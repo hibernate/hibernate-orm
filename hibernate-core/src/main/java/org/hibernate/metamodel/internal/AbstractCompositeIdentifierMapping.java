@@ -11,15 +11,10 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -30,12 +25,10 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -47,6 +40,8 @@ import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Base implementation for composite identifier mappings
@@ -66,7 +61,9 @@ public abstract class AbstractCompositeIdentifierMapping
 			EntityMappingType entityMapping,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
-		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ID_ROLE_NAME );
+		this.navigableRole =
+				entityMapping.getNavigableRole()
+						.appendContainer( ID_ROLE_NAME );
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
@@ -135,8 +132,8 @@ public abstract class AbstractCompositeIdentifierMapping
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
-		final TableGroup tableGroup = createRootTableGroupJoin(
+		final var joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
+		final var tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
@@ -146,7 +143,6 @@ public abstract class AbstractCompositeIdentifierMapping
 				null,
 				creationState
 		);
-
 		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
 	}
 
@@ -184,26 +180,24 @@ public abstract class AbstractCompositeIdentifierMapping
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final var embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		if ( value == null ) {
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				final var attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-				final Object o = embeddableTypeDescriptor.getValue( value, i );
+				final var attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				final Object object = embeddableTypeDescriptor.getValue( value, i );
 				if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
-					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
-							o,
-							toOneAttributeMapping.getSideNature().inverse(),
-							session
-					);
-					span += fkDescriptor.forEachJdbcValue(
+					final var foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+					final var inverse = toOneAttributeMapping.getSideNature().inverse();
+					final Object identifier =
+							foreignKeyDescriptor.getAssociationKeyFromSide( object, inverse, session );
+					span += foreignKeyDescriptor.forEachJdbcValue(
 							identifier,
 							span + offset,
 							x,
@@ -213,7 +207,7 @@ public abstract class AbstractCompositeIdentifierMapping
 					);
 				}
 				else {
-					span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+					span += attributeMapping.forEachJdbcValue( object, span + offset, x, y, valuesConsumer, session );
 				}
 			}
 		}
@@ -226,22 +220,22 @@ public abstract class AbstractCompositeIdentifierMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final SelectableMappings selectableMappings = getEmbeddableTypeDescriptor();
-		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectableMappings.getJdbcTypeCount() );
-		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
-		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+		final List<ColumnReference> columnReferences = arrayList( getEmbeddableTypeDescriptor().getJdbcTypeCount() );
+		final var navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
+		final var defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
-							? defaultTableReference
-							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
-					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
-							.resolveSqlExpression( tableReference, selection );
-
+					final String containingTableExpression = selection.getContainingTableExpression();
+					final var tableReference =
+							getContainingTableExpression().equals( containingTableExpression )
+									? defaultTableReference
+									: tableGroup.resolveTableReference( navigablePath, containingTableExpression );
+					final var columnReference =
+							sqlAstCreationState.getSqlExpressionResolver()
+									.resolveSqlExpression( tableReference, selection );
 					columnReferences.add( (ColumnReference) columnReference );
 				}
 		);
-
 		return new SqlTuple( columnReferences, this );
 	}
 

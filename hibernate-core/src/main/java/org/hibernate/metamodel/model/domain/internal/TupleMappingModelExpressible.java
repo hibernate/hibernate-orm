@@ -15,13 +15,13 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 /**
  * @author Christian Beikov
  */
-public class TupleMappingModelExpressible implements MappingModelExpressible {
+public class TupleMappingModelExpressible implements MappingModelExpressible<Object[]> {
 
-	private final MappingModelExpressible<Object>[] components;
+	private final MappingModelExpressible<?>[] components;
 	private final JdbcMapping[] mappings;
 
 	public TupleMappingModelExpressible(MappingModelExpressible<?>[] components) {
-		this.components = (MappingModelExpressible<Object>[]) components;
+		this.components = components;
 		final ArrayList<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( 0, (index, jdbcMapping) -> results.add( jdbcMapping ) );
 		this.mappings = results.toArray( new JdbcMapping[0] );

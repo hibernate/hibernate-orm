@@ -9,9 +9,11 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-/**
- * @author Steve Ebersole
- */
+/// ParameterResolver for [MessageKeyWatcher]
+///
+/// @see MessageKeyInspectionExtension
+///
+/// @author Steve Ebersole
 public class MessageKeyWatcherResolver implements ParameterResolver {
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {

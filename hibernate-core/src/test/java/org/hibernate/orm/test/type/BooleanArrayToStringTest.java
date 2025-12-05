@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Jan Schatteman
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel (
 		annotatedClasses = {BooleanArrayToStringTest.TestEntity.class}
 )
@@ -43,7 +44,7 @@ public class BooleanArrayToStringTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

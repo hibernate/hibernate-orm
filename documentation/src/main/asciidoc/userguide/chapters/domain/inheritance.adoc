@@ -1,6 +1,5 @@
 [[entity-inheritance]]
 === Inheritance
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
 :extrasdir: extras/inheritance
@@ -17,7 +16,7 @@ Table per class:: Each subclass has its own table containing both the subclass a
 
 In the following domain model class hierarchy, a `DebitAccount` and a `CreditAccount` share the same `Account` base class.
 
-image:images/domain/inheritance/inheritance_class_diagram.svg[Inheritance class diagram]
+image::images/domain/inheritance/inheritance_class_diagram.svg[Inheritance class diagram,align="center"]
 
 When using `MappedSuperclass`, the inheritance is visible in the domain model only, and each database table contains both the base class and the subclass properties.
 

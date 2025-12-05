@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ import jakarta.persistence.Id;
 /**
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				ContributedUserTypeTest.StringWrapperTestEntity.class,
@@ -44,13 +46,9 @@ import jakarta.persistence.Id;
 		}
 )
 public class ContributedUserTypeTest {
-
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Wallet" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -60,10 +58,8 @@ public class ContributedUserTypeTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( StringWrapperTestEntity.class )
 				.getPropertyType( "stringWrapper" );
-		Assertions.assertTrue(
-				type instanceof CustomType,
-				"Type was initialized too early i.e. before type-contributors were run"
-		);
+		Assertions.assertInstanceOf( CustomType.class, type,
+				"Type was initialized too early i.e. before type-contributors were run" );
 	}
 
 	@Test

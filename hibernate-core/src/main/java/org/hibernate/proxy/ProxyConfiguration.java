@@ -89,12 +89,7 @@ public interface ProxyConfiguration extends PrimeAmongSecondarySupertypes {
 				@FieldValue(INTERCEPTOR_FIELD_NAME) Interceptor interceptor
 		) throws Throwable {
 			if ( interceptor == null ) {
-				if ( method.getName().equals( "getHibernateLazyInitializer" ) ) {
-					return instance;
-				}
-				else {
-					return stubValue;
-				}
+				return method.getName().equals( "getHibernateLazyInitializer" ) ? instance : stubValue;
 			}
 			else {
 				return interceptor.intercept( instance, method, arguments );

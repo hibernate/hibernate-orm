@@ -50,13 +50,12 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 	@Override
 	public O toDomainValue(R relationalForm) {
 		assert relationalForm == null || relationalJavaType.isInstance( relationalForm );
-
-		final DiscriminatorValueDetails matchingValueDetails = getDetailsForRelationalForm( relationalForm );
+		final var matchingValueDetails = getDetailsForRelationalForm( relationalForm );
 		if ( matchingValueDetails == null ) {
 			throw new IllegalStateException( "Could not resolve discriminator value" );
 		}
 
-		final EntityMappingType indicatedEntity = matchingValueDetails.getIndicatedEntity();
+		final var indicatedEntity = matchingValueDetails.getIndicatedEntity();
 		//noinspection unchecked
 		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
 			&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
@@ -66,24 +65,18 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		final String entityName;
-		if ( domainForm == null ) {
+		final String entityName = getEntityName( domainForm );
+		if ( entityName == null ) {
 			return null;
 		}
-		else if ( domainForm instanceof Class<?> clazz ) {
-			entityName = clazz.getName();
-		}
-		else if ( domainForm instanceof String name ) {
-			entityName = name;
-		}
 		else {
-			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
+			final var discriminatorValueDetails = getDetailsForEntityName( entityName );
+			//noinspection unchecked
+			return (R) discriminatorValueDetails.getValue();
 		}
-
-		final DiscriminatorValueDetails discriminatorValueDetails = getDetailsForEntityName( entityName );
-		//noinspection unchecked
-		return (R) discriminatorValueDetails.getValue();
 	}
+
+	protected abstract String getEntityName(O domainForm);
 
 	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
 

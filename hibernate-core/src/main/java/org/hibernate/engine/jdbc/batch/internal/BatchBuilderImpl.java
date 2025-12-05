@@ -19,7 +19,6 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
@@ -40,12 +39,18 @@ public class BatchBuilderImpl implements BatchBuilder {
 		if ( globalBatchSize > 1 ) {
 			BATCH_MESSAGE_LOGGER.batchingEnabled( globalBatchSize );
 		}
-		BATCH_LOGGER.trace( "Using standard BatchBuilder");
+		BATCH_MESSAGE_LOGGER.usingStandardBatchBuilder();
 		this.globalBatchSize = globalBatchSize;
 	}
 
 	public int getJdbcBatchSize() {
 		return globalBatchSize;
+	}
+
+	private int batchSize(Integer explicitBatchSize) {
+		return explicitBatchSize == null
+				? globalBatchSize
+				: explicitBatchSize;
 	}
 
 	@Override
@@ -54,26 +59,16 @@ public class BatchBuilderImpl implements BatchBuilder {
 			Integer explicitBatchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier,
 			JdbcCoordinator jdbcCoordinator) {
-		final int batchSize =
-				explicitBatchSize == null
-						? globalBatchSize
-						: explicitBatchSize;
+		final int batchSize = batchSize( explicitBatchSize );
 		assert batchSize > 1;
 		return new BatchImpl( key, statementGroupSupplier.get(), batchSize, jdbcCoordinator );
 	}
-
 
 	/**
 	 * Intended for use from tests
 	 */
 	@Internal
 	public BatchImpl buildBatch(BatchKey batchKey, Integer sizeOverride, String table, SessionImplementor session, String sql) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-
-		final int batchSize = sizeOverride == null
-				? globalBatchSize
-				: sizeOverride;
-
 		return new BatchImpl(
 				batchKey,
 				new PreparedStatementGroupSingleTable(
@@ -137,8 +132,8 @@ public class BatchBuilderImpl implements BatchBuilder {
 						),
 						session
 				),
-				batchSize,
-				jdbcCoordinator
+				batchSize( sizeOverride ),
+				session.getJdbcCoordinator()
 		);
 	}
 }

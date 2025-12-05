@@ -61,7 +61,7 @@ class DetachedPreviousRowStateTest {
 
 	@AfterEach
 	void cleanupData(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().getSchemaManager().truncate();;
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

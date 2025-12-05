@@ -56,75 +56,6 @@ public class JsonHelper {
 	 */
 	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
 			throws SQLException {
-		record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}
-		record ParseLevel(
-				@Nullable SelectableData selectableData,
-				@Nullable EmbeddableMappingType embeddableMappingType,
-				@Nullable BasicPluralType<?, ?> arrayType,
-				@Nullable List<Object> subArrayObjectList,
-				@Nullable Object [] objectArray
-		) {
-			ParseLevel(EmbeddableMappingType embeddableMappingType) {
-				this(null, embeddableMappingType);
-			}
-			ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType embeddableMappingType) {
-				this(
-						selectableData,
-						embeddableMappingType,
-						null,
-						null,
-						new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )]
-				);
-			}
-			ParseLevel(@Nullable SelectableData selectableData, BasicPluralType<?, ?> arrayType) {
-				this( selectableData, null, arrayType, new ArrayList<>(), null );
-			}
-
-			public void addValue(@Nullable SelectableData selectableData, @Nullable Object value) {
-				if ( embeddableMappingType != null ) {
-					assert selectableData != null;
-					objectArray[selectableData.selectableIndex] = value;
-				}
-				else {
-					assert subArrayObjectList != null;
-					subArrayObjectList.add(value);
-				}
-			}
-
-			public JdbcMapping determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
-				if ( currentSelectableData != null ) {
-					return currentSelectableData.selectableMapping.getJdbcMapping();
-				}
-				else if ( arrayType != null ) {
-					return arrayType.getElementType();
-				}
-				else {
-					assert selectableData != null;
-					return selectableData.selectableMapping.getJdbcMapping();
-				}
-			}
-
-			public static String determineSelectablePath(StandardStack<ParseLevel> parseLevel, @Nullable SelectableData currentSelectableData) {
-				if ( currentSelectableData != null ) {
-					return currentSelectableData.selectableName;
-				}
-				else {
-					return determineSelectablePath( parseLevel, 0 );
-				}
-			}
-
-			private static String determineSelectablePath(StandardStack<ParseLevel> stack, int level) {
-				final ParseLevel parseLevel = stack.peek( level );
-				assert parseLevel != null;
-				if ( parseLevel.selectableData != null ) {
-					return parseLevel.selectableData.selectableName;
-				}
-				else {
-					assert parseLevel.arrayType != null;
-					return determineSelectablePath( stack, level + 1 ) + ".{element}";
-				}
-			}
-		}
 		final StandardStack<ParseLevel> parseLevel = new StandardStack<>();
 		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,returnEmbeddable);
 
@@ -455,6 +386,76 @@ public class JsonHelper {
 				r[i] = (T) array[i];
 			}
 			return null;
+		}
+	}
+
+	private record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}
+	private record ParseLevel(
+			@Nullable SelectableData selectableData,
+			@Nullable EmbeddableMappingType embeddableMappingType,
+			@Nullable BasicPluralType<?, ?> arrayType,
+			@Nullable List<Object> subArrayObjectList,
+			@Nullable Object [] objectArray
+	) {
+		ParseLevel(EmbeddableMappingType embeddableMappingType) {
+			this(null, embeddableMappingType);
+		}
+		ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType embeddableMappingType) {
+			this(
+					selectableData,
+					embeddableMappingType,
+					null,
+					null,
+					new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )]
+			);
+		}
+		ParseLevel(@Nullable SelectableData selectableData, BasicPluralType<?, ?> arrayType) {
+			this( selectableData, null, arrayType, new ArrayList<>(), null );
+		}
+
+		public void addValue(@Nullable SelectableData selectableData, @Nullable Object value) {
+			if ( embeddableMappingType != null ) {
+				assert selectableData != null;
+				objectArray[selectableData.selectableIndex] = value;
+			}
+			else {
+				assert subArrayObjectList != null;
+				subArrayObjectList.add(value);
+			}
+		}
+
+		public JdbcMapping determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
+			if ( currentSelectableData != null ) {
+				return currentSelectableData.selectableMapping.getJdbcMapping();
+			}
+			else if ( arrayType != null ) {
+				return arrayType.getElementType();
+			}
+			else {
+				assert selectableData != null;
+				return selectableData.selectableMapping.getJdbcMapping();
+			}
+		}
+
+		public static String determineSelectablePath(StandardStack<ParseLevel> parseLevel, @Nullable SelectableData currentSelectableData) {
+			if ( currentSelectableData != null ) {
+				return currentSelectableData.selectableName;
+			}
+			else {
+				return determineSelectablePath( parseLevel, 0 );
+			}
+		}
+
+		private static String determineSelectablePath(StandardStack<ParseLevel> stack, int level) {
+			final ParseLevel parseLevel = stack.peek( level );
+			assert parseLevel != null;
+			if ( parseLevel.selectableData != null ) {
+				return parseLevel.selectableData.selectableName;
+			}
+			else {
+				assert parseLevel.arrayType != null;
+				return determineSelectablePath( stack, level + 1 ) + ".{element}";
+			}
 		}
 	}
 

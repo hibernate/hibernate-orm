@@ -19,7 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -36,7 +36,6 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,21 +50,16 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @JiraKey("HHH-17293")
 @BaseUnitTest
-@RequiresDialects(
-		{
-				@RequiresDialect(PostgreSQLDialect.class),
-				@RequiresDialect(H2Dialect.class),
-		}
-)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(H2Dialect.class)
 public class DurationValidationTest implements ExecutionOptions {
-
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
 	private static Stream<Arguments> jdbcMetadataExtractorStrategies() {
 		return Stream.of(
-				arguments( JdbcMetadaAccessStrategy.GROUPED.toString() ),
-				arguments( JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() )
+				arguments( JdbcMetadataAccessStrategy.GROUPED.toString() ),
+				arguments( JdbcMetadataAccessStrategy.INDIVIDUALLY.toString() )
 		);
 	}
 

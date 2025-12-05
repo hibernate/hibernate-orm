@@ -4,12 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -18,21 +22,27 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	private final UnaryArithmeticOperator operation;
 	private final SqmExpression<T> operand;
 
-	public SqmUnaryOperation(UnaryArithmeticOperator operation, SqmExpression<T> operand) {
+	public SqmUnaryOperation(
+			UnaryArithmeticOperator operation,
+			SqmExpression<T> operand,
+			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
 		this(
 				operation,
 				operand,
-				operand.nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType(
-						operand.getExpressible().getRelationalJavaType().getJavaType()
-				)
+				(SqmBindableType<T>) // TODO: this cast is unsound
+						nodeBuilder.getTypeConfiguration()
+								.resolveArithmeticType( castNonNull( operand.getExpressible() ) ),
+				nodeBuilder
 		);
 	}
 
 	public SqmUnaryOperation(
 			UnaryArithmeticOperator operation,
 			SqmExpression<T> operand,
-			SqmBindableType<T> inherentType) {
-		super( inherentType, operand.nodeBuilder() );
+			@Nullable SqmBindableType<T> inherentType,
+			NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
 		this.operation = operation;
 		this.operand = operand;
 	}
@@ -48,14 +58,15 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 				new SqmUnaryOperation<>(
 						operation,
 						operand.copy( context ),
-						getNodeType()
+						getNodeType(),
+						nodeBuilder()
 				)
 		);
 		copyTo( expression, context );
 		return expression;
 	}
 
-	public SqmExpression getOperand() {
+	public SqmExpression<T> getOperand() {
 		return operand;
 	}
 
@@ -76,5 +87,33 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( operation.getOperatorChar() );
 		operand.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmUnaryOperation<?> that
+			&& operation == that.getOperation()
+			&& operand.equals( that.getOperand() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = operation.hashCode();
+		result = 31 * result + operand.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmUnaryOperation<?> that
+				&& operation == that.getOperation()
+				&& operand.isCompatible( that.getOperand() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = operation.hashCode();
+		result = 31 * result + operand.cacheHashCode();
+		return result;
 	}
 }

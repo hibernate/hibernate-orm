@@ -28,15 +28,13 @@ public class RegisteredSynchronization implements Synchronization {
 
 	@Override
 	public void beforeCompletion() {
-		JTA_LOGGER.trace( "Registered JTA Synchronization: beforeCompletion()" );
-
+		JTA_LOGGER.registeredSynchronizationBeforeCompletion();
 		synchronizationCallbackCoordinator.beforeCompletion();
 	}
 
 	@Override
 	public void afterCompletion(int status) {
-		JTA_LOGGER.tracef( "Registered JTA Synchronization: afterCompletion(%s)", status );
-
+		JTA_LOGGER.registeredSynchronizationAfterCompletion( status );
 		synchronizationCallbackCoordinator.afterCompletion( status );
 	}
 }

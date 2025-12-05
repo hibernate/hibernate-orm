@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -16,6 +18,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Used to model numeric literals found in HQL queries.
@@ -40,7 +44,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
 		this( literalValue,
-				interpretCategory( literalValue, criteriaBuilder.resolveExpressible( type ) ),
+				interpretCategory( literalValue, castNonNull( criteriaBuilder.resolveExpressible( type ) ) ),
 				type, criteriaBuilder );
 		this.type = type;
 	}
@@ -61,7 +65,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public N getLiteralValue() {
+	public @NonNull N getLiteralValue() {
 		return typeCategory.parseLiteralValue( literalValue );
 	}
 
@@ -84,6 +88,30 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 				case LONG -> "l";
 				case INTEGER, DOUBLE -> "";
 			} );
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmHqlNumericLiteral<?> that
+			&& literalValue.equals( that.literalValue )
+			&& typeCategory.equals( that.typeCategory );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = literalValue.hashCode();
+		result = 31 * result + typeCategory.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 
 	@Override

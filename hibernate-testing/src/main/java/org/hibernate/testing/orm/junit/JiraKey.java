@@ -10,14 +10,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Identifies the JIRA issue associated with a test.  Is repeatable, so
- * multiple JIRA issues can be indicated.
- *
- * @see JiraKeyGroup
- *
- * @author Steve Ebersole
- */
+/// Identifies the key of a JIRA issue associated with a test.
+///
+/// @see JiraKeyGroup
+/// @see Jira
+///
+/// @author Steve Ebersole
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Repeatable( JiraKeyGroup.class  )

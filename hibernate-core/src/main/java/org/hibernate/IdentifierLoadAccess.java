@@ -12,84 +12,73 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
 
-/**
- * Loads an entity by its primary identifier.
- * <p>
- * The interface is especially useful when customizing association
- * fetching using an {@link jakarta.persistence.EntityGraph}.
- * <pre>
- * var graph = session.createEntityGraph(Book.class);
- * graph.addSubgraph(Book_.publisher);
- * graph.addPluralSubgraph(Book_.authors)
- *     .addSubgraph(Author_.person);
- *
- * Book book =
- *         session.byId(Book.class)
- *             .withFetchGraph(graph)
- *             .load(bookId);
- * </pre>
- * <p>
- * It's also useful for loading entity instances with a specific
- * {@linkplain CacheMode cache interaction mode} in effect, or in
- * {@linkplain Session#setReadOnly(Object, boolean) read-only mode}.
- * <pre>
- * Book book =
- *         session.byId(Book.class)
- *             .with(CacheMode.GET)
- *             .withReadOnly(true)
- *             .load(bookId);
- * </pre>
- *
- * @author Eric Dalquist
- * @author Steve Ebersole
- *
- * @see Session#byId(Class)
- */
+/// Loads an entity by its primary identifier.
+///
+/// The interface is especially useful when customizing association
+/// fetching using an [jakarta.persistence.EntityGraph].
+/// ```java
+/// var graph = session.createEntityGraph(Book.class);
+/// graph.addSubgraph(Book_.publisher);
+/// graph.addPluralSubgraph(Book_.authors)
+/// 	.addSubgraph(Author_.person);
+/// Book book = session.byId(Book.class)
+/// 	.withFetchGraph(graph)
+/// 	.load(bookId);
+/// ```
+///
+/// It's also useful for loading entity instances with a specific
+/// [cache interaction mode][CacheMode] in effect, or in
+/// [read-only mode][Session#setReadOnly(Object, boolean)].
+///
+/// ```java
+/// Book book = session.byId(Book.class)
+/// 	.with(CacheMode.GET)
+/// 	.withReadOnly(true)
+/// 	.load(bookId);
+/// ```
+///
+/// @author Eric Dalquist
+/// @author Steve Ebersole
+///
+/// @see Session#byId
+///
+/// @deprecated Use forms of [Session#find] accepting [jakarta.persistence.FindOption]} instead.
+@Deprecated(since = "7.1", forRemoval = true)
 public interface IdentifierLoadAccess<T> {
 
-	/**
-	 * Specify the {@linkplain LockMode lock mode} to use when
-	 * querying the database.
-	 *
-	 * @param lockMode The lock mode to apply
-	 * @return {@code this}, for method chaining
-	 */
+	/// Specify the [lock mode][LockMode] to use when querying the database.
+	///
+	/// @param lockMode The lock mode to apply
+	///
+	/// @return `this`, for method chaining
 	default IdentifierLoadAccess<T> with(LockMode lockMode) {
 		return with( lockMode, PessimisticLockScope.NORMAL );
 	}
 
-	/**
-	 * Specify the {@linkplain LockMode lock mode} to use when
-	 * querying the database.
-	 *
-	 * @param lockMode The lock mode to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Specify the [lock mode][LockMode] and [scope][PessimisticLockScope] to use when querying the database.
+	///
+	/// @param lockMode The lock mode to apply
+	/// @param lockScope The locking scope (how much to lock).
+	///
+	/// @return `this`, for method chaining
 	IdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
 
-	/**
-	 * Specify the {@linkplain Timeout timeout} to use when
-	 * querying the database.
-	 *
-	 * @param timeout The timeout to apply to the database operation
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Specify the [timeout][Timeout] to use when querying the database.
+	///
+	/// @param timeout The timeout to apply to the database operation
+	///
+	/// @return `this`, for method chaining
 	IdentifierLoadAccess<T> with(Timeout timeout);
 
-	/**
-	 * Specify the {@linkplain LockOptions lock options} to use when
-	 * querying the database.
-	 *
-	 * @param lockOptions The lock options to use
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use one of {@linkplain #with(LockMode)},
-	 * {@linkplain #with(LockMode, PessimisticLockScope)}
-	 * and/or {@linkplain #with(Timeout)} instead.
-	 */
+	/// Specify the [lock options][LockOptions] to use when querying the database.
+	///
+	/// @param lockOptions The lock options to use
+	///
+	/// @return `this`, for method chaining
+	///
+	/// @deprecated Use one of [#with(LockMode)],
+	/// [#with(LockMode, PessimisticLockScope)]
+	/// and/or [#with(Timeout)] instead.
 	@Deprecated(since = "7.0", forRemoval = true)
 	IdentifierLoadAccess<T> with(LockOptions lockOptions);
 

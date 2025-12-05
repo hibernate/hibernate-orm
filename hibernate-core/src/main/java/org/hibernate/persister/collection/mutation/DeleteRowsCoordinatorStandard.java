@@ -4,23 +4,16 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import java.util.Iterator;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * @author Steve Ebersole
@@ -44,8 +37,8 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteByIndex = deleteByIndex;
 
-		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#DELETE" );
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
+		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#DELETE" );
+		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -60,33 +53,29 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		}
 
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Deleting removed collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					key
-			);
+			MODEL_MUTATION_LOGGER.deletingRemovedCollectionRows( mutationTarget.getRolePath(), key );
 		}
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+		final var mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,
 				session
 		);
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		try {
-			final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
-			final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+			final var pluralAttribute = mutationTarget.getTargetPart();
+			final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-			final Iterator<?> deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
+			final var deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 			if ( !deletes.hasNext() ) {
-				MODEL_MUTATION_LOGGER.trace( "No rows to delete" );
+				MODEL_MUTATION_LOGGER.noRowsToDelete();
 				return;
 			}
 
 			int deletionCount = 0;
 
-			final RowMutationOperations.Restrictions restrictions = rowMutationOperations.getDeleteRowRestrictions();
+			final var restrictions = rowMutationOperations.getDeleteRowRestrictions();
 
 			while ( deletes.hasNext() ) {
 				final Object removal = deletes.next();
@@ -105,8 +94,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 				deletionCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done deleting %s collection rows : %s",
-					deletionCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.doneDeletingCollectionRows( deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {
 			mutationExecutor.release();
@@ -114,10 +102,10 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 	}
 
 	private MutationOperationGroup createOperationGroup() {
-		assert mutationTarget.getTargetPart() != null;
-		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
+		assert mutationTarget.getTargetPart() != null
+			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		final JdbcMutationOperation operation = rowMutationOperations.getDeleteRowOperation();
-		return MutationOperationGroupFactory.singleOperation( MutationType.DELETE, mutationTarget, operation );
+		final var operation = rowMutationOperations.getDeleteRowOperation();
+		return singleOperation( MutationType.DELETE, mutationTarget, operation );
 	}
 }

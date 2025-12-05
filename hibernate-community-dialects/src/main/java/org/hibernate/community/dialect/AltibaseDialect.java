@@ -4,13 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.pagination.AltibaseLimitHandler;
@@ -25,6 +19,8 @@ import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -36,9 +32,9 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -56,7 +52,12 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -101,33 +102,18 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "char(1)";
-			case FLOAT:
-			case DOUBLE:
-				return "double";
-			case TINYINT:
-				return "smallint";
-			case TIME:
-			case TIMESTAMP:
-			case TIME_WITH_TIMEZONE:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "date";
-			case BINARY:
-				return "byte($l)";
-			case VARBINARY:
-				return "varbyte($l)";
-			case LONGVARBINARY:
-				return "blob";
-			case BIT:
-				return "varbit($l)";
-			case LONGVARCHAR:
-			case NCLOB:
-				return "clob";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "char(1)";
+			case FLOAT, DOUBLE -> "double";
+			case TINYINT -> "smallint";
+			case TIME, TIMESTAMP, TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "date";
+			case BINARY -> "byte($l)";
+			case VARBINARY -> "varbyte($l)";
+			case LONGVARBINARY -> "blob";
+			case BIT -> "varbit($l)";
+			case LONGVARCHAR, NCLOB -> "clob";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -164,22 +150,11 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
-		switch ( specification ) {
-			case BOTH:
-				return isWhitespace
-						? "trim(?1)"
-						: "trim(?1,?2)";
-			case LEADING:
-				return isWhitespace
-						? "ltrim(?1)"
-						: "ltrim(?1,?2)";
-			case TRAILING:
-				return isWhitespace
-						? "rtrim(?1)"
-						: "rtrim(?1,?2)";
-		}
-
-		return super.trimPattern( specification, isWhitespace );
+		return switch ( specification ) {
+			case BOTH -> isWhitespace ? "trim(?1)" : "trim(?1,?2)";
+			case LEADING -> isWhitespace ? "ltrim(?1)" : "ltrim(?1,?2)";
+			case TRAILING -> isWhitespace ? "rtrim(?1)": "rtrim(?1,?2)";
+		};
 	}
 
 	@Override
@@ -256,6 +231,7 @@ public class AltibaseDialect extends Dialect {
 							.setExactArgumentCount( 2 )
 							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 							.register();
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	@Override
@@ -321,51 +297,36 @@ public class AltibaseDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case DAY_OF_WEEK:
-				return "extract(?2, 'DAYOFWEEK')";
-			case DAY_OF_MONTH:
-				return "extract(?2, 'DAY')";
-			case DAY_OF_YEAR:
-				return "extract(?2,'DAYOFYEAR')";
-			case WEEK:
-				return "to_number(to_char(?2,'IW'))"; //the ISO week number
-			case WEEK_OF_YEAR:
-				return "extract(?2, 'WEEK')";
-			case EPOCH:
-				return timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
+		return switch (unit) {
+			case DAY_OF_WEEK -> "extract(?2, 'DAYOFWEEK')";
+			case DAY_OF_MONTH -> "extract(?2, 'DAY')";
+			case DAY_OF_YEAR -> "extract(?2,'DAYOFYEAR')";
+			case WEEK -> "to_number(to_char(?2,'IW'))"; //the ISO week number
+			case WEEK_OF_YEAR -> "extract(?2, 'WEEK')";
+			case EPOCH -> timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
 						.replace( "?2", "TO_DATE('1970-01-01 00:00:00','YYYY-MM-DD HH24:MI:SS')" )
 						.replace( "?3", "?2" );
-			case QUARTER:
-				return "extract(?2, 'QUARTER')";
-			default:
-				return super.extractPattern( unit );
-		}
+			case QUARTER -> "extract(?2, 'QUARTER')";
+			default ->  super.extractPattern( unit );
+		};
 	}
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampadd(MICROSECOND,(?2)/1e3,?3)";
-			case NATIVE:
-				return "timestampadd(SECOND, ?2, ?3)";
-			default:
-				return "timestampadd(?1, ?2, ?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampadd(MICROSECOND,(?2)/1e3,?3)";
+			case NATIVE -> "timestampadd(SECOND, ?2, ?3)";
+			default ->  "timestampadd(?1, ?2, ?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case SECOND:
-			case NATIVE:
-				return "datediff(?2, ?3, 'SECOND')";
-			case NANOSECOND:
-				return "datediff(?2, ?3, 'MICROSECOND')*1e3";
-			default:
-				return "datediff(?2, ?3, '?1')";
-		}
+		return switch (unit) {
+			case SECOND, NATIVE -> "datediff(?2, ?3, 'SECOND')";
+			case NANOSECOND -> "datediff(?2, ?3, 'MICROSECOND')*1e3";
+			default -> "datediff(?2, ?3, '?1')";
+		};
 	}
 
 	@Override
@@ -585,9 +546,8 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		// "SELECT FOR UPDATE can only be used with a single-table SELECT statement"
-		return false;
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override
@@ -677,12 +637,12 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "dayofyear";
-			case DAY_OF_WEEK: return "dayofweek";
-			default: return super.translateExtractField( unit );
-		}
+		return switch ( unit ) {
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "dayofyear";
+			case DAY_OF_WEEK -> "dayofweek";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override

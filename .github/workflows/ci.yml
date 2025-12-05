@@ -33,7 +33,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: OpenJDK 21 - ${{matrix.rdbms}}
+    name: OpenJDK 25 - ${{matrix.rdbms}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -63,11 +63,11 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Generate cache key
         id: cache-key
@@ -142,39 +142,30 @@ jobs:
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh
 
-  # Job for builds on Atlas (Oracle) infrastructure.
+  # Job for builds on Oracle TP infrastructure.
   # This is untrusted, even for pushes, see below.
-  atlas:
+  otp:
     permissions:
       contents: read
-    name: GraalVM 21 - ${{matrix.rdbms}}
-    #    runs-on: ubuntu-latest
-    runs-on: [ self-hosted, Linux, X64, OCI ]
+    name: GraalVM 25 - ${{matrix.rdbms}}
+    runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - rdbms: oracle_atps
-          - rdbms: oracle_db19c
-          - rdbms: oracle_db21c
-          - rdbms: oracle_db23c
+          #- rdbms: autonomous-transaction-processing-serverless
+          - rdbms: base-database-service-19c
+          - rdbms: base-database-service-21c
+          - rdbms: base-database-service-23ai
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: Reclaim disk space and sanitize user home
-        run: .github/ci-prerequisites-atlas.sh
-      - name: Start database
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          RUNID: ${{ github.run_number }}
-        run: ci/database-start.sh
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: graalvm/setup-graalvm@aafbedb8d382ed0ca6167d3a051415f20c859274 # v1.2.8
         with:
           distribution: 'graalvm'
-          java-version: '21'
-
+          java-version: '25'
       - name: Generate cache key
         id: cache-key
         run: |
@@ -205,7 +196,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        # if it a pull request, we restore the cache but we don't save it
+        # if it is a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
           path: |
@@ -218,17 +209,35 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
+      - id: create_database
+        uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: create
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4
+
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
-          # These runners have no HOME variable set by default, we need to explicitly set it to make the build work
-          HOME: /root
+          TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
+          TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
+          API_HOST: ""
+          TESTPILOT_CLIENT_ID: ""
+          TESTPILOT_TOKEN: ""
           # Needed for TFO (TCP fast open)
-          LD_PRELOAD: /home/opc/libtfojdbc1.so
-          LD_LIBRARY_PATH: /home/opc
+          LD_PRELOAD: /home/ubuntu/libtfojdbc1.so
+          LD_LIBRARY_PATH: /home/ubuntu
         run: ./ci/build-github.sh
         shell: bash
+
+      - uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
+        if: always()
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: delete
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4
+
       # Upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
@@ -261,11 +270,11 @@ jobs:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Generate cache key
         id: cache-key

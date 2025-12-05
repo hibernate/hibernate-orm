@@ -23,9 +23,9 @@ import java.util.Objects;
  */
 public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, JpaCastTarget<T> {
 	private final ReturnableType<T> type;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable Long length;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	public SqmCastTarget(
 			ReturnableType<T> type,
@@ -35,24 +35,24 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 
 	public SqmCastTarget(
 			ReturnableType<T> type,
-			Long length,
+			@Nullable Long length,
 			NodeBuilder nodeBuilder) {
 		this( type, length, null, null, nodeBuilder );
 	}
 
 	public SqmCastTarget(
 			ReturnableType<T> type,
-			Integer precision,
-			Integer scale,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
 			NodeBuilder nodeBuilder) {
 		this( type, null, precision, scale, nodeBuilder );
 	}
 
 	public SqmCastTarget(
 			ReturnableType<T> type,
-			Long length,
-			Integer precision,
-			Integer scale,
+			@Nullable Long length,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.type = type;
@@ -91,7 +91,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public SqmBindableType<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return nodeBuilder().resolveExpressible( type );
 	}
 
@@ -115,7 +115,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCastTarget<?> that
 			&& Objects.equals( type, that.type )
 			&& Objects.equals( length, that.length )
@@ -126,5 +126,15 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	@Override
 	public int hashCode() {
 		return Objects.hash( type, length, precision, scale );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -4,17 +4,12 @@
  */
 package org.hibernate.orm.test.id.hhh12973;
 
-import java.io.StringReader;
-import java.sql.Statement;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,21 +17,23 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.SequenceMismatchStrategy;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.io.StringReader;
+import java.sql.Statement;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
-import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -45,10 +42,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger( SEQUENCE_GENERATOR_LOGGER ).build();
 
-	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090202:" );
+	public final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -64,7 +62,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 	@Override
 	protected void addConfigOptions(Map settings) {
 		triggerable.reset();
-		assertFalse( triggerable.wasTriggered() );
+		assertThat( triggerable.wasTriggered() ).isFalse();
 
 		//For this test, we need to make sure the DB is created prior to bootstrapping Hibernate
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
@@ -105,7 +103,8 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 
 	@Override
 	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
-		assertTrue( triggerable.wasTriggered() );
+		// this message is logged at trace level
+		assertThat( triggerable.wasTriggered() ).isFalse();
 	}
 
 	@Test

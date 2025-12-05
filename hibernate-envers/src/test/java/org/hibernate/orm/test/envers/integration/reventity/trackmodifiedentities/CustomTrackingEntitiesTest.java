@@ -4,21 +4,25 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
 
-import jakarta.persistence.EntityManager;
-
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.reventity.trackmodifiedentities.CustomTrackingRevisionEntity;
 import org.hibernate.orm.test.envers.entities.reventity.trackmodifiedentities.CustomTrackingRevisionListener;
 import org.hibernate.orm.test.envers.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}
@@ -27,87 +31,94 @@ import org.junit.Test;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class CustomTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		ModifiedEntityTypeEntity.class,
+		StrTestEntity.class,
+		StrIntTestEntity.class,
+		CustomTrackingRevisionEntity.class
+})
+public class CustomTrackingEntitiesTest {
 	private Integer steId = null;
 	private Integer siteId = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				ModifiedEntityTypeEntity.class,
-				StrTestEntity.class,
-				StrIntTestEntity.class,
-				CustomTrackingRevisionEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - Adding two entities
-		em.getTransaction().begin();
-		StrTestEntity ste = new StrTestEntity( "x" );
-		StrIntTestEntity site = new StrIntTestEntity( "y", 1 );
-		em.persist( ste );
-		em.persist( site );
-		steId = ste.getId();
-		siteId = site.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste = new StrTestEntity( "x" );
+			StrIntTestEntity site = new StrIntTestEntity( "y", 1 );
+			em.persist( ste );
+			em.persist( site );
+			steId = ste.getId();
+			siteId = site.getId();
+		} );
 
 		// Revision 2 - Modifying one entity
-		em.getTransaction().begin();
-		site = em.find( StrIntTestEntity.class, siteId );
-		site.setNumber( 2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrIntTestEntity site = em.find( StrIntTestEntity.class, siteId );
+			site.setNumber( 2 );
+		} );
 
 		// Revision 3 - Deleting both entities
-		em.getTransaction().begin();
-		ste = em.find( StrTestEntity.class, steId );
-		site = em.find( StrIntTestEntity.class, siteId );
-		em.remove( ste );
-		em.remove( site );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste = em.find( StrTestEntity.class, steId );
+			StrIntTestEntity site = em.find( StrIntTestEntity.class, siteId );
+			em.remove( ste );
+			em.remove( site );
+		} );
 	}
 
 	@Test
-	public void testTrackAddedEntities() {
+	public void testTrackAddedEntities(EntityManagerFactoryScope scope) {
 		ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity( StrTestEntity.class.getName() );
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );
 
-		CustomTrackingRevisionEntity ctre = getAuditReader().findRevision( CustomTrackingRevisionEntity.class, 1 );
+		scope.inEntityManager( em -> {
+			CustomTrackingRevisionEntity ctre = AuditReaderFactory.get( em )
+					.findRevision( CustomTrackingRevisionEntity.class, 1 );
 
-		assert ctre.getModifiedEntityTypes() != null;
-		assert ctre.getModifiedEntityTypes().size() == 2;
-		assert TestTools.makeSet( steDescriptor, siteDescriptor ).equals( ctre.getModifiedEntityTypes() );
+			assertNotNull( ctre.getModifiedEntityTypes() );
+			assertEquals( 2, ctre.getModifiedEntityTypes().size() );
+			assertEquals( TestTools.makeSet( steDescriptor, siteDescriptor ), ctre.getModifiedEntityTypes() );
+		} );
 	}
 
 	@Test
-	public void testTrackModifiedEntities() {
+	public void testTrackModifiedEntities(EntityManagerFactoryScope scope) {
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );
 
-		CustomTrackingRevisionEntity ctre = getAuditReader().findRevision( CustomTrackingRevisionEntity.class, 2 );
+		scope.inEntityManager( em -> {
+			CustomTrackingRevisionEntity ctre = AuditReaderFactory.get( em )
+					.findRevision( CustomTrackingRevisionEntity.class, 2 );
 
-		assert ctre.getModifiedEntityTypes() != null;
-		assert ctre.getModifiedEntityTypes().size() == 1;
-		assert TestTools.makeSet( siteDescriptor ).equals( ctre.getModifiedEntityTypes() );
+			assertNotNull( ctre.getModifiedEntityTypes() );
+			assertEquals( 1, ctre.getModifiedEntityTypes().size() );
+			assertEquals( TestTools.makeSet( siteDescriptor ), ctre.getModifiedEntityTypes() );
+		} );
 	}
 
 	@Test
-	public void testTrackDeletedEntities() {
+	public void testTrackDeletedEntities(EntityManagerFactoryScope scope) {
 		ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity( StrTestEntity.class.getName() );
 		ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity( StrIntTestEntity.class.getName() );
 
-		CustomTrackingRevisionEntity ctre = getAuditReader().findRevision( CustomTrackingRevisionEntity.class, 3 );
+		scope.inEntityManager( em -> {
+			CustomTrackingRevisionEntity ctre = AuditReaderFactory.get( em )
+					.findRevision( CustomTrackingRevisionEntity.class, 3 );
 
-		assert ctre.getModifiedEntityTypes() != null;
-		assert ctre.getModifiedEntityTypes().size() == 2;
-		assert TestTools.makeSet( steDescriptor, siteDescriptor ).equals( ctre.getModifiedEntityTypes() );
+			assertNotNull( ctre.getModifiedEntityTypes() );
+			assertEquals( 2, ctre.getModifiedEntityTypes().size() );
+			assertEquals( TestTools.makeSet( steDescriptor, siteDescriptor ), ctre.getModifiedEntityTypes() );
+		} );
 	}
 
-	@Test(expected = AuditException.class)
-	public void testFindEntitiesChangedInRevisionException() {
-		getAuditReader().getCrossTypeRevisionChangesReader();
+	@Test
+	public void testFindEntitiesChangedInRevisionException(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertThrows( AuditException.class, () -> {
+				AuditReaderFactory.get( em ).getCrossTypeRevisionChangesReader();
+			} );
+		} );
 	}
 }

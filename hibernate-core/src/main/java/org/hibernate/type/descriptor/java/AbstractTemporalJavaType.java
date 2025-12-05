@@ -17,18 +17,18 @@ public abstract class AbstractTemporalJavaType<T>
 		extends AbstractClassJavaType<T>
 		implements TemporalJavaType<T> {
 
-	protected AbstractTemporalJavaType(Class<? extends T> type) {
+	protected AbstractTemporalJavaType(Class<T> type) {
 		super( type );
 	}
 
-	protected AbstractTemporalJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
+	protected AbstractTemporalJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
 	}
 
 	public AbstractTemporalJavaType(
-			Class<? extends T> type,
-			MutabilityPlan<? extends T> mutabilityPlan,
-			Comparator<? extends T> comparator) {
+			Class<T> type,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
 		super( type, mutabilityPlan, comparator );
 	}
 
@@ -39,20 +39,13 @@ public abstract class AbstractTemporalJavaType<T>
 		if ( precision == null ) {
 			return forMissingPrecision( typeConfiguration );
 		}
-
-		switch ( precision ) {
-			case DATE: {
-				return forDatePrecision( typeConfiguration );
-			}
-			case TIME: {
-				return forTimePrecision( typeConfiguration );
-			}
-			case TIMESTAMP: {
-				return forTimestampPrecision( typeConfiguration );
-			}
+		else {
+			return switch ( precision ) {
+				case DATE -> forDatePrecision( typeConfiguration );
+				case TIME -> forTimePrecision( typeConfiguration );
+				case TIMESTAMP -> forTimestampPrecision( typeConfiguration );
+			};
 		}
-
-		throw new IllegalArgumentException( "Unrecognized JPA TemporalType precision [" + precision + "]" );
 	}
 
 	private <X> TemporalJavaType<X> forMissingPrecision(TypeConfiguration typeConfiguration) {

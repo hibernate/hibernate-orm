@@ -4,14 +4,12 @@
  */
 package org.hibernate.id;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * The legacy id generator named {@code guid}.
@@ -24,38 +22,39 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 @Deprecated(since = "6.0")
 public class GUIDGenerator implements IdentifierGenerator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;
 
 	public GUIDGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-			LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
+			DEPRECATION_LOGGER.deprecatedUuidGenerator(
+					UUIDGenerator.class.getName(),
+					UUIDGenerationStrategy.class.getName() );
 		}
 	}
 
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
-			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					if ( !rs.next() ) {
+					if ( !resultSet.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
-					final String result = rs.getString( 1 );
-					LOG.guidGenerated( result );
-					return result;
+					return resultSet.getString( 1 );
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				resourceRegistry.release( statement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {

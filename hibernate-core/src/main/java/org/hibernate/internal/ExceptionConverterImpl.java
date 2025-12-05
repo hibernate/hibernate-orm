@@ -40,11 +40,13 @@ import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.QueryTimeoutException;
 import jakarta.persistence.RollbackException;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 /**
  * @author Andrea Boriero
  */
+// Extended by Hibernate Reactive
 public class ExceptionConverterImpl implements ExceptionConverter {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ExceptionConverterImpl.class );
 
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
@@ -77,17 +79,17 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	@Override
 	public RuntimeException convert(HibernateException exception, LockOptions lockOptions) {
 		if ( exception instanceof StaleStateException staleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( staleStateException );
+			final var converted = wrapStaleStateException( staleStateException );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.PessimisticLockException pessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( pessimisticLockException, lockOptions );
+			final var converted = wrapLockException( pessimisticLockException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof LockingStrategyException lockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( lockingStrategyException, lockOptions );
+			final var converted = wrapLockException( lockingStrategyException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -95,28 +97,28 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new OptimisticLockException( exception.getMessage(), exception );
 		}
 		else if ( exception instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( exception.getMessage(), exception );
+			final var converted = new QueryTimeoutException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage(), exception );
+			final var converted = new EntityNotFoundException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.NonUniqueObjectException
 					|| exception instanceof PersistentObjectException) {
-			final EntityExistsException converted = new EntityExistsException( exception.getMessage(), exception );
+			final var converted = new EntityExistsException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( exception.getMessage(), exception );
+			final var converted = new NonUniqueResultException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage(), exception );
+			final var converted = new EntityNotFoundException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -134,13 +136,13 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnTransientObjectException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
 		}
 		else if ( exception instanceof TransactionSerializationException ) {
-			final PersistenceException converted = new RollbackException( exception.getMessage(), exception );
+			final var converted = new RollbackException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -183,6 +185,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	protected PersistenceException wrapStaleStateException(StaleStateException exception) {
+		final String message = exception.getMessage();
 		if ( exception instanceof StaleObjectStateException staleStateException ) {
 			final Object identifier = staleStateException.getIdentifier();
 			final String entityName = staleStateException.getEntityName();
@@ -190,7 +193,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				try {
 					final Object entity = session.internalLoad( entityName, identifier, false, true );
 					if ( entity instanceof Serializable ) { // avoid some user errors regarding boundary crossing
-						return new OptimisticLockException( exception.getMessage(), exception, entity );
+						return new OptimisticLockException( message, exception, entity );
 					}
 				}
 				catch (EntityNotFoundException entityNotFoundException) {
@@ -198,18 +201,20 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				}
 			}
 		}
-		return new OptimisticLockException( exception.getMessage(), exception );
+		return new OptimisticLockException( message, exception );
 	}
 
 	protected PersistenceException wrapLockException(LockingStrategyException exception, LockOptions lockOptions) {
+		final String message = exception.getMessage();
+		final Object entity = exception.getEntity();
 		if ( exception instanceof OptimisticEntityLockException lockException ) {
-			return new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
+			return new OptimisticLockException( message, lockException, entity );
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
-					? new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() )
-					: new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
+					? new LockTimeoutException( message, lockException, entity )
+					: new PessimisticLockException( message, lockException, entity );
 		}
 		else {
 			throw new AssertionFailure( "Unrecognized exception type" );
@@ -217,14 +222,15 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
+		final String message = exception.getMessage();
 		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
-			return new LockTimeoutException( exception.getMessage(), exception );
+			return new LockTimeoutException( message, exception );
 		}
 		else {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
-					? new LockTimeoutException( exception.getMessage(), exception )
-					: new PessimisticLockException( exception.getMessage(), exception );
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
+					? new LockTimeoutException( message, exception )
+					: new PessimisticLockException( message, exception );
 		}
 	}
 
@@ -235,7 +241,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			catch (Exception ne) {
 				//we do not want the subsequent exception to swallow the original one
-				log.unableToMarkForRollbackOnPersistenceException( ne );
+				CORE_LOGGER.unableToMarkForRollbackOnPersistenceException( ne );
 			}
 		}
 	}

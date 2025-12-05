@@ -4,33 +4,36 @@
  */
 package org.hibernate.orm.test.serialization;
 
-
-
-import org.junit.Test;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.type.SerializationException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class SessionFactorySerializationTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class SessionFactorySerializationTest {
 	public static final String NAME = "mySF";
 
+	@BeforeAll
+	public void clearRegistry() {
+		SessionFactoryRegistry.INSTANCE.clearRegistrations();
+	}
+
 	@Test
-	public void testNamedSessionFactorySerialization() throws Exception {
+	public void testNamedSessionFactorySerialization() {
 		Configuration cfg = new Configuration()
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
 				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, false ); // default is true
@@ -39,7 +42,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 
 			// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 			// different VM
-			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
+			String uuid = ((SessionFactoryImplementor) factory).getUuid();
 			// deregister under this uuid...
 			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, null, null );
 			// and then register under a different uuid...
@@ -52,16 +55,16 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			);
 
 			SessionFactory factory2 = (SessionFactory) SerializationHelper.clone( factory );
-			assertSame( factory, factory2 );
+			assertThat( factory2 ).isSameAs( factory );
 
 			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, null, null );
 		}
 
-		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
+		assertThat( SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
 	}
 
 	@Test
-	public void testUnNamedSessionFactorySerialization() throws Exception {
+	public void testUnNamedSessionFactorySerialization() {
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution
 		Configuration cfg = new Configuration()
@@ -71,7 +74,7 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 
 			// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 			// different VM
-			String uuid = ( (SessionFactoryImplementor) factory ).getUuid();
+			String uuid = ((SessionFactoryImplementor) factory).getUuid();
 			// deregister under this uuid...
 			SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, null, null );
 			// and then register under a different uuid...
@@ -93,6 +96,6 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 			SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, null, null );
 		}
 
-		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
+		assertThat( SessionFactoryRegistry.INSTANCE.hasRegistrations() ).isFalse();
 	}
 }

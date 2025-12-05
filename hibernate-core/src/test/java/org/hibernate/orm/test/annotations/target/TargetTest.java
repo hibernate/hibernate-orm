@@ -4,86 +4,97 @@
  */
 package org.hibernate.orm.test.annotations.target;
 
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
-public class TargetTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testTargetOnEmbedded() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Luggage l = new LuggageImpl();
-		l.setHeight( 12 );
-		l.setWidth( 12 );
-		Owner o = new OwnerImpl();
-		o.setName( "Emmanuel" );
-		l.setOwner( o );
-		s.persist( l );
-		s.flush();
-		s.clear();
-		l = (Luggage) s.get(LuggageImpl.class, ( (LuggageImpl) l).getId() );
-		assertEquals( "Emmanuel", l.getOwner().getName() );
-		s.getTransaction().rollback();
-		s.close();
+@DomainModel(
+		annotatedClasses = {
+				LuggageImpl.class,
+				Brand.class
+		}
+)
+@SessionFactory
+public class TargetTest {
+
+	@AfterEach
+	public void afterEach(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testTargetOnMapKey() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Luggage l = new LuggageImpl();
-		l.setHeight( 12 );
-		l.setWidth( 12 );
-		Size size = new SizeImpl();
-		size.setName( "S" );
-		Owner o = new OwnerImpl();
-		o.setName( "Emmanuel" );
-		l.setOwner( o );
-		s.persist( l );
-		Brand b = new Brand();
-		s.persist( b );
-		b.getLuggagesBySize().put( size, l );
-		s.flush();
-		s.clear();
-		b = (Brand) s.get(Brand.class, b.getId() );
-		assertEquals( "S", b.getLuggagesBySize().keySet().iterator().next().getName() );
-		s.getTransaction().rollback();
-		s.close();
+	public void testTargetOnEmbedded(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					LuggageImpl l = new LuggageImpl();
+					l.setHeight( 12 );
+					l.setWidth( 12 );
+					Owner o = new OwnerImpl();
+					o.setName( "Emmanuel" );
+					l.setOwner( o );
+					session.persist( l );
+					session.flush();
+					session.clear();
+					l = session.find( LuggageImpl.class, l.getId() );
+					assertEquals( "Emmanuel", l.getOwner().getName() );
+				}
+		);
 	}
 
 	@Test
-	public void testTargetOnMapKeyManyToMany() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Luggage l = new LuggageImpl();
-		l.setHeight( 12 );
-		l.setWidth( 12 );
-		Size size = new SizeImpl();
-		size.setName( "S" );
-		Owner o = new OwnerImpl();
-		o.setName( "Emmanuel" );
-		l.setOwner( o );
-		s.persist( l );
-		Brand b = new Brand();
-		s.persist( b );
-		b.getSizePerLuggage().put( l, size );
-		s.flush();
-		s.clear();
-		b = (Brand) s.get(Brand.class, b.getId() );
-		assertEquals( 12d, b.getSizePerLuggage().keySet().iterator().next().getWidth(), 0.01 );
-		s.getTransaction().rollback();
-		s.close();
+	public void testTargetOnMapKey(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Luggage l = new LuggageImpl();
+					l.setHeight( 12 );
+					l.setWidth( 12 );
+					Size size = new SizeImpl();
+					size.setName( "S" );
+					Owner o = new OwnerImpl();
+					o.setName( "Emmanuel" );
+					l.setOwner( o );
+					session.persist( l );
+					Brand b = new Brand();
+					session.persist( b );
+					b.getLuggagesBySize().put( size, l );
+					session.flush();
+					session.clear();
+					b = session.find( Brand.class, b.getId() );
+					assertEquals( "S", b.getLuggagesBySize().keySet().iterator().next().getName() );
+				}
+		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { LuggageImpl.class, Brand.class };
+	@Test
+	public void testTargetOnMapKeyManyToMany(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Luggage l = new LuggageImpl();
+					l.setHeight( 12 );
+					l.setWidth( 12 );
+					Size size = new SizeImpl();
+					size.setName( "S" );
+					Owner o = new OwnerImpl();
+					o.setName( "Emmanuel" );
+					l.setOwner( o );
+					session.persist( l );
+					Brand b = new Brand();
+					session.persist( b );
+					b.getSizePerLuggage().put( l, size );
+					session.flush();
+					session.clear();
+					b = session.find( Brand.class, b.getId() );
+					assertEquals( 12d, b.getSizePerLuggage().keySet().iterator().next().getWidth(), 0.01 );
+				}
+		);
 	}
+
 }

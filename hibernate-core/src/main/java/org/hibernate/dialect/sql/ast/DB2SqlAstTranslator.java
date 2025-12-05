@@ -73,7 +73,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 	}
 
 	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -92,7 +92,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 				}
 				appendSql( COMMA_SEPARATOR_CHAR );
 
-				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), lockMode );
 
 				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
 					addAdditionalWherePredicate( tableJoin.getPredicate() );
@@ -100,7 +100,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
+			super.renderTableReferenceJoins( tableGroup, lockMode, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 
@@ -116,7 +116,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			}
 			appendSql( COMMA_SEPARATOR_CHAR );
 
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin, null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );
 			}
@@ -198,21 +198,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		else {
 			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
-	}
-
-	@Override
-	protected String getForUpdate() {
-		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only with rs use and keep share locks";
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " skip locked data";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

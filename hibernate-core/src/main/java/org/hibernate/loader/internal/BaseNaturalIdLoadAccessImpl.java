@@ -16,10 +16,6 @@ import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
@@ -28,7 +24,6 @@ import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
@@ -176,24 +171,24 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			return null;
 		}
 		else {
-			final SessionImplementor session = context.getSession();
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			final var fetchProfiles =
-					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final EffectiveEntityGraph effectiveEntityGraph =
-					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
+			final var session = context.getSession();
+			final var influencers = session.getLoadQueryInfluencers();
+			final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+			final var effectiveEntityGraph =
+					rootGraph == null
+							? null
+							: influencers.applyEntityGraph( rootGraph, graphSemantic );
 			try {
 				@SuppressWarnings("unchecked")
 				final T loaded = cachedResolution != null
-						? identifierLoadAccess().load(cachedResolution)
+						? identifierLoadAccess().load( cachedResolution )
 						: (T) entityPersister().getNaturalIdLoader()
 								.load( normalizedNaturalIdValue, this, session );
 				if ( loaded != null ) {
-					final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
-					final EntityEntry entry = lazyInitializer != null
-							? persistenceContext.getEntry( lazyInitializer.getImplementation() )
-							: persistenceContext.getEntry( loaded );
+					final var persistenceContext = session.getPersistenceContextInternal();
+					final var lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
+					final var entity = lazyInitializer != null ? lazyInitializer.getImplementation() : loaded;
+					final var entry = persistenceContext.getEntry( entity );
 					assert entry != null;
 					if ( entry.getStatus() == Status.DELETED ) {
 						return null;
@@ -203,7 +198,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			}
 			finally {
 				context.delayedAfterCompletion();
-				effectiveEntityGraph.clear();
+				if ( effectiveEntityGraph != null ) {
+					effectiveEntityGraph.clear();
+				}
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

@@ -38,8 +38,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface TableGeneratorLogger extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".id.table";
 
-	Logger TABLE_GENERATOR_LOGGER = Logger.getLogger(NAME);
-	TableGeneratorLogger TABLE_GENERATOR_MESSAGE_LOGGER = Logger.getMessageLogger(
+	TableGeneratorLogger TABLE_GENERATOR_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			TableGeneratorLogger.class,
 			NAME

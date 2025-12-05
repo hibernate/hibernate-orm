@@ -5,7 +5,6 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -34,12 +33,6 @@ public class ScriptSourceInputNonExistentImpl extends AbstractScriptSourceInput 
 
 	@Override
 	protected void releaseReader(Reader reader) {
-
-	}
-
-	@Override
-	public boolean containsScript(URL url) {
-		return false;
 	}
 
 	@Override

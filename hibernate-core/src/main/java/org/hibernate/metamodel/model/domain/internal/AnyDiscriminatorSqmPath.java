@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -13,7 +14,8 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 
 public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 
@@ -44,20 +46,13 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 	}
 
 	@Override
-	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
+	public @NonNull SqmPath<?> getLhs() {
+		return castNonNull( super.getLhs() );
+	}
+
+	@Override
+	public @NonNull AnyDiscriminatorSqmPathSource<T> getExpressible() {
 //		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
 		return (AnyDiscriminatorSqmPathSource<T>) getReferencedPathSource();
-	}
-
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof AnyDiscriminatorSqmPath<?> that
-			&& Objects.equals( this.getLhs(), that.getLhs() );
-	}
-
-	@Override
-	public int hashCode() {
-		return getLhs().hashCode();
 	}
 }

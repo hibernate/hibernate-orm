@@ -15,10 +15,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,9 +34,7 @@ public interface RuntimeModelCreationContext {
 
 	MappingMetamodelImplementor getDomainModel();
 
-	default TypeConfiguration getTypeConfiguration() {
-		return getBootstrapContext().getTypeConfiguration();
-	}
+	TypeConfiguration getTypeConfiguration();
 
 	default JavaTypeRegistry getJavaTypeRegistry() {
 		return getTypeConfiguration().getJavaTypeRegistry();
@@ -68,10 +64,6 @@ public interface RuntimeModelCreationContext {
 
 	GeneratorSettings getGeneratorSettings();
 
-	/*
-	 * Used by Hibernate Reactive
-	 */
-	default EntityMetamodel createEntityMetamodel(PersistentClass persistentClass, EntityPersister persister) {
-		return new EntityMetamodel( persistentClass, persister, this );
-	}
+	// For Hibernate Reactive
+	Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass);
 }

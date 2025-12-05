@@ -10,11 +10,9 @@ import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
 
 import static jakarta.persistence.spi.LoadState.NOT_LOADED;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
@@ -86,12 +84,12 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
 		else if ( isManagedEntity( entity ) ) {
-			final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+			final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 			if ( entityEntry != null ) {
 				return entityEntry.getId();
 			}
@@ -110,12 +108,12 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return getVersionFromPersister( lazyInitializer.getImplementation() );
 		}
 		else if ( isManagedEntity( entity ) ) {
-			final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
+			final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 			if ( entityEntry != null ) {
 				return entityEntry.getVersion();
 			}
@@ -129,37 +127,27 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	private Object getIdentifierFromPersister(Object entity) {
-		final Class<?> entityClass = Hibernate.getClass( entity );
-		final EntityPersister persister;
-		try {
-			persister =
-					sessionFactory.getMappingMetamodel()
-							.getEntityDescriptor( entityClass );
-			if ( persister == null ) {
-				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
-			}
-		}
-		catch (MappingException ex) {
-			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
-		}
-		return persister.getIdentifier( entity );
+		return getPersister( entity ).getIdentifier( entity );
 	}
 
 	private Object getVersionFromPersister(Object entity) {
-		final Class<?> entityClass = Hibernate.getClass( entity );
-		final EntityPersister persister;
+		return getPersister( entity ).getVersion( entity );
+	}
+
+	private EntityPersister getPersister(Object entity) {
+		final var entityClass = Hibernate.getClass( entity );
 		try {
-			persister =
+			final var entityPersister =
 					sessionFactory.getMappingMetamodel()
 							.getEntityDescriptor( entityClass );
-			if ( persister == null ) {
+			if ( entityPersister == null ) {
 				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
 			}
+			return entityPersister;
 		}
 		catch (MappingException ex) {
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
-		return persister.getVersion( entity );
 	}
 
 }

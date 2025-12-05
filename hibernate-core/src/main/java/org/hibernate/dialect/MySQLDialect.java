@@ -19,13 +19,15 @@ import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
@@ -66,6 +68,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -91,10 +96,12 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
+import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -143,7 +150,7 @@ public class MySQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
-	private final MySQLStorageEngine storageEngine = createStorageEngine();
+	private final MySQLStorageEngine storageEngine;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -204,7 +211,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
-		this( version, serverConfiguration.getBytesPerCharacter(), serverConfiguration.isNoBackslashEscapesEnabled() );
+		super( version );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), serverConfiguration.getBytesPerCharacter() ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = serverConfiguration.isNoBackslashEscapesEnabled();
+		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
 	}
 
 	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
@@ -212,6 +223,7 @@ public class MySQLDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
+		storageEngine = createStorageEngine( Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE ) );
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
@@ -254,13 +266,10 @@ public class MySQLDialect extends Dialect {
 		getDefaultProperties().setProperty( FetchSettings.MAX_FETCH_DEPTH, "2" );
 	}
 
-	private MySQLStorageEngine createStorageEngine() {
-		final String storageEngine =
-				Environment.getProperties()
-						.getProperty( AvailableSettings.STORAGE_ENGINE );
-		return storageEngine == null
+	private MySQLStorageEngine createStorageEngine(String configuredStorageEngine) {
+		return configuredStorageEngine == null
 				? getDefaultMySQLStorageEngine()
-				: switch ( storageEngine ) {
+				: switch ( configuredStorageEngine.toLowerCase(Locale.ROOT) ) {
 					case "innodb" -> InnoDBStorageEngine.INSTANCE;
 					case "myisam" -> MyISAMStorageEngine.INSTANCE;
 					default -> throw new UnsupportedOperationException(
@@ -678,11 +687,12 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_mysql();
 		functionFactory.jsonArrayAppend_mysql();
 		functionFactory.jsonArrayInsert_mysql();
+		functionFactory.regexpLike_regexp();
 
-		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
-			functionFactory.unnest_emulated();
-			functionFactory.jsonTable_mysql();
-		}
+		functionFactory.unnest_emulated();
+		functionFactory.jsonTable_mysql();
+		functionFactory.regexpLike();
+
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 		}
@@ -720,7 +730,7 @@ public class MySQLDialect extends Dialect {
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 
@@ -1071,7 +1081,10 @@ public class MySQLDialect extends Dialect {
 	 * MySQL does support the {@code create schema} command, but
 	 * it's a synonym for {@code create database}. Hibernate has
 	 * always treated a MySQL database as a
-	 * {@linkplain #canCreateCatalog catalog}.
+	 * {@linkplain #canCreateCatalog catalog}, which is consistent
+	 * with how the JDBC driver itself views the situation, since
+	 * {@link DatabaseMetaData#supportsSchemasInDataManipulation()}
+	 * returns {@code false} on MySQL.
 	 *
 	 * @return {@code false}
 	 */
@@ -1134,30 +1147,19 @@ public class MySQLDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return MySQLLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
@@ -1167,22 +1169,22 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temporary table if not exists";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public String getTemporaryTableDropCommand() {
-		return "drop temporary table";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
@@ -1245,15 +1247,6 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSubqueryOnMutatingTable() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		// yes, we do handle "lock timeout" conditions in the exception conversion delegate,
-		// but that's a hardcoded lock timeout period across the whole entire MySQL database.
-		// MySQL does not support specifying lock timeouts as part of the SQL statement, which is really
-		// what this meta method is asking.
 		return false;
 	}
 
@@ -1532,6 +1525,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return MYSQL_LOCKING_SUPPORT;
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? " for update nowait"
@@ -1572,27 +1570,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveCTE() {
 		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		//only supported on MariaDB
-		return false;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override
@@ -1691,4 +1668,8 @@ public class MySQLDialect extends Dialect {
 		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorMySQLImpl( extractionContext );
+	}
 }

@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -18,8 +19,9 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  */
 public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
-	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
+	private final ResultSetMapping resultSetMapping;
 	private final Collection<String> querySpaces;
+	private final int parameterStartPosition;
 	private final int hash;
 
 	@Deprecated(forRemoval = true)
@@ -32,24 +34,36 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		this( sql, jdbcValuesMappingProducer, querySpaces );
 	}
 
+	@Deprecated(forRemoval = true)
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces) {
+		this( sql, (ResultSetMapping) jdbcValuesMappingProducer, querySpaces, 1 );
+	}
+
+	public SelectInterpretationsKey(
+			String sql,
+			ResultSetMapping jdbcValuesMappingProducer,
+			Collection<String> querySpaces,
+			int parameterStartPosition) {
 		this.sql = sql;
-		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.resultSetMapping = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
+		this.parameterStartPosition = parameterStartPosition;
 		this.hash = generateHashCode();
 	}
 
 	private SelectInterpretationsKey(
 			String sql,
-			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			ResultSetMapping resultSetMapping,
 			Collection<String> querySpaces,
+			int parameterStartPosition,
 			int hash) {
 		this.sql = sql;
-		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.resultSetMapping = resultSetMapping;
 		this.querySpaces = querySpaces;
+		this.parameterStartPosition = parameterStartPosition;
 		this.hash = hash;
 	}
 
@@ -58,12 +72,21 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		return sql;
 	}
 
+	public ResultSetMapping getResultSetMapping() {
+		return resultSetMapping;
+	}
+
+	public int getStartPosition() {
+		return parameterStartPosition;
+	}
+
 	@Override
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SelectInterpretationsKey(
 				sql,
-				jdbcValuesMappingProducer.cacheKeyInstance(),
+				resultSetMapping.cacheKeyInstance(),
 				new HashSet<>( querySpaces ),
+				parameterStartPosition,
 				hash
 		);
 	}
@@ -86,7 +109,8 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 			return false;
 		}
 		return sql.equals( that.sql )
-			&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
-			&& Objects.equals( querySpaces, that.querySpaces );
+			&& Objects.equals( resultSetMapping, that.resultSetMapping )
+			&& Objects.equals( querySpaces, that.querySpaces )
+			&& parameterStartPosition == that.parameterStartPosition;
 	}
 }

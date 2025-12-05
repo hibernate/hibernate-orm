@@ -299,20 +299,17 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	public void injectLoadedState(
 			PluralAttributeMapping attributeMapping,
 			List<?> loadingStateList) {
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		if ( loadingStateList != null ) {
-			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
-					loadingStateList.size(),
-					collectionDescriptor
-			);
-
-			this.set.addAll( (List<E>) loadingStateList );
+			//noinspection unchecked
+			set = (Set<E>) collectionSemantics.instantiateRaw( loadingStateList.size(), collectionDescriptor );
+			//noinspection unchecked
+			set.addAll( (List<E>) loadingStateList );
 		}
 		else {
-			this.set = (Set<E>) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
-					0,
-					collectionDescriptor
-			);
+			//noinspection unchecked
+			set = (Set<E>) collectionSemantics.instantiateRaw( 0, collectionDescriptor );
 		}
 	}
 

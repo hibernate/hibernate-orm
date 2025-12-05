@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -19,27 +18,20 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
@@ -48,12 +40,16 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 
+import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.sql.model.MutationType.INSERT;
+import static org.hibernate.sql.model.MutationType.UPDATE;
+import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
 
 /**
  * Factory and helper methods for {@link GeneratedValuesMutationDelegate} framework.
@@ -62,13 +58,13 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 @Internal
 public class GeneratedValuesHelper {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
-	 * Reads the {@link EntityPersister#getGeneratedProperties(EventType) generated values}
+	 * Reads the {@linkplain EntityPersister#getGeneratedProperties(EventType) generated values}
 	 * for the specified {@link ResultSet}.
 	 *
 	 * @param resultSet The result set from which to extract the generated values
+	 * @param statement The prepared statement the result set was generated from
 	 * @param persister The entity type which we're reading the generated values for
 	 * @param session The session
 	 *
@@ -87,23 +83,24 @@ public class GeneratedValuesHelper {
 			return null;
 		}
 
-		final GeneratedValuesMutationDelegate delegate = persister.getMutationDelegate(
-				timing == EventType.INSERT ? MutationType.INSERT : MutationType.UPDATE
-		);
-		final GeneratedValuesMappingProducer mappingProducer =
-				(GeneratedValuesMappingProducer) delegate.getGeneratedValuesMappingProducer();
-		final List<GeneratedValueBasicResultBuilder> resultBuilders = mappingProducer.getResultBuilders();
+		final var mappingProducer =
+				(GeneratedValuesMappingProducer)
+						persister.getMutationDelegate( timing == EventType.INSERT ? INSERT : UPDATE )
+								.getGeneratedValuesMappingProducer();
+		final var resultBuilders = mappingProducer.getResultBuilders();
 		final List<ModelPart> generatedProperties = new ArrayList<>( resultBuilders.size() );
-		for ( GeneratedValueBasicResultBuilder resultBuilder : resultBuilders ) {
+		for ( var resultBuilder : resultBuilders ) {
 			generatedProperties.add( resultBuilder.getModelPart() );
 		}
 
-		final GeneratedValuesImpl generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final Object[] results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
+		final var generatedValues = new GeneratedValuesImpl( generatedProperties );
+		final var results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Extracted generated values for entity "
-							+ infoString( persister ) + ": " + ArrayHelper.toString( results ) );
+		if ( CORE_LOGGER.isDebugEnabled() ) {
+			CORE_LOGGER.extractedGeneratedValues(
+					infoString( persister ),
+					ArrayHelper.toString( results )
+			);
 		}
 
 		for ( int i = 0; i < results.length; i++ ) {
@@ -118,6 +115,7 @@ public class GeneratedValuesHelper {
 	 * using the {@link JdbcValuesMappingProducer} provided in input.
 	 *
 	 * @param resultSet the result set containing the generated values
+	 * @param statement The prepared statement the result set was generated from
 	 * @param persister the current entity persister
 	 * @param mappingProducer the mapping producer to use when reading generated values
 	 * @param session the current session
@@ -130,84 +128,38 @@ public class GeneratedValuesHelper {
 			EntityPersister persister,
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session) {
-		final ExecutionContext executionContext = new BaseExecutionContext( session );
-
-		final DirectResultSetAccess directResultSetAccess = new DirectResultSetAccess(
-					session,
-					statement,
-					resultSet
-			);
-
+		final var factory = session.getFactory();
+		final var executionContext = new BaseExecutionContext( session );
+		final var directResultSetAccess =
+				new DirectResultSetAccess( session, statement, resultSet );
+		final var influencers = session.getLoadQueryInfluencers();
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
 				directResultSetAccess,
 				null,
 				null,
 				QueryOptions.NONE,
 				true,
-				mappingProducer.resolve(
-						directResultSetAccess,
-						session.getLoadQueryInfluencers(),
-						session.getSessionFactory()
-				),
+				mappingProducer.resolve( directResultSetAccess, influencers, factory ),
 				null,
 				executionContext
 		);
-
-		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
-			@Override
-			public Object getEffectiveOptionalObject() {
-				return null;
-			}
-
-			@Override
-			public String getEffectiveOptionalEntityName() {
-				return null;
-			}
-
-			@Override
-			public Object getEffectiveOptionalId() {
-				return null;
-			}
-
-			@Override
-			public boolean shouldReturnProxies() {
-				return true;
-			}
-		};
-
-		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState =
-				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
-
+		final var valuesProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, NO_OPTIONS );
 		final RowReader<Object[]> rowReader = ResultsHelper.createRowReader(
-				session.getFactory(),
+				factory,
 				RowTransformerArrayImpl.instance(),
 				Object[].class,
 				jdbcValues
 		);
-
-		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
-				valuesProcessingState,
-				executionContext,
-				rowReader,
-				jdbcValues
-		);
-
-		final List<Object[]> results = ListResultsConsumer.<Object[]>instance( ListResultsConsumer.UniqueSemantic.NONE )
-				.consume(
-						jdbcValues,
-						session,
-						processingOptions,
-						valuesProcessingState,
-						rowProcessingState,
-						rowReader
-				);
-
+		final var rowProcessingState =
+				new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
+		final List<Object[]> results =
+				ListResultsConsumer.<Object[]>instance( ListResultsConsumer.UniqueSemantic.NONE )
+						.consume( jdbcValues, session, NO_OPTIONS, valuesProcessingState, rowProcessingState, rowReader );
 		if ( results.isEmpty() ) {
-			throw new HibernateException(
-					"The database returned no natively generated values : " + persister.getNavigableRole().getFullPath()
-			);
+			throw new HibernateException( "The database returned no natively generated values : "
+											+ persister.getNavigableRole().getFullPath() );
 		}
-
 		return results.get( 0 );
 	}
 
@@ -228,8 +180,16 @@ public class GeneratedValuesHelper {
 			EventType timing,
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
+		return generatedValuesMappingProducer( persister, supportsArbitraryValues,
+				getActualGeneratedModelParts( persister, timing, supportsArbitraryValues, supportsRowId ) );
+	}
+
+	private static GeneratedValuesMappingProducer generatedValuesMappingProducer(
+			EntityPersister persister,
+			boolean supportsArbitraryValues,
+			List<? extends ModelPart> generatedProperties) {
+		final var parentNavigablePath = new NavigablePath( persister.getEntityName() );
 		// This is just a mock table group needed to correctly resolve expressions
-		final NavigablePath parentNavigablePath = new NavigablePath( persister.getEntityName() );
 		final TableGroup tableGroup = new TableGroupImpl(
 				parentNavigablePath,
 				null,
@@ -237,24 +197,17 @@ public class GeneratedValuesHelper {
 				persister
 		);
 		// Create the mapping producer and add all result builders to it
-		final List<? extends ModelPart> generatedProperties = getActualGeneratedModelParts(
-				persister,
-				timing,
-				supportsArbitraryValues,
-				supportsRowId
-		);
-		final GeneratedValuesMappingProducer mappingProducer = new GeneratedValuesMappingProducer();
+		final var mappingProducer = new GeneratedValuesMappingProducer();
 		for ( int i = 0; i < generatedProperties.size(); i++ ) {
-			final ModelPart modelPart = generatedProperties.get( i );
-			final BasicValuedModelPart basicModelPart = modelPart.asBasicValuedModelPart();
+			final var modelPart = generatedProperties.get( i );
+			final var basicModelPart = modelPart.asBasicValuedModelPart();
 			if ( basicModelPart != null ) {
-				final GeneratedValueBasicResultBuilder resultBuilder = new GeneratedValueBasicResultBuilder(
+				mappingProducer.addResultBuilder( new GeneratedValueBasicResultBuilder(
 						parentNavigablePath.append( basicModelPart.getSelectableName() ),
 						basicModelPart,
 						tableGroup,
 						supportsArbitraryValues ? i : null
-				);
-				mappingProducer.addResultBuilder( resultBuilder );
+				) );
 			}
 			else {
 				throw new UnsupportedOperationException( "Unsupported generated ModelPart: " + modelPart.getPartName() );
@@ -266,12 +219,12 @@ public class GeneratedValuesHelper {
 	public static BasicValuedModelPart getActualGeneratedModelPart(BasicValuedModelPart modelPart) {
 		// Use the root entity descriptor's identifier mapping to get the correct selection
 		// expression since we always retrieve generated values for the root table only
-		return modelPart.isEntityIdentifierMapping() ?
-				modelPart.findContainingEntityMapping()
+		return modelPart.isEntityIdentifierMapping()
+				? modelPart.findContainingEntityMapping()
 						.getRootEntityDescriptor()
 						.getIdentifierMapping()
-						.asBasicValuedModelPart() :
-				modelPart;
+						.asBasicValuedModelPart()
+				: modelPart;
 	}
 
 	/**
@@ -284,14 +237,16 @@ public class GeneratedValuesHelper {
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
 		if ( timing == EventType.INSERT ) {
-			final List<? extends ModelPart> generatedProperties = supportsArbitraryValues ?
-					persister.getInsertGeneratedProperties() :
-					List.of( persister.getIdentifierMapping() );
+			final var generatedProperties =
+					supportsArbitraryValues
+							? persister.getInsertGeneratedProperties()
+							: List.of( persister.getIdentifierMapping() );
 			if ( persister.getRowIdMapping() != null && supportsRowId ) {
-				final List<ModelPart> newList = new ArrayList<>( generatedProperties.size() + 1 );
+				final List<ModelPart> newList =
+						new ArrayList<>( generatedProperties.size() + 1 );
 				newList.addAll( generatedProperties );
 				newList.add( persister.getRowIdMapping() );
-				return Collections.unmodifiableList( newList );
+				return unmodifiableList( newList );
 			}
 			else {
 				return generatedProperties;
@@ -313,53 +268,55 @@ public class GeneratedValuesHelper {
 	public static GeneratedValuesMutationDelegate getGeneratedValuesDelegate(
 			EntityPersister persister,
 			EventType timing) {
-		final List<? extends ModelPart> generatedProperties = persister.getGeneratedProperties( timing );
-		final boolean hasGeneratedProperties = !generatedProperties.isEmpty();
+		final var factory = persister.getFactory();
+		final var generatedProperties = persister.getGeneratedProperties( timing );
 		final boolean hasFormula =
 				generatedProperties.stream()
-					.anyMatch( part -> part instanceof SelectableMapping selectable && selectable.isFormula() );
-		final boolean hasRowId = timing == EventType.INSERT && persister.getRowIdMapping() != null;
-		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-
-		if ( hasRowId && dialect.supportsInsertReturning() && dialect.supportsInsertReturningRowId()
+					.anyMatch( part -> part instanceof SelectableMapping selectable
+										&& selectable.isFormula() );
+		final boolean hasRowId =
+				timing == EventType.INSERT
+						&& persister.getRowIdMapping() != null;
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		if ( hasRowId
+				&& dialect.supportsInsertReturning()
+				&& dialect.supportsInsertReturningRowId()
 				&& noCustomSql( persister, timing ) ) {
 			// Special case for RowId on INSERT, since GetGeneratedKeysDelegate doesn't support it
 			// make InsertReturningDelegate the preferred method if the dialect supports it
 			return new InsertReturningDelegate( persister, timing );
 		}
-
-		if ( !hasGeneratedProperties ) {
+		else if ( generatedProperties.isEmpty() ) {
 			return null;
 		}
-
-		if ( !hasFormula
+		else if ( !hasFormula
 				&& dialect.supportsInsertReturningGeneratedKeys()
-				&& persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
+				&& factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, timing );
 		}
 		else if ( supportsReturning( dialect, timing ) && noCustomSql( persister, timing ) ) {
 			return new InsertReturningDelegate( persister, timing );
 		}
-		else if ( timing == EventType.INSERT && persister.getNaturalIdentifierProperties() != null
-				&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			return new UniqueKeySelectingDelegate(
-					persister,
-					getNaturalIdPropertyNames( persister ),
-					timing
-			);
+		else if ( timing == EventType.INSERT
+					&& persister.getNaturalIdentifierProperties() != null
+					&& !persister.isNaturalIdentifierInsertGenerated() ) {
+			return new UniqueKeySelectingDelegate( persister, getNaturalIdPropertyNames( persister ), timing );
 		}
 		return null;
 	}
 
 	private static boolean supportsReturning(Dialect dialect, EventType timing) {
-		return timing == EventType.INSERT ? dialect.supportsInsertReturning() : dialect.supportsUpdateReturning();
+		return timing == EventType.INSERT
+				? dialect.supportsInsertReturning()
+				: dialect.supportsUpdateReturning();
 	}
 
 	public static boolean noCustomSql(EntityPersister persister, EventType timing) {
-		final EntityTableMapping identifierTable = persister.getIdentifierTableMapping();
-		final TableMapping.MutationDetails mutationDetails = timing == EventType.INSERT ?
-				identifierTable.getInsertDetails() :
-				identifierTable.getUpdateDetails();
+		final var identifierTable = persister.getIdentifierTableMapping();
+		final var mutationDetails =
+				timing == EventType.INSERT
+						? identifierTable.getInsertDetails()
+						: identifierTable.getUpdateDetails();
 		return mutationDetails.getCustomSql() == null;
 	}
 }

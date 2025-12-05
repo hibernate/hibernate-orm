@@ -11,8 +11,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -22,8 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(annotatedClasses =
 		{CascadePersistJpaTest.Parent.class,
-		CascadePersistJpaTest.Child.class},
-	jpaComplianceEnabled = true)
+				CascadePersistJpaTest.Child.class},
+		integrationSettings = {
+				@Setting(name = JpaComplianceSettings.JPA_COMPLIANCE, value = "true")
+		}
+)
 public class CascadePersistJpaTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		Parent p = new Parent();

@@ -11,9 +11,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.InstanceIdentityStore;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -21,7 +18,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -29,6 +25,7 @@ import java.util.function.Consumer;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the
@@ -46,8 +43,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
  *
  * @author Steve Ebersole
  */
-public class EntityEntryContext {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityEntryContext.class );
+class EntityEntryContext {
 
 	private final transient PersistenceContext persistenceContext;
 
@@ -67,7 +63,7 @@ public class EntityEntryContext {
 	/**
 	 * Constructs a EntityEntryContext
 	 */
-	public EntityEntryContext(PersistenceContext persistenceContext) {
+	EntityEntryContext(PersistenceContext persistenceContext) {
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -77,7 +73,7 @@ public class EntityEntryContext {
 	 * @param entity The entity
 	 * @param entityEntry The entry
 	 */
-	public void addEntityEntry(Object entity, EntityEntry entityEntry) {
+	void addEntityEntry(Object entity, EntityEntry entityEntry) {
 		// IMPORTANT!!!!!
 		//		add is called more than once of some entities.  In such cases the first
 		//		call is simply setting up a "marker" to avoid infinite looping from reentrancy
@@ -94,13 +90,13 @@ public class EntityEntryContext {
 		// Determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
 		// Throw an exception if entity is a mutable ManagedEntity that is associated with a different
 		// PersistenceContext.
-		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		var managedEntity = getAssociatedManagedEntity( entity );
 
 		int instanceId = nextManagedEntityInstanceId();
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
 			if ( isManagedEntity( entity ) ) {
-				final ManagedEntity managed = asManagedEntity( entity );
+				final var managed = asManagedEntity( entity );
 				assert managed.$$_hibernate_getInstanceId() == 0;
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
@@ -164,13 +160,14 @@ public class EntityEntryContext {
 
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
 		if ( isManagedEntity( entity ) ) {
-			final ManagedEntity managedEntity = asManagedEntity( entity );
+			final var managedEntity = asManagedEntity( entity );
 			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
 				// it is not associated
 				return null;
 			}
-			final EntityEntryImpl entityEntry =
-					(EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
+			final var entityEntry =
+					(EntityEntryImpl)
+							managedEntity.$$_hibernate_getEntityEntry();
 
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
@@ -210,23 +207,22 @@ public class EntityEntryContext {
 
 	private void checkNotAssociatedWithOtherPersistenceContextIfMutable(ManagedEntity managedEntity) {
 		// we only have to check mutable managedEntity
-		final EntityEntryImpl entityEntry = (EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
-		if ( entityEntry == null ||
-				!entityEntry.getPersister().isMutable() ||
-				entityEntry.getPersistenceContext() == null ||
-				entityEntry.getPersistenceContext() == persistenceContext ) {
-			return;
-		}
-		if ( entityEntry.getPersistenceContext().getSession().isOpen() ) {
-			// NOTE: otherPersistenceContext may be operating on the entityEntry in a different thread.
-			//       it is not safe to associate entityEntry with this EntityEntryContext.
-			throw new HibernateException(
-					"Illegal attempt to associate a ManagedEntity with two open persistence contexts: " + entityEntry
-			);
-		}
-		else {
-			// otherPersistenceContext is associated with a closed PersistenceContext
-			log.stalePersistenceContextInEntityEntry( entityEntry.toString() );
+		final var entityEntry = (EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
+		if ( entityEntry != null && entityEntry.getPersister().isMutable() ) {
+			final var entryPersistenceContext = entityEntry.getPersistenceContext();
+			if ( entryPersistenceContext != null && entryPersistenceContext != persistenceContext ) {
+				if ( entryPersistenceContext.getSession().isOpen() ) {
+					// NOTE: otherPersistenceContext may be operating on the entityEntry in a different thread.
+					//       it is not safe to associate entityEntry with this EntityEntryContext.
+					throw new HibernateException(
+							"Illegal attempt to associate a ManagedEntity with two open persistence contexts: " + entityEntry
+					);
+				}
+				else {
+					// otherPersistenceContext is associated with a closed PersistenceContext
+					CORE_LOGGER.stalePersistenceContextInEntityEntry( entityEntry.toString() );
+				}
+			}
 		}
 	}
 
@@ -237,7 +233,7 @@ public class EntityEntryContext {
 	 *
 	 * @return {@code true} if it is associated with this context
 	 */
-	public boolean hasEntityEntry(Object entity) {
+	boolean hasEntityEntry(Object entity) {
 		return getEntityEntry( entity ) != null;
 	}
 
@@ -248,9 +244,9 @@ public class EntityEntryContext {
 	 *
 	 * @return The associated {@link EntityEntry}
 	 */
-	public EntityEntry getEntityEntry(Object entity) {
+	EntityEntry getEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
-		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		final var managedEntity = getAssociatedManagedEntity( entity );
 		// and get/return the EntityEntry from the ManagedEntry
 		return managedEntity == null
 				? null
@@ -264,10 +260,10 @@ public class EntityEntryContext {
 	 *
 	 * @return The removed {@link EntityEntry}
 	 */
-	public EntityEntry removeEntityEntry(Object entity) {
+	EntityEntry removeEntityEntry(Object entity) {
 		// locate a ManagedEntity for the entity, but only if it is associated with the same PersistenceContext.
 		// no need to check if the entity is a ManagedEntity that is associated with a different PersistenceContext
-		final ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+		final var managedEntity = getAssociatedManagedEntity( entity );
 		if ( managedEntity == null ) {
 			// not associated with this EntityEntryContext, so nothing to do.
 			return null;
@@ -275,18 +271,7 @@ public class EntityEntryContext {
 
 		dirty = true;
 
-		if ( managedEntity instanceof ImmutableManagedEntityHolder holder ) {
-			assert entity == holder.managedEntity;
-			if ( !isReferenceCachingEnabled( holder.$$_hibernate_getEntityEntry().getPersister() ) ) {
-				immutableManagedEntityXref.remove( managedEntity.$$_hibernate_getInstanceId(), entity );
-			}
-			else {
-				nonEnhancedEntityXref.remove( entity );
-			}
-		}
-		else if ( !isManagedEntity( entity ) ) {
-			nonEnhancedEntityXref.remove( entity );
-		}
+		removeXref( entity, managedEntity );
 
 		// re-link
 		count--;
@@ -295,14 +280,13 @@ public class EntityEntryContext {
 			// handle as a special case...
 			head = null;
 			tail = null;
-
 			assert managedEntity.$$_hibernate_getPreviousManagedEntity() == null;
 			assert managedEntity.$$_hibernate_getNextManagedEntity() == null;
 		}
 		else {
 			// otherwise, previous or next (or both) should be non-null
-			final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
-			final ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
+			final var previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
+			final var next = managedEntity.$$_hibernate_getNextManagedEntity();
 			if ( previous == null ) {
 				// we are removing head
 				assert managedEntity == head;
@@ -326,6 +310,21 @@ public class EntityEntryContext {
 		return clearManagedEntity( managedEntity );
 	}
 
+	private void removeXref(Object entity, ManagedEntity managedEntity) {
+		if ( managedEntity instanceof ImmutableManagedEntityHolder holder ) {
+			assert entity == holder.managedEntity;
+			if ( !isReferenceCachingEnabled( holder.$$_hibernate_getEntityEntry().getPersister() ) ) {
+				immutableManagedEntityXref.remove( managedEntity.$$_hibernate_getInstanceId(), entity );
+			}
+			else {
+				nonEnhancedEntityXref.remove( entity );
+			}
+		}
+		else if ( !isManagedEntity( entity ) ) {
+			nonEnhancedEntityXref.remove( entity );
+		}
+	}
+
 	/**
 	 * The main bugaboo with {@code IdentityMap} that warranted this class in the
 	 * first place.
@@ -336,11 +335,11 @@ public class EntityEntryContext {
 	 *
 	 * @return The safe array
 	 */
-	public Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
+	Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
 		if ( dirty ) {
 			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
 			int i = 0;
-			ManagedEntity managedEntity = head;
+			var managedEntity = head;
 			while ( managedEntity != null ) {
 				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
 						managedEntity.$$_hibernate_getEntityInstance(),
@@ -354,9 +353,9 @@ public class EntityEntryContext {
 	}
 
 	private void processEachManagedEntity(final Consumer<ManagedEntity> action) {
-		ManagedEntity node = head;
+		var node = head;
 		while ( node != null ) {
-			final ManagedEntity next = node.$$_hibernate_getNextManagedEntity();
+			final var next = node.$$_hibernate_getNextManagedEntity();
 			action.accept( node );
 			node = next;
 		}
@@ -367,9 +366,9 @@ public class EntityEntryContext {
 	// Also: we perform two operations at once, so to not iterate on the list twice;
 	// being a linked list, multiple iterations are not cache friendly at all.
 	private void clearAllReferencesFromManagedEntities() {
-		ManagedEntity nextManagedEntity = head;
+		var nextManagedEntity = head;
 		while ( nextManagedEntity != null ) {
-			final ManagedEntity current = nextManagedEntity;
+			final var current = nextManagedEntity;
 			nextManagedEntity = current.$$_hibernate_getNextManagedEntity();
 			Object toProcess = current.$$_hibernate_getEntityInstance();
 			unsetSession( asPersistentAttributeInterceptableOrNull( toProcess ) );
@@ -378,11 +377,10 @@ public class EntityEntryContext {
 	}
 
 	private static void unsetSession(PersistentAttributeInterceptable persistentAttributeInterceptable) {
-		if ( persistentAttributeInterceptable != null ) {
-			final PersistentAttributeInterceptor interceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
-				( (LazyAttributeLoadingInterceptor) interceptor ).unsetSession();
-			}
+		if ( persistentAttributeInterceptable != null
+				&& persistentAttributeInterceptable.$$_hibernate_getInterceptor()
+						instanceof LazyAttributeLoadingInterceptor lazinessInterceptor ) {
+			lazinessInterceptor.unsetSession();
 		}
 	}
 
@@ -428,7 +426,7 @@ public class EntityEntryContext {
 	}
 
 	private static void downgradeLockOnManagedEntity(final ManagedEntity node) {
-		final EntityEntry entityEntry = node.$$_hibernate_getEntityEntry();
+		final var entityEntry = node.$$_hibernate_getEntityEntry();
 		if ( entityEntry != null ) {
 			entityEntry.setLockMode( LockMode.NONE );
 		}
@@ -442,13 +440,13 @@ public class EntityEntryContext {
 	 * @throws IOException Indicates an IO exception accessing the given stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		log.tracef( "Starting serialization of [%s] EntityEntry entries", count );
+		CORE_LOGGER.startingEntityEntrySerialization( count );
 		oos.writeInt( count );
 		if ( count == 0 ) {
 			return;
 		}
 
-		ManagedEntity managedEntity = head;
+		var managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
 			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
@@ -457,7 +455,6 @@ public class EntityEntryContext {
 			oos.writeInt( managedEntity.$$_hibernate_getEntityEntry().getClass().getName().length() );
 			oos.writeChars( managedEntity.$$_hibernate_getEntityEntry().getClass().getName() );
 			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
-
 			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 		}
 	}
@@ -476,9 +473,9 @@ public class EntityEntryContext {
 	public static EntityEntryContext deserialize(ObjectInputStream ois, StatefulPersistenceContext rtn)
 			throws IOException, ClassNotFoundException {
 		final int count = ois.readInt();
-		log.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
+		CORE_LOGGER.startingEntityEntryDeserialization( count );
 
-		final EntityEntryContext context = new EntityEntryContext( rtn );
+		final var context = new EntityEntryContext( rtn );
 		context.count = count;
 		context.dirty = true;
 
@@ -499,19 +496,20 @@ public class EntityEntryContext {
 				entityEntryClassNameArr[j] = ois.readChar();
 			}
 
-			final EntityEntry entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
+			final var entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
 
 			final int instanceId = context.nextManagedEntityInstanceId();
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
-				final ManagedEntity castedEntity = asManagedEntity( entity );
+				final var castedEntity = asManagedEntity( entity );
 				if ( entry.getPersister().isMutable() ) {
 					managedEntity = castedEntity;
 				}
 				else {
-					managedEntity = new ImmutableManagedEntityHolder( castedEntity );
+					final var holder = new ImmutableManagedEntityHolder( castedEntity );
+					managedEntity = holder;
 					if ( !isReferenceCachingEnabled( entry.getPersister() ) ) {
-						context.putImmutableManagedEntity( castedEntity, instanceId, (ImmutableManagedEntityHolder) managedEntity );
+						context.putImmutableManagedEntity( castedEntity, instanceId, holder );
 					}
 					else {
 						context.putManagedEntity( entity, castedEntity );
@@ -542,24 +540,20 @@ public class EntityEntryContext {
 
 	private static EntityEntry deserializeEntityEntry(
 			char[] entityEntryClassNames, ObjectInputStream ois, StatefulPersistenceContext persistenceContext){
-		EntityEntry entry = null;
-
 		final String entityEntryClassName = new String( entityEntryClassNames );
-		final Class<?> entityEntryClass =
+		final var entityEntryClass =
 				persistenceContext.getSession().getFactory().getClassLoaderService()
 						.classForName( entityEntryClassName );
-
 		try {
-			final Method deserializeMethod =
-					entityEntryClass.getDeclaredMethod( "deserialize", ObjectInputStream.class, PersistenceContext.class );
-			entry = (EntityEntry) deserializeMethod.invoke( null, ois, persistenceContext );
+			final var deserializeMethod =
+					entityEntryClass.getDeclaredMethod( "deserialize",
+							ObjectInputStream.class, PersistenceContext.class );
+			return (EntityEntry) deserializeMethod.invoke( null, ois, persistenceContext );
 		}
 		catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
+			CORE_LOGGER.unableToDeserialize( entityEntryClassName );
+			return null;
 		}
-
-		return entry;
-
 	}
 
 	public int getNumberOfManagedEntities() {
@@ -764,7 +758,7 @@ public class EntityEntryContext {
 	/**
 	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
 	 */
-	public interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+	private interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
 		/**
 		 * The entity
 		 *

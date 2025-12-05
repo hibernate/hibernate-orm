@@ -6,14 +6,15 @@ package org.hibernate.orm.test.envers.integration.ids.embeddedid;
 
 import java.util.Arrays;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test avoiding the creating of a foreign key constraint for an embedded identifier that
@@ -23,19 +24,14 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11107")
-public class RelationInsideEmbeddableRemoveTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { CorrectChild.class, IncorrectChild.class, Parent.class };
-	}
+@EnversTest
+@Jpa(annotatedClasses = {CorrectChild.class, IncorrectChild.class, Parent.class})
+public class RelationInsideEmbeddableRemoveTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			// Revision 1
-			entityManager.getTransaction().begin();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		// Revision 1
+		scope.inTransaction( entityManager -> {
 			Parent parent = new Parent( "Parent" );
 			parent.addIncorrectChild( 1 );
 			parent.addCorrectChild( 1 );
@@ -46,10 +42,11 @@ public class RelationInsideEmbeddableRemoveTest extends BaseEnversJPAFunctionalT
 			for ( CorrectChild child : parent.getCorrectChildren() ) {
 				entityManager.persist( child );
 			}
-			entityManager.getTransaction().commit();
+		} );
 
-			// Revision 2
-			entityManager.getTransaction().begin();
+		// Revision 2
+		scope.inTransaction( entityManager -> {
+			Parent parent = entityManager.find( Parent.class, "Parent" );
 			for ( IncorrectChild child : parent.getIncorrectChildren() ) {
 				entityManager.remove( child );
 			}
@@ -58,27 +55,21 @@ public class RelationInsideEmbeddableRemoveTest extends BaseEnversJPAFunctionalT
 				entityManager.remove( child );
 			}
 			parent.getCorrectChildren().clear();
-			entityManager.getTransaction().commit();
+		} );
 
-			// Revision 3
-			// This fails because of referential integrity constraints without fix.
-			entityManager.getTransaction().begin();
+		// Revision 3
+		// This fails because of referential integrity constraints without fix.
+		scope.inTransaction( entityManager -> {
+			Parent parent = entityManager.find( Parent.class, "Parent" );
 			entityManager.remove( parent );
-			entityManager.getTransaction().commit();
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 3 ), getAuditReader().getRevisions( Parent.class, "Parent" ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 3 ),
+					AuditReaderFactory.get( em ).getRevisions( Parent.class, "Parent" ) );
+		} );
 	}
 }

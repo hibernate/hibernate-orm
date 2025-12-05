@@ -26,12 +26,45 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.*;
+import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.ValueMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
@@ -41,7 +74,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -57,7 +89,6 @@ import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.BindableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.FetchClauseType;
@@ -73,8 +104,10 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.InterpretationException;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -87,6 +120,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.AsWrappedExpression;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
@@ -137,7 +171,52 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.expression.*;
+import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
+import org.hibernate.query.sqm.tree.expression.Conversion;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmByUnit;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.expression.SqmCollation;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpressionHelper;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmOver;
+import org.hibernate.query.sqm.tree.expression.SqmOverflow;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
+import org.hibernate.query.sqm.tree.expression.SqmToDuration;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -148,6 +227,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -219,7 +299,41 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.*;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
+import org.hibernate.sql.ast.tree.expression.Any;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Collation;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.Every;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.Overflow;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.QueryTransformer;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
+import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableGroup;
@@ -280,7 +394,9 @@ import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiati
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.BottomType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
@@ -352,7 +468,7 @@ import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUs
 public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends BaseSemanticQueryWalker
 		implements SqmTranslator<T>, DomainResultCreationState, JdbcTypeIndicators {
 
-//	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
+//	private static final Logger LOG = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
 	private final SqlAstCreationContext creationContext;
 	private final boolean jpaQueryComplianceEnabled;
@@ -1529,6 +1645,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
+			rootPathsForLockingCollector = null;
 		}
 	}
 
@@ -1536,7 +1653,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final SqmDynamicInstantiationTarget<?> instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaType<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
+		final JavaType<?> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
 
 		final DynamicInstantiation<?> dynamicInstantiation =
 				new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
@@ -1555,10 +1672,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return dynamicInstantiation;
 	}
 
-	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
-		return getCreationContext().getMappingMetamodel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
+	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<X> instantiationTarget) {
+		return getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
 				.getDescriptor( switch ( instantiationTarget.getNature() ) {
 					case LIST -> List.class;
 					case MAP -> Map.class;
@@ -2091,12 +2206,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return getFromClauseAccess().getTableGroup( navigablePath );
 	}
 
+	private Consumer<NavigablePath> rootPathsForLockingCollector;
+
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
-			if ( selectClause == null ) {
+			if ( sqmQueryPartStack.depth() == 1 && currentClauseStack.depth() == 1 ) {
+				// these 2 conditions combined *should* indicate we have the
+				// root query-spec of a top-level select statement
+				rootPathsForLockingCollector = (path) ->
+						currentQuerySpec().applyRootPathForLocking( path );
+			}
+			if ( selectClause.getSelections().isEmpty() ) {
 				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
 				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
 			}
@@ -2110,6 +2233,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return sqlSelectClause;
 		}
 		finally {
+			rootPathsForLockingCollector = null;
 			currentClauseStack.pop();
 		}
 	}
@@ -2129,12 +2253,60 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void visitSelection(int index, SqmSelection<?> sqmSelection) {
+		collectRootPathsForLocking( sqmSelection );
+
 		inferTargetPath( index );
 		callResultProducers( resultProducers( sqmSelection ) );
 		if ( statement instanceof SqmInsertSelectStatement<?>
 				&& contributesToTopLevelSelectClause() ) {
 			inferrableTypeAccessStack.pop();
 		}
+	}
+
+	private void collectRootPathsForLocking(SqmSelection<?> sqmSelection) {
+		if ( rootPathsForLockingCollector == null ) {
+			return;
+		}
+
+		collectRootPathsForLocking( sqmSelection.getSelectableNode() );
+	}
+
+	private void collectRootPathsForLocking(SqmSelectableNode<?> selectableNode) {
+		// roughly speaking we only care about 2 cases here:
+		//		1) entity path - the entity will be locked
+		//		2) scalar path - the entity from which the path originates will be locked
+		//
+		// note, however, that we need to account for both cases as the argument to a dynamic instantiation
+
+		if ( selectableNode instanceof SqmPath<?> selectedPath ) {
+			collectRootPathsForLocking( selectedPath );
+		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> dynamicInstantiation ) {
+			collectRootPathsForLocking( dynamicInstantiation );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmPath<?> selectedPath) {
+		assert rootPathsForLockingCollector != null;
+
+		if ( selectedPath == null ) {
+			// typically this comes from paths rooted in a CTE.
+			// regardless, without a path we cannot evaluate so just return.
+			return;
+		}
+
+		if ( selectedPath.getNodeType() instanceof EntityTypeImpl ) {
+			rootPathsForLockingCollector.accept( selectedPath.getNavigablePath() );
+		}
+		else {
+			collectRootPathsForLocking( selectedPath.getLhs() );
+		}
+	}
+
+	private void collectRootPathsForLocking(SqmDynamicInstantiation<?> dynamicInstantiation) {
+		dynamicInstantiation.getArguments().forEach( ( argument ) -> {
+			collectRootPathsForLocking( argument.getSelectableNode() );
+		} );
 	}
 
 	private void inferTargetPath(int index) {
@@ -2371,7 +2543,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Predicate visitWhereClause(SqmWhereClause whereClause) {
+	public Predicate visitWhereClause(@Nullable SqmWhereClause whereClause) {
 		if ( whereClause == null ) {
 			return null;
 		}
@@ -2480,10 +2652,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected void consumeFromClauseCorrelatedRoot(SqmRoot<?> sqmRoot) {
-//		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
+//		LOG.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 //		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
-//			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
+//			LOG.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 //		}
 		final TableGroup tableGroup;
 		if ( !sqmRoot.isCorrelated() ) {
@@ -2571,8 +2743,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Any table group joins added to the correlated table group are added to the query spec
 			// as roots anyway, so nothing to worry about
 
-//			log.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
-			consumeExplicitJoins( from, tableGroup );
+//			LOG.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
+			if ( from instanceof SqmRoot<?> correlatedRoot ) {
+				consumeJoins( correlatedRoot, fromClauseIndex, tableGroup );
+			}
+			else {
+				consumeExplicitJoins( from, tableGroup );
+			}
 			return;
 		}
 		else {
@@ -2640,7 +2817,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-//		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
+//		LOG.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
 		fromClauseIndex.register( sqmRoot, tableGroup );
 		currentQuerySpec.getFromClause().addRoot( tableGroup );
@@ -2649,10 +2826,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
-//		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
+//		LOG.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 //		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
-//			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
+//			LOG.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 //		}
 		if ( sqmRoot.isCorrelated() ) {
 			return;
@@ -2730,7 +2907,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-//		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
+//		LOG.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
 		registerSqmFromTableGroup( sqmRoot, tableGroup );
 		currentQueryNodeProcessingState.getFromClause().addRoot( tableGroup );
@@ -2814,8 +2991,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmRoot, tableGroup );
 		}
 		else {
-//			if ( log.isTraceEnabled() ) {
-//				log.tracef( "Visiting explicit joins for '%s'", sqmRoot.getNavigablePath() );
+//			if ( LOG.isTraceEnabled() ) {
+//				LOG.tracef( "Visiting explicit joins for '%s'", sqmRoot.getNavigablePath() );
 //			}
 			TableGroup lastTableGroup = tableGroup;
 			for ( SqmJoin<?, ?> join : sqmRoot.getOrderedJoins() ) {
@@ -2997,7 +3174,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			persister = creationContext.getMappingMetamodel().findEntityDescriptor( treatTargetTypeName );
-			if ( persister == null || !persister.getEntityMetamodel().isPolymorphic() ) {
+			if ( persister == null || !persister.isPolymorphic() ) {
 				return;
 			}
 		}
@@ -3132,8 +3309,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom, TableGroup lhsTableGroup) {
-//		if ( log.isTraceEnabled() ) {
-//			log.tracef( "Visiting explicit joins for '%s'", sqmFrom.getNavigablePath() );
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracef( "Visiting explicit joins for '%s'", sqmFrom.getNavigablePath() );
 //		}
 		sqmFrom.visitSqmJoins(
 				sqmJoin -> {
@@ -3227,6 +3404,38 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.findSubPart( pathSource.getPathName(),
 								resolveExplicitTreatTarget( sqmJoin, this ) );
 
+		final List<SqmTreatedFrom<?, ?, ?>> sqmTreats = sqmJoin.getSqmTreats();
+		final SqmPredicate joinPredicate;
+		final SqmPredicate[] treatPredicates;
+		final boolean hasPredicate;
+		if ( !sqmTreats.isEmpty() ) {
+			if ( sqmTreats.size() == 1 ) {
+				// If there is only a single treat, combine the predicates just as they are
+				joinPredicate = SqmCreationHelper.combinePredicates(
+						sqmJoin.getJoinPredicate(),
+						( (SqmTreatedAttributeJoin<?, ?, ?>) sqmTreats.get( 0 ) ).getJoinPredicate()
+				);
+				treatPredicates = null;
+				hasPredicate = joinPredicate != null;
+			}
+			else {
+				// When there are multiple predicates, we have to apply type filters
+				joinPredicate = sqmJoin.getJoinPredicate();
+				treatPredicates = new SqmPredicate[sqmTreats.size()];
+				boolean hasTreatPredicate = false;
+				for ( int i = 0; i < sqmTreats.size(); i++ ) {
+					final var p = ( (SqmTreatedAttributeJoin<?, ?, ?>) sqmTreats.get( i ) ).getJoinPredicate();
+					treatPredicates[i] = p;
+					hasTreatPredicate = hasTreatPredicate || p != null;
+				}
+				hasPredicate = joinPredicate != null || hasTreatPredicate;
+			}
+		}
+		else {
+			joinPredicate = sqmJoin.getJoinPredicate();
+			treatPredicates = null;
+			hasPredicate = joinPredicate != null;
+		}
 		final TableGroupJoin joinedTableGroupJoin =
 				((TableGroupJoinProducer) modelPart)
 						.createTableGroupJoin(
@@ -3236,7 +3445,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								null,
 								sqmJoinType.getCorrespondingSqlJoinType(),
 								sqmJoin.isFetched(),
-								sqmJoin.getJoinPredicate() != null,
+								hasPredicate,
 								this
 						);
 		final TableGroup joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
@@ -3251,8 +3460,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Since this is an explicit join, we force the initialization of a possible lazy table group
 			// to retain the cardinality, but only if this is a non-trivial attribute join.
 			// Left or inner singular attribute joins without a predicate can be safely optimized away
-			if ( sqmJoin.getJoinPredicate() != null
-					|| sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
+			if ( hasPredicate || sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
 				joinedTableGroup.getPrimaryTableReference();
 			}
 		}
@@ -3287,14 +3495,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin joinForPredicate;
 
 		// add any additional join restrictions
-		if ( sqmJoin.getJoinPredicate() != null ) {
+		if ( hasPredicate ) {
 			if ( sqmJoin.isFetched() ) {
 				QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 			}
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			final Predicate predicate = visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() );
+			Predicate predicate = joinPredicate == null ? null : visitNestedTopLevelPredicate( joinPredicate );
+			if ( treatPredicates != null ) {
+				final Junction orPredicate = new Junction( Junction.Nature.DISJUNCTION );
+				for ( int i = 0; i < treatPredicates.length; i++ ) {
+					final var treatType = (EntityDomainType<?>) sqmTreats.get( i ).getTreatTarget();
+					orPredicate.add( combinePredicates(
+							createTreatTypeRestriction( sqmJoin, treatType ),
+							treatPredicates[i] == null ? null : visitNestedTopLevelPredicate( treatPredicates[i] )
+					) );
+				}
+				predicate = predicate != null ? combinePredicates( predicate, orPredicate ) : orPredicate;
+			}
 			joinForPredicate = determineJoinForPredicateApply( joinedTableGroupJoin );
 			// If translating the join predicate didn't initialize the table group,
 			// we can safely apply it on the collection table group instead
@@ -3890,7 +4109,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitRootPath(SqmRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+//			LOG.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
@@ -3901,7 +4120,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmDerivedRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+//			LOG.tracef( "SqmDerivedRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
@@ -3912,7 +4131,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitRootFunction(SqmFunctionRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmFunctionRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+//			LOG.tracef( "SqmFunctionRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
@@ -3923,7 +4142,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmCteRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+//			LOG.tracef( "SqmCteRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
 			return visitTableGroup( resolved, sqmRoot );
 		}
 
@@ -3934,7 +4153,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -3945,7 +4164,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitQualifiedDerivedJoin(SqmDerivedJoin<?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmDerivedJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmDerivedJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -3956,7 +4175,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitQualifiedFunctionJoin(SqmFunctionJoin<?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmFunctionJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmFunctionJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -3967,7 +4186,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitQualifiedCteJoin(SqmCteJoin<?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmCteJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmCteJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -3978,7 +4197,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -3989,7 +4208,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmPluralPartJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmPluralPartJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -4000,7 +4219,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitQualifiedEntityJoin(SqmEntityJoin<?,?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
-//			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+//			LOG.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return visitTableGroup( existing, sqmJoin );
 		}
 
@@ -4503,18 +4722,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitCorrelation(SqmCorrelation<?, ?> correlation) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( correlation.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmCorrelation [%s] resolved to existing TableGroup [%s]", correlation, resolved );
+//			LOG.tracef( "SqmCorrelation [%s] resolved to existing TableGroup [%s]", correlation, resolved );
 			return visitTableGroup( resolved, correlation );
 		}
 		throw new InterpretationException( "SqmCorrelation not yet resolved to TableGroup" );
 	}
 
 	@Override
-	public Expression visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
+	public Expression visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
 		prepareReusablePath( sqmTreatedPath, () -> null );
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmTreatedPath.getNavigablePath() );
 		if ( resolved != null ) {
-//			log.tracef( "SqmTreatedPath [%s] resolved to existing TableGroup [%s]", sqmTreatedPath, resolved );
+//			LOG.tracef( "SqmTreatedPath [%s] resolved to existing TableGroup [%s]", sqmTreatedPath, resolved );
 			return visitTableGroup( resolved, sqmTreatedPath );
 		}
 
@@ -4654,14 +4873,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		registerProjectionUsageFromDescriptor( tableGroup, valueDescriptor );
 
-		return new DomainResultProducer<Map.Entry<Object, Object>>() {
+		//noinspection rawtypes
+		return new DomainResultProducer<Map.Entry>() {
 			@Override
-			public DomainResult<Map.Entry<Object, Object>> createDomainResult(
+			public DomainResult<Map.Entry> createDomainResult(
 					String resultVariable,
 					DomainResultCreationState creationState) {
-				final JavaType<Map.Entry<Object, Object>> mapEntryDescriptor = getTypeConfiguration()
-						.getJavaTypeRegistry()
-						.resolveDescriptor( Map.Entry.class );
+				final var mapEntryDescriptor =
+						getTypeConfiguration().getJavaTypeRegistry()
+								.resolveDescriptor( Map.Entry.class );
 				return new SqmMapEntryResult<>( indexResult, valueResult, resultVariable, mapEntryDescriptor );
 			}
 
@@ -5320,7 +5540,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		if ( entityDescriptor.getEntityMetamodel().isPolymorphic() && lhs.getNodeType() != treatTarget ) {
+		if ( entityDescriptor.isPolymorphic() && lhs.getNodeType() != treatTarget ) {
 			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
 			return createTreatTypeRestriction( lhs, subclassEntityNames );
 		}
@@ -5723,39 +5943,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
-		if ( binding.setType( valueMapping ) ) {
-			replaceJdbcParametersType(
-					sqmParameter,
-					domainParameterXref.getSqmParameters( queryParameter ),
-					valueMapping
-			);
-		}
+		binding.setType( valueMapping );
 		return new SqmParameterInterpretation( jdbcParametersForSqm, valueMapping );
-	}
-
-	private void replaceJdbcParametersType(
-			SqmParameter<?> sourceSqmParameter,
-			List<SqmParameter<?>> sqmParameters,
-			MappingModelExpressible<?> valueMapping) {
-		final JdbcMapping jdbcMapping = valueMapping.getSingleJdbcMapping();
-		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-			if ( sqmParameter != sourceSqmParameter ) {
-				sqmParameterMappingModelTypes.put( sqmParameter, valueMapping );
-				final List<List<JdbcParameter>> jdbcParamsForSqmParameter = jdbcParamsBySqmParam.get( sqmParameter );
-				if ( jdbcParamsForSqmParameter != null ) {
-					for ( List<JdbcParameter> parameters : jdbcParamsForSqmParameter ) {
-						assert parameters.size() == 1;
-						final JdbcParameter jdbcParameter = parameters.get( 0 );
-						if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != jdbcMapping ) {
-							final JdbcParameter newJdbcParameter = new JdbcParameterImpl( jdbcMapping );
-							parameters.set( 0, newJdbcParameter );
-							jdbcParameters.getJdbcParameters().remove( jdbcParameter );
-							jdbcParameters.getJdbcParameters().add( newJdbcParameter );
-						}
-					}
-				}
-			}
-		}
 	}
 
 	protected Expression consumeSqmParameter(SqmParameter<?> sqmParameter) {
@@ -5801,12 +5990,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression, FromClauseIndex fromClauseIndex) {
-		if ( sqmExpression instanceof SqmParameter ) {
-			return determineValueMapping( (SqmParameter<?>) sqmExpression );
+		if ( sqmExpression instanceof SqmParameter<?> ) {
+			return determineValueMapping( getSqmParameter( sqmExpression ) );
 		}
 
 		if ( sqmExpression instanceof SqmPath ) {
-//			log.tracef( "Determining mapping-model type for SqmPath: %s ", sqmExpression );
+//			LOG.tracef( "Determining mapping-model type for SqmPath: %s ", sqmExpression );
 			final MappingModelExpressible<?> mappingModelExpressible =
 					resolveMappingModelExpressible( sqmExpression, domainModel, fromClauseIndex::findTableGroup );
 			if ( mappingModelExpressible != null ) {
@@ -5873,13 +6062,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return (MappingModelExpressible<?>) getTypeConfiguration().resolveArithmeticType(
 						// These casts should be safe, since the only JdbcMapping is BasicType
 						// which also implements SqmExpressible
-						lhs == null ? null : (SqmExpressible<?>) lhs.getSingleJdbcMapping(),
-						rhs == null ? null : (SqmExpressible<?>) rhs.getSingleJdbcMapping()
+						lhs == null ? null : (SqmBindableType<?>) lhs.getSingleJdbcMapping(),
+						rhs == null ? null : (SqmBindableType<?>) rhs.getSingleJdbcMapping()
 				);
 			}
 		}
 
-//		log.tracef( "Determining mapping-model type for generalized SqmExpression: %s", sqmExpression );
+//		LOG.tracef( "Determining mapping-model type for generalized SqmExpression: %s", sqmExpression );
 		final SqmExpressible<?> nodeType = sqmExpression.getNodeType();
 		if ( nodeType == null ) {
 			// We can't determine the type of the expression
@@ -5934,7 +6123,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter) {
-//		log.tracef( "Determining mapping-model type for SqmParameter: %s", sqmParameter );
+//		LOG.tracef( "Determining mapping-model type for SqmParameter: %s", sqmParameter );
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
 		final boolean bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
@@ -5953,7 +6142,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineValueMapping
-			(SqmParameter<?> sqmParameter, BindableType<?> paramType, boolean bindingTypeExplicit) {
+			(SqmParameter<?> sqmParameter, @Nullable BindableType<?> paramType, boolean bindingTypeExplicit) {
 		if ( paramType == null ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			return inferredValueMapping != null
@@ -6086,14 +6275,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			MappingModelExpressible<?> valueMapping,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
+		final List<List<JdbcParameter>> jdbcParams = jdbcParamsBySqmParam.get( expression );
+		final int parameterId = jdbcParams == null ? jdbcParameters.getJdbcParameters().size()
+				: NullnessUtil.castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
 		final Bindable bindable = bindable( valueMapping );
 		if ( bindable instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
-					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping ) )
+					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId + index ) )
 			);
 		}
 		else if ( bindable instanceof SelectableMapping selectableMapping ) {
-			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( selectableMapping ) );
+			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) );
 		}
 		else {
 			final SqlTypedMapping sqlTypedMapping = sqlTypedMapping( expression, bindable );
@@ -6105,12 +6297,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				bindable.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,
-								new JdbcParameterImpl( jdbcMapping )
+								new JdbcParameterImpl( jdbcMapping, parameterId + index )
 						)
 				);
 			}
 			else {
-				jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( sqlTypedMapping ) );
+				jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId ) );
 			}
 		}
 	}
@@ -6148,6 +6340,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SqlTypedMappingImpl(
 					null,
 					null,
+					null,
 					precision,
 					0,
 					null,
@@ -6156,6 +6349,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( bindValue instanceof BigDecimal bigDecimal ) {
 			return new SqlTypedMappingImpl(
+					null,
 					null,
 					null,
 					bigDecimal.precision(),
@@ -6369,12 +6563,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( targetType instanceof BasicType basicType ) {
 			targetType = resolveSqlTypeIndicators( this, basicType, target.getNodeJavaType() );
 		}
-		return new CastTarget(
-				targetType.getJdbcMapping(),
-				target.getLength(),
-				target.getPrecision(),
-				target.getScale()
-		);
+		if ( targetType instanceof BasicPluralType<?, ?>
+			&& target.getLength() != null
+			&& target.getScale() == null ) {
+			// Assume that the given length is the array length
+			return new CastTarget(
+					targetType.getJdbcMapping(),
+					null,
+					null,
+					target.getLength().intValue(),
+					null,
+					null
+			);
+		}
+		else {
+			return new CastTarget(
+					targetType.getJdbcMapping(),
+					null,
+					target.getLength(),
+					null,
+					target.getPrecision(),
+					target.getScale()
+			);
+		}
 	}
 
 	@Override
@@ -8018,10 +8229,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmInListPredicate<?> sqmPredicate,
 			JpaCriteriaParameter<?> jpaCriteriaParameter) {
 		assert jpaCriteriaParameter.allowsMultiValuedBinding();
-		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( jpaCriteriaParameter );
+		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
+		final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmWrapper );
+		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( domainParam );
 		if ( domainParamBinding.isMultiValued() ) {
-			final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
-			return processInSingleParameter( sqmPredicate, sqmWrapper, jpaCriteriaParameter, domainParamBinding );
+			return processInSingleParameter( sqmPredicate, sqmWrapper, domainParam, domainParamBinding );
 		}
 		else {
 			return null;

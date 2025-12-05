@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -116,12 +117,17 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@Override // promote protected to public
+	public SqmStatement<?> getStatement() {
+		return super.getStatement();
+	}
+
+	@Override // promote protected to public
 	public Stack<SqlAstProcessingState> getProcessingStateStack() {
 		return super.getProcessingStateStack();
 	}
 
 	@Override
-	public Predicate visitWhereClause(SqmWhereClause whereClause) {
+	public Predicate visitWhereClause(@Nullable SqmWhereClause whereClause) {
 		return SqlAstTreeHelper.combinePredicates( super.visitWhereClause( whereClause ), discriminatorPredicate );
 	}
 

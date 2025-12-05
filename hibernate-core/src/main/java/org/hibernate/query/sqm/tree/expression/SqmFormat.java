@@ -6,12 +6,15 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Effectively a query-literal but we want to handle it specially in the SQM to SQL AST conversion
@@ -49,6 +52,16 @@ public class SqmFormat extends SqmLiteral<String> {
 		if (!FORMAT.matcher(value).matches()) {
 			throw new SemanticException("Illegal format pattern '" + value + "'");
 		}
+	}
+
+	@Override
+	public @NonNull SqmBindableType<String> getNodeType() {
+		return castNonNull( super.getNodeType() );
+	}
+
+	@Override
+	public @NonNull String getLiteralValue() {
+		return castNonNull( super.getLiteralValue() );
 	}
 
 	@Override

@@ -41,7 +41,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
@@ -75,7 +74,7 @@ public class ComponentType extends AbstractType
 	public ComponentType(Component component, int[] originalPropertyOrder) {
 		this( component, originalPropertyOrder,
 				component.getComponentClassName() != null
-						&& !isRecord( component.getComponentClass() ) );
+						&& !component.getComponentClass().isRecord() );
 	}
 
 	public ComponentType(Component component, int[] originalPropertyOrder, boolean mutable) {

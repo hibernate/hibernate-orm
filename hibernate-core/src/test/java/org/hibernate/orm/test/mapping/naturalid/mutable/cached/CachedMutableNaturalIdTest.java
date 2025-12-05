@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -12,9 +12,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests of mutable natural ids stored in second level cache
@@ -100,7 +100,7 @@ public abstract class CachedMutableNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final Another it = session.byId( Another.class ).load( id );
+					final Another it = session.find( Another.class, id );
 					it.setName( "it2" );
 					// changing something but not the natural-id's
 					it.setSurname( "surname" );
@@ -134,7 +134,7 @@ public abstract class CachedMutableNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final AllCached it = session.byId( AllCached.class ).load( id );
+					final AllCached it = session.find( AllCached.class, id );
 					it.setName( "it2" );
 
 					final AllCached shouldBeGone = session.bySimpleNaturalId( AllCached.class ).load( "it" );
@@ -207,13 +207,13 @@ public abstract class CachedMutableNaturalIdTest {
 			AllCached aAllCached = new AllCached();
 			aAllCached.setName("John Doe");
 			session.persist(aAllCached);
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			SessionFactoryImplementor sfi = session.getSessionFactory();
 			sfi.getStatistics().clear();
 		});
 
 		scope.inTransaction((session) -> {
 			System.out.println("Native load by natural-id, generate first hit");
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			SessionFactoryImplementor sfi = session.getSessionFactory();
 			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
 			assertNotNull(person);
 			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
@@ -225,7 +225,7 @@ public abstract class CachedMutableNaturalIdTest {
 		scope.inTransaction((session) -> {
 			System.out.println("Native load by natural-id, generate second hit");
 
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			SessionFactoryImplementor sfi = session.getSessionFactory();
 			//tag::caching-entity-natural-id-example[]
 			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
 			assertNotNull(person);
@@ -255,7 +255,7 @@ public abstract class CachedMutableNaturalIdTest {
 			System.out.println("Native load by natural-id, generate 4. hit");
 			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
 			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals("we expected now 4 hits", 4, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount(), "we expected now 4 hits");
 			assertNotNull(person);
 			session.remove(person); // evicts natural-id from first & second level cache
 			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");

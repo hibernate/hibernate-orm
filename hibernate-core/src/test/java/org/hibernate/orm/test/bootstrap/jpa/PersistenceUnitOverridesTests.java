@@ -4,62 +4,55 @@
  */
 package org.hibernate.orm.test.bootstrap.jpa;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import javax.sql.DataSource;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Id;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.spi.PersistenceProvider;
-import jakarta.persistence.spi.PersistenceUnitInfo;
+import javax.sql.DataSource;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect( H2Dialect.class )
-public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
+@RequiresDialect(H2Dialect.class)
+@BaseUnitTest
+public class PersistenceUnitOverridesTests {
 
 	@Test
 	public void testPassingIntegrationJpaJdbcOverrides() {
 
 		// the integration overrides say to use the "db2" JPA connection settings (which should override the persistence unit values)
-		final Map integrationOverrides = ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" );
+		final Properties integrationOverrides = ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" );
 
-		final EntityManagerFactory emf = new HibernatePersistenceProvider().createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = new HibernatePersistenceProvider().createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter() {
 					@Override
 					public Properties getProperties() {
@@ -67,20 +60,15 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 						return ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db1" );
 					}
 				},
-				integrationOverrides
-		);
+				integrationOverrides )) {
 
-		try {
 			final Map<String, Object> properties = emf.getProperties();
 
-			final Object hibernateJdbcDriver = properties.get( AvailableSettings.URL );
-			assertThat( hibernateJdbcDriver, notNullValue() );
+			final Object hibernateJdbcDriver = properties.get( AvailableSettings.JAKARTA_JDBC_URL );
+			assertThat( hibernateJdbcDriver ).isNotNull();
 
-			final Object jpaJdbcDriver = properties.get( AvailableSettings.JPA_JDBC_URL );
-			assertThat( (String) jpaJdbcDriver, containsString( "db2" ) );
-		}
-		finally {
-			emf.close();
+			final Object jpaJdbcDriver = properties.get( AvailableSettings.JAKARTA_JDBC_URL );
+			assertThat( (String) jpaJdbcDriver ).contains( "db2" );
 		}
 	}
 
@@ -96,36 +84,34 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		// todo (6.0) : fix for Oracle see HHH-13432
 //		puInfo.getProperties().setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, MultiTableBulkIdStrategyStub.class.getName() );
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				puInfo,
-				Collections.singletonMap( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource )
-		);
+				Collections.singletonMap( AvailableSettings.JAKARTA_JTA_DATASOURCE, integrationDataSource )
+		)) {
 
-		try {
+
 			// first let's check the DataSource used in the EMF...
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
-			final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
-			assertThat( dsCp.getDataSource(), is( integrationDataSource ) );
+			assertThat( connectionProvider ).isInstanceOf( DataSourceConnectionProvider.class );
+			final DataSourceConnectionProvider dsCp = (DataSourceConnectionProvider) connectionProvider;
+			assertThat( dsCp ).isNotNull();
+			assertThat( dsCp.getDataSource() ).isEqualTo( integrationDataSource );
 
 			// now let's check that it is exposed via the EMF properties
 			//		- note : the spec does not indicate that this should work, but
 			//			it worked this way in previous versions
 			final Object jtaDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
-			assertThat( jtaDs, is( integrationDataSource ) );
+			assertThat( jtaDs ).isEqualTo( integrationDataSource );
 
 			// Additionally, we should have set Hibernate's DATASOURCE setting
 			final Object hibDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
-			assertThat( hibDs, is( integrationDataSource ) );
+			assertThat( hibDs ).isEqualTo( integrationDataSource );
 
 			// Make sure the non-jta-data-source setting was cleared or otherwise null
-			final Object nonJtaDs = emf.getProperties().get( AvailableSettings.JPA_NON_JTA_DATASOURCE );
-			assertThat( nonJtaDs, nullValue() );
-		}
-		finally {
-			emf.close();
+			final Object nonJtaDs = emf.getProperties().get( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE );
+			assertThat( nonJtaDs ).isNull();
 		}
 	}
 
@@ -169,31 +155,26 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				// however, provide JPA connection settings as "integration settings", which according to JPA spec should override the persistence unit values.
 				//		- note that it is unclear in the spec whether JDBC value in the integration settings should override
 				//			a JTA DataSource (nor the reverse).  However, that is a useful thing to support
 				ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" )
-		);
-
-		try {
+		)) {
 			final Map<String, Object> properties = emf.getProperties();
 
 			final Object hibernateJdbcDriver = properties.get( AvailableSettings.URL );
-			assertThat( hibernateJdbcDriver, notNullValue() );
+			assertThat( hibernateJdbcDriver ).isNotNull();
 
 			final Object jpaJdbcDriver = properties.get( AvailableSettings.JPA_JDBC_URL );
-			assertThat( (String) jpaJdbcDriver, containsString( "db2" ) );
+			assertThat( (String) jpaJdbcDriver ).contains( "db2" );
 
 			// see if the values had the affect to adjust the `ConnectionProvider` used
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
-		}
-		finally {
-			emf.close();
+			assertThat( connectionProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
 	}
 
@@ -222,31 +203,27 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				// however, provide JPA connection settings as "integration settings", which according to JPA spec should override the persistence unit values.
 				//		- note that it is unclear in the spec whether JDBC value in the integration settings should override
 				//			a JTA DataSource (nor the reverse).  However, that is a useful thing to support
 				ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" )
-		);
+		)) {
 
-		try {
 			final Map<String, Object> properties = emf.getProperties();
 
 			final Object hibernateJdbcDriver = properties.get( AvailableSettings.URL );
-			assertThat( hibernateJdbcDriver, notNullValue() );
+			assertThat( hibernateJdbcDriver ).isNotNull();
 
 			final Object jpaJdbcDriver = properties.get( AvailableSettings.JPA_JDBC_URL );
-			assertThat( (String) jpaJdbcDriver, containsString( "db2" ) );
+			assertThat( (String) jpaJdbcDriver ).contains( "db2" );
 
 			// see if the values had the affect to adjust the `ConnectionProvider` used
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
-		}
-		finally {
-			emf.close();
+			assertThat( connectionProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
 	}
 
@@ -277,39 +254,35 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map integrationOverrides = new HashMap();
+		final Map<String, Object> integrationOverrides = new HashMap<>();
 		//noinspection unchecked
 		integrationOverrides.put( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource );
 		// todo (6.0) : fix for Oracle see HHH-13432
 //		integrationOverrides.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				integrationOverrides
-		);
-
-		try {
+		)) {
 			final Map<String, Object> properties = emf.getProperties();
 
 			final Object datasource = properties.get( AvailableSettings.JPA_JTA_DATASOURCE );
-			assertThat( datasource, is( integrationDataSource ) );
+			assertThat( datasource ).isEqualTo( integrationDataSource );
 
 			// see if the values had the affect to adjust the `ConnectionProvider` used
 			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
 					.getServiceRegistry()
 					.getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+			assertThat( connectionProvider ).isInstanceOf( DataSourceConnectionProvider.class );
 
-			final DatasourceConnectionProviderImpl datasourceConnectionProvider = (DatasourceConnectionProviderImpl) connectionProvider;
-			assertThat( datasourceConnectionProvider.getDataSource(), is( integrationDataSource ) );
-		}
-		finally {
-			emf.close();
+			final DataSourceConnectionProvider datasourceConnectionProvider = (DataSourceConnectionProvider) connectionProvider;
+			assertThat( datasourceConnectionProvider ).isNotNull();
+			assertThat( datasourceConnectionProvider.getDataSource() ).isEqualTo( integrationDataSource );
 		}
 	}
 
 	@Test
-	@JiraKey( value = "HHH-13640" )
+	@JiraKey(value = "HHH-13640")
 	public void testIntegrationOverridesOfPersistenceXmlDataSource() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -325,38 +298,32 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		// Now create "integration Map" that overrides the DataSource to use
 		final DataSource override = new DataSourceStub( "integrationDataSource" );
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String, Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_NON_JTA_DATASOURCE, override );
 		// todo (6.0) : fix for Oracle see HHH-13432
 //		integrationSettings.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
-				info,
-				integrationSettings
-		);
-
-		try {
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory( info,
+				integrationSettings )) {
 			final Map<String, Object> properties = emf.getProperties();
 
-			assertThat( properties.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ), notNullValue() );
-			assertThat( properties.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ), is( override ) );
+			assertThat( properties.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ) ).isNotNull();
+			assertThat( properties.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ) ).isEqualTo( override );
 
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
-			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService( ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry()
+					.getService( ConnectionProvider.class );
+			assertThat( connectionProvider ).isInstanceOf( DataSourceConnectionProvider.class );
 
-			final DatasourceConnectionProviderImpl dsProvider = (DatasourceConnectionProviderImpl) connectionProvider;
-			assertThat( dsProvider.getDataSource(), is( override ) );
-		}
-		finally {
-			emf.close();
+			final DataSourceConnectionProvider dsProvider = (DataSourceConnectionProvider) connectionProvider;
+			assertThat( dsProvider.getDataSource() ).isEqualTo( override );
 		}
 	}
 
 	@Test
-	@JiraKey( value = "HHH-13640" )
+	@JiraKey(value = "HHH-13640")
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfo() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -369,33 +336,28 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.JPA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		integrationSettings.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
 				integrationSettings
-		);
-
-		try {
+		)) {
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
 			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
 					ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
-		}
-		finally {
-			emf.close();
+			assertThat( connectionProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
 	}
 
 	@Test
-	@JiraKey( value = "HHH-13640" )
+	@JiraKey(value = "HHH-13640")
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfoUsingJakarta() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -408,28 +370,23 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
-		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+		integrationSettings.put( DriverManagerConnectionProvider.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
 				integrationSettings
-		);
-
-		try {
+		)) {
 			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
 			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
 					ConnectionProvider.class );
-			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
-		}
-		finally {
-			emf.close();
+			assertThat( connectionProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
 	}
 
@@ -437,6 +394,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	public void testCfgXmlBaseline() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
+
 			{
 				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
@@ -449,28 +407,20 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final Map integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
 				integrationSettings
-		);
+		)) {
+			assertThat( emf.getProperties().get( AvailableSettings.DIALECT ) )
+					.isEqualTo( PersistenceUnitDialect.class.getName() );
 
-		try {
-			assertThat(
-					emf.getProperties().get( AvailableSettings.DIALECT ),
-					is( PersistenceUnitDialect.class.getName() )
-			);
-			assertThat(
-					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
-					instanceOf( PersistenceUnitDialect.class )
-			);
+			assertThat( emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect() )
+					.isInstanceOf( PersistenceUnitDialect.class );
 
-			final EntityType<MappedEntity> entityMapping = emf.getMetamodel().entity( MappedEntity.class );
-			assertThat( entityMapping, notNullValue() );
-		}
-		finally {
-			emf.close();
+			assertThat( emf.getMetamodel().entity( MappedEntity.class ) )
+					.isNotNull();
 		}
 	}
 
@@ -478,6 +428,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	public void testIntegrationOverridesOfCfgXml() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
+
 			{
 				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
@@ -493,33 +444,23 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.DIALECT, IntegrationDialect.class.getName() );
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
 				integrationSettings
-		);
+		)) {
+			assertThat( emf.getProperties().get( AvailableSettings.DIALECT ) )
+					.isEqualTo( IntegrationDialect.class.getName() );
 
-		try {
-			assertThat(
-					emf.getProperties().get( AvailableSettings.DIALECT ),
-					is( IntegrationDialect.class.getName() )
-			);
-			assertThat(
-					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
-					instanceOf( IntegrationDialect.class )
-			);
+			assertThat( emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect() )
+					.isInstanceOf( IntegrationDialect.class );
 
 			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( MappedEntity.class );
-			assertThat( entityMapping, notNullValue() );
-			assertThat(
-					entityMapping.getCacheAccessStrategy().getAccessType(),
-					is( AccessType.READ_ONLY )
-			);
-		}
-		finally {
-			emf.close();
+			assertThat( entityMapping ).isNotNull();
+			assertThat( entityMapping.getCacheAccessStrategy().getAccessType() )
+					.isEqualTo( AccessType.READ_ONLY );
 		}
 	}
 

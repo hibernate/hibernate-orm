@@ -16,7 +16,7 @@ public class StatefulInterceptor implements Interceptor {
 
 	private Session session;
 
-	private List list = new ArrayList();
+	private final List<Object> list = new ArrayList<>();
 
 	@Override
 	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
@@ -35,10 +35,10 @@ public class StatefulInterceptor implements Interceptor {
 	}
 
 	@Override
-	public void postFlush(Iterator entities) {
-		if ( list.size()>0 ) {
-			for ( Iterator iter = list.iterator(); iter.hasNext(); ) {
-				session.persist( iter.next() );
+	public void postFlush(Iterator<Object> entities) {
+		if ( !list.isEmpty() ) {
+			for ( Object object : list ) {
+				session.persist( object );
 			}
 			list.clear();
 			session.flush();
@@ -48,5 +48,4 @@ public class StatefulInterceptor implements Interceptor {
 	public void setSession(Session s) {
 		session = s;
 	}
-
 }

@@ -8,15 +8,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.util.EnumSet;
-import java.util.Map;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
@@ -29,46 +28,60 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import java.util.EnumSet;
+import java.util.Map;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10605")
 @RequiresDialect(value = HSQLDialect.class)
-public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions, ExceptionHandler {
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class ).buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+@ServiceRegistry
+@DomainModel(annotatedClasses = SchemaDropTest.MyEntity.class)
+public class SchemaDropTest implements ExceptionHandler {
+	@BeforeEach
+	public void setUp(DomainModelScope modelScope) throws Exception {
+		var model = modelScope.getDomainModel();
+		model.orderColumns( false );
+		model.validate();
 	}
 
 	@Test
-	public void testDropSequence() {
-		getSchemaDropper().doDrop(
-				metadata,
-				this,
+	public void testDropSequence(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		getSchemaDropper( registryScope ).doDrop(
+				modelScope.getDomainModel(),
+				options( registryScope ),
 				ContributableMatcher.ALL,
 				getSourceDescriptor(),
 				getTargetDescriptor()
 		);
 	}
 
-	private SchemaDropper getSchemaDropper() {
-		return serviceRegistry.getService( SchemaManagementTool.class ).getSchemaDropper( null );
+	private SchemaDropper getSchemaDropper(ServiceRegistryScope registryScope) {
+		return registryScope.getRegistry().requireService( SchemaManagementTool.class ).getSchemaDropper( null );
+	}
+
+	private ExecutionOptions options(ServiceRegistryScope registryScope) {
+		return new ExecutionOptions() {
+			@Override
+			public Map<String, Object> getConfigurationValues() {
+				return registryScope.getRegistry().requireService( ConfigurationService.class ).getSettings();
+			}
+
+			@Override
+			public boolean shouldManageNamespaces() {
+				return false;
+			}
+
+			@Override
+			public ExceptionHandler getExceptionHandler() {
+				return SchemaDropTest.this;
+			}
+		};
 	}
 
 	private TargetDescriptor getTargetDescriptor() {
@@ -97,21 +110,6 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 				return null;
 			}
 		};
-	}
-
-	@Override
-	public Map<String,Object> getConfigurationValues() {
-		return serviceRegistry.getService( ConfigurationService.class ).getSettings();
-	}
-
-	@Override
-	public boolean shouldManageNamespaces() {
-		return false;
-	}
-
-	@Override
-	public ExceptionHandler getExceptionHandler() {
-		return this;
 	}
 
 	@Override

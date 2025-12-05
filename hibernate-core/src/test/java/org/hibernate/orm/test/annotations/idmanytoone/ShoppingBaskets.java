@@ -33,7 +33,7 @@ public class ShoppingBaskets implements Serializable {
 	private java.util.Date basketDatetime;
 
 	@OneToMany(mappedBy="shoppingBaskets", cascade=CascadeType.ALL, targetEntity=BasketItems.class)
-	private java.util.Set items = new java.util.HashSet();
+	private java.util.Set<BasketItems> items = new java.util.HashSet<>();
 
 	public void setBasketDatetime(java.util.Date value) {
 		this.basketDatetime = value;
@@ -51,11 +51,11 @@ public class ShoppingBaskets implements Serializable {
 		return owner;
 	}
 
-	public void setItems(java.util.Set value) {
+	public void setItems(java.util.Set<BasketItems> value) {
 		this.items = value;
 	}
 
-	public java.util.Set getItems() {
+	public java.util.Set<BasketItems> getItems() {
 		return items;
 	}
 

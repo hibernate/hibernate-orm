@@ -5,24 +5,19 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
@@ -36,6 +31,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Emmanuel Bernard
@@ -99,15 +95,17 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		// collect superclass info first
 		collectAttributeConversionInfo( infoMap, entityClassDetails.getSuperClass() );
 
-		final boolean canContainConvert = entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class, getSourceModelContext() )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, getSourceModelContext() )
-				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class, getSourceModelContext() );
+		final var modelContext = getSourceModelContext();
+		final boolean canContainConvert =
+				entityClassDetails.hasAnnotationUsage( jakarta.persistence.Entity.class, modelContext )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, modelContext )
+				|| entityClassDetails.hasAnnotationUsage( jakarta.persistence.Embeddable.class, modelContext );
 		if ( ! canContainConvert ) {
 			return;
 		}
 
-		entityClassDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			final AttributeConversionInfo info = new AttributeConversionInfo( usage, entityClassDetails );
+		entityClassDetails.forEachAnnotationUsage( Convert.class, modelContext, (usage) -> {
+			final var info = new AttributeConversionInfo( usage, entityClassDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "@Convert placed on @Entity/@MappedSuperclass must define attributeName" );
 			}
@@ -117,22 +115,20 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void startingProperty(MemberDetails property) {
-		if ( property == null ) {
-			return;
+		if ( property != null ) {
+			final String propertyName = property.resolveAttributeName();
+			if ( !attributeConversionInfoMap.containsKey( propertyName ) ) {
+				property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+					final var info = new AttributeConversionInfo( usage, property );
+					final String infoAttributeName = info.getAttributeName();
+					final String path =
+							isEmpty( infoAttributeName )
+									? propertyName
+									: propertyName + '.' + infoAttributeName;
+					attributeConversionInfoMap.put( path, info );
+				} );
+			}
 		}
-
-		final String propertyName = property.resolveAttributeName();
-		if ( attributeConversionInfoMap.containsKey( propertyName ) ) {
-			return;
-		}
-
-		property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			final AttributeConversionInfo info = new AttributeConversionInfo( usage, property );
-			final String path = isEmpty( info.getAttributeName() )
-					? propertyName
-					: propertyName + '.' + info.getAttributeName();
-			attributeConversionInfoMap.put( path, info );
-		} );
 	}
 
 	@Override
@@ -172,7 +168,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			//TODO handle quote and non quote table comparison
 			final String tableName = prop.getValue().getTable().getName();
 			if ( getJoinsPerRealTableName().containsKey( tableName ) ) {
-				final Join join = getJoinsPerRealTableName().get( tableName );
+				final var join = getJoinsPerRealTableName().get( tableName );
 				addPropertyToJoin( prop, memberDetails, declaringClass, join );
 			}
 			else {
@@ -185,15 +181,28 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public void movePropertyToJoin(Property property, Join join, MemberDetails memberDetails, ClassDetails declaringClass) {
+		if ( property.getValue() instanceof Component ) {
+			//TODO handle quote and non quote table comparison
+			final String tableName = property.getValue().getTable().getName();
+			if ( getJoinsPerRealTableName().get( tableName ) == join ) {
+				// Skip moving the property, since it was already added to the join
+				return;
+			}
+		}
+		persistentClass.movePropertyToJoin( property, join );
+	}
+
+	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		final Join join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
+		final var join = entityBinder.addJoinTable( joinTableAnn, this, noDelayInPkColumnCreation );
 		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 
 	@Override
 	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
-		final Join join = entityBinder.createJoin(
+		final var join = entityBinder.createJoin(
 				this,
 				noDelayInPkColumnCreation,
 				false,
@@ -212,21 +221,21 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 * with correctly typed sub-properties for the metamodel.
 	 */
 	public static void handleGenericComponentProperty(Property property, MemberDetails memberDetails, MetadataBuildingContext context) {
-		final Value value = property.getValue();
-		if ( value instanceof final Component component ) {
+		if ( property.getValue() instanceof Component component ) {
+			final var collector = context.getMetadataCollector();
 			if ( component.isGeneric() && component.getPropertySpan() > 0
-					&& context.getMetadataCollector().getGenericComponent( component.getComponentClass() ) == null ) {
+					&& collector.getGenericComponent( component.getComponentClass() ) == null ) {
 				// If we didn't already, register the generic component to use it later
 				// as the metamodel type for generic embeddable attributes
 				final Component copy = component.copy();
 				copy.setGeneric( false );
 				copy.getProperties().clear();
-				final Map<String, MemberDetails> declaredMembers = getDeclaredAttributeMembers(
+				final var declaredMembers = getDeclaredAttributeMembers(
 						memberDetails.getType().determineRawClass(),
 						component.getProperty( 0 ).getPropertyAccessorName()
 				);
-				for ( Property prop : component.getProperties() ) {
-					final MemberDetails declaredMember = declaredMembers.get( prop.getName() );
+				for ( var prop : component.getProperties() ) {
+					final var declaredMember = declaredMembers.get( prop.getName() );
 					if ( declaredMember == null ) {
 						// This can happen for generic custom composite user types
 						copy.addProperty( prop );
@@ -241,7 +250,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						);
 					}
 				}
-				context.getMetadataCollector().registerGenericComponent( copy );
+				collector.registerGenericComponent( copy );
 			}
 		}
 	}
@@ -249,7 +258,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private void addPropertyToPersistentClass(Property property, MemberDetails memberDetails, ClassDetails declaringClass) {
 		handleGenericComponentProperty( property, memberDetails, getContext() );
 		if ( declaringClass != null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			final var inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
 				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
@@ -273,50 +282,50 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			MemberDetails memberDetails,
 			ClassDetails declaringClass,
 			MetadataBuildingContext context) {
-		final MappedSuperclass superclass = context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
+		final var superclass = context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
 		prepareActualProperty( prop, memberDetails, true, context, superclass::addDeclaredProperty );
 	}
 
 	static void prepareActualProperty(
-			Property prop,
+			Property property,
 			MemberDetails memberDetails,
 			boolean allowCollections,
 			MetadataBuildingContext context,
 			Consumer<Property> propertyConsumer) {
 		if ( memberDetails.getDeclaringType().getGenericSuperType() == null ) {
-			propertyConsumer.accept( prop );
+			propertyConsumer.accept( property );
 			return;
 		}
 
 		if ( memberDetails.getType().isResolved() ) {
 			// Avoid copying when the property doesn't depend on a type variable
-			propertyConsumer.accept( prop );
+			propertyConsumer.accept( property );
 			return;
 		}
 
 		// If the property depends on a type variable, we have to copy it and the Value
-		final Property actualProperty = prop.copy();
+		final var actualProperty = property.copy();
 		actualProperty.setGeneric( true );
 		actualProperty.setReturnedClassName( memberDetails.getType().getName() );
-		final Value value = actualProperty.getValue().copy();
+		final var value = actualProperty.getValue().copy();
 		if ( value instanceof Collection collection ) {
 			if ( !allowCollections ) {
 				throw new AssertionFailure( "Collections are not allowed as identifier properties" );
 			}
 			// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
 //						collection.setOwner( null );
-			collection.setRole( memberDetails.getDeclaringType().getName() + "." + prop.getName() );
+			collection.setRole( memberDetails.getDeclaringType().getName() + "." + property.getName() );
 			// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
-			final Value originalValue = prop.getValue();
+			final var originalValue = property.getValue();
 			context.getMetadataCollector().addSecondPass(
 					new SecondPass() {
 						@Override
-						public void doSecondPass(Map persistentClasses) throws MappingException {
-							final Collection initializedCollection = (Collection) originalValue;
-							final Value element = initializedCollection.getElement().copy();
+						public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+							final var initializedCollection = (Collection) originalValue;
+							final var element = initializedCollection.getElement().copy();
 							setTypeName( element, memberDetails.getElementType().getName() );
 							if ( initializedCollection instanceof IndexedCollection indexedCollection ) {
-								final Value index = indexedCollection.getIndex().copy();
+								final var index = indexedCollection.getIndex().copy();
 								if ( memberDetails.getMapKeyType() != null ) {
 									setTypeName( index, memberDetails.getMapKeyType().getName() );
 								}
@@ -332,7 +341,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 
 		if ( value instanceof Component component ) {
-			final Class<?> componentClass = component.getComponentClass();
+			final var componentClass = component.getComponentClass();
 			if ( component.isGeneric() ) {
 				actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
 			}
@@ -342,7 +351,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					component.clearProperties();
 				}
 				else {
-					final Iterator<Property> propertyIterator = component.getProperties().iterator();
+					final var propertyIterator = component.getProperties().iterator();
 					while ( propertyIterator.hasNext() ) {
 						try {
 							propertyIterator.next().getGetter( componentClass );
@@ -378,15 +387,17 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			ClassDetails classDetails,
 			String accessType,
 			Map<String, MemberDetails> members) {
-		final List<? extends MemberDetails> collectedMembers = switch ( accessType ) {
+		final var collectedMembers = switch ( accessType ) {
 			case ACCESS_FIELD -> classDetails.getFields();
 			case ACCESS_PROPERTY -> classDetails.getMethods();
 			case ACCESS_RECORD -> classDetails.getRecordComponents();
 			default -> throw new IllegalArgumentException( "Unknown access type " + accessType );
 		};
-		collectedMembers.stream()
-				.filter( MemberDetails::isPersistable )
-				.forEach( member -> members.put( member.resolveAttributeName(), member ) );
+		for ( var member : collectedMembers ) {
+			if ( member.isPersistable() ) {
+				members.put( member.resolveAttributeName(), member );
+			}
+		}
 	}
 
 	private static void setTypeName(Value value, String typeName) {
@@ -410,7 +421,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	private void addPropertyToJoin(Property property, MemberDetails memberDetails, ClassDetails declaringClass, Join join) {
 		if ( declaringClass != null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			final var inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
 				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
@@ -435,8 +446,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 */
 	private Map<String, Join> getJoinsPerRealTableName() {
 		if ( joinsPerRealTableName == null ) {
-			joinsPerRealTableName = CollectionHelper.mapOfSize( joins.size() );
-			for (Join join : joins.values()) {
+			joinsPerRealTableName = mapOfSize( joins.size() );
+			for ( Join join : joins.values() ) {
 				joinsPerRealTableName.put( join.getTable().getName(), join );
 			}
 		}

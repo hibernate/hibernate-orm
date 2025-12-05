@@ -9,41 +9,42 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.junit.Test;
 
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12063")
-public class AttributeAccessorTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Foo.class };
-	}
-
+@Jpa(annotatedClasses = { AttributeAccessorTest.Foo.class })
+@EnversTest
+public class AttributeAccessorTest {
 	@Test
-	public void testAttributeAccessor() {
+	public void testAttributeAccessor(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory(); // force building the metamodel
+
 		// Verify that the accessor was triggered during metadata building phase.
 		assertTrue( BasicAttributeAccessor.invoked );
 
 		// Create an audited entity
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Foo foo = new Foo( 1, "ABC" );
 			entityManager.persist( foo );
 		} );
 
 		// query the entity.
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Foo foo = getAuditReader().find( Foo.class, 1, 1 );
+		scope.inEntityManager( entityManager -> {
+			final Foo foo = AuditReaderFactory.get( entityManager ).find( Foo.class, 1, 1 );
 			assertEquals( "ABC", foo.getName() );
 		} );
 	}

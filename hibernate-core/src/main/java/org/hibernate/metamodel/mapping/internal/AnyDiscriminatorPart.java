@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -17,17 +18,15 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -54,12 +53,14 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 
 	private final String table;
 	private final String column;
-	private final String customReadExpression;
-	private final String customWriteExpression;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final SelectablePath selectablePath;
+	private final @Nullable String customReadExpression;
+	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 
 	private final boolean insertable;
 	private final boolean updateable;
@@ -68,15 +69,62 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final BasicType<?> underlyingJdbcMapping;
 	private final DiscriminatorConverter<?,?> valueConverter;
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
 			String table,
-			String column, String customReadExpression, String customWriteExpression,
+			String column,
+			SelectablePath selectablePath,
+			String customReadExpression,
+			String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object, String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
+		this(
+				partRole,
+				declaringType,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				insertable,
+				updateable,
+				partitioned,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public AnyDiscriminatorPart(
+			NavigableRole partRole,
+			DiscriminatedAssociationModelPart declaringType,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
@@ -88,10 +136,12 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.declaringType = declaringType;
 		this.table = table;
 		this.column = column;
+		this.selectablePath = selectablePath;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.insertable = insertable;
@@ -143,6 +193,16 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
+	}
+
+	@Override
 	public boolean isFormula() {
 		return false;
 	}
@@ -168,37 +228,42 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return customReadExpression;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
@@ -311,17 +376,17 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
-		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
+		final var tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
+		final var tableReference = tableGroup.resolveTableReference( fetchablePath, table );
+		final var columnReference = sqlExpressionResolver.resolveSqlExpression(
 				tableReference,
 				this
 		);
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
 				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
@@ -355,7 +420,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -372,11 +437,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		return creationState.getSqlExpressionResolver().resolveSqlExpression( tableGroup.resolveTableReference(
+		var tableReference = tableGroup.resolveTableReference(
 				navigablePath,
 				this,
 				getContainingTableExpression()
-		), this );
+		);
+		return creationState.getSqlExpressionResolver()
+				.resolveSqlExpression( tableReference, this );
 	}
 
 	@Override
@@ -400,7 +467,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		return sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),

@@ -10,7 +10,6 @@ import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.QueryImplementor;
 
 import jakarta.persistence.Parameter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -41,8 +40,8 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 
 	@Override @SuppressWarnings("unchecked")
 	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
-		final JavaType<T> mappedJavaType = (JavaType<T>) entityDescriptor.getMappedJavaType();
-		final QueryImplementor<T> query = namedQueryMemento.toQuery( session, mappedJavaType.getJavaTypeClass() );
+		final var mappedJavaType = (JavaType<T>) entityDescriptor.getMappedJavaType();
+		final var query = namedQueryMemento.toQuery( session, mappedJavaType.getJavaTypeClass() );
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), pkValue );
 		query.setQueryFlushMode( QueryFlushMode.NO_FLUSH );
 		return query.uniqueResult();

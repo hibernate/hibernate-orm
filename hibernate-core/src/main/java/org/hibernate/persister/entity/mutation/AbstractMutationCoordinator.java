@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -26,9 +25,13 @@ import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 
+import static java.lang.System.arraycopy;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.manyOperations;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noOperations;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
+
 
 /**
  * Base support for coordinating mutations against an entity
@@ -49,7 +52,7 @@ public abstract class AbstractMutationCoordinator {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
 		dialect = factory.getJdbcServices().getDialect();
-		this.mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
+		mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	protected EntityPersister entityPersister() {
@@ -81,37 +84,34 @@ public abstract class AbstractMutationCoordinator {
 		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();
 		switch ( numberOfTableMutations ) {
 			case 0:
-				return MutationOperationGroupFactory.noOperations( mutationGroup );
+				return noOperations( mutationGroup );
 			case 1: {
-				final MutationOperation operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
+				final var operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
 				return operation == null
-						? MutationOperationGroupFactory.noOperations( mutationGroup )
-						: MutationOperationGroupFactory.singleOperation( mutationGroup, operation );
+						? noOperations( mutationGroup )
+						: singleOperation( mutationGroup, operation );
 			}
 			default: {
-				MutationOperation[] operations = new MutationOperation[numberOfTableMutations];
+				var operations = new MutationOperation[numberOfTableMutations];
 				int outputIndex = 0;
 				int skipped = 0;
 				for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
-					final TableMutation<?> tableMutation = mutationGroup.getTableMutation( i );
-					final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
+					final var tableMutation = mutationGroup.getTableMutation( i );
+					final var operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
 					if ( operation != null ) {
 						operations[outputIndex++] = operation;
 					}
 					else {
 						skipped++;
-						MODEL_MUTATION_LOGGER.tracef(
-								"Skipping table update - %s",
-								tableMutation.getTableName()
-						);
+						MODEL_MUTATION_LOGGER.skippingUpdate( tableMutation.getTableName() );
 					}
 				}
 				if ( skipped != 0 ) {
-					final MutationOperation[] trimmed = new MutationOperation[outputIndex];
-					System.arraycopy( operations, 0, trimmed, 0, outputIndex );
+					final var trimmed = new MutationOperation[outputIndex];
+					arraycopy( operations, 0, trimmed, 0, outputIndex );
 					operations = trimmed;
 				}
-				return MutationOperationGroupFactory.manyOperations( mutationGroup.getMutationType(), entityPersister, operations );
+				return manyOperations( mutationGroup.getMutationType(), entityPersister, operations );
 			}
 		}
 	}
@@ -132,12 +132,11 @@ public abstract class AbstractMutationCoordinator {
 		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
 			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
-			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );
+			final ColumnValuesTableMutationBuilder tableUpdateBuilder =
+					mutationGroupBuilder.findTableDetailsBuilder( tableName );
 			tableUpdateBuilder.addValueColumn(
-					mapping.getSelectionExpression(),
 					writePropertyValue ? "?" : columnValues[j],
-					mapping.getJdbcMapping(),
-					mapping.isLob()
+					mapping
 			);
 		} );
 	}
@@ -146,12 +145,12 @@ public abstract class AbstractMutationCoordinator {
 			Object[] loadedState,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		final EntityPersister persister = entityPersister();
+		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			final var attributeMappings = persister.getAttributeMappings();
 			final int size = attributeMappings.size();
 			for ( int i = 0; i < size; i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final var attributeMapping = attributeMappings.get( i );
 				if ( attributeMapping.hasPartitionedSelectionMapping() ) {
 					attributeMapping.decompose(
 							loadedState[i],
@@ -175,7 +174,8 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected static boolean needsRowId(EntityPersister entityPersister, EntityTableMapping tableMapping) {
-		return entityPersister.getRowIdMapping() != null && tableMapping.isIdentifierTable();
+		return entityPersister.getRowIdMapping() != null
+			&& tableMapping.isIdentifierTable();
 	}
 
 	protected static void applyKeyRestriction(

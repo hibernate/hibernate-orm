@@ -38,7 +38,7 @@ import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCod
  * @since 5.3
  */
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
-//	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
+//	private static final Logger LOG = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
@@ -66,17 +66,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	@Override
 	public void addDescriptor(JdbcType jdbcType) {
-		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
+		final var previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
-//			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
+//			LOG.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 //		}
 	}
 
 	@Override
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
-		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
+		final var previous = descriptorMap.put( typeCode, jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
-//			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
+//			LOG.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 //		}
 	}
 
@@ -93,18 +93,18 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	}
 
 	public JdbcType getDescriptor(int jdbcTypeCode) {
-		final JdbcType descriptor = descriptorMap.get( jdbcTypeCode );
+		final var descriptor = descriptorMap.get( jdbcTypeCode );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
 		else {
 //			if ( isStandardTypeCode( jdbcTypeCode ) ) {
-//				log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//				LOG.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
 //						jdbcTypeCode );
 //			}
 
 			// see if the typecode is part of a known type family...
-			final JdbcType potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
+			final var potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
 			if ( potentialAlternateDescriptor != null ) {
 				return potentialAlternateDescriptor;
 			}
@@ -123,13 +123,13 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
-					final JdbcType potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
+					final var potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
 					if ( potentialAlternateDescriptor != null ) {
 						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
 					}
 //					if ( isStandardTypeCode( potentialAlternateTypeCode ) ) {
-//						log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//						LOG.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
 //								potentialAlternateTypeCode );
 //					}
 				}
@@ -174,7 +174,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			EmbeddableMappingType embeddableMappingType,
 			RuntimeModelCreationContext context,
 			String registrationKey) {
-		final JdbcType descriptor = getDescriptor( jdbcTypeCode );
+		final var descriptor = getDescriptor( jdbcTypeCode );
 		if ( descriptor instanceof AggregateJdbcType aggregateJdbcType ) {
 			final AggregateJdbcType resolvedJdbcType =
 					aggregateJdbcType.resolveAggregateJdbcType( embeddableMappingType, typeName, context );
@@ -241,15 +241,15 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 				columnTypeInformation == null
 						? new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType )
 						: new TypeConstructedJdbcTypeKey( jdbcTypeConstructorCode, elementType, columnTypeInformation );
-		final JdbcType descriptor = typeConstructorDescriptorMap.get( key );
+		final var descriptor = typeConstructorDescriptorMap.get( key );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
 		else {
 			final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
 			if ( jdbcTypeConstructor != null ) {
-				final JdbcType jdbcType = jdbcElementType( elementType, columnTypeInformation, jdbcTypeConstructor );
-				final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
+				final var jdbcType = jdbcElementType( elementType, columnTypeInformation, jdbcTypeConstructor );
+				final var existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
 				if ( existingType != null ) {
 					return existingType;
 				}
@@ -295,7 +295,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
 		return descriptorMap.containsKey( jdbcTypeCode )
 			|| isStandardTypeCode( jdbcTypeCode )
-			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
+			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null
+			|| locateConstructedJdbcType( jdbcTypeCode );
+	}
+
+	private boolean locateConstructedJdbcType(int jdbcTypeCode) {
+		for ( TypeConstructedJdbcTypeKey key : typeConstructorDescriptorMap.keySet() ) {
+			if ( key.typeCode() == jdbcTypeCode ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public JdbcTypeConstructor getConstructor(int jdbcTypeCode) {

@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.Identifier;
@@ -19,32 +13,39 @@ import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class ExportIdentifierTest extends BaseUnitTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
+@ServiceRegistry
+public class ExportIdentifierTest {
 
 	@Test
 	@JiraKey( value = "HHH-12935" )
-	public void testUniqueExportableIdentifier() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );
-		options.setBootstrapContext( new BootstrapContextImpl( ssr, options ) );
-		final Database database = new Database( options );
+	public void testUniqueExportableIdentifier(ServiceRegistryScope scope) {
+		final var registry = scope.getRegistry();
+		final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
+		options.setBootstrapContext( new BootstrapContextImpl( registry, options ) );
+
+		final var database = new Database( options );
 
 		database.locateNamespace( null, null );
 		database.locateNamespace( Identifier.toIdentifier( "catalog1" ), null );
@@ -63,19 +64,14 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 		final List<String> exportIdentifierList = new ArrayList<>();
 		final Set<String> exportIdentifierSet = new HashSet<>();
 
-		try {
-			addTables( "aTable" , database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
-			addSimpleAuxiliaryDatabaseObject( database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
-			addNamedAuxiliaryDatabaseObjects(
-					"aNamedAuxiliaryDatabaseObject", database.getNamespaces(), exportIdentifierList, exportIdentifierSet
-			);
-			addSequences( "aSequence", database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
+		addTables( "aTable" , database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
+		addSimpleAuxiliaryDatabaseObject( database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
+		addNamedAuxiliaryDatabaseObjects(
+				"aNamedAuxiliaryDatabaseObject", database.getNamespaces(), exportIdentifierList, exportIdentifierSet
+		);
+		addSequences( "aSequence", database.getNamespaces(), exportIdentifierList, exportIdentifierSet );
 
-			assertEquals( exportIdentifierList.size(), exportIdentifierSet.size() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		assertEquals( exportIdentifierList.size(), exportIdentifierSet.size() );
 	}
 
 	private void addTables(
@@ -84,7 +80,6 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			List<String> exportIdentifierList,
 			Set<String> exportIdentifierSet) {
 		for ( Namespace namespace : namespaces ) {
-
 			final Table table = new Table( "orm", namespace, Identifier.toIdentifier( name ), false );
 			addExportIdentifier( table, exportIdentifierList, exportIdentifierSet );
 

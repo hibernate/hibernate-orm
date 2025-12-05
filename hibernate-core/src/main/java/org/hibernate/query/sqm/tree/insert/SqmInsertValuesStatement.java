@@ -19,6 +19,7 @@ import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -32,6 +33,8 @@ import jakarta.persistence.metamodel.EntityType;
 
 import jakarta.persistence.criteria.Path;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Gavin King
@@ -59,12 +62,12 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	private SqmInsertValuesStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
-			List<SqmPath<?>> insertionTargetPaths,
-			SqmConflictClause<T> conflictClause,
-			List<SqmValues> valuesList) {
+			@Nullable List<SqmPath<?>> insertionTargetPaths,
+			@Nullable SqmConflictClause<T> conflictClause,
+			@Nullable List<SqmValues> valuesList) {
 		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.valuesList = valuesList;
 	}
@@ -86,11 +89,20 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 			}
 		}
 
+		return copyWithValues( context, valuesList );
+	}
+
+	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
+		return copyWithValues( context, null );
+	}
+
+	private SqmInsertValuesStatement<T> copyWithValues(SqmCopyContext context, @Nullable List<SqmValues> valuesList) {
+		final var newQuerySource = context.getQuerySource();
 		final SqmInsertValuesStatement<T> sqmInsertValuesStatementCopy = context.registerCopy(
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+						newQuerySource == null ? getQuerySource() : newQuerySource,
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context ),
@@ -100,27 +112,12 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				)
 		);
 
-		if ( getConflictClause() != null ) {
-			sqmInsertValuesStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		final var conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			sqmInsertValuesStatementCopy.setConflictClause( conflictClause.copy( context ) );
 		}
 
 		return sqmInsertValuesStatementCopy;
-	}
-
-	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
-		return context.registerCopy(
-				this,
-				new SqmInsertValuesStatement<>(
-						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
-						copyParameters( context ),
-						copyCteStatements( context ),
-						getTarget().copy( context ),
-						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
-						null
-				)
-		);
 	}
 
 	@Override
@@ -148,7 +145,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public JpaPredicate getRestriction() {
+	public @Nullable JpaPredicate getRestriction() {
 		return null;
 	}
 
@@ -159,7 +156,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public SqmInsertValuesStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertValuesStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
@@ -177,14 +174,15 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public SqmInsertValuesStatement<T> onConflict(JpaConflictClause<T> conflictClause) {
+	public SqmInsertValuesStatement<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
 		super.onConflict( conflictClause );
 		return this;
 	}
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		assert valuesList != null;
+		final List<SqmValues> valuesList = castNonNull( this.valuesList );
+
 		super.appendHqlString( hql, context );
 		hql.append( " values (" );
 		appendValues( valuesList.get( 0 ), hql, context );
@@ -211,19 +209,30 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( !(object instanceof SqmInsertValuesStatement<?> that) ) {
-			return false;
-		}
-		return Objects.equals( valuesList, that.valuesList )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
-			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmInsertValuesStatement<?> that
+			&& super.equals( that )
+			&& Objects.equals( valuesList, that.valuesList );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( valuesList, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( valuesList );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInsertValuesStatement<?> that
+			&& super.isCompatible( that )
+			&& SqmCacheable.areCompatible( valuesList, that.valuesList );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( valuesList );
+		return result;
 	}
 }

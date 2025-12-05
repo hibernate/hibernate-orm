@@ -52,7 +52,8 @@ import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.format.jakartajson.JsonBJsonFormatMapper;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Builder for {@link StrategySelector} instances.
@@ -60,7 +61,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorBuilder {
-	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
 
 	private final List<StrategyRegistration<?>> explicitStrategyRegistrations = new ArrayList<>();
 
@@ -85,18 +85,15 @@ public class StrategySelectorBuilder {
 	 * compatible.
 	 */
 	public <T> void addExplicitStrategyRegistration(StrategyRegistration<T> strategyRegistration) {
-		if ( !strategyRegistration.getStrategyRole().isInterface() ) {
-			// not good form...
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "Registering non-interface strategy : %s", strategyRegistration.getStrategyRole().getName() );
-			}
+		final var strategyRole = strategyRegistration.getStrategyRole();
+		if ( BOOT_LOGGER.isTraceEnabled() && !strategyRole.isInterface() ) {
+			BOOT_LOGGER.registeringNonInterfaceStrategy( strategyRole.getName() );
 		}
-
-		if ( ! strategyRegistration.getStrategyRole().isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {
+		if ( !strategyRole.isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {
 			throw new StrategySelectionException(
 					"Implementation class [" + strategyRegistration.getStrategyImplementation().getName()
-							+ "] does not implement strategy interface ["
-							+ strategyRegistration.getStrategyRole().getName() + "]"
+					+ "] does not implement strategy interface ["
+					+ strategyRole.getName() + "]"
 			);
 		}
 		explicitStrategyRegistrations.add( strategyRegistration );
@@ -111,13 +108,11 @@ public class StrategySelectorBuilder {
 	 * @return The selector.
 	 */
 	public StrategySelector buildSelector(ClassLoaderService classLoaderService) {
-		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
+		final var strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
-		strategySelector.registerStrategyLazily(
-				Dialect.class,
-				new AggregatedDialectSelector( classLoaderService.loadJavaServices( DialectSelector.class ) )
-		);
+		strategySelector.registerStrategyLazily( Dialect.class,
+				new AggregatedDialectSelector( classLoaderService.loadJavaServices( DialectSelector.class ) ) );
 		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableInsertStrategies( strategySelector );
@@ -129,14 +124,14 @@ public class StrategySelectorBuilder {
 		addXmlFormatMappers( strategySelector );
 
 		// apply auto-discovered registrations
-		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
-			for ( StrategyRegistration<?> discoveredStrategyRegistration : provider.getStrategyRegistrations() ) {
+		for ( var provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
+			for ( var discoveredStrategyRegistration : provider.getStrategyRegistrations() ) {
 				applyFromStrategyRegistration( strategySelector, discoveredStrategyRegistration );
 			}
 		}
 
 		// apply customizations
-		for ( StrategyRegistration<?> explicitStrategyRegistration : explicitStrategyRegistrations ) {
+		for ( var explicitStrategyRegistration : explicitStrategyRegistrations ) {
 			applyFromStrategyRegistration( strategySelector, explicitStrategyRegistration );
 		}
 

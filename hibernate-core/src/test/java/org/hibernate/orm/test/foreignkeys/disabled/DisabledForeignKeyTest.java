@@ -4,32 +4,32 @@
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
-import java.util.EnumSet;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import java.util.EnumSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Steve Ebersole
  */
-public class DisabledForeignKeyTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class DisabledForeignKeyTest {
 
 	@Test
-	@JiraKey( value = "HHH-9704" )
+	@JiraKey(value = "HHH-9704")
 	public void basicTests() {
 		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
@@ -51,17 +51,18 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 			int fkCount = 0;
 			for ( Table table : metadata.collectTableMappings() ) {
 				for ( var entry : table.getForeignKeys().entrySet() ) {
-					assertFalse(
-							"Creation for ForeignKey [" + entry.getKey() + "] was not disabled",
-							entry.getValue().isCreationEnabled()
-					);
+					assertThat( entry.getValue().isCreationEnabled() )
+							.describedAs( "Creation for ForeignKey [" + entry.getKey() + "] was not disabled" )
+							.isFalse();
 					fkCount++;
 				}
 			}
 
 			// ultimately I want to actually create the ForeignKet reference, but simply disable its creation
 			// via ForeignKet#disableCreation()
-			assertEquals( "Was expecting 4 FKs", 0, fkCount );
+			assertThat( fkCount )
+					.describedAs( "Was expecting 4 FKs" )
+					.isEqualTo( 0 );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( standardRegistry );
@@ -69,7 +70,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9704" )
+	@JiraKey(value = "HHH-9704")
 	public void expandedTests() {
 		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {

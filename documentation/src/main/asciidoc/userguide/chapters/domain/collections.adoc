@@ -1,10 +1,9 @@
 [[collections]]
 === Collections
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
-:docs-base: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}
+:docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}
 :javadoc-base: {docs-base}/javadocs
 :java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 :extrasdir: extras/collections
@@ -241,7 +240,7 @@ include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[ta
 
 
 
-[[collections-bag]]
+[[collections-mapping]]
 ==== Mapping Collections
 
 Without any other mapping influencers, `java.util.Collection` is interpreted using BAG
@@ -286,7 +285,7 @@ is available to have Hibernate interpret a `List` with no `@OrderColumn` and no 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
 table.  `@CollectionId` is the annotation to configure this identifier.
 
-For details about defining an id-bad identifier, see the Javadocs for:
+For details about defining an id-bag identifier, see the Javadocs for:
 
 * link:{javadoc-base}/org/hibernate/annotations/CollectionId.html[@CollectionId]
 * link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaClass.html[@CollectionIdJavaClass]
@@ -308,7 +307,7 @@ Hibernate is able to map Object and primitive arrays as collections.  Mapping an
 the same as mapping a <<collection-list,list>>.
 
 There is a major limitation of mapping arrays to be aware of - the array cannot be lazy using
-<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<bytecode-enhancement-guide,bytecode enhancement>>
+<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<BytecodeEnhancement, bytecode enhancement>>
 of its owner.
 
 Note that Jakarta Persistence does not define support for arrays as plural attributes; according to the specification,
@@ -684,7 +683,9 @@ include::{extrasdir}/collections-unidirectional-ordered-list-order-column-select
 ----
 ====
 
-With the `order_id` column in place, Hibernate can order the list in-memory after it's being fetched from the database.
+With the `order_id` column in place, Hibernate can order the list in-memory after it's fetched from the database.
+
+The <<collection-list-indexbase-ex,`@ListIndexBase` annotation>> may be used to choose between 0-based and 1-based indexing on the database side.
 
 [[collections-bidirectional-ordered-list]]
 ===== Bidirectional ordered lists
@@ -702,61 +703,13 @@ include::{example-dir-collection}/BidirectionalOrderByListTest.java[tags=collect
 
 Just like with the unidirectional `@OrderBy` list, the `number` column is used to order the statement on the SQL level.
 
-When using the `@OrderColumn` annotation, the `order_id` column is going to be embedded in the child table:
-
-[[collections-bidirectional-ordered-list-order-column-example]]
-.Bidirectional `@OrderColumn` list
-====
-[source,java]
-----
-include::{example-dir-collection}/BidirectionalOrderColumnListTest.java[tags=collections-bidirectional-ordered-list-order-column-example,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/collections-bidirectional-ordered-list-order-column-example.sql[]
-----
-====
-
-When fetching the collection, Hibernate will use the fetched ordered columns to sort the elements according to the `@OrderColumn` mapping.
-
-[[collections-customizing-ordered-list-ordinal]]
-===== Customizing ordered list ordinal
-
-You can customize the ordinal of the underlying ordered list by using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation.
-
-[[collections-customizing-ordered-list-ordinal-mapping-example]]
-.`@ListIndexBase` mapping example
-====
-[source,java]
-----
-include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
-----
-====
-
-When inserting two `Phone` records, Hibernate is going to start the List index from 100 this time.
-
-[[collections-customizing-ordered-list-ordinal-persist-example]]
-.`@ListIndexBase` persist example
-====
-[source,java]
-----
-include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-example.sql[]
-----
-====
-
 [[collections-customizing-ordered-by-sql-clause]]
 ===== Customizing ORDER BY SQL clause
 
 While the Jakarta Persistence
 {jpaJavadocUrlPrefix}OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
 when fetching the current annotated collection, the Hibernate specific
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
 
 In the following example, the `@OrderBy` annotation uses the `CHAR_LENGTH` SQL function to order the `Article` entities
 by the number of characters of the `name` attribute.
@@ -786,7 +739,7 @@ include::{extrasdir}/collections-customizing-ordered-by-sql-clause-fetching-exam
 ----
 ====
 
-[[collections-set]]
+[[collections-set-types]]
 ==== Sets
 
 Sets are collections that don't allow duplicate entries and Hibernate supports both the unordered `Set` and the natural-ordering `SortedSet`.
@@ -885,7 +838,7 @@ Before v6, `@SortNatural` must be used if collection element's natural ordering 
 Starting from v6, we can omit `@SortNatural` as it will take effect by default.
 ====
 
-[[collections-map]]
+[[collections-map-types]]
 ==== Maps
 
 A `java.util.Map` is a ternary association because it requires a parent entity, a map key, and a value.
@@ -937,7 +890,7 @@ include::{extrasdir}/collections-map-value-type-entity-key-add-example.sql[]
 ===== Maps with a custom key type
 
 Hibernate defines the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
 which you can use to customize the `Map` key type.
 
 Considering you have the following tables in your database:
@@ -1080,7 +1033,7 @@ include::{extrasdir}/collections-map-bidirectional-example.sql[]
 ----
 ====
 
-[[collections-array]]
+[[collections-array-types]]
 ==== Arrays
 
 When discussing arrays, it is important to understand the distinction between SQL array types and Java arrays that are mapped as part of the application's domain model.

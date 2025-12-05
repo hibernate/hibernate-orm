@@ -19,29 +19,26 @@ import org.hibernate.Session;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Client.class,
-			Account.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+			FilterJoinTableTest.Client.class,
+				FilterJoinTableTest.Account.class
+		}
+)
+public class FilterJoinTableTest  {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::pc-filter-join-table-persistence-example[]
 			Client client = new Client()
 			.setId(1L)
@@ -75,17 +72,15 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			//end::pc-filter-join-table-persistence-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction(  entityManager -> {
 			//tag::pc-no-filter-join-table-collection-query-example[]
 			Client client = entityManager.find(Client.class, 1L);
 
-			assertEquals(3, client.getAccounts().size());
+			assertThat(client.getAccounts()).hasSize( 3 );
 			//end::pc-no-filter-join-table-collection-query-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			log.infof("Activate filter [%s]", "firstAccounts");
-
+		scope.inTransaction(  entityManager -> {
 			//tag::pc-filter-join-table-collection-query-example[]
 			Client client = entityManager.find(Client.class, 1L);
 
@@ -94,7 +89,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 				.enableFilter("firstAccounts")
 				.setParameter("maxOrderId", 1);
 
-			assertEquals(2, client.getAccounts().size());
+			assertThat(client.getAccounts()).hasSize( 2 );
 			//end::pc-filter-join-table-collection-query-example[]
 		});
 	}

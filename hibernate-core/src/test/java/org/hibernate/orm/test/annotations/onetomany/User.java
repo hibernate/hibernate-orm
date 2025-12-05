@@ -38,7 +38,7 @@ public class User {
 	}
 
 	@ManyToOne(optional=false,fetch=FetchType.LAZY)
-	@JoinColumn(name="FK_ForumId", nullable=false, insertable=true,updatable=false)
+	@JoinColumn(name="FK_ForumId", nullable=false, updatable=false)
 	public Forum getForum() {
 		return forum;
 	}

@@ -338,6 +338,59 @@ Within a given session, our data is automatically filtered so that only rows tag
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
 
+[[read-only-replicas]]
+=== Read-only replicas
+
+A similar but distinct problem is accessing data held in a read-only replica of the main production database.
+One way to handle this problem is to simply instantiate two instances of `SessionFactory`:
+
+- read-only transactions use a `SessionFactory` configured to access the read-only replica, while
+- other transactions use the `SessionFactory` configured to read from and write to the main database.
+
+[CAUTION]
+====
+The second-level cache doesn't play well with replication, and so a `SessionFactory` with access to a read-only replica should be configured with the second-level cache disabled.
+====
+
+Alternatively, Hibernate 7.2 introduces experimental support for accessing replicas via a single instance of `SessionFactory`.
+A `Session` which accesses a read-only replica must be created in a special read-only mode:
+
+[source,java]
+----
+Session readOnlySession =
+        factory.withOptions()
+                .readOnly(true)
+                .initialCacheMode(CacheMode.IGNORE)
+                .openSession();
+----
+
+There are now two possibilities.
+
+- Some JDBC drivers (MySQL) are able to automatically direct read-only sessions to the read-only replica.
+  In this case, there's no more work to do, since Hibernate will automatically call `Connection.setReadOnly(true)` to signal to the JDBC driver that the read-only replica may be used.
+
+- Other drivers (Postgres, Oracle) don't feature any special support for read-only replicas, and in this case we need to supply our own custom link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[`ConnectionProvider`] or link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] and implement link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html#getReadOnlyConnection()[`getReadOnlyConnection()`] to return a connection to the read-only replica.
+
+Notice that we created the read-only session with link:{doc-javadoc-url}/org/hibernate/CacheMode.html#IGNORE[`CacheMode.IGNORE`], indicating that access to the read-only replica should <<second-level-cache-management,bypass the second-level cache>>.
+There's two different phenomena we need to consider here:
+
+1. A read-only replica might contain stale data which has already been updated or deleted from the main database and invalidated in the second-level cache.
+A read-only session might read this stale data and recache it, exposing the stale data to subsequent sessions.
+Use of `CacheMode.GET` in a read-only session prevents this phenomenon.
+
+2. A session might read data which has not yet been replicated from the main database and add it to the second-level cache.
+If a read-only session reads this data from the cache, it might fail to resolve references to other data which has not yet been replicated.
+Use of `CacheMode.PUT` in a read-only session prevents this phenomenon.
+
+Use of `CacheMode.IGNORE` in a read-only session prevents both phenomena.
+
+[CAUTION]
+====
+The first issue is objectively more serious than the second, and the second issue can often be avoided by careful programming by someone _who really understands what they're doing_.
+We do not, therefore, require the use of `CacheMode.IGNORE`, but we strongly encourage the use of _at least_ `CacheMode.GET` in every read-only session.
+====
+
+
 [[custom-sql]]
 === Using custom-written SQL
 
@@ -833,6 +886,17 @@ On the other hand, the following annotations specify how a collection should be 
 
 Under the covers, Hibernate uses a `TreeSet` or `TreeMap` to maintain the collection in sorted order.
 
+[CAUTION]
+====
+The unowned (`mappedBy`) side of a bidirectional association is not responsible for specifying column mappings.
+So it's wrong in principle to use `@OrderColumn` or `@MapKeyColumn` on the unowned side of an association mapping.
+But for unowned collections, we may use `@OrderBy` or `@MapKey` instead.
+That is:
+
+- You can use `@OrderColumn` or `@MapKeyColumn` with an `@ElementCollection`, owned `@ManyToMany`, or owned `@OneToMany`.
+- But use `@OrderBy` or `@MapKey` when it's an _unowned_ `@ManyToMany` or `@OneToMany`.
+====
+
 [[any]]
 === Any mappings
 
@@ -994,8 +1058,17 @@ plugins {
     id "org.hibernate.orm" version "{fullVersion}"
 }
 
-hibernate { enhancement }
+hibernate {
+  enhancement {}
+}
 ----
+
+[CAUTION]
+====
+Some online documentation (including previous versions of the present one) suggest to use `hibernate { enhancement }`, which will _not_ work as it is interpreted by Gradle as a (pointless) getter call instead of actual configuration.
+That form will result in bytecode enhancement NOT happening (unfortunately silently).
+To enable bytecode enhancement, make sure to always use the block form (with `{}`).
+====
 
 // [discrete]
 // ==== Attribute-level lazy fetching
@@ -1054,6 +1127,10 @@ byte[] image;
 Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
 It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
 ====
+
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
 
 [[fetch-profiles]]
 === Named fetch profiles

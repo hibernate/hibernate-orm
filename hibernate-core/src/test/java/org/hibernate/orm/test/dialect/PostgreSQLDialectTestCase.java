@@ -31,25 +31,26 @@ import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test case for PostgreSQL specific things.
  * @author Bryan Varner
  * @author Christoph Dreis
  */
-public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
+@RequiresDialect(PostgreSQLDialect.class)
+public class PostgreSQLDialectTestCase {
 
 	@Test
 	@JiraKey( value = "HHH-7251")
@@ -59,7 +60,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		assertNotNull(delegate);
 
 		JDBCException exception = delegate.convert(new SQLException("Deadlock Detected", "40P01"), "", "");
-		assertTrue(exception instanceof LockAcquisitionException);
+		assertInstanceOf( LockAcquisitionException.class, exception );
 	}
 
 	@Test
@@ -70,7 +71,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		assertNotNull(delegate);
 
 		JDBCException exception = delegate.convert(new SQLException("Lock Not Available", "55P03"), "", "");
-		assertTrue(exception instanceof PessimisticLockException);
+		assertInstanceOf( PessimisticLockException.class, exception );
 	}
 
 	@Test
@@ -81,7 +82,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		assertNotNull( delegate );
 
 		final JDBCException exception = delegate.convert( new SQLException("Client cancelled operation", "57014"), "", "" );
-		assertTrue( exception instanceof QueryTimeoutException );
+		assertInstanceOf( QueryTimeoutException.class, exception );
 	}
 
 	/**
@@ -89,17 +90,16 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
 	 */
 	@JiraKey( value = "HHH-5654" )
+	@Test
 	public void testGetForUpdateStringWithAliasesAndLockOptions() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
-		LockOptions lockOptions = new LockOptions();
-		lockOptions.setAliasSpecificLockMode("tableAlias1", LockMode.PESSIMISTIC_WRITE);
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 
 		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
-		assertEquals( "for update of tableAlias1", forUpdateClause );
+		assertEquals( " for no key update of tableAlias1", forUpdateClause );
 
-		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
 		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
-		assertEquals("for update of tableAlias1,tableAlias2", forUpdateClause);
+		assertEquals(" for no key update of tableAlias1,tableAlias2", forUpdateClause);
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 			fail( "Expected UnsupportedOperationException" );
 		}
 		catch (Exception e) {
-			assertTrue( e instanceof UnsupportedOperationException );
+			assertInstanceOf( UnsupportedOperationException.class, e );
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
 	}
@@ -178,6 +178,7 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 				new SqlTypedMappingImpl(
 						null,
 						(long) Length.LONG32,
+						null,
 						null,
 						null,
 						null,

@@ -162,8 +162,6 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	boolean isManyToMany();
 
-	String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters);
-
 	/**
 	 * Is this an "indexed" collection? (list or map)
 	 */

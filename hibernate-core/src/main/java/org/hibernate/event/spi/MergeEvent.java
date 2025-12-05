@@ -11,7 +11,7 @@ package org.hibernate.event.spi;
  *
  * @see org.hibernate.Session#merge
  */
-public class MergeEvent extends AbstractEvent {
+public class MergeEvent extends AbstractSessionEvent {
 
 	private Object original;
 	private Object requestedId;

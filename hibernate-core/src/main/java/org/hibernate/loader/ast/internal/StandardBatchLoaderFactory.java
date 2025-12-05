@@ -15,7 +15,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 
@@ -34,9 +33,9 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
 			LoadQueryInfluencers influencers) {
-		final SessionFactoryImplementor factory = influencers.getSessionFactory();
-		// NOTE : don't use the EntityIdentifierMapping here because it will not be known until later
-		final Type identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
+		final var factory = influencers.getSessionFactory();
+		// NOTE: don't use the EntityIdentifierMapping here because it will not be known until later
+		final var identifierType = entityDescriptor.getEntityPersister().getIdentifierType();
 		if ( identifierType.getColumnSpan( factory.getRuntimeMetamodels() ) == 1
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() )
 				&& identifierType instanceof BasicType ) {

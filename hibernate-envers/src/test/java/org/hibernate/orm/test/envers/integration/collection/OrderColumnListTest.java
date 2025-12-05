@@ -13,90 +13,101 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-7940")
-public class OrderColumnListTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class };
-	}
+@EnversTest
+@Jpa(annotatedClasses = {OrderColumnListTest.Parent.class})
+public class OrderColumnListTest {
 
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - Create indexed entries.
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( em -> {
 			Parent p = new Parent( 1 );
 			p.getChildren().add( "child1" );
 			p.getChildren().add( "child2" );
-			entityManager.persist( p );
+			em.persist( p );
 		} );
 
 		// Revision 2 - remove an indexed entry, resetting positions.
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent p = entityManager.find( Parent.class, 1 );
+		scope.inTransaction( em -> {
+			final Parent p = em.find( Parent.class, 1 );
 			// should remove child with id 1
 			p.getChildren().remove( 0 );
-			entityManager.merge( p );
 		} );
 
 		// Revision 3 - add new indexed entity to reset positions
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent p = entityManager.find( Parent.class, 1 );
+		scope.inTransaction( em -> {
+			final Parent p = em.find( Parent.class, 1 );
 			// add child with id 3
 			p.getChildren().add( 0, "child3" );
-			entityManager.merge( p );
 		} );
 
 		// Revision 4 - remove all children
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final Parent p = entityManager.find( Parent.class, 1 );
+		scope.inTransaction( em -> {
+			final Parent p = em.find( Parent.class, 1 );
 			p.getChildren().clear();
-			entityManager.merge( p );
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( Parent.class, 1 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2, 3, 4 ), auditReader.getRevisions( Parent.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testIndexedCollectionRev1() {
-		final Parent p = getAuditReader().find( Parent.class, 1, 1 );
-		assertEquals( 2, p.getChildren().size() );
-		assertEquals( Arrays.asList( "child1", "child2" ), p.getChildren() );
+	public void testIndexedCollectionRev1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final Parent p = auditReader.find( Parent.class, 1, 1 );
+			assertEquals( 2, p.getChildren().size() );
+			assertEquals( Arrays.asList( "child1", "child2" ), p.getChildren() );
+		} );
 	}
 
 	@Test
-	public void testIndexedCollectionRev2() {
-		final Parent p = getAuditReader().find( Parent.class, 1, 2 );
-		assertEquals( 1, p.getChildren().size() );
-		assertEquals( Arrays.asList( "child2" ), p.getChildren() );
+	public void testIndexedCollectionRev2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final Parent p = auditReader.find( Parent.class, 1, 2 );
+			assertEquals( 1, p.getChildren().size() );
+			assertEquals( Arrays.asList( "child2" ), p.getChildren() );
+		} );
 	}
 
 	@Test
-	public void testIndexedCollectionRev3() {
-		final Parent p = getAuditReader().find( Parent.class, 1, 3 );
-		assertEquals( 2, p.getChildren().size() );
-		assertEquals( Arrays.asList( "child3", "child2" ), p.getChildren() );
+	public void testIndexedCollectionRev3(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final Parent p = auditReader.find( Parent.class, 1, 3 );
+			assertEquals( 2, p.getChildren().size() );
+			assertEquals( Arrays.asList( "child3", "child2" ), p.getChildren() );
+		} );
 	}
 
 	@Test
-	public void testIndexedCollectionRev4() {
-		final Parent p = getAuditReader().find( Parent.class, 1, 4 );
-		assertEquals( 0, p.getChildren().size() );
+	public void testIndexedCollectionRev4(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final Parent p = auditReader.find( Parent.class, 1, 4 );
+			assertEquals( 0, p.getChildren().size() );
+		} );
 	}
 
 	@Audited

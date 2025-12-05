@@ -4,13 +4,14 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.results.ResultSetMapping;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Standard {@link NamedResultSetMappingMemento} implementation
@@ -34,7 +35,7 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 	}
 
 	public List<ResultMemento> getResultMementos() {
-		return Collections.unmodifiableList( resultMementos );
+		return unmodifiableList( resultMementos );
 	}
 
 	@Override

@@ -43,7 +43,6 @@ import org.hibernate.usertype.UserCollectionType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyColumn;
@@ -52,6 +51,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.MAP_KEY;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -116,8 +116,8 @@ public class MapBinder extends CollectionBinder {
 			return namedMapValue( property.getDirectAnnotationUsage( AttributeOverride.class ) );
 		}
 		if ( property.hasDirectAnnotationUsage( AttributeOverrides.class ) ) {
-			final AttributeOverrides annotations = property.getDirectAnnotationUsage( AttributeOverrides.class );
-			for ( AttributeOverride attributeOverride : annotations.value() ) {
+			final var annotations = property.getDirectAnnotationUsage( AttributeOverrides.class );
+			for ( var attributeOverride : annotations.value() ) {
 				if ( namedMapValue( attributeOverride ) ) {
 					return true;
 				}
@@ -131,17 +131,17 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void makeOneToManyMapKeyColumnNullableIfNotInProperty(MemberDetails property) {
-		final Map map = (Map) this.collection;
+		final var map = (Map) this.collection;
 		if ( map.isOneToMany() && property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 			final Value indexValue = map.getIndex();
 			if ( indexValue.getColumnSpan() != 1 ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn does not have 1 column" );
 			}
-			final Selectable selectable = indexValue.getSelectables().get(0);
+			final var selectable = indexValue.getSelectables().get(0);
 			if ( selectable.isFormula() ) {
 				throw new AssertionFailure( "Map key mapped by @MapKeyColumn is a Formula" );
 			}
-			final Column column = (Column) selectable;
+			final var column = (Column) selectable;
 			if ( !column.isNullable() ) {
 				final PersistentClass persistentClass = ( (OneToMany) map.getElement() ).getAssociatedClass();
 				// check if the index column has been mapped by the associated entity to a property;
@@ -157,8 +157,8 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private boolean propertiesContainColumn(List<Property> properties, Column column) {
-		for ( Property property : properties ) {
-			for ( Selectable selectable: property.getSelectables() ) {
+		for ( var property : properties ) {
+			for ( var selectable: property.getSelectables() ) {
 				if ( column.equals( selectable ) ) {
 					final Column iteratedColumn = (Column) selectable;
 					if ( column.getValue().getTable().equals( iteratedColumn.getValue().getTable() ) ) {
@@ -196,17 +196,17 @@ public class MapBinder extends CollectionBinder {
 			AnnotatedColumns mapKeyColumns,
 			AnnotatedJoinColumns mapKeyManyToManyColumns) {
 		final String mapKeyType = getKeyType( property );
-		final PersistentClass collectionEntity = persistentClasses.get( mapKeyType );
+		final var collectionEntity = persistentClasses.get( mapKeyType );
 		final boolean isKeyedByEntities = collectionEntity != null;
 		if ( isKeyedByEntities ) {
-			final ManyToOne element = handleCollectionKeyedByEntities( mapKeyType );
+			final var element = handleCollectionKeyedByEntities( mapKeyType );
 			handleForeignKey( property, element );
 			// a map key column has no unique constraint, so pass 'unique=false' here
 			bindManyToManyInverseForeignKey( collectionEntity, mapKeyManyToManyColumns, element, false );
 		}
 		else {
-			final ClassDetails keyClass = mapKeyClass( mapKeyType );
-			final TypeDetails keyTypeDetails = new ClassTypeDetailsImpl( keyClass, TypeDetails.Kind.CLASS );
+			final var keyClass = mapKeyClass( mapKeyType );
+			final var keyTypeDetails = new ClassTypeDetailsImpl( keyClass, TypeDetails.Kind.CLASS );
 			handleMapKey(
 					property,
 					mapKeyColumns,
@@ -220,7 +220,7 @@ public class MapBinder extends CollectionBinder {
 		//FIXME pass the Index Entity JoinColumns
 		if ( !collection.isOneToMany() ) {
 			//index column should not be null
-			for ( AnnotatedJoinColumn column : mapKeyManyToManyColumns.getJoinColumns() ) {
+			for ( var column : mapKeyManyToManyColumns.getJoinColumns() ) {
 				column.forceNotNull();
 			}
 		}
@@ -254,8 +254,8 @@ public class MapBinder extends CollectionBinder {
 	private static String getKeyType(MemberDetails property) {
 		//target has priority over reflection for the map key type
 		//JPA 2 has priority
-		final MapKeyClass mapKeyClassAnn = property.getDirectAnnotationUsage( MapKeyClass.class );
-		final Class<?> target = mapKeyClassAnn != null ? mapKeyClassAnn.value() : void.class;
+		final var mapKeyClassAnn = property.getDirectAnnotationUsage( MapKeyClass.class );
+		final var target = mapKeyClassAnn != null ? mapKeyClassAnn.value() : void.class;
 		return void.class.equals( target ) ? property.getMapKeyType().getName() : target.getName();
 	}
 
@@ -263,7 +263,7 @@ public class MapBinder extends CollectionBinder {
 			TypeDetails elementType,
 			java.util.Map<String, PersistentClass> persistentClasses,
 			String mapKeyPropertyName) {
-		final PersistentClass associatedClass = persistentClasses.get( elementType.getName() );
+		final var associatedClass = persistentClasses.get( elementType.getName() );
 		if ( associatedClass == null ) {
 			throw new AnnotationException( "Association '" + safeCollectionRole() + "'"
 					+ targetEntityMessage( elementType ) );
@@ -274,7 +274,7 @@ public class MapBinder extends CollectionBinder {
 					+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
 		}
 		// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
-		final PersistentClass targetEntity =
+		final var targetEntity =
 				inheritanceStatePerClass.get( elementType.determineRawClass() ).getType() == InheritanceType.JOINED
 						? mapProperty.getPersistentClass()
 						: associatedClass;
@@ -292,7 +292,7 @@ public class MapBinder extends CollectionBinder {
 	private CollectionPropertyHolder buildCollectionPropertyHolder(
 			MemberDetails property,
 			ClassDetails keyClass) {
-		final CollectionPropertyHolder holder =
+		final var holder =
 				buildPropertyHolder( collection, getPath(), keyClass, property, propertyHolder, buildingContext );
 		// 'propertyHolder' is the PropertyHolder for the owner of the collection
 		// 'holder' is the CollectionPropertyHolder.
@@ -307,7 +307,7 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void handleForeignKey(MemberDetails property, ManyToOne element) {
-		final ForeignKey foreignKey = getMapKeyForeignKey( property );
+		final var foreignKey = getMapKeyForeignKey( property );
 		if ( foreignKey != null ) {
 			final ConstraintMode constraintMode = foreignKey.value();
 			if ( constraintMode == ConstraintMode.NO_CONSTRAINT
@@ -326,7 +326,7 @@ public class MapBinder extends CollectionBinder {
 	//similar to CollectionBinder.handleCollectionOfEntities()
 	private ManyToOne handleCollectionKeyedByEntities(
 			String mapKeyType) {
-		final ManyToOne element = new ManyToOne( buildingContext, collection.getCollectionTable() );
+		final var element = new ManyToOne( buildingContext, collection.getCollectionTable() );
 		getMap().setIndex( element );
 		element.setReferencedEntityName( mapKeyType );
 		//element.setFetchMode( fetchMode );
@@ -346,8 +346,7 @@ public class MapBinder extends CollectionBinder {
 			AnnotatedClassType classType,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
-		final Class<? extends CompositeUserType<?>> compositeUserType
-				= resolveCompositeUserType( property, keyTypeDetails, buildingContext );
+		final var compositeUserType = resolveCompositeUserType( property, keyTypeDetails, buildingContext );
 		if ( classType == EMBEDDABLE || compositeUserType != null ) {
 			handleCompositeMapKey( keyTypeDetails, holder, accessType, compositeUserType );
 		}
@@ -363,9 +362,9 @@ public class MapBinder extends CollectionBinder {
 			TypeDetails keyTypeDetails,
 			CollectionPropertyHolder holder,
 			AccessType accessType) {
-		final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
+		final var elementBinder = new BasicValueBinder( MAP_KEY, buildingContext );
 		elementBinder.setReturnedClassName(mapKeyType);
-		final AnnotatedColumns keyColumns = createElementColumnsIfNecessary(
+		final var keyColumns = createElementColumnsIfNecessary(
 				collection,
 				mapKeyColumns,
 				Collection.DEFAULT_KEY_COLUMN_NAME,
@@ -420,7 +419,7 @@ public class MapBinder extends CollectionBinder {
 			MemberDetails property,
 			TypeDetails returnedClass,
 			MetadataBuildingContext context) {
-		final MapKeyCompositeType compositeType = property.getDirectAnnotationUsage( MapKeyCompositeType.class );
+		final var compositeType = property.getDirectAnnotationUsage( MapKeyCompositeType.class );
 		if ( compositeType != null ) {
 			return compositeType.value();
 		}
@@ -434,12 +433,12 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private jakarta.persistence.ForeignKey getMapKeyForeignKey(MemberDetails property) {
-		final MapKeyJoinColumns mapKeyJoinColumns = property.getDirectAnnotationUsage( MapKeyJoinColumns.class );
+		final var mapKeyJoinColumns = property.getDirectAnnotationUsage( MapKeyJoinColumns.class );
 		if ( mapKeyJoinColumns != null ) {
 			return mapKeyJoinColumns.foreignKey();
 		}
 
-		final MapKeyJoinColumn mapKeyJoinColumn = property.getDirectAnnotationUsage( MapKeyJoinColumn.class );
+		final var mapKeyJoinColumn = property.getDirectAnnotationUsage( MapKeyJoinColumn.class );
 		if ( mapKeyJoinColumn != null ) {
 			return mapKeyJoinColumn.foreignKey();
 		}
@@ -448,14 +447,14 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private boolean mappingDefinedAttributeOverrideOnMapKey(MemberDetails property) {
-		final AttributeOverride overrideAnn = property.getDirectAnnotationUsage( AttributeOverride.class );
+		final var overrideAnn = property.getDirectAnnotationUsage( AttributeOverride.class );
 		if ( overrideAnn != null ) {
 			return namedMapKey( overrideAnn );
 		}
 
-		final AttributeOverrides overridesAnn = property.getDirectAnnotationUsage( AttributeOverrides.class );
+		final var overridesAnn = property.getDirectAnnotationUsage( AttributeOverrides.class );
 		if ( overridesAnn != null ) {
-			for ( AttributeOverride nestedAnn : overridesAnn.value() ) {
+			for ( var nestedAnn : overridesAnn.value() ) {
 				if ( namedMapKey( nestedAnn ) ) {
 					return true;
 				}
@@ -499,7 +498,7 @@ public class MapBinder extends CollectionBinder {
 	private SimpleValue createTargetValue(Table mapKeyTable, SimpleValue sourceValue) {
 		final SimpleValue targetValue;
 		if ( sourceValue instanceof ManyToOne sourceManyToOne ) {
-			final ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable);
+			final var targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable);
 			targetManyToOne.setFetchMode( FetchMode.DEFAULT );
 			targetManyToOne.setLazy( true );
 			//targetValue.setIgnoreNotFound( ); does not make sense for a map key
@@ -510,14 +509,14 @@ public class MapBinder extends CollectionBinder {
 			targetValue = new BasicValue( getBuildingContext(), mapKeyTable);
 			targetValue.copyTypeFrom( sourceValue );
 		}
-		for ( Selectable selectable : sourceValue.getSelectables() ) {
+		for ( var selectable : sourceValue.getSelectables() ) {
 			addSelectable( targetValue, selectable );
 		}
 		return targetValue;
 	}
 
 	private DependantBasicValue createDependantBasicValue(Table mapKeyTable, BasicValue sourceValue) {
-		final DependantBasicValue dependantBasicValue = new DependantBasicValue(
+		final var dependantBasicValue = new DependantBasicValue(
 				getBuildingContext(),
 				mapKeyTable,
 				sourceValue,
@@ -538,14 +537,14 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private Component createIndexComponent(Collection collection, PersistentClass associatedClass, Component component) {
-		final Component indexComponent = new Component( getBuildingContext(), collection );
+		final var indexComponent = new Component( getBuildingContext(), collection );
 		indexComponent.setComponentClassName( component.getComponentClassName() );
-		for ( Property property : component.getProperties() ) {
-			final Property newProperty = new Property();
+		for ( var property : component.getProperties() ) {
+			final var newProperty = new Property();
 			newProperty.setCascade( property.getCascade() );
 			newProperty.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			newProperty.setInsertable( false );
-			newProperty.setUpdateable( false );
+			newProperty.setUpdatable( false );
 			newProperty.setMetaAttributes( property.getMetaAttributes() );
 			newProperty.setName( property.getName() );
 			newProperty.setNaturalIdentifier( false );

@@ -7,9 +7,11 @@ package org.hibernate.testing.util.uuid;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -19,6 +21,7 @@ public class IdGeneratorCreationContext implements GeneratorCreationContext {
 	private final ServiceRegistry serviceRegistry;
 	private final MetadataImplementor domainModel;
 	private final RootClass entityMapping;
+	private final KeyValue identifier;
 
 	public IdGeneratorCreationContext(
 			ServiceRegistry serviceRegistry,
@@ -27,7 +30,7 @@ public class IdGeneratorCreationContext implements GeneratorCreationContext {
 		this.serviceRegistry = serviceRegistry;
 		this.domainModel = domainModel;
 		this.entityMapping = entityMapping;
-
+		this.identifier = entityMapping.getIdentifier();
 		assert entityMapping.getIdentifierProperty() != null;
 	}
 
@@ -72,5 +75,10 @@ public class IdGeneratorCreationContext implements GeneratorCreationContext {
 	@Override
 	public Property getProperty() {
 		return entityMapping.getIdentifierProperty();
+	}
+
+	@Override
+	public Value getValue() {
+		return identifier;
 	}
 }

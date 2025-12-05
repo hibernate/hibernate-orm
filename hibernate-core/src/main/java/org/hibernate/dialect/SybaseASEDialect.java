@@ -4,20 +4,19 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
@@ -30,8 +29,8 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -42,11 +41,11 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
@@ -204,10 +203,10 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet = statement.executeQuery( "SELECT @@options" );
+				final var resultSet = statement.executeQuery( "SELECT @@options" );
 				if ( resultSet.next() ) {
 					final byte[] optionBytes = resultSet.getBytes( 1 );
 					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
@@ -219,14 +218,14 @@ public class SybaseASEDialect extends SybaseDialect {
 			}
 		}
 		// default to the dialect-specific configuration setting
-		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
+		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues() );
 	}
 
 	private int pageSize(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
+				final var resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
 				if ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
@@ -294,8 +293,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 	}
@@ -599,8 +597,8 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE_ASE;
 	}
 
 	@Override
@@ -632,17 +630,13 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// It does support skipping locked rows only for READ locking
-		return false;
-	}
-
-	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		final String lockHint = super.appendLockHint( mode, tableName );
-		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
-				? lockHint + " readpast"
-				: lockHint;
+		if ( !mode.getLockMode().greaterThan( LockMode.READ )
+				&& mode.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			return lockHint + " readpast";
+		}
+		return lockHint;
 	}
 
 	@Override

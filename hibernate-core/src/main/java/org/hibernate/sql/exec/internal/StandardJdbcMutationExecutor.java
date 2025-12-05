@@ -9,19 +9,12 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
@@ -40,27 +33,28 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			Function<String, PreparedStatement> statementCreator,
 			BiConsumer<Integer, PreparedStatement> expectationCheck,
 			ExecutionContext executionContext) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
+		final var session = executionContext.getSession();
 		session.autoFlushIfRequired( jdbcMutation.getAffectedTableNames() );
 
-		final LogicalConnectionImplementor logicalConnection =
+		final var logicalConnection =
 				session.getJdbcCoordinator().getLogicalConnection();
 
-		final JdbcServices jdbcServices = session.getJdbcServices();
+		final var jdbcServices = session.getJdbcServices();
 		final String finalSql = applyOptions( jdbcMutation, executionContext, jdbcServices );
+		final var queryOptions = executionContext.getQueryOptions();
 		try {
 			// prepare the query
-			final PreparedStatement preparedStatement = statementCreator.apply( finalSql );
-
+			final var preparedStatement = statementCreator.apply( finalSql );
 			try {
-				if ( executionContext.getQueryOptions().getTimeout() != null ) {
-					preparedStatement.setQueryTimeout( executionContext.getQueryOptions().getTimeout() );
+				final Integer timeout = queryOptions.getTimeout();
+				if ( timeout != null ) {
+					preparedStatement.setQueryTimeout( timeout );
 				}
 
 				// bind parameters
 				// 		todo : validate that all query parameters were bound?
 				int paramBindingPosition = 1;
-				for ( JdbcParameterBinder parameterBinder : jdbcMutation.getParameterBinders() ) {
+				for ( var parameterBinder : jdbcMutation.getParameterBinders() ) {
 					parameterBinder.bindParameterValue(
 							preparedStatement,
 							paramBindingPosition++,
@@ -70,16 +64,15 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				}
 
 				session.getEventListenerManager().jdbcExecuteStatementStart();
-				final EventMonitor eventMonitor = session.getEventMonitor();
-				final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
-						eventMonitor.beginJdbcPreparedStatementExecutionEvent();
+				final var eventMonitor = session.getEventMonitor();
+				final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 				try {
 					final int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
-					eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+					eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, finalSql );
 					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}
@@ -97,11 +90,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 
 	private static int handleException(
 			JdbcOperationQueryMutation jdbcMutation, SQLException sqle, JdbcServices jdbcServices, String finalSql) {
-		final JDBCException exception =
+		final var exception =
 				jdbcServices.getSqlExceptionHelper()
 						.convert( sqle, "JDBC exception executing SQL", finalSql );
 		if ( exception instanceof ConstraintViolationException constraintViolationException
-			&& jdbcMutation instanceof JdbcOperationQueryInsert jdbcInsert ) {
+				&& jdbcMutation instanceof JdbcOperationQueryInsert jdbcInsert ) {
 			if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
 				final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();
 				if ( uniqueConstraintNameThatMayFail != null ) {
@@ -117,7 +110,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 
 	private static String applyOptions(
 			JdbcOperationQueryMutation jdbcMutation, ExecutionContext executionContext, JdbcServices jdbcServices) {
-		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		final var queryOptions = executionContext.getQueryOptions();
 		return queryOptions == null
 				? jdbcMutation.getSqlString()
 				: jdbcServices.getDialect().addSqlHintOrComment(

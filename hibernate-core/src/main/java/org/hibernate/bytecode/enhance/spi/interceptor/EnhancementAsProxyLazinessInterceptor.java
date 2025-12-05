@@ -4,12 +4,10 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -18,7 +16,9 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.bytecode.enhance.spi.interceptor.BytecodeInterceptorLogging.BYTECODE_INTERCEPTOR_LOGGER;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTrackerType;
@@ -27,7 +27,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSe
 /**
  * @author Steve Ebersole
  */
-public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
+public class EnhancementAsProxyLazinessInterceptor
+		extends AbstractInterceptor
+		implements BytecodeLazyAttributeInterceptor {
 
 	private final EntityKey entityKey;
 	private final EntityRelatedState meta;
@@ -83,7 +85,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 		if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
 			// enhancement has dirty-tracking available and at least one attribute was explicitly set
-			final EntityPersister entityPersister = meta.persister;
+			final var entityPersister = meta.persister;
 			if ( writtenFieldNames.contains( attributeName ) ) {
 				// the requested attribute was one of the attributes explicitly set,
 				// we can just return the explicitly-set value
@@ -116,7 +118,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 		if ( writtenAttributeValues != null ) {
 			// here is the replaying of the explicitly set values we prepared above
 			for ( int i = 0; i < writtenAttributeMappings.length; i++ ) {
-				final AttributeMapping attribute = writtenAttributeMappings[i];
+				final var attribute = writtenAttributeMappings[i];
 				attribute.setValue(target, writtenAttributeValues[i] );
 				if ( meta.inLineDirtyChecking ) {
 					asSelfDirtinessTracker(target).$$_hibernate_trackChange( attribute.getAttributeName() );
@@ -130,7 +132,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 
 	private Object extractIdValue(Object target, String attributeName) {
 		// access to the id or part of it for non-aggregated cid
-		final CompositeType nonAggregatedCidMapper = meta.nonAggregatedCidMapper;
+		final var nonAggregatedCidMapper = meta.nonAggregatedCidMapper;
 		if ( nonAggregatedCidMapper == null ) {
 			return getIdentifier();
 		}
@@ -144,9 +146,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
-			BytecodeLogging.LOGGER.tracef(
-					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+		if ( BYTECODE_INTERCEPTOR_LOGGER.isTraceEnabled() ) {
+			BYTECODE_INTERCEPTOR_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName
@@ -166,9 +167,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			String attributeName,
 			SharedSessionContractImplementor session,
 			boolean isTemporarySession) {
-		if ( BytecodeLogging.LOGGER.isTraceEnabled() ) {
-			BytecodeLogging.LOGGER.tracef(
-					"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
+		if ( BYTECODE_INTERCEPTOR_LOGGER.isTraceEnabled() ) {
+			BYTECODE_INTERCEPTOR_LOGGER.enhancementAsProxyLazinessForceInitialize(
 					entityKey.getEntityName(),
 					entityKey.getIdentifier(),
 					attributeName
@@ -202,7 +202,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			}
 			else {
 				final int subAttrIndex = meta.nonAggregatedCidMapper.getPropertyIndex( attributeName );
-				final Type subAttrType = meta.nonAggregatedCidMapper.getSubtypes()[subAttrIndex];
+				final var subAttrType = meta.nonAggregatedCidMapper.getSubtypes()[subAttrIndex];
 				changed = ! subAttrType.isEqual( oldValue, newValue );
 			}
 
@@ -247,7 +247,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 
 	@Override
 	public Set<String> getInitializedLazyAttributeNames() {
-		return Collections.emptySet();
+		return emptySet();
 	}
 
 	@Override
@@ -300,6 +300,13 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 		return writtenFieldNames != null && !writtenFieldNames.isEmpty();
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean isIdentifier(String attributeName) {
+		return meta.identifierAttributeNames.contains( attributeName );
+	}
+
 	private enum Status {
 		UNINITIALIZED,
 		INITIALIZING,
@@ -342,21 +349,21 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 						tmpCollectionAttributeNames.add( propertyNames[i] );
 					}
 				}
-				this.collectionAttributeNames = toSmallSet( unmodifiableSet( tmpCollectionAttributeNames ) );
+				collectionAttributeNames = toSmallSet( unmodifiableSet( tmpCollectionAttributeNames ) );
 			}
 			else {
-				this.collectionAttributeNames = Collections.emptySet();
+				collectionAttributeNames = emptySet();
 			}
 
-			this.inLineDirtyChecking = isSelfDirtinessTrackerType( persister.getMappedClass() );
+			inLineDirtyChecking = isSelfDirtinessTrackerType( persister.getMappedClass() );
 			// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to
 			// initialize the entity because the precomputed update statement contains even not
 			// dirty properties. And so we need all the values we have to initialize. Or, if it's
 			// versioned, we need to fetch the current version.
-			this.initializeBeforeWrite =
+			initializeBeforeWrite =
 					!inLineDirtyChecking
-					|| !persister.getEntityMetamodel().isDynamicUpdate()
-					|| persister.isVersioned();
+						|| !persister.isDynamicUpdate()
+						|| persister.isVersioned();
 		}
 	}
 }

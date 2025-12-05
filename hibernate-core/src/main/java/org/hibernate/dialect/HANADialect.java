@@ -21,13 +21,16 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.HANALockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.HANAGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -214,7 +217,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return HANAServerConfiguration.staticDetermineDatabaseVersion( info );
+		return HANAServerConfiguration.determineDatabaseVersion( info );
 	}
 
 	// Use column or row tables by default
@@ -427,8 +430,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
-		// Prefer XML since JSON was only added later
-		return getVersion().isSameOrAfter( 2 ) ? SqlTypes.XML_ARRAY : super.getPreferredSqlTypeCodeForArray();
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
@@ -530,6 +532,7 @@ public class HANADialect extends Dialect {
 		functionFactory.hex( "bintohex(?1)" );
 		functionFactory.sha( "hash_sha256(to_binary(?1))" );
 		functionFactory.md5( "hash_md5(to_binary(?1))" );
+		functionFactory.regexpLike_like_regexp();
 	}
 
 	/**
@@ -650,8 +653,8 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return HANALockingSupport.HANA_LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -686,18 +689,17 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.findGreatestLockMode();
-		lockOptions.setLockMode( lockMode );
+		final LockMode lockMode = lockOptions.getLockMode();
 
 		// not sure why this is sometimes empty
 		if ( aliases == null || aliases.isEmpty() ) {
 			return getForUpdateString( lockOptions );
 		}
 
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( aliases, lockMode, lockOptions.getTimeout() );
 	}
 
-	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
+	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
@@ -1001,34 +1003,18 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout.milliseconds() );
+	}
+
+	@Override
 	public String getReadLockString(String aliases, Timeout timeout) {
 		return getWriteLockString( aliases, timeout );
 	}
 
 	@Override
-	public String getWriteLockString(Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
-	}
-
-	@Override
 	public String getWriteLockString(String aliases, Timeout timeout) {
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
-		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+		return withTimeout( getForUpdateString( aliases ), timeout.milliseconds() );
 	}
 
 	@Override
@@ -1042,29 +1028,17 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return getForUpdateString();
-		}
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout );
-		}
-		else if ( timeout == 0 ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		else {
-			return getForUpdateString( aliases );
-		}
+	private String withTimeout(String lockString, int timeout) {
+		return switch (timeout) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + SQL_IGNORE_LOCKED : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1184,11 +1158,6 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
 		return true;
 	}
 
@@ -1967,30 +1936,14 @@ public class HANADialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1999,29 +1952,28 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return HANAGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create global temporary row table";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public String getTemporaryTableTruncateCommand() {
-		return "truncate table";
+		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableTruncateCommand();
 	}
 
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
-		return true;
 	}
 
 	@Override

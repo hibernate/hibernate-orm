@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -19,6 +20,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -39,7 +41,7 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatement<T> implements SqmInsertStatement<T> {
-	private List<SqmPath<?>> insertionTargetPaths;
+	private @Nullable List<SqmPath<?>> insertionTargetPaths;
 	private @Nullable SqmConflictClause<T> conflictClause;
 
 	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
@@ -49,17 +51,17 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	protected AbstractSqmInsertStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
-			List<SqmPath<?>> insertionTargetPaths,
-			SqmConflictClause<T> conflictClause) {
+			@Nullable List<SqmPath<?>> insertionTargetPaths,
+			@Nullable SqmConflictClause<T> conflictClause) {
 		super( builder, querySource, parameters, cteStatements, target );
 		this.insertionTargetPaths = insertionTargetPaths;
 		this.conflictClause = conflictClause;
 	}
 
-	protected List<SqmPath<?>> copyInsertionTargetPaths(SqmCopyContext context) {
+	protected @Nullable List<SqmPath<?>> copyInsertionTargetPaths(SqmCopyContext context) {
 		if ( insertionTargetPaths == null ) {
 			return null;
 		}
@@ -141,7 +143,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public SqmInsertStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
 		//noinspection unchecked
 		this.insertionTargetPaths = (List<SqmPath<?>>) insertionTargetPaths;
 		return this;
@@ -187,6 +189,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		appendHqlCteString( hql, context );
 		hql.append( "insert into " );
 		hql.append( getTarget().getEntityName() );
+		final List<SqmPath<?>> insertionTargetPaths = this.insertionTargetPaths;
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
 			hql.append( '(' );
 			insertionTargetPaths.get( 0 ).appendHqlString( hql, context );
@@ -196,5 +199,37 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			}
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof AbstractSqmInsertStatement<?> that
+			&& super.equals( that )
+			&& Objects.equals( getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( getConflictClause(), that.getConflictClause() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( getInsertionTargetPaths() );
+		result = 31 * result + Objects.hashCode( getConflictClause() );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmInsertStatement<?> that
+			&& super.isCompatible( that )
+			&& SqmCacheable.areCompatible( getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& SqmCacheable.areCompatible( getConflictClause(), that.getConflictClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( getInsertionTargetPaths() );
+		result = 31 * result + SqmCacheable.cacheHashCode( getConflictClause() );
+		return result;
 	}
 }

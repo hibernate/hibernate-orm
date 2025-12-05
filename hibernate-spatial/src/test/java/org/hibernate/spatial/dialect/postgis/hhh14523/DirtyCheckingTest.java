@@ -4,85 +4,74 @@
  */
 package org.hibernate.spatial.dialect.postgis.hhh14523;
 
-import java.io.Serializable;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Query;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-
+import jakarta.persistence.TypedQuery;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.jts.JTS;
-import org.locationtech.jts.geom.GeometryFactory;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Point;
+
+import java.io.Serializable;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 @JiraKey(value = "HHH-14523")
 @RequiresDialect(PostgreSQLDialect.class)
-public class DirtyCheckingTest extends BaseEntityManagerFunctionalTestCase {
-
-	private GeometryFactory gfact = new GeometryFactory();
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
+@Jpa(
+		annotatedClasses = {
 				TestEntity.class
-		};
-	}
+		}
+)
+public class DirtyCheckingTest {
 
-	public void createtestEntity() {
-		Point pnt = (Point) JTS.to( Wkt.fromWkt( "POINT Z( 3.41127795 8.11062269 2.611)", Wkt.Dialect.SFA_1_2_1 ) );
-		EntityManager entityManager = createEntityManager();
-		TestEntity test1 = new TestEntity( "radar 5", pnt );
-
-		entityManager.getTransaction().begin();
-		entityManager.persist( test1 );
-		entityManager.getTransaction().commit();
-
-		entityManager.close();
+	@BeforeAll
+	public void createtestEntity(EntityManagerFactoryScope scope) {
+		Point pnt = createPoint( "POINT Z( 3.41127795 8.11062269 2.611)" );
+		scope.inTransaction(
+				entityManager ->
+						entityManager.persist( new TestEntity( "radar 5", pnt ) )
+		);
 	}
 
 	// Entities are auto-discovered, so just add them anywhere on class-path
 	// Add your tests, using standard JUnit.
 	@Test
-	public void hhh14523() throws Exception {
+	public void hhh14523(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					TypedQuery<TestEntity> query = entityManager
+							.createQuery( "select t from TestEntity t", TestEntity.class );
+					TestEntity ent = query.getResultList().get( 0 );
+					ent.setGeom( createPoint( "POINT Z( 3.41127795 8.11062269 8.611)" ) );
+				}
+		);
 
-		createtestEntity();
+		scope.inTransaction(
+				entityManager -> {
+					List<TestEntity> entities = entityManager
+							.createQuery( "select t from TestEntity t", TestEntity.class )
+							.getResultList();
+					TestEntity ent2 = entities.get( 0 );
+					assertEquals( 8.611, ent2.getGeom().getCoordinate().getZ(), 0.00001 );
+				}
+		);
+	}
 
-		EntityManager entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		Query query = entityManager.createQuery( "select t from TestEntity t" );
-		TestEntity ent = (TestEntity) query.getResultList().get( 0 );
-		Point newPnt = (Point) JTS.to( Wkt.fromWkt( "POINT Z( 3.41127795 8.11062269 8.611)", Wkt.Dialect.SFA_1_2_1 ) );
-		ent.setGeom( newPnt );
-		entityManager.getTransaction().commit();
-		entityManager.close();
-
-
-		entityManager = createEntityManager();
-		entityManager.getTransaction().begin();
-		List<TestEntity> entities = entityManager.createQuery( "select t from TestEntity t" ).getResultList();
-		TestEntity ent2 = entities.get( 0 );
-		try {
-			assertEquals( 8.611, ent2.getGeom().getCoordinate().getZ(), 0.00001 );
-		}
-		finally {
-			entityManager.getTransaction().commit();
-		}
-		entityManager.close();
+	private static Point createPoint(String wkt) {
+		return (Point) JTS.to( Wkt.fromWkt( wkt, Wkt.Dialect.SFA_1_2_1 ) );
 	}
 }
 

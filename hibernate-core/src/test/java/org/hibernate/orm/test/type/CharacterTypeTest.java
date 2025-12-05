@@ -7,6 +7,7 @@ package org.hibernate.orm.test.type;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,11 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = CharacterTypeTest.TestEntity.class
 )
 @SessionFactory
 public class CharacterTypeTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {

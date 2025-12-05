@@ -4,37 +4,39 @@
  */
 package org.hibernate.orm.test.cache;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
-
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.Region;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -45,25 +47,39 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				SharedDomainDataAndQueryResultsTest.Dog.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = Environment.CACHE_REGION_PREFIX, value = SharedDomainDataAndQueryResultsTest.PREFIX),
+				@Setting(name = Environment.CACHE_REGION_FACTORY, value = "org.hibernate.testing.cache.CachingRegionFactory"),
+		}
+)
+@SessionFactory(generateStatistics = true)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class SharedDomainDataAndQueryResultsTest {
 
 	private static final String QUERY = "SELECT a FROM Dog a";
 	private static final String REGION = "TheRegion";
-	private static final String PREFIX = "test";
+	static final String PREFIX = "test";
 
+	@Order( 2 )
 	@Test
-	@JiraKey( value = "HHH-13586")
-	public void testAllCachedStatistics() {
-
-		final Statistics statistics = sessionFactory().getStatistics();
+	@JiraKey(value = "HHH-13586")
+	public void testAllCachedStatistics(SessionFactoryScope scope) {
+		final Statistics statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		final CacheRegionStatistics regionStatistics = statistics.getCacheRegionStatistics( REGION );
 
 		final QueryStatistics queryStatistics = statistics.getQueryStatistics( QUERY );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 
 					Dog yogi = session.get( Dog.class, "Yogi" );
 
@@ -104,8 +120,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 
 					Dog yogi = session.get( Dog.class, "Yogi" );
 
@@ -147,8 +162,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 
 					List<Dog> dogs = session.createNamedQuery( "Dog.findAll", Dog.class ).list();
 
@@ -211,8 +225,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 
 					List<Dog> dogs = session.getNamedQuery( "Dog.findAll" ).list();
 
@@ -271,12 +284,11 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		);
 	}
 
+	@Order( 1 )
 	@Test
-	@JiraKey( value = "HHH-13586")
-	public void testCacheImplementorGetRegion() {
-		rebuildSessionFactory();
-
-		final CacheImplementor cache = sessionFactory().getCache();
+	@JiraKey(value = "HHH-13586")
+	public void testCacheImplementorGetRegion(SessionFactoryScope scope) {
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
 		final Region domainDataRegion = cache.getRegion( REGION );
 		assertTrue( DomainDataRegion.class.isInstance( domainDataRegion ) );
 		assertEquals( REGION, domainDataRegion.getName() );
@@ -285,11 +297,9 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		// the named query is executed.
 		assertNull( cache.getQueryResultsCacheStrictly( REGION ) );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNamedQuery( "Dog.findAll", Dog.class ).list();
-				}
-		);
+		scope.inTransaction( session -> {
+			session.createNamedQuery( "Dog.findAll", Dog.class ).list();
+		} );
 
 		// No there should be a QueryResultsCache named REGION
 		final QueryResultsCache queryResultsCache = cache.getQueryResultsCacheStrictly( REGION );
@@ -301,11 +311,12 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		assertSame( domainDataRegion, cache.getRegion( REGION ) );
 	}
 
+	@Order( 2 )
 	@Test
-	@JiraKey( value = "HHH-13586")
-	public void testEvictCaches() {
+	@JiraKey(value = "HHH-13586")
+	public void testEvictCaches(SessionFactoryScope scope) {
 
-		final Statistics statistics = sessionFactory().getStatistics();
+		final Statistics statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
@@ -316,9 +327,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		assertEquals( 0, statistics.getQueryCachePutCount() );
 		assertEquals( 0, statistics.getQueryCacheMissCount() );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-
+		scope.inTransaction( session -> {
 					Dog yogi = session.get( Dog.class, "Yogi" );
 					assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 					assertEquals( 0, statistics.getSecondLevelCachePutCount() );
@@ -345,7 +354,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 					session.clear();
 					statistics.clear();
 
-					sessionFactory().getCache().evictRegion( REGION );
+					scope.getSessionFactory().getCache().evictRegion( REGION );
 
 					session.createNamedQuery( "Dog.findAll", Dog.class ).list();
 
@@ -356,26 +365,9 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 
 	}
 
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		ssrb.applySetting( AvailableSettings.USE_QUERY_CACHE, true );
-		ssrb.applySetting( AvailableSettings.CACHE_REGION_PREFIX, PREFIX );
-		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, new CachingRegionFactory() );
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
-		super.applyMetadataSources( metadataSources );
-		metadataSources.addAnnotatedClass( Dog.class );
-	}
-
-	@Before
-	public void setupData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 					Dog yogi = new Dog( "Yogi" );
 					yogi.nickNames.add( "The Yog" );
 					yogi.nickNames.add( "Little Boy" );
@@ -389,16 +381,10 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		);
 	}
 
-	@After
-	public void cleanupData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					List<Dog> dogs = session.createQuery( "from Dog", Dog.class ).getResultList();
-					for ( Dog dog : dogs ) {
-						session.remove( dog );
-					}
-				}
-		);
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getCache().evictAll();
 	}
 
 	@Entity(name = "Dog")
@@ -408,12 +394,12 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 					@QueryHint(name = "org.hibernate.cacheRegion", value = REGION)
 			}
 	)
-	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region=REGION)
+	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region = REGION)
 	public static class Dog {
 		@Id
 		private String name;
 
-		@Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region=REGION)
+		@Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region = REGION)
 		@ElementCollection
 		private Set<String> nickNames = new HashSet<>();
 

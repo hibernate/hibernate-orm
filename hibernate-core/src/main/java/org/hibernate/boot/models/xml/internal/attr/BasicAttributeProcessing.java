@@ -78,8 +78,8 @@ public class BasicAttributeProcessing {
 		XmlAnnotationHelper.applyLob( jaxbBasic.getLob(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyEnumerated( jaxbBasic.getEnumerated(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyNationalized( jaxbBasic.getNationalized(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyGenerated( jaxbBasic.getGenerated(), memberDetails, xmlDocumentContext );
 
-		// todo : value generation
 		// todo : ...
 
 		return memberDetails;

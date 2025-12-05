@@ -8,37 +8,30 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
 @author Vlad Mihalcea
  */
 @RequiresDialect( HSQLDialect.class )
-public class HSQLTruncFunctionTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
+@Jpa(annotatedClasses = {HSQLTruncFunctionTest.Person.class})
+public class HSQLTruncFunctionTest {
 
 	@Test
-	public void testTruncateAndTruncFunctions(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTruncateAndTruncFunctions(EntityManagerFactoryScope scope){
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.setId( 1L );
 			person.setHighestScore( 99.56d );
 			entityManager.persist( person );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Double score = entityManager.createQuery(
 				"select truncate(p.highestScore, 1) " +
 				"from Person p " +
@@ -49,7 +42,7 @@ public class HSQLTruncFunctionTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( 99.5d, score, 0.01 );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Double score = entityManager.createQuery(
 				"select trunc(p.highestScore, 1) " +
 				"from Person p " +

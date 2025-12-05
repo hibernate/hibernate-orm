@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositeelement;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -12,7 +13,7 @@ import java.util.HashSet;
 public class Parent {
 	private Long id;
 	private String name;
-	private Collection children = new HashSet();
+	private Collection<Child> children = new HashSet<>();
 	Parent() {}
 	public Parent(String name) {
 		this.name = name;
@@ -20,13 +21,13 @@ public class Parent {
 	/**
 	 * @return Returns the children.
 	 */
-	public Collection getChildren() {
+	public Collection<Child> getChildren() {
 		return children;
 	}
 	/**
 	 * @param children The children to set.
 	 */
-	public void setChildren(Collection children) {
+	public void setChildren(Collection<Child> children) {
 		this.children = children;
 	}
 	/**

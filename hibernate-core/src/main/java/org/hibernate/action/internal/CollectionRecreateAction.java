@@ -6,16 +6,12 @@ package org.hibernate.action.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for recreating a collection
@@ -41,13 +37,13 @@ public final class CollectionRecreateAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
-		final PersistentCollection<?> collection = getCollection();
+		final var collection = getCollection();
 		preRecreate();
-		final SharedSessionContractImplementor session = getSession();
-		final CollectionPersister persister = getPersister();
+		final var session = getSession();
+		final var persister = getPersister();
 		final Object key = getKey();
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var event = eventMonitor.beginCollectionRecreateEvent();
 		boolean success = false;
 		try {
 			persister.recreate( collection, key, session );
@@ -61,7 +57,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		evict();
 		postRecreate();
 
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.recreateCollection( persister.getRole() );
 		}

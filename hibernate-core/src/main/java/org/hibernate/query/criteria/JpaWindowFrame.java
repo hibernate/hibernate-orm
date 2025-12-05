@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FrameKind;
 
@@ -28,5 +29,5 @@ public interface JpaWindowFrame {
 	 *
 	 * @return the window frame expression
 	 */
-	Expression<?> getExpression();
+	@Nullable Expression<?> getExpression();
 }

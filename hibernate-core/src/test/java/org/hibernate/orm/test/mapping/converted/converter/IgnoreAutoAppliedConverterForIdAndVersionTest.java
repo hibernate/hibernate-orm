@@ -16,7 +16,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey( value = "HHH-19286" )
 @DomainModel( annotatedClasses = {

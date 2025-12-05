@@ -6,39 +6,32 @@ package org.hibernate.persister.entity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.DynamicFilterAliasGenerator;
-import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
+import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
@@ -112,11 +105,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {
+			final RuntimeModelCreationContext creationContext)
+					throws HibernateException {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
-		final Dialect dialect = creationContext.getDialect();
-		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
+		final var dialect = creationContext.getDialect();
+		final var typeConfiguration = creationContext.getTypeConfiguration();
 
 		// CLASS + TABLE
 
@@ -124,9 +118,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// todo (6.2) : see note on AbstractEntityPersister#getTableName(int)
 		qualifiedTableNames = new String[joinSpan];
 
-		final Table table = persistentClass.getRootTable();
-		final String rootTableName = determineTableName( table );
-		qualifiedTableNames[0] = rootTableName;
+		qualifiedTableNames[0] = determineTableName( persistentClass.getRootTable() );
 
 		isInverseTable = new boolean[joinSpan];
 		isNullableTable = new boolean[joinSpan];
@@ -163,13 +155,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// JOINS
 
-		final List<Join> joinClosure = persistentClass.getJoinClosure();
+		final var joinClosure = persistentClass.getJoinClosure();
 		boolean hasDuplicateTableName = false;
 		for ( int j = 1; j - 1 < joinClosure.size(); j++ ) {
-			Join join = joinClosure.get( j - 1 );
+			final var join = joinClosure.get( j - 1 );
 			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			hasDuplicateTableName = hasDuplicateTableName
-					|| ArrayHelper.indexOf( qualifiedTableNames, j, qualifiedTableNames[j] ) != -1;
+					|| indexOf( qualifiedTableNames, j, qualifiedTableNames[j] ) != -1;
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
@@ -188,7 +180,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 
-			final List<Column> columns = join.getKey().getColumns();
+			final var columns = join.getKey().getColumns();
 			for ( int i = 0; i < columns.size(); i++ ) {
 				keyColumnNames[j][i] = columns.get( i ).getQuotedName( dialect );
 			}
@@ -202,7 +194,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			constraintOrderedKeyColumnNames[position] = keyColumnNames[i];
 		}
 
-		spaces = ArrayHelper.join( qualifiedTableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
+		spaces = join( qualifiedTableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
 		final ArrayList<String> subclassTables = new ArrayList<>();
 		final ArrayList<String[]> joinKeyColumns = new ArrayList<>();
@@ -214,16 +206,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isConcretes.add( true );
 		isClassOrSuperclassJoins.add( true );
 		isNullables.add( false );
-		for ( Join join : persistentClass.getSubclassJoinClosure() ) {
+		for ( var join : persistentClass.getSubclassJoinClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
 			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isNullables.add( join.isOptional() );
 
-			final String joinTableName = determineTableName( join.getTable() );
-			subclassTables.add( joinTableName );
+			subclassTables.add( determineTableName( join.getTable() ) );
 
 			final String[] keyCols = new String[join.getKey().getColumnSpan()];
-			final List<Column> columns = join.getKey().getColumns();
+			final var columns = join.getKey().getColumns();
 			for ( int i = 0; i < columns.size(); i++ ) {
 				keyCols[i] = columns.get( i ).getQuotedName( dialect );
 			}
@@ -239,31 +230,32 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// DISCRIMINATOR
 
 		if ( persistentClass.isPolymorphic() ) {
-			final Value discriminator = persistentClass.getDiscriminator();
+			final var discriminator = persistentClass.getDiscriminator();
 			if ( discriminator == null ) {
 				throw new MappingException( "discriminator mapping required for single table polymorphic persistence" );
 			}
 			forceDiscriminator = persistentClass.isForceDiscriminator();
-			final Selectable selectable = discriminator.getSelectables().get( 0 );
+			final var selectable = discriminator.getSelectables().get( 0 );
 			discriminatorType = DiscriminatorHelper.getDiscriminatorType( persistentClass );
 			discriminatorValue = DiscriminatorHelper.getDiscriminatorValue( persistentClass );
 			discriminatorSQLValue = DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect );
 			discriminatorInsertable = isDiscriminatorInsertable( persistentClass );
-			if ( discriminator.hasFormula() ) {
-				final Formula formula = (Formula) selectable;
+			if ( selectable instanceof Formula formula ) {
 				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration );
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
 				discriminatorColumnReaderTemplate = null;
 				discriminatorAlias = "clazz_";
 			}
-			else {
-				final Column column = (Column) selectable;
+			else if ( selectable instanceof Column column ) {
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
 				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration );
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				discriminatorFormulaTemplate = null;
+			}
+			else {
+				throw new AssertionFailure( "Unrecognized selectable" );
 			}
 		}
 		else {
@@ -282,7 +274,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		// PROPERTIES
 
 		propertyTableNumbers = new int[getPropertySpan()];
-		final List<Property> propertyClosure = persistentClass.getPropertyClosure();
+		final var propertyClosure = persistentClass.getPropertyClosure();
 		for ( int k = 0; k < propertyClosure.size(); k++ ) {
 			propertyTableNumbers[k] = persistentClass.getJoinNumber( propertyClosure.get( k ) );
 		}
@@ -292,7 +284,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final ArrayList<Integer> propertyJoinNumbers = new ArrayList<>();
 		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
 
-		for ( Property property : persistentClass.getSubclassPropertyClosure() ) {
+		for ( var property : persistentClass.getSubclassPropertyClosure() ) {
 			propertyJoinNumbers.add( persistentClass.getJoinNumber( property ) );
 		}
 
@@ -309,14 +301,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			);
 
 			// SUBCLASSES
-			final List<Subclass> subclasses = persistentClass.getSubclasses();
+			final var subclasses = persistentClass.getSubclasses();
 			for ( int k = 0; k < subclasses.size(); k++ ) {
-				Subclass subclass = subclasses.get( k );
+				final var subclass = subclasses.get( k );
 				subclassClosure[k] = subclass.getEntityName();
-				Object subclassDiscriminatorValue = DiscriminatorHelper.getDiscriminatorValue( subclass );
 				addSubclassByDiscriminatorValue(
 						subclassesByDiscriminatorValueLocal,
-						subclassDiscriminatorValue,
+						DiscriminatorHelper.getDiscriminatorValue( subclass ),
 						subclass.getEntityName()
 				);
 			}
@@ -478,11 +469,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( discriminatorInsertable ) {
-			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
+			final TableInsertBuilder tableInsertBuilder =
+					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
-					discriminatorColumnName,
 					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
-					getDiscriminatorMapping().getJdbcMapping()
+					getDiscriminatorMapping()
 			);
 		}
 	}
@@ -559,40 +550,39 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
-		if ( !needsDiscriminator() && entityNameUses.isEmpty() ) {
-			return;
-		}
-		// The following optimization is to add the discriminator filter fragment for all treated entity names
-		final MappingMetamodelImplementor mappingMetamodel = getFactory().getMappingMetamodel();
-
-		boolean containsTreatUse = false;
-		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
-			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
-			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
-				// We only care about treat and filter uses which allow to reduce the amount of rows to select
-				continue;
+		if ( needsDiscriminator() || !entityNameUses.isEmpty() ) {// The following optimization is to add the discriminator filter fragment for all treated entity names
+			final var mappingMetamodel = getFactory().getMappingMetamodel();
+			if ( containsTreatUse( entityNameUses, mappingMetamodel ) ) {
+				final String discriminatorPredicate =
+						getPrunedDiscriminatorPredicate( entityNameUses, mappingMetamodel, "t" );
+				if ( discriminatorPredicate != null ) {
+					final var tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
+					tableReference.setPrunedTableExpression(
+							"(select * from " + getTableName() + " t where " + discriminatorPredicate + ")" );
+				}
 			}
-			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
-			// Filtering for abstract entities makes no sense, so ignore that
-			// Also, it makes no sense to filter for any of the super types,
-			// as the query will contain a filter for that already anyway
-			if ( useKind == EntityNameUse.UseKind.TREAT && !persister.isAbstract()
-					&& ( getSuperMappingType() == null || !getSuperMappingType().isTypeOrSuperType( persister ) ) ) {
-				containsTreatUse = true;
-				break;
+			// Otherwise, if we only have FILTER uses, we don't have to do anything here because
+			// the BaseSqmToSqlAstConverter will already apply the type filter in the WHERE clause
+		}
+	}
+
+	private boolean containsTreatUse(Map<String, EntityNameUse> entityNameUses, MappingMetamodel metamodel) {
+		for ( var entry : entityNameUses.entrySet() ) {
+			// We only care about treat uses which allow to reduce the amount of rows to select
+			if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
+				final var persister = metamodel.getEntityDescriptor( entry.getKey() );
+				// Filtering for abstract entities makes no sense, so ignore that
+				if ( !persister.isAbstract() ) {
+					// Also, it makes no sense to filter for any of the super types,
+					// as the query will contain a filter for that already anyway
+					final var superMappingType = getSuperMappingType();
+					if ( superMappingType == null || !superMappingType.isTypeOrSuperType( persister ) ) {
+						return true;
+					}
+				}
 			}
 		}
-		if ( !containsTreatUse ) {
-			// If we only have FILTER uses, we don't have to do anything here,
-			// because the BaseSqmToSqlAstConverter will already apply the type filter in the WHERE clause
-			return;
-		}
-
-		final String discriminatorPredicate = getPrunedDiscriminatorPredicate( entityNameUses, mappingMetamodel, "t" );
-		if ( discriminatorPredicate != null ) {
-			final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
-			tableReference.setPrunedTableExpression( "(select * from " + getTableName() + " t where " + discriminatorPredicate + ")" );
-		}
+		return false;
 	}
 
 	@Override
@@ -620,8 +610,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					tableName,
 					tableIndex,
 					() -> columnConsumer -> columnConsumer.accept(
-							tableName,
 							getIdentifierMapping(),
+							tableName,
 							keyColumnNames[tableIndex]
 					)
 			);

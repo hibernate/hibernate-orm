@@ -50,6 +50,7 @@ import static org.hamcrest.core.Is.is;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -83,7 +84,7 @@ public class BooleanArrayTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -152,7 +153,7 @@ public class BooleanArrayTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithBooleanArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_boolean_arrays t WHERE the_array " + op + " " + param,
 					TableWithBooleanArrays.class

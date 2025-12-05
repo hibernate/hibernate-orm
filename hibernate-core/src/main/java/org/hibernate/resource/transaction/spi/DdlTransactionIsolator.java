@@ -15,7 +15,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  *
  * @author Steve Ebersole
  */
-public interface DdlTransactionIsolator {
+public interface DdlTransactionIsolator extends AutoCloseable {
 	JdbcContext getJdbcContext();
 
 	/**
@@ -43,4 +43,9 @@ public interface DdlTransactionIsolator {
 	Connection getIsolatedConnection(boolean autocommit);
 
 	void release();
+
+	@Override
+	default void close() {
+		release();
+	}
 }

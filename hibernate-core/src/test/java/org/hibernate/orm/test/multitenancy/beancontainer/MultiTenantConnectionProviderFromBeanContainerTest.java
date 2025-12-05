@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.multitenancy.AbstractMultiTenancyTest;
 import org.hibernate.orm.test.multitenancy.ConfigurableMultiTenantConnectionProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -18,9 +18,9 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Yanming Zhou
@@ -88,8 +88,10 @@ public class MultiTenantConnectionProviderFromBeanContainerTest extends Abstract
 
 	@Test
 	public void testProviderInUse() {
-		MultiTenantConnectionProvider<?> providerInUse = ((SessionFactoryImpl) sessionFactory).getServiceRegistry().getService( MultiTenantConnectionProvider.class );
-		assertSame( providerInUse, expectedProviderInUse());
+		MultiTenantConnectionProvider<?> providerInUse =
+				((SessionFactoryImplementor) sessionFactory).getServiceRegistry()
+						.getService( MultiTenantConnectionProvider.class );
+		assertThat( providerInUse).isSameAs( expectedProviderInUse() );
 	}
 
 	protected MultiTenantConnectionProvider<?> expectedProviderInUse() {

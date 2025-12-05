@@ -21,7 +21,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * Sub-system logging related to JDBC batch execution
+ * Subsystem logging related to JDBC batch execution
  *
  * @author Steve Ebersole
  */
@@ -35,7 +35,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JdbcBatchLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc.batch";
 
-	Logger BATCH_LOGGER = Logger.getLogger( NAME );
 	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME );
 
 	@LogMessage(level = INFO)
@@ -43,30 +42,47 @@ public interface JdbcBatchLogging extends BasicLogger {
 	void batchingEnabled(int batchSize);
 
 	@LogMessage(level = WARN)
-	@Message(id = 100502, value = "Unable to release batch statement")
+	@Message(id = 100502, value = "Unable to release JDBC batch statement")
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = INFO)
-	@Message(id=100503, value = "On release of batch it still contained JDBC statements")
+	@Message(id=100503, value = "JDBC batch still contained JDBC statements on release")
 	void batchContainedStatementsOnRelease();
 
 	@LogMessage(level = TRACE)
 	@Message("Created JDBC batch (%s) - [%s]")
-	void createBatch(int batchSize, String string);
+	void createBatch(int batchSize, String batchKey);
 
 	@LogMessage(level = TRACE)
 	@Message("Adding to JDBC batch (%s / %s) - [%s]")
-	void addToBatch(int batchPosition, int batchSize, String string);
+	void addToBatch(int batchPosition, int batchSize, String batchKey);
 
 	@LogMessage(level = TRACE)
 	@Message("Executing JDBC batch (%s / %s) - [%s]")
-	void executeBatch(int batchPosition, int batchSize, String string);
+	void executeBatch(int batchPosition, int batchSize, String batchKey);
 
 	@LogMessage(level = TRACE)
 	@Message("Conditionally executing JDBC batch - [%s]")
-	void conditionallyExecuteBatch(String string);
+	void conditionallyExecuteBatch(String batchKey);
 
 	@LogMessage(level = TRACE)
 	@Message("Aborting JDBC batch - [%s]")
-	void abortBatch(String string);
+	void abortBatch(String batchKey);
+
+	@LogMessage(level = TRACE)
+	@Message("Using standard JDBC batch builder")
+	void usingStandardBatchBuilder();
+
+	@LogMessage(level = TRACE)
+	@Message("No statements to execute in JDBC batch - [%s]")
+	void emptyBatch(String batchKey);
+
+	// this might actually belong in JdbcLogging
+	@LogMessage(level = TRACE)
+	@Message("PreparedStatementDetails did not contain PreparedStatement on releaseStatements: %s")
+	void noPreparedStatements(String sqlString);
+
+	@LogMessage(level = TRACE)
+	@Message( "Success of batch update unknown: %s")
+	void batchSuccessUnknown(int batchPosition);
 }

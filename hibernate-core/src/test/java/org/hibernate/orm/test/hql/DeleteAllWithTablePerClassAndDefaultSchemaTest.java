@@ -4,40 +4,39 @@
  */
 package org.hibernate.orm.test.hql;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQLDialect;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-15022")
 @RequiresDialect(PostgreSQLDialect.class)
-public class DeleteAllWithTablePerClassAndDefaultSchemaTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { SuperEntity.class, SubEntity1.class, SubEntity2.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_SCHEMA, "public" );
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction( session -> {
+@ServiceRegistry(settings = @Setting(name=DEFAULT_SCHEMA, value = "public"))
+@DomainModel(annotatedClasses = {
+		DeleteAllWithTablePerClassAndDefaultSchemaTest.SuperEntity.class,
+		DeleteAllWithTablePerClassAndDefaultSchemaTest.SubEntity1.class,
+		DeleteAllWithTablePerClassAndDefaultSchemaTest.SubEntity2.class
+})
+@SessionFactory
+public class DeleteAllWithTablePerClassAndDefaultSchemaTest {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			SuperEntity entity1 = new SubEntity1( 1L, "super1", "sub1" );
 			SuperEntity entity2 = new SubEntity2( 2L, "super2", "sub2" );
 			session.persist( entity1 );
@@ -45,16 +44,21 @@ public class DeleteAllWithTablePerClassAndDefaultSchemaTest extends BaseCoreFunc
 		} );
 	}
 
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test
-	public void testDeleteAll() {
-		inTransaction( session -> {
+	public void testDeleteAll(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			assertThat( session.createQuery( "select count(*) from superent", Long.class ).uniqueResult() )
 					.isEqualTo( 2L );
 		} );
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			session.createMutationQuery( "delete from subent1" ).executeUpdate();
 		} );
-		inTransaction( session -> {
+		factoryScope.inTransaction( session -> {
 			assertThat( session.createQuery( "select count(*) from superent", Long.class ).uniqueResult() )
 					.isEqualTo( 1L );
 		} );

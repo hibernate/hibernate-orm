@@ -7,7 +7,6 @@ package org.hibernate.type.descriptor.jdbc;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.Types;
 
@@ -50,7 +49,7 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final var typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		final int jdbcTypeCode;

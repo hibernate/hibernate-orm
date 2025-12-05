@@ -12,9 +12,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -26,7 +25,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  * @author Gavin King
  */
 public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -297,9 +295,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		if ( hasSubclasses() ) {
 			final Set<Table> tables = new HashSet<>();
 			tables.add( getTable() );
-			for ( Subclass subclass : getSubclasses() ) {
+			for ( var subclass : getSubclasses() ) {
 				if ( !(subclass instanceof SingleTableSubclass) ) {
-					final Table table = subclass.getTable();
+					final var table = subclass.getTable();
 					if ( !tables.add( table ) ) {
 						// we encountered a duplicate table mapping
 						if ( getDiscriminator() == null ) {
@@ -330,13 +328,13 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private void checkCompositeIdentifier() {
 		if ( getIdentifier() instanceof Component id
 				&& !id.isDynamic() ) {
-			final Class<?> idClass = id.getComponentClass();
+			final var idClass = id.getComponentClass();
 			if ( idClass != null ) {
 				if ( !overridesEquals( idClass ) ) {
-					LOG.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
+					CORE_LOGGER.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
 				}
 				else if ( !overridesHashCode( idClass ) ) {
-					LOG.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
+					CORE_LOGGER.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
 				}
 			}
 		}
@@ -388,7 +386,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public Set<Table> getIdentityTables() {
 		final Set<Table> tables = new HashSet<>();
-		for ( PersistentClass clazz : getSubclassClosure() ) {
+		for ( var clazz : getSubclassClosure() ) {
 			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) {
 				tables.add( clazz.getIdentityTable() );
 			}
@@ -398,8 +396,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	@Override
 	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
-		this.softDeleteColumn = indicatorColumn;
-		this.softDeleteStrategy = strategy;
+		softDeleteColumn = indicatorColumn;
+		softDeleteStrategy = strategy;
 	}
 
 	@Override

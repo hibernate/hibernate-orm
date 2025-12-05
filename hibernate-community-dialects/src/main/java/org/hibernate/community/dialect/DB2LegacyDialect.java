@@ -6,10 +6,13 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
+import org.hibernate.community.dialect.temptable.DB2LegacyLocalTemporaryTableStrategy;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -26,11 +29,15 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -170,16 +177,31 @@ public class DB2LegacyDialect extends Dialect {
 		}
 	};
 
+	private LockingSupport lockingSupport;
+
 	public DB2LegacyDialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
 	}
 
 	public DB2LegacyDialect(DialectResolutionInfo info) {
-		super( info );
+		this( DB2Dialect.determinFullDatabaseVersion( info ) );
+		lockingSupport = buildLockingSupport();
 	}
 
 	public DB2LegacyDialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = buildLockingSupport();
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return DB2Dialect.determinFullDatabaseVersion( info );
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter( 11, 5 );
+		return DB2LockingSupport.forDB2( supportsSkipLocked );
 	}
 
 	@Override
@@ -221,36 +243,25 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				// prior to DB2 11, the 'boolean' type existed,
-				// but was not allowed as a column type
-				return getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
-			case TINYINT:
-				// no tinyint
-				return "smallint";
-			case NUMERIC:
-				// HHH-12827: map them both to the same type to avoid problems with schema update
-				// Note that 31 is the maximum precision DB2 supports
-				return columnType( DECIMAL );
-			case BLOB:
-				return "blob";
-			case CLOB:
-				return "clob";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case TIME:
-			case TIME_WITH_TIMEZONE:
-				return "time";
-			case BINARY:
-				// should use 'binary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
-			case VARBINARY:
-				// should use 'varbinary' since version 11
-				return getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			// prior to DB2 11, the 'boolean' type existed,
+			// but was not allowed as a column type
+			case BOOLEAN -> getDB2Version().isBefore( 11 ) ? "smallint" : super.columnType( sqlTypeCode );
+			// no tinyint
+			case TINYINT -> "smallint";
+			// HHH-12827: map them both to the same type to avoid problems with schema update
+			// Note that 31 is the maximum precision DB2 supports
+			case NUMERIC -> columnType( DECIMAL );
+			case BLOB -> "blob";
+			case CLOB -> "clob";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			case TIME, TIME_WITH_TIMEZONE -> "time";
+			// should use 'binary' since version 11
+			case BINARY -> getDB2Version().isBefore( 11 ) ? "char($l) for bit data" : super.columnType( sqlTypeCode );
+			// should use 'varbinary' since version 11
+			case VARBINARY -> getDB2Version().isBefore( 11 ) ? "varchar($l) for bit data" : super.columnType( sqlTypeCode );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -488,6 +499,8 @@ public class DB2LegacyDialect extends Dialect {
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
 			functionFactory.sha( "hash(?1, 2)" );
 			functionFactory.md5( "hash(?1, 0)" );
+
+			functionFactory.regexpLike();
 		}
 	}
 
@@ -537,28 +550,16 @@ public class DB2LegacyDialect extends Dialect {
 			toExpression = "?3";
 		}
 		else {
-			switch ( fromTemporalType ) {
-				case DATE:
-					fromExpression = "cast(?2 as timestamp)";
-					break;
-				case TIME:
-					fromExpression = "timestamp('1970-01-01',?2)";
-					break;
-				default:
-					fromExpression = "?2";
-					break;
-			}
-			switch ( toTemporalType ) {
-				case DATE:
-					toExpression = "cast(?3 as timestamp)";
-					break;
-				case TIME:
-					toExpression = "timestamp('1970-01-01',?3)";
-					break;
-				default:
-					toExpression = "?3";
-					break;
-			}
+			fromExpression = switch ( fromTemporalType ) {
+				case DATE -> "cast(?2 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?2)";
+				default -> "?2";
+			};
+			toExpression = switch ( toTemporalType ) {
+				case DATE -> "cast(?3 as timestamp)";
+				case TIME -> "timestamp('1970-01-01',?3)";
+				default -> "?3";
+			};
 		}
 		switch ( unit ) {
 			case NATIVE:
@@ -868,9 +869,8 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getDB2Version().isSameOrAfter( 11, 5 );
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -914,18 +914,7 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		//as far as I know, DB2 doesn't support this
 		return false;
 	}
 
@@ -1042,6 +1031,21 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public @Nullable TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are supported; (obviously) data is not shared between sessions.
+		return getDB2Version().isBefore( 9, 7 ) ? null : DB2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public @Nullable TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+		// Hibernate treats it as a "local" temp table.
+		return getDB2Version().isBefore( 9, 7 ) ? DB2LegacyLocalTemporaryTableStrategy.INSTANCE : null;
+	}
+
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}
@@ -1076,7 +1080,16 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods() {
+		// See HHH-12753, HHH-18314, HHH-19201
+		// Old DB2 JDBC drivers do not support setNClob, setNCharcterStream or setNString.
+		// In more recent driver versions, some methods just delegate to the non-N variant, but others still fail.
+		// Ultimately, let's just avoid the N variant methods on DB2 altogether
 		return false;
 	}
 
@@ -1322,13 +1335,13 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
+		return switch ( unit ) {
 			//WEEK means the ISO week number on DB2
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "doy";
-			case DAY_OF_WEEK: return "dow";
-			default: return super.translateExtractField( unit );
-		}
+			case DAY_OF_MONTH -> "day";
+			case DAY_OF_YEAR -> "doy";
+			case DAY_OF_WEEK -> "dow";
+			default -> super.translateExtractField( unit );
+		};
 	}
 
 	@Override
@@ -1443,7 +1456,7 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public String getDual() {
-		return "sysibm.dual";
+		return "sysibm.sysdummy1";
 	}
 
 	@Override
@@ -1469,6 +1482,11 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return true;
 	}
 
 }

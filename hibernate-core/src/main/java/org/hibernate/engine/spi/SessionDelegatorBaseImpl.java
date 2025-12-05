@@ -36,10 +36,10 @@ import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -60,6 +60,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -109,6 +110,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T execute(Callback<T> callback) {
 		return delegate.execute( callback );
+	}
+
+	@Override
+	public SharedStatelessSessionBuilder statelessWithOptions() {
+		return delegate.statelessWithOptions();
 	}
 
 	@Override
@@ -382,6 +388,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isAutoCloseSessionEnabled() {
+		return delegate.isAutoCloseSessionEnabled();
+	}
+
+	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
 	}
@@ -408,8 +419,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void autoPreFlush() {
-		delegate.autoPreFlush();
+	public boolean autoPreFlushIfRequired(QueryParameterBindings parameterBindings) {
+		return delegate.autoPreFlushIfRequired( parameterBindings );
 	}
 
 	@Override
@@ -425,6 +436,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Transaction accessTransaction() {
 		return delegate.accessTransaction();
+	}
+
+	@Override
+	public Transaction getCurrentTransaction() {
+		return delegate.getCurrentTransaction();
 	}
 
 	@Override
@@ -786,6 +802,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isManaged(Object entity) {
+		return delegate.isManaged( entity );
+	}
+
+	@Override
 	public LockModeType getLockMode(Object entity) {
 		return delegate.getLockMode( entity );
 	}
@@ -831,7 +852,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
 		return delegate.merge( object, loadGraph );
 	}
 
@@ -873,6 +894,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		return delegate.find( entityGraph, primaryKey, options );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey) {
+		return delegate.find( entityName, primaryKey );
+	}
+
+	@Override
+	public Object find(String entityName, Object primaryKey, FindOption... options) {
+		return delegate.find( entityName, primaryKey, options );
 	}
 
 	@Override
@@ -1146,8 +1177,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void registerProcess(AfterTransactionCompletionProcess process) {
-		delegate.registerProcess( process );
+	public TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return delegate.getTransactionCompletionCallbacks();
+	}
+
+	@Override
+	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return delegate.getTransactionCompletionCallbacksImplementor();
 	}
 
 	@Override
@@ -1178,6 +1214,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return delegate.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
+	public boolean useLanguageTagForLocale() {
+		return delegate.useLanguageTagForLocale();
 	}
 
 	@Override

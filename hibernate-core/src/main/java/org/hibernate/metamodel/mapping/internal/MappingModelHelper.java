@@ -5,9 +5,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.metamodel.mapping.Association;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -104,26 +101,26 @@ public class MappingModelHelper {
 			return false;
 		}
 		if ( attribute1 instanceof Association association1 ) {
-			final Association association2 = (Association) attribute2;
+			final var association2 = (Association) attribute2;
 			return association1.getForeignKeyDescriptor().getAssociationKey().equals(
 					association2.getForeignKeyDescriptor().getAssociationKey()
 			);
 		}
 		else if ( attribute1 instanceof PluralAttributeMapping plural1 ) {
-			final PluralAttributeMapping plural2 = (PluralAttributeMapping) attribute2;
-			final CollectionPart element1 = plural1.getElementDescriptor();
-			final CollectionPart element2 = plural2.getElementDescriptor();
-			final CollectionPart index1 = plural1.getIndexDescriptor();
-			final CollectionPart index2 = plural2.getIndexDescriptor();
-			return plural1.getKeyDescriptor().getAssociationKey().equals(
-					plural2.getKeyDescriptor().getAssociationKey()
-			) && ( index1 == null && index2 == null || isCompatibleModelPart( index1, index2 ) )
-					&& isCompatibleModelPart( element1, element2 );
+			final var plural2 = (PluralAttributeMapping) attribute2;
+			final var element1 = plural1.getElementDescriptor();
+			final var element2 = plural2.getElementDescriptor();
+			final var index1 = plural1.getIndexDescriptor();
+			final var index2 = plural2.getIndexDescriptor();
+			return plural1.getKeyDescriptor().getAssociationKey()
+						.equals( plural2.getKeyDescriptor().getAssociationKey() )
+				&& ( index1 == null && index2 == null || isCompatibleModelPart( index1, index2 ) )
+				&& isCompatibleModelPart( element1, element2 );
 		}
 		else if ( attribute1 instanceof EmbeddableValuedModelPart embedded1 ) {
-			final EmbeddableValuedModelPart embedded2 = (EmbeddableValuedModelPart) attribute2;
-			final EmbeddableMappingType embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
-			final EmbeddableMappingType embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();
+			final var embedded2 = (EmbeddableValuedModelPart) attribute2;
+			final var embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
+			final var embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();
 			final int numberOfAttributeMappings = embeddableTypeDescriptor1.getNumberOfAttributeMappings();
 			if ( numberOfAttributeMappings != embeddableTypeDescriptor2.getNumberOfAttributeMappings() ) {
 				return false;
@@ -139,9 +136,9 @@ public class MappingModelHelper {
 			return true;
 		}
 		else {
-			final BasicValuedModelPart basic1 = attribute1.asBasicValuedModelPart();
+			final var basic1 = attribute1.asBasicValuedModelPart();
 			if ( basic1 != null ) {
-				final BasicValuedModelPart basic2 = castNonNull( attribute2.asBasicValuedModelPart() );
+				final var basic2 = castNonNull( attribute2.asBasicValuedModelPart() );
 				if ( !basic1.getSelectionExpression().equals( basic2.getSelectionExpression() ) ) {
 					return false;
 				}

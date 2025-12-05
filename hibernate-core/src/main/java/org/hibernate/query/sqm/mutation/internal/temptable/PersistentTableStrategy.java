@@ -9,15 +9,19 @@ import java.sql.SQLException;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -27,7 +31,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class PersistentTableStrategy {
-	private static final Logger log = Logger.getLogger( PersistentTableStrategy.class );
+	private static final Logger LOG = Logger.getLogger( PersistentTableStrategy.class );
 
 	public static final String SHORT_NAME = "persistent";
 
@@ -52,13 +56,13 @@ public abstract class PersistentTableStrategy {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 
-		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
+		if ( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
 		}
 	}
 
-	public EntityMappingType getEntityDescriptor() {
-		return getTemporaryTable().getEntityDescriptor();
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return castNonNull( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy() );
 	}
 
 	public void prepare(
@@ -84,7 +88,7 @@ public abstract class PersistentTableStrategy {
 			return;
 		}
 
-		log.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
+		LOG.debugf( "Creating persistent ID table : %s", getTemporaryTable().getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
 				getTemporaryTable(),
@@ -96,11 +100,11 @@ public abstract class PersistentTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+			LOG.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
 			return;
 		}
 		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
+			LOG.error( "Unable obtain JDBC Connection", e );
 			return;
 		}
 
@@ -116,7 +120,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}
@@ -131,7 +136,7 @@ public abstract class PersistentTableStrategy {
 		dropIdTables = false;
 
 		final TemporaryTable temporaryTable = getTemporaryTable();
-		log.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
+		LOG.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
 				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, sessionFactory );
@@ -141,11 +146,11 @@ public abstract class PersistentTableStrategy {
 		}
 		catch (UnsupportedOperationException e) {
 			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debugf( "Unable to obtain JDBC connection; unable to drop persistent ID table : %s", temporaryTable.getTableExpression() );
+			LOG.debugf( "Unable to obtain JDBC connection; unable to drop persistent ID table : %s", temporaryTable.getTableExpression() );
 			return;
 		}
 		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
+			LOG.error( "Unable obtain JDBC Connection", e );
 			return;
 		}
 
@@ -156,7 +161,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

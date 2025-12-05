@@ -19,7 +19,6 @@ import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.models.spi.MemberDetails;
 
 import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.members.ResolvedField;
 import com.fasterxml.classmate.members.ResolvedMember;
 import com.fasterxml.classmate.members.ResolvedMethod;
@@ -38,15 +37,15 @@ public class ConverterHelper {
 	}
 
 	public static ResolvedMember<? extends Member> resolveMember(MemberDetails memberDetails, MetadataBuildingContext buildingContext) {
-		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
-		final ResolvedType declaringClassType =
+		final var classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
+		final var declaringClassType =
 				classmateContext.getTypeResolver()
 						.resolve( memberDetails.getDeclaringType().toJavaClass() );
-		final ResolvedTypeWithMembers declaringClassWithMembers =
+		final var declaringClassWithMembers =
 				classmateContext.getMemberResolver()
 						.resolve( declaringClassType, null, null );
 
-		final Member member = memberDetails.toJavaMember();
+		final var member = memberDetails.toJavaMember();
 		if ( member instanceof Method ) {
 			for ( ResolvedMethod resolvedMember : declaringClassWithMembers.getMemberMethods() ) {
 				if ( resolvedMember.getName().equals( member.getName() ) ) {
@@ -73,8 +72,8 @@ public class ConverterHelper {
 	public static List<ResolvedType> resolveConverterClassParamTypes(
 			Class<? extends AttributeConverter<?, ?>> converterClass,
 			ClassmateContext context) {
-		final ResolvedType converterType = context.getTypeResolver().resolve( converterClass );
-		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
+		final var converterType = context.getTypeResolver().resolve( converterClass );
+		final var converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
 		if ( converterParamTypes == null ) {
 			throw new AnnotationException(
 					"Could not extract type argument from attribute converter class '"
@@ -118,7 +117,7 @@ public class ConverterHelper {
 	}
 
 	private static boolean checkTypeParametersMatch(ResolvedType converterDefinedType, ResolvedType checkType) {
-		final List<ResolvedType> converterTypeParameters = converterDefinedType.getTypeParameters();
+		final var converterTypeParameters = converterDefinedType.getTypeParameters();
 		// if the converter did not define any nested type parameters,
 		// then the checks already done above are enough for a match
 		if ( converterTypeParameters.isEmpty() ) {
@@ -129,7 +128,7 @@ public class ConverterHelper {
 			// so we'd have a converter defined using something like, for example,
 			// List<String> for its domain type, and so we need to check those
 			// nested types as well
-			final List<ResolvedType> checkTypeParameters = checkType.getTypeParameters();
+			final var checkTypeParameters = checkType.getTypeParameters();
 			if ( checkTypeParameters.isEmpty() ) {
 				// the domain type did not define nested type params.  a List<String> would not auto-match a List(<Object>)
 				return false;

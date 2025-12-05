@@ -290,11 +290,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for share";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
@@ -454,7 +449,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	}
 
 	@Override
-	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
 		renderAlias();
 		appendSql( "." );
 		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
@@ -464,4 +459,12 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		appendSql( "tr" );
 	}
 
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
 }

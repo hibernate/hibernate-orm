@@ -11,10 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A script source input that aggregates over multiple other {@link ScriptSourceInput}.
@@ -22,8 +21,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  * @author Christian Beikov
  */
 public class ScriptSourceInputAggregate implements ScriptSourceInput {
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final AbstractScriptSourceInput[] inputs;
 
@@ -42,11 +39,11 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 		final List<String>[] lists = new List[inputs.length];
 		int size = 0;
 		for ( int i = 0; i < inputs.length; i++ ) {
-			final AbstractScriptSourceInput scriptSourceInput = inputs[i];
+			final var scriptSourceInput = inputs[i];
 			if ( scriptSourceInput.exists() ) {
-				final Reader reader = scriptSourceInput.prepareReader();
+				final var reader = scriptSourceInput.prepareReader();
 				try {
-					log.executingScript( scriptSourceInput.getScriptDescription() );
+					CORE_LOGGER.executingScript( scriptSourceInput.getScriptDescription() );
 					lists[i] = extractor.apply( reader );
 					size += lists[i].size();
 				}
@@ -56,7 +53,7 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 			}
 		}
 		final List<String> list = new ArrayList<>( size );
-		for ( List<String> strings : lists ) {
+		for ( var strings : lists ) {
 			list.addAll( strings );
 		}
 
@@ -65,8 +62,8 @@ public class ScriptSourceInputAggregate implements ScriptSourceInput {
 
 	@Override
 	public boolean containsScript(URL url) {
-		for ( int i = 0; i < inputs.length; i++ ) {
-			if ( inputs[i].containsScript( url ) ) {
+		for ( var input : inputs ) {
+			if ( input.containsScript( url ) ) {
 				return true;
 			}
 		}

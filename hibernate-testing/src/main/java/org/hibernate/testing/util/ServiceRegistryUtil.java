@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 
 public class ServiceRegistryUtil {
 
@@ -29,7 +29,7 @@ public class ServiceRegistryUtil {
 		return applySettings( ssrb );
 	}
 
-	private static void applyEnvSettings(StandardServiceRegistryBuilder ssrb) {
+	public static void applyEnvSettings(StandardServiceRegistryBuilder ssrb) {
 		ssrb.applySettings( Environment.getProperties() );
 	}
 
@@ -46,7 +46,7 @@ public class ServiceRegistryUtil {
 				&& !builder.getSettings().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
 			builder.applySetting(
 					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
+					SharedDriverManagerConnectionProvider.getInstance()
 			);
 			builder.applySetting(
 					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
@@ -62,7 +62,7 @@ public class ServiceRegistryUtil {
 			final Map<Object, Object> objectMap = (Map<Object, Object>) properties;
 			objectMap.put(
 					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
+					SharedDriverManagerConnectionProvider.getInstance()
 			);
 			objectMap.put(
 					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,

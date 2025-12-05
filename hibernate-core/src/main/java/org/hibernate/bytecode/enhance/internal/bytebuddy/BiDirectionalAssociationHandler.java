@@ -20,8 +20,6 @@ import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
@@ -38,16 +36,16 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 
-final class BiDirectionalAssociationHandler implements Implementation {
+import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( BiDirectionalAssociationHandler.class );
+final class BiDirectionalAssociationHandler implements Implementation {
 
 	static Implementation wrap(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
 			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
-		if ( !enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
+		if ( !enhancementContext.doBiDirectionalAssociationManagement() ) {
 			return implementation;
 		}
 
@@ -64,9 +62,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			bidirectionalAttributeName = mappedBy;
 		}
 		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
-			if ( log.isInfoEnabled() ) {
-				log.infof(
-						"Bi-directional association not managed for field [%s#%s]: Could not find target field in [%s]",
+			if ( ENHANCEMENT_LOGGER.isInfoEnabled() ) {
+				ENHANCEMENT_LOGGER.bidirectionalNotManagedCouldNotFindTargetField(
 						managedCtClass.getName(),
 						persistentField.getName(),
 						targetEntity.getCanonicalName()
@@ -120,9 +117,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
 
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
-				if ( log.isInfoEnabled() ) {
-					log.infof(
-							"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
+				if ( ENHANCEMENT_LOGGER.isInfoEnabled() ) {
+					ENHANCEMENT_LOGGER.manyToManyInMapNotSupported(
 							managedCtClass.getName(),
 							persistentField.getName()
 					);
@@ -148,35 +144,29 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			AnnotationDescription.Loadable<ManyToOne> mto = persistentField.getAnnotation( ManyToOne.class );
 			AnnotationDescription.Loadable<ManyToMany> mtm = persistentField.getAnnotation( ManyToMany.class );
 
-			if ( oto == null && otm == null && mto == null && mtm == null ) {
-				return null;
-			}
-
-			AnnotationValue<?, ?> targetClass = null;
+			final AnnotationValue<?, ?> targetClass;
 			if ( oto != null ) {
 				targetClass = oto.getValue( new MethodDescription.ForLoadedMethod( OneToOne.class.getDeclaredMethod( "targetEntity" ) ) );
 			}
-			if ( otm != null ) {
+			else if ( otm != null ) {
 				targetClass = otm.getValue( new MethodDescription.ForLoadedMethod( OneToMany.class.getDeclaredMethod( "targetEntity" ) ) );
 			}
-			if ( mto != null ) {
+			else if ( mto != null ) {
 				targetClass = mto.getValue( new MethodDescription.ForLoadedMethod( ManyToOne.class.getDeclaredMethod( "targetEntity" ) ) );
 			}
-			if ( mtm != null ) {
+			else if ( mtm != null ) {
 				targetClass = mtm.getValue( new MethodDescription.ForLoadedMethod( ManyToMany.class.getDeclaredMethod( "targetEntity" ) ) );
 			}
-
-			if ( targetClass == null ) {
-				if ( log.isInfoEnabled() ) {
-					log.infof(
-							"Bi-directional association not managed for field [%s#%s]: Could not find target type",
+			else {
+				if ( ENHANCEMENT_LOGGER.isInfoEnabled() ) {
+					ENHANCEMENT_LOGGER.bidirectionalNotManagedCouldNotFindTargetType(
 							managedCtClass.getName(),
 							persistentField.getName()
 					);
 				}
 				return null;
 			}
-			else if ( !targetClass.resolve( TypeDescription.class ).represents( void.class ) ) {
+			if ( !targetClass.resolve( TypeDescription.class ).represents( void.class ) ) {
 				return targetClass.resolve( TypeDescription.class );
 			}
 		}
@@ -208,7 +198,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			return null;
 		}
 		else {
-			// HHH-13446 - mappedBy from annotation may not be a valid bi-directional association, verify by calling isValidMappedBy()
+			// HHH-13446 - mappedBy from annotation may not be a valid bidirectional association, verify by calling isValidMappedBy()
 			return isValidMappedBy( target, targetEntity, mappedBy, context ) ? mappedBy : null;
 		}
 	}
@@ -253,8 +243,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			if ( context.isPersistentField( annotatedF )
 					&& target.getName().equals( getMappedBy( annotatedF, entityType( annotatedF.getType() ), context ) )
 					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
-				if ( log.isTraceEnabled() ) {
-					log.tracef(
+				if ( ENHANCEMENT_LOGGER.isTraceEnabled() ) {
+					ENHANCEMENT_LOGGER.tracef(
 							"mappedBy association for field [%s#%s] is [%s#%s]",
 							target.getDeclaringType().asErasure().getName(),
 							target.getName(),

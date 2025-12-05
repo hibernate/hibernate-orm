@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
@@ -23,6 +24,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				NaturalIdAndAssociationTest.PositionEntity.class,
@@ -31,6 +33,10 @@ import jakarta.persistence.Table;
 @SessionFactory
 @Jira("HHH-18338")
 public class NaturalIdAndAssociationTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testPersist(SessionFactoryScope scope) {

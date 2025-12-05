@@ -1,4 +1,5 @@
-:shared-attributes-dir: ../shared/
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/topical/html_single/
 
 include::{shared-attributes-dir}/common-attributes.adoc[]
 include::{shared-attributes-dir}/url-attributes.adoc[]
@@ -6,7 +7,9 @@ include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Topical Guides
-:toc:
+:toc2:
+:toclevels: 3
+:sectanchors:
 
 Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
 all the documentation to give some direction on where to look for information.
@@ -35,7 +38,7 @@ link:{doc-user-guide-url}[User Guide]::
 [[logging]]
 == Logging
 
-The link:{doc-logging-url}[Logging Guide] discusses logging in Hibernate.
+The xref:logging/index.adoc[Logging Guide] discusses logging in Hibernate.
 
 
 [[tooling]]
@@ -50,7 +53,7 @@ See the link:{doc-user-guide-url}#tooling[Tooling Guide] for information on:
 
 
 == Integrator Guides
-* The <<registries/ServiceRegistries.adoc#registries-guide,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
+* The xref:registries/index.adoc#registries-guide[Service Registries Guide] discusses Hibernate Service and ServiceRegistry contracts.
 * Others coming soon
 
 

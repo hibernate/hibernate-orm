@@ -19,28 +19,23 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Book.class,
-				Country.class
-		};
-	}
+@Jpa(annotatedClasses = {
+		EmbeddableOverrideTest.Book.class,
+		EmbeddableOverrideTest.Country.class
+})
+public class EmbeddableOverrideTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Country canada = new Country();
 			canada.setName("Canada");
 			entityManager.persist(canada);
@@ -50,7 +45,7 @@ public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase 
 			entityManager.persist(usa);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			Country canada = session.byNaturalId(Country.class).using("name", "Canada").load();
 			Country usa = session.byNaturalId(Country.class).using("name", "USA").load();

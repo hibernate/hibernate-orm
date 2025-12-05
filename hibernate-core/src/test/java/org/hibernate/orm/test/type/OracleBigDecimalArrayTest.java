@@ -25,6 +25,7 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = { OracleBigDecimalArrayTest.EntityWithBigDecimalArray.class })
 @RequiresDialect(OracleDialect.class)
@@ -42,7 +43,7 @@ public class OracleBigDecimalArrayTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test

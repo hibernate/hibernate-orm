@@ -22,55 +22,33 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(CustomParameterized.class)
-public class OptimizerConcurrencyUnitTest extends BaseUnitTestCase {
+public class OptimizerConcurrencyUnitTest {
 
-	@Parameterized.Parameters(name = "{0}")
-	public static List<Object[]> params() {
-		List<Object[]> params = new ArrayList<>();
-		for ( StandardOptimizerDescriptor value : StandardOptimizerDescriptor.values() ) {
-			params.add( new Object[] { value } );
-		}
-		return params;
-	}
-
-	private final StandardOptimizerDescriptor optimizerDescriptor;
-
-	public OptimizerConcurrencyUnitTest(StandardOptimizerDescriptor optimizerDescriptor) {
-		this.optimizerDescriptor = optimizerDescriptor;
-	}
-
-	@Test
-	public void testConcurrentUsage_singleTenancy() throws InterruptedException {
+	@ParameterizedTest
+	@MethodSource("org.hibernate.id.enhanced.StandardOptimizerDescriptor#values")
+	public void testConcurrentUsage_singleTenancy(StandardOptimizerDescriptor descriptor) throws InterruptedException {
 		final int increment = 50;
 		final int taskCount = 100 * increment;
 
-		Optimizer optimizer = buildOptimizer( 1, increment );
+		Optimizer optimizer = buildOptimizer( 1, increment, descriptor );
 
 		List<Callable<Long>> tasks = new ArrayList<>();
 
 		SourceMock sequence = new SourceMock( 1, increment );
-		assertEquals( 0, sequence.getTimesCalled() );
-		assertEquals( -1, sequence.getCurrentValue() );
+		Assertions.assertEquals( 0, sequence.getTimesCalled() );
+		Assertions.assertEquals( -1, sequence.getCurrentValue() );
 
 		for ( int i = 0; i < taskCount; i++ ) {
-			tasks.add( new Callable<Long>() {
-				@Override
-				public Long call() throws Exception {
-					return ( Long ) optimizer.generate( sequence );
-				}
-			} );
+			tasks.add( () -> ( Long ) optimizer.generate( sequence ) );
 		}
 
 		ExecutorService executor = Executors.newFixedThreadPool( 10 );
@@ -97,14 +75,15 @@ public class OptimizerConcurrencyUnitTest extends BaseUnitTestCase {
 		System.out.println( "Generated IDs: " + generated );
 	}
 
-	@Test
-	public void testConcurrentUsage_multiTenancy() throws InterruptedException {
+	@ParameterizedTest
+	@MethodSource("org.hibernate.id.enhanced.StandardOptimizerDescriptor#values")
+	public void testConcurrentUsage_multiTenancy(StandardOptimizerDescriptor descriptor) throws InterruptedException {
 		final int increment = 50;
 
 		final int tenantCount = 5;
 		final int taskCountPerTenant = 20 * increment;
 
-		Optimizer optimizer = buildOptimizer( 1, increment );
+		Optimizer optimizer = buildOptimizer( 1, increment, descriptor );
 
 		Map<String, List<Callable<Long>>> tasksByTenantId = new LinkedHashMap<>();
 
@@ -118,12 +97,7 @@ public class OptimizerConcurrencyUnitTest extends BaseUnitTestCase {
 			List<Callable<Long>> tasksForTenant = new ArrayList<>();
 			tasksByTenantId.put( tenantId, tasksForTenant );
 			for ( int j = 0; j < taskCountPerTenant; j++ ) {
-				tasksForTenant.add( new Callable<Long>() {
-					@Override
-					public Long call() throws Exception {
-						return ( Long ) optimizer.generate( sequenceForTenant );
-					}
-				} );
+				tasksForTenant.add( () -> ( Long ) optimizer.generate( sequenceForTenant ) );
 			}
 		}
 
@@ -173,7 +147,7 @@ public class OptimizerConcurrencyUnitTest extends BaseUnitTestCase {
 		}
 	}
 
-	private Optimizer buildOptimizer(long initial, int increment) {
+	private Optimizer buildOptimizer(long initial, int increment, StandardOptimizerDescriptor optimizerDescriptor) {
 		return OptimizerFactory.buildOptimizer( optimizerDescriptor, Long.class, increment, initial );
 	}
 

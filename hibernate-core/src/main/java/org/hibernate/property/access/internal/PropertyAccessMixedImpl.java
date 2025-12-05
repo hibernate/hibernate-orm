@@ -17,11 +17,12 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
 
 /**
  * A {@link PropertyAccess} based on mix of getter/setter method and/or field.
@@ -37,30 +38,30 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	public PropertyAccessMixedImpl(PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
 		this.strategy = strategy;
 
-		final AccessType propertyAccessType = AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
+		final var propertyAccessType = getAccessType( containerJavaType, propertyName );
 		switch ( propertyAccessType ) {
 			case FIELD: {
-				Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
+				final var field = fieldOrNull( containerJavaType, propertyName );
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				this.getter = fieldGetter( containerJavaType, propertyName, field );
-				this.setter = fieldSetter( containerJavaType, propertyName, field );
+				getter = fieldGetter( containerJavaType, propertyName, field );
+				setter = fieldSetter( containerJavaType, propertyName, field );
 				break;
 			}
 			case PROPERTY: {
-				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				final var getterMethod = getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
+				final var setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
 
-				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
-				this.setter = propertySetter( containerJavaType, propertyName, setterMethod );
+				getter = propertyGetter( containerJavaType, propertyName, getterMethod );
+				setter = propertySetter( containerJavaType, propertyName, setterMethod );
 				break;
 			}
 			default: {

@@ -4,14 +4,15 @@
  */
 package org.hibernate.orm.test.jpa.spi;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import jakarta.persistence.Tuple;
 
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Maksym Symonov
@@ -22,7 +23,7 @@ public class NativeQueryTupleTransformerTest {
 
 	@Test
 	public void nullValueIsExtractedFromTuple() {
-		final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
+		final Tuple tuple = nativeQueryTupleTransformer.transformTuple(
 			new Object[] { 1L, null },
 			new String[] { "id", "value" }
 		);
@@ -30,12 +31,17 @@ public class NativeQueryTupleTransformerTest {
 		assertNull(tuple.get("value"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void missingAliasCausesExceptionWhenIsExtractedFromTuple() {
-		final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
-			new Object[] { 1L, null },
-			new String[] { "id", "value" }
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					final Tuple tuple = nativeQueryTupleTransformer.transformTuple(
+							new Object[] {1L, null},
+							new String[] {"id", "value"}
+					);
+					tuple.get( "unknownAlias" );
+				}
 		);
-		tuple.get("unknownAlias");
 	}
 }

@@ -353,7 +353,7 @@ public class BooleanMappingTests {
 	@SkipForDialect(dialectClass = OracleDialect.class)
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = HANADialect.class)
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10)
 	@SkipForDialect(dialectClass = AltibaseDialect.class)
 	@SkipForDialect(dialectClass = InformixDialect.class)

@@ -12,10 +12,8 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -50,7 +48,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			Namespace namespace,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		final NameSpaceTablesInformation tablesInformation =
+		final var tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
 		if ( schemaFilter.includeNamespace( namespace ) ) {
@@ -66,12 +64,12 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					context,
 					targets
 			);
-			for ( Table table : namespace.getTables() ) {
+			for ( var table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
+					final var tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
@@ -83,11 +81,11 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
-			for ( Table table : namespace.getTables() ) {
+			for ( var table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
-					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
+					final var tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
 								context, targets );

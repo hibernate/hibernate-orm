@@ -10,7 +10,6 @@ import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
-import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -21,13 +20,17 @@ import org.hibernate.dialect.function.OracleExtractFunction;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.OracleLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.OracleBooleanJdbcType;
 import org.hibernate.dialect.type.OracleEnumJdbcType;
 import org.hibernate.dialect.type.OracleJdbcHelper;
@@ -84,8 +87,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorOracleImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -106,6 +112,7 @@ import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.jboss.logging.Logger;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -118,15 +125,14 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jboss.logging.Logger;
 
 import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
+import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
-import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -397,7 +403,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonValue_oracle();
 		functionFactory.jsonQuery_oracle();
 		functionFactory.jsonExists_oracle();
-		functionFactory.jsonObject_oracle( getVersion().isSameOrAfter( 19 ) );
+		functionFactory.jsonObject_oracle( true );
 		functionFactory.jsonArray_oracle();
 		functionFactory.jsonArrayAgg_oracle();
 		functionFactory.jsonObjectAgg_oracle();
@@ -431,6 +437,7 @@ public class OracleDialect extends Dialect {
 				"extract",
 				new OracleExtractFunction( this, typeConfiguration )
 		);
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**
@@ -1059,7 +1066,7 @@ public class OracleDialect extends Dialect {
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 		typeContributions.contributeType(
@@ -1067,7 +1074,7 @@ public class OracleDialect extends Dialect {
 						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 
@@ -1304,33 +1311,27 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return OracleLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1340,7 +1341,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	/**
@@ -1467,18 +1468,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return OracleLockingSupport.ORACLE_LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -1823,10 +1814,10 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		// see HHH-18206
-		return false;
+		// If application continuity is enabled, don't use stream bindings, since a replay could otherwise fail
+		// if the underlying stream doesn't support mark and reset
+		return !isApplicationContinuity();
 	}
-
 
 	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
@@ -1884,6 +1875,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
+	}
+
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
 }

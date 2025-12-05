@@ -31,12 +31,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -53,16 +48,17 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.trim;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Coordinates the updating of an entity.
@@ -72,7 +68,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
  * @author Steve Ebersole
  */
 public class UpdateCoordinatorStandard extends AbstractMutationCoordinator implements UpdateCoordinator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UpdateCoordinatorStandard.class );
 
 	private final MutationOperationGroup staticUpdateGroup;
 	private final BatchKey batchKey;
@@ -83,18 +78,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	public UpdateCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
-		// NOTE : even given dynamic-update and/or dirty optimistic locking
+		// NOTE: even given dynamic-update and/or dirty optimistic locking
 		// there are cases where we need the full static updates.
-		this.staticUpdateGroup = buildStaticUpdateGroup();
-		this.versionUpdateGroup = buildVersionUpdateGroup();
+		staticUpdateGroup = buildStaticUpdateGroup();
+		versionUpdateGroup = buildVersionUpdateGroup();
 		if ( entityPersister.hasUpdateGeneratedProperties() ) {
 			// disable batching in case of update generated properties
-			this.batchKey = null;
-			this.versionUpdateBatchkey = null;
+			batchKey = null;
+			versionUpdateBatchkey = null;
 		}
 		else {
-			this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE" );
-			this.versionUpdateBatchkey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE_VERSION" );
+			batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE" );
+			versionUpdateBatchkey = new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE_VERSION" );
 		}
 	}
 
@@ -167,23 +162,24 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int[] incomingDirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
-		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
-			final Supplier<GeneratedValues> generatedValuesAccess = handlePotentialImplicitForcedVersionIncrement(
-					entity,
-					id,
-					values,
-					oldVersion,
-					incomingDirtyAttributeIndexes,
-					session,
-					versionMapping
-			);
+			final var generatedValuesAccess =
+					handlePotentialImplicitForcedVersionIncrement(
+							entity,
+							id,
+							values,
+							oldVersion,
+							incomingDirtyAttributeIndexes,
+							session,
+							versionMapping
+					);
 			if ( generatedValuesAccess != null ) {
 				return generatedValuesAccess.get();
 			}
 		}
 
-		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entity );
+		final var entry = session.getPersistenceContextInternal().getEntry( entity );
 
 		// Ensure that an immutable or non-modifiable entity is not being updated unless it is
 		// in the process of being deleted.
@@ -193,11 +189,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// apply any pre-update in-memory value generation
 		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, values, session );
-		final int[] dirtyAttributeIndexes = dirtyAttributeIndexes( incomingDirtyAttributeIndexes, preUpdateGeneratedAttributeIndexes );
+		final int[] dirtyAttributeIndexes =
+				dirtyAttributeIndexes( incomingDirtyAttributeIndexes, preUpdateGeneratedAttributeIndexes );
 
 		final boolean[] attributeUpdateability;
 		boolean forceDynamicUpdate;
-		if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
+		if ( entityPersister().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 			forceDynamicUpdate = true;
 		}
@@ -217,7 +214,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			forceDynamicUpdate = true;
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 
-			final boolean[] propertyLaziness = entityPersister().getPropertyLaziness();
+			final var propertyLaziness = entityPersister().getPropertyLaziness();
 			for ( int i = 0; i < propertyLaziness.length; i++ ) {
 				// add also all the non-lazy properties because dynamic update is false
 				if ( !propertyLaziness[i] ) {
@@ -282,7 +279,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final InclusionChecker inclusionChecker = (position, attribute) -> attributeUpdateability[position];
 
-		final UpdateValuesAnalysisImpl valuesAnalysis = analyzeUpdateValues(
+		final var valuesAnalysis = analyzeUpdateValues(
 				entity,
 				values,
 				oldVersion,
@@ -389,57 +386,71 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int[] incomingDirtyAttributeIndexes,
 			SharedSessionContractImplementor session,
 			EntityVersionMapping versionMapping) {
-		// handle case where the only value being updated is the version.
-		// we handle this case specially from `#coordinateUpdate` to leverage
-		// `#doVersionUpdate`
-		final boolean isSimpleVersionUpdate;
+		// Handle a case where the only value being updated is the version.
+		// We treat this case specially in `#coordinateUpdate` to leverage
+		// `#doVersionUpdate`.
 		final Object newVersion;
-
-		if ( incomingDirtyAttributeIndexes != null ) {
-			if ( incomingDirtyAttributeIndexes.length == 1
-					&& versionMapping.getVersionAttribute() == entityPersister().getAttributeMapping( incomingDirtyAttributeIndexes[0] ) ) {
-				// special case of only the version attribute itself as dirty
-				isSimpleVersionUpdate = true;
-				newVersion = values[ incomingDirtyAttributeIndexes[0]];
-			}
-			else if ( incomingDirtyAttributeIndexes.length == 0 && oldVersion != null ) {
-				isSimpleVersionUpdate = !versionMapping.areEqual(
-						values[ versionMapping.getVersionAttribute().getStateArrayPosition() ],
-						oldVersion,
-						session
-				);
-				newVersion = values[ versionMapping.getVersionAttribute().getStateArrayPosition()];
-			}
-			else {
-				isSimpleVersionUpdate = false;
-				newVersion = null;
-			}
+		if ( hasUpdateGeneratedValues() ) {
+			// if we have any fields generated by the UPDATE event,
+			// then we have to include the generated fields in the
+			// update statement
+			return null;
 		}
-		else {
-			isSimpleVersionUpdate = false;
-			newVersion = null;
-		}
-
-		if ( isSimpleVersionUpdate ) {
-			// we have just the version being updated - use the special handling
-			assert newVersion != null;
-			final GeneratedValues generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, session );
-			return () -> generatedValues;
+		else if ( incomingDirtyAttributeIndexes != null ) {
+			switch ( incomingDirtyAttributeIndexes.length ) {
+				case 1:
+					final int dirtyAttributeIndex = incomingDirtyAttributeIndexes[0];
+					final var versionAttribute = versionMapping.getVersionAttribute();
+					final var dirtyAttribute = entityPersister().getAttributeMapping( dirtyAttributeIndex );
+					if ( versionAttribute == dirtyAttribute ) {
+						// only the version attribute itself is dirty
+						newVersion = values[dirtyAttributeIndex];
+					}
+					else {
+						// the dirty field is some other field
+						return null;
+					}
+					break;
+				case 0:
+					if ( oldVersion != null ) {
+						newVersion = values[versionMapping.getVersionAttribute().getStateArrayPosition()];
+						if ( versionMapping.areEqual( newVersion, oldVersion, session ) ) {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+					break;
+				default:
+					return null;
+			}
 		}
 		else {
 			return null;
 		}
+
+		// we have just the version being updated - use the special handling
+		assert newVersion != null;
+		final GeneratedValues generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, session );
+		return () -> generatedValues;
+	}
+
+	private boolean hasUpdateGeneratedValues() {
+		final var entityMetamodel = entityPersister();
+		return entityMetamodel.hasUpdateGeneratedProperties()
+			|| entityMetamodel.hasPreUpdateGeneratedProperties();
 	}
 
 	private static boolean isValueGenerated(Generator generator) {
 		return generator != null
-				&& generator.generatesOnUpdate()
-				&& generator.generatedOnExecution();
+			&& generator.generatesOnUpdate()
+			&& generator.generatedOnExecution();
 	}
 
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		assert isValueGenerated( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
+		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect );
 	}
 
 	/**
@@ -470,13 +481,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		assert versionUpdateGroup != null;
 
-		final EntityTableMapping mutatingTableDetails =
+		final var mutatingTableDetails =
 				(EntityTableMapping) versionUpdateGroup.getSingleOperation().getTableDetails();
 
-		final MutationExecutor mutationExecutor =
+		final var mutationExecutor =
 				updateVersionExecutor( session, versionUpdateGroup, false, batching );
 
-		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+		final var versionMapping = entityPersister().getVersionMapping();
 
 		// set the new version
 		mutationExecutor.getJdbcValueBindings().bindValue(
@@ -527,12 +538,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object object,
 			Object[] newValues,
 			SharedSessionContractImplementor session) {
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		if ( !entityMetamodel.hasPreUpdateGeneratedValues() ) {
+		final var persister = entityPersister();
+		if ( !persister.hasPreUpdateGeneratedProperties() ) {
 			return EMPTY_INT_ARRAY;
 		}
 
-		final Generator[] generators = entityMetamodel.getGenerators();
+		final var generators = persister.getGenerators();
 		if ( generators.length != 0 ) {
 			final int[] fieldsPreUpdateNeeded = new int[generators.length];
 			int count = 0;
@@ -542,7 +553,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
 					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
-					entityPersister().setPropertyValue( object, i, newValues[i] );
+					entityPersister().setValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
 				}
 			}
@@ -560,34 +571,36 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * true when the property is dirty
 	 */
 	protected boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
-		final boolean[] updateability = entityPersister().getPropertyUpdateability();
+		final var persister = entityPersister();
+		final var updateability = persister.getPropertyUpdateability();
 		if ( dirtyProperties == null ) {
 			return updateability;
 		}
 		else {
-			final boolean[] propsToUpdate = new boolean[entityPersister().getNumberOfAttributeMappings()];
+			final var propsToUpdate = new boolean[persister.getNumberOfAttributeMappings()];
 			for ( int property: dirtyProperties ) {
 				if ( updateability[property] ) {
 					propsToUpdate[property] = true;
 				}
 			}
-			if ( entityPersister().isVersioned()
-					&& entityPersister().getVersionMapping().getVersionAttribute().isUpdateable() ) {
-				final int versionAttributeIndex = entityPersister().getVersionMapping()
-						.getVersionAttribute()
-						.getStateArrayPosition();
-				propsToUpdate[versionAttributeIndex] = propsToUpdate[versionAttributeIndex]
-						|| isVersionIncrementRequired(
-								dirtyProperties,
-								hasDirtyCollection,
-								entityPersister().getPropertyVersionability()
-						);
+			if ( persister.isVersioned() ) {
+				final var versionAttribute = persister.getVersionMapping().getVersionAttribute();
+				if ( versionAttribute.isUpdateable() ) {
+					final int versionAttributeIndex = versionAttribute.getStateArrayPosition();
+					propsToUpdate[versionAttributeIndex] =
+							propsToUpdate[versionAttributeIndex]
+							|| isVersionIncrementRequired(
+									dirtyProperties,
+									hasDirtyCollection,
+									persister.getPropertyVersionability()
+							);
+				}
 			}
 			return propsToUpdate;
 		}
 	}
 
-	private UpdateValuesAnalysisImpl analyzeUpdateValues(
+	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
 			Object entity,
 			Object[] values,
 			Object oldVersion,
@@ -599,8 +612,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
-		final EntityPersister persister = entityPersister();
-		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+		final var persister = entityPersister();
+		final var attributeMappings = persister.getAttributeMappings();
 
 		// NOTE:
 		// 		* `dirtyAttributeIndexes == null` means we had no snapshot and couldn't
@@ -608,7 +621,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		//		* `oldValues == null` just means we had no snapshot to begin with - we might
 		//			have used select-before-update to get the dirtyAttributeIndexes (again,
 		//			never the case for #merge)
-		final UpdateValuesAnalysisImpl analysis = new UpdateValuesAnalysisImpl(
+		final var analysis = new UpdateValuesAnalysisImpl(
 				values,
 				oldValues,
 				dirtyAttributeIndexes,
@@ -617,10 +630,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				forceDynamicUpdate
 		);
 
-		final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
+		final var propertyUpdateability = persister.getPropertyUpdateability();
 
 		for ( int attributeIndex = 0; attributeIndex < attributeMappings.size(); attributeIndex++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
+			final var attributeMapping = attributeMappings.get( attributeIndex );
 			analysis.startingAttribute( attributeMapping );
 
 			try {
@@ -641,7 +654,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					// In this case we check for exactly DirtynessStatus.DIRTY so to not log warnings when the user didn't get it wrong:
 					if ( analysis.currentAttributeAnalysis.getDirtynessStatus() == AttributeAnalysis.DirtynessStatus.DIRTY ) {
 						if ( !propertyUpdateability[attributeIndex] ) {
-							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
+							CORE_LOGGER.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
 				}
@@ -665,7 +678,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker lockingChecker,
 			SharedSessionContractImplementor session) {
 
-		final Generator generator = attributeMapping.getGenerator();
+		final var generator = attributeMapping.getGenerator();
 		final boolean generated = isValueGenerated( generator );
 		final boolean needsDynamicUpdate =
 				generated && session != null && generator.generatedBeforeExecution( entity, session );
@@ -682,8 +695,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		if ( lockingChecker.include( attributeIndex, attributeMapping ) ) {
-			final Object attributeLockValue = attributeLockValue( attributeIndex, attributeMapping, oldVersion, oldValues );
-			processLock( analysis, attributeMapping, session, attributeLockValue );
+			processLock( analysis, attributeMapping, session,
+					attributeLockValue( attributeIndex, attributeMapping, oldVersion, oldValues ) );
 		}
 	}
 
@@ -692,8 +705,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SingularAttributeMapping attributeMapping,
 			Object oldVersion,
 			Object[] oldValues) {
-		if ( entityPersister().getVersionMapping() != null
-				&& entityPersister().getVersionMapping().getVersionAttribute() == attributeMapping ) {
+		final var versionMapping = entityPersister().getVersionMapping();
+		if ( versionMapping != null
+			&& versionMapping.getVersionAttribute() == attributeMapping ) {
 			return oldVersion;
 		}
 		else {
@@ -703,7 +717,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private void processSet(UpdateValuesAnalysisImpl analysis, SelectableMapping selectable, boolean needsDynamicUpdate) {
 		if ( selectable != null && !selectable.isFormula() && selectable.isUpdateable() ) {
-			final EntityTableMapping tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
+			final var tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 			if ( needsDynamicUpdate ) {
 				analysis.getTablesNeedingDynamicUpdate().add( tableMapping );
@@ -723,8 +737,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				(valueIndex, updateAnalysis, noop, jdbcValue, columnMapping) -> {
 					if ( !columnMapping.isFormula() ) {
-						final EntityTableMapping tableMapping = physicalTableMappingForMutation( entityPersister(), columnMapping );
-						updateAnalysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
+						updateAnalysis.registerColumnOptLock(
+								physicalTableMappingForMutation( entityPersister(), columnMapping ),
+								columnMapping.getSelectionExpression(),
+								jdbcValue
+						);
 					}
 				},
 				session
@@ -740,7 +757,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
 
-		final MutationExecutor mutationExecutor = executor( session, staticUpdateGroup, false );
+		final var mutationExecutor = executor( session, staticUpdateGroup, false );
 
 		decomposeForUpdate(
 				id,
@@ -784,8 +801,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// apply values
 		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
-			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
-			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
+			final var operation = jdbcOperationGroup.getOperation( position );
+			final var tableMapping = (EntityTableMapping) operation.getTableDetails();
 			if ( valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) ) {
 				final int[] attributeIndexes = tableMapping.getAttributeIndexes();
 				for ( int i = 0; i < attributeIndexes.length; i++ ) {
@@ -804,8 +821,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// apply keys
 		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
-			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
-			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
+			final var operation = jdbcOperationGroup.getOperation( position );
+			final var tableMapping = (EntityTableMapping) operation.getTableDetails();
 			breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, tableMapping );
 		}
 	}
@@ -818,16 +835,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableMapping,
 			int attributeIndex) {
-		final AttributeMapping attributeMapping = entityPersister().getAttributeMappings().get( attributeIndex );
+		final var attributeMapping = entityPersister().getAttributeMappings().get( attributeIndex );
 		if ( attributeMapping instanceof SingularAttributeMapping ) {
-			final AttributeAnalysis attributeAnalysisRef = valuesAnalysis.attributeAnalyses.get( attributeIndex );
+			final var attributeAnalysisRef = valuesAnalysis.attributeAnalyses.get( attributeIndex );
 			if ( !attributeAnalysisRef.isSkipped() ) {
-				final IncludedAttributeAnalysis attributeAnalysis = (IncludedAttributeAnalysis) attributeAnalysisRef;
+				final var attributeAnalysis = (IncludedAttributeAnalysis) attributeAnalysisRef;
 
 				if ( attributeAnalysis.includeInSet() ) {
 					// apply the new values
 					if ( includeInSet( dirtinessChecker, attributeIndex, attributeMapping, attributeAnalysis ) ) {
-						decomposeAttributeMapping(session, jdbcValueBindings, tableMapping, attributeMapping, values[attributeIndex] );
+						decomposeAttributeMapping( session, jdbcValueBindings, tableMapping, attributeMapping, values[attributeIndex] );
 					}
 				}
 
@@ -894,7 +911,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				&& entityPersister().getVersionMapping().getVersionAttribute() == attributeMapping) {
 			return true;
 		}
-		else if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtinessChecker != null ) {
+		else if ( entityPersister().isDynamicUpdate() && dirtinessChecker != null ) {
 			return attributeAnalysis.includeInSet()
 				&& dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 		}
@@ -913,7 +930,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		// Create the JDBC operation descriptors
-		final MutationOperationGroup dynamicUpdateGroup = generateDynamicUpdateGroup(
+		final var dynamicUpdateGroup = generateDynamicUpdateGroup(
 				entity,
 				id,
 				rowId,
@@ -924,7 +941,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// and then execute them
 
-		final MutationExecutor mutationExecutor = executor( session, dynamicUpdateGroup, true );
+		final var mutationExecutor = executor( session, dynamicUpdateGroup, true );
 
 		decomposeForUpdate(
 				id,
@@ -978,10 +995,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			MutationOperationGroup group,
 			boolean dynamicUpdate,
 			boolean batching) {
-		if ( batching ) {
-			return updateVersionExecutor( session, group, dynamicUpdate );
-		}
-		return mutationExecutorService.createExecutor( NoBatchKeyAccess.INSTANCE, group, session );
+		return batching
+				? updateVersionExecutor( session, group, dynamicUpdate )
+				: mutationExecutorService.createExecutor( NoBatchKeyAccess.INSTANCE, group, session );
 
 	}
 
@@ -1002,7 +1018,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private boolean resultCheck(
-			Object id, PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+			Object id,
+			PreparedStatementDetails statementDetails,
+			int affectedRowCount,
+			int batchPosition) {
 		return identifiedResultsCheck(
 				statementDetails,
 				affectedRowCount,
@@ -1024,10 +1043,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] oldValues,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
-		final MutationGroupBuilder updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister() );
+		final var updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister() );
 
 		entityPersister().forEachMutableTable( (tableMapping) -> {
-			final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
+			final var tableReference = new MutatingTableReference( tableMapping );
 			final TableMutationBuilder<?> tableUpdateBuilder;
 			if ( ! valuesAnalysis.tablesNeedingUpdate.contains( tableReference.getTableMapping() ) ) {
 				// this table does not need updating
@@ -1053,7 +1072,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private TableMutationBuilder<?> createTableUpdateBuilder(EntityTableMapping tableMapping) {
-		final GeneratedValuesMutationDelegate delegate =
+		final var delegate =
 				tableMapping.isIdentifierTable()
 						? entityPersister().getUpdateDelegate()
 						: null;
@@ -1074,20 +1093,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			UpdateValuesAnalysisImpl updateValuesAnalysis,
 			DirtinessChecker dirtinessChecker,
 			SharedSessionContractImplementor session) {
-		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
-		final boolean[] versionability = entityPersister().getPropertyVersionability();
-		final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
+		final var persister = entityPersister();
+		final var versionMapping = persister.getVersionMapping();
+		final var attributeMappings = persister.getAttributeMappings();
+		final boolean[] versionability = persister.getPropertyVersionability();
+		final var optimisticLockStyle = persister.optimisticLockStyle();
 
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
-			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 
 			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
 			for ( int i = 0; i < attributeIndexes.length; i++ ) {
 				final int attributeIndex = attributeIndexes[i];
 
-				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
-				final AttributeAnalysis attributeAnalysis = updateValuesAnalysis.attributeAnalyses.get( attributeIndex );
+				final var attributeMapping = attributeMappings.get( attributeIndex );
+				final var attributeAnalysis = updateValuesAnalysis.attributeAnalyses.get( attributeIndex );
 
 				if ( attributeAnalysis.includeInSet() ) {
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping )
@@ -1130,22 +1150,22 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
-			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
-			final TableUpdateBuilder<?> tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
-			applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, tableMapping );
+			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
+			applyKeyRestriction( rowId, persister, tableUpdateBuilder, tableMapping );
 			applyPartitionKeyRestriction( tableUpdateBuilder );
 		} );
 	}
 
 	private void applyPartitionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
-		final EntityPersister persister = entityPersister();
+		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			final var attributeMappings = persister.getAttributeMappings();
 			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( m );
+				final var attributeMapping = attributeMappings.get( m );
 				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 				for ( int i = 0; i < jdbcTypeCount; i++ ) {
-					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
+					final var selectableMapping = attributeMapping.getSelectable( i );
 					if ( selectableMapping.isPartitioned() ) {
 						tableUpdateBuilder.addKeyRestrictionLeniently( selectableMapping );
 					}
@@ -1218,7 +1238,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			AttributeMapping attributeMapping,
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
-		final Generator generator = attributeMapping.getGenerator();
+		final var generator = attributeMapping.getGenerator();
 		if ( needsValueGeneration( entity, session, generator ) ) {
 			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
 		}
@@ -1227,7 +1247,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			tableUpdateBuilder.addValueColumn( versionMapping.getVersionAttribute() );
 		}
 		else {
-			final boolean includeInSet = !entityPersister().getEntityMetamodel().isDynamicUpdate()
+			final boolean includeInSet = !entityPersister().isDynamicUpdate()
 					|| dirtinessChecker == null
 					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 			if ( includeInSet ) {
@@ -1312,7 +1332,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						tablesNeedingDynamicUpdate.add( tableMapping );
 					}
 					else if ( dirtyAttributeIndexes != null ) {
-						if ( entityPersister().getEntityMetamodel().isDynamicUpdate()
+						if ( entityPersister().isDynamicUpdate()
 								|| entityPersister().optimisticLockStyle() == DIRTY ) {
 							tablesNeedingDynamicUpdate.add( tableMapping );
 						}
@@ -1391,11 +1411,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		 * Callback to register the setting of a column value
 		 */
 		public void registerColumnSet(EntityTableMapping table, String readExpression, String writeExpression) {
-			final IncludedAttributeAnalysis includedAttributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
+			final var includedAttributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
 			includedAttributeAnalysis.columnValueAnalyses.add( new ColumnSetAnalysis( readExpression, writeExpression ) );
 
 			if ( !dirtyChecked ) {
-				final SingularAttributeMapping attribute = includedAttributeAnalysis.attribute;
+				final var attribute = includedAttributeAnalysis.attribute;
 				if ( dirtinessChecker.include( attribute.getStateArrayPosition(), attribute ) ) {
 					tablesNeedingUpdate.add( table );
 				}
@@ -1413,7 +1433,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		public void registerColumnOptLock(EntityTableMapping table, String readExpression, Object lockValue) {
-			final IncludedAttributeAnalysis attributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
+			final var attributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
 			attributeAnalysis.columnLockingAnalyses.add( new ColumnLockingAnalysis( readExpression, lockValue ) );
 
 			if ( dirtyAttributeIndexes != null && lockValue == null ) {
@@ -1423,7 +1443,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		public void registerValueGeneratedInSqlNoWrite() {
-			final IncludedAttributeAnalysis attributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
+			final var attributeAnalysis = (IncludedAttributeAnalysis) currentAttributeAnalysis;
 			attributeAnalysis.setValueGeneratedInSqlNoWrite( true );
 		}
 	}
@@ -1503,8 +1523,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		public IncludedAttributeAnalysis(SingularAttributeMapping attribute) {
 			this.attribute = attribute;
 
-			this.columnValueAnalyses = CollectionHelper.arrayList( attribute.getJdbcTypeCount() );
-			this.columnLockingAnalyses = CollectionHelper.arrayList( attribute.getJdbcTypeCount() );
+			this.columnValueAnalyses = arrayList( attribute.getJdbcTypeCount() );
+			this.columnLockingAnalyses = arrayList( attribute.getJdbcTypeCount() );
 		}
 
 		@Override
@@ -1598,7 +1618,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private MutationOperationGroup buildStaticUpdateGroup() {
-		final UpdateValuesAnalysisImpl valuesAnalysis = analyzeUpdateValues(
+		final var persister = entityPersister();
+		final var valuesAnalysis = analyzeUpdateValues(
 				null,
 				null,
 				null,
@@ -1607,12 +1628,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(index,attribute) ->
 						isValueGenerated( attribute.getGenerator() )
 								&& isValueGenerationInSql( attribute.getGenerator(), dialect() )
-						|| entityPersister().getPropertyUpdateability()[index],
+						|| persister.getPropertyUpdateability()[index],
 				(index,attribute) ->
-						switch ( entityPersister().optimisticLockStyle() ) {
+						switch ( persister.optimisticLockStyle() ) {
 							case ALL -> true;
 							case VERSION -> {
-								final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+								final var versionMapping = persister.getVersionMapping();
 								yield versionMapping != null && attribute == versionMapping.getVersionAttribute();
 							}
 							default -> false;
@@ -1623,10 +1644,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null
 		);
 
-		final MutationGroupBuilder updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister() );
+		final var updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, persister );
 
-		entityPersister().forEachMutableTable( (tableMapping) -> {
-			// NOTE : TableUpdateBuilderStandard handles custom sql-update mappings
+		persister.forEachMutableTable( (tableMapping) -> {
+			// NOTE: TableUpdateBuilderStandard handles custom SQL update mappings
 			updateGroupBuilder.addTableDetailsBuilder( createTableUpdateBuilder( tableMapping ) );
 		} );
 
@@ -1650,12 +1671,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private MutationOperationGroup buildVersionUpdateGroup() {
-		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping == null ) {
 			return null;
 		}
 		else {
-			final EntityTableMapping identifierTableMapping = entityPersister().getIdentifierTableMapping();
+			final var identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
 					newTableUpdateBuilder( identifierTableMapping );
 
@@ -1669,7 +1690,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			applyPartitionKeyRestriction( updateBuilder );
 
 			//noinspection resource
-			final JdbcMutationOperation jdbcMutation = factory()
+			final var jdbcMutation = factory()
 					.getJdbcServices()
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
@@ -1691,7 +1712,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	public boolean hasLazyDirtyFields(EntityPersister persister,  int[] dirtyFields) {
-		final boolean[] propertyLaziness = persister.getPropertyLaziness();
+		final var propertyLaziness = persister.getPropertyLaziness();
 		for ( int i = 0; i < dirtyFields.length; i++ ) {
 			if ( propertyLaziness[dirtyFields[i]] ) {
 				return true;
@@ -1703,7 +1724,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	public EntityTableMapping physicalTableMappingForMutation(
 			EntityPersister persister, SelectableMapping selectableMapping) {
 		final String tableNameForMutation = persister.physicalTableNameForMutation( selectableMapping );
-		final EntityTableMapping[] tableMappings = persister.getTableMappings();
+		final var tableMappings = persister.getTableMappings();
 		for ( int i = 0; i < tableMappings.length; i++ ) {
 			if ( tableNameForMutation.equals( tableMappings[i].getTableName() ) ) {
 				return tableMappings[i];

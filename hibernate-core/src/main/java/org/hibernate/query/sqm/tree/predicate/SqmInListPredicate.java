@@ -9,11 +9,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -58,7 +61,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		//noinspection unchecked
 		this.listExpressions = (List<SqmExpression<T>>) listExpressions;
 		for ( SqmExpression<T> listExpression : listExpressions ) {
-			implyListElementType( listExpression );
+			implyListElementType( listExpression, testExpression, nodeBuilder );
 		}
 	}
 
@@ -96,7 +99,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Object value) {
+	public SqmInPredicate<T> value(@NonNull Object value) {
 		if ( value instanceof Collection ) {
 			//noinspection unchecked
 			for ( T v : ( (Collection<T>) value ) ) {
@@ -136,9 +139,13 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	private void implyListElementType(SqmExpression<?> expression) {
-		assertComparable( getTestExpression(), expression, nodeBuilder() );
+		implyListElementType( expression, getTestExpression(), nodeBuilder() );
+	}
+
+	private static void implyListElementType(SqmExpression<?> expression, SqmExpression<?> testExpression, NodeBuilder nodeBuilder) {
+		assertComparable( testExpression, expression, nodeBuilder );
 		expression.applyInferableType(
-				QueryHelper.highestPrecedenceType2( getTestExpression().getExpressible(), expression.getExpressible() )
+				QueryHelper.highestPrecedenceType2( testExpression.getExpressible(), expression.getExpressible() )
 		);
 	}
 
@@ -163,16 +170,35 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmInListPredicate<?> that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( this.testExpression, that.testExpression )
+			&& this.testExpression.equals( that.testExpression )
 			&& Objects.equals( this.listExpressions, that.listExpressions );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( isNegated(), testExpression, listExpressions );
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + testExpression.hashCode();
+		result = 31 * result + Objects.hashCode( listExpressions );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInListPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.isCompatible( that.testExpression )
+			&& SqmCacheable.areCompatible( this.listExpressions, that.listExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + testExpression.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( listExpressions );
+		return result;
 	}
 
 	@Override

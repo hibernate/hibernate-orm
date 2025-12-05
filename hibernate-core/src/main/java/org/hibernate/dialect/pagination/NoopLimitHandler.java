@@ -36,17 +36,18 @@ public class NoopLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public void setMaxRows(Limit limit, PreparedStatement statement) throws SQLException {
-		if ( limit != null && limit.getMaxRows() != null && limit.getMaxRows() > 0 ) {
-			final int maxRows = limit.getMaxRows() + convertToFirstRowValue(
-					limit.getFirstRow() == null ? 0 : limit.getFirstRow()
-			);
+		if ( hasMaxRows( limit ) ) {
+			final Integer firstRow = limit.getFirstRow();
+			final int convertedMaxRows =
+					limit.getMaxRows()
+					+ convertToFirstRowValue( firstRow == null ? 0 : firstRow );
 			// Use Integer.MAX_VALUE on overflow
-			if ( maxRows < 0 ) {
-				statement.setMaxRows( Integer.MAX_VALUE );
-			}
-			else {
-				statement.setMaxRows( maxRows );
-			}
+			statement.setMaxRows( convertedMaxRows < 0 ? Integer.MAX_VALUE : convertedMaxRows );
 		}
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

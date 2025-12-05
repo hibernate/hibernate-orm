@@ -4,7 +4,6 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -12,30 +11,27 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.BridgeMembersClassInfo;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImplConstants;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.ForeignPackageMember;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.GetFieldOnArgument;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.GetPropertyNames;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.GetPropertyValues;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.NameEncodeHelper;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.SetFieldOnArgument;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.SetPropertyValues;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.engine.spi.CompositeOwner;
-import org.hibernate.engine.spi.CompositeTracker;
-import org.hibernate.engine.spi.Managed;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.PropertyAccessEmbeddedImpl;
 import org.hibernate.property.access.spi.Getter;
@@ -49,40 +45,22 @@ import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.description.NamedElement;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.MethodCall;
-import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.implementation.bytecode.assign.primitive.PrimitiveBoxingDelegate;
-import net.bytebuddy.implementation.bytecode.assign.primitive.PrimitiveUnboxingDelegate;
-import net.bytebuddy.implementation.bytecode.assign.reference.ReferenceTypeAwareAssigner;
-import net.bytebuddy.jar.asm.Label;
-import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
-import net.bytebuddy.jar.asm.Type;
-import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class BytecodeProviderImpl implements BytecodeProvider {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BytecodeProviderImpl.class );
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
-	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
+public class BytecodeProviderImpl implements BytecodeProvider {
+
+	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "$HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
-	private static final String OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX = "HibernateAccessOptimizerBridge";
-	private static final ElementMatcher.Junction<NamedElement> newInstanceMethodName = ElementMatchers.named(
-			"newInstance" );
-	private static final ElementMatcher.Junction<NamedElement> getPropertyValuesMethodName = ElementMatchers.named(
-			"getPropertyValues" );
-	private static final ElementMatcher.Junction<NamedElement> setPropertyValuesMethodName = ElementMatchers.named(
-			"setPropertyValues" );
-	private static final ElementMatcher.Junction<NamedElement> getPropertyNamesMethodName = ElementMatchers.named(
-			"getPropertyNames" );
-	private static final Member EMBEDDED_MEMBER = new Member() {
+	private static final String OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX = "$HibernateAccessOptimizerBridge";
+
+	public static final Member EMBEDDED_MEMBER = new Member() {
 		@Override
 		public Class<?> getDeclaringClass() {
 			return null;
@@ -105,15 +83,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	};
 
 	private final ByteBuddyState byteBuddyState;
+	private final EnhancerImplConstants constants;
 
 	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
 
 	/**
 	 * Constructs a ByteBuddy BytecodeProvider instance which attempts to auto-detect the target JVM version
-	 * from the currently running one, with a fallback on Java 11.
+	 * from the currently running one, with a fallback on Java 17.
 	 */
 	public BytecodeProviderImpl() {
-		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V11 ) );
+		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V17 ) );
 	}
 
 	/**
@@ -123,6 +102,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	public BytecodeProviderImpl(ClassFileVersion targetCompatibleJVM) {
 		this.byteBuddyState = new ByteBuddyState( targetCompatibleJVM );
 		this.byteBuddyProxyHelper = new ByteBuddyProxyHelper( byteBuddyState );
+		this.constants = byteBuddyState.getEnhancerConstants();
 	}
 
 	@Override
@@ -147,11 +127,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = clazz.getName() + INSTANTIATOR_PROXY_NAMING_SUFFIX;
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
-						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-						.method( newInstanceMethodName )
+						.subclass( constants.TypeInstantiationOptimizer )
+						.method( constants.newInstanceMethodName )
 						.intercept( MethodCall.construct( constructor ) )
 				);
 			}
@@ -166,23 +146,23 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
 		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom(
 						OPTIMIZER_PROXY_NAMING_SUFFIX,
-						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
+						new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( clazz.getName() )
 				) )
-				.subclass( Object.class )
-				.implement( ReflectionOptimizer.AccessOptimizer.class )
-				.method( getPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getterNames, getters ) ) )
-				.method( setPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, getterNames, setters ) ) )
-				.method( getPropertyNamesMethodName )
-				.intercept( new Implementation.Simple( new GetPropertyNames( getterNames ) ) )
+				.subclass( constants.TypeObject )
+				.implement( constants.INTERFACES_for_AccessOptimizer )
+				.method( constants.getPropertyValuesMethodName )
+				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getterNames, getters, constants ) ) )
+				.method( constants.setPropertyValuesMethodName )
+				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, getterNames, setters, constants ) ) )
+				.method( constants.getPropertyNamesMethodName )
+				.intercept( new Implementation.Simple( new GetPropertyNames( getterNames, constants ) ) )
 		);
 
 		try {
@@ -209,11 +189,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = clazz.getName() + INSTANTIATOR_PROXY_NAMING_SUFFIX;
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
-						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-						.method( newInstanceMethodName )
+						.subclass( constants.TypeInstantiationOptimizer )
+						.method( constants.newInstanceMethodName )
 						.intercept( MethodCall.construct( constructor ) )
 				);
 			}
@@ -228,43 +208,43 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, propertyAccessMap, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
 		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
 		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
 
-		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( propertyNames, getters, setters );
+		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + NameEncodeHelper.encodeName( propertyNames, getters, setters );
 		final Class<?> bulkAccessor;
 		if ( className.getBytes( StandardCharsets.UTF_8 ).length >= 0x10000 ) {
 			// The JVM has a 64K byte limit on class name length, so fallback to random name if encoding exceeds that
 			bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 					.with( new NamingStrategy.SuffixingRandom(
 							OPTIMIZER_PROXY_NAMING_SUFFIX,
-							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
+							new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( clazz.getName() )
 					) )
 					.subclass( superClass )
-					.implement( ReflectionOptimizer.AccessOptimizer.class )
-					.method( getPropertyValuesMethodName )
-					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters ) ) )
-					.method( setPropertyValuesMethodName )
-					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
-					.method( getPropertyNamesMethodName )
-					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames ) ) )
+					.implement( constants.INTERFACES_for_AccessOptimizer )
+					.method( constants.getPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters, constants ) ) )
+					.method( constants.setPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters, constants ) ) )
+					.method( constants.getPropertyNamesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames, constants ) ) )
 			);
 		}
 		else {
 			bulkAccessor = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 					.with( namingStrategy )
 					.subclass( superClass )
-					.implement( ReflectionOptimizer.AccessOptimizer.class )
-					.method( getPropertyValuesMethodName )
-					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters ) ) )
-					.method( setPropertyValuesMethodName )
-					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
-					.method( getPropertyNamesMethodName )
-					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames ) ) )
+					.implement( constants.INTERFACES_for_AccessOptimizer )
+					.method( constants.getPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters, constants ) ) )
+					.method( constants.setPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters, constants ) ) )
+					.method( constants.getPropertyNamesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames, constants ) ) )
 			);
 		}
 
@@ -276,17 +256,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 		catch (Exception exception) {
 			throw new HibernateException( exception );
-		}
-	}
-
-	private static class BridgeMembersClassInfo {
-		final Class<?> clazz;
-		final List<String> propertyNames = new ArrayList<>();
-		final List<Member> getters = new ArrayList<>();
-		final List<Member> setters = new ArrayList<>();
-
-		public BridgeMembersClassInfo(Class<?> clazz) {
-			this.clazz = clazz;
 		}
 	}
 
@@ -305,13 +274,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final BridgeMembersClassInfo bridgeMembersClassInfo = bridgeMembersClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
 
-			final String className = bridgeMembersClassInfo.clazz.getName() + "$" + OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX + encodeName( bridgeMembersClassInfo.propertyNames, bridgeMembersClassInfo.getters, bridgeMembersClassInfo.setters );
+			final String className = bridgeMembersClassInfo.getClazz().getName() + OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX + bridgeMembersClassInfo.encodeName();
 			superClass = byteBuddyState.load(
-					bridgeMembersClassInfo.clazz,
+					bridgeMembersClassInfo.getClazz(),
 					className,
 					(byteBuddy, namingStrategy) -> {
 						DynamicType.Builder<?> builder = byteBuddy.with( namingStrategy ).subclass( newSuperClass );
-						for ( Member getter : bridgeMembersClassInfo.getters ) {
+						for ( Member getter : bridgeMembersClassInfo.gettersIterable() ) {
 							if ( !Modifier.isPublic( getter.getModifiers() ) ) {
 								final Class<?> getterType;
 								if ( getter instanceof Field field ) {
@@ -331,7 +300,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 												),
 												Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
 										)
-										.withParameter( bridgeMembersClassInfo.clazz )
+										.withParameter( bridgeMembersClassInfo.getClazz() )
 										.intercept(
 												new Implementation.Simple(
 														new GetFieldOnArgument(
@@ -341,7 +310,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 										);
 							}
 						}
-						for ( Member setter : bridgeMembersClassInfo.setters ) {
+						for ( Member setter : bridgeMembersClassInfo.settersIterable() ) {
 							if ( !Modifier.isPublic( setter.getModifiers() ) ) {
 								final Class<?> setterType;
 								if ( setter instanceof Field field ) {
@@ -359,7 +328,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 												TypeDescription.Generic.VOID,
 												Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
 										)
-										.withParameter( bridgeMembersClassInfo.clazz )
+										.withParameter( bridgeMembersClassInfo.getClazz() )
 										.withParameter( setterType )
 										.intercept(
 												new Implementation.Simple(
@@ -378,229 +347,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int j = 0; j < getters.length; j++ ) {
 				final Member getter = getters[j];
 				final Member setter = setters[j];
-				if ( bridgeMembersClassInfo.getters.contains( getter ) && !Modifier.isPublic( getter.getModifiers() ) ) {
+				if ( bridgeMembersClassInfo.containsGetter( getter ) && !Modifier.isPublic( getter.getModifiers() ) ) {
 					getters[j] = new ForeignPackageMember( superClass, getter );
 				}
-				if ( bridgeMembersClassInfo.setters.contains( setter ) && !Modifier.isPublic( setter.getModifiers() ) ) {
+				if ( bridgeMembersClassInfo.containsSetter( setter ) && !Modifier.isPublic( setter.getModifiers() ) ) {
 					setters[j] = new ForeignPackageMember( superClass, setter );
 				}
 			}
 		}
 
 		return superClass;
-	}
-
-	private static String encodeName(String[] propertyNames, Member[] getters, Member[] setters) {
-		return encodeName( Arrays.asList( propertyNames ), Arrays.asList( getters ), Arrays.asList( setters ) );
-	}
-
-	private static String encodeName(List<String> propertyNames, List<Member> getters, List<Member> setters) {
-		final StringBuilder sb = new StringBuilder();
-		for ( int i = 0; i < propertyNames.size(); i++ ) {
-			final String propertyName = propertyNames.get( i );
-			final Member getter = getters.get( i );
-			final Member setter = setters.get( i );
-			// Encode the two member types as 4 bit integer encoded as hex character
-			sb.append( Integer.toHexString( getKind( getter ) << 2 | getKind( setter ) ) );
-			sb.append( propertyName );
-		}
-		return sb.toString();
-	}
-
-	private static int getKind(Member member) {
-		// Encode the member type as 2 bit integer
-		if ( member == EMBEDDED_MEMBER ) {
-			return 0;
-		}
-		else if ( member instanceof Field ) {
-			return 1;
-		}
-		else if ( member instanceof Method ) {
-			return 2;
-		}
-		else if ( member instanceof ForeignPackageMember ) {
-			return 3;
-		}
-		else {
-			throw new IllegalArgumentException( "Unknown member type: " + member );
-		}
-	}
-
-	private static class ForeignPackageMember implements Member {
-
-		private final Class<?> foreignPackageAccessor;
-		private final Member member;
-
-		public ForeignPackageMember(Class<?> foreignPackageAccessor, Member member) {
-			this.foreignPackageAccessor = foreignPackageAccessor;
-			this.member = member;
-		}
-
-		public Class<?> getForeignPackageAccessor() {
-			return foreignPackageAccessor;
-		}
-
-		public Member getMember() {
-			return member;
-		}
-
-		@Override
-		public Class<?> getDeclaringClass() {
-			return member.getDeclaringClass();
-		}
-
-		@Override
-		public String getName() {
-			return member.getName();
-		}
-
-		@Override
-		public int getModifiers() {
-			return member.getModifiers();
-		}
-
-		@Override
-		public boolean isSynthetic() {
-			return member.isSynthetic();
-		}
-	}
-
-	private static class GetFieldOnArgument implements ByteCodeAppender {
-
-		private final Member getterMember;
-
-		public GetFieldOnArgument(Member getterMember) {
-			this.getterMember = getterMember;
-		}
-
-		@Override
-		public Size apply(
-				MethodVisitor methodVisitor,
-				Implementation.Context implementationContext,
-				MethodDescription instrumentedMethod) {
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			final Class<?> type;
-			if ( getterMember instanceof Method getter ) {
-				type = getter.getReturnType();
-				methodVisitor.visitMethodInsn(
-						getter.getDeclaringClass().isInterface() ?
-								Opcodes.INVOKEINTERFACE :
-								Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( getter.getDeclaringClass() ),
-						getter.getName(),
-						Type.getMethodDescriptor( getter ),
-						getter.getDeclaringClass().isInterface()
-				);
-			}
-			else {
-				final Field getter = (Field) getterMember;
-				type = getter.getType();
-				methodVisitor.visitFieldInsn(
-						Opcodes.GETFIELD,
-						Type.getInternalName( getter.getDeclaringClass() ),
-						getter.getName(),
-						Type.getDescriptor( type )
-				);
-			}
-			methodVisitor.visitInsn( getReturnOpCode( type ) );
-			return new Size( 2, instrumentedMethod.getStackSize() );
-		}
-
-		private int getReturnOpCode(Class<?> type) {
-			if ( type.isPrimitive() ) {
-				switch ( type.getTypeName() ) {
-					case "long":
-						return Opcodes.LRETURN;
-					case "float":
-						return Opcodes.FRETURN;
-					case "double":
-						return Opcodes.DRETURN;
-				}
-				return Opcodes.IRETURN;
-			}
-			return Opcodes.ARETURN;
-		}
-	}
-
-	private static class SetFieldOnArgument implements ByteCodeAppender {
-
-		private final Member setterMember;
-
-		public SetFieldOnArgument(Member setterMember) {
-			this.setterMember = setterMember;
-		}
-
-		@Override
-		public Size apply(
-				MethodVisitor methodVisitor,
-				Implementation.Context implementationContext,
-				MethodDescription instrumentedMethod) {
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			final Class<?> type;
-			if ( setterMember instanceof Method setter ) {
-				type = setter.getParameterTypes()[0];
-				methodVisitor.visitVarInsn( getLoadOpCode( type ), 1 );
-				methodVisitor.visitMethodInsn(
-						setter.getDeclaringClass().isInterface() ?
-								Opcodes.INVOKEINTERFACE :
-								Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( setter.getDeclaringClass() ),
-						setter.getName(),
-						Type.getMethodDescriptor(
-								Type.getType( void.class ),
-								Type.getType( type )
-						),
-						setter.getDeclaringClass().isInterface()
-				);
-				if ( setter.getReturnType() != void.class ) {
-					// Setters could return something which we have to ignore
-					switch ( setter.getReturnType().getTypeName() ) {
-						case "long":
-						case "double":
-							methodVisitor.visitInsn( Opcodes.POP2 );
-							break;
-						default:
-							methodVisitor.visitInsn( Opcodes.POP );
-							break;
-					}
-				}
-			}
-			else {
-				final Field setter = (Field) setterMember;
-				type = setter.getType();
-				methodVisitor.visitVarInsn( getLoadOpCode( type ), 1 );
-				methodVisitor.visitFieldInsn(
-						Opcodes.PUTFIELD,
-						Type.getInternalName( setter.getDeclaringClass() ),
-						setter.getName(),
-						Type.getDescriptor( type )
-				);
-			}
-			methodVisitor.visitInsn( Opcodes.RETURN );
-			return new Size(
-					is64BitType( type ) ? 3 : 2,
-					instrumentedMethod.getStackSize()
-			);
-		}
-
-		private int getLoadOpCode(Class<?> type) {
-			if ( type.isPrimitive() ) {
-				switch ( type.getTypeName() ) {
-					case "long":
-						return Opcodes.LLOAD;
-					case "float":
-						return Opcodes.FLOAD;
-					case "double":
-						return Opcodes.DLOAD;
-				}
-				return Opcodes.ILOAD;
-			}
-			return Opcodes.ALOAD;
-		}
-
-		private boolean is64BitType(Class<?> type) {
-			return type == long.class || type == double.class;
-		}
 	}
 
 	private List<BridgeMembersClassInfo> createBridgeMembersClassInfos(
@@ -617,12 +373,12 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				final Member setter = setters[i];
 				if ( getter.getDeclaringClass() == c && !Modifier.isPublic( getter.getModifiers() )
 						|| setter.getDeclaringClass() == c && !Modifier.isPublic( setter.getModifiers() ) ) {
-					bridgeMemberClassInfo.getters.add( getter );
-					bridgeMemberClassInfo.setters.add( setter );
-					bridgeMemberClassInfo.propertyNames.add( propertyNames[i] );
+					bridgeMemberClassInfo.addGetter( getter );
+					bridgeMemberClassInfo.addSetter( setter );
+					bridgeMemberClassInfo.addProperty( propertyNames[i] );
 				}
 			}
-			if ( !bridgeMemberClassInfo.propertyNames.isEmpty() ) {
+			if ( !bridgeMemberClassInfo.propertyNamesIsEmpty() ) {
 				bridgeMembersClassInfos.add( bridgeMemberClassInfo );
 			}
 			c = c.getSuperclass();
@@ -632,568 +388,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	public ByteBuddyProxyHelper getByteBuddyProxyHelper() {
 		return byteBuddyProxyHelper;
-	}
-
-	private static class GetPropertyValues implements ByteCodeAppender {
-
-		private final Class<?> clazz;
-		private final String[] propertyNames;
-		private final Member[] getters;
-		private final boolean persistentAttributeInterceptable;
-
-		public GetPropertyValues(Class<?> clazz, String[] propertyNames, Member[] getters) {
-			this.clazz = clazz;
-			this.propertyNames = propertyNames;
-			this.getters = getters;
-			this.persistentAttributeInterceptable = PersistentAttributeInterceptable.class.isAssignableFrom( clazz );
-		}
-
-		@Override
-		public Size apply(
-				MethodVisitor methodVisitor,
-				Implementation.Context implementationContext,
-				MethodDescription instrumentedMethod) {
-			if ( persistentAttributeInterceptable ) {
-				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
-
-				// Extract the interceptor
-				methodVisitor.visitMethodInsn(
-						Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( clazz ),
-						"$$_hibernate_getInterceptor",
-						Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-						false
-				);
-				// Duplicate the interceptor on the stack and check if it implements LazyAttributeLoadingInterceptor
-				methodVisitor.visitInsn( Opcodes.DUP );
-				methodVisitor.visitTypeInsn(
-						Opcodes.INSTANCEOF,
-						Type.getInternalName( LazyAttributeLoadingInterceptor.class )
-				);
-
-				// Jump to the false label if the instanceof check fails
-				final Label instanceofFalseLabel = new Label();
-				methodVisitor.visitJumpInsn( Opcodes.IFEQ, instanceofFalseLabel );
-
-				// Cast to the subtype, so we can mark the property as initialized
-				methodVisitor.visitTypeInsn(
-						Opcodes.CHECKCAST,
-						Type.getInternalName( LazyAttributeLoadingInterceptor.class )
-				);
-				// Store the LazyAttributeLoadingInterceptor at index 2
-				methodVisitor.visitVarInsn( Opcodes.ASTORE, 2 );
-
-				// Skip the cleanup
-				final Label instanceofEndLabel = new Label();
-				methodVisitor.visitJumpInsn( Opcodes.GOTO, instanceofEndLabel );
-
-				// Here is the cleanup section for the false branch
-				methodVisitor.visitLabel( instanceofFalseLabel );
-				// We still have the duplicated interceptor on the stack
-				implementationContext.getFrameGeneration().full(
-						methodVisitor,
-						Arrays.asList(
-								TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class )
-						),
-						Arrays.asList(
-								implementationContext.getInstrumentedType(),
-								TypeDescription.ForLoadedType.of( Object.class )
-						)
-				);
-				// Pop that duplicated interceptor from the stack
-				methodVisitor.visitInsn( Opcodes.POP );
-				methodVisitor.visitInsn( Opcodes.ACONST_NULL );
-				methodVisitor.visitVarInsn( Opcodes.ASTORE, 2 );
-
-				methodVisitor.visitLabel( instanceofEndLabel );
-				implementationContext.getFrameGeneration().full(
-						methodVisitor,
-						Collections.emptyList(),
-						Arrays.asList(
-								implementationContext.getInstrumentedType(),
-								TypeDescription.ForLoadedType.of( Object.class ),
-								TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
-						)
-				);
-			}
-			methodVisitor.visitLdcInsn( getters.length );
-			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, Type.getInternalName( Object.class ) );
-			for ( int index = 0; index < getters.length; index++ ) {
-				final Member getterMember = getters[index];
-				methodVisitor.visitInsn( Opcodes.DUP );
-				methodVisitor.visitLdcInsn( index );
-
-				final Label arrayStoreLabel = new Label();
-				if ( getterMember == EMBEDDED_MEMBER ) {
-					// The embedded property access returns the owner
-					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				}
-				else {
-					if ( persistentAttributeInterceptable ) {
-						final Label extractValueLabel = new Label();
-
-						// Load the LazyAttributeLoadingInterceptor
-						methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
-						// If that is null, then assume attributes are loaded and jump to extraction
-						methodVisitor.visitJumpInsn( Opcodes.IFNULL, extractValueLabel );
-						// Load the LazyAttributeLoadingInterceptor
-						methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
-						// Load the current property name
-						methodVisitor.visitLdcInsn( propertyNames[index] );
-						// Invoke isAttributeLoaded on the interceptor
-						methodVisitor.visitMethodInsn(
-								Opcodes.INVOKEVIRTUAL,
-								Type.getInternalName( LazyAttributeLoadingInterceptor.class ),
-								"isAttributeLoaded",
-								Type.getMethodDescriptor( Type.getType( boolean.class ), Type.getType( String.class ) ),
-								false
-						);
-						// If the attribute is loaded, jump to extraction
-						methodVisitor.visitJumpInsn( Opcodes.IFNE, extractValueLabel );
-
-						// Push LazyPropertyInitializer.UNFETCHED_PROPERTY on the stack
-						methodVisitor.visitFieldInsn(
-								Opcodes.GETSTATIC,
-								Type.getInternalName( LazyPropertyInitializer.class ),
-								"UNFETCHED_PROPERTY",
-								Type.getDescriptor( Serializable.class )
-						);
-						// Jump to the label where we handle storing the unfetched property
-						methodVisitor.visitJumpInsn( Opcodes.GOTO, arrayStoreLabel );
-
-						// This is the end of the lazy check i.e. the start of extraction
-						methodVisitor.visitLabel( extractValueLabel );
-						implementationContext.getFrameGeneration().full(
-								methodVisitor,
-								Arrays.asList(
-										TypeDescription.ForLoadedType.of( Object[].class ),
-										TypeDescription.ForLoadedType.of( Object[].class ),
-										TypeDescription.ForLoadedType.of( int.class )
-								),
-								Arrays.asList(
-										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
-								)
-						);
-					}
-
-					// Load the entity to extract the property
-					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
-
-					final Class<?> type;
-					if ( getterMember instanceof Method getter ) {
-						type = getter.getReturnType();
-						methodVisitor.visitMethodInsn(
-								getter.getDeclaringClass().isInterface() ?
-										Opcodes.INVOKEINTERFACE :
-										Opcodes.INVOKEVIRTUAL,
-								Type.getInternalName( getter.getDeclaringClass() ),
-								getter.getName(),
-								Type.getMethodDescriptor( getter ),
-								getter.getDeclaringClass().isInterface()
-						);
-					}
-					else if ( getterMember instanceof Field getter ) {
-						type = getter.getType();
-						methodVisitor.visitFieldInsn(
-								Opcodes.GETFIELD,
-								Type.getInternalName( getter.getDeclaringClass() ),
-								getter.getName(),
-								Type.getDescriptor( type )
-						);
-					}
-					else {
-						assert getterMember instanceof ForeignPackageMember;
-						final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) getterMember;
-						final Member underlyingMember = foreignPackageMember.getMember();
-						if ( underlyingMember instanceof Method getter ) {
-							type = getter.getReturnType();
-						}
-						else {
-							final Field getter = (Field) underlyingMember;
-							type = getter.getType();
-						}
-						methodVisitor.visitMethodInsn(
-								Opcodes.INVOKESTATIC,
-								Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
-								"get_" + getterMember.getName(),
-								Type.getMethodDescriptor(
-										Type.getType( type ),
-										Type.getType( underlyingMember.getDeclaringClass() )
-								),
-								false
-						);
-					}
-					if ( type.isPrimitive() ) {
-						PrimitiveBoxingDelegate.forPrimitive( new TypeDescription.ForLoadedType( type ) )
-								.assignBoxedTo(
-										TypeDescription.Generic.OBJECT,
-										ReferenceTypeAwareAssigner.INSTANCE,
-										Assigner.Typing.STATIC
-								)
-								.apply( methodVisitor, implementationContext );
-					}
-				}
-				if ( persistentAttributeInterceptable ) {
-					methodVisitor.visitLabel( arrayStoreLabel );
-					implementationContext.getFrameGeneration().full(
-							methodVisitor,
-							Arrays.asList(
-									TypeDescription.ForLoadedType.of( Object[].class ),
-									TypeDescription.ForLoadedType.of( Object[].class ),
-									TypeDescription.ForLoadedType.of( int.class ),
-									TypeDescription.ForLoadedType.of( Object.class )
-							),
-							Arrays.asList(
-									implementationContext.getInstrumentedType(),
-									TypeDescription.ForLoadedType.of( Object.class ),
-									TypeDescription.ForLoadedType.of( LazyAttributeLoadingInterceptor.class )
-							)
-					);
-				}
-				methodVisitor.visitInsn( Opcodes.AASTORE );
-			}
-			methodVisitor.visitInsn( Opcodes.ARETURN );
-			return new Size( 6, instrumentedMethod.getStackSize() + 1 );
-		}
-	}
-
-	private static class SetPropertyValues implements ByteCodeAppender {
-
-		private final Class<?> clazz;
-		private final String[] propertyNames;
-		private final Member[] setters;
-		private final boolean enhanced;
-
-		public SetPropertyValues(Class<?> clazz, String[] propertyNames, Member[] setters) {
-			this.clazz = clazz;
-			this.propertyNames = propertyNames;
-			this.setters = setters;
-			this.enhanced = Managed.class.isAssignableFrom( clazz );
-		}
-
-		@Override
-		public Size apply(
-				MethodVisitor methodVisitor,
-				Implementation.Context implementationContext,
-				MethodDescription instrumentedMethod) {
-			final boolean persistentAttributeInterceptable = PersistentAttributeInterceptable.class.isAssignableFrom( clazz );
-			final boolean compositeOwner = CompositeOwner.class.isAssignableFrom( clazz );
-			Label currentLabel = null;
-			Label nextLabel = new Label();
-			for ( int index = 0; index < setters.length; index++ ) {
-				final Member setterMember = setters[index];
-				if ( setterMember == EMBEDDED_MEMBER ) {
-					// The embedded property access does a no-op
-					continue;
-				}
-				if ( currentLabel != null ) {
-					methodVisitor.visitLabel( currentLabel );
-					implementationContext.getFrameGeneration().same(
-							methodVisitor,
-							instrumentedMethod.getParameters().asTypeList()
-					);
-				}
-				// Push entity on stack
-				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
-				// Push values array on stack
-				methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
-				methodVisitor.visitLdcInsn( index );
-				// Load value for property from array
-				methodVisitor.visitInsn( Opcodes.AALOAD );
-				if ( enhanced ) {
-					// Duplicate the property value
-					methodVisitor.visitInsn( Opcodes.DUP );
-					// Push LazyPropertyInitializer.UNFETCHED_PROPERTY on the stack
-					methodVisitor.visitFieldInsn(
-							Opcodes.GETSTATIC,
-							Type.getInternalName( LazyPropertyInitializer.class ),
-							"UNFETCHED_PROPERTY",
-							Type.getDescriptor( Serializable.class )
-					);
-					Label setterLabel = new Label();
-					// Compare property value against LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// and jump to the setter label if that is unequal
-					methodVisitor.visitJumpInsn( Opcodes.IF_ACMPNE, setterLabel );
-
-					// When we get here, we need to clean up the stack before proceeding with the next property
-					// Pop the property value
-					methodVisitor.visitInsn( Opcodes.POP );
-					// Pop the entity
-					methodVisitor.visitInsn( Opcodes.POP );
-					methodVisitor.visitJumpInsn( Opcodes.GOTO, nextLabel );
-
-					// This label is jumped to when property value != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// At which point we have the entity and the value on the stack
-					methodVisitor.visitLabel( setterLabel );
-					implementationContext.getFrameGeneration().full(
-							methodVisitor,
-							Arrays.asList(
-									TypeDescription.ForLoadedType.of( clazz ),
-									TypeDescription.ForLoadedType.of( Object.class )
-							),
-							Arrays.asList(
-									implementationContext.getInstrumentedType(),
-									TypeDescription.ForLoadedType.of( Object.class ),
-									TypeDescription.ForLoadedType.of( Object[].class )
-							)
-					);
-				}
-				final Class<?> type;
-				if ( setterMember instanceof Method setter ) {
-					type = setter.getParameterTypes()[0];
-				}
-				else if ( setterMember instanceof Field field ) {
-					type = field.getType();
-				}
-				else {
-					final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) setterMember;
-					final Member underlyingMember = foreignPackageMember.getMember();
-					if ( underlyingMember instanceof Method setter ) {
-						type = setter.getParameterTypes()[0];
-					}
-					else {
-						final Field field = (Field) underlyingMember;
-						type = field.getType();
-					}
-				}
-				if ( type.isPrimitive() ) {
-					PrimitiveUnboxingDelegate.forReferenceType( TypeDescription.Generic.OBJECT )
-							.assignUnboxedTo(
-									new TypeDescription.Generic.OfNonGenericType.ForLoadedType( type ),
-									ReferenceTypeAwareAssigner.INSTANCE,
-									Assigner.Typing.DYNAMIC
-							)
-							.apply( methodVisitor, implementationContext );
-				}
-				else {
-					methodVisitor.visitTypeInsn(
-							Opcodes.CHECKCAST,
-							Type.getInternalName( type )
-					);
-				}
-				if ( setterMember instanceof Method setter ) {
-					methodVisitor.visitMethodInsn(
-							setter.getDeclaringClass().isInterface() ?
-									Opcodes.INVOKEINTERFACE :
-									Opcodes.INVOKEVIRTUAL,
-							Type.getInternalName( setter.getDeclaringClass() ),
-							setter.getName(),
-							Type.getMethodDescriptor( setter ),
-							setter.getDeclaringClass().isInterface()
-					);
-					if ( setter.getReturnType() != void.class ) {
-						// Setters could return something which we have to ignore
-						switch ( setter.getReturnType().getTypeName() ) {
-							case "long":
-							case "double":
-								methodVisitor.visitInsn( Opcodes.POP2 );
-								break;
-							default:
-								methodVisitor.visitInsn( Opcodes.POP );
-								break;
-						}
-					}
-				}
-				else if ( setterMember instanceof Field field ) {
-					methodVisitor.visitFieldInsn(
-							Opcodes.PUTFIELD,
-							Type.getInternalName( field.getDeclaringClass() ),
-							field.getName(),
-							Type.getDescriptor( type )
-					);
-				}
-				else {
-					final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) setterMember;
-					methodVisitor.visitMethodInsn(
-							Opcodes.INVOKESTATIC,
-							Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
-							"set_" + setterMember.getName(),
-							Type.getMethodDescriptor(
-									Type.getType( void.class ),
-									Type.getType( foreignPackageMember.getMember().getDeclaringClass() ),
-									Type.getType( type )
-							),
-							false
-					);
-				}
-				if ( enhanced ) {
-					final boolean compositeTracker = CompositeTracker.class.isAssignableFrom( type );
-					boolean alreadyHasFrame = false;
-					// The composite owner check and setting only makes sense if
-					//  * the value type is a composite tracker
-					//  * a value subtype can be a composite tracker
-					//
-					// Final classes that don't already implement the interface never need to be checked.
-					// This helps a bit with common final types which otherwise would have to be checked a lot.
-					if ( compositeOwner && ( compositeTracker || !Modifier.isFinal( type.getModifiers() ) ) ) {
-						// Push values array on stack
-						methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
-						methodVisitor.visitLdcInsn( index );
-						// Load value for property from array
-						methodVisitor.visitInsn( Opcodes.AALOAD );
-
-						// Check if value implements composite tracker
-						methodVisitor.visitInsn( Opcodes.DUP );
-						final Label compositeTrackerFalseLabel = new Label();
-						final String compositeTrackerType;
-						final boolean isInterface;
-						if ( compositeTracker ) {
-							// If the known type already implements that interface, we use that type,
-							// so we just do a null check
-							compositeTrackerType = Type.getInternalName( type );
-							isInterface = false;
-							methodVisitor.visitJumpInsn( Opcodes.IFNULL, compositeTrackerFalseLabel );
-						}
-						else {
-							// If we don't know for sure, we do an instanceof check
-							methodVisitor.visitTypeInsn(
-									Opcodes.INSTANCEOF,
-									compositeTrackerType = Type.getInternalName( CompositeTracker.class )
-							);
-							isInterface = true;
-							methodVisitor.visitJumpInsn( Opcodes.IFEQ, compositeTrackerFalseLabel );
-						}
-
-						// Load the tracker on which we will call $$_hibernate_setOwner
-						methodVisitor.visitTypeInsn(
-								Opcodes.CHECKCAST,
-								compositeTrackerType
-						);
-						methodVisitor.visitLdcInsn( propertyNames[index] );
-						// Load the owner and cast it to the owner class, as we know it implements CompositeOwner
-						methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
-						// Invoke the method to set the owner
-						methodVisitor.visitMethodInsn(
-								isInterface ? Opcodes.INVOKEINTERFACE : Opcodes.INVOKEVIRTUAL,
-								compositeTrackerType,
-								"$$_hibernate_setOwner",
-								Type.getMethodDescriptor(
-										Type.getType( void.class ),
-										Type.getType( String.class ),
-										Type.getType( CompositeOwner.class )
-								),
-								isInterface
-						);
-
-						// Skip the cleanup
-						final Label compositeTrackerEndLabel = new Label();
-						methodVisitor.visitJumpInsn( Opcodes.GOTO, compositeTrackerEndLabel );
-
-						// Here is the cleanup section for the false branch
-						methodVisitor.visitLabel( compositeTrackerFalseLabel );
-						// We still have the duplicated value on the stack
-						implementationContext.getFrameGeneration().full(
-								methodVisitor,
-								Arrays.asList(
-										TypeDescription.ForLoadedType.of( Object.class )
-								),
-								Arrays.asList(
-										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( Object[].class )
-								)
-						);
-						// Pop that duplicated property value from the stack
-						methodVisitor.visitInsn( Opcodes.POP );
-
-						// Clean stack after the if block
-						methodVisitor.visitLabel( compositeTrackerEndLabel );
-						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
-						alreadyHasFrame = true;
-					}
-					if ( persistentAttributeInterceptable ) {
-						// Load the owner
-						methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
-						// Extract the interceptor
-						methodVisitor.visitMethodInsn(
-								Opcodes.INVOKEVIRTUAL,
-								Type.getInternalName( clazz ),
-								"$$_hibernate_getInterceptor",
-								Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-								false
-						);
-						// Duplicate the interceptor on the stack and check if it implements BytecodeLazyAttributeInterceptor
-						methodVisitor.visitInsn( Opcodes.DUP );
-						methodVisitor.visitTypeInsn(
-								Opcodes.INSTANCEOF,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class )
-						);
-
-						// Jump to the false label if the instanceof check fails
-						final Label instanceofFalseLabel = new Label();
-						methodVisitor.visitJumpInsn( Opcodes.IFEQ, instanceofFalseLabel );
-
-						// Cast to the subtype, so we can mark the property as initialized
-						methodVisitor.visitTypeInsn(
-								Opcodes.CHECKCAST,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class )
-						);
-						// Load the property name
-						methodVisitor.visitLdcInsn( propertyNames[index] );
-						// Invoke the method to mark the property as initialized
-						methodVisitor.visitMethodInsn(
-								Opcodes.INVOKEINTERFACE,
-								Type.getInternalName( BytecodeLazyAttributeInterceptor.class ),
-								"attributeInitialized",
-								Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( String.class ) ),
-								true
-						);
-
-						// Skip the cleanup
-						final Label instanceofEndLabel = new Label();
-						methodVisitor.visitJumpInsn( Opcodes.GOTO, instanceofEndLabel );
-
-						// Here is the cleanup section for the false branch
-						methodVisitor.visitLabel( instanceofFalseLabel );
-						// We still have the duplicated interceptor on the stack
-						implementationContext.getFrameGeneration().full(
-								methodVisitor,
-								Arrays.asList(
-										TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class )
-								),
-								Arrays.asList(
-										implementationContext.getInstrumentedType(),
-										TypeDescription.ForLoadedType.of( Object.class ),
-										TypeDescription.ForLoadedType.of( Object[].class )
-								)
-						);
-						// Pop that duplicated interceptor from the stack
-						methodVisitor.visitInsn( Opcodes.POP );
-
-						// Clean stack after the if block
-						methodVisitor.visitLabel( instanceofEndLabel );
-						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
-						alreadyHasFrame = true;
-					}
-
-					if ( alreadyHasFrame ) {
-						// Usually, the currentLabel is visited as well generating a frame,
-						// but if a frame was already generated, only visit the label here,
-						// otherwise two frames for the same bytecode index are generated,
-						// which is wrong and will produce an error when the JDK ClassFile API is used
-						methodVisitor.visitLabel( nextLabel );
-						currentLabel = null;
-					}
-					else {
-						currentLabel = nextLabel;
-					}
-					nextLabel = new Label();
-				}
-			}
-			if ( currentLabel != null ) {
-				methodVisitor.visitLabel( currentLabel );
-				implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
-			}
-			methodVisitor.visitInsn( Opcodes.RETURN );
-			return new Size( 4, instrumentedMethod.getStackSize() );
-		}
 	}
 
 	private static void findAccessors(
@@ -1209,7 +403,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 
 		final Class<?>[] getParam = new Class[0];
-		final Class<?>[] setParam = new Class[1];
 		for ( int i = 0; i < length; i++ ) {
 			if ( getterNames[i] != null ) {
 				final Method getter = findAccessor( clazz, getterNames[i], getParam );
@@ -1350,32 +543,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 		catch (NoSuchMethodException e) {
 			return null;
-		}
-	}
-
-	public static class GetPropertyNames implements ByteCodeAppender {
-
-		private final String[] propertyNames;
-
-		private GetPropertyNames(String[] propertyNames) {
-			this.propertyNames = propertyNames;
-		}
-
-		@Override
-		public Size apply(
-				MethodVisitor methodVisitor,
-				Implementation.Context implementationContext,
-				MethodDescription instrumentedMethod) {
-			methodVisitor.visitLdcInsn( propertyNames.length );
-			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, Type.getInternalName( String.class ) );
-			for ( int i = 0; i < propertyNames.length; i++ ) {
-				methodVisitor.visitInsn( Opcodes.DUP );
-				methodVisitor.visitLdcInsn( i );
-				methodVisitor.visitLdcInsn( propertyNames[i] );
-				methodVisitor.visitInsn( Opcodes.AASTORE );
-			}
-			methodVisitor.visitInsn( Opcodes.ARETURN );
-			return new Size( 4, instrumentedMethod.getStackSize() + 1 );
 		}
 	}
 

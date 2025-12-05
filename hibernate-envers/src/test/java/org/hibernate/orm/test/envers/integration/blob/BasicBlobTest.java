@@ -7,16 +7,17 @@ package org.hibernate.orm.test.envers.integration.blob;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import org.hamcrest.Matchers;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
@@ -26,30 +27,26 @@ import java.nio.file.Path;
 import java.sql.Blob;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.fail;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Cranford
  */
-public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {BasicBlobTest.Asset.class})
+public class BasicBlobTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {Asset.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void testGenerateProxyNoStream() throws URISyntaxException {
+	@BeforeClassTemplate
+	public void testGenerateProxyNoStream(EntityManagerFactoryScope scope) throws URISyntaxException {
 		final Path path = Path.of( Thread.currentThread().getContextClassLoader()
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).toURI() );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final Asset asset = new Asset();
 			asset.setFileName( "blob.txt" );
 
 			try (final InputStream stream = new BufferedInputStream( Files.newInputStream( path ) )) {
-				assertThat( stream.markSupported(), Matchers.is( true ) );
+				assertThat( stream.markSupported(), is( true ) );
 
 				// We use the method readAllBytes instead of passing the raw stream to the proxy
 				// since this is the only guaranteed way that will work across all dialects in a
@@ -74,26 +71,25 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				fail( "Failed to persist the entity" );
 			}
 		} );
-
 	}
 
 	@Test
-	@Priority(10)
-	@SkipForDialect(value = PostgreSQLDialect.class,
-			comment = "The driver closes the stream, so it cannot be reused by envers")
-	@SkipForDialect(value = SQLServerDialect.class,
-			comment = "The driver closes the stream, so it cannot be reused by envers")
-	@SkipForDialect(value = InformixDialect.class)
-	public void testGenerateProxyStream() throws URISyntaxException {
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
+			reason = "The driver closes the stream, so it cannot be reused by envers")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true,
+			reason = "The driver closes the stream, so it cannot be reused by envers")
+	@SkipForDialect(dialectClass = InformixDialect.class, matchSubTypes = true)
+	public void testGenerateProxyStream(EntityManagerFactoryScope scope) throws URISyntaxException {
 		final Path path = Path.of( Thread.currentThread().getContextClassLoader()
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).toURI() );
 
 		try (final InputStream stream = new BufferedInputStream( Files.newInputStream( path ) )) {
-			doInJPA( this::entityManagerFactory, entityManager -> {
+			final long length = Files.size( path );
+			scope.inTransaction( entityManager -> {
 				final Asset asset = new Asset();
 				asset.setFileName( "blob.txt" );
 
-				assertThat( stream.markSupported(), Matchers.is( true ) );
+				assertThat( stream.markSupported(), is( true ) );
 
 				// We use the method readAllBytes instead of passing the raw stream to the proxy
 				// since this is the only guaranteed way that will work across all dialects in a
@@ -108,7 +104,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				// H2, MySQL, Oracle, SQL Server work this way.
 				//
 				//
-				Blob blob = BlobProxy.generateProxy( stream, 9192L );
+				Blob blob = BlobProxy.generateProxy( stream, length );
 
 				asset.setData( blob );
 				entityManager.persist( asset );
@@ -153,5 +149,4 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 			this.data = data;
 		}
 	}
-
 }

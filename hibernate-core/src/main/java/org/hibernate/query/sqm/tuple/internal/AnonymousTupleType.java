@@ -61,7 +61,7 @@ public class AnonymousTupleType<T>
 				.getFirstQuerySpec()
 				.getSelectClause();
 
-		if ( selectClause == null || selectClause.getSelections().isEmpty() ) {
+		if ( selectClause.getSelections().isEmpty() ) {
 			throw new IllegalArgumentException( "selectQuery has no selection items" );
 		}
 		// todo: right now, we "snapshot" the state of the selectQuery when creating this type, but maybe we shouldn't?
@@ -194,7 +194,7 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
-	public SqmBindableType<?> get(String componentName) {
+	public @Nullable SqmBindableType<?> get(String componentName) {
 		final Integer index = componentIndexMap.get( componentName );
 		return index == null ? null : expressibles[index];
 	}
@@ -208,7 +208,7 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		final Integer index = componentIndexMap.get( name );
 		return index == null ? null : subpathSource( name, expressibles[index] );
 	}
@@ -272,12 +272,12 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
-	public SqmDomainType<T> getSqmType() {
+	public @Nullable SqmDomainType<T> getSqmType() {
 		return this;
 	}
 
 	@Override
-	public SqmPath<T> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<T> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedMappingException(
 				"AnonymousTupleType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);

@@ -4,16 +4,8 @@
  */
 package org.hibernate.orm.test.multitenancy;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Consumer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.SessionFactory;
@@ -23,34 +15,40 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.query.Query;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Vlad Mihalcea
  */
-public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
+@BaseUnitTest
+public abstract class AbstractMultiTenancyTest {
 
 	protected static final String FRONT_END_TENANT = "front_end";
 	protected static final String BACK_END_TENANT = "back_end";
@@ -65,47 +63,47 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
 	//tag::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 	private void init() {
-		registerConnectionProvider(FRONT_END_TENANT);
-		registerConnectionProvider(BACK_END_TENANT);
-		sessionFactory = sessionFactory(createSettings());
+		registerConnectionProvider( FRONT_END_TENANT );
+		registerConnectionProvider( BACK_END_TENANT );
+		sessionFactory = sessionFactory( createSettings() );
 	}
 
 	protected Map<String, Object> createSettings() {
 		Map<String, Object> settings = new HashMap<>();
 
-		settings.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
-				new ConfigurableMultiTenantConnectionProvider(connectionProviderMap));
+		settings.put( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
+				new ConfigurableMultiTenantConnectionProvider( connectionProviderMap ) );
 		return settings;
 	}
 	//end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
-	@AfterClassOnce
+	@AfterAll
 	public void destroy() {
 		sessionFactory.close();
-		for (ConnectionProvider connectionProvider : connectionProviderMap.values()) {
-			if (connectionProvider instanceof Stoppable) {
+		for ( ConnectionProvider connectionProvider : connectionProviderMap.values() ) {
+			if ( connectionProvider instanceof Stoppable ) {
 				((Stoppable) connectionProvider).stop();
 			}
 		}
 	}
 
-	@After
+	@AfterEach
 	public void cleanup() {
-		doInSession(FRONT_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
-		doInSession(BACK_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
+		doInSession( FRONT_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
+		doInSession( BACK_END_TENANT, session -> session.createMutationQuery( "delete from Person" ).executeUpdate() );
 	}
 
 	//tag::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
 	protected void registerConnectionProvider(String tenantIdentifier) {
 		Properties properties = properties();
-		properties.put(Environment.URL,
-			tenantUrl(properties.getProperty(Environment.URL), tenantIdentifier));
+		properties.put( Environment.URL,
+				tenantUrl( properties.getProperty( Environment.URL ), tenantIdentifier ) );
 
-		DriverManagerConnectionProviderImpl connectionProvider =
-			new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( PropertiesHelper.map(properties) );
-		connectionProviderMap.put(tenantIdentifier, connectionProvider);
+		DriverManagerConnectionProvider connectionProvider =
+				new DriverManagerConnectionProvider();
+		connectionProvider.configure( PropertiesHelper.map( properties ) );
+		connectionProviderMap.put( tenantIdentifier, connectionProvider );
 	}
 	//end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
@@ -113,24 +111,24 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 	public void testBasicExpectedBehavior() {
 
 		//tag::multitenacy-multitenacy-hibernate-same-entity-example[]
-		doInSession(FRONT_END_TENANT, session -> {
+		doInSession( FRONT_END_TENANT, session -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			session.persist(person);
-		});
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			session.persist( person );
+		} );
 
-		doInSession(BACK_END_TENANT, session -> {
+		doInSession( BACK_END_TENANT, session -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
-			session.persist(person);
-		});
+			person.setId( 1L );
+			person.setName( "John Doe" );
+			session.persist( person );
+		} );
 		//end::multitenacy-multitenacy-hibernate-same-entity-example[]
 	}
 
 	@Test
-	@JiraKey( value = "HHH-17972")
+	@JiraKey(value = "HHH-17972")
 	public void testChangeTenantWithoutConnectionReuse() {
 		Person person = new Person();
 		person.setId( 1L );
@@ -162,38 +160,41 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 			assertEquals( "Jane Doe", newSessionQuery.getResultList().get( 0 ).getName() );
 		}
 		finally {
-			if (session != null) {
+			if ( session != null ) {
 				session.close();
 			}
-			if (newSession != null) {
+			if ( newSession != null ) {
 				newSession.close();
 			}
 		}
 	}
 
 	@Test
-	@JiraKey( value = "HHH-17972")
+	@JiraKey(value = "HHH-17972")
 	public void testChangeTenantWithConnectionReuse() {
 		try (Session session = sessionFactory.withOptions().tenantIdentifier( FRONT_END_TENANT ).openSession()) {
-			Assert.assertThrows( "Cannot redefine the tenant identifier on a child session if the connection is reused",
-								SessionException.class,
-								() -> session.sessionWithOptions().tenantIdentifier( BACK_END_TENANT ).connection().openSession()
+			assertThrows(
+					SessionException.class,
+					() -> session.sessionWithOptions().tenantIdentifier( BACK_END_TENANT ).connection().openSession(),
+					"Cannot redefine the tenant identifier on a child session if the connection is reused"
+
 			);
-			Assert.assertThrows( "Cannot redefine the tenant identifier on a child session if the connection is reused",
-								SessionException.class,
-								() -> session.sessionWithOptions().connection().tenantIdentifier( BACK_END_TENANT ).openSession()
+			assertThrows(
+					SessionException.class,
+					() -> session.sessionWithOptions().connection().tenantIdentifier( BACK_END_TENANT ).openSession(),
+					"Cannot redefine the tenant identifier on a child session if the connection is reused"
 			);
 		}
 	}
 
 	protected Properties properties() {
 		Properties properties = new Properties();
-		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource("hibernate.properties");
-		try(FileInputStream inputStream = new FileInputStream(propertiesURL.getFile())) {
-			properties.load(inputStream);
+		URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
+		try (FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
+			properties.load( inputStream );
 		}
 		catch (IOException e) {
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException( e );
 		}
 		return properties;
 	}
@@ -203,18 +204,18 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 	protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
 		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
-			.applySettings(settings)
-			.build();
+				.applySettings( settings )
+				.build();
 
-		MetadataSources metadataSources = new MetadataSources(serviceRegistry);
-		for(Class annotatedClasses : getAnnotatedClasses()) {
-			metadataSources.addAnnotatedClass(annotatedClasses);
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		for ( Class annotatedClasses : getAnnotatedClasses() ) {
+			metadataSources.addAnnotatedClass( annotatedClasses );
 		}
 
 		Metadata metadata = metadataSources.buildMetadata();
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
-		tool.injectServices(serviceRegistry);
+		tool.injectServices( serviceRegistry );
 
 		new SchemaDropperImpl( serviceRegistry ).doDrop(
 				metadata,
@@ -260,7 +261,7 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Person.class
+				Person.class
 		};
 	}
 
@@ -270,18 +271,22 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 		Transaction txn = null;
 		try {
 			session = sessionFactory
-				.withOptions()
-				.tenantIdentifier(tenant)
-				.openSession();
+					.withOptions()
+					.tenantIdentifier( tenant )
+					.openSession();
 			txn = session.getTransaction();
 			txn.begin();
-			function.accept(session);
+			function.accept( session );
 			txn.commit();
-		} catch (Throwable e) {
-			if (txn != null) txn.rollback();
+		}
+		catch (Throwable e) {
+			if ( txn != null ) {
+				txn.rollback();
+			}
 			throw e;
-		} finally {
-			if (session != null) {
+		}
+		finally {
+			if ( session != null ) {
 				session.close();
 			}
 		}

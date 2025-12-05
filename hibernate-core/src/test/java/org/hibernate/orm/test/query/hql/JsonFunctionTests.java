@@ -23,7 +23,9 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -37,8 +39,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,7 +77,7 @@ public class JsonFunctionTests {
 
 	JsonHolder entity;
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -115,9 +117,9 @@ public class JsonFunctionTests {
 		);
 	}
 
-	@AfterEach
+	@AfterAll
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -337,7 +339,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonExists.class)
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, versionMatchMode = VersionMatchMode.OLDER, reason = "Oracle bug in versions before 23")
 	public void testJsonExists(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -454,7 +456,8 @@ public class JsonFunctionTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgreSQL didn't support the unique keys clause.")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgresPlus didn't support the unique keys clause.")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

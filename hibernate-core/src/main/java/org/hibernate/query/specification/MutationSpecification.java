@@ -114,6 +114,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @param criteriaUpdate The criteria update query
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @see UpdateSpecification#create(CriteriaUpdate)
 	 */
 	static <T> MutationSpecification<T> create(CriteriaUpdate<T> criteriaUpdate) {
 		return new MutationSpecificationImpl<>( criteriaUpdate );
@@ -127,6 +129,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @param criteriaDelete The criteria delete query
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @see DeleteSpecification#create(CriteriaDelete)
 	 */
 	static <T> MutationSpecification<T> create(CriteriaDelete<T> criteriaDelete) {
 		return new MutationSpecificationImpl<>( criteriaDelete );

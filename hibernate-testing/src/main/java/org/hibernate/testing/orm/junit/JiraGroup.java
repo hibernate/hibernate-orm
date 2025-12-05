@@ -9,13 +9,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Grouping annotation for `@Jira`
- *
- * @see Jira
- *
- * @author Steve Ebersole
- */
+/// Grouping annotation for repeatable [@Jira][Jira] annotations.
+///
+/// @author Steve Ebersole
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface JiraGroup {

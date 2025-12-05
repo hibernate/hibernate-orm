@@ -8,7 +8,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 public class JoinedSubclassInheritanceTest {
 
-	@After
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->

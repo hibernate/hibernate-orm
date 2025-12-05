@@ -62,16 +62,14 @@ class ManyToOneWithAnyTest {
 					entityManager.clear();
 
 					firstBook = entityManager.unwrap( Session.class )
-							.byId( firstBook.getClass() )
-							.load( firstBook.getId() );
+							.find( firstBook.getClass(), firstBook.getId() );
 
 					assertNotNull( firstBook );
 
 					entityManager.clear();
 
 					library = entityManager.unwrap( Session.class )
-							.byId( library.getClass() )
-							.load( library.getId() );
+							.find( library.getClass(), library.getId() );
 
 					assertNotNull( library );
 					assertEquals( 2, library.getBooks().size() );
@@ -96,11 +94,11 @@ class ManyToOneWithAnyTest {
 					session.flush();
 					session.clear();
 
-					library = session.byId( library.getClass() ).load( library.getId() );
+					library = session.find( library.getClass(), library.getId() );
 					assertNotNull( library );
 					assertEquals( 2, library.getBooks().size() );
 
-					shop = session.byId( shop.getClass() ).load( shop.getId() );
+					shop = session.find( shop.getClass(), shop.getId() );
 					assertNotNull( shop );
 					assertEquals( 3, shop.getBooks().size() );
 				}

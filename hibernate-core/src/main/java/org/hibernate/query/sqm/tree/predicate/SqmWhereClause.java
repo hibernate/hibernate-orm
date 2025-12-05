@@ -7,22 +7,24 @@ package org.hibernate.query.sqm.tree.predicate;
 import java.util.Collection;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmWhereClause implements SqmPredicateCollection {
+public class SqmWhereClause implements SqmPredicateCollection, SqmCacheable {
 	private final NodeBuilder nodeBuilder;
 
-	private SqmPredicate predicate;
+	private @Nullable SqmPredicate predicate;
 
 	public SqmWhereClause(NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
 	}
 
-	public SqmWhereClause(SqmPredicate predicate, NodeBuilder nodeBuilder) {
+	public SqmWhereClause(@Nullable SqmPredicate predicate, NodeBuilder nodeBuilder) {
 		this.nodeBuilder = nodeBuilder;
 		this.predicate = predicate;
 	}
@@ -35,12 +37,12 @@ public class SqmWhereClause implements SqmPredicateCollection {
 	}
 
 	@Override
-	public SqmPredicate getPredicate() {
+	public @Nullable SqmPredicate getPredicate() {
 		return predicate;
 	}
 
 	@Override
-	public void setPredicate(SqmPredicate predicate) {
+	public void setPredicate(@Nullable SqmPredicate predicate) {
 		this.predicate = predicate;
 	}
 
@@ -72,13 +74,24 @@ public class SqmWhereClause implements SqmPredicateCollection {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		return other instanceof SqmWhereClause that
 			&& Objects.equals( this.predicate, that.predicate );
 	}
 
 	@Override
 	public int hashCode() {
-		return predicate == null ? 0 : predicate.hashCode();
+		return Objects.hashCode( this.predicate );
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return other instanceof SqmWhereClause that
+			&& SqmCacheable.areCompatible( this.predicate, that.predicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( this.predicate );
 	}
 }

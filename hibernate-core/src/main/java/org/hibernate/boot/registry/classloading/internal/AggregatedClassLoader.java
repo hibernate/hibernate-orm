@@ -10,7 +10,6 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
-import org.hibernate.internal.util.ExceptionHelper;
 
 public class AggregatedClassLoader extends ClassLoader {
 	private final ClassLoader[] individualClassLoaders;
@@ -122,7 +121,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	private Iterator<ClassLoader> newTcclNeverIterator() {
 		final ClassLoader systemClassLoader = locateSystemClassLoader();
-		return new Iterator<ClassLoader>() {
+		return new Iterator<>() {
 			private int currentIndex = 0;
 			private boolean sysCLReturned = false;
 
@@ -182,7 +181,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	@Override
 	protected URL findResource(String name) {
-		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+		final var clIterator = newClassLoaderIterator();
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
 			final URL resource = classLoader.getResource( name );
@@ -195,22 +194,18 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
-		Throwable t = null;
+		final var clIterator = newClassLoaderIterator();
+		final var exception = new ClassNotFoundException( "Could not load requested class: " + name );
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
 			try {
 				return classLoader.loadClass( name );
 			}
-			catch (Exception ex) {
-				ExceptionHelper.combine( ( t == null ? t = new Throwable() : t ), ex );
-			}
-			catch (LinkageError le) {
-				ExceptionHelper.combine( ( t == null ? t = new Throwable() : t ), le );
+			catch (Exception|LinkageError ex) {
+				exception.addSuppressed( ex );
 			}
 		}
-
-		throw new ClassNotFoundException( "Could not load requested class : " + name, ( t != null && t.getSuppressed().length > 0 ? t : null ) );
+		throw exception;
 	}
 
 	private static ClassLoader locateSystemClassLoader() {

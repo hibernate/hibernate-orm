@@ -76,23 +76,24 @@ dependencyResolutionManagement {
             def antlrVersion = version "antlr", "4.13.2"
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
-            def byteBuddyVersion = version "byteBuddy", "1.17.6"
-            def classmateVersion = version "classmate", "1.7.0"
+            def byteBuddyVersion = version "byteBuddy", "1.17.8"
+            def checkerFrameworkVersion = version "checkerFramework", "3.52.0"
+            def classmateVersion = version "classmate", "1.7.1"
             def geolatteVersion = version "geolatte", "1.10"
-            def hibernateModelsVersion = version "hibernateModels", "1.0.0"
-            def jandexVersion = version "jandex", "3.3.1"
-            def jacksonVersion = version "jackson", "2.19.1"
+            def hibernateModelsVersion = version "hibernateModels", "1.0.1"
+            def jandexVersion = version "jandex", "3.3.2"
+            def jacksonVersion = version "jackson", "2.19.4"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
-            def agroalVersion = version "agroal", "2.7.1"
+            def agroalVersion = version "agroal", "2.8"
             def c3poVersion = version "c3p0", "0.11.2"
-            def hikaricpVersion = version "hikaricp", "6.3.0"
+            def hikaricpVersion = version "hikaricp", "7.0.2"
 
             def jcacheVersion = version "jcache", "1.1.1"
-            def ehcache3Version = version "ehcache3", "3.10.8"
+            def ehcacheVersion = version "ehcache", "3.11.1"
 
-            def micrometerVersion = version "micrometer", "1.15.1"
+            def micrometerVersion = version "micrometer", "1.16.0"
 
             def antVersion = version "ant", "1.10.15"
 
@@ -101,6 +102,9 @@ dependencyResolutionManagement {
 
             library( "byteBuddy", "net.bytebuddy", "byte-buddy" ).versionRef( byteBuddyVersion )
             library( "byteBuddyAgent", "net.bytebuddy", "byte-buddy-agent" ).versionRef( byteBuddyVersion )
+
+            library( "checkerFramework", "org.checkerframework", "checker-qual-android" ).versionRef( checkerFrameworkVersion )
+            library( "checkerFrameworkChecker", "org.checkerframework", "checker" ).versionRef( checkerFrameworkVersion )
 
             library( "logging", "org.jboss.logging", "jboss-logging" ).versionRef( jbossLoggingVersion )
             library( "loggingAnnotations", "org.jboss.logging", "jboss-logging-annotations" ).versionRef( jbossLoggingToolVersion )
@@ -123,7 +127,7 @@ dependencyResolutionManagement {
             library( "geolatte", "org.geolatte", "geolatte-geom" ).versionRef( geolatteVersion )
 
             library( "jcache", "javax.cache", "cache-api" ).versionRef( jcacheVersion )
-            library( "ehcache3", "org.ehcache", "ehcache" ).versionRef( ehcache3Version )
+            library( "ehcache", "org.ehcache", "ehcache" ).versionRef( ehcacheVersion )
 
             library( "micrometer", "io.micrometer", "micrometer-core" ).versionRef( micrometerVersion )
 
@@ -139,13 +143,12 @@ dependencyResolutionManagement {
             def interceptorsVersion = version "interceptors", "2.2.0"
             def dataVersion = version "data", "1.0.1"
             def jaccVersion = version "jacc", "3.0.0"
-            def jaxbApiVersion = version "jaxbApi", "4.0.2"
-            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.5"
+            def jaxbApiVersion = version "jaxbApi", "4.0.4"
+            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.6"
             def jsonbApiVersion = version "jsonbApi", "3.0.1"
             def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.4"
             def jtaVersion = version "jta", "2.0.1"
             def validationVersion = version "validation", "3.1.1"
-            def xjcVersion = version "jaxbRuntime", jaxbRuntimeVersion
 
             library( "jpa", "jakarta.persistence", "jakarta.persistence-api" ).versionRef( jpaVersion )
             library( "jta", "jakarta.transaction", "jakarta.transaction-api" ).versionRef( jtaVersion )
@@ -161,36 +164,35 @@ dependencyResolutionManagement {
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )
             library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).versionRef( jaxbApiVersion )
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
-            library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( xjcVersion )
         }
         testLibs {
-            def junit5Version = version "junit5", "5.13.0"
+            def junitJupiterVersion = version "junitJupiter", "6.0.1"
             def junit4Version = version "junit4", "4.13.2"
-            def junit5LauncherVersion = version "junit5Launcher", "1.12.0"
+            def junitJupiterLauncherVersion = version "junitJupiterLauncher", "6.0.1"
 
             def assertjVersion = version "assertj", "3.26.3"
             def hamcrestVersion = version "hamcrest", "3.0"
             def bytemanVersion = version "byteman", "4.0.24"
-            def jbossJtaVersion = version "jbossJta", "7.2.2.Final"
+            def jbossJtaVersion = version "jbossJta", "7.3.3.Final"
             def jbossTxSpiVersion = version "jbossTxSpi", "8.0.0.Final"
             def log4jVersion = version "log4j", "2.24.3"
-            def mockitoVersion = version "mockito", "5.14.2"
+            def mockitoVersion = version "mockito", "5.20.0"
             def shrinkwrapVersion = version "shrinkwrap", "1.2.6"
             def shrinkwrapDescriptorsVersion = version "shrinkwrapDescriptors", "2.0.0"
             def weldVersion = version "weld", "6.0.3.Final"
-            def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
+            def wildFlyTxnClientVersion = version "wildFlyTxnClient", "3.0.5.Final"
 
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
-            def hibernateValidatorVersion = version "hibernateValidator", "9.0.0.Final"
+            def hibernateValidatorVersion = version "hibernateValidator", "9.1.0.Final"
 
             library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 
-            library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
-            library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
-            library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
-            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junit5Version )
-            library( "junit5Launcher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junit5LauncherVersion )
+            library( "junitJupiterApi", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterEngine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterParams", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junitJupiterVersion )
+            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junitJupiterVersion )
+            library( "junitJupiterLauncher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junitJupiterLauncherVersion )
             library( "junit4", "junit", "junit" ).versionRef( junit4Version )
 
             library( "assertjCore", "org.assertj", "assertj-core" ).versionRef( assertjVersion )
@@ -205,35 +207,36 @@ dependencyResolutionManagement {
             library( "bytemanBmunit", "org.jboss.byteman", "byteman-bmunit" ).versionRef( bytemanVersion )
 
             library( "mockito", "org.mockito", "mockito-core" ).versionRef( mockitoVersion )
+            library( "mockitoJunitJupiter", "org.mockito", "mockito-junit-jupiter" ).versionRef( mockitoVersion )
 
             library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).versionRef( jbossJtaVersion )
             library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).versionRef( jbossTxSpiVersion )
-            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
+            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client" ).versionRef( wildFlyTxnClientVersion )
 
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
 
             library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
         }
         jdbcLibs {
-            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.3.232" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.4.240" )
 
-            def db2Version = version "db2", "12.1.2.0"
-            // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
+            def db2Version = version "db2", "12.1.3.0"
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.17.1.0" )
-            def firebirdVersion = version "firebird", "6.0.2"
-            def hanaVersion = version "hana", "2.25.9"
+            def firebirdVersion = version "firebird", "6.0.3"
+            def hanaVersion = version "hana", "2.26.11"
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.3" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.4" )
-            def informixVersion = version "informix", "15.0.0.1.1"
-            def mariadbVersion = version "mariadb", "3.5.3"
-            def mssqlVersion = version "mssql", "12.10.1.jre11"
-            def mysqlVersion = version "mysql", "9.3.0"
-            def oracleVersion = version "oracle", "23.8.0.25.04"
+            def informixVersion = version "informix", "15.0.0.2"
+            def mariadbVersion = version "mariadb", "3.5.5"
+            def mssqlVersion = version "mssql", "13.2.1.jre11"
+            def mysqlVersion = version "mysql", "9.5.0"
+            def oracleVersion = version "oracle", "23.26.0.0.0"
             def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.4"
-            def pgsqlVersion = version "pgsql", "42.7.7"
+            def pgsqlVersion = version "pgsql", "42.7.8"
             def edbVersion = version "edb", "42.7.3.3"
             def gaussdbVersion = version "gaussdb", "506.0.0.b058"
             def sybaseVersion = version "sybase", "1.3.1"
+            def teradataVersion = version "teradata",  "20.00.00.51"
             def tidbVersion = version "tidb", mysqlVersion
             def altibaseVersion = version "altibase", "7.3.0.1.1"
 
@@ -257,6 +260,7 @@ dependencyResolutionManagement {
             library( "db2", "com.ibm.db2", "jcc" ).versionRef( db2Version )
             library( "hana", "com.sap.cloud.db.jdbc", "ngdbc" ).versionRef( hanaVersion )
             library( "sybase", "net.sourceforge.jtds", "jtds" ).versionRef( sybaseVersion )
+            library("teradata", "com.teradata.jdbc", "terajdbc").versionRef(teradataVersion)
             library( "informix", "com.ibm.informix", "jdbc" ).versionRef( informixVersion )
             library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).versionRef( firebirdVersion )
             library( "altibase", "com.altibase", "altibase-jdbc" ).versionRef( altibaseVersion )
@@ -328,6 +332,8 @@ include 'hibernate-jcache'
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 include 'hibernate-integrationtest-java-modules'
+
+include 'local-build-asciidoctor-extensions'
 
 include 'documentation'
 include 'release'

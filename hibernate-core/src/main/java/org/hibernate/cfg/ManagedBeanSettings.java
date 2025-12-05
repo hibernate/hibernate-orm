@@ -80,8 +80,8 @@ public interface ManagedBeanSettings {
 	String DELAY_CDI_ACCESS = "hibernate.delay_cdi_access";
 
 	/**
-	 * Controls whether Hibernate can try to create beans other than converters
-	 * and listeners using CDI.  Only meaningful when a CDI {@link #BEAN_CONTAINER container}
+	 * Controls whether Hibernate can try to create beans other than converters and
+	 * listeners using CDI. Only meaningful when a CDI {@link #BEAN_CONTAINER container}
 	 * is used.
 	 * <p>
 	 * By default, Hibernate will only attempt to create converter and listener beans using CDI.

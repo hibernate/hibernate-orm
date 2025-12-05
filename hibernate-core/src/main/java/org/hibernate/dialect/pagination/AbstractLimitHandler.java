@@ -6,7 +6,6 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.query.Query;
@@ -22,7 +21,12 @@ import static java.util.regex.Pattern.compile;
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
-	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){};
+	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){
+		@Override
+		public boolean processSqlMutatesState() {
+			return false;
+		}
+	};
 
 	private static final Pattern SELECT_PATTERN =
 			compile( "^\\s*select\\b", CASE_INSENSITIVE );
@@ -167,43 +171,59 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	protected final int bindLimitParameters(Limit limit, PreparedStatement statement, int index)
 			throws SQLException {
-
-		if ( !supportsVariableLimit() ) {
-			//never any parameters to bind
+		if ( supportsVariableLimit() ) {
+			final boolean hasMaxRows = hasMaxRows( limit );
+			final boolean hasFirstRow = hasFirstRow( limit );
+			final boolean bindLimit
+					= hasMaxRows && supportsLimit()
+					|| forceLimitUsage();
+			final boolean bindOffset
+					= hasFirstRow && supportsOffset()
+					|| hasFirstRow && hasMaxRows && supportsLimitOffset();
+			return bindLimitParameters( limit, statement, index, bindOffset, bindLimit );
+		}
+		else {
+			// never any parameters to bind
 			return 0;
 		}
+	}
 
-		final boolean hasMaxRows = hasMaxRows( limit );
-		final boolean hasFirstRow = hasFirstRow( limit );
-
-		final boolean bindLimit
-				= hasMaxRows && supportsLimit()
-				|| forceLimitUsage();
-		final boolean bindOffset
-				= hasFirstRow && supportsOffset()
-				|| hasFirstRow && hasMaxRows && supportsLimitOffset();
-
-		if ( !bindLimit && !bindOffset ) {
-			//no parameters to bind this time
-			return 0;
+	private int bindLimitParameters(
+			Limit limit,
+			PreparedStatement statement,
+			int index,
+			boolean bindOffset, boolean bindLimit)
+				throws SQLException {
+		int bound = 0;
+		if ( bindLimitParametersInReverseOrder() ) {
+			bound = bindLimit( limit, statement, index, bindLimit, bound );
+			bound = bindOffset( limit, statement, index, bindOffset, bound );
 		}
+		else {
+			bound = bindOffset( limit, statement, index, bindOffset, bound );
+			bound = bindLimit( limit, statement, index, bindLimit, bound );
+		}
+		return bound;
+	}
 
-		final boolean reverse = bindLimitParametersInReverseOrder();
-
+	private int bindOffset(Limit limit, PreparedStatement statement, int index, boolean bindOffset, int bound)
+			throws SQLException {
 		if ( bindOffset ) {
-			statement.setInt(
-					index + ( reverse && bindLimit ? 1 : 0 ),
-					getFirstRow( limit )
-			);
+			statement.setInt( index + bound,
+					getFirstRow( limit ) );
+			bound++;
 		}
-		if ( bindLimit ) {
-			statement.setInt(
-					index + ( reverse || !bindOffset ? 0 : 1 ),
-					getMaxOrLimit( limit )
-			);
-		}
+		return bound;
+	}
 
-		return bindOffset && bindLimit ? 2 : 1;
+	private int bindLimit(Limit limit, PreparedStatement statement, int index, boolean bindLimit, int count)
+			throws SQLException {
+		if ( bindLimit ) {
+			statement.setInt( index + count,
+					getMaxOrLimit( limit ) );
+			count++;
+		}
+		return count;
 	}
 
 	/**
@@ -215,8 +235,8 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	public static boolean hasMaxRows(Limit limit) {
 		return limit != null
-				&& limit.getMaxRows() != null
-				&& limit.getMaxRows() > 0;
+			&& limit.getMaxRows() != null
+			&& limit.getMaxRows() > 0;
 	}
 
 	/**
@@ -228,8 +248,8 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	public static boolean hasFirstRow(Limit limit) {
 		return limit != null
-				&& limit.getFirstRow() != null
-				&& limit.getFirstRow() > 0;
+			&& limit.getFirstRow() != null
+			&& limit.getFirstRow() > 0;
 	}
 
 	/**
@@ -242,16 +262,19 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * @return The appropriate value to bind into the limit clause.
 	 */
 	protected final int getMaxOrLimit(Limit limit) {
-		if ( limit == null || limit.getMaxRows() == null ) {
+		if ( hasMaxRows( limit ) ) {
+			final int firstRow = getFirstRow( limit );
+			final int maxRows = limit.getMaxRows();
+			final int maxOrLimit =
+					useMaxForLimit()
+							? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
+							: maxRows;
+			// Use Integer.MAX_VALUE on overflow
+			return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
+		}
+		else {
 			return Integer.MAX_VALUE;
 		}
-		final int firstRow = getFirstRow( limit );
-		final int maxRows = limit.getMaxRows();
-		final int maxOrLimit = useMaxForLimit()
-				? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
-				: maxRows;
-		// Use Integer.MAX_VALUE on overflow
-		return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
 	}
 
 	/**
@@ -262,10 +285,9 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * @return The first row
 	 */
 	protected final int getFirstRow(Limit limit) {
-		if ( limit == null || limit.getFirstRow() == null ) {
-			return 0;
-		}
-		return convertToFirstRowValue( limit.getFirstRow() );
+		return limit == null || limit.getFirstRow() == null
+				? 0
+				: convertToFirstRowValue( limit.getFirstRow() );
 	}
 
 	/**
@@ -274,7 +296,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * or {@code ALL}.
 	 */
 	protected static String insertAfterSelect(String limitOffsetClause, String sqlStatement) {
-		Matcher selectMatcher = SELECT_PATTERN.matcher( sqlStatement );
+		final var selectMatcher = SELECT_PATTERN.matcher( sqlStatement );
 		if ( selectMatcher.find() ) {
 			return new StringBuilder( sqlStatement )
 					.insert( selectMatcher.end(), limitOffsetClause )
@@ -291,7 +313,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * or {@code SELECT ALL}.
 	 */
 	protected static String insertAfterDistinct(String limitOffsetClause, String sqlStatement) {
-		Matcher selectDistinctMatcher = SELECT_DISTINCT_PATTERN.matcher( sqlStatement );
+		final var selectDistinctMatcher = SELECT_DISTINCT_PATTERN.matcher( sqlStatement );
 		if ( selectDistinctMatcher.find() ) {
 			return new StringBuilder( sqlStatement )
 					.insert( selectDistinctMatcher.end(), limitOffsetClause )
@@ -307,7 +329,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * end of the query.
 	 */
 	protected String insertAtEnd(String limitOffsetClause, String sqlStatement) {
-		Matcher endMatcher = END_PATTERN.matcher( sqlStatement );
+		final var endMatcher = END_PATTERN.matcher( sqlStatement );
 		if ( endMatcher.find() ) {
 			return new StringBuilder( sqlStatement )
 					.insert( endMatcher.start(), limitOffsetClause )
@@ -334,7 +356,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * of the query.
 	 */
 	protected String insertBeforeForUpdate(String limitOffsetClause, String sqlStatement) {
-		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
+		final var forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
 		if ( forUpdateMatcher.find() ) {
 			return new StringBuilder( sqlStatement )
 					.insert( forUpdateMatcher.start(), limitOffsetClause )

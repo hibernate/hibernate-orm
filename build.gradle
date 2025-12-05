@@ -19,12 +19,12 @@ buildscript {
 plugins {
 	id "local.module"
 
-	id "org.hibernate.build.version-injection" version "2.0.0" apply false
+	id "org.hibernate.build.version-injection" version "2.2.0" apply false
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '7.1.0' apply false
 
 	id "com.diffplug.spotless" version "7.0.4"
-	id 'org.checkerframework' version '0.6.55'
+	id 'org.checkerframework' version '0.6.61'
 	id 'org.hibernate.orm.build.jdks'
 
 	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
@@ -45,14 +45,6 @@ tasks.register( 'releasePrepare' ) {
 			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
 			"Sub-projects register their own `releasePrepare` to hook into this stage."
 	// See `:release:releasePrepare` which does a lot of heavy lifting here
-}
-
-tasks.register( 'releasePerform' ) {
-	group "release-perform"
-	description "Scripted release 'Release Perform' stage.  " +
-			"Generally this entails publishing artifacts to various servers.  " +
-			"Sub-projects register their own `releasePerform` to hook into this stage."
-	// See `:release:releasePerform` which does a lot of heavy lifting here
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

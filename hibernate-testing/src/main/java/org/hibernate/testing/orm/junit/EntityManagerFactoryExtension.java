@@ -51,6 +51,7 @@ public class EntityManagerFactoryExtension
 
 	private static final Logger log = Logger.getLogger( EntityManagerFactoryExtension.class );
 	private static final String EMF_KEY = EntityManagerFactoryScope.class.getName();
+	private static final String INTEGRATION_SETTINGS_KEY = EntityManagerFactoryScope.class.getName() + "#INTEGRATION_SETTINGS";
 
 	private static ExtensionContext.Store locateExtensionStore(Object testScope, ExtensionContext context) {
 		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testScope );
@@ -58,7 +59,6 @@ public class EntityManagerFactoryExtension
 
 	public static EntityManagerFactoryScope findEntityManagerFactoryScope(
 			Object testScope, Optional<Jpa> optionalJpa, ExtensionContext context) {
-
 		if ( optionalJpa.isEmpty() ) {
 			// No annotation on the test class, should be on the test methods
 			return null;
@@ -79,6 +79,8 @@ public class EntityManagerFactoryExtension
 		collectProperties( pui, jpa );
 		managedClassesAndMappings( jpa, pui );
 		final Map<String, Object> integrationSettings = collectIntegrationSettings( jpa );
+		// Make the integration settings available in the store for other extensions
+		store.put( INTEGRATION_SETTINGS_KEY, integrationSettings );
 		// statement inspector
 		setupStatementInspector( jpa, integrationSettings );
 		ServiceRegistryUtil.applySettings( integrationSettings );
@@ -88,11 +90,17 @@ public class EntityManagerFactoryExtension
 		return scope;
 	}
 
+	public static Map<String, Object> getIntegrationSettings(Object testScope, ExtensionContext context) {
+		final ExtensionContext.Store store = locateExtensionStore( testScope, context );
+		//noinspection unchecked
+		return (Map<String, Object>) store.get( INTEGRATION_SETTINGS_KEY, Map.class );
+	}
+
 	private static void collectProperties(PersistenceUnitInfoImpl pui, Jpa jpa) {
 		final Properties properties = pui.getProperties();
 		properties.putAll( Environment.getProperties() );
-		// JpaCompliance
-		setJpaComplianceProperties( properties, jpa );
+		// JpaCompliance, default to false, can be overridden in the integrationSettings
+		properties.put( AvailableSettings.JPA_COMPLIANCE, "false" );
 		for ( Setting property : jpa.properties() ) {
 			properties.setProperty( property.name(), property.value() );
 		}
@@ -111,6 +119,9 @@ public class EntityManagerFactoryExtension
 	private static PersistenceUnitInfoImpl createPersistenceUnitInfo(Jpa jpa) {
 		final PersistenceUnitInfoImpl pui =
 				new PersistenceUnitInfoImpl( jpa.persistenceUnitName() );
+		// Use the context class loader for entity loading if configured,
+		// to make enhancement work for tests
+		pui.setClassLoader( Thread.currentThread().getContextClassLoader() );
 		pui.setTransactionType( jpa.transactionType() );
 		pui.setCacheMode( jpa.sharedCacheMode() );
 		pui.setValidationMode( jpa.validationMode() );
@@ -173,6 +184,17 @@ public class EntityManagerFactoryExtension
 				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
 			}
 		}
+		for ( SettingConfiguration settingConfiguration : jpa.settingConfigurations() ) {
+			try {
+				final SettingConfiguration.Configurer configurer = settingConfiguration.configurer()
+						.getDeclaredConstructor().newInstance();
+				configurer.applySettings( integrationSettings );
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+				NoSuchMethodException e) {
+				throw new RuntimeException( e );
+			}
+		}
 		return integrationSettings;
 	}
 
@@ -184,18 +206,6 @@ public class EntityManagerFactoryExtension
 			}
 			integrationSettings.put( AvailableSettings.STATEMENT_INSPECTOR, new SQLStatementInspector() );
 		}
-	}
-
-	private static void setJpaComplianceProperties(Properties properties, Jpa jpa) {
-		properties.put( AvailableSettings.JPA_COMPLIANCE, jpa.jpaComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_QUERY_COMPLIANCE, jpa.queryComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, jpa.transactionComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_CLOSED_COMPLIANCE, jpa.closedComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_PROXY_COMPLIANCE, jpa.proxyComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_CACHING_COMPLIANCE, jpa.cacheComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, jpa.generatorScopeComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, jpa.orderByMappingComplianceEnabled() );
-		properties.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, jpa.loadByIdComplianceEnabled() );
 	}
 
 	private static DomainModelDescriptor instantiateDomainModelDescriptor(

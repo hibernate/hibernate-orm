@@ -151,8 +151,7 @@ cycleClause
  * A toplevel query of subquery, which may be a union or intersection of subqueries
  */
 queryExpression
-	: withClause? orderedQuery								# SimpleQueryGroup
-	| withClause? orderedQuery (setOperator orderedQuery)+	# SetQueryGroup
+	: withClause? orderedQuery (setOperator orderedQuery)*
 	;
 
 /**
@@ -427,8 +426,6 @@ pathContinuation
  *		* VALUE( path )
  * 		* KEY( path )
  * 		* path[ selector ]
- * 		* ARRAY_GET( embeddableArrayPath, index ).path
- * 		* COALESCE( array1, array2 )[ selector ].path
  */
 syntacticDomainPath
 	: treatedNavigablePath
@@ -436,10 +433,6 @@ syntacticDomainPath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
 	| simplePath slicedPathAccessFragment
-	| toOneFkReference
-	| function pathContinuation
-	| function indexedPathAccessFragment pathContinuation?
-	| function slicedPathAccessFragment
 	;
 
 /**
@@ -661,37 +654,27 @@ whereClause
 predicate
 	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
-	| expression IS NOT? NULL													# IsNullPredicate
-	| expression IS NOT? EMPTY													# IsEmptyPredicate
-	| expression IS NOT? TRUE													# IsTruePredicate
-	| expression IS NOT? FALSE													# IsFalsePredicate
-	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
+	| expression IS NOT? (NULL|EMPTY|TRUE|FALSE)								# UnaryIsPredicate
 	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
-	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
-	| expression NOT? CONTAINS expression										# ContainsPredicate
-	| expression NOT? INCLUDES expression										# IncludesPredicate
-	| expression NOT? INTERSECTS expression										# IntersectsPredicate
-	| expression comparisonOperator expression									# ComparisonPredicate
+	| expression NOT? (LIKE | ILIKE) REGEXP? expression likeEscape?				# LikePredicate
+	| expression
+	    ( NOT? (CONTAINS | INCLUDES | INTERSECTS)
+	    | IS NOT? DISTINCT FROM
+	    | EQUAL
+        | NOT_EQUAL
+        | GREATER
+        | GREATER_EQUAL
+        | LESS
+        | LESS_EQUAL
+	    ) expression  			                                                # BinaryExpressionPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
 	| expression																# BooleanExpressionPredicate
-	;
-
-/**
- * An operator which compares values for equality or order
- */
-comparisonOperator
-	: EQUAL
-	| NOT_EQUAL
-	| GREATER
-	| GREATER_EQUAL
-	| LESS
-	| LESS_EQUAL
 	;
 
 /**
@@ -748,7 +731,14 @@ primaryExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
 	| syntacticDomainPath pathContinuation?				# SyntacticPathExpression
-	| function											# FunctionExpression
+ // ARRAY_GET( embeddableArrayPath, index ).path
+ // COALESCE( array1, array2 )[ selector ].path
+ // COALESCE( array1, array2 )[ start : end ]
+	| function (
+          pathContinuation
+        | slicedPathAccessFragment
+        | indexedPathAccessFragment pathContinuation?
+        )?											    # FunctionExpression
 	| generalPathFragment								# GeneralPathExpression
 	;
 
@@ -1108,6 +1098,7 @@ function
 	| columnFunction
 	| jsonFunction
 	| xmlFunction
+	| toOneFkReference
 	| genericFunction
 	;
 
@@ -1998,6 +1989,7 @@ xmltableDefaultClause
 	| PRECEDING
 	| QUARTER
 	| RANGE
+	| REGEXP
 	| RESPECT
 	| RETURNING
 //	| RIGHT

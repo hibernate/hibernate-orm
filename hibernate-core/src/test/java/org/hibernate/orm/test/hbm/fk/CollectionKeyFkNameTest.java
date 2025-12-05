@@ -9,31 +9,30 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
 import org.hibernate.orm.test.hbm.index.JournalingSchemaToolingTarget;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionKeyFkNameTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class CollectionKeyFkNameTest {
 	private StandardServiceRegistry ssr;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		if ( ssr != null ) {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -41,7 +40,7 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10207" )
+	@JiraKey(value = "HHH-10207")
 	public void testExplicitFkNameOnCollectionKey() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",
@@ -63,14 +62,13 @@ public class CollectionKeyFkNameTest extends BaseUnitTestCase {
 				target
 		);
 
-		assertTrue(
-				"Expected foreign-key name [" + expectedName + "] not seen in schema creation output",
-				target.containedText( expectedName )
-		);
+		assertThat( target.containedText( expectedName ) )
+				.describedAs( "Expected foreign-key name [" + expectedName + "] not seen in schema creation output" )
+				.isTrue();
 	}
 
 	@Test
-	@JiraKey( value = "HHH-10207" )
+	@JiraKey(value = "HHH-10207")
 	public void testExplicitFkNameOnManyToOne() {
 		verifyFkNameUsed(
 				"org/hibernate/orm/test/hbm/fk/person_set.hbm.xml",

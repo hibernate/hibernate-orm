@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -21,25 +22,25 @@ public interface SqmTreatedAttributeJoin<L,R,R1 extends R> extends SqmAttributeJ
 	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
 	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(EntityDomainType<S> treatTarget);
 
 	@Override
-	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R1> SqmTreatedAttributeJoin<L,R1,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	SqmTreatedAttributeJoin<L,R,R1> on(JpaExpression<Boolean> restriction);
+	SqmTreatedAttributeJoin<L,R,R1> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	SqmTreatedAttributeJoin<L,R,R1> on(Expression<Boolean> restriction);
+	SqmTreatedAttributeJoin<L,R,R1> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	SqmTreatedAttributeJoin<L,R,R1> on(JpaPredicate... restrictions);
+	SqmTreatedAttributeJoin<L,R,R1> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	SqmTreatedAttributeJoin<L,R,R1> on(Predicate... restrictions);
+	SqmTreatedAttributeJoin<L,R,R1> on(Predicate @Nullable... restrictions);
 
 	@Override
 	SqmTreatedAttributeJoin<L,R,R1> copy(SqmCopyContext context);

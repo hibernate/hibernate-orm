@@ -4,40 +4,35 @@
  */
 package org.hibernate.orm.test.id.hhh12973;
 
-import java.lang.invoke.MethodHandles;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Rule;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.jboss.logging.Logger;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -48,16 +43,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger(
-					MethodHandles.lookup(),
-					CoreMessageLogger.class,
-					SequenceStyleGenerator.class.getName()
-			)
-	);
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger( SEQUENCE_GENERATOR_LOGGER ).build();
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000497:" );
+	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

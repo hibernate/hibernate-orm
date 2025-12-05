@@ -56,7 +56,7 @@ public class DynamicStatusSingleLazyGroupOnBasicFieldTest {
 	public void test(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
 				.findEntityDescriptor( Person.class );
-		assertThat( persister.getEntityMetamodel().isDynamicUpdate() ).isFalse();
+		assertThat( persister.isDynamicUpdate() ).isFalse();
 	}
 
 	@Test

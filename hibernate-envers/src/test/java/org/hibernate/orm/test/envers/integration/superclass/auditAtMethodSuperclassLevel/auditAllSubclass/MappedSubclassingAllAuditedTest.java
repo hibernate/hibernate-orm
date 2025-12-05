@@ -5,102 +5,100 @@
 package org.hibernate.orm.test.envers.integration.superclass.auditAtMethodSuperclassLevel.auditAllSubclass;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.superclass.auditAtMethodSuperclassLevel.AuditedMethodMappedSuperclass;
 import org.hibernate.orm.test.envers.integration.superclass.auditAtMethodSuperclassLevel.NotAuditedSubclassEntity;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacut;n Chanfreau
  */
-public class MappedSubclassingAllAuditedTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		AuditedMethodMappedSuperclass.class,
+		AuditedAllSubclassEntity.class,
+		NotAuditedSubclassEntity.class
+})
+public class MappedSubclassingAllAuditedTest {
 	private Integer id2_1;
 	private Integer id1_1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				AuditedMethodMappedSuperclass.class,
-				AuditedAllSubclassEntity.class,
-				NotAuditedSubclassEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		NotAuditedSubclassEntity nas = new NotAuditedSubclassEntity( "nae", "super str", "not audited str" );
-		em.persist( nas );
-		AuditedAllSubclassEntity ae = new AuditedAllSubclassEntity( "ae", "super str", "audited str" );
-		em.persist( ae );
-		id1_1 = ae.getId();
-		id2_1 = nas.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			NotAuditedSubclassEntity nas = new NotAuditedSubclassEntity( "nae", "super str", "not audited str" );
+			em.persist( nas );
+			AuditedAllSubclassEntity ae = new AuditedAllSubclassEntity( "ae", "super str", "audited str" );
+			em.persist( ae );
+			id1_1 = ae.getId();
+			id2_1 = nas.getId();
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		ae = em.find( AuditedAllSubclassEntity.class, id1_1 );
-		ae.setStr( "ae new" );
-		ae.setSubAuditedStr( "audited str new" );
-		nas = em.find( NotAuditedSubclassEntity.class, id2_1 );
-		nas.setStr( "nae new" );
-		nas.setNotAuditedStr( "not aud str new" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			AuditedAllSubclassEntity ae = em.find( AuditedAllSubclassEntity.class, id1_1 );
+			ae.setStr( "ae new" );
+			ae.setSubAuditedStr( "audited str new" );
+			NotAuditedSubclassEntity nas = em.find( NotAuditedSubclassEntity.class, id2_1 );
+			nas.setStr( "nae new" );
+			nas.setNotAuditedStr( "not aud str new" );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCountsForAudited() {
-		assert Arrays.asList( 1, 2 ).equals(
-				getAuditReader().getRevisions( AuditedAllSubclassEntity.class, id1_1 )
-		);
+	public void testRevisionsCountsForAudited(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2 ),
+					AuditReaderFactory.get( em ).getRevisions( AuditedAllSubclassEntity.class, id1_1 ) );
+		} );
 	}
-
-	@Test(expected = NotAuditedException.class)
-	public void testRevisionsCountsForNotAudited() {
-		try {
-			getAuditReader().getRevisions( NotAuditedSubclassEntity.class, id2_1 );
-			assert (false);
-		}
-		catch (NotAuditedException nae) {
-			throw nae;
-		}
-	}
-
 
 	@Test
-	public void testHistoryOfAudited() {
+	public void testRevisionsCountsForNotAudited(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertThrows( NotAuditedException.class, () -> {
+				AuditReaderFactory.get( em ).getRevisions( NotAuditedSubclassEntity.class, id2_1 );
+			} );
+		} );
+	}
+
+	@Test
+	public void testHistoryOfAudited(EntityManagerFactoryScope scope) {
 		AuditedAllSubclassEntity ver1 = new AuditedAllSubclassEntity( id1_1, "ae", "super str", "audited str" );
 		AuditedAllSubclassEntity ver2 = new AuditedAllSubclassEntity( id1_1, "ae new", "super str", "audited str new" );
 
-		AuditedAllSubclassEntity rev1 = getAuditReader().find( AuditedAllSubclassEntity.class, id1_1, 1 );
-		AuditedAllSubclassEntity rev2 = getAuditReader().find( AuditedAllSubclassEntity.class, id1_1, 2 );
+		scope.inEntityManager( em -> {
+			AuditedAllSubclassEntity rev1 = AuditReaderFactory.get( em ).find( AuditedAllSubclassEntity.class, id1_1, 1 );
+			AuditedAllSubclassEntity rev2 = AuditReaderFactory.get( em ).find( AuditedAllSubclassEntity.class, id1_1, 2 );
 
-		//this property is not audited on superclass
-		assert (rev1.getOtherStr() == null);
-		assert (rev2.getOtherStr() == null);
+			//this property is not audited on superclass
+			assertNull( rev1.getOtherStr() );
+			assertNull( rev2.getOtherStr() );
 
-		assert rev1.equals( ver1 );
-		assert rev2.equals( ver2 );
+			assertEquals( ver1, rev1 );
+			assertEquals( ver2, rev2 );
+		} );
 	}
 
-	@Test(expected = NotAuditedException.class)
-	public void testHistoryOfNotAudited() {
-		try {
-			getAuditReader().find( NotAuditedSubclassEntity.class, id2_1, 1 );
-			assert (false);
-		}
-		catch (NotAuditedException nae) {
-			throw nae;
-		}
+	@Test
+	public void testHistoryOfNotAudited(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertThrows( NotAuditedException.class, () -> {
+				AuditReaderFactory.get( em ).find( NotAuditedSubclassEntity.class, id2_1, 1 );
+			} );
+		} );
 	}
-
 }

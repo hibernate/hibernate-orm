@@ -84,7 +84,7 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 	public JpaAttributeConverter<X,Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
 		return new AttributeConverterBean<>(
 				createManagedBean( context ),
-				context.getJavaTypeRegistry().getDescriptor( converterClass ),
+				context.getJavaTypeRegistry().resolveDescriptor( converterClass ),
 				getDomainClass(),
 				getRelationalClass(),
 				context

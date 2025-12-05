@@ -8,48 +8,61 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.jdbc.JdbcUtils;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-18869")
 @RequiresDialect(value = MariaDBDialect.class)
-public class MariaDbJsonColumnValidationTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Foo.class};
+@ServiceRegistry
+public class MariaDbJsonColumnValidationTest {
+
+	@BeforeEach
+	void setUp(ServiceRegistryScope registryScope) {
+		JdbcUtils.withConnection( registryScope.getRegistry(), connection -> {
+			try (var statement = connection.createStatement()) {
+				try {
+					statement.execute( "drop table Foo" );
+				}
+				catch (Exception ignore) {
+				}
+				statement.execute(
+						"""
+							create table Foo (
+								id integer not null,
+								bigDecimals json,
+								primary key (id)
+							) engine=InnoDB
+							"""
+				);
+			}
+		} );
 	}
 
-	@Before
-	public void init() {
-		try {
-			inTransaction( session -> {
-						try {
-							session.createNativeMutationQuery( "drop table Foo" ).executeUpdate();
-						}
-						catch (Exception e) {
-							throw new RuntimeException( e );
-						}
-					}
-			);
-			inTransaction( session ->
-					session.createNativeMutationQuery(
-							"create table Foo (id integer not null, bigDecimals json, primary key (id)) engine=InnoDB"
-					).executeUpdate()
-			);
-		}
-		catch (Exception ignored) {
-		}
+	@AfterEach
+	void tearDown(ServiceRegistryScope registryScope) {
+		JdbcUtils.withConnection( registryScope.getRegistry(), connection -> {
+			try (var statement = connection.createStatement()) {
+				statement.execute( "drop table Foo" );
+			}
+		} );
 	}
 
 	@Test
-	public void testSchemaValidation() {
-		new SchemaValidator().validate( metadata() );
+	@DomainModel(annotatedClasses =  Foo.class)
+	public void testSchemaValidation(DomainModelScope modelScope) {
+		new SchemaValidator().validate( modelScope.getDomainModel() );
 	}
 
 	@Entity(name = "Foo")

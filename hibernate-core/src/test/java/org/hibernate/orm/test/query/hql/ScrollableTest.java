@@ -7,117 +7,98 @@ package org.hibernate.orm.test.query.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
-
-import org.junit.Test;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class ScrollableTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ScrollableTest.MyEntity.class
+		}
+)
+@SessionFactory
+public class ScrollableTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {MyEntity.class};
+	@BeforeEach
+	public void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new MyEntity( 1L, "entity_1" ) );
+			session.persist( new MyEntity( 2L, "entity_2" ) );
+		} );
 	}
 
-	@Override
-	protected void prepareTest() throws Exception {
-		try (Session session = openSession()) {
-			session.getTransaction().begin();
-			try {
-				session.persist( new MyEntity( 1L, "entity_1" ) );
-				session.persist( new MyEntity( 2L, "entity_2" ) );
-				session.getTransaction().commit();
-			}
-			catch (Exception e) {
-				if ( session.getTransaction().isActive() ) {
-					session.getTransaction().rollback();
-				}
-				throw e;
-			}
-		}
-	}
-
-	@Override
-	protected void cleanupTest() throws Exception {
-		try (Session session = openSession()) {
-			session.getTransaction().begin();
-			try {
-				session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
-				session.getTransaction().commit();
-			}
-			catch (Exception e) {
-				if ( session.getTransaction().isActive() ) {
-					session.getTransaction().rollback();
-				}
-				throw e;
-			}
-		}
+	@AfterEach
+	public void cleanupTest(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10860")
-	public void testScrollableResults() {
+	public void testScrollableResults(SessionFactoryScope scope) {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
 		params.add( 2L );
-
-		try (Session s = openSession()) {
-			final Query<MyEntity> query = s.createQuery( "from MyEntity e where e.id in (:ids)", MyEntity.class )
-					.setParameter( "ids", params )
-					.setFetchSize( 10 );
-			try (ScrollableResults<MyEntity> scroll = query.scroll( ScrollMode.FORWARD_ONLY )) {
-				int i = 0;
-				while ( scroll.next() ) {
-					if ( i == 0 ) {
-						assertThat( scroll.get().getDescription(), is( "entity_1" ) );
+		scope.inSession(
+				session -> {
+					final Query<MyEntity> query = session.createQuery( "from MyEntity e where e.id in (:ids)",
+									MyEntity.class )
+							.setParameter( "ids", params )
+							.setFetchSize( 10 );
+					try (ScrollableResults<MyEntity> scroll = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						int i = 0;
+						while ( scroll.next() ) {
+							if ( i == 0 ) {
+								assertThat( scroll.get().getDescription() ).isEqualTo( "entity_1" );
+							}
+							else {
+								assertThat( scroll.get().getDescription() ).isEqualTo( "entity_2" );
+							}
+							i++;
+						}
 					}
-					else {
-						assertThat( scroll.get().getDescription(), is( "entity_2" ) );
-					}
-					i++;
 				}
-			}
-		}
+		);
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10860")
-	public void testScrollableResults2() {
+	public void testScrollableResults2(SessionFactoryScope scope) {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
 		params.add( 2L );
 
-		try (Session s = openSession()) {
-			final Query<MyEntity> query = s.createQuery( "from MyEntity e where e.id in (:ids)", MyEntity.class )
+		scope.inSession( session -> {
+			final Query<MyEntity> query = session.createQuery( "from MyEntity e where e.id in (:ids)", MyEntity.class )
 					.setParameter( "ids", params )
 					.setFetchSize( 10 );
-			try (ScrollableResults<MyEntity> scroll = query.scroll( )) {
+			try (ScrollableResults<MyEntity> scroll = query.scroll()) {
 				int i = 0;
 				while ( scroll.next() ) {
 					if ( i == 0 ) {
-						assertThat( scroll.get().getDescription(), is( "entity_1" ) );
+						assertThat( scroll.get().getDescription() ).isEqualTo( "entity_1" );
 					}
 					else {
-						assertThat( scroll.get().getDescription(), is( "entity_2" ) );
+						assertThat( scroll.get().getDescription() ).isEqualTo( "entity_2" );
 					}
 					i++;
 				}
 			}
-		}
+		} );
 	}
 
 	@Entity(name = "MyEntity")

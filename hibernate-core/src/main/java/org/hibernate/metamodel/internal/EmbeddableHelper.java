@@ -4,14 +4,14 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.Arrays;
+import static java.util.Arrays.binarySearch;
 
 public class EmbeddableHelper {
 	public static int[] determineMappingIndex(String[] sortedNames, String[] names) {
 		final int[] index = new int[sortedNames.length];
 		int i = 0;
 		for ( String name : names ) {
-			final int mappingIndex = Arrays.binarySearch( sortedNames, name );
+			final int mappingIndex = binarySearch( sortedNames, name );
 			if ( mappingIndex != -1 ) {
 				index[i++] = mappingIndex;
 			}
@@ -22,7 +22,7 @@ public class EmbeddableHelper {
 	public static boolean resolveIndex(String[] sortedComponentNames, String[] componentNames, int[] index) {
 		boolean hasGaps = false;
 		for ( int i = 0; i < componentNames.length; i++ ) {
-			final int newIndex = Arrays.binarySearch( sortedComponentNames, componentNames[i] );
+			final int newIndex = binarySearch( sortedComponentNames, componentNames[i] );
 			index[i] = newIndex;
 			hasGaps = hasGaps || newIndex < 0;
 		}

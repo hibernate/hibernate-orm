@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.pagination;
 
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
 import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -27,8 +29,24 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		final String limit = " limit " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		return hasFirstRow
+				? limit + "," + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null )
+				: limit;
+	}
+
+	@Override
 	protected String offsetOnlyClause() {
 		return " limit ?," + Integer.MAX_VALUE;
+	}
+
+	@Override
+	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " limit "
+				+ parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null )
+				+ ","
+				+ Integer.MAX_VALUE;
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =
@@ -42,5 +60,10 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	public boolean supportsOffset() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

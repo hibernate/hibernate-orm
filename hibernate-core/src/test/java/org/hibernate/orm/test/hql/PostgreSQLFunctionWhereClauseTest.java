@@ -4,56 +4,51 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.sql.Statement;
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.Session;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.After;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
+import java.sql.Statement;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(PostgreSQLDialect.class)
-public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunctionalTestCase {
+@BootstrapServiceRegistry( javaServices = @BootstrapServiceRegistry.JavaService(
+		role = FunctionContributor.class,
+		impl = PostgreSQLFunctionSelectClauseTest.FunctionContributorImpl.class
+) )
+@DomainModel( annotatedClasses = PostgreSQLFunctionWhereClauseTest.Book.class )
+@SessionFactory
+public class PostgreSQLFunctionWhereClauseTest {
+	@BeforeEach
+	void setUp(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> entityManager.doWork( (connection) -> {
+			try(Statement statement = connection.createStatement()) {
+				//tag::hql-user-defined-function-postgresql-example[]
+				statement.executeUpdate(
+						"CREATE OR REPLACE FUNCTION apply_vat(integer) RETURNS integer " +
+						"   AS 'select cast(($1 * 1.2) as integer);' " +
+						"   LANGUAGE SQL " +
+						"   IMMUTABLE " +
+						"   RETURNS NULL ON NULL INPUT;"
+				);
+				//end::hql-user-defined-function-postgresql-example[]
+			}
+		} ) );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap(Session.class).doWork(
-				connection -> {
-					try(Statement statement = connection.createStatement()) {
-						//tag::hql-user-defined-function-postgresql-example[]
-						statement.executeUpdate(
-							"CREATE OR REPLACE FUNCTION apply_vat(integer) RETURNS integer " +
-							"   AS 'select cast(($1 * 1.2) as integer);' " +
-							"   LANGUAGE SQL " +
-							"   IMMUTABLE " +
-							"   RETURNS NULL ON NULL INPUT;"
-						);
-						//end::hql-user-defined-function-postgresql-example[]
-					}
-				}
-			);
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( (entityManager) -> {
 			//tag::hql-user-defined-function-postgresql-entity-example[]
 			Book book = new Book();
 
@@ -64,64 +59,56 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 
 			entityManager.persist(book);
 			//end::hql-user-defined-function-postgresql-entity-example[]
-		});
+		} );
 	}
 
-	@After
-	public void destroy() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap(Session.class).doWork(
-				connection -> {
-					try(Statement statement = connection.createStatement()) {
-						statement.executeUpdate(
-							"DROP FUNCTION apply_vat(integer)"
-						);
-					}
-				}
-			);
-		});
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+			factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
+			try(Statement statement = connection.createStatement()) {
+				statement.executeUpdate(
+						"DROP FUNCTION apply_vat(integer)"
+				);
+			}
+		} ) );
+
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testHibernatePassThroughFunction() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testHibernatePassThroughFunction(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			//tag::hql-user-defined-function-postgresql-where-clause-example[]
-			List<Book> books = entityManager.createQuery(
-				"select b " +
-				"from Book b " +
-				"where apply_vat(b.priceCents) = :price ", Book.class)
-			.setParameter("price", 5400)
-			.getResultList();
+			var books = entityManager.createQuery(
+							"select b " +
+							"from Book b " +
+							"where apply_vat(b.priceCents) = :price ", Book.class)
+					.setParameter("price", 5400)
+					.getResultList();
 
-			assertTrue(books
-				.stream()
-				.filter(book -> "High-Performance Java Persistence".equals(book.getTitle()))
-				.findAny()
-				.isPresent()
-			);
+			Assertions.assertTrue( books
+					.stream()
+					.anyMatch( book -> "High-Performance Java Persistence".equals(book.getTitle())) );
 			//end::hql-user-defined-function-postgresql-where-clause-example[]
-		});
+		} );
 	}
 
 	@Test
-	public void testCustomFunction() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testCustomFunction(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			//tag::hql-user-defined-function-postgresql-jpql-example[]
-			List<Book> books = entityManager.createQuery(
-				"select b " +
-				"from Book b " +
-				"where function('apply_vat', b.priceCents) = :price ", Book.class)
-			.setParameter("price", 5400)
-			.getResultList();
+			var books = entityManager.createQuery(
+							"select b " +
+							"from Book b " +
+							"where function('apply_vat', b.priceCents) = :price ", Book.class)
+					.setParameter("price", 5400)
+					.getResultList();
 
-			assertTrue(books
-				.stream()
-				.filter(book -> "High-Performance Java Persistence".equals(book.getTitle()))
-				.findAny()
-				.isPresent()
-			);
+			Assertions.assertTrue( books
+					.stream()
+					.anyMatch( book -> "High-Performance Java Persistence".equals(book.getTitle())) );
 			//end::hql-user-defined-function-postgresql-jpql-example[]
-		});
+		} );
 	}
 
 	@Entity(name = "Book")

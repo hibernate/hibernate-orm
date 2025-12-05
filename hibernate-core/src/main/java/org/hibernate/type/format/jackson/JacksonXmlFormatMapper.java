@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -36,6 +37,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
+import org.hibernate.type.format.FormatMapperCreationContext;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 /**
@@ -45,7 +47,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jackson-xml";
-	private boolean legacyFormat;
+	private final boolean legacyFormat;
 
 	private final ObjectMapper objectMapper;
 
@@ -54,18 +56,39 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 	}
 
 	public JacksonXmlFormatMapper(boolean legacyFormat) {
-		this( createXmlMapper( legacyFormat ) );
-		this.legacyFormat = legacyFormat;
+		this(
+				createXmlMapper( ObjectMapper.findModules( JacksonXmlFormatMapper.class.getClassLoader() ), legacyFormat ),
+				legacyFormat
+		);
+	}
+
+	public JacksonXmlFormatMapper(FormatMapperCreationContext creationContext) {
+		this(
+				createXmlMapper(
+						JacksonIntegration.loadModules( creationContext ),
+						creationContext.getBootstrapContext()
+								.getMetadataBuildingOptions()
+								.isXmlFormatMapperLegacyFormatEnabled()
+				),
+				creationContext.getBootstrapContext()
+						.getMetadataBuildingOptions()
+						.isXmlFormatMapperLegacyFormatEnabled()
+		);
 	}
 
 	public JacksonXmlFormatMapper(ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
+		this( objectMapper, false );
 	}
 
-	private static XmlMapper createXmlMapper(boolean legacyFormat) {
+	public JacksonXmlFormatMapper(ObjectMapper objectMapper, boolean legacyFormat) {
+		this.objectMapper = objectMapper;
+		this.legacyFormat = legacyFormat;
+	}
+
+	private static XmlMapper createXmlMapper(List<Module> modules, boolean legacyFormat) {
 		final XmlMapper xmlMapper = new XmlMapper();
 		// needed to automatically find and register Jackson's jsr310 module for java.time support
-		xmlMapper.findAndRegisterModules();
+		xmlMapper.registerModules( modules );
 		xmlMapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
 		xmlMapper.enable( ToXmlGenerator.Feature.WRITE_NULLS_AS_XSI_NIL );
 		// Workaround for null vs empty string handling inside arrays,

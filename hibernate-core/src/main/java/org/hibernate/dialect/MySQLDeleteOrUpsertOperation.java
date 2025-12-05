@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 /**
  * @author Jan Schatteman
  */
+@Deprecated(forRemoval = true)
 public class MySQLDeleteOrUpsertOperation extends DeleteOrUpsertOperation {
 
 	private Expectation customExpectation;

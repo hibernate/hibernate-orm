@@ -48,16 +48,14 @@ public class NotInsertableEntityType {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof NotInsertableEntityType that) ) {
 			return false;
 		}
 
-		NotInsertableEntityType that = (NotInsertableEntityType) o;
-
-		if ( type != null ? !type.equals( that.type ) : that.type != null ) {
+		if ( type != null ? !type.equals( that.getType() ) : that.getType() != null ) {
 			return false;
 		}
-		if ( typeId != null ? !typeId.equals( that.typeId ) : that.typeId != null ) {
+		if ( typeId != null ? !typeId.equals( that.getTypeId() ) : that.getTypeId() != null ) {
 			return false;
 		}
 

@@ -10,7 +10,7 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Implementation of JdbcConnectionAccess for cases where we are provided
@@ -19,39 +19,39 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectionAccess {
-	private static final Logger log = Logger.getLogger( JdbcConnectionAccessProvidedConnectionImpl.class );
 
 	private final Connection jdbcConnection;
 	private final boolean wasInitiallyAutoCommit;
 
 	public JdbcConnectionAccessProvidedConnectionImpl(Connection jdbcConnection) {
 		this.jdbcConnection = jdbcConnection;
+		wasInitiallyAutoCommit = enableAutoCommit( jdbcConnection );
+		JDBC_LOGGER.initialAutoCommit( wasInitiallyAutoCommit );
+	}
 
-		boolean wasInitiallyAutoCommit;
+	private static boolean enableAutoCommit(Connection jdbcConnection) {
 		try {
-			wasInitiallyAutoCommit = jdbcConnection.getAutoCommit();
+			final boolean wasInitiallyAutoCommit = jdbcConnection.getAutoCommit();
 			if ( !wasInitiallyAutoCommit ) {
 				try {
 					jdbcConnection.setAutoCommit( true );
 				}
-				catch (SQLException e) {
+				catch (SQLException exception) {
 					throw new PersistenceException(
 							String.format(
 									"Could not set provided connection [%s] to auto-commit mode" +
 											" (needed for schema generation)",
 									jdbcConnection
 							),
-							e
+							exception
 					);
 				}
 			}
+			return wasInitiallyAutoCommit;
 		}
 		catch (SQLException ignore) {
-			wasInitiallyAutoCommit = false;
+			return false;
 		}
-
-		log.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
-		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 
 	@Override
@@ -61,16 +61,16 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		// NOTE : reset auto-commit, but *do not* close the Connection.  The application handed us this connection
-
+		// NOTE: reset auto-commit, but *do not* close the Connection.
+		//       The application handed us this connection.
 		if ( !wasInitiallyAutoCommit ) {
 			try {
 				if ( jdbcConnection.getAutoCommit() ) {
 					jdbcConnection.setAutoCommit( false );
 				}
 			}
-			catch (SQLException e) {
-				log.info( "Was unable to reset JDBC connection to no longer be in auto-commit mode" );
+			catch (SQLException exception) {
+				JDBC_LOGGER.unableToResetAutoCommitDisabled( exception );
 			}
 		}
 	}

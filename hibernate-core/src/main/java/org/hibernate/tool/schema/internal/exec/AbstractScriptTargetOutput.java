@@ -24,9 +24,10 @@ public abstract class AbstractScriptTargetOutput implements ScriptTargetOutput {
 	@Override
 	public void accept(String command) {
 		try {
-			writer().write( command );
-			writer().write( System.lineSeparator() );
-			writer().flush();
+			final var writer = writer();
+			writer.write( command );
+			writer.write( System.lineSeparator() );
+			writer.flush();
 		}
 		catch (IOException e) {
 			throw new CommandAcceptanceException( "Could not write \"" + command + "\" to target script file", e );

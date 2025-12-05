@@ -4,19 +4,19 @@
  */
 package org.hibernate.orm.test.util;
 
-import org.junit.Test;
-
 import org.hibernate.internal.util.compare.RowVersionComparator;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  */
-public class RowVersionComparatorTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class RowVersionComparatorTest {
 
 	@Test
 	public void testNull() {
@@ -47,52 +47,37 @@ public class RowVersionComparatorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testArraysSameLength() {
-		assertEquals(
-				0,
-				RowVersionComparator.INSTANCE.compare(
-						new byte[] {},
-						new byte[] {}
-				)
-		);
-		assertEquals(
-				0,
-				RowVersionComparator.INSTANCE.compare(
-						new byte[] { 1 },
-						new byte[] { 1 }
-				)
-		);
-		assertEquals(
-				0,
-				RowVersionComparator.INSTANCE.compare(
-						new byte[] { 1, 2 },
-						new byte[] { 1, 2 }
-				)
-		);
-		assertTrue(
-				RowVersionComparator.INSTANCE.compare(
-						new byte[] { 0, 2 },
-						new byte[] { 1, 2 }
-				) < 0
-		);
+		assertEquals( 0, RowVersionComparator.INSTANCE.compare(
+				new byte[] {},
+				new byte[] {}
+		) );
+		assertEquals( 0, RowVersionComparator.INSTANCE.compare(
+				new byte[] { 1 },
+				new byte[] { 1 }
+		) );
+		assertEquals( 0, RowVersionComparator.INSTANCE.compare(
+				new byte[] { 1, 2 },
+				new byte[] { 1, 2 }
+		) );
+		assertTrue( RowVersionComparator.INSTANCE.compare(
+				new byte[] { 0, 2 },
+				new byte[] { 1, 2 }
+		) < 0 );
 
-		assertTrue(
-				RowVersionComparator.INSTANCE.compare(
-						new byte[] { 1, 1 },
-						new byte[] { 1, 2 }
-				) < 0
-		);
+		assertTrue( RowVersionComparator.INSTANCE.compare(
+				new byte[] { 1, 1 },
+				new byte[] { 1, 2 }
+		) < 0 );
 
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 2, 2 },
 						new byte[] { 1, 2 }
-				) > 0
-		);
+				) > 0 );
 
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 2, 2 },
 						new byte[] { 2, 1 }
-				) > 0
-		);
+				) > 0 );
 	}
 
 	@Test
@@ -100,37 +85,30 @@ public class RowVersionComparatorTest extends BaseUnitTestCase {
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] {},
 						new byte[] { 1 }
-				) < 0
-		);
+				) < 0 );
 
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 1 },
 						new byte[] {}
-				) > 0
-		);
+				) > 0 );
 
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 1 },
 						new byte[] { 1, 2 }
-				) < 0
-		);
+				) < 0 );
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 1, 2 },
 						new byte[] { 1 }
-				) > 0
-		);
+				) > 0 );
 
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 2 },
 						new byte[] { 1, 2 }
-				) > 0
-		);
+				) > 0 );
 		assertTrue( RowVersionComparator.INSTANCE.compare(
 						new byte[] { 1, 2 },
 						new byte[] { 2 }
-				) < 0
-		);
-
+				) < 0 );
 	}
 
 

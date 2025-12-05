@@ -40,35 +40,21 @@ public final class LobTypeMappings {
 	}
 
 	public static int getLobCodeTypeMapping(final int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-
+		return switch ( jdbcTypeCode ) {
 			// BLOB mappings
-			case Types.BLOB :
-			case Types.BINARY :
-			case Types.VARBINARY :
-			case Types.LONGVARBINARY : return Types.BLOB;
-
+			case Types.BLOB, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> Types.BLOB;
 			// CLOB mappings
-			case Types.CLOB :
-			case Types.CHAR :
-			case Types.VARCHAR :
-			case Types.LONGVARCHAR : return Types.CLOB;
-
+			case Types.CLOB, Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR -> Types.CLOB;
 			// NCLOB mappings
-			case Types.NCLOB :
-			case Types.NCHAR :
-			case Types.NVARCHAR :
-			case Types.LONGNVARCHAR : return Types.NCLOB;
-
+			case Types.NCLOB, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR -> Types.NCLOB;
 			// Anything else:
-			default:
-				throw new IllegalArgumentException(
-						String.format(
-								Locale.ROOT,
-								"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
-								jdbcTypeCode,
-								JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
-						) );
-		}
+			default -> throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"JDBC type-code [%s (%s)] not known to have a corresponding LOB equivalent",
+							jdbcTypeCode,
+							JdbcTypeNameMapper.getTypeName( jdbcTypeCode )
+					) );
+		};
 	}
 }

@@ -4,35 +4,36 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.math.BigDecimal;
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.math.BigDecimal;
 
 /**
  * @author Vlad Mihalcea
  */
-public class JoinTableTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				DebitAccount.class,
-				CreditAccount.class,
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		JoinTableTest.DebitAccount.class,
+		JoinTableTest.CreditAccount.class,
+})
+@SessionFactory
+public class JoinTableTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			DebitAccount debitAccount = new DebitAccount();
 			debitAccount.setId(1L);
 			debitAccount.setOwner("John Doe");
@@ -51,9 +52,9 @@ public class JoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(creditAccount);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::entity-inheritance-joined-table-query-example[]
-			List<Account> accounts = entityManager
+			var accounts = entityManager
 				.createQuery("select a from Account a")
 				.getResultList();
 			//end::entity-inheritance-joined-table-query-example[]

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -24,13 +25,13 @@ public interface SqmJoinable<O, E> {
 	SqmJoin<O, E> createSqmJoin(
 			SqmFrom<?, O> lhs,
 			SqmJoinType joinType,
-			String alias,
+			@Nullable String alias,
 			boolean fetched,
 			SqmCreationState creationState);
 
 	String getName();
 
-	default NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+	default NavigablePath createNavigablePath(SqmPath<?> parent, @Nullable String alias) {
 		return SqmCreationHelper.buildSubNavigablePath( parent, getName(), alias );
 	}
 }

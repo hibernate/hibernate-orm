@@ -5,12 +5,11 @@
 package org.hibernate.query.internal;
 
 import java.util.Collection;
-import java.util.Iterator;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.BindableType;
@@ -19,14 +18,13 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypeHelper;
-import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
+import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
 
 /**
  * The standard implementation of {@link QueryParameterBinding}.
@@ -40,9 +38,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private BindableType<? super T> bindType;
-	private MappingModelExpressible<T> type;
-	private TemporalType explicitTemporalPrecision;
+	private @Nullable BindableType<? super T> bindType;
+	private @Nullable MappingModelExpressible<T> type;
+	private @Nullable TemporalType explicitTemporalPrecision;
 
 	private Object bindValue;
 	private Collection<? extends T> bindValues;
@@ -73,12 +71,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public BindableType<? super T> getBindType() {
+	public @Nullable BindableType<? super T> getBindType() {
 		return bindType;
 	}
 
 	@Override
-	public TemporalType getExplicitTemporalPrecision() {
+	public @Nullable TemporalType getExplicitTemporalPrecision() {
 		return explicitTemporalPrecision;
 	}
 
@@ -135,11 +133,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		isBound = true;
 		bindValue = null;
 		if ( resolveJdbcTypeIfNecessary && bindType == null ) {
-			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
+			bindType = (BindableType<? super T>)
+					getTypeConfiguration().getBasicTypeRegistry()
+							.getRegisteredType( "null" );
 		}
 	}
 
-	private boolean handleAsMultiValue(T value, BindableType<T> bindableType) {
+	private boolean handleAsMultiValue(T value, @Nullable BindableType<T> bindableType) {
 		if ( queryParameter.allowsMultiValuedBinding()
 				&& value instanceof Collection
 				&& !( bindableType == null
@@ -167,7 +167,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValue(T value, BindableType<T> clarifiedType) {
+	public void setBindValue(T value, @Nullable BindableType<T> clarifiedType) {
 		if ( !handleAsMultiValue( value, clarifiedType ) ) {
 			if ( clarifiedType != null ) {
 				bindType = clarifiedType;
@@ -218,7 +218,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.bindValue = null;
 		this.bindValues = values;
 
-		final Iterator<? extends T> iterator = values.iterator();
+		final var iterator = values.iterator();
 		T value = null;
 		while ( value == null && iterator.hasNext() ) {
 			value = iterator.next();
@@ -248,24 +248,22 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	private void setExplicitTemporalPrecision(TemporalType precision) {
 		explicitTemporalPrecision = precision;
-		if ( bindType == null || JavaTypeHelper.isTemporal( determineJavaType( bindType ) ) ) {
-			bindType = BindingTypeHelper.resolveTemporalPrecision( precision, bindType, getCriteriaBuilder() );
+		if ( bindType == null || isTemporal( determineJavaType( bindType ) ) ) {
+			bindType = resolveTemporalPrecision( precision, bindType, getCriteriaBuilder() );
 		}
 	}
 
 	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
-		final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( bindType );
-		assert sqmExpressible != null;
-		return sqmExpressible.getExpressibleJavaType();
+		return getCriteriaBuilder().resolveExpressible( bindType ).getExpressibleJavaType();
 	}
 
 	@Override
-	public MappingModelExpressible<T> getType() {
+	public @Nullable MappingModelExpressible<T> getType() {
 		return type;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public boolean setType(MappingModelExpressible<T> type) {
+	public boolean setType(@Nullable MappingModelExpressible<T> type) {
 		this.type = type;
 		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
 		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
@@ -275,7 +273,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
-				final JdbcMapping jdbcMapping = basicValuedMapping.getJdbcMapping();
+				final var jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
 					bindType = (BindableType<? super T>) jdbcMapping;
@@ -338,17 +336,16 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return null;
 		}
 		else {
-			final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( parameterType );
-			assert sqmExpressible != null;
-			return sqmExpressible.getExpressibleJavaType().coerce( value, this );
+			return getCriteriaBuilder().resolveExpressible( parameterType )
+					.getExpressibleJavaType().coerce( value, this );
 		}
 	}
 
 	private static boolean canValueBeCoerced(BindableType<?> bindType) {
-		return bindType != null && !( bindType instanceof NullSqmExpressible );
+		return bindType != null;
 	}
 
 	private static boolean canBindValueBeSet(Object value, BindableType<?> bindType) {
-		return value != null && ( bindType == null || bindType instanceof NullSqmExpressible );
+		return value != null && bindType == null;
 	}
 }

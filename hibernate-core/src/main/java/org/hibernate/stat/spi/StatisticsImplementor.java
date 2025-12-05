@@ -242,13 +242,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	void queryCacheMiss(String hql, String regionName);
 
 	/**
-	 * Callback indicating execution of a sql/hql query
+	 * Callback indicating execution of a SQL or HQL query
 	 *
-	 * @param hql The query
+	 * @param query The query
 	 * @param rows Number of rows returned
 	 * @param time execution time
 	 */
-	void queryExecuted(String hql, int rows, long time);
+	void queryExecuted(String query, int rows, long time);
 
 	/**
 	 * Callback indicating a hit to the timestamp cache

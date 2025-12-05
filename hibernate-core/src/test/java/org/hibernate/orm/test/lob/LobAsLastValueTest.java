@@ -12,11 +12,13 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Chris Cranford
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.ForceLobAsLastValue.class)
 @JiraKey(value = "HHH-8382")
 @DomainModel(
@@ -24,6 +26,10 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 public class LobAsLastValueTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testInsertLobAsLastValue(SessionFactoryScope scope) {

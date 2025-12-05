@@ -24,7 +24,7 @@ key-side:: `orders.customer_fk`
 target-side:: `customers.id`
 
 
-Assuming bi-directionality, we have 2 `Association` refs:
+Assuming bidirectionality, we have 2 `Association` refs:
 
 * `Order#customer` which models the key-side of the FK,
 * `Customer#orders` which models the target-side

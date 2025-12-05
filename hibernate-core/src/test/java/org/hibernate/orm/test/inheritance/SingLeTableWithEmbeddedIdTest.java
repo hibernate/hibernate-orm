@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -25,9 +14,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		annotatedClasses = {
 				SingLeTableWithEmbeddedIdTest.Entity1.class,
@@ -40,39 +40,40 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @JiraKey("HHH-17525")
 public class SingLeTableWithEmbeddedIdTest {
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					Entity1 entity1 = new Entity1( 1L, "entity1" );
-					entityManager.persist( entity1 );
+		scope.inTransaction(entityManager -> {
+			Entity1 entity1 = new Entity1( 1L, "entity1" );
+			entityManager.persist( entity1 );
 
-					Entity2 entity2 = new Entity2( 2L, "entity2" );
-					entityManager.persist( entity2 );
+			Entity2 entity2 = new Entity2( 2L, "entity2" );
+			entityManager.persist( entity2 );
 
-					Entity3 entity3 = new Entity3( new CompositeId( entity1, entity2 ), "entity3" );
+			Entity3 entity3 = new Entity3( new CompositeId( entity1, entity2 ), "entity3" );
 
-					entityManager.persist( entity3 );
+			entityManager.persist( entity3 );
 
-					Entity4 entity4 = new Entity4( 4L );
-					entity4.addEntity( entity3 );
-					entityManager.persist( entity4 );
-				}
-		);
+			Entity4 entity4 = new Entity4( 4L );
+			entity4.addEntity( entity3 );
+			entityManager.persist( entity4 );
+		} );
+	}
+
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	public void testHqlQuery(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					Entity4 entity4 = entityManager.createQuery( "select e from Entity4 e ", Entity4.class )
-							.getSingleResult();
-					Set<Entity3> entities = entity4.getEntities();
-					assertThat(entities.size()).isEqualTo( 1 );
-					Entity3 entity3 = entities.iterator().next();
-					assertThat( entity3.getField()).isEqualTo( "entity3" );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			Entity4 entity4 = entityManager.createQuery( "select e from Entity4 e ", Entity4.class )
+					.getSingleResult();
+			Set<Entity3> entities = entity4.getEntities();
+			assertThat(entities.size()).isEqualTo( 1 );
+			Entity3 entity3 = entities.iterator().next();
+			assertThat( entity3.getField()).isEqualTo( "entity3" );
+		} );
 	}
 
 

@@ -23,11 +23,15 @@ import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.PostgreSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.PgJdbcHelper;
 import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
@@ -81,7 +85,10 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
@@ -112,7 +119,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
@@ -571,6 +577,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.substring_substr();
 		//also natively supports ANSI-style substring()
+		functionFactory.reverse();
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
@@ -703,6 +710,8 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );
 		functionFactory.md5( "decode(md5(?1), 'hex')" );
+
+		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
 	}
 
 	@Override
@@ -867,22 +876,10 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		// parent's implementation for (aliases, lockOptions) ignores aliases
-		if ( aliases.isEmpty() ) {
-			LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if ( lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -905,17 +902,21 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs) {
+		return getVersion().isSameOrAfter( 18 )
+				? " generated always as (" + generatedAs + ")"
+				: super.generatedAs( generatedAs );
+	}
+
+	@Override
 	public GenerationType getNativeValueGenerationStrategy() {
 		return GenerationType.SEQUENCE;
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean useInputStreamToInsertBlob() {
+		// PG-JDBC treats setBinaryStream()/setCharacterStream() calls like bytea/varchar, which are not LOBs,
+		// so disable stream bindings for this dialect completely
 		return false;
 	}
 
@@ -1011,6 +1012,11 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return StandardLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
@@ -1308,6 +1314,12 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return PostgreSQLLockingSupport.LOCKING_SUPPORT;
+	}
+
 	private String withTimeout(String lockString, Timeout timeout) {
 		return switch (timeout.milliseconds()) {
 			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
@@ -1398,21 +1410,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsInsertReturning() {
 		return true;
 	}
@@ -1449,11 +1446,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
 	}
 
 	@Override
@@ -1525,7 +1517,7 @@ public class PostgreSQLDialect extends Dialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 
@@ -1667,4 +1659,8 @@ public class PostgreSQLDialect extends Dialect {
 		return getVersion().isSameOrAfter( 14 );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
 }

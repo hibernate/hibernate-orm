@@ -39,6 +39,7 @@ public final class EventType<T> {
 
 	public static final EventType<FlushEventListener> FLUSH = create( "flush", FlushEventListener.class );
 	public static final EventType<AutoFlushEventListener> AUTO_FLUSH = create( "auto-flush", AutoFlushEventListener.class );
+	public static final EventType<PreFlushEventListener> PRE_FLUSH = create( "pre-flush", PreFlushEventListener.class );
 	public static final EventType<DirtyCheckEventListener> DIRTY_CHECK = create( "dirty-check", DirtyCheckEventListener.class );
 	public static final EventType<FlushEntityEventListener> FLUSH_ENTITY = create( "flush-entity", FlushEntityEventListener.class );
 

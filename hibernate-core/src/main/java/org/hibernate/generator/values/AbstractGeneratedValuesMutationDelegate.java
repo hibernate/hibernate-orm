@@ -6,10 +6,11 @@ package org.hibernate.generator.values;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.internal.GeneratedValuesMappingProducer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.createMappingProducer;
 
 /**
  * @author Marco Belladelli
@@ -34,12 +35,8 @@ public abstract class AbstractGeneratedValuesMutationDelegate implements Generat
 		this.timing = timing;
 		this.supportsArbitraryValues = supportsArbitraryValues;
 		this.supportsRowId = supportsRowId;
-		this.jdbcValuesMappingProducer = GeneratedValuesHelper.createMappingProducer(
-				persister,
-				timing,
-				supportsArbitraryValues,
-				supportsRowId
-		);
+		this.jdbcValuesMappingProducer =
+				createMappingProducer( persister, timing, supportsArbitraryValues, supportsRowId );
 	}
 
 	@Override

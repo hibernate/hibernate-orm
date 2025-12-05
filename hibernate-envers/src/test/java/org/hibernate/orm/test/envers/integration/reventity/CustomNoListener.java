@@ -5,112 +5,108 @@
 package org.hibernate.orm.test.envers.integration.reventity;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.envers.AuditReader;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.reventity.CustomDataRevEntity;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class CustomNoListener extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class, CustomDataRevEntity.class})
+public class CustomNoListener {
 	private Integer id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, CustomDataRevEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws InterruptedException {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		StrTestEntity te = new StrTestEntity( "x" );
-		em.persist( te );
-		id = te.getId();
+		scope.inTransaction( em -> {
+			StrTestEntity te = new StrTestEntity( "x" );
+			em.persist( te );
+			id = te.getId();
 
-		// Setting the data on the revision entity
-		CustomDataRevEntity custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, false );
-		custom.setData( "data1" );
-
-		em.getTransaction().commit();
+			// Setting the data on the revision entity
+			CustomDataRevEntity custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, false );
+			custom.setData( "data1" );
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		te = em.find( StrTestEntity.class, id );
-		te.setStr( "y" );
+		scope.inTransaction( em -> {
+			StrTestEntity te = em.find( StrTestEntity.class, id );
+			te.setStr( "y" );
 
-		// Setting the data on the revision entity
-		custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, false );
-		custom.setData( "data2" );
-
-		em.getTransaction().commit();
+			// Setting the data on the revision entity
+			CustomDataRevEntity custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, false );
+			custom.setData( "data2" );
+		} );
 
 		// Revision 3 - no changes, but rev entity should be persisted
-		em.getTransaction().begin();
-
-		// Setting the data on the revision entity
-		custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, true );
-		custom.setData( "data3" );
-
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			// Setting the data on the revision entity
+			CustomDataRevEntity custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, true );
+			custom.setData( "data3" );
+		} );
 
 		// No changes, rev entity won't be persisted
-		em.getTransaction().begin();
-
-		// Setting the data on the revision entity
-		custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, false );
-		custom.setData( "data4" );
-
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			// Setting the data on the revision entity
+			CustomDataRevEntity custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, false );
+			custom.setData( "data4" );
+		} );
 
 		// Revision 4
-		em.getTransaction().begin();
-		te = em.find( StrTestEntity.class, id );
-		te.setStr( "z" );
+		scope.inTransaction( em -> {
+			StrTestEntity te = em.find( StrTestEntity.class, id );
+			te.setStr( "z" );
 
-		// Setting the data on the revision entity
-		custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, false );
-		custom.setData( "data5" );
+			// Setting the data on the revision entity
+			CustomDataRevEntity custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, false );
+			custom.setData( "data5" );
 
-		custom = getAuditReader().getCurrentRevision( CustomDataRevEntity.class, false );
-		custom.setData( "data5bis" );
-
-		em.getTransaction().commit();
+			custom = AuditReaderFactory.get( em ).getCurrentRevision( CustomDataRevEntity.class, false );
+			custom.setData( "data5bis" );
+		} );
 	}
 
 	@Test
-	public void testFindRevision() {
-		AuditReader vr = getAuditReader();
-
-		assert "data1".equals( vr.findRevision( CustomDataRevEntity.class, 1 ).getData() );
-		assert "data2".equals( vr.findRevision( CustomDataRevEntity.class, 2 ).getData() );
-		assert "data3".equals( vr.findRevision( CustomDataRevEntity.class, 3 ).getData() );
-		assert "data5bis".equals( vr.findRevision( CustomDataRevEntity.class, 4 ).getData() );
+	public void testFindRevision(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( "data1", auditReader.findRevision( CustomDataRevEntity.class, 1 ).getData() );
+			assertEquals( "data2", auditReader.findRevision( CustomDataRevEntity.class, 2 ).getData() );
+			assertEquals( "data3", auditReader.findRevision( CustomDataRevEntity.class, 3 ).getData() );
+			assertEquals( "data5bis", auditReader.findRevision( CustomDataRevEntity.class, 4 ).getData() );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2, 4 ).equals( getAuditReader().getRevisions( StrTestEntity.class, id ) );
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			assertEquals( Arrays.asList( 1, 2, 4 ), AuditReaderFactory.get( em ).getRevisions( StrTestEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
-		StrTestEntity ver1 = new StrTestEntity( "x", id );
-		StrTestEntity ver2 = new StrTestEntity( "y", id );
-		StrTestEntity ver3 = new StrTestEntity( "z", id );
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			StrTestEntity ver1 = new StrTestEntity( "x", id );
+			StrTestEntity ver2 = new StrTestEntity( "y", id );
+			StrTestEntity ver3 = new StrTestEntity( "z", id );
 
-		assert getAuditReader().find( StrTestEntity.class, id, 1 ).equals( ver1 );
-		assert getAuditReader().find( StrTestEntity.class, id, 2 ).equals( ver2 );
-		assert getAuditReader().find( StrTestEntity.class, id, 3 ).equals( ver2 );
-		assert getAuditReader().find( StrTestEntity.class, id, 4 ).equals( ver3 );
+			assertEquals( ver1, auditReader.find( StrTestEntity.class, id, 1 ) );
+			assertEquals( ver2, auditReader.find( StrTestEntity.class, id, 2 ) );
+			assertEquals( ver2, auditReader.find( StrTestEntity.class, id, 3 ) );
+			assertEquals( ver3, auditReader.find( StrTestEntity.class, id, 4 ) );
+		} );
 	}
 }

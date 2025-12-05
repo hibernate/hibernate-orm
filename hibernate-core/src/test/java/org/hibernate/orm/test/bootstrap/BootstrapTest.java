@@ -380,6 +380,7 @@ public class BootstrapTest {
 				SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
 					.applyBeanManager(getBeanManager())
 					.build();
+				sessionFactory.close();
 				//end::bootstrap-native-SessionFactory-example[]
 			}
 			{
@@ -410,6 +411,7 @@ public class BootstrapTest {
 
 				SessionFactory sessionFactory = sessionFactoryBuilder.build();
 				//end::bootstrap-native-SessionFactoryBuilder-example[]
+				sessionFactory.close();
 			}
 		}
 		catch (Exception ignore) {

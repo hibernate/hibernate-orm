@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.schemagen.JpaSchemaGeneratorTest;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 
 /**

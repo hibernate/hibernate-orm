@@ -6,7 +6,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -21,6 +20,8 @@ import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
+
 /**
  * @author Steve Ebersole
  */
@@ -34,18 +35,18 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		this.entityMappingType = entityMappingType;
-		if ( bootDescriptor.getComponentClassName() != null && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
-			this.instantiator = new EmbeddableInstantiatorProxied(
+		if ( bootDescriptor.getComponentClassName() != null
+				&& isAbstractClass( bootDescriptor.getComponentClass() ) ) {
+			instantiator = new EmbeddableInstantiatorProxied(
 					bootDescriptor.getComponentClass(),
 					() -> virtualIdEmbeddable,
-					creationContext.getServiceRegistry()
-							.requireService( ProxyFactoryFactory.class )
+					creationContext.getServiceRegistry().requireService( ProxyFactoryFactory.class )
 							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 
 			);
 		}
 		else {
-			this.instantiator = new InstantiatorAdapter( virtualIdEmbeddable, entityMappingType );
+			instantiator = new InstantiatorAdapter( virtualIdEmbeddable, entityMappingType );
 		}
 	}
 
@@ -80,14 +81,14 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 
 		public InstantiatorAdapter(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
 			this.virtualIdEmbeddable = virtualIdEmbeddable;
-			this.entityInstantiator = entityMappingType.getRepresentationStrategy().getInstantiator();
+			entityInstantiator = entityMappingType.getRepresentationStrategy().getInstantiator();
 		}
 
 		@Override
 		public Object instantiate(ValueAccess valuesAccess) {
 			final Object instantiated = entityInstantiator.instantiate();
 			if ( valuesAccess != null ) {
-				final Object[] values = valuesAccess.getValues();
+				final var values = valuesAccess.getValues();
 				if ( values != null ) {
 					virtualIdEmbeddable.setValues( instantiated, values );
 				}

@@ -8,6 +8,7 @@ plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
 
+    id "org.hibernate.build.version-injection"
     id "org.hibernate.orm.antlr"
     id "local-xjc-plugin"
 }
@@ -48,6 +49,10 @@ dependencies {
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
+    // todo : to get rid of these
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
+
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
     testImplementation jakartaLibs.cdi
@@ -57,13 +62,18 @@ dependencies {
         // for test runtime
         transitive = true
     }
-    testImplementation "joda-time:joda-time:2.3"
     testImplementation jdbcLibs.h2
     testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
-    testRuntimeOnly testLibs.wildFlyTxnClient
+    implementation(libs.logging)
+    testRuntimeOnly(testLibs.wildFlyTxnClient) {
+        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
+        // not even shaded, which causes lots of problems.
+        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
+        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
+    }
     testImplementation libs.jandex
     testImplementation jakartaLibs.jsonb
     testImplementation libs.jackson
@@ -112,19 +122,23 @@ xjc {
         hbm {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
         configuration {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
         mapping {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-7.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
-            xjcExtensions += ['inheritance', 'simplify']
+            xjcPlugins('inheritance', 'simplify')
         }
     }
+}
+
+versionInjection {
+    into( 'org.hibernate.Version', 'initVersion' )
 }
 
 task copyBundleResourcesXml (type: Copy) {
@@ -253,12 +267,27 @@ tasks.withType( Test.class ).each { test ->
     //Avoid Log4J2 classloader leaks:
     test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
 
-    test.beforeTest { descriptor ->
-        //println "Starting test: " + descriptor
+    // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
+    if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
+            || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"
+            || project.db == "db2_ci" || project.db == "mssql_ci" || project.db == "cockroachdb" ) {
+        // Most systems have multi-threading and maxing out a core on both threads will hurt performance
+        // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
+        def threadCount = Runtime.runtime.availableProcessors()
+        def testThreads = project.getProperties().get( "test.threads" )
+        if ( testThreads == null ) {
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = testThreads
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    if ( project.db == "h2" || project.db == "hsqldb" ) {
-        // Parallel test runs when running with in-memory databases
-        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
+    else if ( project.db == "oracle_test_pilot_database" ) {
+        // Since Oracle TestPilot databases run on separate machines, use all threads for testing
+        test.maxParallelForks = Runtime.runtime.availableProcessors()
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
 }
 

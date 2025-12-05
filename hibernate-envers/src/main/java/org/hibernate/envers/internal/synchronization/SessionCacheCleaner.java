@@ -25,7 +25,7 @@ public class SessionCacheCleaner {
 	 * @param data Audit data that shall be evicted (e.g. revision data or entity snapshot)
 	 */
 	public void scheduleAuditDataRemoval(final Session session, final Object data) {
-		( (EventSource) session ).getActionQueue().registerProcess(
+		( (EventSource) session ).getActionQueue().registerCallback(
 				new AfterTransactionCompletionProcess() {
 					public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor sessionImplementor) {
 						if ( !sessionImplementor.isClosed() ) {

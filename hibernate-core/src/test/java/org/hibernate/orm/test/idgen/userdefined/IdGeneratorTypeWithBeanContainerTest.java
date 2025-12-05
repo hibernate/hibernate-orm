@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -23,6 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Yanming Zhou
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-18164" )
 @SessionFactory
 @ServiceRegistry(
@@ -33,6 +35,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @DomainModel(annotatedClasses = IdGeneratorTypeWithBeanContainerTest.SimpleEntity.class)
 public class IdGeneratorTypeWithBeanContainerTest {
+
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test void test(SessionFactoryScope scope) {
 		SimpleEntity entity = new SimpleEntity();

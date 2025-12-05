@@ -4,9 +4,8 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Locale;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -14,104 +13,70 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class NullHandlingTests extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
-	}
+@DomainModel(annotatedClasses = {NullHandlingTests.TheEntity.class})
+@SessionFactory
+public class NullHandlingTests {
 
 	@Test
 	@JiraKey( value = "HHH-8697" )
-	public void testNullReplacementOnBinding() {
+	public void testNullReplacementOnBinding(SessionFactoryScope scope) {
 		TheEntity theEntity = new TheEntity( 1 );
 
-		Session session = openSession();
-		session.beginTransaction();
 		// at this point TheEntity.sex is null
 		// lets make sure that the converter is given a chance to adjust that to UNKNOWN...
-		session.persist( theEntity );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.persist( theEntity ) );
 
-		session = openSession();
-		session.beginTransaction();
-		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						ResultSet rs = connection.createStatement().executeQuery( "select sex from the_entity where id=1" );
-						try {
-							if ( !rs.next() ) {
-								throw new RuntimeException( "Could not locate inserted row" );
+		scope.inTransaction(  session -> {
+					session.doWork(
+							conn -> {
+								try (Statement st = conn.createStatement()) {
+									st.execute( "select sex from the_entity where id = 1" );
+									ResultSet rs = st.getResultSet();
+									if ( !rs.next() ) {
+										throw new RuntimeException( "Could not locate inserted row" );
+									}
+
+									String sexDbValue = rs.getString( 1 );
+
+									if ( rs.next() ) {
+										throw new RuntimeException( "Found more than one row" );
+									}
+
+									assertEquals( Sex.UNKNOWN.name().toLowerCase( Locale.ENGLISH ), sexDbValue );
+								}
 							}
+					);
+				} );
 
-							String sexDbValue = rs.getString( 1 );
-
-							if ( rs.next() ) {
-								throw new RuntimeException( "Found more than one row" );
-							}
-
-							assertEquals( Sex.UNKNOWN.name().toLowerCase( Locale.ENGLISH ), sexDbValue );
-						}
-						finally {
-							rs.close();
-						}
-					}
-				}
-		);
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		session.remove( theEntity );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.remove( theEntity ) );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9320" )
-	public void testNullReplacementOnExtraction() {
-		Session session = openSession();
-		session.beginTransaction();
-		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						connection.createStatement().execute( "insert into the_entity(id, sex) values (1, null)" );
-					}
-				}
-		);
-		session.getTransaction().commit();
-		session.close();
+	public void testNullReplacementOnExtraction(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			session.doWork(
+					connection -> connection.createStatement().execute( "insert into the_entity(id, sex) values (1, null)" )
+			);
+		} );
 
-		session = openSession();
-		session.beginTransaction();
 		// at this point TheEntity.sex is null in the database
 		// lets load it and make sure that the converter is given a chance to adjust that to UNKNOWN...
-		TheEntity theEntity = (TheEntity) session.get( TheEntity.class, 1 );
-		session.getTransaction().commit();
-		session.close();
-
+		TheEntity theEntity = scope.fromTransaction( session -> session.find( TheEntity.class, 1 ) );
 		assertEquals( Sex.UNKNOWN, theEntity.sex );
 
-		session = openSession();
-		session.beginTransaction();
-		session.remove( theEntity );
-		session.getTransaction().commit();
-		session.close();
+		scope.inTransaction( session -> session.remove( theEntity ) );
 	}
 
 	@Entity( name = "TheEntity" )

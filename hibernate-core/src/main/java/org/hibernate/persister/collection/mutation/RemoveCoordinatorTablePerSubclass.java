@@ -4,14 +4,9 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import java.util.Collection;
 
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
@@ -20,6 +15,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * OneToMany remove coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -43,7 +39,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.operationProducer = operationProducer;
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
+		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -64,30 +60,26 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	@Override
 	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Deleting collection - %s : %s",
-					mutationTarget.getRolePath(),
-					key
-			);
+			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
 
-		MutationOperationGroup[] operationGroups = this.operationGroups;
+		var operationGroups = this.operationGroups;
 		if ( operationGroups == null ) {
 			// delayed creation of the operation-group
 			operationGroups = this.operationGroups = buildOperationGroups();
 		}
 
-		final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
+		final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 
-		for ( MutationOperationGroup operationGroup : operationGroups ) {
-			final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+		for ( var operationGroup : operationGroups ) {
+			final var mutationExecutor = mutationExecutorService.createExecutor(
 					() -> null,
 					operationGroup,
 					session
 			);
 
 			try {
-				fkDescriptor.getKeyPart().decompose(
+				foreignKeyDescriptor.getKeyPart().decompose(
 						key,
 						0,
 						mutationExecutor.getJdbcValueBindings(),
@@ -111,28 +103,29 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	}
 
 	private MutationOperationGroup[] buildOperationGroups() {
-		final Collection<EntityMappingType> subMappingTypes = mutationTarget.getElementPersister()
-				.getRootEntityDescriptor()
-				.getSubMappingTypes();
-		final MutationOperationGroup[] operationGroups = new MutationOperationGroup[subMappingTypes.size()];
+		final var subMappingTypes =
+				mutationTarget.getElementPersister()
+						.getRootEntityDescriptor()
+						.getSubMappingTypes();
+		final var operationGroups = new MutationOperationGroup[subMappingTypes.size()];
 		int i = 0;
-		for ( EntityMappingType subMappingType : subMappingTypes ) {
+		for ( var subMappingType : subMappingTypes ) {
 			operationGroups[i++] = buildOperationGroup( subMappingType.getEntityPersister() );
 		}
 		return operationGroups;
 	}
 
 	private MutationOperationGroup buildOperationGroup(EntityPersister elementPersister) {
-		assert mutationTarget.getTargetPart() != null;
-		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
+		assert mutationTarget.getTargetPart() != null
+			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
 //		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 //			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s",
 //					mutationTarget.getRolePath() );
 //		}
 
-		final CollectionTableMapping collectionTableMapping = mutationTarget.getCollectionTableMapping();
-		final MutatingTableReference tableReference = new MutatingTableReference(
+		final var collectionTableMapping = mutationTarget.getCollectionTableMapping();
+		final var tableReference = new MutatingTableReference(
 				new CollectionTableMapping(
 						elementPersister.getMappedTableDetails().getTableName(),
 						collectionTableMapping.getSpaces(),
@@ -146,10 +139,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 				)
 		);
 
-		return MutationOperationGroupFactory.singleOperation(
-				MutationType.DELETE,
-				mutationTarget,
-				operationProducer.createOperation( tableReference )
-		);
+		return singleOperation( MutationType.DELETE, mutationTarget,
+				operationProducer.createOperation( tableReference ) );
 	}
 }

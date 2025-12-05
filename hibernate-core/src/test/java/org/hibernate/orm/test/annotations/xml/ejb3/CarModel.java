@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
+
 import jakarta.persistence.Column;
 import java.util.Date;
 

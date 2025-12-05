@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import org.hibernate.engine.creation.CommonSharedBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -12,26 +13,46 @@ import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
 /**
- * Specialized {@link SessionBuilder} with access to stuff from another session.
+ * Allows creation of a child {@link Session} which shares some options with
+ * another pre-existing parent session. Each session has its own isolated
+ * persistence context, and entity instances must not be shared between
+ * parent and child sessions.
+ * <p>
+ * When {@linkplain Transaction resource-local} transaction management is used:
+ * <ul>
+ * <li>by default, each session executes with its own dedicated JDBC connection
+ *     and therefore has its own isolated transaction, but
+ * <li>calling the {@link #connection()} method specifies that the connection,
+ *     and therefore also the JDBC transaction, should be shared from parent
+ *     to child.
+ * </ul>
+ * <p>
+ * <pre>
+ * try (var childSession
+ *          = session.sessionWithOptions()
+ *                  .connection() // share the JDBC connection
+ *                  .cacheMode(CacheMode.IGNORE)
+ *                  .openSession()) {
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * On the other hand, when JTA transaction management is used, all sessions
+ * execute within the same transaction. Typically, connection sharing is
+ * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.
  *
  * @author Steve Ebersole
  *
  * @see Session#sessionWithOptions()
+ * @see StatelessSession#sessionWithOptions()
+ * @see SessionBuilder
  */
-public interface SharedSessionBuilder extends SessionBuilder {
+public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
 
-	/**
-	 * Signifies that the connection from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SharedSessionBuilder connection();
 
-	/**
-	 * Signifies the interceptor from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SharedSessionBuilder interceptor();
 
 	/**
@@ -76,7 +97,13 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
-	SessionBuilder statementInspector(UnaryOperator<String> operator);
+	SharedSessionBuilder statementInspector(UnaryOperator<String> operator);
+
+	@Override
+	SharedSessionBuilder statementInspector();
+
+	@Override
+	SharedSessionBuilder noStatementInspector();
 
 	@Override @Deprecated
 	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
@@ -97,6 +124,12 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
+	SharedSessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SharedSessionBuilder initialCacheMode(CacheMode cacheMode);
+
+	@Override
 	SharedSessionBuilder eventListeners(SessionEventListener... listeners);
 
 	@Override
@@ -112,6 +145,9 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder noInterceptor();
 
 	@Override
+	SharedSessionBuilder noSessionInterceptorCreation();
+
+	@Override
 	SharedSessionBuilder connection(Connection connection);
 
 	@Override
@@ -122,4 +158,10 @@ public interface SharedSessionBuilder extends SessionBuilder {
 
 	@Override
 	SharedSessionBuilder identifierRollback(boolean identifierRollback);
+
+	@Override
+	SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	@Override
+	SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

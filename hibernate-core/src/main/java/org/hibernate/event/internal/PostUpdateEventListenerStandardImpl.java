@@ -4,8 +4,8 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -29,10 +29,10 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 		handlePostUpdate( event.getEntity(), event.getSession() );
 	}
 
-	private void handlePostUpdate(Object entity, EventSource source) {
+	private void handlePostUpdate(Object entity, SharedSessionContractImplementor source) {
 		// mimic the preUpdate filter
-		if ( source == null // it must be a StatelessSession
-				|| source.getPersistenceContextInternal().getEntry(entity).getStatus() != Status.DELETED ) {
+		if ( source.isStateless()
+				|| source.getPersistenceContextInternal().getEntry( entity ).getStatus() != Status.DELETED ) {
 			callbackRegistry.postUpdate(entity);
 		}
 	}

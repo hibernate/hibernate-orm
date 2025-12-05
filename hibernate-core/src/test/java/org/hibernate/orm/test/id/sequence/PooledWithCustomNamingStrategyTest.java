@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -61,7 +61,7 @@ public class PooledWithCustomNamingStrategyTest {
 		catch (Exception e) {
 			assertThat( e.getMessage() ).isEqualTo(
 					"The increment size of the [MY_SEQ] sequence is set to [50] in the entity " +
-							"mapping while the associated database sequence increment size is [5]."
+							"mapping but the mapped database sequence increment size is [5]"
 			);
 		}
 	}
@@ -91,7 +91,7 @@ public class PooledWithCustomNamingStrategyTest {
 
 	@BeforeAll
 	public void setUp() {
-		final DriverManagerConnectionProviderImpl provider = new DriverManagerConnectionProviderImpl();
+		final DriverManagerConnectionProvider provider = new DriverManagerConnectionProvider();
 		provider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 		connectionProvider = provider;
 		try (final Connection connection = connectionProvider.getConnection();

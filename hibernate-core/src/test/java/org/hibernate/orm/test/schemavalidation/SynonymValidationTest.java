@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -90,7 +90,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.INDIVIDUALLY
+						JdbcMetadataAccessStrategy.INDIVIDUALLY
 				)
 				.build();
 		try {
@@ -137,7 +137,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.GROUPED
+						JdbcMetadataAccessStrategy.GROUPED
 				)
 				.build();
 		try {

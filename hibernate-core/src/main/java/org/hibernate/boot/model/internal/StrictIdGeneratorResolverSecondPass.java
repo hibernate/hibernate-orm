@@ -8,11 +8,7 @@ import java.util.UUID;
 
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
-import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
-import org.hibernate.boot.models.spi.TableGeneratorRegistration;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -57,11 +53,9 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 	@Override
 	protected void handleUnnamedSequenceGenerator() {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
 		// according to the spec, this should locate a generator with the same name as the entity-name
-		final SequenceGeneratorRegistration globalMatch =
-				metadataCollector.getGlobalRegistrations().getSequenceGeneratorRegistrations()
+		final var globalMatch =
+				getGlobalRegistrations().getSequenceGeneratorRegistrations()
 						.get( entityMapping.getJpaEntityName() );
 		if ( globalMatch != null ) {
 			handleSequenceGenerator(
@@ -71,25 +65,23 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 					idMember,
 					buildingContext
 			);
-			return;
 		}
-
-		handleSequenceGenerator(
-				entityMapping.getJpaEntityName(),
-				new SequenceGeneratorJpaAnnotation( modelsContext() ),
-				idValue,
-				idMember,
-				buildingContext
-		);
+		else {
+			handleSequenceGenerator(
+					entityMapping.getJpaEntityName(),
+					new SequenceGeneratorJpaAnnotation( modelsContext() ),
+					idValue,
+					idMember,
+					buildingContext
+			);
+		}
 	}
 
 	@Override
 	protected void handleNamedSequenceGenerator() {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final SequenceGeneratorRegistration globalMatch =
-				metadataCollector.getGlobalRegistrations()
-						.getSequenceGeneratorRegistrations().get( generatedValue.generator() );
+		final var globalMatch =
+				getGlobalRegistrations().getSequenceGeneratorRegistrations()
+						.get( generatedValue.generator() );
 		if ( globalMatch != null ) {
 			handleSequenceGenerator(
 					generatedValue.generator(),
@@ -98,24 +90,22 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 					idMember,
 					buildingContext
 			);
-			return;
 		}
-
-		handleSequenceGenerator(
-				generatedValue.generator(),
-				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
-				idValue,
-				idMember,
-				buildingContext
-		);
+		else {
+			handleSequenceGenerator(
+					generatedValue.generator(),
+					new SequenceGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
+					idValue,
+					idMember,
+					buildingContext
+			);
+		}
 	}
 
 	@Override
 	protected void handleUnnamedTableGenerator() {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final TableGeneratorRegistration globalMatch =
-				metadataCollector.getGlobalRegistrations().getTableGeneratorRegistrations()
+		final var globalMatch =
+				getGlobalRegistrations().getTableGeneratorRegistrations()
 						.get( entityMapping.getJpaEntityName() );
 		if ( globalMatch != null ) {
 			handleTableGenerator(
@@ -125,24 +115,22 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 					idMember,
 					buildingContext
 			);
-			return;
 		}
-
-		handleTableGenerator(
-				entityMapping.getJpaEntityName(),
-				new TableGeneratorJpaAnnotation( modelsContext() ),
-				idValue,
-				idMember,
-				buildingContext
-		);
+		else {
+			handleTableGenerator(
+					entityMapping.getJpaEntityName(),
+					new TableGeneratorJpaAnnotation( modelsContext() ),
+					idValue,
+					idMember,
+					buildingContext
+			);
+		}
 	}
 
 	@Override
 	protected void handleNamedTableGenerator() {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final TableGeneratorRegistration globalMatch =
-				metadataCollector.getGlobalRegistrations().getTableGeneratorRegistrations()
+		final var globalMatch =
+				getGlobalRegistrations().getTableGeneratorRegistrations()
 						.get( generatedValue.generator() );
 		if ( globalMatch != null ) {
 			handleTableGenerator(
@@ -152,17 +140,16 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 					idMember,
 					buildingContext
 			);
-
-			return;
 		}
-
-		handleTableGenerator(
-				generatedValue.generator(),
-				new TableGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
-				idValue,
-				idMember,
-				buildingContext
-		);
+		else {
+			handleTableGenerator(
+					generatedValue.generator(),
+					new TableGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
+					idValue,
+					idMember,
+					buildingContext
+			);
+		}
 	}
 
 	@Override
@@ -176,11 +163,10 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 	}
 
 	private void handleAutoGenerator(String globalRegistrationName) {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-		final GlobalRegistrations globalRegistrations = metadataCollector.getGlobalRegistrations();
 
-		final SequenceGeneratorRegistration globalSequenceMatch =
-				globalRegistrations.getSequenceGeneratorRegistrations().get( globalRegistrationName );
+		final var globalSequenceMatch =
+				getGlobalRegistrations().getSequenceGeneratorRegistrations()
+						.get( globalRegistrationName );
 		if ( globalSequenceMatch != null ) {
 			handleSequenceGenerator(
 					globalRegistrationName,
@@ -192,8 +178,9 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 			return;
 		}
 
-		final TableGeneratorRegistration globalTableMatch =
-				globalRegistrations.getTableGeneratorRegistrations().get( globalRegistrationName );
+		final var globalTableMatch =
+				getGlobalRegistrations().getTableGeneratorRegistrations()
+						.get( globalRegistrationName );
 		if ( globalTableMatch != null ) {
 			handleTableGenerator(
 					globalRegistrationName,
@@ -205,8 +192,9 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 			return;
 		}
 
-		final GenericGeneratorRegistration globalGenericMatch =
-				globalRegistrations.getGenericGeneratorRegistrations().get( globalRegistrationName );
+		final var globalGenericMatch =
+				getGlobalRegistrations().getGenericGeneratorRegistrations()
+						.get( globalRegistrationName );
 		if ( globalGenericMatch != null ) {
 			handleGenericGenerator(
 					globalRegistrationName,
@@ -223,8 +211,9 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		}
 
 		// Implicit handling of UUID generation
-		if ( idMember.getType().isImplementor( UUID.class )
-				|| idMember.getType().isImplementor( String.class ) ) {
+		final var idMemberType = idMember.getType();
+		if ( idMemberType.isImplementor( UUID.class )
+			|| idMemberType.isImplementor( String.class ) ) {
 			handleUuidStrategy(
 					idValue,
 					idMember,
@@ -246,5 +235,9 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 				idMember,
 				buildingContext
 		);
+	}
+
+	private GlobalRegistrations getGlobalRegistrations() {
+		return buildingContext.getMetadataCollector().getGlobalRegistrations();
 	}
 }

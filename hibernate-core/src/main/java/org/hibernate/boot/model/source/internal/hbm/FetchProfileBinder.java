@@ -5,19 +5,19 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 
-import org.jboss.logging.Logger;
 
 import static jakarta.persistence.FetchType.EAGER;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class FetchProfileBinder {
-	private static final Logger log = Logger.getLogger( FetchProfileBinder.class );
 
 	/**
 	 * Handling for a {@code <fetch-profile/>} declaration.
@@ -48,35 +48,50 @@ public class FetchProfileBinder {
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFetchProfileType fetchProfileBinding,
 			String containingEntityName) {
-		FetchProfile profile = context.getMetadataCollector().getFetchProfile( fetchProfileBinding.getName() );
-		if ( profile == null ) {
-			log.tracef( "Creating FetchProfile: %s", fetchProfileBinding.getName() );
-			profile = new FetchProfile( fetchProfileBinding.getName(), MetadataSource.HBM );
-			context.getMetadataCollector().addFetchProfile( profile );
-		}
-
-		for ( JaxbHbmFetchProfileType.JaxbHbmFetch fetchBinding : fetchProfileBinding.getFetch() ) {
-			String entityName = fetchBinding.getEntity();
+		final var profile = fetchProfile( context, fetchProfileBinding );
+		for ( var fetchBinding : fetchProfileBinding.getFetch() ) {
+			final String entityName = entityName( containingEntityName, fetchBinding );
 			if ( entityName == null ) {
-				entityName = containingEntityName;
-			}
-			if ( entityName == null ) {
-				throw new org.hibernate.boot.MappingException(
+				throw new MappingException(
 						String.format(
-								"Unable to determine entity for fetch-profile fetch [%s:%s]",
+								"Unable to determine entity for fetch profile fetch [%s:%s]",
 								profile.getName(),
 								fetchBinding.getAssociation()
 						),
 						context.getOrigin()
 				);
 			}
-			String association = fetchBinding.getAssociation();
-			profile.addFetch( new FetchProfile.Fetch(entityName, association, fetchMode(fetchBinding.getStyle().value()), EAGER ) );
+			profile.addFetch( new FetchProfile.Fetch(
+					entityName,
+					fetchBinding.getAssociation(),
+					fetchMode( fetchBinding.getStyle().value() ),
+					EAGER
+			) );
+		}
+	}
+
+	private static String entityName(String containingEntityName, JaxbHbmFetchProfileType.JaxbHbmFetch fetchBinding) {
+		final String entityName = fetchBinding.getEntity();
+		return entityName == null ? containingEntityName : entityName;
+	}
+
+	private static FetchProfile fetchProfile(
+			HbmLocalMetadataBuildingContext context, JaxbHbmFetchProfileType fetchProfileBinding) {
+		final var collector = context.getMetadataCollector();
+		final var profile = collector.getFetchProfile( fetchProfileBinding.getName() );
+		if ( profile == null ) {
+			BOOT_LOGGER.creatingFetchProfile( fetchProfileBinding.getName() );
+			final var newProfile = new FetchProfile( fetchProfileBinding.getName(), MetadataSource.HBM );
+			collector.addFetchProfile( newProfile );
+			return newProfile;
+		}
+		else {
+			return profile;
 		}
 	}
 
 	private static FetchMode fetchMode(String style) {
-		for ( FetchMode mode: FetchMode.values() ) {
+		for ( var mode: FetchMode.values() ) {
 			if ( mode.name().equalsIgnoreCase( style ) ) {
 				return mode;
 			}

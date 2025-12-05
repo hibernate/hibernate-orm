@@ -6,110 +6,72 @@ package org.hibernate.orm.test.envers.integration.query;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Chris Cranford
  */
-public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { NonAuditedEntity.class };
+@Jpa(annotatedClasses = {NotAuditedQueryTest.NonAuditedEntity.class})
+@EnversTest
+public class NotAuditedQueryTest {
+
+	@Test
+	@JiraKey(value = "HHH-11558")
+	public void testRevisionsOfEntityNotAuditedMultipleResults(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forRevisionsOfEntity( NonAuditedEntity.class, false, false )
+				.getResultList() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11558")
-	public void testRevisionsOfEntityNotAuditedMultipleResults() {
-		try {
-			getAuditReader().createQuery()
-					.forRevisionsOfEntity( NonAuditedEntity.class, false, false )
-					.getResultList();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
+	public void testRevisionsOfEntityNotAuditedSingleResult(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forRevisionsOfEntity( NonAuditedEntity.class, false, false )
+				.setMaxResults( 1 )
+				.getSingleResult() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11558")
-	public void testRevisionsOfEntityNotAuditedSingleResult() {
-		try {
-			getAuditReader().createQuery()
-					.forRevisionsOfEntity( NonAuditedEntity.class, false, false )
-					.setMaxResults( 1 )
-					.getSingleResult();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
+	public void testForEntitiesAtRevisionNotAuditedMultipleResults(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forEntitiesAtRevision( NonAuditedEntity.class, 1 )
+				.getResultList() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11558")
-	public void testForEntitiesAtRevisionNotAuditedMultipleResults() {
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesAtRevision( NonAuditedEntity.class, 1 )
-					.getResultList();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
+	public void testForEntitiesAtRevisionNotAuditedSingleResult(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forEntitiesAtRevision( NonAuditedEntity.class, 1 )
+				.setMaxResults( 1 )
+				.getSingleResult() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11558")
-	public void testForEntitiesAtRevisionNotAuditedSingleResult() {
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesAtRevision( NonAuditedEntity.class, 1 )
-					.setMaxResults( 1 )
-					.getSingleResult();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
+	public void testForEntitiesModifiedAtRevisionNotAuditedMultipleResults(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forEntitiesModifiedAtRevision( NonAuditedEntity.class, 1 )
+				.getResultList() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11558")
-	public void testForEntitiesModifiedAtRevisionNotAuditedMultipleResults() {
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesModifiedAtRevision( NonAuditedEntity.class, 1 )
-					.getResultList();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
-	}
-
-	@Test
-	@JiraKey(value = "HHH-11558")
-	public void testForEntitiesModifiedAtRevisionNotAuditedSingleResult() {
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesModifiedAtRevision( NonAuditedEntity.class, 1 )
-					.setMaxResults( 1 )
-					.getSingleResult();
-			fail( "Expected a NotAuditedException" );
-		}
-		catch ( Exception e ) {
-			assertTyping( NotAuditedException.class, e );
-		}
+	public void testForEntitiesModifiedAtRevisionNotAuditedSingleResult(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> assertThrows( NotAuditedException.class, () -> AuditReaderFactory.get( em ).createQuery()
+				.forEntitiesModifiedAtRevision( NonAuditedEntity.class, 1 )
+				.setMaxResults( 1 )
+				.getSingleResult() ) );
 	}
 
 	@Entity(name = "NonAuditedEntity")

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.lang.invoke.MethodHandles;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -18,9 +17,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+
 
 /**
  * A helper for dealing with {@code BLOB} and {@code CLOB} data
@@ -34,8 +33,6 @@ public final class DataHelper {
 
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DataHelper.class.getName() );
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.
@@ -61,7 +58,7 @@ public final class DataHelper {
 	public static String extractString(Reader reader, int lengthHint) {
 		// read the Reader contents into a buffer and return the complete string
 		final int bufferSize = getSuggestedBufferSize( lengthHint );
-		final StringBuilder stringBuilder = new StringBuilder( bufferSize );
+		final var stringBuilder = new StringBuilder( bufferSize );
 		try {
 			final char[] buffer = new char[bufferSize];
 			while (true) {
@@ -80,7 +77,7 @@ public final class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-				LOG.unableToCloseStream( e );
+				CORE_LOGGER.unableToCloseStream( e );
 			}
 		}
 		return stringBuilder.toString();
@@ -99,7 +96,7 @@ public final class DataHelper {
 		if ( length == 0 ) {
 			return "";
 		}
-		final StringBuilder stringBuilder = new StringBuilder( length );
+		final var stringBuilder = new StringBuilder( length );
 		try {
 			final long skipped = characterStream.skip( start );
 			if ( skipped != start ) {
@@ -156,7 +153,7 @@ public final class DataHelper {
 		}
 
 		// read the stream contents into a buffer and return the complete byte[]
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
+		final var outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
 		try {
 			final byte[] buffer = new byte[BUFFER_SIZE];
 			while (true) {
@@ -175,13 +172,13 @@ public final class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-				LOG.unableToCloseInputStream( e );
+				CORE_LOGGER.unableToCloseInputStream( e );
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-				LOG.unableToCloseOutputStream( e );
+				CORE_LOGGER.unableToCloseOutputStream( e );
 			}
 		}
 		return outputStream.toByteArray();
@@ -206,7 +203,7 @@ public final class DataHelper {
 			return result;
 		}
 
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream( length );
+		final var outputStream = new ByteArrayOutputStream( length );
 		try {
 			final long skipped = inputStream.skip( start );
 			if ( skipped != start ) {
@@ -254,7 +251,7 @@ public final class DataHelper {
 	 */
 	public static String extractString(final Clob value) {
 		try {
-			final Reader characterStream = value.getCharacterStream();
+			final var characterStream = value.getCharacterStream();
 			final long length = determineLengthForBufferSizing( value );
 			return length > Integer.MAX_VALUE
 					? extractString( characterStream, Integer.MAX_VALUE )

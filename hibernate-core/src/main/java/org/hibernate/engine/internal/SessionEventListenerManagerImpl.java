@@ -5,12 +5,14 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionEventListenerManager;
+
+import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOf;
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author Steve Ebersole
@@ -21,35 +23,35 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 	public SessionEventListenerManagerImpl(SessionEventListener... initialListener) {
 		//no need for defensive copies until the array is mutated:
-		this.listeners = initialListener;
+		listeners = initialListener;
 	}
 
 	public SessionEventListenerManagerImpl(List<SessionEventListener> initialListener) {
 		//no need for defensive copies until the array is mutated:
-		this.listeners = initialListener.toArray( new SessionEventListener[0] );
+		listeners = initialListener.toArray( new SessionEventListener[0] );
 	}
 
 	@Override
 	public void addListener(final SessionEventListener... additionalListeners) {
-		Objects.requireNonNull( additionalListeners );
-		final SessionEventListener[] existing = this.listeners;
+		requireNonNull( additionalListeners );
+		final var existing = listeners;
 		if ( existing == null ) {
 			//Make a defensive copy as this array can be tracked back to API (user code)
-			this.listeners = Arrays.copyOf( additionalListeners, additionalListeners.length );
+			listeners = copyOf( additionalListeners, additionalListeners.length );
 		}
 		else {
 			// Resize our existing array and add the new listeners
-			final SessionEventListener[] newList = new SessionEventListener[ existing.length + additionalListeners.length ];
-			System.arraycopy( existing, 0, newList, 0, existing.length );
-			System.arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
-			this.listeners = newList;
+			final var newList = new SessionEventListener[ existing.length + additionalListeners.length ];
+			arraycopy( existing, 0, newList, 0, existing.length );
+			arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
+			listeners = newList;
 		}
 	}
 
 	@Override
 	public void transactionCompletion(boolean successful) {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.transactionCompletion( successful );
 			}
 		}
@@ -58,7 +60,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcConnectionAcquisitionStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcConnectionAcquisitionStart();
 			}
 		}
@@ -67,7 +69,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcConnectionAcquisitionEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcConnectionAcquisitionEnd();
 			}
 		}
@@ -76,7 +78,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcConnectionReleaseStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcConnectionReleaseStart();
 			}
 		}
@@ -85,7 +87,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcConnectionReleaseEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcConnectionReleaseEnd();
 			}
 		}
@@ -94,7 +96,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcPrepareStatementStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcPrepareStatementStart();
 			}
 		}
@@ -103,7 +105,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcPrepareStatementEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcPrepareStatementEnd();
 			}
 		}
@@ -112,7 +114,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcExecuteStatementStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcExecuteStatementStart();
 			}
 		}
@@ -121,7 +123,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcExecuteStatementEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcExecuteStatementEnd();
 			}
 		}
@@ -130,7 +132,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcExecuteBatchStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcExecuteBatchStart();
 			}
 		}
@@ -139,7 +141,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void jdbcExecuteBatchEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.jdbcExecuteBatchEnd();
 			}
 		}
@@ -148,7 +150,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void cachePutStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.cachePutStart();
 			}
 		}
@@ -157,7 +159,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void cachePutEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.cachePutEnd();
 			}
 		}
@@ -166,7 +168,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void cacheGetStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.cacheGetStart();
 			}
 		}
@@ -175,7 +177,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void cacheGetEnd(boolean hit) {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.cacheGetEnd( hit );
 			}
 		}
@@ -184,7 +186,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void flushStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.flushStart();
 			}
 		}
@@ -193,7 +195,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void flushEnd(int numberOfEntities, int numberOfCollections) {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.flushEnd( numberOfEntities, numberOfCollections );
 			}
 		}
@@ -202,7 +204,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void prePartialFlushStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.prePartialFlushStart();
 			}
 		}
@@ -211,7 +213,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void prePartialFlushEnd() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.prePartialFlushEnd();
 			}
 		}
@@ -220,7 +222,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void partialFlushStart() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.partialFlushStart();
 			}
 		}
@@ -229,7 +231,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void partialFlushEnd(int numberOfEntities, int numberOfCollections) {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.partialFlushEnd( numberOfEntities, numberOfCollections );
 			}
 		}
@@ -241,7 +243,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 			return;
 		}
 
-		for ( SessionEventListener listener : listeners ) {
+		for ( var listener : listeners ) {
 			listener.dirtyCalculationStart();
 		}
 	}
@@ -249,7 +251,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void dirtyCalculationEnd(boolean dirty) {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.dirtyCalculationEnd( dirty );
 			}
 		}
@@ -258,7 +260,7 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	@Override
 	public void end() {
 		if ( listeners != null ) {
-			for ( SessionEventListener listener : listeners ) {
+			for ( var listener : listeners ) {
 				listener.end();
 			}
 		}

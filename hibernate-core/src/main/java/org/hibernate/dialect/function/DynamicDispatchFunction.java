@@ -33,11 +33,14 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 	public DynamicDispatchFunction(SqmFunctionRegistry functionRegistry, String... functionNames) {
 		this.functionRegistry = functionRegistry;
 		this.functionNames = functionNames;
+		this.functionKind = functionKind( functionRegistry, functionNames );
+	}
 
+	private static FunctionKind functionKind(SqmFunctionRegistry functionRegistry, String[] functionNames) {
 		FunctionKind functionKind = null;
 		// Sanity check
 		for ( String overload : functionNames ) {
-			final SqmFunctionDescriptor functionDescriptor = functionRegistry.findFunctionDescriptor( overload );
+			final var functionDescriptor = functionRegistry.findFunctionDescriptor( overload );
 			if ( functionDescriptor == null ) {
 				throw new IllegalArgumentException( "No function registered under the name '" + overload + "'" );
 			}
@@ -45,10 +48,12 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 				functionKind = functionDescriptor.getFunctionKind();
 			}
 			else if ( functionKind != functionDescriptor.getFunctionKind() ) {
-				throw new IllegalArgumentException( "Function has function kind " + functionDescriptor.getFunctionKind() + ", but other overloads have " + functionKind + ". An overloaded function needs a single function kind." );
+				throw new IllegalArgumentException( "Function has function kind " + functionDescriptor.getFunctionKind()
+													+ ", but other overloads have " + functionKind
+													+ ". An overloaded function needs a single function kind." );
 			}
 		}
-		this.functionKind = functionKind;
+		return functionKind;
 	}
 
 	@Override
@@ -61,8 +66,8 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
-		return functionDescriptor.generateSqmExpression( arguments, impliedResultType, queryEngine );
+		return validateGetFunction( arguments, queryEngine )
+				.generateSqmExpression( arguments, impliedResultType, queryEngine );
 	}
 
 	@Override
@@ -71,13 +76,13 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
-		return functionDescriptor.generateAggregateSqmExpression(
-				arguments,
-				filter,
-				impliedResultType,
-				queryEngine
-		);
+		return validateGetFunction( arguments, queryEngine )
+				.generateAggregateSqmExpression(
+						arguments,
+						filter,
+						impliedResultType,
+						queryEngine
+				);
 	}
 
 	@Override
@@ -87,14 +92,14 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
-		return functionDescriptor.generateOrderedSetAggregateSqmExpression(
-				arguments,
-				filter,
-				withinGroupClause,
-				impliedResultType,
-				queryEngine
-		);
+		return validateGetFunction( arguments, queryEngine )
+				.generateOrderedSetAggregateSqmExpression(
+						arguments,
+						filter,
+						withinGroupClause,
+						impliedResultType,
+						queryEngine
+				);
 	}
 
 	@Override
@@ -105,15 +110,15 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
-		return functionDescriptor.generateWindowSqmExpression(
-				arguments,
-				filter,
-				respectNulls,
-				fromFirst,
-				impliedResultType,
-				queryEngine
-		);
+		return validateGetFunction( arguments, queryEngine )
+				.generateWindowSqmExpression(
+						arguments,
+						filter,
+						respectNulls,
+						fromFirst,
+						impliedResultType,
+						queryEngine
+				);
 	}
 
 	@Override
@@ -134,12 +139,13 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			BindingContext bindingContext) {
 		RuntimeException exception = null;
 		for ( String overload : functionNames ) {
-			final SqmFunctionDescriptor functionDescriptor = functionRegistry.findFunctionDescriptor( overload );
+			final var functionDescriptor = functionRegistry.findFunctionDescriptor( overload );
 			if ( functionDescriptor == null ) {
 				throw new IllegalArgumentException( "No function registered under the name '" + overload + "'" );
 			}
 			try {
-				functionDescriptor.getArgumentsValidator().validate( arguments, overload, bindingContext );
+				functionDescriptor.getArgumentsValidator()
+						.validate( arguments, overload, bindingContext );
 				return functionDescriptor;
 			}
 			catch (RuntimeException ex) {

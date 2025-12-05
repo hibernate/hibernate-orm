@@ -9,19 +9,17 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 @JiraKey( value = "HHH-16122" )
-public class HHH16122Test extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ValueConverter.class, SuperClass.class, SubClass.class };
-	}
+@Jpa( annotatedClasses = {HHH16122Test.ValueConverter.class, HHH16122Test.SuperClass.class, HHH16122Test.SubClass.class} )
+public class HHH16122Test {
 
 	@Test
-	public void testGenericSuperClassWithConverter() {
+	public void testGenericSuperClassWithConverter(EntityManagerFactoryScope scope) {
 		// The test is successful if the entity manager factory can be built.
 	}
 

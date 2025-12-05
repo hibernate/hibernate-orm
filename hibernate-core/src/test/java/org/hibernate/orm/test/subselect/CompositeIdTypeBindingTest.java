@@ -4,81 +4,67 @@
  */
 package org.hibernate.orm.test.subselect;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Strong Liu
  */
-@JiraKey( value = "HHH-8312")
-public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Employee.class, EmployeeGroup.class };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-8312")
+@DomainModel(annotatedClasses = { Employee.class, EmployeeGroup.class })
+@SessionFactory
+public class CompositeIdTypeBindingTest {
+
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var employeegroup = new EmployeeGroup( new EmployeeGroupId( "a", "b" ) );
+			employeegroup.addEmployee( new Employee( "stliu" ) );
+			employeegroup.addEmployee( new Employee( "david" ) );
+			session.persist( employeegroup );
+
+			employeegroup = new EmployeeGroup( new EmployeeGroupId( "c", "d" ) );
+			employeegroup.addEmployee( new Employee( "gail" ) );
+			employeegroup.addEmployee( new Employee( "steve" ) );
+			session.persist( employeegroup );
+		});
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testCompositeTypeBinding() {
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// prepare test data
-		Session session = openSession();
-		session.beginTransaction();
+	public void testCompositeTypeBinding(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			List<EmployeeGroupId> parameters = new ArrayList<>();
+			parameters.add( new EmployeeGroupId( "a", "b" ) );
+			parameters.add( new EmployeeGroupId( "c", "d" ) );
+			parameters.add( new EmployeeGroupId( "e", "f" ) );
 
-		EmployeeGroup employeegroup = new EmployeeGroup( new EmployeeGroupId( "a", "b" ) );
-		employeegroup.addEmployee( new Employee( "stliu" ) );
-		employeegroup.addEmployee( new Employee( "david" ) );
-		session.persist( employeegroup );
+			List<EmployeeGroup> result = session.createQuery( "select eg from EmployeeGroup eg where eg.id in (:employeegroupIds)", EmployeeGroup.class )
+					.setParameterList( "employeegroupIds", parameters ).list();
 
-		employeegroup = new EmployeeGroup( new EmployeeGroupId( "c", "d" ) );
-		employeegroup.addEmployee( new Employee( "gail" ) );
-		employeegroup.addEmployee( new Employee( "steve" ) );
-		session.persist( employeegroup );
+			assertEquals( 2, result.size() );
 
-		session.getTransaction().commit();
-		session.close();
+			var employeegroup = result.get( 0 );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Perform the test
-		session = openSession();
-		session.beginTransaction();
-
-		List<EmployeeGroupId> parameters = new ArrayList<EmployeeGroupId>();
-		parameters.add( new EmployeeGroupId( "a", "b" ) );
-		parameters.add( new EmployeeGroupId( "c", "d" ) );
-		parameters.add( new EmployeeGroupId( "e", "f" ) );
-
-		List result = session.createQuery( "select eg from EmployeeGroup eg where eg.id in (:employeegroupIds)" )
-				.setParameterList( "employeegroupIds", parameters ).list();
-
-		Assert.assertEquals( 2, result.size() );
-
-		employeegroup = (EmployeeGroup) result.get( 0 );
-
-		Assert.assertEquals( "a", employeegroup.getId().getGroupName() );
-		Assert.assertNotNull( employeegroup.getEmployees() );
-		Assert.assertEquals( 2, employeegroup.getEmployees().size() );
-		session.getTransaction().commit();
-		session.close();
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// clean up test data
-		session = openSession();
-		session.beginTransaction();
-		List<EmployeeGroup> egs = session.createQuery( "from EmployeeGroup" ).list();
-		for ( EmployeeGroup eg : egs ) {
-			eg.getEmployees().clear();
-		}
-		session.flush();
-		session.createQuery( "delete from EmployeeGroup" ).executeUpdate();
-		session.createQuery( "delete from Employee" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+			assertEquals( "a", employeegroup.getId().getGroupName() );
+			assertNotNull( employeegroup.getEmployees() );
+			assertEquals( 2, employeegroup.getEmployees().size() );
+		} );
 	}
 }

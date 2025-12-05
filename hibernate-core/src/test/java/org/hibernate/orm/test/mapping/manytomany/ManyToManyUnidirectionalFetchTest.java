@@ -121,7 +121,7 @@ public class ManyToManyUnidirectionalFetchTest {
 	private void addSpeakerToEvent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Event event = session.get( Event.class, 1l );
+					Event event = session.find( Event.class, 1l );
 					Speaker speaker = new Speaker( 2l, "Steve" );
 					event.addSpeaker( speaker );
 					session.persist( speaker );

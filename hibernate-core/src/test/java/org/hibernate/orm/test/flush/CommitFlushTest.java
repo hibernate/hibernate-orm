@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.flush;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,32 +12,37 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CommitFlushTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = {
+		CommitFlushTest.Person.class,
+		CommitFlushTest.Phone.class,
+		CommitFlushTest.Advertisement.class,
+})
+public class CommitFlushTest {
+	private final Logger log = Logger.getLogger( CommitFlushTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-			Person.class,
-			Phone.class,
-			Advertisement.class,
-		};
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testFlushJPQL() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushJPQL(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushJPQL");
 			//tag::flushing-commit-flush-jpql-example[]
 			Person person = new Person("John Doe");
@@ -57,20 +60,16 @@ public class CommitFlushTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testFlushSQL() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.createNativeQuery("delete from Person")
-				.executeUpdate();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testFlushSQL(EntityManagerFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			log.info("testFlushSQL");
 			//tag::flushing-commit-flush-sql-example[]
 			Person person = new Person("John Doe");
 			entityManager.persist(person);
 
-			assertTrue(((Number) entityManager
-				.createNativeQuery("select count(*) from Person")
-				.getSingleResult()).intValue() == 1);
+			assertEquals( 1, ((Number) entityManager
+					.createNativeQuery( "select count(*) from Person" )
+					.getSingleResult()).intValue() );
 			//end::flushing-commit-flush-sql-example[]
 		});
 	}

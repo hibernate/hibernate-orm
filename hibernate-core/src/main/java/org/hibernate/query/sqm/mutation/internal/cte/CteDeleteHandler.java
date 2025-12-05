@@ -12,8 +12,10 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -32,6 +34,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
@@ -47,8 +50,10 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			CteMutationStrategy strategy,
-			SessionFactoryImplementor sessionFactory) {
-		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, sessionFactory );
+			SessionFactoryImplementor sessionFactory,
+			DomainQueryExecutionContext context,
+			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, sessionFactory, context, firstJdbcParameterBindingsConsumer );
 	}
 
 	@Override
@@ -72,7 +77,9 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		SqmMutationStrategyHelper.visitCollectionTables(
 				(EntityMappingType) mutatingTableGroup.getModelPart(),
 				pluralAttribute -> {
-					if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+					// Skip deleting rows in collection tables if cascade delete is enabled
+					if ( pluralAttribute.getSeparateCollectionTable() != null
+						&& !pluralAttribute.getCollectionDescriptor().isCascadeDeleteEnabled() ) {
 						// Ensure that the FK target columns are available
 						final boolean useFkTarget = !pluralAttribute.getKeyDescriptor()
 								.getTargetPart().isEntityIdentifierMapping();

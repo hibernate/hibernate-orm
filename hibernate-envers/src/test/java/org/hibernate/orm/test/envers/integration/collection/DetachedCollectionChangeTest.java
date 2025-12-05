@@ -4,6 +4,24 @@
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.Audited;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,27 +30,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-
-import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.testing.orm.junit.JiraKey;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-13080")
-public class DetachedCollectionChangeTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		DetachedCollectionChangeTest.Alert.class,
+		DetachedCollectionChangeTest.RuleName.class
+})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class DetachedCollectionChangeTest {
 	@Audited
 	@Entity(name = "Alert")
 	public static class Alert {
@@ -121,7 +131,7 @@ public class DetachedCollectionChangeTest extends BaseEnversJPAFunctionalTestCas
 			}
 			RuleName ruleName = (RuleName) o;
 			return Objects.equals( id, ruleName.id ) &&
-					Objects.equals( name, ruleName.name );
+				Objects.equals( name, ruleName.name );
 		}
 
 		@Override
@@ -161,147 +171,147 @@ public class DetachedCollectionChangeTest extends BaseEnversJPAFunctionalTestCas
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Alert.class, RuleName.class };
-	}
-
 	private Integer ruleName1Id;
 	private Integer ruleName2Id;
 	private Integer alertId;
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			RuleName ruleName1 = new RuleName();
+			RuleName ruleName2 = new RuleName();
 
-		RuleName ruleName1 = new RuleName();
-		RuleName ruleName2 = new RuleName();
+			CompositeName compositeName1 = new CompositeName( "First1", "Last1" );
+			CompositeName compositeName2 = new CompositeName( "First2", "Last2" );
 
-		CompositeName compositeName1 = new CompositeName( "First1", "Last1" );
-		CompositeName compositeName2 = new CompositeName( "First2", "Last2" );
+			Alert alert = new Alert();
+			alert.getRuleNames().add( ruleName1 );
+			alert.getRuleNames().add( ruleName2 );
+			alert.getNames().add( "N1" );
+			alert.getNames().add( "N2" );
+			alert.getComposites().add( compositeName1 );
+			alert.getComposites().add( compositeName2 );
 
-		Alert alert = new Alert();
-		alert.getRuleNames().add( ruleName1 );
-		alert.getRuleNames().add( ruleName2 );
-		alert.getNames().add( "N1" );
-		alert.getNames().add( "N2" );
-		alert.getComposites().add( compositeName1 );
-		alert.getComposites().add( compositeName2 );
+			// Revision 1
+			em.getTransaction().begin();
+			em.persist( ruleName1 );
+			em.persist( ruleName2 );
+			em.persist( alert );
+			em.getTransaction().commit();
 
-		// Revision 1
-		em.getTransaction().begin();
-		em.persist( ruleName1 );
-		em.persist( ruleName2 );
-		em.persist( alert );
-		em.getTransaction().commit();
-
-		alertId = alert.id;
-		ruleName1Id = ruleName1.id;
-		ruleName2Id = ruleName2.id;
+			alertId = alert.id;
+			ruleName1Id = ruleName1.id;
+			ruleName2Id = ruleName2.id;
+		} );
 	}
 
 	@Test
-	@Priority(9)
-	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( Alert.class, alertId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName1Id ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName2Id ) );
+	@Order(1)
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( Alert.class, alertId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName1Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName2Id ) );
+		} );
 	}
 
 	@Test
-	@Priority(8)
-	public void testClearAndAddWithinTransactionDoesNotChangeAnything() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+	@Order(2)
+	public void testClearAndAddWithinTransactionDoesNotChangeAnything(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final Alert alert = em.find( Alert.class, alertId );
 
-		final Alert alert = em.find( Alert.class, alertId );
+			List<RuleName> ruleNamesClone = new ArrayList<>( alert.getRuleNames() );
+			List<String> namesClone = new ArrayList<>( alert.getNames() );
+			List<CompositeName> compositeNamesClones = new ArrayList<>( alert.getComposites() );
 
-		List<RuleName> ruleNamesClone = new ArrayList<>( alert.getRuleNames() );
-		List<String> namesClone = new ArrayList<>( alert.getNames() );
-		List<CompositeName> compositeNamesClones = new ArrayList<>( alert.getComposites() );
+			alert.getRuleNames().clear();
+			alert.getRuleNames().addAll( ruleNamesClone );
 
-		alert.getRuleNames().clear();
-		alert.getRuleNames().addAll( ruleNamesClone );
+			alert.getNames().clear();
+			alert.getNames().addAll( namesClone );
 
-		alert.getNames().clear();
-		alert.getNames().addAll( namesClone );
+			alert.getComposites().clear();
+			alert.getComposites().addAll( compositeNamesClones );
 
-		alert.getComposites().clear();
-		alert.getComposites().addAll( compositeNamesClones );
+			em.persist( alert );
+		} );
 
-		em.persist( alert );
-		em.getTransaction().commit();
-
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( Alert.class, alertId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName1Id ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName2Id ) );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( Alert.class, alertId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName1Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName2Id ) );
+		} );
 	}
 
 	@Test
-	@Priority(7)
-	public void testClearAddDetachedOutsideTransaction() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-
-		final RuleName ruleName1 = em.find( RuleName.class, ruleName1Id );
-		final RuleName ruleName2 = em.find( RuleName.class, ruleName2Id );
-
+	@Order(3)
+	public void testClearAddDetachedOutsideTransaction(EntityManagerFactoryScope scope) {
+		final RuleName ruleName1;
+		final RuleName ruleName2;
 		final CompositeName compositeName1 = new CompositeName( "First1", "Last1" );
 		final CompositeName compositeName2 = new CompositeName( "First2", "Last2" );
+
+		// Load entities outside transaction
+		ruleName1 = scope.fromTransaction( em -> em.find( RuleName.class, ruleName1Id ) );
+		ruleName2 = scope.fromTransaction( em -> em.find( RuleName.class, ruleName2Id ) );
 
 		List<RuleName> ruleNamesClone = Arrays.asList( ruleName1, ruleName2 );
 		List<String> namesClone = Arrays.asList( "N1", "N2" );
 		List<CompositeName> compositeNamesClone = Arrays.asList( compositeName1, compositeName2 );
 
-		em.getTransaction().rollback();
+		scope.inTransaction( em -> {
+			Alert alert = em.find( Alert.class, alertId );
 
-		em.getTransaction().begin();
-		Alert alert = em.find( Alert.class, alertId );
+			alert.getRuleNames().clear();
+			alert.getRuleNames().addAll( ruleNamesClone );
 
-		alert.getRuleNames().clear();
-		alert.getRuleNames().addAll( ruleNamesClone );
+			alert.getNames().clear();
+			alert.getNames().addAll( namesClone );
 
-		alert.getNames().clear();
-		alert.getNames().addAll( namesClone );
+			alert.getComposites().clear();
+			alert.getComposites().addAll( compositeNamesClone );
 
-		alert.getComposites().clear();
-		alert.getComposites().addAll( compositeNamesClone );
+			em.persist( alert );
+		} );
 
-		em.persist( alert );
-		em.getTransaction().commit();
-
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( Alert.class, alertId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName1Id ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName2Id ) );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( Alert.class, alertId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName1Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName2Id ) );
+		} );
 	}
 
 	@Test
-	@Priority(6)
-	public void testClearAddOneWithinTransaction() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
+	@Order(4)
+	public void testClearAddOneWithinTransaction(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Alert alert = em.find( Alert.class, alertId );
 
-		Alert alert = em.find( Alert.class, alertId );
+			List<RuleName> ruleNamesClone = new ArrayList<>( alert.getRuleNames() );
+			List<String> namesClone = new ArrayList<>( alert.getNames() );
+			List<CompositeName> compositeNamesClones = new ArrayList<>( alert.getComposites() );
 
-		List<RuleName> ruleNamesClone = new ArrayList<>( alert.getRuleNames() );
-		List<String> namesClone = new ArrayList<>( alert.getNames() );
-		List<CompositeName> compositeNamesClones = new ArrayList<>( alert.getComposites() );
+			alert.getRuleNames().clear();
+			alert.getRuleNames().add( ruleNamesClone.get( 0 ) );
 
-		alert.getRuleNames().clear();
-		alert.getRuleNames().add( ruleNamesClone.get( 0 ) );
+			alert.getNames().clear();
+			alert.getNames().add( namesClone.get( 0 ) );
 
-		alert.getNames().clear();
-		alert.getNames().add( namesClone.get( 0 ) );
+			alert.getComposites().clear();
+			alert.getComposites().add( compositeNamesClones.get( 0 ) );
 
-		alert.getComposites().clear();
-		alert.getComposites().add( compositeNamesClones.get( 0 ) );
+			em.persist( alert );
+		} );
 
-		em.persist( alert );
-		em.getTransaction().commit();
-
-		Assert.assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( Alert.class, alertId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName1Id ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( RuleName.class, ruleName2Id ) );
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( Alert.class, alertId ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName1Id ) );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( RuleName.class, ruleName2Id ) );
+		} );
 	}
 }

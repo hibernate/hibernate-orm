@@ -1,6 +1,5 @@
 [[batch]]
 == Batching
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
 :example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
@@ -171,7 +170,7 @@ Both the Hibernate native Query Language and JPQL (Java Persistence Query Langua
 [[batch-bulk-hql-update-delete-example]]
 .Pseudo-syntax for UPDATE and DELETE statements using HQL
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 UPDATE FROM EntityName e WHERE e.name = ?
 
@@ -258,7 +257,7 @@ In the example of joined-subclass, a `DELETE` against one of the subclasses may 
 
 .Pseudo-syntax for INSERT-SELECT statements
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 INSERT INTO EntityName
 	properties_list
@@ -271,7 +270,7 @@ Alternatively one can also declare individual values
 
 .Pseudo-syntax for INSERT-VALUES statements
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 INSERT INTO EntityName
 	properties_list
@@ -329,7 +328,7 @@ Dialect support through `org.hibernate.dialect.Dialect.getFallbackSqmMutationStr
 
 Considering we have the following entities:
 
-image:images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram]
+image::images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram,align="center"]
 
 The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
 
@@ -366,7 +365,7 @@ Now, when you try to execute a bulk entity delete query:
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
 ----
@@ -414,7 +413,7 @@ With the inline strategy, when running the previous test case, Hibernate generat
 [[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
 .`InlineIdsInClauseBulkIdStrategy` delete entity query example
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{extrasdir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example.sql[]
 ----

@@ -25,13 +25,11 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	private final LongAdder recreateCount = new LongAdder();
 
 	CollectionStatisticsImpl(CollectionPersister persister) {
-		super(
-				() -> persister.getCacheAccessStrategy() != null
-						? persister.getCacheAccessStrategy().getRegion()
-						: null
-		);
-
-		this.collectionRole = persister.getRole();
+		super( () -> {
+			final var cache = persister.getCacheAccessStrategy();
+			return cache == null ? null : cache.getRegion();
+		} );
+		collectionRole = persister.getRole();
 	}
 
 	public long getLoadCount() {
@@ -75,7 +73,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	}
 
 	public String toString() {
-		final StringBuilder buffer = new StringBuilder()
+		final var text = new StringBuilder()
 				.append( "CollectionStatistics" )
 				.append( "[collectionRole=" ).append( collectionRole )
 				.append( ",loadCount=" ).append( this.loadCount )
@@ -83,7 +81,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 				.append( ",recreateCount=" ).append( this.recreateCount )
 				.append( ",removeCount=" ).append( this.removeCount )
 				.append( ",updateCount=" ).append( this.updateCount );
-		appendCacheStats( buffer );
-		return buffer.append(']').toString();
+		appendCacheStats( text );
+		return text.append(']').toString();
 	}
 }

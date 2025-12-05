@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '21'
+@Field final String DEFAULT_JDK_VERSION = '25'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -40,14 +40,14 @@ stage('Configure') {
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		// We generally build with JDK 21, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
-		// Here we even compile the main code with JDK 17, to be sure no JDK 18+ classes are depended on.
-		new BuildEnvironment( mainJdkVersion: '17', testJdkVersion: '17' ),
+		// We generally build with JDK 25, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
+		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '17' ),
+		// Additionally, have one job that builds using JDK 17 as well
+		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17' ),
+		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '21' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
-		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
@@ -171,7 +171,7 @@ stage('Build') {
 						}
 						stage('Test') {
 							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
-							withEnv(["RDBMS=${buildEnv.dbName}"]) {
+							withEnv(["RDBMS=${buildEnv.dbName}", 'CI_SYSTEM=jenkins']) {
 								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {

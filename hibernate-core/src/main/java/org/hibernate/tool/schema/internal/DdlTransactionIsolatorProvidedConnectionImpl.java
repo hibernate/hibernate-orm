@@ -7,13 +7,12 @@ package org.hibernate.tool.schema.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * Specialized DdlTransactionIsolator for cases where we have a user provided Connection
@@ -56,7 +55,7 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 
 	@Override
 	public void release() {
-		JdbcConnectionAccess connectionAccess = jdbcContext.getJdbcConnectionAccess();
+		final var connectionAccess = jdbcContext.getJdbcConnectionAccess();
 		if( !( connectionAccess instanceof JdbcConnectionAccessProvidedConnectionImpl ) ) {
 			throw new IllegalStateException(
 				"DdlTransactionIsolatorProvidedConnectionImpl should always use a JdbcConnectionAccessProvidedConnectionImpl"
@@ -68,8 +67,8 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 			// and we don't have access to it upon releasing via the DdlTransactionIsolatorProvidedConnectionImpl.
 			connectionAccess.releaseConnection( null );
 		}
-		catch (SQLException ignored) {
-			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( ignored );
+		catch (SQLException exception) {
+			JDBC_LOGGER.unableToReleaseIsolatedConnection( exception );
 		}
 	}
 }

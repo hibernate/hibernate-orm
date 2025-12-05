@@ -16,6 +16,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
  *
  * @author Steve Ebersole
  */
-public interface JdbcOperationQueryMutation extends JdbcOperationQuery {
+public interface JdbcOperationQueryMutation extends JdbcOperationQuery, JdbcMutation {
 
 }

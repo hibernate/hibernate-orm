@@ -4,10 +4,17 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
-
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -19,7 +26,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-
 import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
@@ -32,24 +38,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
-import jakarta.persistence.TypedQuery;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -74,22 +73,23 @@ public class EnumSetConverterTest {
 			em.persist( new TableWithEnumSetConverter( 2L, EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSetConverter( 3L, null ) );
 
-			Query q;
-			q = em.createNamedQuery( "TableWithEnumSetConverter.Native.insert" );
-			q.setParameter( "id", 4L );
-			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNamedQuery( "TableWithEnumSetConverter.Native.insert" )
+					.setParameter( "id", 4L )
+					.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType )
+					.executeUpdate();
 
-			q = em.createNativeQuery( "INSERT INTO table_with_enum_set_convert(id, the_set) VALUES ( :id , :data )" );
-			q.setParameter( "id", 5L );
-			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
-			q.executeUpdate();
+			//noinspection deprecation,unchecked
+			em.createNativeQuery( "INSERT INTO table_with_enum_set_convert(id, the_set) VALUES ( :id , :data )" )
+					.setParameter( "id", 5L )
+					.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType )
+					.executeUpdate();
 		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -97,13 +97,13 @@ public class EnumSetConverterTest {
 		scope.inSession( em -> {
 			TableWithEnumSetConverter tableRecord;
 			tableRecord = em.find( TableWithEnumSetConverter.class, 1L );
-			assertThat( tableRecord.getTheSet(), is( new HashSet<>() ) );
+			assertThat( tableRecord.getTheSet() ).isEmpty();
 
 			tableRecord = em.find( TableWithEnumSetConverter.class, 2L );
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) );
 
 			tableRecord = em.find( TableWithEnumSetConverter.class, 3L );
-			assertThat( tableRecord.getTheSet(), is( (Object) null ) );
+			assertNull( tableRecord.getTheSet() );
 		} );
 	}
 
@@ -113,7 +113,7 @@ public class EnumSetConverterTest {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) );
 		} );
 	}
 
@@ -127,7 +127,7 @@ public class EnumSetConverterTest {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getByData", TableWithEnumSetConverter.class );
 			tq.setParameter( "data", new HashSet<>() );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 1L ) );
+			assertThat( tableRecord.getId() ).isEqualTo( 1 );
 		} );
 	}
 
@@ -137,7 +137,7 @@ public class EnumSetConverterTest {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.Native.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet() ).isEqualTo( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) );
 		} );
 	}
 
@@ -154,14 +154,14 @@ public class EnumSetConverterTest {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			Query<TableWithEnumSetConverter> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " " + param,
 					TableWithEnumSetConverter.class
 			);
 			tq.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ), enumSetType );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getId(), is( 2L ) );
+			assertThat( tableRecord.getId() ).isEqualTo( 2L );
 		} );
 	}
 

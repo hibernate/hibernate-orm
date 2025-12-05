@@ -18,6 +18,9 @@ import org.hibernate.persister.entity.EntityPersister;
 public class PostInsertEventListenerStandardImpl implements PostInsertEventListener, CallbackRegistryConsumer {
 	private CallbackRegistry callbackRegistry;
 
+	public PostInsertEventListenerStandardImpl() {
+	}
+
 	@Override
 	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
 		this.callbackRegistry = callbackRegistry;

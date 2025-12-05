@@ -10,9 +10,11 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +27,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				JpaProxyComplianceEnabledTest.Provider.class,
 				JpaProxyComplianceEnabledTest.TelephoneNumber.class,
 		},
-		proxyComplianceEnabled = true
+		integrationSettings = {
+				@Setting(name = JpaComplianceSettings.JPA_PROXY_COMPLIANCE, value = "true")
+		}
 )
 @JiraKey("HHH-19476")
 public class JpaProxyComplianceEnabledTest {

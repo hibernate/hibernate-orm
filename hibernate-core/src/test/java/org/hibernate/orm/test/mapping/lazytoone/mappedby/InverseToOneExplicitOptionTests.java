@@ -30,7 +30,7 @@ import static jakarta.persistence.FetchType.LAZY;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Baseline test for inverse (mappedBy) to-one, using an explicit @LazyToOne(NO_PROXY)

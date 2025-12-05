@@ -5,13 +5,15 @@
 package org.hibernate.orm.test.mapping.lazytoone;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -20,22 +22,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {Airport.class, Flight.class})
+@SessionFactory(generateStatistics = true)
+public class LazyToOneTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Airport.class, Flight.class };
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		inTransaction(
-				(session) -> {
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(
+				session -> {
 					final Airport austin = new Airport( 1, "AUS" );
 					final Airport baltimore = new Airport( 2, "BWI" );
 
@@ -51,18 +45,18 @@ public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void cleanupTestData() throws Exception {
-		sessionFactory().getSchemaManager().truncate();
+	@AfterEach
+	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
+		scope.dropData();
 	}
 
 	@Test
-	public void testNonEnhanced() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testNonEnhanced(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		inTransaction(
-				(session) -> {
+		scope.inTransaction(
+				session -> {
 					final Flight flight1 = session.byId( Flight.class ).load( 1 );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );

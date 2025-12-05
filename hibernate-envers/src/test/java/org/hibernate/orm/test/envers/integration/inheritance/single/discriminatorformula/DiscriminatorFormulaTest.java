@@ -6,83 +6,78 @@ package org.hibernate.orm.test.envers.integration.inheritance.single.discriminat
 
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
-	private PersistentClass parentAudit = null;
+@EnversTest
+@DomainModel(annotatedClasses = { ClassTypeEntity.class, ParentEntity.class, ChildEntity.class })
+@SessionFactory
+public class DiscriminatorFormulaTest {
 	private ChildEntity childVer1 = null;
 	private ChildEntity childVer2 = null;
 	private ParentEntity parentVer1 = null;
 	private ParentEntity parentVer2 = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {ClassTypeEntity.class, ParentEntity.class, ChildEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		parentAudit = metadata().getEntityBinding(
-				"org.hibernate.orm.test.envers.integration.inheritance.single.discriminatorformula.ParentEntity_AUD"
-		);
-
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Child entity type
-		em.getTransaction().begin();
-		ClassTypeEntity childType = new ClassTypeEntity();
-		childType.setType( ClassTypeEntity.CHILD_TYPE );
-		em.persist( childType );
-		Long childTypeId = childType.getId();
-		em.getTransaction().commit();
+		final Long childTypeId = scope.fromTransaction( em -> {
+			ClassTypeEntity childType = new ClassTypeEntity();
+			childType.setType( ClassTypeEntity.CHILD_TYPE );
+			em.persist( childType );
+			return childType.getId();
+		} );
 
 		// Parent entity type
-		em.getTransaction().begin();
-		ClassTypeEntity parentType = new ClassTypeEntity();
-		parentType.setType( ClassTypeEntity.PARENT_TYPE );
-		em.persist( parentType );
-		Long parentTypeId = parentType.getId();
-		em.getTransaction().commit();
+		final Long parentTypeId = scope.fromTransaction( em -> {
+			ClassTypeEntity parentType = new ClassTypeEntity();
+			parentType.setType( ClassTypeEntity.PARENT_TYPE );
+			em.persist( parentType );
+			return parentType.getId();
+		} );
 
 		// Child Rev 1
-		em.getTransaction().begin();
-		ChildEntity child = new ChildEntity( childTypeId, "Child data", "Child specific data" );
-		em.persist( child );
-		Long childId = child.getId();
-		em.getTransaction().commit();
+		final Long childId = scope.fromTransaction( em -> {
+			ChildEntity child = new ChildEntity( childTypeId, "Child data", "Child specific data" );
+			em.persist( child );
+			return child.getId();
+		} );
 
 		// Parent Rev 2
-		em.getTransaction().begin();
-		ParentEntity parent = new ParentEntity( parentTypeId, "Parent data" );
-		em.persist( parent );
-		Long parentId = parent.getId();
-		em.getTransaction().commit();
+		final Long parentId = scope.fromTransaction( em -> {
+			ParentEntity parent = new ParentEntity( parentTypeId, "Parent data" );
+			em.persist( parent );
+			return parent.getId();
+		} );
 
 		// Child Rev 3
-		em.getTransaction().begin();
-		child = em.find( ChildEntity.class, childId );
-		child.setData( "Child data modified" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ChildEntity child = em.find( ChildEntity.class, childId );
+			child.setData( "Child data modified" );
+		} );
 
 		// Parent Rev 4
-		em.getTransaction().begin();
-		parent = em.find( ParentEntity.class, parentId );
-		parent.setData( "Parent data modified" );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			ParentEntity parent = em.find( ParentEntity.class, parentId );
+			parent.setData( "Parent data modified" );
+		} );
 
 		childVer1 = new ChildEntity( childId, childTypeId, "Child data", "Child specific data" );
 		childVer2 = new ChildEntity( childId, childTypeId, "Child data modified", "Child specific data" );
@@ -91,74 +86,85 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	public void testDiscriminatorFormulaInAuditTable() {
-		assert parentAudit.getDiscriminator().hasFormula();
+	public void testDiscriminatorFormulaInAuditTable(DomainModelScope scope) {
+		final var parentAudit = scope.getDomainModel().getEntityBinding(
+				"org.hibernate.orm.test.envers.integration.inheritance.single.discriminatorformula.ParentEntity_AUD"
+		);
+		assertTrue( parentAudit.getDiscriminator().hasFormula() );
+		boolean found = false;
 		for ( Object o : parentAudit.getDiscriminator().getSelectables() ) {
 			if ( o instanceof Formula formula ) {
-				Assert.assertEquals( ParentEntity.DISCRIMINATOR_QUERY, formula.getText() );
-				return;
+				assertEquals( ParentEntity.DISCRIMINATOR_QUERY, formula.getText() );
+				found = true;
+				break;
 			}
 		}
-		assert false;
+		assertTrue( found );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
-	public void testRevisionsCounts() {
-		Assert.assertEquals(
-				Arrays.asList( 1, 3 ), getAuditReader().getRevisions(
-				ChildEntity.class,
-				childVer1.getId()
-		)
-		);
-		Assert.assertEquals(
-				Arrays.asList( 2, 4 ), getAuditReader().getRevisions(
-				ParentEntity.class,
-				parentVer1.getId()
-		)
-		);
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1, 3 ),
+					auditReader.getRevisions( ChildEntity.class, childVer1.getId() )
+			);
+			assertEquals(
+					Arrays.asList( 2, 4 ),
+					auditReader.getRevisions( ParentEntity.class, parentVer1.getId() )
+			);
+		} );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
-	public void testHistoryOfParent() {
-		Assert.assertEquals( parentVer1, getAuditReader().find( ParentEntity.class, parentVer1.getId(), 2 ) );
-		Assert.assertEquals( parentVer2, getAuditReader().find( ParentEntity.class, parentVer2.getId(), 4 ) );
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
+	public void testHistoryOfParent(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( parentVer1, auditReader.find( ParentEntity.class, parentVer1.getId(), 2 ) );
+			assertEquals( parentVer2, auditReader.find( ParentEntity.class, parentVer2.getId(), 4 ) );
+		} );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
-	public void testHistoryOfChild() {
-		Assert.assertEquals( childVer1, getAuditReader().find( ChildEntity.class, childVer1.getId(), 1 ) );
-		Assert.assertEquals( childVer2, getAuditReader().find( ChildEntity.class, childVer2.getId(), 3 ) );
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
+	public void testHistoryOfChild(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( childVer1, auditReader.find( ChildEntity.class, childVer1.getId(), 1 ) );
+			assertEquals( childVer2, auditReader.find( ChildEntity.class, childVer2.getId(), 3 ) );
+		} );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
-	public void testPolymorphicQuery() {
-		Assert.assertEquals(
-				childVer1, getAuditReader().createQuery()
-				.forEntitiesAtRevision( ChildEntity.class, 1 )
-				.getSingleResult()
-		);
-		Assert.assertEquals(
-				childVer1, getAuditReader().createQuery()
-				.forEntitiesAtRevision( ParentEntity.class, 1 )
-				.getSingleResult()
-		);
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
+	public void testPolymorphicQuery(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					childVer1,
+					auditReader.createQuery().forEntitiesAtRevision( ChildEntity.class, 1 ).getSingleResult()
+			);
+			assertEquals(
+					childVer1,
+					auditReader.createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult()
+			);
 
-		List childEntityRevisions = getAuditReader().createQuery().forRevisionsOfEntity(
-				ChildEntity.class,
-				true,
-				false
-		).getResultList();
-		Assert.assertEquals( Arrays.asList( childVer1, childVer2 ), childEntityRevisions );
+			List childEntityRevisions = auditReader.createQuery().forRevisionsOfEntity(
+					ChildEntity.class,
+					true,
+					false
+			).getResultList();
+			assertEquals( Arrays.asList( childVer1, childVer2 ), childEntityRevisions );
 
-		List parentEntityRevisions = getAuditReader().createQuery().forRevisionsOfEntity(
-				ParentEntity.class,
-				true,
-				false
-		).getResultList();
-		Assert.assertEquals( Arrays.asList( childVer1, parentVer1, childVer2, parentVer2 ), parentEntityRevisions );
+			List parentEntityRevisions = auditReader.createQuery().forRevisionsOfEntity(
+					ParentEntity.class,
+					true,
+					false
+			).getResultList();
+			assertEquals( Arrays.asList( childVer1, parentVer1, childVer2, parentVer2 ), parentEntityRevisions );
+		} );
 	}
 }

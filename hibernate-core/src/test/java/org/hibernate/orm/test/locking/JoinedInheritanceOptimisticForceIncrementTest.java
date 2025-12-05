@@ -13,55 +13,52 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Version;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Jeroen Stiekema (jeroen@stiekema.eu)
  */
-public class JoinedInheritanceOptimisticForceIncrementTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		JoinedInheritanceOptimisticForceIncrementTest.Person.class,
+		JoinedInheritanceOptimisticForceIncrementTest.Employee.class
+})
+@SessionFactory
+public class JoinedInheritanceOptimisticForceIncrementTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Employee.class };
+	@BeforeEach
+	public void prepare(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new Employee( 1L, "John Doe", 10000 ) );
+		} );
 	}
 
-	@Before
-	public void prepare() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Employee employee = new Employee( 1L, "John Doe", 10000 );
-					session.persist( employee );
-				}
-		);
-	}
-
-	@After
-	public void cleanup() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					session.remove( session.get( Employee.class, 1L ) );
-				}
-		);
+	@AfterEach
+	public void cleanup(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-11979")
-	public void testForceIncrement() {
-		doInHibernate(
-				this::sessionFactory,
-				session -> {
-					Employee lockedEmployee = session.get( Employee.class, 1L );
-					session.lock( lockedEmployee, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-				}
-		);
+	public void testForceIncrement(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var employeeToLock = session.find( Employee.class, 1L );
+			assertEquals( 0, employeeToLock.getVersion() );
+			session.lock( employeeToLock, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var employee = session.find( Employee.class, 1L );
+			assertEquals( 1, employee.getVersion() );
+		} );
 	}
 
 	@Entity(name = "Person")
@@ -83,6 +80,10 @@ public class JoinedInheritanceOptimisticForceIncrementTest extends BaseNonConfig
 		public Person(Long id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+
+		public Integer getVersion() {
+			return version;
 		}
 	}
 

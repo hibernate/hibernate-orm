@@ -5,96 +5,92 @@
 package org.hibernate.orm.test.envers.integration.jta;
 
 import java.util.List;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
 
+import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
+
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Same as {@link org.hibernate.orm.test.envers.integration.basic.Simple}, but in a JTA environment.
  *
  * @author Adam Warski (adam at warski dot org)
  */
-public class JtaTransaction extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(
+		annotatedClasses = {IntTestEntity.class},
+		integrationSettings = @Setting(name = AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, value = "true"),
+		settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class)
+)
+public class JtaTransaction {
 	private Integer id1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {IntTestEntity.class};
-	}
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) throws Exception {
+		final var emf = scope.getEntityManagerFactory();
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-
-		EntityManager em;
+		var entityManager = emf.createEntityManager();
 		IntTestEntity ite;
 		try {
-			em = getEntityManager();
 			ite = new IntTestEntity( 10 );
-			em.persist( ite );
+			entityManager.persist( ite );
 			id1 = ite.getId();
 		}
 		finally {
 			TestingJtaPlatformImpl.tryCommit();
+			entityManager.close();
 		}
-		em.close();
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
+		entityManager = emf.createEntityManager();
 		try {
-			em = getEntityManager();
-			ite = em.find( IntTestEntity.class, id1 );
+			ite = entityManager.find( IntTestEntity.class, id1 );
 			ite.setNumber( 20 );
 		}
 		finally {
 			TestingJtaPlatformImpl.tryCommit();
+			entityManager.close();
 		}
-		em.close();
 	}
 
 	@Test
-	public void testRevisionsCounts() throws Exception {
-		Assert.assertEquals(
-				2, getAuditReader().getRevisions(
-				IntTestEntity.class, id1
-		).size()
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> assertEquals(
+				2,
+				AuditReaderFactory.get( entityManager ).getRevisions( IntTestEntity.class, id1 ).size()
+		) );
 	}
 
 	@Test
-	public void testHistoryOfId1() {
+	public void testHistoryOfId1(EntityManagerFactoryScope scope) {
 		IntTestEntity ver1 = new IntTestEntity( 10, id1 );
 		IntTestEntity ver2 = new IntTestEntity( 20, id1 );
 
-		List<Number> revisions = getAuditReader().getRevisions(
-				IntTestEntity.class, id1
-		);
+		scope.inEntityManager( entityManager -> {
+			List<Number> revisions = AuditReaderFactory.get( entityManager ).getRevisions( IntTestEntity.class, id1 );
 
-		Assert.assertEquals(
-				ver1, getAuditReader().find(
-				IntTestEntity.class, id1, revisions.get( 0 )
-		)
-		);
-		Assert.assertEquals(
-				ver2, getAuditReader().find(
-				IntTestEntity.class, id1, revisions.get( 1 )
-		)
-		);
+			assertEquals(
+					ver1,
+					AuditReaderFactory.get( entityManager ).find( IntTestEntity.class, id1, revisions.get( 0 ) )
+			);
+			assertEquals(
+					ver2,
+					AuditReaderFactory.get( entityManager ).find( IntTestEntity.class, id1, revisions.get( 1 ) )
+			);
+		} );
 	}
 }

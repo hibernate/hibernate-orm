@@ -16,7 +16,6 @@ import org.hibernate.annotations.MapKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -37,7 +36,7 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Temporal;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -46,7 +45,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
-	private static final CoreMessageLogger LOG = messageLogger( CollectionPropertyHolder.class );
 
 	private final Collection collection;
 
@@ -98,13 +96,13 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
 
-		// IMPL NOTE : the rules here are quite more lenient than what JPA says. For example, JPA says that @Convert
-		// on a Map of basic types should default to "value" but it should explicitly specify attributeName of "key"
+		// IMPL NOTE: the rules here are quite more lenient than what JPA says. For example, JPA says that @Convert
+		// on a Map of basic types should default to "value" but it should explicitly specify 'attributeName' of "key"
 		// (or prefixed with "key." for embedded paths) to be applied on the key. However, we try to see if conversion
-		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated the
-		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
+		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated, the
+		// elements cannot be converted, and so any @Convert likely meant the key, so we apply it to the key
 
-		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
+		final var info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		final String attributeName = info.getAttributeName();
 		if ( collection.isMap() ) {
 			logSpecNoncompliance( attributeName, collection.getRole() );
@@ -183,7 +181,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		final boolean specCompliant = isNotEmpty( attributeName )
 				&& (attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
 		if ( !specCompliant ) {
-			LOG.nonCompliantMapConversion( role );
+			BOOT_LOGGER.nonCompliantMapConversion( role );
 		}
 	}
 
@@ -263,6 +261,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
+		throw new AssertionFailure( "Cannot add property to a collection" );
+	}
+
+	@Override
+	public void movePropertyToJoin(Property prop, Join join, MemberDetails memberDetails, ClassDetails declaringClass) {
 		throw new AssertionFailure( "Cannot add property to a collection" );
 	}
 
@@ -409,7 +412,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	public ConverterDescriptor<?,?> mapKeyAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			TypeDetails keyTypeDetails) {
-		final AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
+		final var info = locateAttributeConversionInfo( "key" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;

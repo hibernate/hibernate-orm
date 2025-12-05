@@ -4,131 +4,102 @@
  */
 package org.hibernate.orm.test.jpa.userguide.util;
 
-import jakarta.persistence.EntityManager;
-
-import org.junit.Test;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * @author Emmanuel Bernard
  */
-public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {
+		Book.class,
+		Umbrella.class,
+		Sickness.class,
+		Author.class,
+		Article.class
+})
+public class GetIdentifierTest {
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
-	public void testSimpleId() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testSimpleId(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Book book = new Book();
-			em.persist( book );
-			em.flush();
-			assertEquals( book.getId(), em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( book ) );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+			entityManager.persist( book );
+			entityManager.flush();
+			assertEquals( book.getId(), entityManager.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( book ) );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-7561")
-	public void testProxyObject() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testProxyObject(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Book book = new Book();
-			em.persist( book );
-			em.flush();
-			em.clear(); // Clear persistence context to receive proxy object below.
-			Book proxy = em.getReference( Book.class, book.getId() );
-			assertTrue( proxy instanceof HibernateProxy );
-			assertEquals( book.getId(), em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( proxy ) );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+			entityManager.persist( book );
+			entityManager.flush();
+			entityManager.clear(); // Clear persistence context to receive proxy object below.
+			Book proxy = entityManager.getReference( Book.class, book.getId() );
+			assertInstanceOf( HibernateProxy.class, proxy );
+			assertEquals( book.getId(), entityManager.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( proxy ) );
+		} );
 
-		em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
+		scope.inTransaction( entityManager -> {
 			Author author = new Author();
 			Article article = new Article( author );
-			em.persist( author );
-			em.persist( article );
-			em.flush();
-			em.clear(); // Clear persistence context to receive proxy relation below.
-			article = em.find( Article.class, article.getId() );
-			assertTrue( article.getAuthor() instanceof HibernateProxy );
+			entityManager.persist( author );
+			entityManager.persist( article );
+			entityManager.flush();
+			entityManager.clear(); // Clear persistence context to receive proxy relation below.
+			article = entityManager.find( Article.class, article.getId() );
+			assertInstanceOf( HibernateProxy.class, article.getAuthor() );
 			assertEquals(
 					author.getId(),
-					em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( article.getAuthor() )
+					entityManager.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( article.getAuthor() )
 			);
-
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testEmbeddedId() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testEmbeddedId(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Umbrella umbrella = new Umbrella();
 			umbrella.setId( new Umbrella.PK() );
 			umbrella.getId().setBrand( "Burberry" );
 			umbrella.getId().setModel( "Red Hat" );
-			em.persist( umbrella );
-			em.flush();
+			entityManager.persist( umbrella );
+			entityManager.flush();
 			assertEquals(
 					umbrella.getId(),
-					em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( umbrella )
+					entityManager.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( umbrella )
 			);
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+		} );
 	}
 
 	@Test
-	public void testIdClass() {
-		EntityManager em = entityManagerFactory().createEntityManager();
-		em.getTransaction().begin();
-		try {
+	public void testIdClass(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Sickness sick = new Sickness();
-
 			sick.setClassification( "H1N1" );
 			sick.setType( "Flu" );
-			em.persist( sick );
-			em.flush();
+			entityManager.persist( sick );
+			entityManager.flush();
 			Sickness.PK id = new Sickness.PK();
 			id.setClassification( sick.getClassification() );
 			id.setType( sick.getType() );
-			assertEquals( id, em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( sick ) );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+			assertEquals( id, entityManager.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier( sick ) );
+		} );
 	}
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class,
-				Umbrella.class,
-				Sickness.class,
-				Author.class,
-				Article.class
-		};
-	}
 }

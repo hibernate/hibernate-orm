@@ -35,22 +35,26 @@ public class BasicCollectionType<C extends Collection<E>, E>
 		this.name = determineName( collectionTypeDescriptor, baseDescriptor );
 	}
 
+	public BasicCollectionType(
+			BasicType<E> baseDescriptor,
+			JdbcType arrayJdbcType,
+			JavaType<C> collectionTypeDescriptor,
+			String typeName) {
+		super( arrayJdbcType, collectionTypeDescriptor );
+		this.baseDescriptor = baseDescriptor;
+		this.name = typeName;
+	}
+
 	private static String determineName(BasicCollectionJavaType<?, ?> collectionTypeDescriptor, BasicType<?> baseDescriptor) {
 		final String elementTypeName = determineElementTypeName( baseDescriptor );
-		switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {
-			case BAG:
-			case ID_BAG:
-				return "Collection<" + elementTypeName + ">";
-			case LIST:
-				return "List<" + elementTypeName + ">";
-			case SET:
-				return "Set<" + elementTypeName + ">";
-			case SORTED_SET:
-				return "SortedSet<" + elementTypeName + ">";
-			case ORDERED_SET:
-				return "OrderedSet<" + elementTypeName + ">";
-		}
-		return null;
+		return switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {
+			case BAG, ID_BAG -> "Collection<" + elementTypeName + ">";
+			case LIST -> "List<" + elementTypeName + ">";
+			case SET -> "Set<" + elementTypeName + ">";
+			case SORTED_SET -> "SortedSet<" + elementTypeName + ">";
+			case ORDERED_SET -> "OrderedSet<" + elementTypeName + ">";
+			default -> null;
+		};
 	}
 
 	@Override
@@ -77,9 +81,9 @@ public class BasicCollectionType<C extends Collection<E>, E>
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		return o == this || o.getClass() == BasicCollectionType.class
-				&& Objects.equals( baseDescriptor, ( (BasicCollectionType<?, ?>) o ).baseDescriptor );
+	public boolean equals(Object object) {
+		return object == this || object.getClass() == BasicCollectionType.class
+			&& Objects.equals( baseDescriptor, ( (BasicCollectionType<?, ?>) object ).baseDescriptor );
 	}
 
 	@Override

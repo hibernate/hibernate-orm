@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
+
 import java.util.Collection;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;

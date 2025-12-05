@@ -4,10 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -17,37 +17,34 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.jboss.logging.Logger;
-
-import jakarta.persistence.TemporalType;
+import java.sql.Types;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -79,11 +76,6 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Ploski and Hanson
  */
 public class RDMSOS2200Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			RDMSOS2200Dialect.class.getName()
-	);
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -123,37 +115,20 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * Note that $l (dollar-L) will use the length value if provided.
 		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case TINYINT:
-				return "smallint";
-			case BIGINT:
-				return "numeric(19,0)";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN, TINYINT -> "smallint";
+			case BIGINT -> "numeric(19,0)";
 			//'varchar' is not supported in RDMS for OS 2200
 			//(but it is for other flavors of RDMS)
 			//'character' means ASCII by default, 'unicode(n)'
 			//means 'character(n) character set "UCS-2"'
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "unicode($l)";
-			case CLOB:
-			case NCLOB:
-				return "clob($l)";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "unicode($l)";
+			case CLOB, NCLOB ->  "clob($l)";
 			//no 'binary' nor 'varbinary' so use 'blob'
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-			case BLOB:
-				return "blob($l)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return columnType( TIMESTAMP );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "blob($l)";
+			case TIMESTAMP_WITH_TIMEZONE -> columnType( TIMESTAMP );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -273,42 +248,31 @@ public class RDMSOS2200Dialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "(second(?2)+microsecond(?2)/1e6)";
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			default:
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
-			case NATIVE:
-				return "timestampadd('SQL_TSI_FRAC_SECOND',?2,?3)";
-			default:
-				return "dateadd('?1',?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
+			case NATIVE -> "timestampadd('SQL_TSI_FRAC_SECOND',?2,?3)";
+			default -> "dateadd('?1',?2,?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
-			case NATIVE:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)";
-			default:
-				return "dateadd('?1',?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
+			case NATIVE -> "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)";
+			default -> "dateadd('?1',?2,?3)";
+		};
 	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -347,15 +311,9 @@ public class RDMSOS2200Dialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * Currently, RDMS-JDBC does not support ForUpdate.
-	 * Need to review this in the future when support is provided.
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override
@@ -392,26 +350,21 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		// RDMS has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
-		}
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
-			return new UpdateLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
+		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	@Override
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
+		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Unisys 2200 does not support the FOR UPDATE clause
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

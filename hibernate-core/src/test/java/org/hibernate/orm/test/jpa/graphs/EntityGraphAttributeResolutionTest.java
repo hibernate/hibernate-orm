@@ -25,15 +25,14 @@ import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 
 /**
  * @author Benjamin M.
@@ -41,40 +40,36 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 @JiraKey( value = "HHH-14113" )
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {EntityGraphAttributeResolutionTest.User.class, EntityGraphAttributeResolutionTest.Group.class})
+public class EntityGraphAttributeResolutionTest {
 
 	private User u;
 	private Group g1, g2;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { User.class, Group.class };
-	}
-
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			g1 = new Group();
 			g1.addPermission( Permission.BAR );
-			em.persist( g1 );
+			entityManager.persist( g1 );
 
 			g2 = new Group();
 			g2.addPermission( Permission.BAZ );
-			em.persist( g2 );
+			entityManager.persist( g2 );
 
 			u = new User();
-			em.persist( u );
+			entityManager.persist( u );
 			u.addGroup( g1 );
 			u.addGroup( g2 );
 		} );
 	}
 
 	@Test
-	public void fetchAssocWithNamedFetchGraph() {
-		doInJPA( this::entityManagerFactory, em -> {
-			List result = em.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
+	public void fetchAssocWithNamedFetchGraph(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJpaHintName(), em.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJpaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -82,11 +77,11 @@ public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctio
 	}
 
 	@Test
-	public void fetchAssocWithNamedFetchGraphAndJoin() {
-		doInJPA( this::entityManagerFactory, em -> {
-			List result = em.createQuery( "SELECT g FROM User u JOIN u.groups g WHERE u.id = ?1" )
+	public void fetchAssocWithNamedFetchGraphAndJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List result = entityManager.createQuery( "SELECT g FROM User u JOIN u.groups g WHERE u.id = ?1" )
 					.setParameter( 1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJpaHintName(), em.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJpaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -94,12 +89,12 @@ public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctio
 	}
 
 	@Test
-	public void fetchAssocWithAdhocFetchGraph() {
-		doInJPA( this::entityManagerFactory, em -> {
-			EntityGraph<Group> eg = em.createEntityGraph( Group.class );
+	public void fetchAssocWithAdhocFetchGraph(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			EntityGraph<Group> eg = entityManager.createEntityGraph( Group.class );
 			eg.addAttributeNodes( "permissions" );
 
-			List result = em.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
+			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
 					.setHint( GraphSemantic.FETCH.getJpaHintName(), eg )
 					.getResultList();

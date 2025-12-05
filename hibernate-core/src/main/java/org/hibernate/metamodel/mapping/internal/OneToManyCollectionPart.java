@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -64,7 +63,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
 		super( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, notFoundAction, creationProcess );
-
 		mapKeyPropertyName =
 				nature == Nature.INDEX && bootCollectionDescriptor instanceof Map map
 						? map.getMapKeyPropertyName()
@@ -103,19 +101,23 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		);
 	}
 
+	private ForeignKeyDescriptor getKeyDescriptor() {
+		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor();
+	}
+
 	@Override
 	public String getContainingTableExpression() {
-		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getContainingTableExpression();
+		return getKeyDescriptor().getContainingTableExpression();
 	}
 
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getSelectable( columnIndex );
+		return getKeyDescriptor().getSelectable( columnIndex );
 	}
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getKeyPart().forEachSelectable( offset, consumer );
+		return getKeyDescriptor().getKeyPart().forEachSelectable( offset, consumer );
 	}
 
 	@Override
@@ -138,7 +140,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().isSimpleJoinPredicate( predicate );
+		return getKeyDescriptor().isSimpleJoinPredicate( predicate );
 	}
 
 	@Override
@@ -151,18 +153,18 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final TableGroup elementTableGroup = ( (OneToManyTableGroup) lhs ).getElementTableGroup();
+		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final var elementTableGroup = ( (OneToManyTableGroup) lhs ).getElementTableGroup();
 
 		// INDEX is implied if mapKeyPropertyName is not null
 		if ( mapKeyPropertyName != null ) {
-			final EntityCollectionPart elementPart =
+			final var elementPart =
 					(EntityCollectionPart)
 							getCollectionDescriptor().getAttributeMapping().getElementDescriptor();
 			if ( elementPart.getAssociatedEntityMappingType().findAttributeMapping( mapKeyPropertyName )
 							instanceof ToOneAttributeMapping toOne ) {
-				final NavigablePath mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
-				final TableGroupJoin tableGroupJoin = toOne.createTableGroupJoin(
+				final var mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
+				final var tableGroupJoin = toOne.createTableGroupJoin(
 						mapKeyPropertyPath,
 						elementTableGroup,
 						null,
@@ -228,12 +230,12 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			Collection bootValueMapping,
 			String fkTargetModelPartName,
 			MappingModelCreationProcess creationProcess) {
-		final PluralAttributeMapping pluralAttribute = getCollectionDescriptor().getAttributeMapping();
+		final var pluralAttribute = getCollectionDescriptor().getAttributeMapping();
 		if ( pluralAttribute == null ) {
 			return false;
 		}
 
-		final ForeignKeyDescriptor foreignKey = pluralAttribute.getKeyDescriptor();
+		final var foreignKey = pluralAttribute.getKeyDescriptor();
 		if ( foreignKey == null ) {
 			return false;
 		}

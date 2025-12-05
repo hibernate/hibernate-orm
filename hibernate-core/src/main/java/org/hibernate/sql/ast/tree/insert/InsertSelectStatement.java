@@ -64,6 +64,13 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 		}
 	}
 
+	public void addTargetColumnReference(ColumnReference reference) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
+		}
+		targetColumnReferences.add( reference );
+	}
+
 	public void addTargetColumnReferences(ColumnReference... references) {
 		if ( targetColumnReferences == null ) {
 			targetColumnReferences = new ArrayList<>();

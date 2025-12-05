@@ -6,18 +6,22 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.XmlAttributes;
 
-import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Special expression for the json_query function that also captures special syntax elements like error and empty behavior.
@@ -29,7 +33,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 
 	private final Map<String, SqmExpression<?>> attributes;
 
-	public SqmXmlAttributesExpression(String attributeName, Expression<?> expression) {
+	public SqmXmlAttributesExpression(String attributeName, jakarta.persistence.criteria.Expression<?> expression) {
 		final Map<String, SqmExpression<?>> attributes = new LinkedHashMap<>();
 		attributes.put( attributeName, (SqmExpression<?>) expression );
 		this.attributes = attributes;
@@ -39,7 +43,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 		this.attributes = attributes;
 	}
 
-	public void attribute(String attributeName, Expression<?> expression) {
+	public void attribute(String attributeName, jakarta.persistence.criteria.Expression<?> expression) {
 		attributes.put( attributeName, (SqmExpression<?>) expression );
 	}
 
@@ -59,9 +63,9 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		final Map<String, org.hibernate.sql.ast.tree.expression.Expression> attributes = new LinkedHashMap<>();
+		final Map<String, Expression> attributes = new LinkedHashMap<>();
 		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
-			attributes.put( entry.getKey(), (org.hibernate.sql.ast.tree.expression.Expression) entry.getValue().accept( walker ) );
+			attributes.put( entry.getKey(), (Expression) castNonNull( entry.getValue().accept( walker ) ) );
 		}
 		//noinspection unchecked
 		return (X) new XmlAttributes( attributes );
@@ -91,5 +95,27 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 			separator = ", ";
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmXmlAttributesExpression that
+			&& Objects.equals( attributes, that.attributes );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( attributes );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmXmlAttributesExpression that
+			&& SqmCacheable.areCompatible( attributes, that.attributes );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( attributes );
 	}
 }

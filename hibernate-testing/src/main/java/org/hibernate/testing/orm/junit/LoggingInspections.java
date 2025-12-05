@@ -10,16 +10,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * Injects the ability to watch multiple for log messages being triggered.
- *
- * Only available at the class-level
- *
- * For watching a single message-key, {@link MessageKeyInspection} is a
- * better option.
- */
+/// Injects the ability to watch multiple for log messages being triggered.
+///
+/// @see LoggingInspectionsScope
+/// @see LoggingInspectionsExtension
+///
+/// @apiNote Only available at the class-level
+/// @implNote For watching a single message-key, [MessageKeyInspection] is a
+/// better option.
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -37,6 +40,11 @@ public @interface LoggingInspections {
 		 * JBoss Logging to prefix each messaged log event
 		 */
 		String messageKey();
+
+		/**
+		 * Whether to reset the inspection {@linkplain BeforeEachCallback before each test} method.
+		 */
+		boolean resetBeforeEach() default true;
 
 		/**
 		 * Descriptor of the log messages to watch for

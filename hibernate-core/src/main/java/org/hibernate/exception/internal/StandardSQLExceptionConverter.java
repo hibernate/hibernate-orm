@@ -30,8 +30,8 @@ public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 
 	@Override
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		for ( SQLExceptionConversionDelegate delegate : delegates ) {
-			final JDBCException jdbcException = delegate.convert( sqlException, message, sql );
+		for ( var delegate : delegates ) {
+			final var jdbcException = delegate.convert( sqlException, message, sql );
 			if ( jdbcException != null ) {
 				return jdbcException;
 			}

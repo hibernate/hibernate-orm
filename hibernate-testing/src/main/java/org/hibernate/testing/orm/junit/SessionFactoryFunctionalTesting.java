@@ -38,7 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @DomainModelFunctionalTesting
 @ExtendWith( FailureExpectedExtension.class )
 
-
 @ExtendWith( SessionFactoryExtension.class )
 public @interface SessionFactoryFunctionalTesting {
 }

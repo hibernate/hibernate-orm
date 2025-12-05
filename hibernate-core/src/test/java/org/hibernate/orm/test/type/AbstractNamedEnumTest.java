@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.sql.ResultSet;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -23,13 +22,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Yanming Zhou
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
-@DomainModel(annotatedClasses = { AbstractNamedEnumTest.Timeslot.class, AbstractNamedEnumTest.Activity.class, AbstractNamedEnumTest.Weather.class, AbstractNamedEnumTest.Sky.class})
+@DomainModel(annotatedClasses = {
+		AbstractNamedEnumTest.Timeslot.class,
+		AbstractNamedEnumTest.Activity.class,
+		AbstractNamedEnumTest.Weather.class,
+		AbstractNamedEnumTest.Sky.class
+})
 public abstract class AbstractNamedEnumTest {
 
 	@Test public void testNamedEnum(SessionFactoryScope scope) {
@@ -39,7 +45,7 @@ public abstract class AbstractNamedEnumTest {
 		timeslot.activity = activity;
 		scope.inTransaction( s -> s.persist( timeslot ) );
 		Timeslot ts = scope.fromTransaction( s-> s.createQuery("from Timeslot where activity.activityType = Play", Timeslot.class ).getSingleResult() );
-		assertEquals( ts.activity.activityType, ActivityType.Play );
+		assertEquals( ActivityType.Play, ts.activity.activityType );
 	}
 
 	@Test public void testNamedOrdinalEnum(SessionFactoryScope scope) {
@@ -49,40 +55,36 @@ public abstract class AbstractNamedEnumTest {
 		weather.sky = sky;
 		scope.inTransaction( s -> s.persist( weather ) );
 		Weather w = scope.fromTransaction( s-> s.createQuery("from Weather where sky.skyType = Sunny", Weather.class ).getSingleResult() );
-		assertEquals( w.sky.skyType, SkyType.Sunny );
+		assertEquals( SkyType.Sunny, w.sky.skyType );
 	}
 
 	@Test public void testSchema(SessionFactoryScope scope) {
-		scope.inSession( s -> {
-			s.doWork(
-					c -> {
-						boolean namedEnumFound = false;
-						boolean namedOrdinalEnumFound = false;
-
-						ResultSet tableInfo = c.getMetaData().getColumns(null, null, normalizeNameForQueryingMetadata("Activity"), normalizeNameForQueryingMetadata("ActivityType"));
-						while ( tableInfo.next() ) {
-							String type = tableInfo.getString(6);
-							assertEquals( getDataTypeForNamedEnum( "ActivityType"), type );
-							namedEnumFound = true;
-							break;
-						}
-						tableInfo = c.getMetaData().getColumns(null, null, normalizeNameForQueryingMetadata("Sky"), normalizeNameForQueryingMetadata("SkyType"));
-						while ( tableInfo.next() ) {
-							String type = tableInfo.getString(6);
-							assertEquals( getDataTypeForNamedOrdinalEnum("SkyType"), type );
-							namedOrdinalEnumFound = true;
-							break;
-						}
-
-						if (!namedEnumFound) {
-							fail("named enum type not exported");
-						}
-						if (!namedOrdinalEnumFound) {
-							fail("named ordinal enum type not exported");
-						}
-					}
-			);
-		});
+		scope.inSession( s -> s.doWork( c -> {
+			{
+				var tableInfo = c.getMetaData().getColumns(
+						null,
+						null,
+						normalizeNameForQueryingMetadata( "Activity" ),
+						normalizeNameForQueryingMetadata( "ActivityType" )
+				);
+				assertTrue( tableInfo.next(), "named enum type not exported" );
+				String type = tableInfo.getString( 6 );
+				assertEquals( getDataTypeForNamedEnum( "ActivityType" ), type );
+				assertFalse( tableInfo.next() );
+			}
+			{
+				var tableInfo = c.getMetaData().getColumns(
+						null,
+						null,
+						normalizeNameForQueryingMetadata( "Sky" ),
+						normalizeNameForQueryingMetadata( "SkyType" )
+				);
+				assertTrue( tableInfo.next(), "named ordinal enum type not exported" );
+				String type = tableInfo.getString( 6 );
+				assertEquals( getDataTypeForNamedOrdinalEnum( "SkyType" ), type );
+				assertFalse( tableInfo.next() );
+			}
+		} ) );
 	}
 
 	protected abstract String normalizeNameForQueryingMetadata(String name);

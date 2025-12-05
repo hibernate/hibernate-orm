@@ -50,7 +50,8 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 		if ( !hasFrom( querySpec.getFromClause() )
-				&& hasWhere( querySpec.getWhereClauseRestrictions() ) ) {
+				&& hasWhere( querySpec.getWhereClauseRestrictions() )
+				&& getDialect().getFromDualForSelectOnly().isBlank() ) {
 			append( " from " );
 			append( getDual() );
 		}
@@ -321,8 +322,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
-			renderTableReferenceIdentificationVariable( tableReference );
+		if (getDialect().getVersion().isSameOrAfter( 12, 10 )) {
+			if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+				renderTableReferenceIdentificationVariable( tableReference );
+			}
 		}
 	}
 

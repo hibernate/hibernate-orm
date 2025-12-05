@@ -36,6 +36,7 @@ dependencies {
 
         api jakartaLibs.jpa
         api jakartaLibs.jta
+        api jakartaLibs.data
 
         runtime libs.antlrRuntime
         runtime libs.logging
@@ -61,6 +62,16 @@ dependencies {
         runtime libs.micrometer
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     }
+}
+
+
+tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "See :release:releasePrepare for details."
+
+    dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
+    dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+    dependsOn tasks.publishAllPublicationsToStagingRepository
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension

@@ -6,22 +6,27 @@ package org.hibernate.orm.test.envers.integration.modifiedflags;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefIngEntity;
-
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
 import static org.hibernate.orm.test.envers.tools.TestTools.makeList;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@Jpa(integrationSettings = @Setting(name = EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, value = "true"),
+		annotatedClasses = {ListRefEdEntity.class, ListRefIngEntity.class})
 public class HasChangedMergeTest extends AbstractModifiedFlagsEntityTest {
 	private Integer parent1Id = null;
 	private Integer child1Id = null;
@@ -29,83 +34,83 @@ public class HasChangedMergeTest extends AbstractModifiedFlagsEntityTest {
 	private Integer parent2Id = null;
 	private Integer child2Id = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {ListRefEdEntity.class, ListRefIngEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - data preparation
-		em.getTransaction().begin();
-		ListRefEdEntity parent1 = new ListRefEdEntity( 1, "initial data" );
-		parent1.setReffering( new ArrayList<ListRefIngEntity>() ); // Empty collection is not the same as null reference.
-		ListRefEdEntity parent2 = new ListRefEdEntity( 2, "initial data" );
-		parent2.setReffering( new ArrayList<ListRefIngEntity>() );
-		em.persist( parent1 );
-		em.persist( parent2 );
-		em.getTransaction().commit();
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			ListRefEdEntity parent1 = new ListRefEdEntity( 1, "initial data" );
+			parent1.setReffering( new ArrayList<>() ); // Empty collection is not the same as null reference.
+			ListRefEdEntity parent2 = new ListRefEdEntity( 2, "initial data" );
+			parent2.setReffering( new ArrayList<>() );
+			em.persist( parent1 );
+			em.persist( parent2 );
+			parent1Id = parent1.getId();
+			parent2Id = parent2.getId();
+			em.getTransaction().commit();
+		} );
 
 		// Revision 2 - inserting new child entity and updating parent
-		em.getTransaction().begin();
-		parent1 = em.find( ListRefEdEntity.class, parent1.getId() );
-		ListRefIngEntity child1 = new ListRefIngEntity( 1, "initial data", parent1 );
-		em.persist( child1 );
-		parent1.setData( "updated data" );
-		parent1 = em.merge( parent1 );
-		em.getTransaction().commit();
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			ListRefEdEntity parent1 = em.find( ListRefEdEntity.class, parent1Id );
+			ListRefIngEntity child1 = new ListRefIngEntity( 1, "initial data", parent1 );
+			em.persist( child1 );
+			parent1.setData( "updated data" );
+			em.merge( parent1 );
+			child1Id = child1.getId();
+			em.getTransaction().commit();
+		} );
 
 		// Revision 3 - updating parent, flushing and adding new child
-		em.getTransaction().begin();
-		parent2 = em.find( ListRefEdEntity.class, parent2.getId() );
-		parent2.setData( "updated data" );
-		parent2 = em.merge( parent2 );
-		em.flush();
-		ListRefIngEntity child2 = new ListRefIngEntity( 2, "initial data", parent2 );
-		em.persist( child2 );
-		em.getTransaction().commit();
-
-		parent1Id = parent1.getId();
-		child1Id = child1.getId();
-
-		parent2Id = parent2.getId();
-		child2Id = child2.getId();
-
-		em.close();
+		scope.inEntityManager( em -> {
+			em.getTransaction().begin();
+			ListRefEdEntity parent2 = em.find( ListRefEdEntity.class, parent2Id );
+			parent2.setData( "updated data" );
+			em.merge( parent2 );
+			em.flush();
+			ListRefIngEntity child2 = new ListRefIngEntity( 2, "initial data", parent2 );
+			em.persist( child2 );
+			child2Id = child2.getId();
+			em.getTransaction().commit();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-7948")
-	public void testOneToManyInsertChildUpdateParent() {
-		List list = queryForPropertyHasChanged( ListRefEdEntity.class, parent1Id, "data" );
-		assertEquals( 2, list.size() );
-		assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
+	public void testOneToManyInsertChildUpdateParent(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List list = queryForPropertyHasChanged( auditReader, ListRefEdEntity.class, parent1Id, "data" );
+			assertEquals( 2, list.size() );
+			assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
 
-		list = queryForPropertyHasChanged( ListRefEdEntity.class, parent1Id, "reffering" );
-		assertEquals( 2, list.size() );
-		assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
+			list = queryForPropertyHasChanged( auditReader, ListRefEdEntity.class, parent1Id, "reffering" );
+			assertEquals( 2, list.size() );
+			assertEquals( makeList( 1, 2 ), extractRevisionNumbers( list ) );
 
-		list = queryForPropertyHasChanged( ListRefIngEntity.class, child1Id, "reference" );
-		assertEquals( 1, list.size() );
-		assertEquals( makeList( 2 ), extractRevisionNumbers( list ) );
+			list = queryForPropertyHasChanged( auditReader, ListRefIngEntity.class, child1Id, "reference" );
+			assertEquals( 1, list.size() );
+			assertEquals( makeList( 2 ), extractRevisionNumbers( list ) );
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-7948")
-	public void testOneToManyUpdateParentInsertChild() {
-		List list = queryForPropertyHasChanged( ListRefEdEntity.class, parent2Id, "data" );
-		assertEquals( 2, list.size() );
-		assertEquals( makeList( 1, 3 ), extractRevisionNumbers( list ) );
+	public void testOneToManyUpdateParentInsertChild(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			List list = queryForPropertyHasChanged( auditReader, ListRefEdEntity.class, parent2Id, "data" );
+			assertEquals( 2, list.size() );
+			assertEquals( makeList( 1, 3 ), extractRevisionNumbers( list ) );
 
-		list = queryForPropertyHasChanged( ListRefEdEntity.class, parent2Id, "reffering" );
-		assertEquals( 2, list.size() );
-		assertEquals( makeList( 1, 3 ), extractRevisionNumbers( list ) );
+			list = queryForPropertyHasChanged( auditReader, ListRefEdEntity.class, parent2Id, "reffering" );
+			assertEquals( 2, list.size() );
+			assertEquals( makeList( 1, 3 ), extractRevisionNumbers( list ) );
 
-		list = queryForPropertyHasChanged( ListRefIngEntity.class, child2Id, "reference" );
-		assertEquals( 1, list.size() );
-		assertEquals( makeList( 3 ), extractRevisionNumbers( list ) );
+			list = queryForPropertyHasChanged( auditReader, ListRefIngEntity.class, child2Id, "reference" );
+			assertEquals( 1, list.size() );
+			assertEquals( makeList( 3 ), extractRevisionNumbers( list ) );
+		} );
 	}
 }

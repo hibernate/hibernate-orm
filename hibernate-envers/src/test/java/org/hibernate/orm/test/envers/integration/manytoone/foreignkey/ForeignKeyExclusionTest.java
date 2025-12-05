@@ -7,12 +7,11 @@ package org.hibernate.orm.test.envers.integration.manytoone.foreignkey;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.Jpa;
 
 /**
  * Tests that no foreign key should be generated from audit schema to main schema.
@@ -20,19 +19,16 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12965")
-public class ForeignKeyExclusionTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = { RootLayer.class, MiddleLayer.class, LeafLayer.class })
+public class ForeignKeyExclusionTest {
 
-	private RootLayer rootLayer;
+	private Long rootLayerId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { RootLayer.class, MiddleLayer.class, LeafLayer.class };
-	}
-
-	@Test
-	public void testRemovingAuditedEntityWithIdClassAndManyToOneForeignKeyConstraint() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - Add Root/Middle/Leaf layers
-		this.rootLayer = doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( em -> {
 			final RootLayer rootLayer = new RootLayer();
 			rootLayer.setMiddleLayers( new ArrayList<>() );
 
@@ -46,15 +42,15 @@ public class ForeignKeyExclusionTest extends BaseEnversJPAFunctionalTestCase {
 			leafLayer.setMiddleLayer( middleLayer );
 			middleLayer.getLeafLayers().add( leafLayer );
 
-			entityManager.persist( rootLayer );
-			return rootLayer;
+			em.persist( rootLayer );
+			this.rootLayerId = rootLayer.getId();
 		} );
 
 		// Revision 2 - Delete Root/Middle/Leaf layers
 		// This causes FK violation
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final RootLayer rootLayer = entityManager.find( RootLayer.class, this.rootLayer.getId() );
-			entityManager.remove( rootLayer );
+		scope.inTransaction( em -> {
+			final RootLayer rootLayer = em.find( RootLayer.class, this.rootLayerId );
+			em.remove( rootLayer );
 		} );
 	}
 }

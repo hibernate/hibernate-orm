@@ -24,6 +24,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterRegistrationImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectScopeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableInstantiatorRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
@@ -53,6 +55,8 @@ import org.hibernate.boot.models.spi.CollectionTypeRegistration;
 import org.hibernate.boot.models.spi.CompositeUserTypeRegistration;
 import org.hibernate.boot.models.spi.ConversionRegistration;
 import org.hibernate.boot.models.spi.ConverterRegistration;
+import org.hibernate.boot.models.spi.DatabaseObjectRegistration;
+import org.hibernate.boot.models.spi.DialectScopeRegistration;
 import org.hibernate.boot.models.spi.EmbeddableInstantiatorRegistration;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
@@ -74,7 +78,6 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
@@ -112,6 +115,7 @@ import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REGISTRATION;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.collectResultClasses;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -143,6 +147,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private Map<String, NamedQueryRegistration> namedQueryRegistrations;
 	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
 	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
+
+	private List<DatabaseObjectRegistration> databaseObjectRegistrations;
 
 	public GlobalRegistrationsImpl(ModelsContext sourceModelContext, BootstrapContext bootstrapContext) {
 		this.sourceModelContext = sourceModelContext;
@@ -242,9 +248,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 
 	@Override
 	public Map<String, NamedStoredProcedureQueryRegistration> getNamedStoredProcedureQueryRegistrations() {
-		return namedStoredProcedureQueryRegistrations== null ? emptyMap() : namedStoredProcedureQueryRegistrations;
+		return namedStoredProcedureQueryRegistrations == null ? emptyMap() : namedStoredProcedureQueryRegistrations;
 	}
 
+	@Override
+	public List<DatabaseObjectRegistration> getDatabaseObjectRegistrations() {
+		return databaseObjectRegistrations == null ? emptyList() : databaseObjectRegistrations;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JavaTypeRegistration
@@ -860,7 +870,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 				throw new IllegalArgumentException( "Duplicate generator name " + name + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
 			else {
-				CoreLogging.messageLogger( GlobalRegistrationsImpl.class ).duplicateGeneratorName( name );
+				BOOT_LOGGER.duplicateGeneratorName( name );
 			}
 		}
 	}
@@ -1313,5 +1323,35 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 			hint.value( jaxbHint.getValue() );
 		}
 		return hints;
+	}
+
+	public void collectDataBaseObject(List<JaxbDatabaseObjectImpl> databaseObjects) {
+		if ( isEmpty( databaseObjects ) ) {
+			return;
+		}
+
+		if ( databaseObjectRegistrations == null ) {
+			databaseObjectRegistrations = new ArrayList<>();
+		}
+
+		for ( JaxbDatabaseObjectImpl jaxbDatabaseObject : databaseObjects ) {
+			final JaxbDatabaseObjectImpl.JaxbDefinitionImpl definition = jaxbDatabaseObject.getDefinition();
+			final List<JaxbDatabaseObjectScopeImpl> dialectScopes = jaxbDatabaseObject.getDialectScopes();
+			final List<DialectScopeRegistration> scopeRegistrations = new ArrayList<>(dialectScopes.size());
+			for ( JaxbDatabaseObjectScopeImpl dialectScope : dialectScopes ) {
+				scopeRegistrations.add(
+						new DialectScopeRegistration(
+								dialectScope.getName(),
+								dialectScope.getContent(),
+								dialectScope.getMinimumVersion(),
+								dialectScope.getMaximumVersion() )
+				);
+			}
+			databaseObjectRegistrations.add( new DatabaseObjectRegistration(
+					jaxbDatabaseObject.getCreate(),
+					jaxbDatabaseObject.getDrop(),
+					definition != null ? definition.getClazz() : null,
+					scopeRegistrations ) );
+		}
 	}
 }

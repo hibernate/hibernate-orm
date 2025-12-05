@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscapedString;
 
 /**
@@ -29,19 +30,25 @@ import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscaped
  * @author Steve Ebersole
  */
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
-	private final T value;
+	private final @Nullable T value;
 
-	public SqmLiteral(T value, SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(T value, @Nullable SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
-			|| inherentType.getExpressibleJavaType().isInstance( value );
+			|| inherentType.getExpressibleJavaType().isInstance( castNonNull( value ) );
 		this.value = value;
 	}
 
-	protected SqmLiteral(SqmBindableType<T> inherentType, NodeBuilder nodeBuilder) {
+	protected SqmLiteral(@Nullable SqmBindableType<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = null;
+	}
+
+	// Constructor for SqmEnumLiteral
+	SqmLiteral(@Nullable SqmBindableType<T> inherentType, T value, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
+		this.value = value;
 	}
 
 	@Override
@@ -53,13 +60,13 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		else {
 			final SqmLiteral<T> expression =
 					context.registerCopy( this,
-							new SqmLiteral<>( getLiteralValue(), getNodeType(), nodeBuilder() ) );
+							new SqmLiteral<>( castNonNull( getLiteralValue() ), getNodeType(), nodeBuilder() ) );
 			copyTo( expression, context );
 			return expression;
 		}
 	}
 
-	public T getLiteralValue() {
+	public @Nullable T getLiteralValue() {
 		return value;
 	}
 
@@ -102,13 +109,24 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmLiteral<?> that
+			&& getClass() == that.getClass()
 			&& Objects.equals( value, that.value );
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hashCode( value );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -39,7 +39,7 @@ public class BatchReleaseStatementDebugMessageTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		trigger = new TriggerOnDebugMessageListener();
-		LogInspectionHelper.registerListener( trigger, JdbcBatchLogging.BATCH_LOGGER );
+		LogInspectionHelper.registerListener( trigger, JdbcBatchLogging.BATCH_MESSAGE_LOGGER );
 	}
 
 	@Test

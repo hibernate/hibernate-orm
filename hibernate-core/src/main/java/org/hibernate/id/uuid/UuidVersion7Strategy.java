@@ -42,7 +42,6 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 	@Internal
 	public static class Holder {
 		private static final SecureRandom numberGenerator = new SecureRandom();
-
 	}
 
 	public record State(Instant lastTimestamp, long lastSequence, long nanos) {
@@ -60,18 +59,21 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 		}
 
 		public State getNextState() {
-			final Instant now = Instant.now();
-			if ( lastTimestamp.toEpochMilli() < now.toEpochMilli() ||
-				lastTimestamp.toEpochMilli() == now.toEpochMilli() && nanos < nanos( now ) ) {
+			final var now = Instant.now();
+			if ( lastTimestampEarlierThan( now ) ) {
 				return new State( now, randomSequence() );
 			}
-			final long nextSequence = lastSequence + Holder.numberGenerator.nextLong( 0xFFFF_FFFFL );
-			if ( nextSequence > MAX_RANDOM_SEQUENCE ) {
-				return new State( lastTimestamp.plusNanos( 250 ), randomSequence() );
-			}
 			else {
-				return new State( lastTimestamp, nextSequence );
+				final long nextSequence = lastSequence + Holder.numberGenerator.nextLong( 0xFFFF_FFFFL );
+				return nextSequence > MAX_RANDOM_SEQUENCE
+						? new State( lastTimestamp.plusNanos( 250 ), randomSequence() )
+						: new State( lastTimestamp, nextSequence );
 			}
+		}
+
+		private boolean lastTimestampEarlierThan(Instant now) {
+			return lastTimestamp.toEpochMilli() < now.toEpochMilli()
+				|| lastTimestamp.toEpochMilli() == now.toEpochMilli() && nanos < nanos( now );
 		}
 
 		private static long randomSequence() {
@@ -106,8 +108,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Override
 	public UUID generateUuid(final SharedSessionContractImplementor session) {
-		final State state = lastState.updateAndGet( State::getNextState );
-
+		final var state = lastState.updateAndGet( State::getNextState );
 		return new UUID(
 				// MSB bits 0-47 - 48-bit big-endian unsigned number of the Unix Epoch timestamp in milliseconds
 				state.millis() << 16 & 0xFFFF_FFFF_FFFF_0000L

@@ -42,13 +42,13 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		return sb.toString();
 	}
 
-	private void append(StringBuilder sb, JavaType[] components, Object[] value, int i) {
-		final Object o = value[i];
-		if (o == null ) {
-			sb.append( "null" );
+	private void append(StringBuilder builder, JavaType[] components, Object[] value, int i) {
+		final Object element = value[i];
+		if (element == null ) {
+			builder.append( "null" );
 		}
 		else {
-			sb.append( components[i].toString( o ) );
+			builder.append( components[i].toString( element ) );
 		}
 	}
 

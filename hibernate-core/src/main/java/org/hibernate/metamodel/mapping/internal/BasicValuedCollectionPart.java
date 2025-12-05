@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,11 +23,9 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -111,37 +110,42 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return selectableMapping.getCustomWriteExpression();
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return selectableMapping.getLength();
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return selectableMapping.getArrayLength();
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return selectableMapping.getPrecision();
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return selectableMapping.getTemporalPrecision();
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return selectableMapping.getScale();
 	}
 
@@ -166,8 +170,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -183,7 +186,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final var exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableGroup targetTableGroup;
 		// If the index is part of the element table group, we must use that explicitly here because the index is basic
 		// and thus there is no index table group registered. The logic in the PluralTableGroup prevents from looking
@@ -195,10 +198,8 @@ public class BasicValuedCollectionPart
 		else {
 			targetTableGroup = tableGroup;
 		}
-		final TableReference tableReference = targetTableGroup.resolveTableReference(
-				navigablePath,
-				getContainingTableExpression()
-		);
+		final var tableReference =
+				targetTableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				getJdbcMapping().getJdbcJavaType(),
@@ -273,10 +274,10 @@ public class BasicValuedCollectionPart
 			parentNavigablePath = parentNavigablePath.getParent();
 		}
 
-		final TableGroup tableGroup =
+		final var tableGroup =
 				creationState.getSqlAstCreationState().getFromClauseAccess()
 						.findTableGroup( parentNavigablePath );
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
+		final var sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),

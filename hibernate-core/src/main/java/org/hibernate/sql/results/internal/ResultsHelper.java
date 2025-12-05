@@ -6,39 +6,27 @@ package org.hibernate.sql.results.internal;
 
 
 import org.hibernate.CacheMode;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
-import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.EntityType;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Steve Ebersole
  */
 public class ResultsHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
 
 	public static <R> RowReader<R> createRowReader(
 			SessionFactoryImplementor sessionFactory,
@@ -53,9 +41,8 @@ public class ResultsHelper {
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValuesMapping jdbcValuesMapping) {
-		final JdbcValuesMappingResolution jdbcValuesMappingResolution = jdbcValuesMapping.resolveAssemblers( sessionFactory );
 		return new StandardRowReader<>(
-				jdbcValuesMappingResolution,
+				jdbcValuesMapping.resolveAssemblers( sessionFactory ),
 				rowTransformer,
 				transformedResultJavaType
 		);
@@ -64,62 +51,76 @@ public class ResultsHelper {
 	public static void finalizeCollectionLoading(
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
-			PersistentCollection<?> collectionInstance,
+			PersistentCollection<?> collection,
 			Object key,
 			boolean hasNoQueuedAdds) {
-		final SharedSessionContractImplementor session = persistenceContext.getSession();
-
-		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
-		if ( collectionEntry == null ) {
-			collectionEntry = persistenceContext.addInitializedCollection( collectionDescriptor, collectionInstance, key );
-		}
-		else {
-			collectionEntry.postInitialize( collectionInstance, session );
-		}
-
+		final var session = persistenceContext.getSession();
+		final var collectionEntry =
+				initializedEntry( persistenceContext, collectionDescriptor, collection, key, session );
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
-			// in case of PersistentArrayHolder we have to realign
-			// the EntityEntry loaded state with the entity values
-			final Object owner = collectionInstance.getOwner();
-			final EntityEntry entry = persistenceContext.getEntry( owner );
-			final Object[] loadedState = entry.getLoadedState();
-			if ( loadedState != null ) {
-				final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
-				final int propertyIndex = mapping.getStateArrayPosition();
-				loadedState[propertyIndex] = mapping.getValue( owner );
-			}
-			// else it must be an immutable entity or loaded in read-only mode,
-			// but unfortunately we have no way to reliably determine that here
-			persistenceContext.addCollectionHolder( collectionInstance );
+			addCollectionHolder( persistenceContext, collectionDescriptor, collection );
 		}
-
-		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
-		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
-
-		// add to cache if:
-		final boolean addToCache =
-				// there were no queued additions
-				hasNoQueuedAdds
-						// and the role has a cache
-						&& collectionDescriptor.hasCache()
-						// and this is not a forced initialization during flush
-						&& session.getCacheMode().isPutEnabled() && !collectionEntry.isDoremove();
-		if ( addToCache ) {
-			addCollectionToCache( persistenceContext, collectionDescriptor, collectionInstance, key );
+		persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( collectionEntry );
+		if ( addToCache( session, collectionEntry, collectionDescriptor, hasNoQueuedAdds ) ) {
+			addCollectionToCache( persistenceContext, collectionDescriptor, collection, key );
 		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Collection fully initialized: "
-					+ collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
-		}
-
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.loadCollection( collectionDescriptor.getRole() );
 		}
 
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Collection fully initialized: "
+							+ collectionInfoString( collectionDescriptor, collection, key, session ) );
+		}
+
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x
+	}
+
+	private static boolean addToCache(
+			SharedSessionContract session,
+			CollectionEntry collectionEntry,
+			CollectionPersister collectionDescriptor,
+			boolean hasNoQueuedAdds) {
+		return hasNoQueuedAdds  // there were no queued additions
+			&& collectionDescriptor.hasCache()  // the collection role has a cache
+			&& session.getCacheMode().isPutEnabled()  // the session cache mode allows puts
+			&& !collectionEntry.isDoremove();  // this is not a forced initialization during flush
+	}
+
+	private static void addCollectionHolder(
+			PersistenceContext persistenceContext,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection<?> collectionInstance) {
+		// in case of PersistentArrayHolder we have to realign
+		// the EntityEntry loaded state with the entity values
+		final Object owner = collectionInstance.getOwner();
+		final var loadedState = persistenceContext.getEntry( owner ).getLoadedState();
+		if ( loadedState != null ) {
+			final var mapping = collectionDescriptor.getAttributeMapping();
+			final int propertyIndex = mapping.getStateArrayPosition();
+			loadedState[propertyIndex] = mapping.getValue( owner );
+		}
+		// else it must be an immutable entity or loaded in read-only mode,
+		// but, unfortunately, we have no way to reliably determine that here
+		persistenceContext.addCollectionHolder( collectionInstance );
+	}
+
+	private static CollectionEntry initializedEntry(
+			PersistenceContext context,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection<?> collectionInstance,
+			Object key,
+			SharedSessionContractImplementor session) {
+		final var collectionEntry = context.getCollectionEntry( collectionInstance );
+		if ( collectionEntry == null ) {
+			return context.addInitializedCollection( collectionDescriptor, collectionInstance, key );
+		}
+		else {
+			collectionEntry.postInitialize( collectionInstance, session );
+			return collectionEntry;
+		}
 	}
 
 	/**
@@ -128,19 +129,19 @@ public class ResultsHelper {
 	private static void addCollectionToCache(
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
-			PersistentCollection<?> collectionInstance,
+			PersistentCollection<?> collection,
 			Object key) {
-		final SharedSessionContractImplementor session = persistenceContext.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var session = persistenceContext.getSession();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Caching collection: "
-					+ collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.trace( "Caching collection: "
+							+ collectionInfoString( collectionDescriptor, collection, key, session ) );
 		}
 
-		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
+		if ( session.getLoadQueryInfluencers().hasEnabledFilters()
+				&& collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			LOG.debug( "Refusing to add to cache due to enabled filters" );
+			CORE_LOGGER.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -150,24 +151,11 @@ public class ResultsHelper {
 
 		final Object version;
 		if ( collectionDescriptor.isVersioned() ) {
-			Object collectionOwner = persistenceContext.getCollectionOwner( key, collectionDescriptor );
+			final Object collectionOwner =
+					getCollectionOwner( persistenceContext, collectionDescriptor, collection, key, session );
 			if ( collectionOwner == null ) {
-				// generally speaking this would be caused by the collection key being defined by a property-ref, thus
-				// the collection key and the owner key would not match up.  In this case, try to use the key of the
-				// owner instance associated with the collection itself, if one.  If the collection does already know
-				// about its owner, that owner should be the same instance as associated with the PC, but we do the
-				// resolution against the PC anyway just to be safe since the lookup should not be costly.
-				if ( collectionInstance != null ) {
-					final Object linkedOwner = collectionInstance.getOwner();
-					if ( linkedOwner != null ) {
-						final Object ownerKey = collectionDescriptor.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
-						collectionOwner = persistenceContext.getCollectionOwner( ownerKey, collectionDescriptor );
-					}
-				}
-				if ( collectionOwner == null ) {
-					LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
-					return;
-				}
+				CORE_LOGGER.debug( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
+				return;
 			}
 			version = persistenceContext.getEntry( collectionOwner ).getVersion();
 		}
@@ -175,8 +163,19 @@ public class ResultsHelper {
 			version = null;
 		}
 
-		final CollectionCacheEntry entry = new CollectionCacheEntry( collectionInstance, collectionDescriptor );
-		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
+		addCollectionToCache( persistenceContext, collectionDescriptor, collection, key, version );
+	}
+
+	private static void addCollectionToCache(
+			PersistenceContext context,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection<?> collection,
+			Object key,
+			Object version) {
+		final var session = context.getSession();
+		final var factory = session.getFactory();
+		final var entry = new CollectionCacheEntry( collection, collectionDescriptor );
+		final var cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		final Object cacheKey = cacheAccess.generateCacheKey(
 				key,
 				collectionDescriptor,
@@ -184,22 +183,11 @@ public class ResultsHelper {
 				session.getTenantIdentifier()
 		);
 
-		boolean isPutFromLoad = true;
-		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
-			final EntityPersister entityPersister = collectionDescriptor.getElementPersister();
-			for ( Object id : entry.getState() ) {
-				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
-					isPutFromLoad = false;
-					break;
-				}
-			}
-		}
-
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
-		if ( isPutFromLoad ) {
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
+			final var eventListenerManager = session.getEventListenerManager();
+			final var eventMonitor = session.getEventMonitor();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
@@ -209,7 +197,7 @@ public class ResultsHelper {
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
 						version,
 						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-								&& session.getCacheMode()!= CacheMode.REFRESH
+						&& session.getCacheMode() != CacheMode.REFRESH
 				);
 			}
 			finally {
@@ -223,15 +211,58 @@ public class ResultsHelper {
 				);
 				eventListenerManager.cachePutEnd();
 
-				final StatisticsImplementor statistics = factory.getStatistics();
+				final var statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.collectionCachePut(
 							collectionDescriptor.getNavigableRole(),
-							collectionDescriptor.getCacheAccessStrategy().getRegion().getName()
+							cacheAccess.getRegion().getName()
 					);
 				}
-
 			}
+		}
+	}
+
+	private static boolean isPutFromLoad(
+			PersistenceContext context,
+			CollectionPersister collectionDescriptor,
+			CollectionCacheEntry entry) {
+		if ( collectionDescriptor.getElementType().isEntityType() ) {
+			final var entityPersister = collectionDescriptor.getElementPersister();
+			for ( Object id : entry.getState() ) {
+				if ( context.wasInsertedDuringTransaction( entityPersister, id ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static Object getCollectionOwner(
+			PersistenceContext context,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection<?> collection,
+			Object key,
+			SharedSessionContractImplementor session) {
+		final Object collectionOwner = context.getCollectionOwner( key, collectionDescriptor );
+		if ( collectionOwner == null ) {
+			// This happens when the collection key is defined by a property-ref. In this case, the collection key
+			// and the owner key would not match up. Use the key of the owner instance associated with the collection
+			// itself, if there is one. If the collection does already know about its owner, that owner should be the
+			// same instance as associated with the PC, but we do the resolution against the PC anyway just to be safe,
+			// since the lookup should not be costly.
+			if ( collection != null ) {
+				final Object linkedOwner = collection.getOwner();
+				if ( linkedOwner != null ) {
+					final Object ownerKey =
+							collectionDescriptor.getOwnerEntityPersister()
+									.getIdentifier( linkedOwner, session );
+					return context.getCollectionOwner( ownerKey, collectionDescriptor );
+				}
+			}
+			return null;
+		}
+		else {
+			return collectionOwner;
 		}
 	}
 }

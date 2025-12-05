@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -14,7 +15,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCteJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -22,16 +24,18 @@ import jakarta.persistence.criteria.JoinType;
 
 import java.util.Objects;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
+public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularValuedJoin<T, T> {
 	private final SqmCteStatement<T> cte;
 
 	public SqmCteJoin(
 			SqmCteStatement<T> cte,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<T> sqmRoot) {
 		//noinspection unchecked
@@ -49,7 +53,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 			NavigablePath navigablePath,
 			SqmCteStatement<T> cte,
 			SqmPathSource<T> pathSource,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<T> sqmRoot) {
 		super(
@@ -91,7 +95,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	}
 
 	public SqmRoot<?> getRoot() {
-		return (SqmRoot<?>) super.getLhs();
+		return (SqmRoot<?>) castNonNull( super.getLhs() );
 	}
 
 	@Override
@@ -104,7 +108,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	}
 
 	@Override
-	public SqmFrom<?,T> getLhs() {
+	public @Nullable SqmFrom<?,T> getLhs() {
 		// A cte-join has no LHS
 		return null;
 	}
@@ -118,32 +122,32 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T,T> createCorrelation() {
-		throw new UnsupportedOperationException();
+	public SqmCorrelatedCteJoin<T> createCorrelation() {
+		return new SqmCorrelatedCteJoin<>( this );
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> getAttribute() {
+	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
 		return null;
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
@@ -158,14 +162,14 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCteJoin<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte.getName(), that.cte.getName() );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte.getName() );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 }

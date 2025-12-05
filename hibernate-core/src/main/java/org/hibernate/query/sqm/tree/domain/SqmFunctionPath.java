@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -29,7 +30,6 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
-import java.util.Objects;
 
 import static java.util.Arrays.asList;
 
@@ -40,7 +40,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		this( new NavigablePath( function.toHqlString() ), function );
 	}
 
-	public SqmFunctionPath(NavigablePath navigablePath, SqmFunction<?> function) {
+	private SqmFunctionPath(NavigablePath navigablePath, SqmFunction<?> function) {
 		super(
 				navigablePath,
 				determinePathSource( navigablePath, function ),
@@ -53,6 +53,9 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
 		final SqmBindableType<X> nodeType = (SqmBindableType<X>) function.getNodeType();
+		if ( nodeType == null ) {
+			throw new IllegalArgumentException( "Null return type for function: " + function.getFunctionName() );
+		}
 		final Class<X> bindableJavaType = nodeType.getJavaType();
 		final ManagedType<X> managedType = function.nodeBuilder()
 				.getJpaMetamodel()
@@ -60,6 +63,9 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		if ( managedType == null ) {
 			final BasicType<X> basicType = function.nodeBuilder().getTypeConfiguration()
 					.getBasicTypeForJavaType( bindableJavaType );
+			if ( basicType == null ) {
+				throw new IllegalArgumentException( "Couldn't determine basic type for java type: " + bindableJavaType.getName() );
+			}
 			return new BasicSqmPathSource<>(
 					navigablePath.getFullPath(),
 					null,
@@ -119,7 +125,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			SqmCreationState creationState) {
 		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath = getNavigablePath().getParent().append(
+		final NavigablePath navigablePath = getNavigablePath().append(
 				CollectionPart.Nature.ELEMENT.getName(),
 				alias
 		);
@@ -132,7 +138,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		}
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
 		final SelfRenderingSqmFunction<?> result = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "array_get" )
+				.getFunctionDescriptor( "array_get" )
 				.generateSqmExpression(
 						asList( function, selector ),
 						null,
@@ -164,14 +170,28 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmFunctionPath<?> that
-			&& super.equals( object )
-			&& Objects.equals( function, that.function );
+	public boolean equals(@Nullable Object object) {
+		return super.equals( object )
+			&& function.equals( ((SqmFunctionPath<?>) object).function );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), function );
+		int result = super.hashCode();
+		result = 31 * result + function.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return super.isCompatible( object )
+			&& function.isCompatible( ((SqmFunctionPath<?>) object).function );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + function.cacheHashCode();
+		return result;
 	}
 }

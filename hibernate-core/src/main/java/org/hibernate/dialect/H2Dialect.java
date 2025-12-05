@@ -4,18 +4,11 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -23,14 +16,17 @@ import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.H2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.H2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
 import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.H2JsonJdbcType;
@@ -48,10 +44,10 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -82,7 +78,15 @@ import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
@@ -126,10 +130,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 public class H2Dialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
 
-	private final boolean ansiSequence;
-	private final boolean cascadeConstraints;
-	private final boolean useLocalTime;
-
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
@@ -145,15 +145,6 @@ public class H2Dialect extends Dialect {
 
 	public H2Dialect(DatabaseVersion version) {
 		super( version );
-
-		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
-		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
-		ansiSequence = true;
-
-		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = true;
-		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = true;
 
 		sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
@@ -302,9 +293,9 @@ public class H2Dialect extends Dialect {
 		functionFactory.dayOfWeekMonthYear();
 		functionFactory.weekQuarter();
 		functionFactory.daynameMonthname();
-		if ( useLocalTime ) {
-			functionFactory.localtimeLocaltimestamp();
-		}
+
+		functionFactory.localtimeLocaltimestamp();
+
 		functionFactory.trunc_dateTrunc();
 		functionFactory.dateTrunc();
 		functionFactory.bitLength();
@@ -377,6 +368,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.hex( "rawtohex(?1)" );
 		functionFactory.sha( "hash('SHA-256', ?1)" );
 		functionFactory.md5( "hash('MD5', ?1)" );
+
+		functionFactory.regexpLike();
 	}
 
 	/**
@@ -459,12 +452,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String currentTime() {
-		return useLocalTime ? "localtime" : super.currentTime();
+		return  "localtime";
 	}
 
 	@Override
 	public String currentTimestamp() {
-		return useLocalTime ? "localtimestamp" : super.currentTimestamp();
+		return "localtimestamp";
 	}
 
 	@Override
@@ -665,6 +658,36 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return getVersion().isSameOrAfter( 2, 2, 220 ) ? H2LockingSupport.INSTANCE : H2LockingSupport.LEGACY_INSTANCE;
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait";
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return getForUpdateString() + " skip locked";
+	}
+
+	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withRealTimeout( getForUpdateString(), timeout );
+	}
+
+	private String withRealTimeout(String lockString, Timeout timeout) {
+		assert Timeouts.isRealTimeout( timeout );
+		return lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout );
+	}
+
+	private String withRealTimeout(String lockString, int millis) {
+		assert Timeouts.isRealTimeout( millis );
+		return lockString + " wait " + Timeouts.getTimeoutInSeconds( millis );
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}
@@ -676,12 +699,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return cascadeConstraints;
+		return true;
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return cascadeConstraints;
+		return true;
 	}
 
 	@Override
@@ -691,8 +714,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getCascadeConstraintsString() {
-		return cascadeConstraints ? " cascade "
-				: super.getCascadeConstraintsString();
+		return " cascade ";
 	}
 
 	@Override
@@ -719,7 +741,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return ansiSequence ? H2V2SequenceSupport.INSTANCE: H2V1SequenceSupport.INSTANCE;
+		return H2V2SequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -741,40 +763,34 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "TRANSACTIONAL";
+		return H2GlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
 		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return H2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return StandardLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override

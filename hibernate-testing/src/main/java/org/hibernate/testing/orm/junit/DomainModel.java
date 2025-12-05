@@ -20,64 +20,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import jakarta.persistence.SharedCacheMode;
 
-/**
- * @asciidoc
- *
- * Used to define the test model ({@link org.hibernate.boot.spi.MetadataImplementor})
- * to be used for testing.
- *
- * Can be used by itself, along with {@link DomainModelScopeAware}, to test the MetadataImplementor.  E.g.
- *
- * [source, JAVA, indent=0]
- * ----
- * @TestDomain ( ... )
- * class MyTest implements TestDomainAware {
- *
- * 		@Test
- * 		public void doTheTest() {
- * 		    // use the injected MetadataImplementor
- * 		}
- *
- * 		private MetadataImplementor model;
- *
- * 		@Override
- * 		public void injectTestModelScope(MetadataImplementor model) {
- * 		 	this.model = model;
- * 		}
- * }
- * ----
- *
- *
- * Can optionally be used with {@link ServiceRegistry} to define the ServiceRegistry used to
- * build the MetadataImplementor (passed to
- * {@link org.hibernate.boot.MetadataSources#MetadataSources(org.hibernate.service.ServiceRegistry)}).
- *
- * [source, JAVA, indent=0]
- * ----
- * @ServiceRegistry ( ... )
- * @TestDomain ( ... )
- * class MyTest implements TestDomainAware {
- *
- * 		@Test
- * 		public void doTheTest() {
- * 		    // use the injected MetadataImplementor
- * 		}
- *
- * 		private MetadataImplementor model;
- *
- * 		@Override
- * 		public void injectTestModelScope(MetadataImplementor model) {
- * 		 	this.model = model;
- * 		}
- * }
- * ----
- *
- * It can also be used in conjunction with {@link SessionFactory}
- *
- * @see DomainModelScopeAware
- *
- * @author Steve Ebersole
- */
+/// Used to define the [domain model][org.hibernate.boot.spi.MetadataImplementor] to be used for testing.
+/// Produces a [DomainModelScope] which can be injected via [JUnit ParameterResolver][DomainModelParameterResolver]
+/// or via [DomainModelScopeAware]; the ParameterResolver should be preferred.
+///
+/// ```java
+/// @DomainModel(annotatedClasses=SomeEntity.class)
+/// class SomeTest {
+///     @Test
+///     void testStuff(DomainModelScope modelScope) {
+///         ...
+///     }
+/// }
+/// ```
+///
+/// @see DomainModelExtension
+/// @see DomainModelScope
+/// @see DomainModelScopeAware
+/// @see DomainModelProducer
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

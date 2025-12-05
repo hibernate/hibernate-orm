@@ -4,10 +4,15 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -23,6 +28,11 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 				correlationParent.getExplicitAlias(),
 				correlationParent.nodeBuilder()
 		);
+		this.correlationParent = correlationParent;
+	}
+
+	protected SqmCorrelatedRoot(NavigablePath navigablePath, SqmPathSource<T> referencedNavigable, NodeBuilder nodeBuilder, SqmRoot<T> correlationParent) {
+		super( navigablePath, referencedNavigable, nodeBuilder );
 		this.correlationParent = correlationParent;
 	}
 
@@ -51,12 +61,12 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	}
 
 	@Override
-	public String getExplicitAlias() {
+	public @Nullable String getExplicitAlias() {
 		return correlationParent.getExplicitAlias();
 	}
 
 	@Override
-	public void setExplicitAlias(String explicitAlias) {
+	public void setExplicitAlias(@Nullable String explicitAlias) {
 		throw new UnsupportedOperationException( "Can't set alias on a correlated root" );
 	}
 
@@ -79,5 +89,19 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedRoot( this );
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedRoot<?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedRoot<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 }

@@ -13,9 +13,26 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * @author Steve Ebersole
- */
+/// Used in conjunction with [DomainModelProducer] to behave
+/// as if [@DomainModel][DomainModel] were used.  E.g.
+///
+/// ```java
+/// @DomainModelFunctionalTesting
+/// class SomeTest implements DomainModelProducer {
+///     @Override
+///     MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
+/// 	}
+///
+///     @Test
+///     void testStuff(DomainModelScope modelScope) {
+///         ...
+///     }
+///
+///     ...
+/// }
+/// ```
+///
+/// @author Steve Ebersole
 @Inherited
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ElementType.TYPE, ElementType.METHOD})

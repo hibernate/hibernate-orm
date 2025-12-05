@@ -17,6 +17,8 @@ import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -72,22 +74,16 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
-			case TINYINT:
-				return "smallint";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "bit";
+			case TINYINT -> "smallint";
 			//'timestamp' has a very limited range
 			//'datetime' does not support explicit precision
 			//(always 3, millisecond precision)
-			case TIMESTAMP:
-				return "datetime";
-			case TIME_WITH_TIMEZONE:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "datetimetz";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case TIMESTAMP -> "datetime";
+			case TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "datetimetz";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -264,6 +260,7 @@ public class CUBRIDDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.rownumInstOrderbyGroupbyNum();
+		functionFactory.regexpLike();
 	}
 
 	@Override
@@ -314,6 +311,11 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public char closeQuote() {
 		return ']';
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.STANDARD_SUPPORT;
 	}
 
 	@Override
@@ -419,20 +421,14 @@ public class CUBRIDDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "(second(?2)+extract(millisecond from ?2)/1e3)";
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			case WEEK:
-				return "week(?2,3)"; //mode 3 is the ISO week
-			default:
-				return "?1(?2)";
-		}
+		return switch (unit) {
+			case SECOND -> "(second(?2)+extract(millisecond from ?2)/1e3)";
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH ->"dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			case WEEK -> "week(?2,3)"; //mode 3 is the ISO week
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -442,14 +438,11 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "adddate(?3,interval (?2)/1e6 millisecond)";
-			case NATIVE:
-				return "adddate(?3,interval ?2 millisecond)";
-			default:
-				return "adddate(?3,interval ?2 ?1)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "adddate(?3,interval (?2)/1e6 millisecond)";
+			case NATIVE -> "adddate(?3,interval ?2 millisecond)";
+			default -> "adddate(?3,interval ?2 ?1)";
+		};
 	}
 
 	@Override

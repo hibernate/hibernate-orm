@@ -76,9 +76,4 @@ public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		getStorageAccess().removeFromCache( key, session );
 	}
-
-	@Override
-	public void remove(SharedSessionContractImplementor session, Object key) {
-		getStorageAccess().removeFromCache( key, session );
-	}
 }

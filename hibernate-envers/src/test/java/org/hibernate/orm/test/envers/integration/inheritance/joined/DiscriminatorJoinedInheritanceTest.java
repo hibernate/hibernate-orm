@@ -11,7 +11,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -19,70 +18,68 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11133")
-public class DiscriminatorJoinedInheritanceTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		DiscriminatorJoinedInheritanceTest.ParentEntity.class,
+		DiscriminatorJoinedInheritanceTest.ChildEntity.class,
+		DiscriminatorJoinedInheritanceTest.ChildListHolder.class
+})
+public class DiscriminatorJoinedInheritanceTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ParentEntity.class, ChildEntity.class, ChildListHolder.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager entityManager = getEntityManager();
-		try {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			ChildEntity childEntity = new ChildEntity( 1, "Child" );
-			entityManager.getTransaction().begin();
-			entityManager.persist( childEntity );
-			entityManager.getTransaction().commit();
+			em.persist( childEntity );
+		} );
 
+		scope.inTransaction( em -> {
+			ChildEntity childEntity = em.find( ChildEntity.class, 1 );
 			ChildListHolder holder = new ChildListHolder();
 			holder.setId( 1 );
 			holder.setChildren( Arrays.asList( childEntity ) );
-			entityManager.getTransaction().begin();
-			entityManager.persist( holder );
-			entityManager.getTransaction().commit();
-
-		}
-		catch ( Exception e ) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+			em.persist( holder );
+		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( ChildEntity.class, 1 ) );
-		assertEquals( Arrays.asList( 2 ), getAuditReader().getRevisions( ChildListHolder.class, 1 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( ChildEntity.class, 1 ) );
+			assertEquals( Arrays.asList( 2 ), auditReader.getRevisions( ChildListHolder.class, 1 ) );
+		} );
 	}
 
 	@Test
-	public void testConfiguredDiscriminatorValue() {
-		ChildEntity entity = getAuditReader().find( ChildEntity.class, 1, 1 );
-		assertEquals( "ce", entity.getType() );
+	public void testConfiguredDiscriminatorValue(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ChildEntity entity = AuditReaderFactory.get( em ).find( ChildEntity.class, 1, 1 );
+			assertEquals( "ce", entity.getType() );
+		} );
 	}
 
 	@Test
-	public void testDiscriminatorValuesViaRelatedEntityQuery() {
-		ChildListHolder holder = getAuditReader().find( ChildListHolder.class, 1, 2 );
-		assertEquals( 1, holder.getChildren().size() );
-		assertEquals( "ce", holder.getChildren().get( 0 ).getType() );
+	public void testDiscriminatorValuesViaRelatedEntityQuery(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			ChildListHolder holder = AuditReaderFactory.get( em ).find( ChildListHolder.class, 1, 2 );
+			assertEquals( 1, holder.getChildren().size() );
+			assertEquals( "ce", holder.getChildren().get( 0 ).getType() );
+		} );
 	}
 
 	@Entity(name = "ParentEntity")

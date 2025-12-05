@@ -30,7 +30,7 @@ public abstract class AbstractFieldSerialForm implements Serializable {
 
 	protected Field resolveField() {
 		try {
-			final Field field = declaringClass.getDeclaredField( fieldName );
+			final var field = declaringClass.getDeclaredField( fieldName );
 			ReflectHelper.ensureAccessibility( field );
 			return field;
 		}

@@ -22,7 +22,9 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 	public AbstractUpdateRowsCoordinator(CollectionMutationTarget mutationTarget, SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.sessionFactory = sessionFactory;
-		this.mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
+		mutationExecutorService =
+				sessionFactory.getServiceRegistry()
+						.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -41,12 +43,12 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 
 	@Override
 	public void updateRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "Updating collection rows - %s#%s", mutationTarget.getRolePath(), key );
+		MODEL_MUTATION_LOGGER.updatingCollectionRows( mutationTarget.getRolePath(), key );
 
 		// update all the modified entries
-		int count = doUpdate( key, collection, session );
+		final int count = doUpdate( key, collection, session );
 
-		MODEL_MUTATION_LOGGER.tracef( "Updated %s collection rows - %s#%s", count, mutationTarget.getRolePath(), key );
+		MODEL_MUTATION_LOGGER.updatedCollectionRows( count, mutationTarget.getRolePath(), key );
 	}
 
 	protected abstract int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);

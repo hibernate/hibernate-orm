@@ -4,24 +4,27 @@
  */
 package org.hibernate.orm.test.util;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import org.hibernate.internal.util.BytesHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Benoit W
  */
-public class BytesHelperTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class BytesHelperTest {
 
 	@Test
 	public void testAsLongNullArray() {
 		assertEquals(0, BytesHelper.asLong(null, 0));
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test()
+	@ExpectedException(IllegalArgumentException.class)
 	public void testAsLongArrayTooSmall() {
 		byte[] src = new byte[16];
 		assertEquals(0, BytesHelper.asLong(src, 9));

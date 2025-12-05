@@ -6,10 +6,11 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -37,11 +38,15 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 			NodeBuilder nodeBuilder) {
 		super( booleanExpression.getExpressible(), negated, nodeBuilder );
 
-		assert booleanExpression.getNodeType() != null;
-		final Class<?> expressionJavaType = booleanExpression.getNodeType().getExpressibleJavaType().getJavaTypeClass();
-		assert boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
-
+		assert isBooleanExpression( booleanExpression );
 		this.booleanExpression = booleanExpression;
+	}
+
+	private static boolean isBooleanExpression(SqmExpression<Boolean> expression) {
+		final SqmBindableType<Boolean> nodeType = expression.getNodeType();
+		final Class<?> expressionJavaType =
+				nodeType != null ? nodeType.getExpressibleJavaType().getJavaTypeClass() : Boolean.class;
+		return boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 	}
 
 	@Override
@@ -84,15 +89,31 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmBooleanExpressionPredicate that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( this.booleanExpression, that.booleanExpression );
+			&& this.booleanExpression.equals( that.booleanExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( booleanExpression, isNegated() );
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + booleanExpression.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBooleanExpressionPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.booleanExpression.isCompatible( that.booleanExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + booleanExpression.cacheHashCode();
+		return result;
 	}
 
 	@Override

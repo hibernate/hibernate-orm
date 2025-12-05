@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.sql;
 
-import java.sql.Statement;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-
 import org.hibernate.Session;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
@@ -20,66 +18,65 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Before;
-import org.junit.Test;
+import java.sql.Statement;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
-public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				CustomSQLSecondaryTableTest.Person.class
+		}
+)
+public class CustomSQLSecondaryTableTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
-
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			session.doWork(connection -> {
-				try(Statement statement = connection.createStatement();) {
-					statement.executeUpdate("ALTER TABLE person ADD COLUMN valid boolean");
-					statement.executeUpdate("ALTER TABLE person_details ADD COLUMN valid boolean");
+	@BeforeAll
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "ALTER TABLE person ADD COLUMN valid boolean" );
+					statement.executeUpdate( "ALTER TABLE person_details ADD COLUMN valid boolean" );
 				}
-			});
-		});
+			} );
+		} );
 	}
 
 	@Test
-	public void test_sql_custom_crud() {
+	public void test_sql_custom_crud(EntityManagerFactoryScope scope) {
 
-		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
+		Person _person = scope.fromTransaction( entityManager -> {
 			Person person = new Person();
-			person.setName("John Doe");
-			entityManager.persist(person);
-			person.setImage(new byte[] {1, 2, 3});
+			person.setName( "John Doe" );
+			entityManager.persist( person );
+			person.setImage( new byte[] {1, 2, 3} );
 			return person;
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertArrayEquals(new byte[] {1, 2, 3}, person.getImage());
-			entityManager.remove(person);
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertThat( person.getImage() ).isEqualTo( new byte[] {1, 2, 3} );
+			entityManager.remove( person );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find(Person.class, postId);
-			assertNull(person);
-		});
+			Person person = entityManager.find( Person.class, postId );
+			assertThat( person ).isNull();
+		} );
 	}
 
 
@@ -89,23 +86,23 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
 	@SecondaryTable(name = "person_details",
 			pkJoinColumns = @PrimaryKeyJoinColumn(name = "person_id"))
 	@SQLInsert(
-		sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) "
-)
+			sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) "
+	)
 	@SQLDelete(
-		sql = "UPDATE person SET valid = false WHERE id = ? "
+			sql = "UPDATE person SET valid = false WHERE id = ? "
 	)
 	@SQLInsert(
-		table = "person_details",
-		sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
-		check = ResultCheckStyle.COUNT
+			table = "person_details",
+			sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
+			check = ResultCheckStyle.COUNT
 	)
 	@SQLDelete(
-		table = "person_details",
-		sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
+			table = "person_details",
+			sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
 	)
 
 	@SQLSelect(
-		sql = "SELECT " +
+			sql = "SELECT " +
 				"    p.id, " +
 				"    p.name, " +
 				"    pd.image  " +
@@ -126,7 +123,7 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters are omitted for brevity
 
-	//end::sql-custom-crud-secondary-table-example[]
+		//end::sql-custom-crud-secondary-table-example[]
 
 		public Long getId() {
 			return id;
@@ -151,7 +148,7 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
 		public void setImage(byte[] image) {
 			this.image = image;
 		}
-	//tag::sql-custom-crud-secondary-table-example[]
+		//tag::sql-custom-crud-secondary-table-example[]
 	}
 	//end::sql-custom-crud-secondary-table-example[]
 

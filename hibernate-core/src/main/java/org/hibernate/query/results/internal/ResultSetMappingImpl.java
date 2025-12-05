@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 
@@ -199,6 +198,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				legacyFetchBuilders,
 				sqlSelections::add,
 				loadQueryInfluencers,
+				true,
 				sessionFactory
 		);
 
@@ -237,7 +237,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult entityResult ) {
 				// Special case for result set mappings that just fetch a single polymorphic entity
 				final EntityPersister persister = entityResult.getReferencedMappingContainer().getEntityPersister();
-				final boolean polymorphic = persister.getEntityMetamodel().isPolymorphic();
+				final boolean polymorphic = persister.isPolymorphic();
 				// We only need to check for duplicate aliases if we have join fetches,
 				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
 				// If we don't do that, there is no way to fetch joined inheritance entities
@@ -328,7 +328,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public JdbcValuesMappingProducer cacheKeyInstance() {
+	public ResultSetMapping cacheKeyInstance() {
 		return new ResultSetMappingImpl( this );
 	}
 

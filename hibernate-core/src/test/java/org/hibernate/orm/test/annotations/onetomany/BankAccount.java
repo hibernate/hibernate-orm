@@ -46,7 +46,7 @@ public class BankAccount {
 
 	public void addTransaction(String code) {
 		if ( transactions == null ) {
-			transactions = new ArrayList<Transaction>();
+			transactions = new ArrayList<>();
 		}
 		Transaction transaction = new Transaction();
 		transaction.setCode( code );

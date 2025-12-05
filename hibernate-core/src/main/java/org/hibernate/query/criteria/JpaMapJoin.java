@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.Expression;
@@ -19,16 +20,16 @@ import jakarta.persistence.criteria.Predicate;
  */
 public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJoin<O,K,V> {
 	@Override
-	JpaMapJoin<O, K, V> on(JpaExpression<Boolean> restriction);
+	JpaMapJoin<O, K, V> on(@Nullable JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaMapJoin<O, K, V> on(Expression<Boolean> restriction);
+	JpaMapJoin<O, K, V> on(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaMapJoin<O, K, V> on(JpaPredicate... restrictions);
+	JpaMapJoin<O, K, V> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaMapJoin<O, K, V> on(Predicate... restrictions);
+	JpaMapJoin<O, K, V> on(Predicate @Nullable... restrictions);
 
 	@Override
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(Class<S> treatAsType);

@@ -251,14 +251,14 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
+					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaType.unwrap( value, CharacterStream.class, options );
+					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 				}
 			};

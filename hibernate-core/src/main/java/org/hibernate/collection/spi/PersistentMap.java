@@ -254,11 +254,14 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		assert isInitializing();
 		assert map == null;
 
-		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		this.map = (Map<K,E>) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
+		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final var collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		//noinspection unchecked
+		map = (Map<K,E>) collectionSemantics.instantiateRaw( loadingState.size(), collectionDescriptor );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] keyVal = (Object[]) loadingState.get( i );
+			//noinspection unchecked
 			map.put( (K) keyVal[0], (E) keyVal[1] );
 		}
 	}
@@ -438,10 +441,10 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	@Override
 	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final List<Object> deletes = new ArrayList<>();
-		for ( Entry<?,?> e : ((Map<?,?>) getSnapshot()).entrySet() ) {
-			final Object key = e.getKey();
-			if ( e.getValue() != null && map.get( key ) == null ) {
-				deletes.add( indexIsFormula ? e.getValue() : key );
+		for ( var entry : ((Map<?,?>) getSnapshot()).entrySet() ) {
+			final Object key = entry.getKey();
+			if ( entry.getValue() != null && map.get( key ) == null ) {
+				deletes.add( indexIsFormula ? entry.getValue() : key );
 			}
 		}
 		return deletes.iterator();
@@ -449,8 +452,8 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public boolean hasDeletes(CollectionPersister persister) {
-		for ( Entry<?,?> e : ((Map<?,?>) getSnapshot()).entrySet() ) {
-			if ( e.getValue() != null && map.get( e.getKey() ) == null ) {
+		for ( var entry : ((Map<?,?>) getSnapshot()).entrySet() ) {
+			if ( entry.getValue() != null && map.get( entry.getKey() ) == null ) {
 				return true;
 			}
 		}
@@ -535,6 +538,11 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 		protected final K getIndex() {
 			return index;
+		}
+
+		@Override
+		public Object getAddedEntry() {
+			return Map.entry( getIndex(), getAddedInstance() );
 		}
 	}
 

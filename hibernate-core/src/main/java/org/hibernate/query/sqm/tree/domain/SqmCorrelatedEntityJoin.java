@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -11,6 +12,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -35,7 +37,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 
 	public SqmCorrelatedEntityJoin(
 			EntityDomainType<R> joinedEntityDescriptor,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot,
 			SqmCorrelatedRootJoin<L> correlatedRootJoin,
@@ -108,10 +110,23 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),
-				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.resolveFromByPath( getRoot().getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedEntityJoin<?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
+	}
 }

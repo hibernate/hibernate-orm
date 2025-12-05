@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -20,9 +21,9 @@ import java.util.Objects;
  * @see org.hibernate.query.criteria.ValueHandlingMode
  */
 public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
-	private final T value;
+	private final @Nullable T value;
 
-	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
+	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null
 			|| ( type instanceof SqmBindableType<? super T> bindable
@@ -45,7 +46,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 				: context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
-	public T getValue() {
+	public @Nullable T getValue() {
 		return value;
 	}
 
@@ -54,34 +55,38 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
-	@Override
-	// TODO: fix this
-	public int compareTo(SqmParameter<T> parameter) {
-		return this == parameter ? 0 : 1;
-	}
-
-	// this is not really a parameter, it's really a literal value
-	// so use value equality based on its value
+	// For caching purposes, any two ValueBindJpaCriteriaParameter objects are compatible as ensured by the parent impl,
+	// but for equals/hashCode, use equals/hashCode of the underlying value, if available, from the nodes JavaType
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof ValueBindJpaCriteriaParameter<?> that
-			&& Objects.equals( this.value, that.value );
-//			&& getJavaTypeDescriptor().areEqual( this.value, (T) that.value );
+	public final boolean equals(@Nullable Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o instanceof ValueBindJpaCriteriaParameter<?> that ) {
+			if ( value == null ) {
+				return that.value == null && Objects.equals( getNodeType(), that.getNodeType() );
+			}
+			final var javaType = getJavaTypeDescriptor();
+			if ( that.value != null ) {
+				if ( javaType != null ) {
+					//noinspection unchecked
+					return javaType.equals( that.getJavaTypeDescriptor() ) && javaType.areEqual( value, (T) that.value );
+				}
+				else {
+					return that.getJavaTypeDescriptor() == null && value.equals( that.value );
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return value == null ? 0 : value.hashCode(); // getJavaTypeDescriptor().extractHashCode( value );
+		if ( value == null ) {
+			return 0;
+		}
+		final var javaType = getJavaTypeDescriptor();
+		return javaType == null ? value.hashCode() : javaType.extractHashCode( value );
 	}
-
-//	@Override
-//	public boolean equals(Object object) {
-//		return this == object;
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return System.identityHashCode( this );
-//	}
 }

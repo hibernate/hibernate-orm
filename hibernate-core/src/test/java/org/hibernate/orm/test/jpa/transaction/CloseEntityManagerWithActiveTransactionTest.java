@@ -21,10 +21,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -119,7 +118,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 		}
 		scope.inEntityManager(
 				em -> {
-					final List results = em.createQuery( "from Box" ).getResultList();
+					final List<Box> results = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( results.size(), is( 1 ) );
 				}
 		);
@@ -160,7 +159,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
 				}
@@ -202,7 +201,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
+					final List<SmallBox> boxes = em.createQuery( "from SmallBox", SmallBox.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertTrue( boxes.get( 0 ).isEmpty() );
 				}
@@ -243,7 +242,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 1 ) );
 					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
 				}
@@ -286,7 +285,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 		scope.inEntityManager(
 				em -> {
-					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					final List<Box> boxes = em.createQuery( "from Box", Box.class ).getResultList();
 					assertThat( boxes.size(), is( 0 ) );
 				}
 		);
@@ -303,7 +302,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 						Box box = new Box();
 						box.setColor( "red-and-white" );
 						em.persist( box );
-						final SessionImpl session = (SessionImpl) em.unwrap( Session.class );
+						final SessionImplementor session = em.unwrap( SessionImplementor.class );
 						return (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					}
 			);

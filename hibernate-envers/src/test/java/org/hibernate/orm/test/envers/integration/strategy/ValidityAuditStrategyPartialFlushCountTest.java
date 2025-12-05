@@ -4,22 +4,22 @@
  */
 package org.hibernate.orm.test.envers.integration.strategy;
 
-import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.collection.EmbeddableListEntity1;
 import org.hibernate.orm.test.envers.entities.components.Component3;
 import org.hibernate.orm.test.envers.entities.components.Component4;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,36 +31,29 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Vincent Stradiot
  */
 @JiraKey("HHH-17442")
-public class ValidityAuditStrategyPartialFlushCountTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {EmbeddableListEntity1.class},
+		integrationSettings = @Setting(name = EnversSettings.AUDIT_STRATEGY, value = "org.hibernate.envers.strategy.ValidityAuditStrategy"))
+public class ValidityAuditStrategyPartialFlushCountTest {
 
 	private final AtomicInteger partialFlushEntityCount = new AtomicInteger();
 	private final AtomicInteger partialFlushCollectionCount = new AtomicInteger();
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {EmbeddableListEntity1.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( EnversSettings.AUDIT_STRATEGY, "org.hibernate.envers.strategy.ValidityAuditStrategy" );
-	}
-
 	@Test
-	public void testPartialFlushCount() {
-		TransactionUtil.doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testPartialFlushCount(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
 
 			givenHibernateFlushModeAuto(entityManager);
 			recordPartialFlushCount(entityManager);
 
 			final Component3 c3_1 = new Component3(
-							"str1_1",
-							new Component4("key_1", "value_1", "descr_1"),
-							new Component4("key_2", "value_2", "descr_2"));
+					"str1_1",
+					new Component4("key_1", "value_1", "descr_1"),
+					new Component4("key_2", "value_2", "descr_2"));
 			final Component3 c3_2 = new Component3(
-							"str1_2",
-							new Component4("key_3", "value_3", "descr_3"),
-							new Component4("key_4", "value_4", "descr_4"));
+					"str1_2",
+					new Component4("key_3", "value_3", "descr_3"),
+					new Component4("key_4", "value_4", "descr_4"));
 
 			final EmbeddableListEntity1 el = new EmbeddableListEntity1();
 			el.setOtherData("other_data");
@@ -73,11 +66,11 @@ public class ValidityAuditStrategyPartialFlushCountTest extends BaseEnversJPAFun
 		assertThat(partialFlushCollectionCount.get()).isZero();
 	}
 
-	private void givenHibernateFlushModeAuto(final EntityManager entityManager) {
+	private void givenHibernateFlushModeAuto(final jakarta.persistence.EntityManager entityManager) {
 		entityManager.unwrap(Session.class).setHibernateFlushMode(FlushMode.AUTO);
 	}
 
-	private void recordPartialFlushCount(final EntityManager entityManager) {
+	private void recordPartialFlushCount(final jakarta.persistence.EntityManager entityManager) {
 		entityManager.unwrap(SessionImplementor.class).getEventListenerManager().addListener(new StatisticalLoggingSessionEventListener() {
 
 			@Override
@@ -87,6 +80,6 @@ public class ValidityAuditStrategyPartialFlushCountTest extends BaseEnversJPAFun
 				partialFlushCollectionCount.getAndAdd(numberOfCollections);
 			}
 
-		} );
+		});
 	}
 }

@@ -9,28 +9,22 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class SimpleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Book.class
-		};
-	}
+@Jpa(annotatedClasses = {SimpleNaturalIdTest.Book.class})
+public class SimpleNaturalIdTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Book book = new Book();
 			book.setId(1L);
 			book.setTitle("High-Performance Java Persistence");
@@ -39,7 +33,7 @@ public class SimpleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(book);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::naturalid-simple-load-access-example[]
 			Book book = entityManager
 				.unwrap(Session.class)
@@ -49,7 +43,7 @@ public class SimpleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::naturalid-load-access-example[]
 			Book book = entityManager
 				.unwrap(Session.class)

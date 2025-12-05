@@ -6,7 +6,6 @@ package org.hibernate.dialect.lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,16 +34,18 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		this.lockMode = lockMode;
 		// ForceIncrement can be used for PESSIMISTIC_READ, PESSIMISTIC_WRITE or PESSIMISTIC_FORCE_INCREMENT
 		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {
-			throw new HibernateException( "[" + lockMode + "] not valid for [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "Entity '" + lockable.getEntityName()
+						+ "' may not be locked at level " + lockMode );
+		}
+		if ( !lockable.isVersioned() ) {
+			throw new HibernateException( "Entity '" + lockable.getEntityName()
+						+ "' has no version and may not be locked at level " + lockMode);
 		}
 	}
 
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
-		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
-		}
-		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
+		final var entry = session.getPersistenceContextInternal().getEntry( object );
 		OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 	}
 

@@ -13,33 +13,26 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Vlad Mihalcea
  */
-public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
-	}
+@Jpa(annotatedClasses = {GeneratorTypeTest.Person.class})
+public class GeneratorTypeTest {
 
 	@Test
-	public void test() {
+	public void test(EntityManagerFactoryScope scope) {
 		//tag::mapping-generated-GeneratorType-persist-example[]
 		CurrentUser.INSTANCE.logIn("Alice");
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 
 			Person person = new Person();
 			person.setId(1L);
@@ -55,7 +48,7 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 		//tag::mapping-generated-GeneratorType-update-example[]
 		CurrentUser.INSTANCE.logIn("Bob");
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.setFirstName("Mr. John");
 		});

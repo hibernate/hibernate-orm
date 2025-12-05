@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.generated.delegate;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Date;
 import java.util.Set;
 
@@ -15,9 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.engine.jdbc.JdbcLogging;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 
 import org.hibernate.testing.logger.LogInspectionHelper;
 import org.hibernate.testing.logger.TriggerOnPrefixLogListener;
@@ -32,7 +29,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,6 +38,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.resource.jdbc.internal.ResourceRegistryLogger.RESOURCE_REGISTRY_LOGGER;
 
 /**
  * @author Marco Belladelli
@@ -61,14 +58,7 @@ public class MutationDelegateStatementReleaseTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		trigger = new TriggerOnPrefixLogListener( Set.of( "Exception clearing", "Unable to release" ) );
-		LogInspectionHelper.registerListener(
-				trigger,
-				Logger.getMessageLogger(
-						MethodHandles.lookup(),
-						CoreMessageLogger.class,
-						ResourceRegistryStandardImpl.class.getName()
-				)
-		);
+		LogInspectionHelper.registerListener( trigger, RESOURCE_REGISTRY_LOGGER );
 	}
 
 	@BeforeEach
@@ -78,7 +68,7 @@ public class MutationDelegateStatementReleaseTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_MESSAGE_LOGGER );
+		LogInspectionHelper.clearAllListeners( JdbcLogging.JDBC_LOGGER );
 	}
 
 	@Test

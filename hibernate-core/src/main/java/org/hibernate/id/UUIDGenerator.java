@@ -14,10 +14,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.uuid.StandardRandomStrategy;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
+
+import static org.hibernate.id.UUIDLogger.UUID_MESSAGE_LOGGER;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -39,7 +39,6 @@ import org.hibernate.type.descriptor.java.UUIDJavaType;
  */
 @Deprecated(since = "6.0")
 public class UUIDGenerator implements IdentifierGenerator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
@@ -51,50 +50,53 @@ public class UUIDGenerator implements IdentifierGenerator {
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		// check first for an explicit strategy instance
 		strategy = (UUIDGenerationStrategy) parameters.get( UUID_GEN_STRATEGY );
-
 		if ( strategy == null ) {
 			// next check for an explicit strategy class
-			final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
-			if ( strategyClassName != null ) {
-				try {
-					final Class<?> strategyClass =
-							creationContext.getServiceRegistry().requireService( ClassLoaderService.class )
-									.classForName( strategyClassName );
-					try {
-						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
-					}
-					catch ( Exception e ) {
-						LOG.unableToInstantiateUuidGenerationStrategy(e);
-					}
-				}
-				catch ( ClassLoadingException ignore ) {
-					LOG.unableToLocateUuidGenerationStrategy( strategyClassName );
-				}
-			}
+			strategy = strategy( creationContext, parameters );
 		}
+		valueTransformer = valueTransformer( creationContext );
+	}
 
-		if ( strategy == null ) {
-			// lastly use the standard random generator
-			strategy = StandardRandomStrategy.INSTANCE;
-		}
-
+	private UUIDJavaType.ValueTransformer valueTransformer(GeneratorCreationContext creationContext) {
 		final Type type = creationContext.getType();
 		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
+			return UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
 		else if ( String.class.isAssignableFrom( type.getReturnedClass() ) ) {
 			// todo (6.0) : allow for org.hibernate.type.descriptor.java.UUIDJavaType.NoDashesStringTransformer
-			valueTransformer = UUIDJavaType.ToStringTransformer.INSTANCE;
+			return UUIDJavaType.ToStringTransformer.INSTANCE;
 		}
 		else if ( byte[].class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
+			return UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
 		else {
 			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClassName() + "] for UUID conversion" );
 		}
 	}
 
-	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	private UUIDGenerationStrategy strategy(GeneratorCreationContext creationContext, Properties parameters) {
+		final String strategyClassName = parameters.getProperty( UUID_GEN_STRATEGY_CLASS );
+		if ( strategyClassName != null ) {
+			final var classLoaderService =
+					creationContext.getServiceRegistry()
+							.requireService( ClassLoaderService.class );
+			try {
+				final var strategyClass = classLoaderService.classForName( strategyClassName );
+				try {
+					return (UUIDGenerationStrategy) strategyClass.newInstance();
+				}
+				catch ( Exception exception ) {
+					UUID_MESSAGE_LOGGER.unableToInstantiateUuidGenerationStrategy( exception );
+				}
+			}
+			catch ( ClassLoadingException ignore ) {
+				UUID_MESSAGE_LOGGER.unableToLocateUuidGenerationStrategy( strategyClassName );
+			}
+		}
+		return StandardRandomStrategy.INSTANCE;
+	}
+
+	public Object generate(SharedSessionContractImplementor session, Object object) {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
 }

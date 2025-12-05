@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -14,8 +15,8 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
 
 /**
@@ -46,7 +47,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 			throw new SemanticException(
 					String.format(
 							"Cannot compare left expression of type '%s' with right expression of type '%s'",
-							leftHandExpression.getNodeType().getTypeName(),
+							castNonNull( leftHandExpression.getNodeType() ).getTypeName(),
 							pluralPath.getNodeType().getTypeName()
 					)
 			);
@@ -98,16 +99,35 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmMemberOfPredicate that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( leftHandExpression, that.leftHandExpression )
-			&& Objects.equals( pluralPath, that.pluralPath );
+			&& leftHandExpression.equals( that.leftHandExpression )
+			&& pluralPath.equals( that.pluralPath );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( isNegated(), leftHandExpression, pluralPath );
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + leftHandExpression.hashCode();
+		result = 31 * result + pluralPath.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmMemberOfPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& leftHandExpression.isCompatible( that.leftHandExpression )
+			&& pluralPath.isCompatible( that.pluralPath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + leftHandExpression.cacheHashCode();
+		result = 31 * result + pluralPath.cacheHashCode();
+		return result;
 	}
 
 	@Override

@@ -5,35 +5,32 @@
 package org.hibernate.orm.test.jpa.metamodel;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12871")
-public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractJpaMetamodelPopulationTest {
 	@Entity(name = "SimpleAnnotatedEntity")
 	public static class SimpleAnnotatedEntity {
 		@Id
@@ -55,37 +52,16 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 		private Integer id2;
 	}
 
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"org/hibernate/jpa/test/metamodel/SimpleEntity.xml",
-				"org/hibernate/jpa/test/metamodel/CompositeIdEntity.hbm.xml",
-				"org/hibernate/jpa/test/metamodel/CompositeId2Entity.hbm.xml"
-		};
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SimpleAnnotatedEntity.class, CompositeIdAnnotatedEntity.class };
-	}
-
 	protected abstract String getJpaMetamodelPopulationValue();
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.JPA_METAMODEL_POPULATION, getJpaMetamodelPopulationValue() );
-	}
-
 	@Test
-	public void testMetamodel() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
+	public void testMetamodel(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
 			final Metamodel metamodel = entityManager.getMetamodel();
 
 			if ( getJpaMetamodelPopulationValue().equalsIgnoreCase( "disabled" ) ) {
 				// In 5.1, metamodel returned null.
-				// In 5.2+, metamodel erturned as a non-null instance.
+				// In 5.2+, metamodel returned as a non-null instance.
 				assertNotNull( metamodel );
 				assertEquals( 0, metamodel.getManagedTypes().size() );
 				assertEquals( 0, metamodel.getEntities().size() );
@@ -98,10 +74,7 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 			assertManagedTypes( metamodel );
 			assertEntityTypes( metamodel );
 			assertEmbeddableTypes( metamodel );
-		}
-		finally {
-			entityManager.close();
-		}
+		} );
 	}
 
 	private void assertManagedTypes(Metamodel metamodel) {
@@ -153,7 +126,7 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 			// SimpleAnnotatedEntity
 			// SimpleEntity <-- this should not exist since its entity-type is filtered
 			// CompositeIdEntity <-- this should not exist since its entity-type is filtered
-			// CompsoiteId2Entity <-- this should not exist since its entity-type is filtered
+			// CompositeId2Entity <-- this should not exist since its entity-type is filtered
 			//
 			// In 5.2, this returns 5 elements too.
 			// In 5.3, this returns 5 elements too.

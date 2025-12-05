@@ -1,0 +1,27 @@
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+
+import java.util.List;
+import java.util.ArrayList;
+
+@Entity
+public class Baz {
+
+    private String foo;
+
+    @OneToMany(mappedBy = "baz")
+    private List<Bar> bars = new ArrayList<Bar>();
+
+    String getFoo() {
+        return foo;
+    }
+
+    public void setFoo(String f) {
+        foo = f;
+    }
+
+    public void addBar(Bar bar) {
+        bars.add( bar );
+    }
+
+}

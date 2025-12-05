@@ -4,11 +4,11 @@
  */
 package org.hibernate.orm.test.jpa.userguide.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.hibernate.jpa.internal.util.PessimisticNumberParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Sanne Grinovero

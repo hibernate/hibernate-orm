@@ -11,11 +11,9 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
@@ -25,8 +23,10 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
  */
 public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> {
 
-	private final EnumMap<LockMode, SingleIdLoadPlan<T>> selectByLockMode = new EnumMap<>( LockMode.class );
-	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan<T>> selectByInternalCascadeProfile;
+	private final EnumMap<LockMode, SingleIdLoadPlan<T>> selectByLockMode =
+			new EnumMap<>( LockMode.class );
+	private final EnumMap<CascadingFetchProfile, EnumMap<LockMode,SingleIdLoadPlan<T>>> selectByInternalCascadeProfile =
+			new EnumMap<>( CascadingFetchProfile.class );
 
 	private final BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator;
 
@@ -34,8 +34,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			EntityMappingType entityDescriptor,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		this( entityDescriptor, loadQueryInfluencers,
-				(lockOptions, influencers) ->
-						createLoadPlan( entityDescriptor, lockOptions, influencers, influencers.getSessionFactory() ) );
+				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers) );
 	}
 
 	/**
@@ -51,13 +50,11 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, influencers.getSessionFactory() );
 		this.loadPlanCreator = loadPlanCreator;
-		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
-		// we should preload a few - maybe LockMode.NONE and LockMode.READ
-		final LockOptions lockOptions = LockOptions.NONE;
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
-		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
-			selectByLockMode.put( lockOptions.getLockMode(), plan );
-		}
+		// Preload some load plans (for now only do it for LockMode.NONE)
+		final var singleIdLoadPlan = loadPlanCreator.apply( LockOptions.NONE, influencers );
+//		if ( isLoadPlanReusable( LockOptions.NONE, influencers ) ) {
+		selectByLockMode.put( LockMode.NONE, singleIdLoadPlan );
+//		}
 	}
 
 	@Override
@@ -99,14 +96,14 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 	private SingleIdLoadPlan<T> getRegularLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
 		if ( isLoadPlanReusable( lockOptions, influencers )  ) {
-			final SingleIdLoadPlan<T> existing = selectByLockMode.get( lockOptions.getLockMode() );
+			final var existing = selectByLockMode.get( lockOptions.getLockMode() );
 			if ( existing != null ) {
 				return existing;
 			}
 			else {
-				final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, influencers );
-				selectByLockMode.put( lockOptions.getLockMode(), plan );
-				return plan;
+				final var singleIdLoadPlan = loadPlanCreator.apply( lockOptions, influencers );
+				selectByLockMode.put( lockOptions.getLockMode(), singleIdLoadPlan );
+				return singleIdLoadPlan;
 			}
 		}
 		else {
@@ -115,52 +112,75 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	}
 
 	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		final CascadingFetchProfile fetchProfile =
-				influencers.getEnabledCascadingFetchProfile();
-		if ( selectByInternalCascadeProfile == null ) {
-			selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
-		}
-		else {
-			final SingleIdLoadPlan<T> existing =
-					selectByInternalCascadeProfile.get( fetchProfile );
-			if ( existing != null ) {
-				return existing;
+		// TODO: It might be more efficient to just instantiate a LoadPlanKey
+		//       object here than it is to maintain an EnumMap of EnumMaps
+		final var lockMode = lockOptions.getLockMode();
+		EnumMap<LockMode,SingleIdLoadPlan<T>> map;
+		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
+			final var fetchProfile = influencers.getEnabledCascadingFetchProfile();
+			final var existingMap = selectByInternalCascadeProfile.get( fetchProfile );
+			if ( existingMap == null ) {
+				map = new EnumMap<>( LockMode.class );
+				selectByInternalCascadeProfile.put( fetchProfile, map );
+			}
+			else {
+				final var existing = existingMap.get( lockMode );
+				if ( existing != null ) {
+					return existing;
+				}
+				else {
+					map = existingMap;
+				}
 			}
 		}
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( lockOptions, influencers );
-		selectByInternalCascadeProfile.put( fetchProfile, plan );
+		else {
+			map = null;
+		}
+
+		final var plan = loadPlanCreator.apply( lockOptions, influencers );
+		if ( map != null ) {
+			map.put( lockMode, plan );
+		}
 		return plan;
 	}
 
+	/**
+	 * We key the caches only by {@link LockMode} and {@link CascadingFetchProfile}.
+	 * If there is a pessimistic lock with non-default options like timeout, a custom
+	 * fetch profile, or an entity graph, we don't cache and reuse the plan.
+	 */
 	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
-			&& !getLoadable().isAffectedByEntityGraph( influencers )
-			&& !getLoadable().isAffectedByEnabledFetchProfiles( influencers );
+		if ( lockOptions.getLockMode().isPessimistic() && lockOptions.hasNonDefaultOptions() ) {
+			return false;
+		}
+		else {
+			final var loadable = getLoadable();
+			return !loadable.isAffectedByEntityGraph( influencers )
+				&& !loadable.isAffectedByEnabledFetchProfiles( influencers );
+		}
 	}
 
 	private static <T> SingleIdLoadPlan<T> createLoadPlan(
 			EntityMappingType loadable,
 			LockOptions lockOptions,
-			LoadQueryInfluencers influencers,
-			SessionFactoryImplementor factory) {
-
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
-				loadable,
-				// null here means to select everything
-				null,
-				loadable.getIdentifierMapping(),
-				null,
-				1,
-				influencers,
-				lockOptions,
-				jdbcParametersBuilder::add,
-				factory
-		);
+			LoadQueryInfluencers influencers) {
+		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		final var factory = influencers.getSessionFactory();
 		return new SingleIdLoadPlan<>(
 				loadable,
 				loadable.getIdentifierMapping(),
-				sqlAst,
+				LoaderSelectBuilder.createSelect(
+						loadable,
+						// null here means to select everything
+						null,
+						loadable.getIdentifierMapping(),
+						null,
+						1,
+						influencers,
+						lockOptions,
+						jdbcParametersBuilder::add,
+						factory
+				),
 				jdbcParametersBuilder.build(),
 				lockOptions,
 				factory

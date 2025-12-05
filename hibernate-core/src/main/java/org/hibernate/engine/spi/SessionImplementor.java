@@ -74,6 +74,22 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	ActionQueue getActionQueue();
 
 	@Override
+	default TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return getActionQueue();
+	}
+
+	@Override
+	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return getActionQueue().getTransactionCompletionCallbacks();
+	}
+
+	/**
+	 * Should this session be automatically closed after the current
+	 * transaction completes?
+	 */
+	boolean isAutoCloseSessionEnabled();
+
+	@Override
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**

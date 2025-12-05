@@ -6,7 +6,6 @@ package org.hibernate.orm.test.mapping.collections;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -18,39 +17,29 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
-public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Article.class,
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
-	}
+@Jpa(
+		annotatedClasses = {OrderedBySQLTest.Person.class, OrderedBySQLTest.Article.class},
+		integrationSettings = {@Setting(name = DEFAULT_LIST_SEMANTICS, value = "BAG")}
+)
+public class OrderedBySQLTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.setId(1L);
 			person.setName("Vlad Mihalcea");
@@ -69,7 +58,7 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 			);
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::collections-customizing-ordered-by-sql-clause-fetching-example[]
 			Person person = entityManager.find(Person.class, 1L);
 			assertEquals(

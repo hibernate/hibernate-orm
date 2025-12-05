@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public class EffectiveEntityGraph implements AppliedGraph, Serializable {
-	private static final Logger log = Logger.getLogger( EffectiveEntityGraph.class );
+	private static final Logger LOG = Logger.getLogger( EffectiveEntityGraph.class );
 
 	private final boolean allowOverwrite;
 
@@ -74,15 +74,12 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalArgumentException Thrown if the semantic is null
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
-	public void applyGraph(RootGraphImplementor<?> graph, @Nullable GraphSemantic semantic) {
+	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
 		if ( semantic == null ) {
 			throw new IllegalArgumentException( "Graph semantic cannot be null" );
 		}
-
 		verifyWriteability();
-
-		log.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
-
+		LOG.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
 		this.semantic = semantic;
 		this.graph = graph;
 	}
@@ -107,20 +104,16 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
 	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
-		if ( properties == null || properties.isEmpty() ) {
-			return;
-		}
+		if ( properties != null && !properties.isEmpty() ) {
+			var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+			var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+			if ( fetchHint == null ) {
+				fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
+			}
+			if ( loadHint == null ) {
+				loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
+			}
 
-		var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
-		if ( fetchHint == null ) {
-			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
-		}
-		if ( loadHint == null ) {
-			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
-		}
-
-		if ( fetchHint != null || loadHint != null ) {
 			if ( fetchHint != null ) {
 				if ( loadHint != null ) {
 					// can't have both
@@ -131,14 +124,14 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 				}
 				applyGraph( fetchHint, GraphSemantic.FETCH );
 			}
-			else {
+			else if ( loadHint != null ) {
 				applyGraph( loadHint, GraphSemantic.LOAD );
 			}
 		}
 	}
 
 	public void clear() {
-		this.semantic = null;
-		this.graph = null;
+		semantic = null;
+		graph = null;
 	}
 }

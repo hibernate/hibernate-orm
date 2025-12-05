@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import java.util.Comparator;
 
 /**
  * Models a parameter expression declared in the query.
@@ -20,14 +23,30 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T>, Comparable<SqmParameter<T>> {
+public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T> {
+	Comparator<SqmParameter<?>> COMPARATOR = new Comparator<>() {
+		@Override
+		public int compare(SqmParameter<?> o1, SqmParameter<?> o2) {
+			if ( o1 instanceof SqmNamedParameter<?> one ) {
+				return o2 instanceof SqmNamedParameter<?>
+						? one.getName().compareTo( o2.getName() )
+						: -1;
+			}
+			else if ( o1 instanceof SqmPositionalParameter<?> one ) {
+				return o2 instanceof SqmPositionalParameter<?>
+						? one.getPosition().compareTo( o2.getPosition() )
+						: 1;
+			}
+			throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + o2 );
+		}
+	};
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.
 	 *
 	 * @return The parameter name, or {@code null} if not a named parameter
 	 */
-	String getName();
+	@Nullable String getName();
 
 	/**
 	 * If this represents a positional parameter, return that parameter position;
@@ -35,7 +54,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The parameter position
 	 */
-	Integer getPosition();
+	@Nullable Integer getPosition();
 
 	/**
 	 * Can a collection/array of values be bound to this parameter?
@@ -60,7 +79,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 *
 	 * @return The anticipated Type.
 	 */
-	BindableType<T> getAnticipatedType();
+	@Nullable BindableType<T> getAnticipatedType();
 
 	/**
 	 * Make a copy
@@ -69,27 +88,4 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 
 	@Override
 	SqmParameter<T> copy(SqmCopyContext context);
-
-	/**
-	 * @implSpec Defined as default since this is an SPI to
-	 * support any previous extensions
-	 */
-	@Override
-	default int compareTo(SqmParameter<T> parameter) {
-		if ( this instanceof SqmNamedParameter<T> one ) {
-			return parameter instanceof SqmNamedParameter<?>
-					? one.getName().compareTo( parameter.getName() )
-					: -1;
-		}
-		else if ( this instanceof SqmPositionalParameter<T> one ) {
-			return parameter instanceof SqmPositionalParameter<?>
-					? one.getPosition().compareTo( parameter.getPosition() )
-					: 1;
-		}
-		else if ( this instanceof SqmJpaCriteriaParameterWrapper<T>
-				&& parameter instanceof SqmJpaCriteriaParameterWrapper<T> ) {
-			return Integer.compare( this.hashCode(), parameter.hashCode() );
-		}
-		throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + parameter );
-	}
 }

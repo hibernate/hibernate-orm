@@ -4,22 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -32,12 +16,26 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory( useCollectingStatementInspector = true )
 @DomainModel( annotatedClasses = {
 		InheritanceQueryGroupByTest.Parent.class,
@@ -55,7 +53,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16349" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16773" )
 public class InheritanceQueryGroupByTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final SingleTableChildOne st1 = new SingleTableChildOne();
@@ -72,12 +70,9 @@ public class InheritanceQueryGroupByTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from " + Parent.class.getName() ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test
@@ -105,6 +100,7 @@ public class InheritanceQueryGroupByTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final MyPojo myPojo = session.createQuery(
 					"select new MyPojo(sum(e.amount), re) from MyEntity e join e." + parentProp + " re group by re",
 					MyPojo.class
@@ -145,6 +141,7 @@ public class InheritanceQueryGroupByTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Long sum = session.createQuery(
 					String.format( "select sum(e.amount) from MyEntity e join e.%s re group by re", parentProp ),
 					Long.class
@@ -182,6 +179,7 @@ public class InheritanceQueryGroupByTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final MyPojo myPojo = session.createQuery(
 					String.format(
 							"select new %s(sum(e.amount), re) from MyEntity e join e.%s re group by re order by re",
@@ -226,6 +224,7 @@ public class InheritanceQueryGroupByTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
+			//noinspection removal
 			final Long sum = session.createQuery(
 					String.format(
 							"select sum(e.amount) from MyEntity e join e.%s re group by re order by re",
@@ -239,10 +238,6 @@ public class InheritanceQueryGroupByTest {
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", childPropCount );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", childPropCount );
 		} );
-	}
-
-	private static Dialect getDialect(SessionFactoryScope scope) {
-		return scope.getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	private static boolean supportsFunctionalDependency(
@@ -266,6 +261,7 @@ public class InheritanceQueryGroupByTest {
 		return false;
 	}
 
+	@SuppressWarnings("unused")
 	@MappedSuperclass
 	public abstract static class Parent {
 		@Id
@@ -293,6 +289,7 @@ public class InheritanceQueryGroupByTest {
 	public static class SingleTableParent extends Parent {
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleTableChildOne" )
 	@DiscriminatorValue( "1" )
 	public static class SingleTableChildOne extends SingleTableParent {
@@ -300,6 +297,7 @@ public class InheritanceQueryGroupByTest {
 		private Integer childOneProp;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "SingleTableChildTwo" )
 	@DiscriminatorValue( "2" )
 	public static class SingleTableChildTwo extends SingleTableParent {
@@ -312,12 +310,14 @@ public class InheritanceQueryGroupByTest {
 	public static class JoinedParent extends Parent {
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedChildOne" )
 	public static class JoinedChildOne extends JoinedParent {
 		@Column( name = "child_one_col" )
 		private Integer childOneProp;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "JoinedChildTwo" )
 	public static class JoinedChildTwo extends JoinedParent {
 		@Column( name = "child_two_col" )
@@ -329,18 +329,21 @@ public class InheritanceQueryGroupByTest {
 	public static class TPCParent extends Parent {
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "TPCChildOne" )
 	public static class TPCChildOne extends TPCParent {
 		@Column( name = "child_one_col" )
 		private Integer childOneProp;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity( name = "TPCChildTwo" )
 	public static class TPCChildTwo extends TPCParent {
 		@Column( name = "child_two_col" )
 		private Integer childTwoProp;
 	}
 
+	@SuppressWarnings({"unused", "FieldCanBeLocal"})
 	@Entity( name = "MyEntity" )
 	public static class MyEntity {
 		@Id

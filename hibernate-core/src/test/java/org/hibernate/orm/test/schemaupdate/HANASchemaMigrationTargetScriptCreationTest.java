@@ -8,176 +8,202 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import org.hamcrest.MatcherAssert;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
+import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
+import org.hibernate.tool.schema.spi.ExecutionOptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.EnumSet;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import org.junit.After;
-import org.junit.Test;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * @author Jonathan Bregler
  */
-@RequiresDialect(value = HANADialect.class)
-public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalTestCase {
-
-	private File output;
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialect(HANADialect.class)
+public class HANASchemaMigrationTargetScriptCreationTest {
 	private String varcharType;
 	private String clobType;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ TestEntity.class };
-	}
-
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		try {
-			this.output = File.createTempFile( "update_script", ".sql" );
-		}
-		catch (IOException e) {
-			fail( e.getMessage() );
-		}
-		this.output.deleteOnExit();
-		configuration.setProperty( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" );
-		configuration.setProperty( Environment.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, this.output.getAbsolutePath() );
-	}
-
-	@Override
-	protected void afterSessionFactoryBuilt() {
-		super.afterSessionFactoryBuilt();
-		final Dialect dialect = sessionFactory().getJdbcServices().getDialect();
-		this.varcharType = ( (HANADialect) dialect ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
-		this.clobType = ( (HANADialect) dialect ).isUseUnicodeStringTypes() ? "nclob" : "clob";
-	}
-
-	@After
-	public void tearDown() {
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( TestEntity.class )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
-
-			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
-		}
-		finally {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
-		}
+	@BeforeEach
+	void setUp(DomainModelScope modelScope) {
+		final HANADialect dialect = (HANADialect) modelScope.getDomainModel().getDatabase().getDialect();
+		this.varcharType = dialect.isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
+		this.clobType = dialect.isUseUnicodeStringTypes() ? "nclob" : "clob";
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12302")
-	public void testTargetScriptIsCreatedStringTypeDefault() throws Exception {
-		this.rebuildSessionFactory();
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedStringTypeDefault(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b boolean[^,]+, c " + this.varcharType + "[^,]+, field " + this.varcharType + "[^,]+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(),
 				fileContentMatcher.find(),
 				is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12302")
-	public void testTargetScriptIsCreatedStringTypeNVarchar() throws Exception {
-		this.rebuildSessionFactory( config -> {
-			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "true" );
-		} );
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry(settings = {
+			@Setting(name = "hibernate.dialect.hana.use_unicode_string_types", value = "true")
+	})
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedStringTypeNVarchar(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b boolean[^,]+, c nvarchar[^,]+, field nvarchar[^,]+, lob nclob" );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
-				fileContentMatcher.find(),
-				is( true ) );
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(), fileContentMatcher.find(), is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12302")
-	public void testTargetScriptIsCreatedStringTypeVarchar() throws Exception {
-		this.rebuildSessionFactory( config -> {
-			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "false" );
-		} );
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedStringTypeVarchar(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b boolean[^,]+, c " + this.varcharType + "[^,]+, field " + this.varcharType + "[^,]+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
-				fileContentMatcher.find(),
-				is( true ) );
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(), fileContentMatcher.find(), is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testTargetScriptIsCreatedBooleanTypeDefault() throws Exception {
-		this.rebuildSessionFactory();
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedBooleanTypeDefault(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b boolean[^,]+, c " + this.varcharType + "[^,]+, field " + this.varcharType + "[^,]+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
-				fileContentMatcher.find(),
-				is( true ) );
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(), fileContentMatcher.find(), is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testTargetScriptIsCreatedBooleanTypeLegacy() throws Exception {
-		this.rebuildSessionFactory( config -> {
-			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "true" );
-		} );
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry(settings = {
+			@Setting(name = "hibernate.dialect.hana.use_legacy_boolean_type", value = "true")
+	})
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedBooleanTypeLegacy(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b tinyint[^,]+, c " + this.varcharType + "[^,]+, field " + this.varcharType + "[^,]+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
-				fileContentMatcher.find(),
-				is( true ) );
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(), fileContentMatcher.find(), is( true ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12132")
-	public void testTargetScriptIsCreatedBooleanType() throws Exception {
-		this.rebuildSessionFactory( config -> {
-			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "false" );
-		} );
-		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+	@ServiceRegistry
+	@DomainModel(annotatedClasses = HANASchemaMigrationTargetScriptCreationTest.TestEntity.class)
+	public void testTargetScriptIsCreatedBooleanType(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		var scriptFile = new File( tmpDir, "script.sql" );
+
+		exportToScriptFile( registryScope, modelScope, scriptFile );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(b boolean[^,]+, c " + this.varcharType + "[^,]+, field " + this.varcharType + "[^,]+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
-		assertThat(
-				"Script file : " + fileContent.toLowerCase(),
-				fileContentMatcher.find(),
-				is( true ) );
+		MatcherAssert.assertThat( "Script file : " + fileContent.toLowerCase(), fileContentMatcher.find(), is( true ) );
+	}
+
+	private void exportToScriptFile(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			File scriptFile) {
+		var schemaCreator = new SchemaCreatorImpl( registryScope.getRegistry() );
+		final GenerationTargetToScript target =
+				new GenerationTargetToScript( new ScriptTargetOutputToFile( scriptFile, "utf8" ), ";" );
+		modelScope.getDomainModel().orderColumns( true );
+		try {
+			target.prepare();
+			final Map<String, Object> settings = registryScope.getRegistry().requireService( ConfigurationService.class ).getSettings();
+			schemaCreator.createFromMetadata(
+					modelScope.getDomainModel(),
+					new ExecutionOptions() {
+						@Override
+						public Map<String, Object> getConfigurationValues() {
+							return settings;
+						}
+
+						@Override
+						public boolean shouldManageNamespaces() {
+							return false;
+						}
+
+						@Override
+						public ExceptionHandler getExceptionHandler() {
+							return ExceptionHandlerHaltImpl.INSTANCE;
+						}
+					},
+					registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect(),
+					source -> source,
+					target
+			);
+		}
+		finally {
+			target.release();
+		}
 	}
 
 	@Entity

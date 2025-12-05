@@ -162,7 +162,7 @@ class IndexBinder {
 			boolean declaredAsIndex,
 			String options,
 			Selectable[] columns) {
-		final IndexOrUniqueKeyNameSource source =
+		final var source =
 				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName, declaredAsIndex );
 		boolean hasFormula = false;
 		for ( Selectable selectable : columns ) {
@@ -197,8 +197,8 @@ class IndexBinder {
 	}
 
 	void bindIndexes(Table table, jakarta.persistence.Index[] indexes) {
-		for ( jakarta.persistence.Index index : indexes ) {
-			final StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
+		for ( var index : indexes ) {
+			final var tokenizer = new StringTokenizer( index.columnList(), "," );
 			final List<String> parsed = new ArrayList<>();
 			while ( tokenizer.hasMoreElements() ) {
 				final String trimmed = tokenizer.nextToken().trim();
@@ -227,7 +227,7 @@ class IndexBinder {
 	}
 
 	void bindUniqueConstraints(Table table, UniqueConstraint[] constraints) {
-		for ( UniqueConstraint constraint : constraints ) {
+		for ( var constraint : constraints ) {
 			final String name = constraint.name();
 			final String[] columnNames = constraint.columnNames();
 			final String options = constraint.options();
@@ -323,11 +323,12 @@ class IndexBinder {
 		if ( names == null ) {
 			return emptyList();
 		}
-
-		final List<Identifier> columnNames = arrayList( names.length );
-		for ( String name : names ) {
-			columnNames.add( getDatabase().toIdentifier( name ) );
+		else {
+			final List<Identifier> columnNames = arrayList( names.length );
+			for ( String name : names ) {
+				columnNames.add( getDatabase().toIdentifier( name ) );
+			}
+			return columnNames;
 		}
-		return columnNames;
 	}
 }

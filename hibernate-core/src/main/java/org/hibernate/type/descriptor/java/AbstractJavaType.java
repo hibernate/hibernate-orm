@@ -48,9 +48,10 @@ public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializa
 	protected AbstractJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = type != null && Comparable.class.isAssignableFrom( getJavaTypeClass() )
-				? (Comparator<T>) ComparableComparator.INSTANCE
-				: null;
+		this.comparator =
+				type != null && Comparable.class.isAssignableFrom( getJavaTypeClass() )
+						? ComparableComparator.INSTANCE
+						: null;
 	}
 
 	@Override

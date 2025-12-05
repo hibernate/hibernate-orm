@@ -18,7 +18,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
 import java.net.URL;
-import java.util.Map;
 
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
@@ -45,10 +44,8 @@ public abstract class AbstractSchemaPopulator {
 			boolean format,
 			Dialect dialect,
 			GenerationTarget... targets) {
-
-		final Formatter formatter = getImportScriptFormatter(format);
-
-		boolean hasDefaultImportFileScriptBeenExecuted = applyImportScript(
+		final var formatter = getImportScriptFormatter(format);
+		final boolean hasDefaultImportFileScriptBeenExecuted = applyImportScript(
 				options,
 				commandExtractor,
 				dialect,
@@ -70,7 +67,7 @@ public abstract class AbstractSchemaPopulator {
 	}
 
 	private static boolean skipDefaultFileImport(ExecutionOptions options) {
-		return getBoolean( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, options.getConfigurationValues(), false );
+		return getBoolean( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, options.getConfigurationValues() );
 	}
 
 	/**
@@ -90,7 +87,7 @@ public abstract class AbstractSchemaPopulator {
 
 	/**
 	 * Handles import scripts specified using
-	 * {@link org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES}.
+	 * {@link org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES}.
 	 *
 	 * @return {@code true} if the legacy {@linkplain #DEFAULT_IMPORT_FILE default import file}
 	 *         was one of the listed imported files that were executed
@@ -103,8 +100,9 @@ public abstract class AbstractSchemaPopulator {
 			GenerationTarget[] targets) {
 		final Object importScriptSetting = getImportScriptSetting( options );
 		if ( importScriptSetting != null ) {
-			final ScriptSourceInput importScriptInput =
-					interpretScriptSourceSetting( importScriptSetting, getClassLoaderService(), getCharsetName( options ) );
+			final var importScriptInput =
+					interpretScriptSourceSetting( importScriptSetting,
+							getClassLoaderService(), getCharsetName( options ) );
 			applyScript(
 					options,
 					commandExtractor,
@@ -124,13 +122,18 @@ public abstract class AbstractSchemaPopulator {
 		if ( skipDefaultFileImport( options ) ) {
 			return false;
 		}
-		final URL defaultImportFileUrl = getClassLoaderService().locateResource( DEFAULT_IMPORT_FILE );
-		return defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl );
+		else {
+			final URL defaultImportFileUrl =
+					getClassLoaderService()
+							.locateResource( DEFAULT_IMPORT_FILE );
+			return defaultImportFileUrl != null
+				&& importScriptInput.containsScript( defaultImportFileUrl );
+		}
 	}
 
 	/**
 	 * Handles import scripts specified using
-	 * {@link org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
+	 * {@link org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
 	 */
 	private void applyImportFiles(
 			ExecutionOptions options,
@@ -142,16 +145,27 @@ public abstract class AbstractSchemaPopulator {
 		final String[] importFiles =
 				StringHelper.split( ",",
 						getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile ) );
+		if ( importFiles.length > 0 ) {
+			applyImportFiles( options, commandExtractor, dialect, formatter, importFiles, targets );
+		}
+	}
+
+	private void applyImportFiles(
+			ExecutionOptions options,
+			SqlScriptCommandExtractor commandExtractor,
+			Dialect dialect,
+			Formatter formatter,
+			String[] importFiles,
+			GenerationTarget[] targets) {
 		final String charsetName = getCharsetName( options );
-		final ClassLoaderService classLoaderService = getClassLoaderService();
+		final var classLoaderService = getClassLoaderService();
 		for ( String currentFile : importFiles ) {
-			final String resourceName = currentFile.trim();
-			if ( !resourceName.isEmpty() ) { //skip empty resource names
+			if ( !currentFile.isBlank() ) { //skip empty resource names
 				applyScript(
 						options,
 						commandExtractor,
 						dialect,
-						interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName ),
+						interpretLegacyImportScriptSetting( currentFile.trim(), classLoaderService, charsetName ),
 						formatter,
 						targets
 				);
@@ -175,19 +189,19 @@ public abstract class AbstractSchemaPopulator {
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CHARSET_NAME
+	 * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_CHARSET_NAME
 	 */
 	private static String getCharsetName(ExecutionOptions options) {
 		return (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * @see org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 *
 	 * @return a {@link java.io.Reader} or a string URL
 	 */
 	private static Object getImportScriptSetting(ExecutionOptions options) {
-		final Map<String, Object> configuration = options.getConfigurationValues();
+		final var configuration = options.getConfigurationValues();
 		final Object importScriptSetting = configuration.get( HBM2DDL_LOAD_SCRIPT_SOURCE );
 		return importScriptSetting == null
 				? configuration.get( JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE )

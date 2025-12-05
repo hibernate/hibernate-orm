@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.sql.SQLException;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
@@ -11,11 +12,12 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.tool.schema.extract.internal.CachingDatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -50,7 +52,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			Namespace namespace,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		final NameSpaceTablesInformation tablesInformation =
+		final var tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
 
 		if ( schemaFilter.includeNamespace( namespace ) ) {
@@ -67,13 +69,13 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					targets
 			);
 
-			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
-			for ( Table table : namespace.getTables() ) {
+			final var tables = existingDatabase.getTablesInformation( namespace );
+			for ( var table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
 					checkExportIdentifier( table, exportIdentifiers );
-					final TableInformation tableInformation = tables.getTableInformation( table );
+					final var tableInformation = tables.getTableInformation( table );
 					if ( tableInformation == null ) {
 						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
@@ -85,11 +87,11 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
-			for ( Table table : namespace.getTables() ) {
+			for ( var table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table )
 						&& table.isPhysicalTable()
 						&& contributableInclusionFilter.matches( table ) ) {
-					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
+					final var tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
 								context, targets );
@@ -100,5 +102,24 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			}
 		}
 		return tablesInformation;
+	}
+
+	@Override
+	protected DatabaseInformation buildDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, SqlStringGenerationContext sqlStringGenerationContext) {
+		final var serviceRegistry = ddlTransactionIsolator.getJdbcContext().getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		try {
+			return new CachingDatabaseInformationImpl(
+					serviceRegistry,
+					jdbcEnvironment,
+					sqlStringGenerationContext,
+					ddlTransactionIsolator,
+					tool
+			);
+		}
+		catch (SQLException e) {
+			throw jdbcEnvironment.getSqlExceptionHelper()
+					.convert( e, "Unable to build DatabaseInformation" );
+		}
 	}
 }

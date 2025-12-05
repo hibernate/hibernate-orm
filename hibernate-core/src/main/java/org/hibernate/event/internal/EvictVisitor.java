@@ -7,15 +7,11 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -26,7 +22,6 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public class EvictVisitor extends AbstractVisitor {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
 
 	private final Object owner;
 
@@ -44,7 +39,7 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	public void evictCollection(Object value, CollectionType type) {
-		final EventSource session = getSession();
+		final var session = getSession();
 		final PersistentCollection<?> collection;
 		if ( type.hasHolder() ) {
 			collection = session.getPersistenceContextInternal().removeCollectionHolder( value );
@@ -66,14 +61,15 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	private void evictCollection(PersistentCollection<?> collection) {
-		final EventSource session = getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionEntry ce = persistenceContext.removeCollectionEntry( collection );
-		final CollectionPersister persister = ce.getLoadedPersister();
+		final var session = getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var ce = persistenceContext.removeCollectionEntry( collection );
+		final var persister = ce.getLoadedPersister();
 		final Object loadedKey = ce.getLoadedKey();
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evicting collection: " + collectionInfoString( persister, collection, loadedKey, session ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.evictingCollection(
+					collectionInfoString( persister, collection, loadedKey, session ) );
 		}
 
 		if ( persister != null ) {

@@ -5,102 +5,100 @@
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
 
 import java.util.HashSet;
-import java.util.Map;
-import jakarta.persistence.EntityManager;
 
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {StrTestEntity.class},
+		integrationSettings = @Setting(name = EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, value = "true"))
+public class TrackingEntitiesMultipleChangesTest {
 	private Integer steId1 = null;
 	private Integer steId2 = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - Adding two entities
-		em.getTransaction().begin();
-		StrTestEntity ste1 = new StrTestEntity( "x" );
-		StrTestEntity ste2 = new StrTestEntity( "y" );
-		em.persist( ste1 );
-		em.persist( ste2 );
-		steId1 = ste1.getId();
-		steId2 = ste2.getId();
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste1 = new StrTestEntity( "x" );
+			StrTestEntity ste2 = new StrTestEntity( "y" );
+			em.persist( ste1 );
+			em.persist( ste2 );
+			steId1 = ste1.getId();
+			steId2 = ste2.getId();
+		} );
 
 		// Revision 2 - Adding first and removing second entity
-		em.getTransaction().begin();
-		ste1 = em.find( StrTestEntity.class, steId1 );
-		ste2 = em.find( StrTestEntity.class, steId2 );
-		ste1.setStr( "z" );
-		em.remove( ste2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste1 = em.find( StrTestEntity.class, steId1 );
+			StrTestEntity ste2 = em.find( StrTestEntity.class, steId2 );
+			ste1.setStr( "z" );
+			em.remove( ste2 );
+		} );
 
 		// Revision 3 - Modifying and removing the same entity.
-		em.getTransaction().begin();
-		ste1 = em.find( StrTestEntity.class, steId1 );
-		ste1.setStr( "a" );
-		em.merge( ste1 );
-		em.remove( ste1 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			StrTestEntity ste1 = em.find( StrTestEntity.class, steId1 );
+			ste1.setStr( "a" );
+			em.merge( ste1 );
+			em.remove( ste1 );
+		} );
 	}
 
 	@Test
-	public void testTrackAddedTwoEntities() {
+	public void testTrackAddedTwoEntities(EntityManagerFactoryScope scope) {
 		StrTestEntity ste1 = new StrTestEntity( "x", steId1 );
 		StrTestEntity ste2 = new StrTestEntity( "y", steId2 );
 
-		Assert.assertEquals(
-				TestTools.makeSet( ste1, ste2 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 1 ) )
-		);
+		scope.inEntityManager( em -> {
+			assertEquals(
+					TestTools.makeSet( ste1, ste2 ),
+					new HashSet<Object>( getCrossTypeRevisionChangesReader( em ).findEntities( 1 ) )
+			);
+		} );
 	}
 
 	@Test
-	public void testTrackUpdateAndRemoveDifferentEntities() {
+	public void testTrackUpdateAndRemoveDifferentEntities(EntityManagerFactoryScope scope) {
 		StrTestEntity ste1 = new StrTestEntity( "z", steId1 );
 		StrTestEntity ste2 = new StrTestEntity( null, steId2 );
 
-		Assert.assertEquals(
-				TestTools.makeSet( ste1, ste2 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 2 ) )
-		);
+		scope.inEntityManager( em -> {
+			assertEquals(
+					TestTools.makeSet( ste1, ste2 ),
+					new HashSet<Object>( getCrossTypeRevisionChangesReader( em ).findEntities( 2 ) )
+			);
+		} );
 	}
 
 	@Test
-	public void testTrackUpdateAndRemoveTheSameEntity() {
+	public void testTrackUpdateAndRemoveTheSameEntity(EntityManagerFactoryScope scope) {
 		StrTestEntity ste1 = new StrTestEntity( null, steId1 );
 
-		Assert.assertEquals(
-				TestTools.makeSet( ste1 ),
-				new HashSet<Object>( getCrossTypeRevisionChangesReader().findEntities( 3 ) )
-		);
+		scope.inEntityManager( em -> {
+			assertEquals(
+					TestTools.makeSet( ste1 ),
+					new HashSet<Object>( getCrossTypeRevisionChangesReader( em ).findEntities( 3 ) )
+			);
+		} );
 	}
 
-	private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() {
-		return getAuditReader().getCrossTypeRevisionChangesReader();
+	private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader(jakarta.persistence.EntityManager em) {
+		return AuditReaderFactory.get( em ).getCrossTypeRevisionChangesReader();
 	}
 }

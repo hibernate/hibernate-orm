@@ -33,17 +33,19 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC ) ) {
-			throw new HibernateException( "[" + lockMode + "] not valid for [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "Entity '" + lockable.getEntityName()
+						+ "' may not be locked at level " + lockMode );
+		}
+		if ( !lockable.isVersioned() ) {
+			throw new HibernateException( "Entity '" + lockable.getEntityName()
+						+ "' has no version and may not be locked at level " + lockMode);
 		}
 	}
 
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
-		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
-		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
-		session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );
+		session.getActionQueue().registerCallback( new EntityVerifyVersionProcess( object ) );
 	}
 
 	protected LockMode getLockMode() {

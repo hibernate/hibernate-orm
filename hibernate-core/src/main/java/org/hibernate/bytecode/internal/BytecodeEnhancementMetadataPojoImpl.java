@@ -14,18 +14,14 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,19 +36,19 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
  *
  * @author Steve Ebersole
  */
-public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
+public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
 	/**
 	 * Static constructor
 	 */
-	public static BytecodeEnhancementMetadata from(
+	public static BytecodeEnhancementMetadataPojoImpl from(
 			PersistentClass persistentClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
 			boolean collectionsInDefaultFetchGroupEnabled,
 			Metadata metadata) {
-		final Class<?> mappedClass = persistentClass.getMappedClass();
+		final var mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = isPersistentAttributeInterceptableType( mappedClass );
-		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
+		final var lazyAttributesMetadata = enhancedForLazyLoading
 				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, metadata )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
@@ -75,7 +71,10 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	private final LazyAttributeLoadingInterceptor.EntityRelatedState lazyAttributeLoadingInterceptorState;
 	private volatile transient EnhancementAsProxyLazinessInterceptor.EntityRelatedState enhancementAsProxyInterceptorState;
 
-	BytecodeEnhancementMetadataPojoImpl(
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected BytecodeEnhancementMetadataPojoImpl(
 			String entityName,
 			Class<?> entityClass,
 			Set<String> identifierAttributeNames,
@@ -91,8 +90,9 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		this.identifierAttributeNames = identifierAttributeNames;
 		this.enhancedForLazyLoading = enhancedForLazyLoading;
 		this.lazyAttributesMetadata = lazyAttributesMetadata;
-		this.lazyAttributeLoadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
-				getEntityName(), lazyAttributesMetadata.getLazyAttributeNames() );
+		this.lazyAttributeLoadingInterceptorState =
+				new LazyAttributeLoadingInterceptor.EntityRelatedState( getEntityName(),
+						lazyAttributesMetadata.getLazyAttributeNames() );
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			return false;
 		}
 
-		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
+		final var interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 			return interceptor.hasAnyUninitializedAttributes();
 		}
@@ -135,7 +135,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			return true;
 		}
 
-		final BytecodeLazyAttributeInterceptor interceptor = extractLazyInterceptor( entity );
+		final var interceptor = extractLazyInterceptor( entity );
 		if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 			return interceptor.isAttributeLoaded( attributeName );
 		}
@@ -150,12 +150,12 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 
 	@Override
 	public PersistentAttributeInterceptable createEnhancedProxy(EntityKey entityKey, boolean addEmptyEntry, SharedSessionContractImplementor session) {
-		final EntityPersister persister = entityKey.getPersister();
+		final var persister = entityKey.getPersister();
 		final Object identifier = entityKey.getIdentifier();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final var persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
-		final PersistentAttributeInterceptable entity = asPersistentAttributeInterceptable( persister.instantiate( identifier, session ) );
+		final var entity = asPersistentAttributeInterceptable( persister.instantiate( identifier, session ) );
 
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		processIfSelfDirtinessTracker( entity, BytecodeEnhancementMetadataPojoImpl::clearDirtyAttributes );
@@ -166,8 +166,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 
 		// if requested, add the "holder entry" to the PC
 		if ( addEmptyEntry ) {
-			EntityHolder entityHolder = persistenceContext.getEntityHolder( entityKey );
-			EntityEntry entityEntry = persistenceContext.addEntry(
+			final var entityHolder = persistenceContext.getEntityHolder( entityKey );
+			final var entityEntry = persistenceContext.addEntry(
 					entity,
 					Status.MANAGED,
 					// loaded state
@@ -187,8 +187,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		}
 
 		// inject the interceptor
-		persister.getEntityMetamodel()
-				.getBytecodeEnhancementMetadata()
+		persister.getBytecodeEnhancementMetadata()
 				.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, session );
 
 		return entity;
@@ -220,14 +219,12 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 					)
 			);
 		}
-		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				this.lazyAttributeLoadingInterceptorState,
+		final var interceptor = new LazyAttributeLoadingInterceptor(
+				lazyAttributeLoadingInterceptorState,
 				identifier,
 				session
 		);
-
 		injectInterceptor( entity, interceptor, session );
-
 		return interceptor;
 	}
 
@@ -248,13 +245,17 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		);
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	//This state object needs to be lazily initialized as it needs access to the Persister, but once
 	//initialized it can be reused across multiple sessions.
-	private EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
-		EnhancementAsProxyLazinessInterceptor.EntityRelatedState state = this.enhancementAsProxyInterceptorState;
+	public EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
+		var state = this.enhancementAsProxyInterceptorState;
 		if ( state == null ) {
-			final EntityPersister entityPersister = session.getFactory().getMappingMetamodel()
-					.getEntityDescriptor( entityName );
+			final var entityPersister =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 			state = new EnhancementAsProxyLazinessInterceptor.EntityRelatedState(
 					entityPersister,
 					nonAggregatedCidMapper,
@@ -311,4 +312,17 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		return (BytecodeLazyAttributeInterceptor) interceptor;
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Class<?> getEntityClass() {
+		return entityClass;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public LazyAttributeLoadingInterceptor.EntityRelatedState getLazyAttributeLoadingInterceptorState() {
+		return lazyAttributeLoadingInterceptorState;
+	}
 }

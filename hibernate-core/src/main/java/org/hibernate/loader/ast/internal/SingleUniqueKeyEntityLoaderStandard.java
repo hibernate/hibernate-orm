@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -27,7 +26,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
@@ -57,15 +56,15 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 						? toOneAttributeMapping.getForeignKeyDescriptor()
 						: uniqueKeyMapping;
 
-		final SessionFactoryImplementor factory = entityDescriptor.getEntityPersister().getFactory();
-		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
+		final var factory = entityDescriptor.getEntityPersister().getFactory();
+		final var builder = JdbcParametersList.newBuilder();
+		final var sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				emptyList(),
 				uniqueKeyMapping,
 				null,
 				loadQueryInfluencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);
@@ -75,13 +74,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	private static String getAttributePath(AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();
-		if ( declaringType instanceof EmbeddableMappingType ) {
-			final StringBuilder path = new StringBuilder();
+		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+			final var path = new StringBuilder();
 			path.append( attribute.getAttributeName() );
 			do {
-				final EmbeddableValuedModelPart embeddedValueMapping =
-						( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
-				attribute = embeddedValueMapping.asAttributeMapping();
+				final var valueMapping = embeddableMappingType.getEmbeddedValueMapping();
+				attribute = valueMapping.asAttributeMapping();
 				if ( attribute == null ) {
 					break;
 				}
@@ -105,7 +103,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings bindings = jdbcParameterBindings( ukValue, jdbcParameters, session );
+		final var bindings = jdbcParameterBindings( ukValue, jdbcParameters, session );
 		final List<T> list = list( jdbcSelect, bindings,
 				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ) );
 		return switch ( list.size() ) {
@@ -118,21 +116,21 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	@Override
 	public Object resolveId(Object ukValue, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
 		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
-		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
+		final var builder = JdbcParametersList.newBuilder();
+		final var sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				singletonList( entityDescriptor.getIdentifierMapping() ),
 				uniqueKeyAttribute,
 				null,
 				new LoadQueryInfluencers( factory ),
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);
-		final JdbcParameterBindings bindings = jdbcParameterBindings( ukValue, builder.build(), session );
-		final JdbcOperationQuerySelect jdbcSelect = getJdbcSelect( factory, sqlAst, bindings );
+		final var bindings = jdbcParameterBindings( ukValue, builder.build(), session );
+		final var jdbcSelect = getJdbcSelect( factory, sqlAst, bindings );
 		final List<Object> list = list( jdbcSelect, bindings, new NoCallbackExecutionContext( session ) );
 		assert list.size() == 1;
 		return list.get( 0 );
@@ -142,7 +140,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			Object ukValue,
 			JdbcParametersList parameters,
 			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( parameters.size() );
+		final var bindings = new JdbcParameterBindingsImpl( parameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue( ukValue, uniqueKeyAttribute, parameters, session );
 		assert offset == parameters.size();
 		return bindings;

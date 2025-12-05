@@ -4,18 +4,21 @@
  */
 package org.hibernate.orm.test.dialect;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.JiraKey;
 
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasFirstRow;
 import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasMaxRows;
 
 @JiraKey( value = "HHH-14649")
+@RequiresDialect(OracleDialect.class)
 public class Oracle12LimitHandlerTest extends AbstractLimitHandlerTest {
 
 	@Override

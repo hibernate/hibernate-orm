@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +37,7 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 	private SqmCorrelatedMapJoin(
 			SqmFrom<?, L> lhs,
 			SqmMapPersistentAttribute<L,K,V> attribute,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder,
@@ -93,5 +94,19 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedMapJoin( this );
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedMapJoin<?, ?, ?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedMapJoin<?, ?, ?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 }

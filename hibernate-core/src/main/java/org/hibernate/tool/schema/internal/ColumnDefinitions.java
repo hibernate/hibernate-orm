@@ -4,26 +4,21 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 
+import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isStringType;
@@ -132,46 +127,53 @@ class ColumnDefinitions {
 			Dialect dialect,
 			SqlStringGenerationContext context) {
 		if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
-			String uniqueKeyName = column.getUniqueKeyName();
+			final String uniqueKeyName = column.getUniqueKeyName();
 			final String keyName = uniqueKeyName == null
 					// fallback in case the ImplicitNamingStrategy name was not assigned
 					// (we don't have access to the ImplicitNamingStrategy here)
 					? generateName( "UK_", table, column )
 					: uniqueKeyName;
-			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
+			final var uniqueKey = table.getOrCreateUniqueKey( keyName );
 			uniqueKey.addColumn( column );
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );
 		}
 
 		if ( dialect.supportsColumnCheck() ) {
-			// some databases (Maria, SQL Server) don't like multiple 'check' clauses
-			final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
-			long anonConstraints = checkConstraints.stream().filter(CheckConstraint::isAnonymous).count();
-			if ( anonConstraints == 1 ) {
-				for ( CheckConstraint constraint : checkConstraints ) {
-					definition.append( constraint.constraintString( dialect ) );
+			final var checkConstraints = column.getCheckConstraints();
+			boolean hasAnonymousConstraints = false;
+			for ( var constraint : checkConstraints ) {
+				if ( constraint.isAnonymous() ) {
+					if ( !hasAnonymousConstraints ) {
+						definition.append(" check (");
+						hasAnonymousConstraints = true;
+					}
+					else {
+						definition.append(" and ");
+					}
+					definition.append( constraint.getConstraintInParens() );
 				}
 			}
-			else {
-				boolean first = true;
-				for ( CheckConstraint constraint : checkConstraints ) {
-					if ( constraint.isAnonymous() ) {
-						if ( first ) {
-							definition.append(" check (");
-							first = false;
-						}
-						else {
-							definition.append(" and ");
-						}
-						definition.append( constraint.getConstraintInParens() );
-					}
-				}
-				if ( !first ) {
-					definition.append(")");
-				}
-				for ( CheckConstraint constraint : checkConstraints ) {
+			if ( hasAnonymousConstraints ) {
+				definition.append( ')' );
+			}
+
+			if ( !dialect.supportsTableCheck() ) {
+				// When table check constraints are not supported, try to render all named constraints
+				for ( var constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
 						definition.append( constraint.constraintString( dialect ) );
+					}
+				}
+			}
+			else if ( !hasAnonymousConstraints && dialect.supportsNamedColumnCheck() ) {
+				// Otherwise only render the first named constraint as column constraint if there are no anonymous
+				// constraints and named column check constraint are supported, because some database don't like
+				// multiple check clauses.
+				// Note that the TableExporter will take care of named constraints then
+				for ( var constraint : checkConstraints ) {
+					if ( constraint.isNamed() ) {
+						definition.append( constraint.constraintString( dialect ) );
+						break;
 					}
 				}
 			}
@@ -195,8 +197,9 @@ class ColumnDefinitions {
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
 				definition.append( ' ' ).append( column.getSqlType( metadata ) );
 			}
-			final String identityColumnString = dialect.getIdentityColumnSupport()
-					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
+			final String identityColumnString =
+					dialect.getIdentityColumnSupport()
+							.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
 			// the custom columnDefinition might have already included the
 			// identity column generation clause, so try not to add it twice
 			if ( !definition.toString().toLowerCase(Locale.ROOT).contains( identityColumnString ) ) {
@@ -280,46 +283,19 @@ class ColumnDefinitions {
 	private static String generateName(String prefix, Table table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
-		final StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
+		final var builder = new StringBuilder( "table`" + table.getName() + "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
 		// bindings are given.
-		final Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, Comparator.comparing( Column::getName ) );
-		for ( Column column : alphabeticalColumns ) {
+		final var alphabeticalColumns = columns.clone();
+		Arrays.sort( alphabeticalColumns, comparing( Column::getName ) );
+		for ( var column : alphabeticalColumns ) {
 			final String columnName = column == null ? "" : column.getName();
-			sb.append( "column`" ).append( columnName ).append( "`" );
+			builder.append( "column`" ).append( columnName ).append( "`" );
 		}
-		return prefix + hashedName( sb.toString() );
+		final byte[] hashed = NamingHelper.hash( builder.toString().getBytes() );
+		return prefix + new BigInteger( 1, hashed ).toString( 35 );
 	}
 
-	/**
-	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
-	 * (full alphanumeric), guaranteeing
-	 * that the length of the name will always be smaller than the 30
-	 * character identifier restriction enforced by a few dialects.
-	 *
-	 * @param name The name to be hashed.
-	 * @return String The hashed name.
-	 *
-	 * @deprecated Only used from deprecated methods
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	private static String hashedName(String name) {
-		try {
-			final MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( name.getBytes() );
-			final byte[] digest = md.digest();
-			final BigInteger bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name", e );
-		}
-	}
 }

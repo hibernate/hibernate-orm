@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -24,9 +25,15 @@ import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = NativeGeneratorMemberTest.NativeEntity.class)
 public class NativeGeneratorMemberTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new NativeEntity()));
 

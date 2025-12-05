@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.connections;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -11,24 +12,25 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
-import static org.junit.Assert.assertSame;
 
 /**
  * @author Yanming Zhou
  */
 @RequiresDialect(H2Dialect.class)
-public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ConnectionProviderFromBeanContainerTest {
 
 	private final ConnectionProvider dummyConnectionProvider = new DummyConnectionProvider();
 
@@ -46,7 +48,7 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 					@Override
 					public B getBeanInstance() {
 						return (B) (beanType == DummyConnectionProvider.class ?
-								dummyConnectionProvider : fallbackProducer.produceBeanInstance( beanType ) );
+								dummyConnectionProvider : fallbackProducer.produceBeanInstance( beanType ));
 					}
 
 					@Override
@@ -55,6 +57,7 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 					}
 				};
 			}
+
 			@Override
 			public <B> ContainedBean<B> getBean(
 					String name,
@@ -66,6 +69,7 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 					public B getBeanInstance() {
 						return fallbackProducer.produceBeanInstance( beanType );
 					}
+
 					@Override
 					public Class<B> getBeanClass() {
 						return beanType;
@@ -85,10 +89,14 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 	public void testProviderFromBeanContainerInUse() {
 		Map<String, Object> settings = createSettings();
 		settings.putIfAbsent( CONNECTION_PROVIDER, DummyConnectionProvider.class.getName() );
-		try ( ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySettings( settings ).build() ) {
+		ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySettings( settings ).build();
+		try {
 			ConnectionProvider providerInUse = serviceRegistry.getService( ConnectionProvider.class );
-			assertSame( dummyConnectionProvider, providerInUse );
+			assertThat( providerInUse ).isSameAs( dummyConnectionProvider );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -118,5 +126,5 @@ public class ConnectionProviderFromBeanContainerTest extends BaseUnitTestCase {
 		public boolean supportsAggressiveRelease() {
 			return false;
 		}
-	};
+	}
 }

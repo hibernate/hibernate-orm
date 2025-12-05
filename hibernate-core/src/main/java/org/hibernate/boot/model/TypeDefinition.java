@@ -7,7 +7,6 @@ package org.hibernate.boot.model;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -15,14 +14,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
@@ -39,7 +35,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.UserType;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -98,13 +96,21 @@ public class TypeDefinition implements Serializable {
 
 	public BasicValue.Resolution<?> resolve(
 			Map<?,?> localConfigParameters,
+			MetadataBuildingContext context,
+			JdbcTypeIndicators indicators) {
+		return resolve( localConfigParameters, null, context, indicators );
+	}
+
+	public BasicValue.Resolution<?> resolve(
+			Map<?,?> localConfigParameters,
+			// TODO: why is this parameter ignored??
 			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
-		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
+		if ( isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( name, Collections.emptyMap(), indicators, context );
+				reusableResolution = createResolution( this.name, emptyMap(), indicators, context );
 			}
 			return reusableResolution;
 		}
@@ -136,9 +142,9 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
-		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
+		final var bootstrapContext = context.getBootstrapContext();
+		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var instanceProducer = bootstrapContext.getCustomTypeProducer();
 		final boolean isKnownType =
 				Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
@@ -153,7 +159,7 @@ public class TypeDefinition implements Serializable {
 				configurationAware.setTypeConfiguration( typeConfiguration );
 			}
 
-			final Properties combinedTypeParameters = new Properties();
+			final var combinedTypeParameters = new Properties();
 			if ( parameters!=null ) {
 				combinedTypeParameters.putAll( parameters );
 			}
@@ -165,8 +171,8 @@ public class TypeDefinition implements Serializable {
 
 			if ( typeInstance instanceof UserType ) {
 				@SuppressWarnings("unchecked")
-				final UserType<T> userType = (UserType<T>) typeInstance;
-				final CustomType<T> customType = new CustomType<>( userType, typeConfiguration );
+				final var userType = (UserType<T>) typeInstance;
+				final var customType = new CustomType<>( userType, typeConfiguration );
 				return new UserTypeResolution<>( customType, null, combinedTypeParameters );
 			}
 
@@ -226,30 +232,32 @@ public class TypeDefinition implements Serializable {
 
 	private static <T> BasicValue.Resolution<T> resolveLegacyCases(
 			Class<T> typeImplementorClass, JdbcTypeIndicators indicators, TypeConfiguration typeConfiguration) {
-		final BasicType<T> legacyType;
+		return createBasicTypeResolution( getLegacyType( typeImplementorClass ),
+				typeImplementorClass, indicators, typeConfiguration );
+	}
+
+	private static <T> BasicType<T> getLegacyType(Class<T> typeImplementorClass) {
 		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
-			legacyType = new SerializableType( typeImplementorClass );
+			return new SerializableType( typeImplementorClass );
 		}
 		else if ( typeImplementorClass.isInterface() ) {
-			legacyType = (BasicType<T>) new JavaObjectType();
+			return (BasicType<T>) new JavaObjectType();
 		}
 		else {
 			throw new IllegalArgumentException( "Named type [" + typeImplementorClass
-					+ "] did not implement BasicType nor UserType" );
+												+ "] did not implement BasicType nor UserType" );
 		}
-
-		return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
 	}
 
 	private static <T> BasicValue.Resolution<T> createBasicTypeResolution(
 			BasicType<T> type,
-			Class<? extends T> typeImplementorClass,
+			Class<T> typeImplementorClass,
 			JdbcTypeIndicators indicators,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<T> jtd = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( typeImplementorClass );
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
-		final BasicType<T> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
-		final BasicType<T> resolved = resolveSqlTypeIndicators( indicators, basicType, jtd );
+		final var jtd = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( typeImplementorClass );
+		final var jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
+		final var basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+		final var resolved = resolveSqlTypeIndicators( indicators, basicType, jtd );
 
 		return new BasicValue.Resolution<>() {
 			@Override
@@ -304,8 +312,8 @@ public class TypeDefinition implements Serializable {
 					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			final ManagedBeanRegistry beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
-			final ManagedBean<T> typeBean = name != null
+			final var beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+			final var typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
 			return typeBean.getBeanInstance();
@@ -322,29 +330,31 @@ public class TypeDefinition implements Serializable {
 				typeImplementorClass,
 				localTypeParams,
 				null,
-				buildingContext.getBootstrapContext().getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
+				buildingContext.getBootstrapContext().getTypeConfiguration()
+						.getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( !(o instanceof TypeDefinition that) ) {
+		else if ( !(object instanceof TypeDefinition that) ) {
 			return false;
 		}
-
-		return Objects.equals( this.name, that.name )
-			&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
-			&& Arrays.equals( this.registrationKeys, that.registrationKeys )
-			&& Objects.equals( this.parameters, that.parameters );
+		else {
+			return Objects.equals( this.name, that.name )
+				&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
+				&& Arrays.equals( this.registrationKeys, that.registrationKeys )
+				&& Objects.equals( this.parameters, that.parameters );
+		}
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( name, typeImplementorClass, registrationKeys, parameters );
+		return Objects.hash( name, typeImplementorClass, Arrays.hashCode( registrationKeys ), parameters );
 	}
 
 	@Override

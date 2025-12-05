@@ -55,9 +55,8 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 		else {
 			char separator = '[';
 			for ( int i = 0; i < size; i++ ) {
-				SqlAstNode argument = arguments.get( i );
 				sqlAppender.append( separator );
-				argument.accept( walker );
+				arguments.get( i ).accept( walker );
 				separator = ',';
 			}
 		}
@@ -79,7 +78,7 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 			final int size = arguments.size();
 			SqmBindableType<?> firstType = null;
 			for ( int i = 0; i < size; i++ ) {
-				final SqmBindableType<?> argument = arguments.get( i ).getExpressible();
+				final var argument = arguments.get( i ).getExpressible();
 				if ( firstType == null ) {
 					firstType = argument;
 				}
@@ -101,7 +100,8 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 			final int size = arguments.size();
 			JdbcMappingContainer firstType = null;
 			for ( int i = 0; i < size; i++ ) {
-				final JdbcMappingContainer argumentType = ( (Expression) arguments.get( i ) ).getExpressionType();
+				final var expression = (Expression) arguments.get( i );
+				final var argumentType = expression.getExpressionType();
 				if ( argumentType != null && !( argumentType instanceof BottomType ) ) {
 					if ( firstType == null ) {
 						firstType = argumentType;

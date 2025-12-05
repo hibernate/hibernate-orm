@@ -4,51 +4,47 @@
  */
 package org.hibernate.orm.test.fetching;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class FetchModeSubselectTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		FetchModeSubselectTest.Department.class,
+		FetchModeSubselectTest.Employee.class,
+})
+@SessionFactory
+public class FetchModeSubselectTest {
+	private final Logger log = Logger.getLogger( FetchModeSubselectTest.class );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Department.class,
-			Employee.class,
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			for (long i = 0; i < 2; i++) {
 				Department department = new Department();
 				department.id = i + 1;
@@ -64,7 +60,7 @@ public class FetchModeSubselectTest extends BaseEntityManagerFunctionalTestCase 
 			}
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::fetching-strategies-fetch-mode-subselect-example[]
 			List<Department> departments = entityManager.createQuery(
 				"select d " +
@@ -76,7 +72,7 @@ public class FetchModeSubselectTest extends BaseEntityManagerFunctionalTestCase 
 			log.infof("Fetched %d Departments", departments.size());
 
 			for (Department department : departments) {
-				assertEquals(3, department.getEmployees().size());
+				assertEquals( 3, department.getEmployees().size() );
 			}
 			//end::fetching-strategies-fetch-mode-subselect-example[]
 		});

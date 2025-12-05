@@ -43,7 +43,6 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -63,15 +62,11 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
 import java.lang.annotation.Annotation;
@@ -82,6 +77,7 @@ import java.util.Map;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ATTRIBUTE;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
@@ -101,7 +97,6 @@ import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -261,7 +256,7 @@ public class PropertyBinder {
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( memberDetails );
 
-		basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
+		basicValueBinder = new BasicValueBinder( ATTRIBUTE, buildingContext );
 		basicValueBinder.setReturnedClassName( returnedClassName );
 		basicValueBinder.setColumns( columns );
 		basicValueBinder.setPersistentClassName( containerClassName );
@@ -273,6 +268,13 @@ public class PropertyBinder {
 		);
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
+
+		if ( holder instanceof ComponentPropertyHolder embeddableTypedContainer ) {
+			final Component component = embeddableTypedContainer.getComponent();
+			if ( component.wasTableExplicitlyDefined() ) {
+				basicValueBinder.setTable( component.getTable() );
+			}
+		}
 
 		value = basicValueBinder.make();
 
@@ -293,30 +295,27 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
-		final List<? extends Annotation> metaAnnotatedTargets =
+		final var metaAnnotatedTargets =
 				memberDetails.getMetaAnnotated( AttributeBinderType.class, getSourceModelContext() );
-
-		if ( !isEmpty( metaAnnotatedTargets ) ) {
-			final AnnotationDescriptorRegistry descriptorRegistry =
-					getSourceModelContext().getAnnotationDescriptorRegistry();
-			for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
-				final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
-				final AnnotationDescriptor<? extends Annotation> metaAnnotatedDescriptor =
-						descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
-				final AttributeBinderType binderTypeAnn =
-						metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
-				try {
-					final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
-					final PersistentClass persistentClass = entityBinder != null
-							? entityBinder.getPersistentClass()
-							: persistentClasses.get( holder.getEntityName() );
-					binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
-				}
-				catch ( Exception e ) {
-					throw new AnnotationException( "error processing @AttributeBinderType annotation '"
-							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property '"
-							+ qualify( holder.getPath(), name ) + "'", e );
-				}
+		final var descriptorRegistry = getSourceModelContext().getAnnotationDescriptorRegistry();
+		for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
+			final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
+			final var metaAnnotatedDescriptor =
+					descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
+			final var binderTypeAnn =
+					metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
+			try {
+				final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
+				final var persistentClass =
+						entityBinder != null
+								? entityBinder.getPersistentClass()
+								: persistentClasses.get( holder.getEntityName() );
+				binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "error processing @AttributeBinderType annotation '"
+						+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property '"
+						+ qualify( holder.getPath(), name ) + "'", e );
 			}
 		}
 	}
@@ -347,7 +346,7 @@ public class PropertyBinder {
 	}
 
 	void callAttributeBindersInSecondPass(Property property) {
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		if ( metadataCollector.isInSecondPass() ) {
 			callAttributeBinders( property, metadataCollector.getEntityBindingMap() );
 		}
@@ -357,7 +356,7 @@ public class PropertyBinder {
 	}
 
 	private void bindId(Property property) {
-		final RootClass rootClass = (RootClass) holder.getPersistentClass();
+		final var rootClass = (RootClass) holder.getPersistentClass();
 		if ( toMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
 			// If an XxxToMany, it has to be wrapped today.
 			// This poses a problem as the PK is the class instead of the
@@ -372,7 +371,7 @@ public class PropertyBinder {
 			}
 			else {
 				rootClass.setIdentifierProperty( property );
-				final MappedSuperclass superclass =
+				final var superclass =
 						getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
 				setDeclaredIdentifier( rootClass, superclass, property );
 			}
@@ -415,13 +414,13 @@ public class PropertyBinder {
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(
 			MemberDetails property,
 			ClassDetails embeddableClass) {
-		final org.hibernate.annotations.EmbeddableInstantiator onEmbedded =
+		final var onEmbedded =
 				property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( onEmbedded != null ) {
 			return onEmbedded.value();
 		}
 
-		final org.hibernate.annotations.EmbeddableInstantiator onEmbeddable =
+		final var onEmbeddable =
 				embeddableClass.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( onEmbeddable != null ) {
 			return onEmbeddable.value();
@@ -471,7 +470,7 @@ public class PropertyBinder {
 			updatable = false;
 		}
 		property.setInsertable( insertable );
-		property.setUpdateable( updatable );
+		property.setUpdatable( updatable );
 	}
 
 	private void handleOptional(Property property) {
@@ -506,7 +505,7 @@ public class PropertyBinder {
 
 	private void handleNaturalId(Property property) {
 		if ( memberDetails != null && entityBinder != null ) {
-			final NaturalId naturalId = memberDetails.getDirectAnnotationUsage( NaturalId.class );
+			final var naturalId = memberDetails.getDirectAnnotationUsage( NaturalId.class );
 			if ( naturalId != null ) {
 				if ( !entityBinder.isRootEntity() ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -527,7 +526,7 @@ public class PropertyBinder {
 			property.setOptimisticLocked( collection.isOptimisticLocked() );
 		}
 		else if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( OptimisticLock.class ) ) {
-			final OptimisticLock optimisticLock = memberDetails.getDirectAnnotationUsage( OptimisticLock.class );
+			final var optimisticLock = memberDetails.getDirectAnnotationUsage( OptimisticLock.class );
 			final boolean excluded = optimisticLock.excluded();
 			validateOptimisticLock( excluded );
 			property.setOptimisticLocked( !excluded );
@@ -539,7 +538,7 @@ public class PropertyBinder {
 
 	private void validateAnnotationsAgainstType() {
 		if ( memberDetails != null ) {
-			final TypeDetails type = memberDetails.getType();
+			final var type = memberDetails.getType();
 			if ( !(type instanceof ArrayTypeDetails) ) {
 				checkAnnotation( OrderColumn.class, List.class );
 				if ( memberDetails.hasDirectAnnotationUsage( OrderBy.class )
@@ -599,7 +598,7 @@ public class PropertyBinder {
 			PropertyContainer propertyContainer,
 			MetadataBuildingContext context,
 			int idPropertyCounter) {
-		for ( MemberDetails property : propertyContainer.propertyIterator() ) {
+		for ( var property : propertyContainer.propertyIterator() ) {
 			idPropertyCounter = addProperty( propertyContainer, property, elements, context, idPropertyCounter );
 		}
 		return idPropertyCounter;
@@ -611,11 +610,11 @@ public class PropertyBinder {
 			List<PropertyData> inFlightPropertyDataList,
 			MetadataBuildingContext context,
 			int idPropertyCounter) {
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
+		final var collector = context.getMetadataCollector();
 
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it...
-		for ( PropertyData propertyData : inFlightPropertyDataList ) {
+		for ( var propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.resolveAttributeName() ) ) {
 				checkIdProperty( property, propertyData, context.getBootstrapContext().getModelsContext() );
 				// EARLY EXIT!!!
@@ -623,9 +622,9 @@ public class PropertyBinder {
 			}
 		}
 
-		final TypeVariableScope ownerType = propertyContainer.getTypeAtStake();
+		final var ownerType = propertyContainer.getTypeAtStake();
 
-		final PropertyData propertyAnnotatedElement = new PropertyInferredData(
+		final var propertyAnnotatedElement = new PropertyInferredData(
 				propertyContainer.getDeclaringClass(),
 				ownerType,
 				property,
@@ -635,7 +634,7 @@ public class PropertyBinder {
 
 		// put element annotated by @Id in front, since it has to be parsed
 		// before any association by Hibernate
-		final MemberDetails element = propertyAnnotatedElement.getAttributeMember();
+		final var element = propertyAnnotatedElement.getAttributeMember();
 		if ( hasIdAnnotation( element ) ) {
 			inFlightPropertyDataList.add( idPropertyCounter, propertyAnnotatedElement );
 			if ( hasToOneAnnotation( element ) ) {
@@ -655,9 +654,9 @@ public class PropertyBinder {
 
 	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, ModelsContext context) {
 		final boolean incomingIdProperty = hasIdAnnotation( property );
-		final MemberDetails attributeMember = propertyData.getAttributeMember();
-		final boolean existingIdProperty = hasIdAnnotation( attributeMember );
 		if ( incomingIdProperty ) {
+			final var memberDetails = propertyData.getAttributeMember();
+			final boolean existingIdProperty = hasIdAnnotation( memberDetails );
 			if ( existingIdProperty ) {
 				if ( property.hasDirectAnnotationUsage( GeneratedValue.class )
 						|| !property.getMetaAnnotated( IdGeneratorType.class, context ).isEmpty() ) {
@@ -666,9 +665,9 @@ public class PropertyBinder {
 					//      generator, but for now we don't seem to be able to detect
 					//      that case here
 					throw new AnnotationException(
-							"Attribute '" + attributeMember.getName()
+							"Attribute '" + memberDetails.getName()
 							+ "' is declared as an '@Id' or '@EmbeddedId' property by '"
-							+ attributeMember.getDeclaringType().getName()
+							+ memberDetails.getDeclaringType().getName()
 							+ "' and so '" + property.getDeclaringType().getName()
 							+ "' may not respecify the generation strategy" );
 				}
@@ -679,8 +678,8 @@ public class PropertyBinder {
 				//      as an @Id field, but for now we don't seem to be able
 				//      to detect that case here
 				throw new AnnotationException(
-						"Attribute '" + attributeMember.getName()
-						+ "' is declared by '" + attributeMember.getDeclaringType().getName()
+						"Attribute '" + memberDetails.getName()
+						+ "' is declared by '" + memberDetails.getDeclaringType().getName()
 						+ "' and may not be redeclared as an '@Id' or '@EmbeddedId' by '"
 						+ property.getDeclaringType().getName() + "'" );
 			}
@@ -704,15 +703,16 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) throws MappingException {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass)
+					throws MappingException {
 
 		if ( !alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
 			// inSecondPass can only be used to apply right away the second pass of a composite-element
 			// Because it's a value type, there is no bidirectional association, hence second pass
 			// ordering does not matter
-			final MemberDetails property = inferredData.getAttributeMember();
-			if ( property.hasDirectAnnotationUsage( Parent.class ) ) {
-				handleParentProperty( propertyHolder, inferredData, property );
+			final var memberDetails = inferredData.getAttributeMember();
+			if ( memberDetails.hasDirectAnnotationUsage( Parent.class ) ) {
+				handleParentProperty( propertyHolder, inferredData, memberDetails );
 			}
 			else {
 				//prepare PropertyBinder
@@ -757,20 +757,20 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var memberDetails = inferredData.getAttributeMember();
 
 		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
-				&& property.hasDirectAnnotationUsage(Id.class)) {
-			throw new AnnotationException("Member '" + property.getName()
+				&& memberDetails.hasDirectAnnotationUsage( Id.class ) ) {
+			throw new AnnotationException("Member '" + memberDetails.getName()
 					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
 		}
 
-		final TypeDetails attributeTypeDetails =
+		final var attributeTypeDetails =
 				inferredData.getAttributeMember().isPlural()
 						? inferredData.getAttributeMember().getType()
 						: inferredData.getClassOrElementType();
 
-		final PropertyBinder propertyBinder = propertyBinder(
+		final var propertyBinder = propertyBinder(
 				propertyHolder,
 				inferredData,
 				entityBinder,
@@ -780,16 +780,16 @@ public class PropertyBinder {
 				attributeTypeDetails
 		);
 
-		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
+		final var lazyGroupAnnotation = memberDetails.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
-		final ColumnsBuilder columnsBuilder =
-				new ColumnsBuilder( propertyHolder, nullability, property, inferredData, entityBinder, context )
+		final var columnsBuilder =
+				new ColumnsBuilder( propertyHolder, nullability, memberDetails, inferredData, entityBinder, context )
 						.extractMetadata();
-		final AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
-		final AnnotatedColumns columns = propertyBinder.bindProperty(
+		final var joinColumns = columnsBuilder.getJoinColumns();
+		final var columns = propertyBinder.bindProperty(
 				propertyHolder,
 				nullability,
 				inferredData,
@@ -800,7 +800,7 @@ public class PropertyBinder {
 				attributeTypeDetails.determineRawClass(),
 				columnsBuilder
 		);
-		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
+		addNaturalIds( inSecondPass, memberDetails, columns, joinColumns, context );
 	}
 
 	private static PropertyBinder propertyBinder(
@@ -811,13 +811,13 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			TypeDetails attributeTypeDetails) {
-		final MemberDetails property = inferredData.getAttributeMember();
-		final PropertyBinder propertyBinder = new PropertyBinder();
+		final var memberDetails = inferredData.getAttributeMember();
+		final var propertyBinder = new PropertyBinder();
 		propertyBinder.setName( inferredData.getPropertyName() );
 		propertyBinder.setReturnedClassName( inferredData.getTypeName() );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setHolder( propertyHolder );
-		propertyBinder.setMemberDetails( property );
+		propertyBinder.setMemberDetails( memberDetails );
 		propertyBinder.setReturnedClass( attributeTypeDetails );
 		propertyBinder.setBuildingContext( context );
 		if ( isIdentifierMapper ) {
@@ -827,7 +827,7 @@ public class PropertyBinder {
 		propertyBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 		propertyBinder.setEntityBinder( entityBinder );
 		propertyBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
-		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( property ) );
+		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( memberDetails ) );
 		return propertyBinder;
 	}
 
@@ -847,7 +847,7 @@ public class PropertyBinder {
 			boolean inSecondPass,
 			ClassDetails returnedClass,
 			ColumnsBuilder columnsBuilder) {
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var property = inferredData.getAttributeMember();
 		if ( isVersion( property ) ) {
 			bindVersionProperty(
 					propertyHolder,
@@ -950,15 +950,15 @@ public class PropertyBinder {
 			boolean isIdentifierMapper,
 			AnnotatedColumns columns) {
 		checkVersionProperty( propertyHolder, isIdentifierMapper );
-		final RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
+		final var rootClass = (RootClass) propertyHolder.getPersistentClass();
 		setColumns( columns );
-		final Property property = makePropertyValueAndBind();
+		final var property = makePropertyValueAndBind();
 		getBasicValueBinder().setVersion( true );
 		rootClass.setVersion( property );
 
 		//If version is on a mapped superclass, update the mapping
-		final ClassDetails declaringClass = inferredData.getDeclaringClass();
-		final MappedSuperclass mappedSuperclass =
+		final var declaringClass = inferredData.getDeclaringClass();
+		final var mappedSuperclass =
 				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
 		if ( mappedSuperclass != null ) {
 			// Don't overwrite an existing version property
@@ -1000,24 +1000,24 @@ public class PropertyBinder {
 			ColumnsBuilder columnsBuilder,
 			AnnotatedColumns columns,
 			ClassDetails returnedClass) {
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var memberDetails = inferredData.getAttributeMember();
 
 		// overrides from @MapsId or @IdClass if needed
 		final PropertyData overridingProperty =
-				overridingProperty( propertyHolder, isIdentifierMapper, property );
+				overridingProperty( propertyHolder, isIdentifierMapper, memberDetails );
 		final AnnotatedColumns actualColumns;
 		final boolean isComposite;
 		if ( overridingProperty != null ) {
 			setReferencedEntityName( overridingProperty.getClassOrElementName() );
 			actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( overridingProperty );
-			isComposite = isComposite( property, returnedClass, overridingProperty );
+			isComposite = isComposite( memberDetails, returnedClass, overridingProperty );
 		}
 		else {
 			actualColumns = columns;
-			isComposite = isEmbedded( property, returnedClass );
+			isComposite = isEmbedded( memberDetails, returnedClass );
 		}
 
-		final PropertyBinder propertyBinder = propertyBinder(
+		final var propertyBinder = propertyBinder(
 				propertyHolder,
 				nullability,
 				inferredData,
@@ -1045,9 +1045,9 @@ public class PropertyBinder {
 			boolean isIdentifierMapper,
 			MemberDetails property) {
 		if ( isIdentifierMapper
-			|| isId
-			|| propertyHolder.isOrWithinEmbeddedId()
-			|| propertyHolder.isInIdClass() ) {
+				|| isId
+				|| propertyHolder.isOrWithinEmbeddedId()
+				|| propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
 			return getPropertyOverriddenByMapperOrMapsId(
 					isId,
@@ -1074,13 +1074,12 @@ public class PropertyBinder {
 			AnnotatedColumns actualColumns,
 			PropertyData overridingProperty) {
 
-		final Class<? extends CompositeUserType<?>> compositeUserType =
-				resolveCompositeUserType( inferredData, buildingContext );
+		final var compositeUserType = resolveCompositeUserType( inferredData, buildingContext );
 
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var memberDetails = inferredData.getAttributeMember();
 		if ( isComposite || compositeUserType != null ) {
-			if ( property.isArray() && property.getElementType() != null
-					&& isEmbedded( property, property.getElementType() ) ) {
+			if ( memberDetails.isArray() && memberDetails.getElementType() != null
+					&& isEmbedded( memberDetails, memberDetails.getElementType() ) ) {
 				// This is a special kind of basic aggregate component array type
 				aggregateBinder(
 						propertyHolder,
@@ -1088,7 +1087,7 @@ public class PropertyBinder {
 						entityBinder,
 						isIdentifierMapper,
 						isComponentEmbedded,
-						property,
+						memberDetails,
 						columns,
 						returnedClass,
 						compositeUserType,
@@ -1104,7 +1103,7 @@ public class PropertyBinder {
 						isComponentEmbedded,
 						buildingContext,
 						inheritanceStatePerClass,
-						property,
+						memberDetails,
 						actualColumns,
 						returnedClass,
 						isId(),
@@ -1114,8 +1113,8 @@ public class PropertyBinder {
 				);
 			}
 		}
-		else if ( property.isPlural() && property.getElementType() != null
-					&& isEmbedded( property, property.getElementType() ) ) {
+		else if ( memberDetails.isPlural() && memberDetails.getElementType() != null
+					&& isEmbedded( memberDetails, memberDetails.getElementType() ) ) {
 			// This is a special kind of basic aggregate component array type
 			aggregateBinder(
 					propertyHolder,
@@ -1123,9 +1122,9 @@ public class PropertyBinder {
 					entityBinder,
 					isIdentifierMapper,
 					isComponentEmbedded,
-					property,
+					memberDetails,
 					columns,
-					property.getElementType().determineRawClass(),
+					memberDetails.getElementType().determineRawClass(),
 					null,
 					actualColumns
 			);
@@ -1135,7 +1134,7 @@ public class PropertyBinder {
 					propertyHolder,
 					inferredData,
 					nullability,
-					property,
+					memberDetails,
 					actualColumns
 			);
 		}
@@ -1202,16 +1201,15 @@ public class PropertyBinder {
 			MemberDetails property,
 			ClassDetails returnedClass,
 			PropertyData overridingProperty) {
-		final InheritanceState state =
-				inheritanceStatePerClass.get( overridingProperty.getClassOrElementType().determineRawClass() );
+		final var state = inheritanceStatePerClass.get( overridingProperty.getClassOrElementType().determineRawClass() );
 		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 
 	private void handleGeneratorsForOverriddenId(
 			PropertyHolder propertyHolder,
 			PropertyData mapsIdProperty) {
-		final SimpleValue idValue = (SimpleValue) getValue();
-		final RootClass rootClass = propertyHolder.getPersistentClass().getRootClass();
+		final var idValue = (SimpleValue) getValue();
+		final var rootClass = propertyHolder.getPersistentClass().getRootClass();
 		final String propertyName = mapsIdProperty.getPropertyName();
 		final String entityName = rootClass.getEntityName();
 		idValue.setCustomIdGeneratorCreator( creationContext ->
@@ -1277,7 +1275,7 @@ public class PropertyBinder {
 	 *          The intention is really whether non-optional is explicit
 	 */
 	private static boolean isExplicitlyOptional(MemberDetails attributeMember) {
-		final Basic basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+		final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
 		// things are optional (nullable) by default.
 		// If there is no annotation, that cannot be altered
 		return basic == null || basic.optional();
@@ -1288,7 +1286,7 @@ public class PropertyBinder {
 	 * whether it is primitive?
 	 */
 	public static boolean isOptional(MemberDetails attributeMember, PropertyHolder propertyHolder) {
-		final Basic basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+		final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
 		if ( basic != null ) {
 			return basic.optional()
 				&& attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
@@ -1308,26 +1306,25 @@ public class PropertyBinder {
 	}
 
 	private static boolean isLazy(MemberDetails property) {
-		final Basic annotationUsage = property.getDirectAnnotationUsage( Basic.class );
+		final var annotationUsage = property.getDirectAnnotationUsage( Basic.class );
 		return annotationUsage != null && annotationUsage.fetch() == LAZY;
 	}
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
 			MetadataBuildingContext buildingContext) {
-		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
-		final MemberDetails attributeMember = inferredData.getAttributeMember();
-		final TypeDetails classOrElementType = inferredData.getClassOrElementType();
-		final ClassDetails returnedClass = classOrElementType.determineRawClass();
+		final var attributeMember = inferredData.getAttributeMember();
+		final var classOrElementType = inferredData.getClassOrElementType();
+		final var returnedClass = classOrElementType.determineRawClass();
 
 		if ( attributeMember != null ) {
-			final CompositeType compositeType =
-					attributeMember.locateAnnotationUsage( CompositeType.class, modelsContext );
+			final var compositeType = attributeMember.locateAnnotationUsage( CompositeType.class, modelsContext );
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}
-			final Class<? extends CompositeUserType<?>> compositeUserType =
+			final var compositeUserType =
 					resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, buildingContext );
 			if ( compositeUserType != null ) {
 				return compositeUserType;
@@ -1335,7 +1332,7 @@ public class PropertyBinder {
 		}
 
 		if ( returnedClass != null ) {
-			final Class<?> embeddableClass = returnedClass.toJavaClass();
+			final var embeddableClass = returnedClass.toJavaClass();
 			if ( embeddableClass != null ) {
 				return buildingContext.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
 			}
@@ -1349,15 +1346,15 @@ public class PropertyBinder {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final ClassDetailsRegistry classDetailsRegistry =
+		final var classDetailsRegistry =
 				buildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
 		final String name =
 				StringHelper.isEmpty( persistentClass.getClassName() )
 						? persistentClass.getEntityName()
 						: persistentClass.getClassName();
-		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final var classDetails = classDetailsRegistry.resolveClassDetails( name );
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
 			final PropertyData data =
 					metadataCollector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );

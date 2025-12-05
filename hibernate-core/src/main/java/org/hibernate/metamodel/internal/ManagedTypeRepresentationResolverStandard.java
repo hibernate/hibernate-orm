@@ -19,8 +19,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
 
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
-
 /**
  * @author Steve Ebersole
  */
@@ -55,8 +53,8 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 
-		final CompositeUserType<?> compositeUserType = getCompositeUserType( bootDescriptor, creationContext );
-		final EmbeddableInstantiator customInstantiator =
+		final var compositeUserType = getCompositeUserType( bootDescriptor, creationContext );
+		final var customInstantiator =
 				getCustomInstantiator( bootDescriptor, creationContext, compositeUserType );
 
 		if ( bootDescriptor.getComponentClassName() == null ) { // i.e. RepresentationMode.MAP;
@@ -107,7 +105,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
 		else if ( bootDescriptor.getComponentClassName() != null
-				&& isRecord( bootDescriptor.getComponentClass() ) ) {
+				&& bootDescriptor.getComponentClass().isRecord() ) {
 			if ( bootDescriptor.sortProperties() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}

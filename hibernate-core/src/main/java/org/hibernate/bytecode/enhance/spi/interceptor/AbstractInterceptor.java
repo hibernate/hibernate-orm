@@ -18,13 +18,13 @@ public abstract class AbstractInterceptor implements SessionAssociableIntercepto
 
 	@Override
 	public SharedSessionContractImplementor getLinkedSession() {
-		return this.sessionAssociation != null ? this.sessionAssociation.session : null;
+		return sessionAssociation != null ? sessionAssociation.session : null;
 	}
 
 	@Override
 	public void setSession(SharedSessionContractImplementor session) {
 		if ( session != null ) {
-			this.sessionAssociation = session.getSessionAssociationMarkers();
+			sessionAssociation = session.getSessionAssociationMarkers();
 		}
 		else {
 			unsetSession();
@@ -33,31 +33,24 @@ public abstract class AbstractInterceptor implements SessionAssociableIntercepto
 
 	@Override
 	public void unsetSession() {
-		if ( this.sessionAssociation != null ) {
+		if ( sessionAssociation != null ) {
 			//We shouldn't mutate the original instance as it's shared across multiple entities,
 			//but we can get a version of it which represents the same state except it doesn't have the session set:
-			this.sessionAssociation = this.sessionAssociation.deAssociatedCopy();
+			sessionAssociation = sessionAssociation.deAssociatedCopy();
 		}
 	}
 
 	@Override
 	public boolean allowLoadOutsideTransaction() {
-		if ( this.sessionAssociation != null ) {
-			return this.sessionAssociation.allowLoadOutsideTransaction;
-		}
-		else {
-			return false;
-		}
+		return sessionAssociation != null
+			&& sessionAssociation.allowLoadOutsideTransaction;
 	}
 
 	@Override
 	public String getSessionFactoryUuid() {
-		if ( this.sessionAssociation != null ) {
-			return this.sessionAssociation.sessionFactoryUuid;
-		}
-		else {
-			return null;
-		}
+		return sessionAssociation != null
+				? sessionAssociation.sessionFactoryUuid
+				: null;
 	}
 
 	/**

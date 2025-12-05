@@ -6,7 +6,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
@@ -41,7 +41,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		return omitSqlQueryOptions( originalOptions, true, true );
 	}
 
-	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcOperationQuerySelect select) {
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcSelect select) {
 		return omitSqlQueryOptions( originalOptions, !select.usesLimitParameters(), false );
 	}
 
@@ -85,7 +85,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return omitLocks ? LockOptions.NONE : super.getLockOptions();
+		return omitLocks ? new LockOptions() : super.getLockOptions();
 	}
 
 	@Override

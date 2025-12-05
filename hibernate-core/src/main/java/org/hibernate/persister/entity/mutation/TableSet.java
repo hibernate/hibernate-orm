@@ -4,10 +4,11 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import java.util.Arrays;
 import java.util.BitSet;
 
 import org.hibernate.sql.model.TableMapping;
+
+import static java.util.Arrays.copyOf;
 
 /**
  * Represents a Set of TableMapping(s); table mappings are
@@ -31,6 +32,13 @@ public final class TableSet {
 		}
 		assert addForChecks( tableMapping );
 		bits.set( tableMapping.getRelativePosition() );
+	}
+
+	public void remove(final TableMapping tableMapping) {
+		if ( bits != null ) {
+			assert addForChecks( tableMapping );
+			bits.set( tableMapping.getRelativePosition(), false );
+		}
 	}
 
 	public boolean isEmpty() {
@@ -74,7 +82,7 @@ public final class TableSet {
 			checks = new Object[position + increments];
 		}
 		else if ( checks.length <= position ) {
-			checks = Arrays.copyOf( checks, position + increments );
+			checks = copyOf( checks, position + increments );
 		}
 	}
 

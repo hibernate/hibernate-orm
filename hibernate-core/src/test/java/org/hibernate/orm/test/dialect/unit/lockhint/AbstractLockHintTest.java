@@ -4,35 +4,34 @@
  */
 package org.hibernate.orm.test.dialect.unit.lockhint;
 
-import java.util.Collections;
+import java.util.HashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractLockHintTest extends BaseUnitTestCase {
+public abstract class AbstractLockHintTest {
 	private Dialect dialect;
 
 	protected abstract String getLockHintUsed();
 	protected abstract Dialect getDialectUnderTest();
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.dialect = getDialectUnderTest();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		this.dialect = null;
 	}
@@ -46,7 +45,6 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 
 	protected LockOptions lockOptions(String aliasToLock) {
 		LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_WRITE);
-		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.PESSIMISTIC_WRITE );
 		return lockOptions;
 	}
 
@@ -66,7 +64,9 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 		}
 
 		public void verify() {
-			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), Collections.EMPTY_MAP );
+			final HashMap<String, String[]> aliasMap = new HashMap<>();
+			aliasMap.put( aliasToLock, new String[] { "id" } );
+			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), aliasMap );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}
 	}

@@ -4,21 +4,22 @@
  */
 package org.hibernate.orm.test.envers.integration.auditReader;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.IntNoAutoIdTestEntity;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertNull;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * A test which verifies the behavior of the various {@link AuditReader} find implementations when the
@@ -27,70 +28,69 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-13500")
-public class FindByRevisionExactMatchOptionTest extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-
-		options.put( EnversSettings.FIND_BY_REVISION_EXACT_MATCH, "true" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { IntNoAutoIdTestEntity.class };
-	}
-
-	@Priority(10)
-	@Test
-	public void initData() {
+@EnversTest
+@Jpa(annotatedClasses = {IntNoAutoIdTestEntity.class},
+		integrationSettings = @Setting(name = EnversSettings.FIND_BY_REVISION_EXACT_MATCH, value = "true"))
+public class FindByRevisionExactMatchOptionTest {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Insert entity with id=1, numVal=1, revision 1
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final IntNoAutoIdTestEntity entity = new IntNoAutoIdTestEntity( 1, 1 );
-			entityManager.persist( entity );
+		scope.inTransaction( em -> {
+			final IntNoAutoIdTestEntity entity1 = new IntNoAutoIdTestEntity( 1, 1 );
+			em.persist( entity1 );
 		} );
 
 		// Update entity with id=1, setting numVal=11, revision 2
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final IntNoAutoIdTestEntity entity = entityManager.find( IntNoAutoIdTestEntity.class, 1 );
+		scope.inTransaction( em -> {
+			final IntNoAutoIdTestEntity entity = em.find( IntNoAutoIdTestEntity.class, 1 );
 			entity.setNumVal( 11 );
-			entityManager.merge( entity );
+			em.merge( entity );
 		} );
 
 		// Insert entity with id=2, numVal=2, revision 3
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final IntNoAutoIdTestEntity entity = new IntNoAutoIdTestEntity( 2, 2 );
-			entityManager.persist( entity );
+		scope.inTransaction( em -> {
+			final IntNoAutoIdTestEntity entity2 = new IntNoAutoIdTestEntity( 2, 2 );
+			em.persist( entity2 );
 		} );
 
 		// Update entity with id=2, setting numVal=22, revision 4
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			final IntNoAutoIdTestEntity entity = entityManager.find( IntNoAutoIdTestEntity.class, 2 );
+		scope.inTransaction( em -> {
+			final IntNoAutoIdTestEntity entity = em.find( IntNoAutoIdTestEntity.class, 2 );
 			entity.setNumVal( 22 );
-			entityManager.merge( entity );
+			em.merge( entity );
 		} );
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( IntNoAutoIdTestEntity.class, 1 ) );
-		assertEquals( Arrays.asList( 3, 4 ), getAuditReader().getRevisions( IntNoAutoIdTestEntity.class, 2 ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ),
+					auditReader.getRevisions( IntNoAutoIdTestEntity.class, 1 ) );
+			assertEquals( Arrays.asList( 3, 4 ),
+					auditReader.getRevisions( IntNoAutoIdTestEntity.class, 2 ) );
+		} );
 	}
 
 	@Test
-	public void testFindEntityId1() {
-		final AuditReader auditReader = getAuditReader();
-		assertEquals( new IntNoAutoIdTestEntity( 1, 1 ), auditReader.find( IntNoAutoIdTestEntity.class, 1, 1 ) );
-		assertEquals( new IntNoAutoIdTestEntity( 11, 1 ), auditReader.find( IntNoAutoIdTestEntity.class, 1, 2 ) );
-		assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 1, 3 ) );
-		assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 1, 4 ) );
+	public void testFindEntityId1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( new IntNoAutoIdTestEntity( 1, 1 ), auditReader.find( IntNoAutoIdTestEntity.class, 1, 1 ) );
+			assertEquals( new IntNoAutoIdTestEntity( 11, 1 ), auditReader.find( IntNoAutoIdTestEntity.class, 1, 2 ) );
+			assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 1, 3 ) );
+			assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 1, 4 ) );
+		} );
 	}
 
 	@Test
-	public void testFindEntityId2() {
-		final AuditReader auditReader = getAuditReader();
-		assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 2, 1 ) );
-		assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 2, 2 ) );
-		assertEquals( new IntNoAutoIdTestEntity( 2, 2 ), auditReader.find( IntNoAutoIdTestEntity.class, 2, 3 ) );
-		assertEquals( new IntNoAutoIdTestEntity( 22, 2 ), auditReader.find( IntNoAutoIdTestEntity.class, 2, 4 ) );
+	public void testFindEntityId2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 2, 1 ) );
+			assertNull( auditReader.find( IntNoAutoIdTestEntity.class, 2, 2 ) );
+			assertEquals( new IntNoAutoIdTestEntity( 2, 2 ), auditReader.find( IntNoAutoIdTestEntity.class, 2, 3 ) );
+			assertEquals( new IntNoAutoIdTestEntity( 22, 2 ), auditReader.find( IntNoAutoIdTestEntity.class, 2, 4 ) );
+		} );
 	}
 }

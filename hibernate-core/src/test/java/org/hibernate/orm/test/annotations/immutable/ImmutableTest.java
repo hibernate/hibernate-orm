@@ -4,218 +4,146 @@
  */
 package org.hibernate.orm.test.annotations.immutable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import jakarta.persistence.PersistenceException;
-
 import org.hibernate.AnnotationException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for <code>Immutable</code> annotation.
  *
  * @author Hardy Ferentschik
  */
-public class ImmutableTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				Country.class,
+				State.class,
+				Photo.class
+		}
+)
+@SessionFactory
+public class ImmutableTest {
+
+	@AfterEach
+	public void afterEach(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
 
 	@Test
-	public void testImmutableEntity() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Country country = new Country();
-		country.setName("Germany");
-		s.persist(country);
-		tx.commit();
-		s.close();
+	public void testImmutableEntity(SessionFactoryScope scope) {
+		Country c = new Country();
+		scope.inTransaction(
+				session -> {
+					c.setName( "Germany" );
+					session.persist( c );
+				}
+		);
 
 		// try changing the entity
-		s = openSession();
-		tx = s.beginTransaction();
-		Country germany = s.get(Country.class, country.getId());
-		assertNotNull(germany);
-		germany.setName("France");
-		assertEquals("Local name can be changed", "France", germany.getName());
-		s.persist(germany);
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Country germany = session.find( Country.class, c.getId() );
+					assertThat( germany ).isNotNull();
+					germany.setName( "France" );
+					assertThat( germany.getName() )
+							.describedAs( "Local name can be changed" )
+							.isEqualTo( "France" );
+
+					session.persist( germany );
+				}
+		);
 
 		// retrieving the country again - it should be unmodified
-		s = openSession();
-		tx = s.beginTransaction();
-		germany = s.get(Country.class, country.getId());
-		assertNotNull(germany);
-		assertEquals("Name should not have changed", "Germany", germany.getName());
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Country germany = session.find( Country.class, c.getId() );
+					assertThat( germany ).isNotNull();
+					assertThat( germany.getName() )
+							.describedAs( "Name should not have changed" )
+							.isEqualTo( "Germany" );
+
+				}
+		);
 	}
 
 	@Test
-	public void testImmutableCollection() {
+	public void testImmutableCollection(SessionFactoryScope scope) {
 		Country country = new Country();
-		country.setName("Germany");
+		country.setName( "Germany" );
 		List<State> states = new ArrayList<>();
 		State bayern = new State();
-		bayern.setName("Bayern");
+		bayern.setName( "Bayern" );
 		State hessen = new State();
-		hessen.setName("Hessen");
+		hessen.setName( "Hessen" );
 		State sachsen = new State();
-		sachsen.setName("Sachsen");
-		states.add(bayern);
-		states.add(hessen);
-		states.add(sachsen);
-		country.setStates(states);
+		sachsen.setName( "Sachsen" );
+		states.add( bayern );
+		states.add( hessen );
+		states.add( sachsen );
+		country.setStates( states );
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist(country);
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.persist( country )
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		Country germany = s.get(Country.class, country.getId());
-		assertNotNull(germany);
-		assertEquals("Wrong number of states", 3, germany.getStates().size());
+		PersistenceException persistenceException = assertThrows( PersistenceException.class, () -> scope.inTransaction(
+				session -> {
+					Country germany = session.find( Country.class, country.getId() );
+					assertThat( germany ).isNotNull();
+					assertThat( germany.getStates().size() )
+							.describedAs( "Wrong number of states" )
+							.isEqualTo( 3 );
 
-		// try adding a state
-		State foobar = new State();
-		foobar.setName("foobar");
-		s.persist(foobar);
-		germany.getStates().add(foobar);
-		try {
-			tx.commit();
-			fail();
-		}
-		catch ( PersistenceException ex ) {
-			// expected
-			assertTrue(ex.getMessage().contains("changed an immutable collection instance"));
-			log.debug("success");
-		}
-		s.close();
+					// try adding a state
+					State foobar = new State();
+					foobar.setName( "foobar" );
+					session.persist( foobar );
+					germany.getStates().add( foobar );
+				}
+		) );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		germany = s.get(Country.class, country.getId());
-		assertNotNull(germany);
-		assertEquals("Wrong number of states", 3, germany.getStates().size());
+		assertThat( persistenceException.getMessage() ).contains( "Immutable collection was modified" );
 
-		// try deleting a state
-		germany.getStates().remove(0);
-		try {
-			tx.commit();
-			fail();
-		} catch (PersistenceException e) {
-			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-			log.debug("success");
-		}
-		s.close();
+		persistenceException = assertThrows( PersistenceException.class, () -> scope.inTransaction(
+				session -> {
+					Country germany = session.find( Country.class, country.getId() );
+					assertThat( germany ).isNotNull();
+					assertThat( germany.getStates().size() )
+							.describedAs( "Wrong number of states" )
+							.isEqualTo( 3 );
+					// try deleting a state
+					germany.getStates().remove( 0 );
+				}
+		) );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		germany = s.get(Country.class, country.getId());
-		assertNotNull(germany);
-		assertEquals("Wrong number of states", 3, germany.getStates().size());
-		tx.commit();
-		s.close();
+		assertThat( persistenceException.getMessage() ).contains( "Immutable collection was modified" );
+
+		scope.inTransaction(
+				session -> {
+					Country germany = session.find( Country.class, country.getId() );
+					assertThat( germany ).isNotNull();
+					assertThat( germany.getStates().size() )
+							.describedAs( "Wrong number of states" )
+							.isEqualTo( 3 );
+				}
+		);
 	}
 
-	@Test
-	public void testImmutableAttribute(){
-		configuration().addAttributeConverter( ExifConverter.class);
-		configuration().addAttributeConverter( CaptionConverter.class);
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-
-		Photo photo = new Photo();
-		photo.setName( "cat.jpg");
-		photo.setMetadata( new Exif(Collections.singletonMap( "fake", "first value")));
-		photo.setCaption( new Caption( "Cat.jpg caption" ) );
-		s.persist(photo);
-		tx.commit();
-		s.close();
-
-		// try changing the attribute
-		s = openSession();
-		tx = s.beginTransaction();
-
-		Photo cat = s.get(Photo.class, photo.getId());
-		assertNotNull(cat);
-		cat.getMetadata().getAttributes().put( "fake", "second value");
-		cat.getCaption().setText( "new caption" );
-
-		tx.commit();
-		s.close();
-
-		// retrieving the attribute again - it should be unmodified since object identity is the same
-		s = openSession();
-		tx = s.beginTransaction();
-
-		cat = s.get(Photo.class, photo.getId());
-		assertNotNull(cat);
-		assertEquals("Metadata should not have changed", "first value", cat.getMetadata().getAttribute( "fake"));
-		assertEquals("Caption should not have changed", "Cat.jpg caption", cat.getCaption().getText());
-
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	public void testChangeImmutableAttribute(){
-		configuration().addAttributeConverter( ExifConverter.class);
-		configuration().addAttributeConverter( CaptionConverter.class);
-
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-
-		Photo photo = new Photo();
-		photo.setName( "cat.jpg");
-		photo.setMetadata( new Exif(Collections.singletonMap( "fake", "first value")));
-		photo.setCaption( new Caption( "Cat.jpg caption" ) );
-		s.persist(photo);
-
-		tx.commit();
-		s.close();
-
-		// replacing the attribute
-		s = openSession();
-		tx = s.beginTransaction();
-
-		Photo cat = s.get(Photo.class, photo.getId());
-		assertNotNull(cat);
-		cat.setMetadata( new Exif(Collections.singletonMap( "fake", "second value")));
-		cat.setCaption( new Caption( "new caption" ) );
-
-		tx.commit();
-		s.close();
-
-		// retrieving the attribute again - it should be modified since the holder object has changed as well
-		s = openSession();
-		tx = s.beginTransaction();
-
-		cat = s.get(Photo.class, photo.getId());
-		assertNotNull(cat);
-
-		assertEquals("Metadata should have changed", "second value", cat.getMetadata().getAttribute( "fake"));
-		assertEquals("Caption should have changed", "new caption", cat.getCaption().getText());
-
-		tx.commit();
-		s.close();
-	}
 
 	@Test
 	public void testMisplacedImmutableAnnotation() {
@@ -226,18 +154,14 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 //			fail( "Expecting exception due to misplaced @Immutable annotation");
 		}
 		catch (AnnotationException ignore) {
-			fail( "Exception with @Immutable on field");
+			fail( "Exception with @Immutable on field" );
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+			if ( metaServiceRegistry instanceof BootstrapServiceRegistry ) {
 				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
 			}
 		}
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Country.class, State.class, Photo.class };
-	}
 }

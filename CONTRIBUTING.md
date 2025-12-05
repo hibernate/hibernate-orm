@@ -3,7 +3,7 @@
 Contributions from the community are essential in keeping Hibernate (and any Open Source
 project really) strong and successful.  
 
-# Legal
+## Legal
 
 All original contributions to Hibernate are licensed under the
 [Apache License version 2.0 (Apache-2.0)](https://www.apache.org/licenses/LICENSE-2.0.txt),
@@ -23,6 +23,12 @@ Contributors with a valid copyright claim can request to be added to that list
 by sending a pull request to the project's GitHub repository,
 listing at least one relevant contribution in the pull request description.
 Note: one-liner or repetitive patches may not be sufficient to claim copyright.
+
+### Compliance with Laws and Regulations
+
+All contributions must comply with applicable laws and regulations, including U.S. export control and sanctions restrictions.
+For background, see the Linux Foundation’s guidance:
+[Navigating Global Regulations and Open Source: US OFAC Sanctions](https://www.linuxfoundation.org/blog/navigating-global-regulations-and-open-source-us-ofac-sanctions).
 
 ## Guidelines
 

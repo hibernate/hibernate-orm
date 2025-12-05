@@ -4,9 +4,10 @@
  */
 package org.hibernate.internal.util.collections;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -258,27 +260,27 @@ public final class CollectionHelper {
 		}
 	}
 
-	public static boolean isEmpty(Collection<?> collection) {
+	public static boolean isEmpty(@Nullable Collection<?> collection) {
 		return collection == null || collection.isEmpty();
 	}
 
-	public static boolean isEmpty(Map<?,?> map) {
+	public static boolean isEmpty(@Nullable Map<?,?> map) {
 		return map == null || map.isEmpty();
 	}
 
-	public static boolean isNotEmpty(Collection<?> collection) {
+	public static boolean isNotEmpty(@Nullable Collection<?> collection) {
 		return !isEmpty( collection );
 	}
 
-	public static boolean isNotEmpty(Map<?,?> map) {
+	public static boolean isNotEmpty(@Nullable Map<?,?> map) {
 		return !isEmpty( map );
 	}
 
-	public static boolean isEmpty(Object[] objects) {
+	public static boolean isEmpty(@Nullable Object[] objects) {
 		return objects == null || objects.length == 0;
 	}
 
-	public static boolean isNotEmpty(Object[] objects) {
+	public static boolean isNotEmpty(@Nullable Object[] objects) {
 		return objects != null && objects.length > 0;
 	}
 
@@ -288,15 +290,17 @@ public final class CollectionHelper {
 		return list;
 	}
 
+	@SafeVarargs
 	public static <T> List<T> listOf(T... values) {
 		final List<T> list = new ArrayList<>( values.length );
-		Collections.addAll( list, values );
+		addAll( list, values );
 		return list;
 	}
 
+	@SafeVarargs
 	public static <T> Set<T> setOf(T... values) {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
-		Collections.addAll( set, values );
+		addAll( set, values );
 		return set;
 	}
 
@@ -309,7 +313,7 @@ public final class CollectionHelper {
 			return properties;
 		}
 		else {
-			final Properties properties = new Properties();
+			final var properties = new Properties();
 			if ( isNotEmpty( map ) ) {
 				properties.putAll( map );
 			}
@@ -343,6 +347,9 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
+		if ( map == null ) {
+			return emptyMap();
+		}
 		return switch ( map.size() ) {
 			case 0 -> emptyMap();
 			case 1 -> {
@@ -363,6 +370,9 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
+		if ( arrayList == null ) {
+			return emptyList();
+		}
 		return switch ( arrayList.size() ) {
 			case 0 -> emptyList();
 			case 1 -> singletonList( arrayList.get( 0 ) );

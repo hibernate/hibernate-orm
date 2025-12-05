@@ -17,12 +17,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -34,6 +34,8 @@ import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
+import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
@@ -186,6 +188,15 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
+	 * Object the current tenant identifier using the
+	 * {@linkplain #getCurrentTenantIdentifierResolver() resolver}.
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	Object resolveTenantIdentifier();
+
+	/**
 	 * The {@link JavaType} to use for a tenant identifier.
 	 *
 	 * @since 6.4
@@ -299,11 +310,16 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	}
 
 	@Override
-	RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName);
+	RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(String entityName);
 
 	/**
 	 * The best guess entity name for an entity not in an association
 	 */
 	String bestGuessEntityName(Object object);
+
+	@Incubating
+	default JdbcSelectWithActionsBuilder getJdbcSelectWithActionsBuilder(){
+		return new JdbcSelectWithActions.Builder();
+	}
 
 }

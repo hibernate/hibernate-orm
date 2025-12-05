@@ -7,8 +7,8 @@ package org.hibernate.metamodel.internal;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import static org.hibernate.cfg.MappingSettings.STATIC_METAMODEL_POPULATION;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * Enumerated setting used to control whether Hibernate looks for and populates
@@ -41,15 +41,9 @@ public enum JpaStaticMetamodelPopulationSetting {
 		};
 	}
 
-	public static JpaStaticMetamodelPopulationSetting determineJpaStaticMetaModelPopulationSetting(Map configurationValues) {
-		return parse( determineSetting( configurationValues ) );
+	public static JpaStaticMetamodelPopulationSetting determineJpaStaticMetaModelPopulationSetting(
+			Map<String, Object> settings) {
+		return parse( getString( STATIC_METAMODEL_POPULATION, settings, "skipUnsupported" ) );
 	}
 
-	private static String determineSetting(Map configurationValues) {
-		return ConfigurationHelper.getString(
-				AvailableSettings.STATIC_METAMODEL_POPULATION,
-				configurationValues,
-				"skipUnsupported"
-		);
-	}
 }

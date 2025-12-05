@@ -149,9 +149,12 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		//this is the number of *binary* digits
-		//in a single-precision FP number
-		return dialect.getFloatPrecision();
+		return jdbcType.isFloat()
+				// this is usually the number of *binary* digits
+				// in a single-precision FP number
+				? dialect.getFloatPrecision()
+				// this is the number of decimal digits in a Java float
+				: 8;
 	}
 
 	@Override

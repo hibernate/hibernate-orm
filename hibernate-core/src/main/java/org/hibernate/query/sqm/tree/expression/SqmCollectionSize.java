@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -11,7 +13,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 
 /**
  * Represents the {@code SIZE()} function.
@@ -54,6 +57,11 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
+	public @NonNull SqmBindableType<Integer> getNodeType() {
+		return castNonNull( super.getNodeType() );
+	}
+
+	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitPluralAttributeSizeFunction( this );
 	}
@@ -71,13 +79,24 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCollectionSize that
-			&& Objects.equals( this.pluralPath, that.pluralPath );
+			&& this.pluralPath.equals( that.pluralPath );
 	}
 
 	@Override
 	public int hashCode() {
 		return pluralPath.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmCollectionSize that
+			&& this.pluralPath.isCompatible( that.pluralPath );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return pluralPath.cacheHashCode();
 	}
 }

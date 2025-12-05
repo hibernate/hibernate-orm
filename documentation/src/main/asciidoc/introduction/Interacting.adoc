@@ -241,6 +241,8 @@ When a transaction rolls back, Hibernate makes no attempt to roll back the state
 After a transaction rollback, the persistence context must be discarded, and the state of its entities must be assumed inconsistent with the state held by the database.
 ====
 
+The interface link:{doc-javadoc-url}org/hibernate/Transaction.html[`Transaction`] extends `EntityTransaction` with some additional operations, including the ability to register transaction completion callbacks.
+
 [[persistence-operations]]
 === Operations on the persistence context
 
@@ -638,6 +640,62 @@ Book book =
 
 Notice that this code fragment is completely typesafe, again thanks to <<metamodel-generator,Hibernate Processor>>.
 
+[[controlling-merge]]
+=== Controlling state retrieval during merge
+
+The <<persistence-operations,`merge()`>> operation is usually used when some interaction with a user or automated system spans multiple transactions, with each transaction having its own persistence context:
+
+1. an entity `e` is retrieved in one persistence context, and then the current transaction ends, resulting in destruction of the persistence context and in the entity becoming detached, then
+2.  `e` is modified in some way while detached, and then
+3. finally, the modification is made persistent by merging the detached instance in a second transaction, with a new persistence context, by calling `session.merge(e)`.
+
+In step 3, the original entity instance `e` remains detached, but `merge()` returns a distinct instance `f` representing the same row of the database and associated with the new persistence context.
+That is, `merge()` trades a detached instance for a <<persistence-contexts,persistent instance>> representing the same row.
+
+To determine the nature of the modification held in `e` and to guarantee correct semantics with respect to optimistic locking, Hibernate first ``select``s the current persistent state of the entity from the database before applying the modification to `f`.
+
+<<cascade,Cascade merge>> allows multiple modifications held in a graph of entity instances to be made persistent in one call to `merge()`.
+When `merge()` is used with cascading -- that is, when the `merge()` operation is applied to a root entity with associations mapped `cascade=MERGE` -- Hibernate issues a single `select` statement to retrieve the current database state of the root entity and all its associated entities.
+This behavior avoids the use of N+1 select statements for state retrieval during cascade merge but, in certain circumstances, the query might be suboptimal.
+On the other hand, this query does not occur if the root entity was already loaded into the persistence context before `merge()` is called.
+
+Therefore, when using the `EntityManager` API, we may gain control over the way state is loaded before a `merge()` just by calling `find()` before calling `merge()`.
+
+[source,java]
+----
+Book book = ... ;
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+entityManager.find(graph, book.getIsbn());  // force loading of the book
+entityManager.merge(book);  // merge the detached objet
+----
+
+The `Session` interface provides a streamlined alternative:
+
+[source,java]
+----
+Book book = ... ;
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);
+session.merge(book, graph);  // equivalent to find() then merge()
+----
+
+When merging multiple root entities, `findMultiple()` may be used instead of `find()`.
+
+[source,java]
+----
+List<Book> books = ... ;
+var isbns = books.stream().map(Book::getIsbn).toList();
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.chapters);  // Book.chapters mapped cascade=MERGE
+session.findMultiple(graph, isbns);  // force loading of the books
+for (var book in books) {
+    session.merge(book);
+}
+----
+
+TIP: In some cases, `merge()` is much less efficient than the `upsert()` operation of <<stateless-sessions,`StatelessSession`>>.
+
 [[flush]]
 === Flushing the session
 
@@ -743,13 +801,13 @@ session.getTransaction().commit();
 | `ALWAYS` | | Flush before transaction commit, and before execution of every query
 |===
 
-A second way to reduce the cost of flushing is to load entities in _read-only_ mode:
+A second way to reduce the cost of flushing is to load entities in link:{doc-javadoc-url}org/hibernate/Session.html#setDefaultReadOnly(boolean)[_read-only_ mode]:
 
 - `Session.setDefaultReadOnly(true)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
 - `SelectionQuery.setReadOnly(true)` specifies that every entity returned by a given query should be loaded in read-only mode, and
 - `Session.setReadOnly(Object, true)` specifies that a given entity already loaded by the session should be switched to read-only mode.
 
-Hibernate's `ReadOnlyMode` is a custom `FindOption`:
+Hibernate's link:{doc-javadoc-url}org/hibernate/ReadOnlyMode.html[`ReadOnlyMode`] is a custom `FindOption`:
 
 [source,java]
 ----

@@ -19,9 +19,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,21 +56,11 @@ public class LoadGraphMergeTest {
 	@Test
 	public void testGrandChildHasNotBeenInitializedByMerge(EntityManagerFactoryScope scope) {
 		Parent parent = scope.fromTransaction( entityManager ->
-				entityManager.find(
-						Parent.class,
-						PARENT_ID_1,
-						Collections.singletonMap(
-								HINT_SPEC_LOAD_GRAPH,
-								entityManager.getEntityGraph( "parent.child" ) ) )
+				entityManager.find( LoadGraphMergeTest_.Parent_._parent_child, PARENT_ID_1 )
 		);
 
 		Parent parent2 = scope.fromTransaction( entityManager ->
-				entityManager.find(
-						Parent.class,
-						PARENT_ID_2,
-						Collections.singletonMap(
-								HINT_SPEC_LOAD_GRAPH,
-								entityManager.getEntityGraph( "parent.child" ) ) )
+				entityManager.find( LoadGraphMergeTest_.Parent_._parent_child, PARENT_ID_2)
 		);
 
 		scope.inTransaction( entityManager -> {
@@ -81,8 +69,7 @@ public class LoadGraphMergeTest {
 
 			Session session = entityManager.unwrap( Session.class );
 
-			Parent mergedParent = session.merge( parent,
-					entityManager.getEntityGraph( "parent.child" ) );
+			Parent mergedParent = session.merge( parent, LoadGraphMergeTest_.Parent_._parent_child );
 
 			Child child = mergedParent.getChild();
 			assertTrue( Hibernate.isInitialized( child ) );
@@ -113,7 +100,7 @@ public class LoadGraphMergeTest {
 			assertFalse( Hibernate.isInitialized( child1 ) );
 
 			Session session = entityManager.unwrap( Session.class );
-			Parent mergedParent = session.merge( parent, session.createEntityGraph( "parent" ) );
+			Parent mergedParent = session.merge( parent, LoadGraphMergeTest_.Parent_._parent );
 
 			Child child = mergedParent.getChild();
 			assertFalse( Hibernate.isInitialized( child ),

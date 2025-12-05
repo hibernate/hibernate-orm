@@ -23,6 +23,7 @@ import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
@@ -69,6 +70,7 @@ public class ScanningCoordinatorTest {
 	private BootstrapContext bootstrapContext = Mockito.mock( BootstrapContext.class );
 	private ClassmateContext classmateContext = new ClassmateContext();
 	private XmlMappingBinderAccess xmlMappingBinderAccess = Mockito.mock( XmlMappingBinderAccess.class );
+	private MappingBinder mappingBinder = Mockito.mock( MappingBinder.class );
 	private MetadataBuildingOptions metadataBuildingOptions = Mockito.mock( MetadataBuildingOptions.class );
 
 	private ScanEnvironment scanEnvironment = Mockito.mock( ScanEnvironment.class );
@@ -91,6 +93,8 @@ public class ScanningCoordinatorTest {
 
 		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
 		when( bootstrapContext.getClassLoaderService() ).thenReturn( classLoaderService );
+
+		when( xmlMappingBinderAccess.getMappingBinder() ).thenReturn( mappingBinder );
 
 		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 

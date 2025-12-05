@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * @author Steve Ebersole
- */
+/// Grouping annotation for repeatable [@FailureExpected][FailureExpected] annotations.
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

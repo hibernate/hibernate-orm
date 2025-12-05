@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.associations;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,55 +11,54 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Address.class,
-				PersonAddress.class
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				ManyToManyBidirectionalWithLinkEntityTest.Person.class,
+				ManyToManyBidirectionalWithLinkEntityTest.Address.class,
+				ManyToManyBidirectionalWithLinkEntityTest.PersonAddress.class
+		}
+)
+public class ManyToManyBidirectionalWithLinkEntityTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::associations-many-to-many-bidirectional-with-link-entity-lifecycle-example[]
-			Person person1 = new Person("ABC-123");
-			Person person2 = new Person("DEF-456");
+			Person person1 = new Person( "ABC-123" );
+			Person person2 = new Person( "DEF-456" );
 
-			Address address1 = new Address("12th Avenue", "12A", "4005A");
-			Address address2 = new Address("18th Avenue", "18B", "4007B");
+			Address address1 = new Address( "12th Avenue", "12A", "4005A" );
+			Address address2 = new Address( "18th Avenue", "18B", "4007B" );
 
-			entityManager.persist(person1);
-			entityManager.persist(person2);
+			entityManager.persist( person1 );
+			entityManager.persist( person2 );
 
-			entityManager.persist(address1);
-			entityManager.persist(address2);
+			entityManager.persist( address1 );
+			entityManager.persist( address2 );
 
-			person1.addAddress(address1);
-			person1.addAddress(address2);
+			person1.addAddress( address1 );
+			person1.addAddress( address2 );
 
-			person2.addAddress(address1);
+			person2.addAddress( address1 );
 
 			entityManager.flush();
 
-			log.info("Removing address");
-			person1.removeAddress(address1);
+			person1.removeAddress( address1 );
 			//end::associations-many-to-many-bidirectional-with-link-entity-lifecycle-example[]
-		});
+		} );
 	}
 
 	//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
@@ -78,15 +73,15 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 		private String registrationNumber;
 
 		@OneToMany(
-			mappedBy = "person",
-			cascade = CascadeType.ALL,
-			orphanRemoval = true
+				mappedBy = "person",
+				cascade = CascadeType.ALL,
+				orphanRemoval = true
 		)
 		private List<PersonAddress> addresses = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//end::associations-many-to-many-bidirectional-with-link-entity-example[]
 
 		public Person() {
 		}
@@ -103,36 +98,36 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 			return addresses;
 		}
 
-	//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
 		public void addAddress(Address address) {
-			PersonAddress personAddress = new PersonAddress(this, address);
-			addresses.add(personAddress);
-			address.getOwners().add(personAddress);
+			PersonAddress personAddress = new PersonAddress( this, address );
+			addresses.add( personAddress );
+			address.getOwners().add( personAddress );
 		}
 
 		public void removeAddress(Address address) {
-			PersonAddress personAddress = new PersonAddress(this, address);
-			address.getOwners().remove(personAddress);
-			addresses.remove(personAddress);
-			personAddress.setPerson(null);
-			personAddress.setAddress(null);
+			PersonAddress personAddress = new PersonAddress( this, address );
+			address.getOwners().remove( personAddress );
+			addresses.remove( personAddress );
+			personAddress.setPerson( null );
+			personAddress.setAddress( null );
 		}
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) {
+			if ( this == o ) {
 				return true;
 			}
-			if (o == null || getClass() != o.getClass()) {
+			if ( o == null || getClass() != o.getClass() ) {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals(registrationNumber, person.registrationNumber);
+			return Objects.equals( registrationNumber, person.registrationNumber );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(registrationNumber);
+			return Objects.hash( registrationNumber );
 		}
 	}
 
@@ -149,7 +144,7 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//end::associations-many-to-many-bidirectional-with-link-entity-example[]
 
 		public PersonAddress() {
 		}
@@ -175,23 +170,23 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 			this.address = address;
 		}
 
-	//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) {
+			if ( this == o ) {
 				return true;
 			}
-			if (o == null || getClass() != o.getClass()) {
+			if ( o == null || getClass() != o.getClass() ) {
 				return false;
 			}
 			PersonAddress that = (PersonAddress) o;
-			return Objects.equals(person, that.person) &&
-					Objects.equals(address, that.address);
+			return Objects.equals( person, that.person ) &&
+				Objects.equals( address, that.address );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(person, address);
+			return Objects.hash( person, address );
 		}
 	}
 
@@ -210,15 +205,15 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 		private String postalCode;
 
 		@OneToMany(
-			mappedBy = "address",
-			cascade = CascadeType.ALL,
-			orphanRemoval = true
+				mappedBy = "address",
+				cascade = CascadeType.ALL,
+				orphanRemoval = true
 		)
 		private List<PersonAddress> owners = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//end::associations-many-to-many-bidirectional-with-link-entity-example[]
 
 		public Address() {
 		}
@@ -249,24 +244,24 @@ public class ManyToManyBidirectionalWithLinkEntityTest extends BaseEntityManager
 			return owners;
 		}
 
-	//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
+		//tag::associations-many-to-many-bidirectional-with-link-entity-example[]
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) {
+			if ( this == o ) {
 				return true;
 			}
-			if (o == null || getClass() != o.getClass()) {
+			if ( o == null || getClass() != o.getClass() ) {
 				return false;
 			}
 			Address address = (Address) o;
-			return Objects.equals(street, address.street) &&
-					Objects.equals(number, address.number) &&
-					Objects.equals(postalCode, address.postalCode);
+			return Objects.equals( street, address.street ) &&
+				Objects.equals( number, address.number ) &&
+				Objects.equals( postalCode, address.postalCode );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(street, number, postalCode);
+			return Objects.hash( street, number, postalCode );
 		}
 	}
 	//end::associations-many-to-many-bidirectional-with-link-entity-example[]

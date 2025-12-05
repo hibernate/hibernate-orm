@@ -10,8 +10,6 @@ import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonGenerator;
 
 import org.hibernate.dialect.type.OracleJsonArrayJdbcType;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -36,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.hibernate.dialect.OracleOsonJdbcType.OSON_JSON_FACTORY;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  *
@@ -47,8 +46,6 @@ import static org.hibernate.dialect.OracleOsonJdbcType.OSON_JSON_FACTORY;
  * @author Bidyadhar Mohanty
  */
 public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonArrayJdbcType.class );
 
 	public OracleOsonArrayJdbcType(JdbcType elementJdbcType) {
 		super(elementJdbcType);
@@ -199,8 +196,9 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
-						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						// UTF-8 bytes (that is, not OSON) and we fall back to the previous
+						// String-based implementation
+						CORE_LOGGER.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( rs.getBytes( paramIndex ), options );
 					}
 					else {
@@ -225,7 +223,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						CORE_LOGGER.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( statement.getBytes( index ), options );
 					}
 					else {
@@ -251,7 +249,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						CORE_LOGGER.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( statement.getBytes( name ), options );
 					}
 					else {

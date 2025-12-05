@@ -7,17 +7,12 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -33,7 +28,8 @@ import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraph
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions;
 
 /**
  * A Result for an embeddable that is mapped as aggregate e.g. STRUCT, JSON or XML.
@@ -42,10 +38,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  * uses {@link org.hibernate.sql.results.graph.DomainResultCreationState#visitNestedFetches(FetchParent)}
  * for creating the fetches for the attributes of the embeddable.
  */
-public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implements AggregateEmbeddableResultGraphNode,
-		DomainResult<T>,
-		EmbeddableResult<T>,
-		InitializerProducer<AggregateEmbeddableResultImpl<T>> {
+public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
+		implements AggregateEmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T>,
+					InitializerProducer<AggregateEmbeddableResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 	private final EmbeddableMappingType fetchContainer;
@@ -66,15 +61,16 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 		this.fetchContainer = embeddedPartDescriptor.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
 				getNavigablePath(),
 				np -> {
-					final EmbeddableValuedModelPart embeddedValueMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor()
-							.getEmbeddedValueMapping();
-					final TableGroup tg = fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
+					final EmbeddableValuedModelPart embeddedValueMapping =
+							embeddedPartDescriptor.getEmbeddableTypeDescriptor()
+									.getEmbeddedValueMapping();
+					final TableGroup tg =
+							fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
 					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
 							np,
 							tg,
@@ -90,11 +86,11 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				}
 		);
 
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		final SelectableMapping selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var tableReference = tableGroup.getPrimaryTableReference();
+		final var selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				// Using the Object[] type here, so that a different JDBC extractor is chosen
@@ -103,7 +99,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				typeConfiguration
 		);
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, true );
-		this.aggregateValuesArrayPositions = AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions( null, aggregateSelection );
+		this.aggregateValuesArrayPositions = determineAggregateValuesArrayPositions( null, aggregateSelection );
 		resetFetches( creationState.visitNestedFetches( this ) );
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
@@ -119,7 +115,6 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 				return true;
 			}
 		}
-
 		return false;
 	}
 

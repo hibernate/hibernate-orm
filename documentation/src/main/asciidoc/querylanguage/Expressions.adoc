@@ -763,7 +763,7 @@ Recognized Field types are listed below.
 | `offset minute` | `Integer` | 0-59 | Minutes of offset | ✖
 |===
 
-For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+For a full list of field types, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 [source, hql]
 ----
@@ -811,7 +811,7 @@ The pattern must be written in a subset of the pattern language defined by Java'
 select format(local datetime as 'yyyy-MM-dd HH:mm:ss')
 ----
 
-For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
 [[function-trunc-datetime]]
 [discrete]
@@ -1495,7 +1495,7 @@ Their syntax is defined by:
 include::{extrasdir}/predicate_like_bnf.txt[]
 ----
 
-The expression on the right is a pattern, where:
+The expression on the right is usually a SQL-style pattern, where:
 
 * `_` matches any single character,
 * `%` matches any number of characters, and
@@ -1508,6 +1508,14 @@ from Book where title not like '% for Dummies'
 ----
 
 The optional `escape` character allows a pattern to include a literal `_` or `%` character.
+
+Alternatively, the `regexp` keyword specifies that the pattern should be interpreted as a regular expression:
+
+[[like-regexp-predicate-example]]
+[source, hql]
+----
+from Book where title not like regexp '.+ for Dummies'
+----
 
 As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
 

@@ -7,6 +7,8 @@ package org.hibernate.dialect;
 
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
@@ -59,6 +61,11 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
+	}
+
+	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
@@ -106,7 +113,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from sysibm.syssequences";
+		return "select case when seqtype='A' then seqschema else schema end as seqschema, case when seqtype='A' then seqname else name end as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences";
 	}
 
 	@Override
@@ -117,11 +124,6 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override
@@ -208,5 +210,11 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public String getRowIdColumnString(String rowId) {
 		return rowId( rowId ) + " rowid not null generated always";
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
+		return false;
 	}
 }

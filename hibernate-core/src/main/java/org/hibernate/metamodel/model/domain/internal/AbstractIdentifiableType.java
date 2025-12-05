@@ -15,6 +15,7 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -62,7 +63,7 @@ public abstract class AbstractIdentifiableType<J>
 	private List<SqmSingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
 	private SqmEmbeddableDomainType<?> idClassType;
 
-	private SqmPathSource<?> identifierDescriptor;
+	private @Nullable SqmPathSource<?> identifierDescriptor;
 
 	private final boolean isVersioned;
 	private SqmSingularPersistentAttribute<J, ?> versionAttribute;
@@ -88,7 +89,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public SqmPathSource<?> getIdentifierDescriptor() {
+	public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 
@@ -102,13 +103,13 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public AbstractIdentifiableType<? super J> getSuperType() {
+	public @Nullable AbstractIdentifiableType<? super J> getSuperType() {
 		// overridden simply to perform the cast
 		return (AbstractIdentifiableType<? super J>) super.getSuperType();
 	}
 
 	@Override
-	public IdentifiableDomainType<? super J> getSupertype() {
+	public @Nullable IdentifiableDomainType<? super J> getSupertype() {
 		return getSuperType();
 	}
 
@@ -133,7 +134,7 @@ public abstract class AbstractIdentifiableType<J>
 
 
 	@Override
-	public SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
+	public @Nullable SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
 		if ( id != null ) {
 			return id;
 		}
@@ -261,7 +262,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public SqmSingularPersistentAttribute<? super J, ?> findVersionAttribute() {
+	public @Nullable SqmSingularPersistentAttribute<? super J, ?> findVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}
@@ -274,7 +275,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes() {
+	public @Nullable List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes() {
 		if ( naturalIdAttributes != null ) {
 			return naturalIdAttributes;
 		}
@@ -401,10 +402,10 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	private static final Logger log = Logger.getLogger( AbstractIdentifiableType.class );
+	private static final Logger LOG = Logger.getLogger( AbstractIdentifiableType.class );
 
 	private SqmPathSource<?> interpretIdDescriptor() {
-		log.tracef( "Interpreting domain-model identifier descriptor" );
+		LOG.tracef( "Interpreting domain-model identifier descriptor" );
 
 		final var superType = getSuperType();
 		if ( superType != null ) {

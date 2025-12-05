@@ -19,23 +19,23 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
 /**
@@ -45,10 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
+	@RegisterExtension
+	public LoggerInspectionExtension logInspection =
+			LoggerInspectionExtension.builder().setLogger( SEQUENCE_GENERATOR_LOGGER ).build();
 
-	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090202:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
@@ -90,7 +91,8 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 
 	@Override
 	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
-		assertTrue( triggerable.wasTriggered() );
+		// This message is trace level
+		assertFalse( triggerable.wasTriggered() );
 	}
 
 	@Override

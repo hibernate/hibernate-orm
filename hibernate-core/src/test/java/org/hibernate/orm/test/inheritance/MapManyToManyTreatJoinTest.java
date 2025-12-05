@@ -4,17 +4,6 @@
  */
 package org.hibernate.orm.test.inheritance;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -22,9 +11,20 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = {
 		MapManyToManyTreatJoinTest.JoinedBase.class,
 		MapManyToManyTreatJoinTest.JoinedSub1.class,
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17255" )
 public class MapManyToManyTreatJoinTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final JoinedSub1 o1 = new JoinedSub1( 1, 123 );
@@ -45,11 +45,9 @@ public class MapManyToManyTreatJoinTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "from JoinedBase", JoinedBase.class )
-				.getResultList()
-				.forEach( session::remove ) );
+		scope.dropData();
 	}
 
 	@Test
@@ -74,6 +72,7 @@ public class MapManyToManyTreatJoinTest {
 		} );
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused", "FieldMayBeFinal"})
 	@Entity( name = "JoinedBase" )
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static abstract class JoinedBase {
@@ -98,6 +97,7 @@ public class MapManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedSub1" )
 	@Table( name = "joined_sub_1" )
 	public static class JoinedSub1 extends JoinedBase {
@@ -112,6 +112,7 @@ public class MapManyToManyTreatJoinTest {
 		}
 	}
 
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	@Entity( name = "JoinedSub2" )
 	@Table( name = "joined_sub_2" )
 	public static class JoinedSub2 extends JoinedBase {

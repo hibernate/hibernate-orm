@@ -4,37 +4,43 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
-import static org.junit.Assert.fail;
-
-import java.util.ConcurrentModificationException;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.util.ConcurrentModificationException;
+
+import static org.assertj.core.api.Fail.fail;
 
 /**
  * @author Guenther Demetz
  */
-public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class HibernateAnnotationMappingTest {
 
 	@Test
-	@JiraKey( value = "HHH-7446" )
-	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
+	@JiraKey(value = "HHH-7446")
+	public void testUniqueConstraintAnnotationOnNaturalIds() {
 		Configuration configuration = new Configuration();
 		ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		configuration.addAnnotatedClass( Month.class);
+		configuration.addAnnotatedClass( Month.class );
 		SessionFactory sf = null;
 		try {
 			sf = configuration.buildSessionFactory();
-			sf.close();
+
 		}
 		catch (ConcurrentModificationException e) {
-			fail(e.toString());
+			fail( e.toString() );
+		}
+		finally {
+			if ( sf != null ) {
+				sf.close();
+			}
 		}
 	}
 }

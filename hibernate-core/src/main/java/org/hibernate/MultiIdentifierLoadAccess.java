@@ -31,7 +31,11 @@ import org.hibernate.graph.GraphSemantic;
  * @see Session#byMultipleIds(Class)
  *
  * @author Steve Ebersole
+
+ * @deprecated Use forms of {@linkplain Session#findMultiple} accepting
+ * {@linkplain jakarta.persistence.FindOption} instead of {@linkplain Session#byMultipleIds}.
  */
+@Deprecated(since = "7.2", forRemoval = true)
 public interface MultiIdentifierLoadAccess<T> {
 
 	/**

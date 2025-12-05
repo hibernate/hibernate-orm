@@ -604,10 +604,15 @@ public class TransactionUtil {
 				st.execute( String.format( "SET statement_timeout TO %d", millis ) );
 			}
 			catch (SQLException ex) {
-				// Ignore if resetting the statement timeout to 0 fails
-				// Since PostgreSQL is transactional anyway,
-				// the prior change of statement timeout will be undone on rollback
-				if ( millis != 0 ) {
+				if ( "ERROR: current transaction is aborted, commands ignored until end of transaction block".equals( ex.getMessage() ) ) {
+					// The connection would be rolled back anyway, but session variables are not transactional,
+					// so rollback immediately to be able to reset the statement timeout as well
+					connection.rollback();
+					try (Statement st = connection.createStatement()) {
+						st.execute( String.format( "SET statement_timeout TO %d", millis ) );
+					}
+				}
+				else {
 					throw ex;
 				}
 			}

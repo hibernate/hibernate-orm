@@ -4,21 +4,21 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.stat.SessionStatistics;
-import org.hibernate.stat.Statistics;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,21 +27,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				FilterWitSubSelectFetchModeTest.Customer.class,
@@ -93,29 +89,30 @@ public class FilterWitSubSelectFetchModeTest {
 	void testFiltersAreApplied(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "ID" ).setParameter( "id", 3L );
-			final List<Customer> result = session.createQuery( "from Customer order by id", Customer.class ).getResultList();
+			//noinspection removal
+			var result = session.createQuery( "from Customer order by id", Customer.class ).getResultList();
 
 			assertFalse( result.isEmpty() );
-			Customer customer = result.get( 0 );
+			var customer = result.get( 0 );
 			assertThat( customer.getCustomerId(), is( 3L ) );
 
 			assertThat( customer.getOrders().size(), is( 2 ) );
-			SessionStatistics statistics = session.getStatistics();
+			var statistics = session.getStatistics();
 			assertThat( statistics.getEntityCount(), is( 9 ) );
 
-			Statistics sfStatistics = session.getSessionFactory().getStatistics();
+			var sfStatistics = session.getSessionFactory().getStatistics();
 
 			assertThat( sfStatistics.getCollectionFetchCount(), is( 1L ) );
 			assertThat( sfStatistics.getQueries().length, is(1 ) );
-
 		} );
 	}
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
+	@SuppressWarnings("FieldMayBeFinal")
 	@Entity(name = "Customer")
 	@FilterDef(
 			name = "ID",

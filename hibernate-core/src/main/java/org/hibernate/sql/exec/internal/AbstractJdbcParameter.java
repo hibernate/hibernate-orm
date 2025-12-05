@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -16,7 +17,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.type.BindableType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.ExecutionException;
@@ -26,8 +26,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * @author Steve Ebersole
@@ -36,9 +34,15 @@ public abstract class AbstractJdbcParameter
 		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible, BasicValuedMapping {
 
 	private final JdbcMapping jdbcMapping;
+	private final @Nullable Integer parameterId;
 
 	public AbstractJdbcParameter(JdbcMapping jdbcMapping) {
+		this( jdbcMapping, null );
+	}
+
+	public AbstractJdbcParameter(JdbcMapping jdbcMapping, @Nullable Integer parameterId) {
 		this.jdbcMapping = jdbcMapping;
+		this.parameterId = parameterId;
 	}
 
 	@Override
@@ -54,6 +58,11 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public MappingType getMappedType() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public @Nullable Integer getParameterId() {
+		return parameterId;
 	}
 
 	@Override
@@ -73,12 +82,12 @@ public abstract class AbstractJdbcParameter
 			int startPosition,
 			JdbcParameterBindings jdbcParamBindings,
 			ExecutionContext executionContext) throws SQLException {
-		final JdbcParameterBinding binding = jdbcParamBindings.getBinding( AbstractJdbcParameter.this );
+		final var binding = jdbcParamBindings.getBinding( AbstractJdbcParameter.this );
 		if ( binding == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}
 
-		final JdbcMapping jdbcMapping = jdbcMapping( executionContext, binding );
+		final var jdbcMapping = jdbcMapping( executionContext, binding );
 		bindParameterValue( jdbcMapping, statement, binding.getBindValue(), startPosition, executionContext );
 	}
 
@@ -106,14 +115,11 @@ public abstract class AbstractJdbcParameter
 			PreparedStatement statement,
 			Object bindValue,
 			int startPosition,
-			ExecutionContext executionContext) throws SQLException {
+			ExecutionContext executionContext)
+					throws SQLException {
 		//noinspection unchecked
-		jdbcMapping.getJdbcValueBinder().bind(
-				statement,
-				bindValue,
-				startPosition,
-				executionContext.getSession()
-		);
+		jdbcMapping.getJdbcValueBinder()
+				.bind( statement, bindValue, startPosition, executionContext.getSession() );
 	}
 
 	private JdbcMapping guessBindType(ExecutionContext executionContext, Object bindValue, JdbcMapping jdbcMapping) {
@@ -121,32 +127,29 @@ public abstract class AbstractJdbcParameter
 			return jdbcMapping;
 		}
 		else {
-			final BindableType<?> parameterType =
+			final var parameterType =
 					executionContext.getSession().getFactory().getMappingMetamodel()
 							.resolveParameterBindType( bindValue );
-			if ( parameterType == null && bindValue instanceof Enum ) {
-				return createEnumType( executionContext, (Class) bindValue.getClass() );
-			}
-			else {
-				return parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
-			}
+			return parameterType == null && bindValue instanceof Enum<?> enumValue
+					? createEnumType( executionContext, enumValue.getClass() )
+					: parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
 		}
 	}
 
 	private static <E extends Enum<E>> BasicType<E> createEnumType(ExecutionContext executionContext, Class<E> enumClass) {
-		final EnumJavaType<E> enumJavaType = new EnumJavaType<>( enumClass );
-		final JdbcTypeIndicators indicators =
-				executionContext.getSession().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
-		final JdbcType jdbcType =
+		final var enumJavaType = new EnumJavaType<>( enumClass );
+		final var typeConfiguration = executionContext.getSession().getTypeConfiguration();
+		final var indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
+		final var jdbcType =
 				// we don't know whether to map the enum as ORDINAL or STRING,
 				// so just accept the default from the TypeConfiguration, which
 				// is usually ORDINAL (the default according to JPA)
-				enumJavaType.getRecommendedJdbcType(indicators);
-		return indicators.getTypeConfiguration().getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
+				enumJavaType.getRecommendedJdbcType( indicators );
+		return typeConfiguration.getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return this;
 	}
 

@@ -4,37 +4,37 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Chris Cranford
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = {
 				ManyToManyWithDynamicFilterTest.User.class,
@@ -69,7 +69,7 @@ public class ManyToManyWithDynamicFilterTest {
 			session.enableFilter( "activeUserFilter" );
 			session.enableFilter( "activeRoleFilter" );
 
-			final User user = session.get( User.class, 1 );
+			final User user = session.find( User.class, 1 );
 			assertNotNull( user );
 			assertTrue( user.getRoles().isEmpty() );
 		} );
@@ -79,7 +79,7 @@ public class ManyToManyWithDynamicFilterTest {
 	@JiraKey(value = "HHH-11410")
 	void testManyToManyCollectionWithNoFilterOnJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final User user = session.get( User.class, 1 );
+			final User user = session.find( User.class, 1 );
 			assertNotNull( user );
 			assertThat( user.getRoles().size(), is( 2 ) );
 		} );

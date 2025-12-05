@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.Locking;
+
 /**
  * List of Hibernate-specific (extension) hints available to query,
  * load, and lock scenarios.
@@ -100,18 +102,31 @@ public interface HibernateHints {
 	String HINT_COMMENT = "org.hibernate.comment";
 
 	/**
-	 * Hint to enable or disable the follow-on locking mechanism provided
-	 * by {@link org.hibernate.dialect.Dialect#useFollowOnLocking}.
-	 * <p>
-	 * A value of {@code true} enables follow-on-locking, whereas a value
-	 * of {@code false} disables it. If the value is {@code null}, the
-	 * dialect itself will determine whether follow-on locking is used.
+	 * Hint to enable or disable the follow-on locking.<ul>
+	 *     <li>{@code false} - {@linkplain Locking.FollowOn#DISALLOW disallows} follow-on locking
+	 *     <li>{@code null} or {@code true} - {@linkplain Locking.FollowOn#ALLOW allows} follow-on locking
+	 * </ul>
 	 *
 	 * @see org.hibernate.LockOptions#setFollowOnLocking(Boolean)
 	 *
 	 * @since 5.2
+	 *
+	 * @deprecated Use {@linkplain #HINT_FOLLOW_ON_STRATEGY} instead to allow an additional option
+	 * to {@linkplain Locking.FollowOn#IGNORE ignore} follow-on locking which will potentially
+	 * skip locking some rows but may be useful for applications targeting multiple databases.
+	 *
 	 */
+	@Deprecated(since = "7.1")
 	String HINT_FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
+
+	/**
+	 * Hint to indicate how follow-on locking should be handled.
+	 * See {@linkplain Locking.FollowOn} for a discussion of the
+	 * options.
+	 *
+	 * @since 7.1
+	 */
+	String HINT_FOLLOW_ON_STRATEGY = "hibernate.query.followOnStrategy";
 
 	/**
 	 * Hint for specifying the lock mode to apply to the results of a

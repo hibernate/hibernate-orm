@@ -12,5 +12,5 @@ import jakarta.persistence.Table;
 @Table(name = "OtherEntity")
 public class OtherEntity {
 	@Id
-	private Integer id;
+	Integer id;
 }

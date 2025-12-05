@@ -10,52 +10,67 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.usertype.UserTypeLegacyBridge;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BitSetTypeTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {BitSetTypeTest.Product.class},
+		typeContributors = {BitSetTypeContributor.class}
+)
+@SessionFactory
+@ServiceRegistry()
+public class BitSetTypeTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		//tag::basic-custom-type-register-BasicType-example[]
-		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( BitSetType.INSTANCE );
-		} );
-		//end::basic-custom-type-register-BasicType-example[]
+	/*
+	 * We don't need this code for the test itself but we need to include it in the ref doc.
+	 */
+	public void ignoredJustForIncludeInSources() {
+		try (org.hibernate.service.ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build()) {
+			//tag::basic-custom-type-register-BasicType-example[]
+			MetadataSources sources = new MetadataSources( standardRegistry );
+			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+			metadataBuilder.applyBasicType( BitSetType.INSTANCE );
+			//end::basic-custom-type-register-BasicType-example[]
+		}
+		catch (Exception ignore) {
+
+		}
 	}
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 
 		//tag::basic-custom-type-BitSetType-persistence-example[]
 		BitSet bitSet = BitSet.valueOf( new long[] {1, 2, 3} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Product product = new Product( );
 			product.setId( 1 );
 			product.setBitSet( bitSet );
 			session.persist( product );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = session.get( Product.class, 1 );
+		scope.inTransaction( session -> {
+			Product product = session.find( Product.class, 1 );
 			assertEquals(bitSet, product.getBitSet());
 		} );
 		//end::basic-custom-type-BitSetType-persistence-example[]

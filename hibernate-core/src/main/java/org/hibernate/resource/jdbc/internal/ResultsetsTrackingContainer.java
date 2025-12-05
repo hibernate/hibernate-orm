@@ -4,15 +4,14 @@
  */
 package org.hibernate.resource.jdbc.internal;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * We used to record Statement(s) and their associated ResultSet(s) in a Map
@@ -32,8 +31,6 @@ final class ResultsetsTrackingContainer {
 	// #1. if key_1 is non-null, then value_1 is the value it maps to.
 	// #2. if key_1 is null, then the Map in xref is guaranteed to be empty
 	// #3. The Map in xref is lazily initialized, but when emptied it's not guaranteed to be made null
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
 
 	private static final ResultSetsSet EMPTY = new ResultSetsSet();
 
@@ -177,10 +174,12 @@ final class ResultsetsTrackingContainer {
 	}
 
 	private boolean warnOnNotNull(ResultSetsSet existingEntry) {
-		// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-		// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+		// Keep this at DEBUG level, rather than WARN.
+		// Connection pool implementations often return a
+		// proxy/wrapper around the JDBC Statement,
+		// causing excessive logging here. See HHH-8210.
 		if ( existingEntry == null ) {
-			log.trace( "ResultSet statement was not registered (on register)" );
+			CORE_LOGGER.trace( "ResultSet statement was not registered (on register)" );
 		}
 		return true;
 	}

@@ -25,7 +25,7 @@ public final class EntityPersisterConcurrentMap {
 	private volatile String[] keys = new String[0];
 
 	public EntityPersister get(final String name) {
-		final EntityPersisterHolder entityPersisterHolder = map.get( name );
+		final var entityPersisterHolder = map.get( name );
 		if ( entityPersisterHolder != null ) {
 			return entityPersisterHolder.entityPersister;
 		}
@@ -60,13 +60,13 @@ public final class EntityPersisterConcurrentMap {
 		final EntityPersister[] newValues = new EntityPersister[size];
 		final String[] newKeys = new String[size];
 		int i = 0;
-		for ( Map.Entry<String, EntityPersisterHolder> e : map.entrySet() ) {
-			newValues[i] = e.getValue().entityPersister;
-			newKeys[i] = e.getKey();
+		for ( var entry : map.entrySet() ) {
+			newValues[i] = entry.getValue().entityPersister;
+			newKeys[i] = entry.getKey();
 			i++;
 		}
-		this.values = newValues;
-		this.keys = newKeys;
+		values = newValues;
+		keys = newKeys;
 	}
 
 	/**

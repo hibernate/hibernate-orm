@@ -17,7 +17,7 @@ import org.hibernate.boot.Metadata;
 @Incubating
 public interface SchemaTruncator {
 	/**
-	 * Perform a schema truncation from the indicated source(s) to the indicated target(s).
+	 * Perform schema truncation from the indicated source(s) to the indicated target(s).
 	 * @param metadata Represents the schema to be dropped.
 	 * @param options Options for executing the drop
 	 * @param contributableInclusionFilter Filter for Contributable instances to use

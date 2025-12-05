@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -20,6 +19,9 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * @author Steve Ebersole
@@ -53,11 +55,20 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
-		final StatisticsImplementor statistics = getStatistics();
+		final var statistics = getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );
 		}
 		return creator.get();
+	}
+
+	@Override
+	public <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(K key, Function<K, SelectQueryPlan<R>> creator) {
+		final var statistics = getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.queryPlanCacheMiss( key.getQueryString() );
+		}
+		return creator.apply( key );
 	}
 
 	@Override
@@ -72,26 +83,25 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	@Override
 	public <R> HqlInterpretation<R> resolveHqlInterpretation(
 			String queryString, Class<R> expectedResultType, HqlTranslator translator) {
-		final StatisticsImplementor statistics = getStatistics();
-		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = stats ? System.nanoTime() : 0L;
+		final var statistics = getStatistics();
+		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
+		final long startTime = statisticsEnabled ? System.nanoTime() : 0L;
 
-		final SqmStatement<R> sqmStatement = translator.translate( queryString, expectedResultType );
+		final var sqmStatement = translator.translate( queryString, expectedResultType );
 
-		final DomainParameterXref domainParameterXref;
-		final ParameterMetadataImplementor parameterMetadata;
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.EMPTY;
-			parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			domainParameterXref = DomainParameterXref.from( sqmStatement );
-			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		}
+		final boolean hasParameters = sqmStatement.getSqmParameters().isEmpty();
+		final var domainParameterXref =
+				hasParameters
+						? DomainParameterXref.EMPTY
+						: DomainParameterXref.from( sqmStatement );
+		final var parameterMetadata =
+				hasParameters
+						? ParameterMetadataImpl.EMPTY
+						: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 
-		if ( stats ) {
+		if ( statisticsEnabled ) {
 			final long endTime = System.nanoTime();
-			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			final long microseconds = MICROSECONDS.convert( endTime - startTime, NANOSECONDS );
 			statistics.queryCompiled( queryString, microseconds );
 		}
 
@@ -113,7 +123,6 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 			@Override
 			public void validateResultType(Class<?> resultType) {
-				assert sqmStatement instanceof SqmSelectStatement<?>;
 				( (SqmSelectStatement<R>) sqmStatement ).validateResultType( resultType );
 			}
 		};

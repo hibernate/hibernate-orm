@@ -4,39 +4,40 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
-import org.hibernate.Session;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Brett Meyer
  */
-public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				EntityWithNestedEmbeddables.class
+		}
+)
+@SessionFactory
+public class NestedEmbeddableAttributeOverrideTest {
 
 	@Test
-	@JiraKey(value="HHH-8021")
-	public void testAttributeOverride() {
+	@JiraKey(value = "HHH-8021")
+	public void testAttributeOverride(SessionFactoryScope scope) {
 		EmbeddableB embedB = new EmbeddableB();
 		embedB.setEmbedAttrB( "B" );
 
 		EmbeddableA embedA = new EmbeddableA();
-		embedA.setEmbedAttrA("A");
-		embedA.setEmbedB(embedB);
+		embedA.setEmbedAttrA( "A" );
+		embedA.setEmbedB( embedB );
 
 		EntityWithNestedEmbeddables entity = new EntityWithNestedEmbeddables();
-		entity.setEmbedA(embedA);
+		entity.setEmbedA( embedA );
 
-		Session s = openSession();
-		s.beginTransaction();
-		s.persist( entity );
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EntityWithNestedEmbeddables.class };
+		scope.inTransaction(
+				session -> {
+					session.persist( entity );
+				}
+		);
 	}
 }

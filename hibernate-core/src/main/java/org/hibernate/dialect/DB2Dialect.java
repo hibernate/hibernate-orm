@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -19,12 +20,16 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -109,7 +114,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -143,6 +151,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 public class DB2Dialect extends Dialect {
 
 	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 1 );
+
+	private static final Pattern DB2_VERSION_PATTERN = Pattern.compile( "(?:ARI|DSN|QSQ|SQL)(\\d\\d)(\\d\\d)(\\d)\\d?" );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
 
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
@@ -164,17 +174,62 @@ public class DB2Dialect extends Dialect {
 		}
 	};
 
+	private final LockingSupport lockingSupport;
+
 	public DB2Dialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
+		this( determinFullDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = buildLockingSupport();
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return determinFullDatabaseVersion( info );
+	}
+
+	public static DatabaseVersion determinFullDatabaseVersion(DialectResolutionInfo info) {
+		String versionString = null;
+		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		if ( databaseMetadata != null ) {
+			try {
+				versionString = databaseMetadata.getDatabaseProductVersion();
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		final DatabaseVersion databaseVersion = versionString == null ? null : parseVersion( versionString );
+		return databaseVersion != null ? databaseVersion : info.makeCopyOrDefault( MINIMUM_VERSION );
+	}
+
+	public static @Nullable DatabaseVersion parseVersion(String versionString) {
+		if ( versionString.length() != 9 ) {
+			// The default format
+			return null;
+		}
+		DatabaseVersion databaseVersion = null;
+		final Matcher matcher = DB2_VERSION_PATTERN.matcher( versionString );
+		if ( matcher.find() ) {
+			int majorVersion = parseInt( matcher.group( 1 ) );
+			int minorVersion = parseInt( matcher.group( 2 ) );
+			int microVersion = parseInt( matcher.group( 3 ) );
+			databaseVersion = new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion );
+		}
+		return databaseVersion;
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter( 11, 5 );
+		return DB2LockingSupport.forDB2( supportsSkipLocked );
 	}
 
 	@Override
@@ -422,6 +477,8 @@ public class DB2Dialect extends Dialect {
 		functionFactory.hex( "hex(?1)" );
 		functionFactory.sha( "hash(?1, 2)" );
 		functionFactory.md5( "hash(?1, 0)" );
+
+		functionFactory.regexpLike();
 	}
 
 	/**
@@ -688,14 +745,13 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return FOR_UPDATE_SQL;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// Introduced in 11.5.4: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getDB2Version().isSameOrAfter( 11, 5 );
+	public String getForUpdateString() {
+		return FOR_UPDATE_SQL;
 	}
 
 	@Override
@@ -739,18 +795,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		//as far as I know, DB2 doesn't support this
 		return false;
 	}
 
@@ -850,6 +895,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return DB2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public boolean supportsIsTrue() {
 		return true;
 	}
@@ -889,7 +939,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
+	public boolean useConnectionToCreateLob() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods() {
+		// See HHH-12753, HHH-18314, HHH-19201
+		// Old DB2 JDBC drivers do not support setNClob, setNCharcterStream or setNString.
+		// In more recent driver versions, some methods just delegate to the non-N variant, but others still fail.
+		// Ultimately, let's just avoid the N variant methods on DB2 altogether
 		return false;
 	}
 
@@ -921,7 +980,7 @@ public class DB2Dialect extends Dialect {
 						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 
@@ -1230,7 +1289,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getDual() {
-		return "sysibm.dual";
+		return "sysibm.sysdummy1";
 	}
 
 	@Override
@@ -1256,6 +1315,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return true;
 	}
 
 }

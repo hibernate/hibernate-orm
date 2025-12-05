@@ -8,20 +8,24 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.agroal.internal.AgroalConnectionProvider;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
+import org.hibernate.test.agroal.util.GradleParallelTestingAgroalConnectionProvider;
+import org.hibernate.testing.orm.common.BaseTransactionIsolationConfigTest;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
-@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
-@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
+@SkipForDialect(dialectClass = TiDBDialect.class,
+		reason = "Doesn't support SERIALIZABLE isolation")
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase cannot change isolation level in autocommit mode")
+@SkipForDialect(dialectClass = GaussDBDialect.class,
+		reason = "GaussDB does not support SERIALIZABLE isolation")
 public class AgroalTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
-	protected ConnectionProvider getConnectionProviderUnderTest() {
-		return new AgroalConnectionProvider();
+	protected ConnectionProvider getConnectionProviderUnderTest(ServiceRegistryScope registryScope) {
+		return new GradleParallelTestingAgroalConnectionProvider();
 	}
 }

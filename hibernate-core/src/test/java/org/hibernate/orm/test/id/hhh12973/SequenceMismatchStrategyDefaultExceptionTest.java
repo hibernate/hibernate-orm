@@ -60,7 +60,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 		catch (Exception e) {
 			Throwable rootCause = ExceptionUtil.rootCause( e );
 			assertTrue( rootCause instanceof MappingException );
-			assertTrue( rootCause.getMessage().contains( "in the entity mapping while the associated database sequence increment size is" ) );
+			assertTrue( rootCause.getMessage().contains( "in the entity mapping but the mapped database sequence increment size is" ) );
 			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}

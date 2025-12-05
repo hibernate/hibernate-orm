@@ -4,18 +4,13 @@
  */
 package org.hibernate.orm.test.locking;
 
-import java.sql.Connection;
-import java.util.Collections;
-
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -26,18 +21,22 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+
+import static jakarta.persistence.LockModeType.NONE;
+import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -63,11 +62,8 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder ssrBuilder) {
 		super.applySettings( ssrBuilder );
-		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-//		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
 		if ( getDialect() instanceof InformixDialect ) {
-			ssrBuilder.applySetting( AvailableSettings.ISOLATION,
-					Connection.TRANSACTION_REPEATABLE_READ );
+			ssrBuilder.applySetting( ISOLATION, TRANSACTION_REPEATABLE_READ );
 		}
 	}
 
@@ -85,7 +81,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -102,7 +97,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
@@ -111,7 +105,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
 			criteria.from( A.class );
-			A it = session.createQuery( criteria ).setLockMode( LockModeType.PESSIMISTIC_WRITE ).uniqueResult();
+			A it = session.createQuery( criteria ).setLockMode( PESSIMISTIC_WRITE ).uniqueResult();
 //			A it = (A) session.createCriteria( A.class )
 //					.setLockMode( LockMode.PESSIMISTIC_WRITE )
 //					.uniqueResult();
@@ -126,7 +120,6 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
@@ -135,7 +128,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			JpaCriteriaQuery<A> criteria = criteriaBuilder.createQuery( A.class );
 			( (SqmPath<?>) criteria.from( A.class ) ).setExplicitAlias( "this" );
 			A it = session.createQuery( criteria )
-					.setLockMode( "this", LockMode.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 
 //			A it = (A) session.createCriteria( A.class )
@@ -152,13 +145,12 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
 			A it = (A) session.createQuery( "from A a" )
-					.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 			// make sure we got it
 			assertNotNull( it );
@@ -174,10 +166,10 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		doInHibernate( this::sessionFactory, session -> {
 			session.createQuery( "from A a" )
-					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 			session.createQuery( "from A a" )
-					.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 		} );
 	}
@@ -188,7 +180,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
 			session.createQuery( "SELECT a.value FROM A a where a.id = :id" )
-					.setLockMode( "a", LockMode.NONE )
+					.setLockMode( NONE )
 					.setParameter( "id", id )
 					.list();
 		} );
@@ -200,7 +192,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
 			session.createQuery( "SELECT a.id+1 FROM A a where a.value = :value" )
-					.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.setParameter( "value", "it" )
 					.list();
 		} );
@@ -246,7 +238,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 						checkLockMode( a, LockMode.READ, session );
 						session.refresh( a, LockMode.UPGRADE_NOWAIT );
 						checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
-						session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+						session.refresh( a, PESSIMISTIC_WRITE, Collections.emptyMap() );
 						checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
 					} );
 	}
@@ -260,7 +252,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 			checkLockMode( a, LockMode.READ, session );
 			session.refresh( a, LockModeType.PESSIMISTIC_READ );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-			session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+			session.refresh( a, PESSIMISTIC_WRITE, Collections.emptyMap() );
 			checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
 		} );
 	}

@@ -4,34 +4,36 @@
  */
 package org.hibernate.orm.test.fetch;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import org.junit.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.FetchSettings.MAX_FETCH_DEPTH;
 
-public class OneToOneOwnerByContainedEagerCyclesTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Containing.class, Contained.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.MAX_FETCH_DEPTH, 2 );
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name=MAX_FETCH_DEPTH, value = "2"))
+@DomainModel( annotatedClasses = {
+		OneToOneOwnerByContainedEagerCyclesTest.Containing.class,
+		OneToOneOwnerByContainedEagerCyclesTest.Contained.class
+} )
+@SessionFactory
+public class OneToOneOwnerByContainedEagerCyclesTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
-		inTransaction( session -> {
+	public void test(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			Containing containing1 = new Containing();
 			containing1.setId( 1 );
 
@@ -74,8 +76,8 @@ public class OneToOneOwnerByContainedEagerCyclesTest extends BaseCoreFunctionalT
 		} );
 
 		// Test updating the value
-		inTransaction( session -> {
-			Contained contained = session.get( Contained.class, 5 );
+		factoryScope.inTransaction( session -> {
+			Contained contained = session.find( Contained.class, 5 );
 			assertThat( contained ).isNotNull();
 			final Containing containing2 = contained.containing;
 			assertThat( containing2 ).isNotNull();

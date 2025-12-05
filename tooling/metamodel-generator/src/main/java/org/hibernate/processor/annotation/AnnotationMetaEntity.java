@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.ImportContextImpl;
@@ -20,6 +21,7 @@ import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
+import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
@@ -67,6 +69,7 @@ import jakarta.persistence.AccessType;
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -98,8 +101,10 @@ import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQuali
 import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
+import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
+import static org.hibernate.processor.util.TypeUtils.resolveTypeMirror;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -1230,6 +1235,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( hasAnnotation(memberOfClass, MANY_TO_ONE, ONE_TO_ONE, ONE_TO_MANY, MANY_TO_MANY) ) {
 				validateAssociation(memberOfClass);
 			}
+			if ( hasAnnotation(memberOfClass, ORDER_BY) ) {
+				validateOrderBy( memberOfClass );
+			}
+		}
+	}
+
+	private void validateOrderBy(Element memberOfClass) {
+		final AnnotationMirror annotation =
+				castNonNull(getAnnotationMirror( memberOfClass, ORDER_BY));
+		final AnnotationValue annotationValue = getAnnotationValue(annotation);
+		if ( annotationValue != null ) {
+			final String fragment = annotationValue.getValue().toString();
+			if ( !fragment.isBlank() ) {
+				try {
+					OrderByFragmentTranslator.check( fragment );
+				}
+				catch (SyntaxException e) {
+					final String message = "Error in ordering: " + e.getMessage();
+					context.message( memberOfClass, annotation, annotationValue, message, Diagnostic.Kind.ERROR );
+				}
+				catch (Exception ignored) {
+					// do nothing with it
+				}
+			}
 		}
 	}
 
@@ -1802,7 +1831,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								context.addNonnullAnnotation(),
 								lifecycleParameterKind(parameterType),
 								returnArgument,
-								hasGeneratedId(declaredType)
+								hasGeneratedId(declaredType),
+								element
 						)
 				);
 			}
@@ -2035,7 +2065,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				new CriteriaFinderMethod(
 						this, method,
 						methodName,
-						returnType.toString(),
+						typeAsString( returnType, false ),
 						containerType,
 						paramNames,
 						paramTypes,
@@ -2348,7 +2378,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					new CriteriaFinderMethod(
 							this, method,
 							methodName,
-							returnType.toString(),
+							typeAsString( returnType, false ),
 							containerType,
 							paramNames,
 							paramTypes,
@@ -2452,7 +2482,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							new CriteriaFinderMethod(
 									this, method,
 									methodName,
-									returnType.toString(),
+									typeAsString( returnType, false ),
 									containerType,
 									paramNames,
 									paramTypes,
@@ -2519,14 +2549,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final boolean idClassRef = isIdRef( path ) && hasAnnotation( entityType, ID_CLASS );
 		final Element member = idClassRef ? null : memberMatchingPath( entityType, path );
 		if ( member != null ) {
-			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+			if ( isPluralAttribute( member ) ) {
 				message( param,
 						"matching field is a collection",
 						Diagnostic.Kind.ERROR );
 				return null;
 			}
 
-			if ( checkParameterType( entityType, param, memberType( member ) ) ) {
+			final var memberType = memberType( member );
+			final var attributeType = requireNonNullElse(
+					resolveTypeMirror(
+							entityType,
+							member.getEnclosingElement(),
+							memberType.toString()
+					), memberType
+			);
+			if ( checkParameterType( entityType, param, attributeType ) ) {
 				return FieldType.MULTIVALUED;
 			}
 			else if ( containsAnnotation( param, PATTERN ) ) {
@@ -3077,7 +3115,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationValue value,
 			SqmSelectStatement<?> statement) {
 		if ( returnType != null ) {
-			final JpaSelection<?> selection = statement.getSelection();
+			// HQL based queries are ensured to have a select clause by SemanticQueryBuilder
+			final JpaSelection<?> selection = castNonNull( statement.getSelection() );
 			boolean returnTypeCorrect;
 			if ( selection.isCompoundSelection() ) {
 				switch ( returnType.getKind() ) {
@@ -3294,7 +3333,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkOrdinalParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
 			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
-		int position = param.getPosition();
+		int position = castNonNull( param.getPosition() );
 		if ( position > paramNames.size() ) {
 			message(method, mirror, value,
 					"missing method parameter for query parameter ?" + position
@@ -3325,7 +3364,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkNamedParameter(
 			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes, ExecutableElement method,
 			AnnotationMirror mirror, AnnotationValue value, String queryParamType) {
-		final String name = param.getName();
+		final String name = castNonNull( param.getName() );
 		int index = paramNames.indexOf( name );
 		if ( index < 0 ) {
 			message(method, mirror, value,
@@ -3388,19 +3427,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Workaround for a bug in Java 20/21. Should not be necessary!
 	 */
 	private String typeAsString(TypeMirror type) {
-		String result = type.toString();
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			final String annotationString = annotation.toString();
-			result = result
-					// if it has a space after it, we need to remove that too
-					.replace(annotationString + ' ', "")
-					// just in case it did not have a space after it
-					.replace(annotationString, "");
+		return typeAsString( type, true );
+	}
+
+	private String typeAsString(TypeMirror type, boolean includeAnnotations) {
+		if ( type instanceof DeclaredType dt && dt.asElement() instanceof TypeElement te ) {
+			StringBuilder result = new StringBuilder();
+			if ( includeAnnotations ) {
+				for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+					result.append( annotation.toString() ).append( ' ' );
+				}
+			}
+			// get the "fqcn" without any type arguments
+			result.append( te.getQualifiedName().toString() );
+			// add the < ? ,? ....> as necessary:
+			if ( !dt.getTypeArguments().isEmpty() ) {
+				result.append( "<" );
+				int index = 0;
+				for ( ; index < dt.getTypeArguments().size() - 1; index++ ) {
+					result.append( typeAsString( dt.getTypeArguments().get( index ), true ) )
+							.append( ", " );
+				}
+				result.append( typeAsString( dt.getTypeArguments().get( index ), true ) );
+				result.append( ">" );
+			}
+			return result.toString();
 		}
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			result = annotation.toString() + ' ' + result;
+		else {
+			return type.toString();
 		}
-		return result;
 	}
 
 	private TypeMirror parameterType(VariableElement parameter) {

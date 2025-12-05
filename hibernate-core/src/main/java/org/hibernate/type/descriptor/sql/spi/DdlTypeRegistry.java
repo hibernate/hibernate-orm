@@ -29,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @since 6.0
  */
 public class DdlTypeRegistry implements Serializable {
-//	private static final Logger log = Logger.getLogger( DdlTypeRegistry.class );
+//	private static final Logger LOG = Logger.getLogger( DdlTypeRegistry.class );
 
 	private final Map<Integer, DdlType> ddlTypes = new HashMap<>();
 	private final Map<String, Integer> sqlTypes = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
@@ -58,7 +58,7 @@ public class DdlTypeRegistry implements Serializable {
 			for ( String rawTypeName : previous.getRawTypeNames() ) {
 				sqlTypes.remove( rawTypeName );
 			}
-//			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
+//			LOG.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
 		}
 		addSqlType( ddlType, sqlTypeCode );
 	}

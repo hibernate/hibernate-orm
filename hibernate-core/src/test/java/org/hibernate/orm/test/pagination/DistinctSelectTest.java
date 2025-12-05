@@ -4,20 +4,19 @@
  */
 package org.hibernate.orm.test.pagination;
 
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. The bug has to do
@@ -25,54 +24,51 @@ import static org.junit.Assert.assertFalse;
  *
  * @author Valotasios Yoryos
  */
-@JiraKey( value = "HHH-5715" )
-public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
+@JiraKey(value = "HHH-5715")
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/pagination/EntryTag.hbm.xml"
+)
+@SessionFactory
+public class DistinctSelectTest {
 	private static final int NUM_OF_USERS = 30;
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Tag> tags = new ArrayList<>();
+
+					for ( int i = 0; i < 5; i++ ) {
+						Tag tag = new Tag( "Tag: " + SafeRandomUUIDGenerator.safeRandomUUID() );
+						tags.add( tag );
+						session.persist( tag );
+					}
+
+					for ( int i = 0; i < NUM_OF_USERS; i++ ) {
+						Entry e = new Entry( "Entry: " + SafeRandomUUIDGenerator.safeRandomUUID() );
+						e.getTags().addAll( tags );
+						session.persist( e );
+					}
+				}
+		);
 	}
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "pagination/EntryTag.hbm.xml" };
-	}
-
-	public void feedDatabase() {
-		List<Tag> tags = new ArrayList<Tag>();
-
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-
-		for (int i = 0; i < 5; i++) {
-			Tag tag = new Tag("Tag: " + SafeRandomUUIDGenerator.safeRandomUUID());
-			tags.add(tag);
-			s.persist(tag);
-		}
-
-		for (int i = 0; i < NUM_OF_USERS; i++) {
-			Entry e = new Entry("Entry: " + SafeRandomUUIDGenerator.safeRandomUUID());
-			e.getTags().addAll(tags);
-			s.persist(e);
-		}
-		t.commit();
-		s.close();
-	}
-
-	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDistinctSelectWithJoin() {
-		feedDatabase();
+	public void testDistinctSelectWithJoin(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<Entry> entries = session.createQuery(
+									"select distinct e from Entry e join e.tags t where t.surrogate is not null order by e.name",
+									Entry.class )
+							.setFirstResult( 10 ).setMaxResults( 5 ).list();
 
-		Session s = openSession();
-
-		List<Entry> entries = s.createQuery("select distinct e from Entry e join e.tags t where t.surrogate is not null order by e.name").setFirstResult(10).setMaxResults(5).list();
-
-		// System.out.println(entries);
-		Entry firstEntry = entries.remove(0);
-		assertFalse("The list of entries should not contain dublicated Entry objects as we've done a distinct select", entries.contains(firstEntry));
-
-		s.close();
+					// System.out.println(entries);
+					Entry firstEntry = entries.remove( 0 );
+					assertThat( entries )
+							.describedAs(
+									"The list of entries should not contain duplicated Entry objects as we've done a distinct select" )
+							.doesNotContain( firstEntry );
+				}
+		);
 	}
 }

@@ -16,9 +16,7 @@
 		package="org.hibernate.orm.test.version.db">
 
 	<class name="User" table="db_vers_user">
-        <id name="id" column="user_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="user_id"/>
         <timestamp name="timestamp" column="ts" source="db"/>
         <property name="username" column="user_name" type="string" unique="true" not-null="true"/>
         <set name="groups" table="db_vers_user_group" batch-size="9" inverse="true" optimistic-lock="true" lazy="true" cascade="none" >
@@ -32,9 +30,7 @@
 	</class>
 
 	<class name="Group" table="db_vers_group">
-        <id name="id" column="group_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="group_id"/>
         <timestamp name="timestamp" column="ts" source="db"/>
         <property name="name" column="name" type="string" unique="true" not-null="true"/>
         <set name="users" table="db_vers_user_group" batch-size="9" inverse="false" lazy="true" cascade="none" >
@@ -44,9 +40,7 @@
 	</class>
 
 	<class name="Permission" table="db_vers_permission">
-        <id name="id" column="perm_id" type="long">
-            <generator class="native"/>
-        </id>
+        <id name="id" column="perm_id"/>
         <timestamp name="timestamp" column="ts" source="db"/>
         <property name="name" column="name" type="string" unique="true" not-null="true"/>
         <property name="context" column="ctx" type="string"/>

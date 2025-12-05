@@ -4,9 +4,6 @@
  */
 package org.hibernate.id;
 
-import java.util.List;
-
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.BasicSelectingDelegate;
@@ -14,7 +11,6 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.EventType.INSERT;
@@ -54,9 +50,9 @@ public class IdentityGenerator
 
 	@Override
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
-		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
-		final SessionFactoryOptions sessionFactoryOptions = persister.getFactory().getSessionFactoryOptions();
-		final List<? extends ModelPart> generatedProperties = persister.getGeneratedProperties( INSERT );
+		final var dialect = persister.getFactory().getJdbcServices().getDialect();
+		final var sessionFactoryOptions = persister.getFactory().getSessionFactoryOptions();
+		final var generatedProperties = persister.getGeneratedProperties( INSERT );
 		if ( generatedProperties.size() == 1 && sessionFactoryOptions.isGetGeneratedKeysEnabled() ) {
 			// Use Connection#prepareStatement(sql, Statement.RETURN_GENERATED_KEYS) when only retrieving identity
 			assert generatedProperties.get( 0 ).isEntityIdentifierMapping();
@@ -74,7 +70,7 @@ public class IdentityGenerator
 			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister );
 		}
 		else if ( persister.getNaturalIdentifierProperties() != null
-				&& !persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
+				&& !persister.isNaturalIdentifierInsertGenerated() ) {
 			return new UniqueKeySelectingDelegate( persister, getNaturalIdPropertyNames( persister ), INSERT );
 		}
 		else {

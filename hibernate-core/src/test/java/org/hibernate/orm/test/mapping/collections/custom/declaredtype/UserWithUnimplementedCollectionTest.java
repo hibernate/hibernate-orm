@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test that we get an exception when an attribute whose type is not a Collection

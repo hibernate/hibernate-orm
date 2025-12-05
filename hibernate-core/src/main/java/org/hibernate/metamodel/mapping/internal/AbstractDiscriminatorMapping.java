@@ -19,7 +19,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -49,10 +48,8 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			BasicType<Object> underlyingJdbcMapping) {
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 		this.mappingType = mappingType;
-
-		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
-
 		this.discriminatorType = discriminatorType;
+		this.role = mappingType.getNavigableRole().append( DISCRIMINATOR_ROLE_NAME );
 	}
 
 	public EntityMappingType getEntityDescriptor() {
@@ -106,7 +103,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		// create a SqlSelection based on the underlying JdbcMapping
-		final SqlSelection sqlSelection = resolveSqlSelection(
+		final var sqlSelection = resolveSqlSelection(
 				navigablePath,
 				underlyingJdbcMapping,
 				tableGroup,
@@ -132,8 +129,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			TableGroup tableGroup,
 			FetchParent fetchParent,
 			SqlAstCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
-		return expressionResolver.resolveSqlSelection(
+		return creationState.getSqlExpressionResolver().resolveSqlSelection(
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
 				jdbcMappingToUse.getJdbcJavaType(),
 				fetchParent,
@@ -149,15 +145,13 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-				fetchParent.getNavigablePath()
-		);
-
+		final var tableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath() );
 		assert tableGroup != null;
 
 		// create a SqlSelection based on the underlying JdbcMapping
-		final SqlSelection sqlSelection = resolveSqlSelection(
+		final var sqlSelection = resolveSqlSelection(
 				fetchablePath,
 				underlyingJdbcMapping,
 				tableGroup,

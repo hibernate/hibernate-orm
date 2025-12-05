@@ -5,6 +5,7 @@
 package org.hibernate.sql.model.jdbc;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
@@ -55,6 +56,11 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	@Override
 	public TableMapping getTableDetails() {
 		return tableDetails;
+	}
+
+	@Override
+	public Set<String> getAffectedTableNames() {
+		return Set.of( getTableDetails().getTableName() );
 	}
 
 	@Override

@@ -41,6 +41,7 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.ClassDetails;
@@ -49,6 +50,7 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.envers.configuration.internal.ModelsHelper.getMemberDetails;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -72,6 +74,7 @@ public class RevisionInfoConfiguration {
 	private final RevisionInfoQueryCreator revisionInfoQueryCreator;
 	private final ModifiedEntityNamesReader modifiedEntityNamesReader;
 	private final String revisionInfoEntityName;
+	private final String revisionInfoQueryName;
 	private final PropertyData revisionInfoTimestampData;
 	private final String revisionInfoTimestampTypeName;
 	private final String revisionPropType;
@@ -89,6 +92,7 @@ public class RevisionInfoConfiguration {
 		// initialize attributes from resolver
 		this.revisionInfoClass = resolver.revisionInfoClass;
 		this.revisionInfoEntityName = resolver.revisionInfoEntityName;
+		this.revisionInfoQueryName = resolver.revisionInfoQueryName;
 		this.revisionPropType = resolver.revisionPropType;
 		this.revisionPropSqlType = resolver.revisionPropSqlType;
 		this.revisionInfoTimestampData = resolver.revisionInfoTimestampData;
@@ -106,7 +110,7 @@ public class RevisionInfoConfiguration {
 		);
 
 		revisionInfoQueryCreator = new RevisionInfoQueryCreator(
-				resolver.revisionInfoEntityName,
+				resolver.revisionInfoQueryName,
 				resolver.revisionInfoIdData.getName(),
 				resolver.timestampValueResolver
 		);
@@ -123,8 +127,18 @@ public class RevisionInfoConfiguration {
 		}
 	}
 
+	/**
+	 * The full entity name for the revision entity.
+	 */
 	public String getRevisionInfoEntityName() {
 		return revisionInfoEntityName;
+	}
+
+	/**
+	 * The query name for the revision entity.
+	 */
+	public String getRevisionInfoQueryName() {
+		return revisionInfoQueryName;
 	}
 
 	public String getRevisionInfoPropertyType() {
@@ -269,6 +283,7 @@ public class RevisionInfoConfiguration {
 		private boolean revisionTimestampFound;
 		private boolean modifiedEntityNamesFound;
 		private String revisionInfoEntityName;
+		private String revisionInfoQueryName;
 		private Class<?> revisionInfoClass;
 		private Class<? extends RevisionListener> revisionListenerClass;
 		private RevisionInfoGenerator revisionInfoGenerator;
@@ -335,6 +350,7 @@ public class RevisionInfoConfiguration {
 				}
 
 				revisionInfoEntityName = persistentClass.getEntityName();
+				revisionInfoQueryName = determineQueryName( persistentClass );
 				revisionInfoClass = persistentClass.getMappedClass();
 				revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
 
@@ -387,8 +403,8 @@ public class RevisionInfoConfiguration {
 							: SequenceIdRevisionEntity.class;
 				}
 
-				// Use the simple name of default revision entities as entity name
-				revisionInfoEntityName = revisionInfoClass.getSimpleName();
+				revisionInfoQueryName = revisionInfoClass.getSimpleName();
+				revisionInfoEntityName = revisionInfoClass.getName();
 
 				timestampValueResolver = createRevisionTimestampResolver(
 						revisionInfoClass,
@@ -421,6 +437,13 @@ public class RevisionInfoConfiguration {
 			}
 		}
 
+		private String determineQueryName(PersistentClass persistentClass) {
+			if ( StringHelper.isNotEmpty( persistentClass.getJpaEntityName() ) ) {
+				return persistentClass.getJpaEntityName();
+			}
+			return persistentClass.getEntityName();
+		}
+
 		private boolean useEntityTrackingRevisionEntity(Class<?> clazz) {
 			return configuration.isTrackEntitiesChanged()
 					|| ( configuration.isNativeIdEnabled() && DefaultTrackingModifiedEntitiesRevisionEntity.class.isAssignableFrom( clazz ) )
@@ -430,7 +453,7 @@ public class RevisionInfoConfiguration {
 
 		private void resolveConfiguration(ClassDetails classDetails) {
 			final ClassDetails superclass = classDetails.getSuperClass();
-			if ( !Object.class.getName().equals( superclass.getName() ) ) {
+			if ( !OBJECT_CLASS_NAME.equals( superclass.getName() ) ) {
 				// traverse to the top of the entity hierarchy
 				resolveConfiguration( superclass );
 			}

@@ -13,8 +13,8 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * WildFly will use class names in "internal JVM format" when invoking the enhancer,
@@ -34,10 +34,10 @@ public class EnhancerWildFlyNamesTest {
 			buffer = readResource( resourceName );
 		}
 		catch (IOException e) {
-			Assert.fail( "Should not have an IOException here" );
+			Assertions.fail( "Should not have an IOException here" );
 		}
 		byte[] enhanced = enhancer.enhance( internalName, buffer );
-		Assert.assertNotNull( "This is null when there have been swallowed exceptions during enhancement. Check Logs!", enhanced );
+		Assertions.assertNotNull( enhanced, "This is null when there have been swallowed exceptions during enhancement. Check Logs!" );
 	}
 
 	private byte[] readResource(String resourceName) throws IOException {

@@ -9,23 +9,16 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.internal.exec.AbstractScriptSourceInput;
@@ -44,8 +37,14 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_NAMESPACES;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CREATE_SCHEMAS;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Helper methods.
@@ -53,8 +52,6 @@ import static org.hibernate.internal.util.StringHelper.splitAtCommas;
  * @author Steve Ebersole
  */
 public class Helper {
-
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting, //Reader or String URL
@@ -65,18 +62,18 @@ public class Helper {
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
-			log.tracef( "Attempting to resolve script source setting: %s", scriptSourceSettingString );
-
-			final String[] paths = splitAtCommas( scriptSourceSettingString );
+			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptSourceSettingString );
+			final var paths = splitAtCommas( scriptSourceSettingString );
 			if ( paths.length == 1 ) {
 				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
 			}
-			final AbstractScriptSourceInput[] inputs = new AbstractScriptSourceInput[paths.length];
-			for ( int i = 0; i < paths.length; i++ ) {
-				inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName ) ;
+			else {
+				final var inputs = new AbstractScriptSourceInput[paths.length];
+				for ( int i = 0; i < paths.length; i++ ) {
+					inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName );
+				}
+				return new ScriptSourceInputAggregate( inputs );
 			}
-
-			return new ScriptSourceInputAggregate( inputs );
 		}
 	}
 
@@ -89,7 +86,7 @@ public class Helper {
 		//		2) relative file path (resource lookup)
 		//		3) absolute file path
 
-		log.trace( "Trying as URL..." );
+		CORE_LOGGER.trace( "Trying as URL..." );
 		// ClassLoaderService.locateResource() first tries the given resource name as url form...
 		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
 		return url != null
@@ -111,15 +108,14 @@ public class Helper {
 		}
 		else {
 			final String scriptTargetSettingString = scriptTargetSetting.toString();
-			log.tracef( "Attempting to resolve script source setting: %s", scriptTargetSettingString );
+			CORE_LOGGER.attemptingToResolveScriptSourceSetting( scriptTargetSettingString );
 
 			// setting could be either:
 			//		1) string URL representation (i.e., "file://...")
 			//		2) relative file path (resource lookup)
 			//		3) absolute file path
 
-			log.trace( "Trying as URL..." );
-			// ClassLoaderService.locateResource() first tries the given resource name as url form...
+			// ClassLoaderService.locateResource() first tries the given resource name as URL form...
 			final URL url = classLoaderService.locateResource( scriptTargetSettingString );
 			return url != null
 					? new ScriptTargetOutputToUrl( url, charsetName )
@@ -131,16 +127,16 @@ public class Helper {
 	public static boolean interpretNamespaceHandling(Map<String,Object> configurationValues) {
 		warnIfConflictingPropertiesSet( configurationValues );
 		// prefer the JPA setting...
-		return ConfigurationHelper.getBoolean(
-				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
+		return getBoolean(
+				HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
 				//Then try the Jakarta JPA setting:
-				ConfigurationHelper.getBoolean(
-						AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
+				getBoolean(
+						JAKARTA_HBM2DDL_CREATE_SCHEMAS,
 						configurationValues,
 						//Then try the Hibernate ORM setting:
-						ConfigurationHelper.getBoolean(
-								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
+						getBoolean(
+								HBM2DDL_CREATE_NAMESPACES,
 								configurationValues
 						)
 				)
@@ -150,30 +146,30 @@ public class Helper {
 	private static void warnIfConflictingPropertiesSet(Map<String, Object> configurationValues) {
 		//Print a warning if multiple conflicting properties are being set:
 		int count = 0;
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+		if ( configurationValues.containsKey( JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
+		if ( configurationValues.containsKey( HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
 		if ( count > 1 ) {
-			log.multipleSchemaCreationSettingsDefined();
+			CORE_LOGGER.multipleSchemaCreationSettingsDefined();
 		}
 	}
 
 	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
-		return ConfigurationHelper.getBoolean( AvailableSettings.FORMAT_SQL, configurationValues );
+		return getBoolean( FORMAT_SQL, configurationValues );
 	}
 
 	public static DatabaseInformation buildDatabaseInformation(
-			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			SqlStringGenerationContext context,
 			SchemaManagementTool tool) {
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var serviceRegistry = ddlTransactionIsolator.getJdbcContext().getServiceRegistry();
+		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
@@ -190,7 +186,7 @@ public class Helper {
 	}
 
 	public static SqlStringGenerationContext createSqlStringGenerationContext(ExecutionOptions options, Metadata metadata) {
-		final Database database = metadata.getDatabase();
+		final var database = metadata.getDatabase();
 		return SqlStringGenerationContextImpl.fromConfigurationMap(
 				database.getJdbcEnvironment(),
 				database,
@@ -217,7 +213,7 @@ public class Helper {
 			GenerationTarget... targets) {
 		if ( !isEmpty( sqlString ) ) {
 			final String sqlStringFormatted = formatter.format( sqlString );
-			for ( GenerationTarget target : targets ) {
+			for ( var target : targets ) {
 				try {
 					target.accept( sqlStringFormatted );
 				}
@@ -235,10 +231,9 @@ public class Helper {
 			ScriptSourceInput scriptInput,
 			Formatter formatter,
 			GenerationTarget[] targets) {
-		final List<String> commands = scriptInput.extract(
-				reader -> commandExtractor.extractCommands( reader, dialect )
-		);
-		for ( GenerationTarget target : targets ) {
+		final var commands =
+				scriptInput.extract( reader -> commandExtractor.extractCommands( reader, dialect ) );
+		for ( var target : targets ) {
 			target.beforeScript( scriptInput );
 		}
 		for ( String command : commands ) {

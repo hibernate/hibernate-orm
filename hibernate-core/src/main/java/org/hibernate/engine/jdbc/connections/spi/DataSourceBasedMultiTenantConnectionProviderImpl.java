@@ -70,7 +70,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final Object dataSourceConfigValue = configurationService.getSettings().get( DATASOURCE );
 		if ( !(dataSourceConfigValue instanceof String configuredJndiName) ) {
 			throw new HibernateException( "illegal value for configuration setting '" + DATASOURCE + "'" );
@@ -121,7 +121,13 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 				null,
 				null,
 				null,
+				dialect.getClass(),
 				dialect.getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
 				null,
 				null,
 				null,

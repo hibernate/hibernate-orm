@@ -24,6 +24,7 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.Size;
@@ -191,7 +192,8 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6", matchSubTypes = true)
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL only supports precision <= 6", matchSubTypes = true)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL only supports precision <= 6")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus only supports precision <= 6")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB only supports precision <= 6")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")

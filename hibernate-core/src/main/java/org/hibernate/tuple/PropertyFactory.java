@@ -4,10 +4,6 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.PersistentClass;
@@ -25,6 +21,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper.includeInBaseFetchGroup;
 
 /**
  * @deprecated No direct replacement
@@ -45,9 +43,8 @@ public final class PropertyFactory {
 	public static IdentifierProperty buildIdentifierAttribute(
 			PersistentClass mappedEntity,
 			Generator generator) {
-		Type type = mappedEntity.getIdentifier().getType();
-		Property property = mappedEntity.getIdentifierProperty();
-
+		final var type = mappedEntity.getIdentifier().getType();
+		final var property = mappedEntity.getIdentifierProperty();
 		if ( property == null ) {
 			// this is a virtual id property...
 			return new IdentifierProperty(
@@ -82,9 +79,7 @@ public final class PropertyFactory {
 			int attributeNumber,
 			Property property,
 			boolean lazyAvailable) {
-
-		boolean lazy = lazyAvailable && property.isLazy();
-
+		final boolean lazy = lazyAvailable && property.isLazy();
 		return new VersionProperty(
 				persister,
 				sessionFactory,
@@ -94,9 +89,9 @@ public final class PropertyFactory {
 				new BaselineAttributeInformation.Builder()
 						.setLazy( lazy )
 						.setInsertable( property.isInsertable() )
-						.setUpdateable( property.isUpdateable() )
+						.setUpdateable( property.isUpdatable() )
 						.setNullable( property.isOptional() )
-						.setDirtyCheckable( property.isUpdateable() && !lazy )
+						.setDirtyCheckable( property.isUpdatable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
 						.setCascadeStyle( property.getCascadeStyle() )
 						.setOnDeleteAction( property.getOnDeleteAction() )
@@ -127,9 +122,7 @@ public final class PropertyFactory {
 			Property property,
 			boolean lazyAvailable,
 			RuntimeModelCreationContext creationContext) {
-		final Type type = property.getValue().getType();
-
-		final NonIdentifierAttributeNature nature = decode( type );
+		final var type = property.getValue().getType();
 
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment
@@ -138,89 +131,82 @@ public final class PropertyFactory {
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 
-		boolean alwaysDirtyCheck = type.isAssociationType()
+		final boolean alwaysDirtyCheck = type.isAssociationType()
 				&& ( (AssociationType) type ).isAlwaysDirtyChecked();
 
-		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
+		final boolean lazy = !includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
 				entityName -> {
-					final MetadataImplementor metadata = creationContext.getMetadata();
-					final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+					final var entityBinding =
+							creationContext.getMetadata()
+									.getEntityBinding( entityName );
 					assert entityBinding != null;
 					return entityBinding.hasSubclasses();
 				},
-				sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+				sessionFactory.getSessionFactoryOptions()
+						.isCollectionsInDefaultFetchGroupEnabled()
 		);
 
-		switch ( nature ) {
-			case BASIC: {
-				return new EntityBasedBasicAttribute(
-						persister,
-						sessionFactory,
-						attributeNumber,
-						property.getName(),
-						type,
-						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
-								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
-								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
-								.setVersionable( property.isOptimisticLocked() )
-								.setCascadeStyle( property.getCascadeStyle() )
-								.setOnDeleteAction( property.getOnDeleteAction() )
-								.setFetchMode( property.getValue().getFetchMode() )
-								.createInformation()
-				);
-			}
-			case COMPOSITE: {
-				return new EntityBasedCompositionAttribute(
-						persister,
-						sessionFactory,
-						attributeNumber,
-						property.getName(),
-						(CompositeType) type,
-						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
-								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
-								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
-								.setVersionable( property.isOptimisticLocked() )
-								.setCascadeStyle( property.getCascadeStyle() )
-								.setOnDeleteAction( property.getOnDeleteAction() )
-								.setFetchMode( property.getValue().getFetchMode() )
-								.createInformation()
-				);
-			}
-			case ENTITY:
-			case ANY:
-			case COLLECTION: {
-				return new EntityBasedAssociationAttribute(
-						persister,
-						sessionFactory,
-						attributeNumber,
-						property.getName(),
-						(AssociationType) type,
-						new BaselineAttributeInformation.Builder()
-								.setLazy( lazy )
-								.setInsertable( property.isInsertable() )
-								.setUpdateable( property.isUpdateable() )
-								.setNullable( property.isOptional() )
-								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
-								.setVersionable( property.isOptimisticLocked() )
-								.setCascadeStyle( property.getCascadeStyle() )
-								.setOnDeleteAction( property.getOnDeleteAction() )
-								.setFetchMode( property.getValue().getFetchMode() )
-								.createInformation()
-				);
-			}
-			default: {
-				throw new HibernateException( "Internal error" );
-			}
-		}
+		return switch ( decode( type ) ) {
+			case BASIC ->
+					new EntityBasedBasicAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							property.getName(),
+							type,
+							new BaselineAttributeInformation.Builder()
+									.setLazy( lazy )
+									.setInsertable( property.isInsertable() )
+									.setUpdateable( property.isUpdatable() )
+									.setNullable( property.isOptional() )
+									.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
+									.setVersionable( property.isOptimisticLocked() )
+									.setCascadeStyle( property.getCascadeStyle() )
+									.setOnDeleteAction( property.getOnDeleteAction() )
+									.setFetchMode( property.getValue().getFetchMode() )
+									.createInformation()
+					);
+			case COMPOSITE ->
+					new EntityBasedCompositionAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							property.getName(),
+							(CompositeType) type,
+							new BaselineAttributeInformation.Builder()
+									.setLazy( lazy )
+									.setInsertable( property.isInsertable() )
+									.setUpdateable( property.isUpdatable() )
+									.setNullable( property.isOptional() )
+									.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
+									.setVersionable( property.isOptimisticLocked() )
+									.setCascadeStyle( property.getCascadeStyle() )
+									.setOnDeleteAction( property.getOnDeleteAction() )
+									.setFetchMode( property.getValue().getFetchMode() )
+									.createInformation()
+					);
+			case ENTITY, ANY, COLLECTION ->
+					new EntityBasedAssociationAttribute(
+							persister,
+							sessionFactory,
+							attributeNumber,
+							property.getName(),
+							(AssociationType) type,
+							new BaselineAttributeInformation.Builder()
+									.setLazy( lazy )
+									.setInsertable( property.isInsertable() )
+									.setUpdateable( property.isUpdatable() )
+									.setNullable( property.isOptional() )
+									.setDirtyCheckable( alwaysDirtyCheck || property.isUpdatable() )
+									.setVersionable( property.isOptimisticLocked() )
+									.setCascadeStyle( property.getCascadeStyle() )
+									.setOnDeleteAction( property.getOnDeleteAction() )
+									.setFetchMode( property.getValue().getFetchMode() )
+									.createInformation()
+					);
+		};
 	}
 
 	private static NonIdentifierAttributeNature decode(Type type) {
@@ -240,5 +226,4 @@ public final class PropertyFactory {
 			return NonIdentifierAttributeNature.BASIC;
 		}
 	}
-
 }

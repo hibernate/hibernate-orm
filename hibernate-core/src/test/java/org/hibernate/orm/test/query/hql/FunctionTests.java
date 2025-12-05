@@ -45,8 +45,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -92,7 +92,8 @@ public class FunctionTests {
 
 	public static final double ERROR = 0.00001d;
 
-	@BeforeEach @SuppressWarnings("deprecation")
+	@BeforeAll
+	@SuppressWarnings("deprecation")
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -129,7 +130,7 @@ public class FunctionTests {
 		);
 	}
 
-	@AfterEach
+	@AfterAll
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.dropData();
 	}
@@ -1178,8 +1179,9 @@ public class FunctionTests {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class, comment = "Dialect does not support truncate with cast" )
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "CockroachDB bytes doesn't have a length")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncation")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
@@ -1211,7 +1213,9 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -2489,6 +2493,18 @@ public class FunctionTests {
 									.setParameterList("list",List.of())
 									.list().size() );
 					assertEquals( 1,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",List.of(1))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",List.of())
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)", Integer.class)
+									.setParameter("list",null)
+									.list().size() );
+					assertEquals( 1,
 							session.createQuery("select 1 where 1 in :list", Integer.class)
 									.setParameterList("list",List.of(1,2))
 									.list().size() );
@@ -2500,9 +2516,14 @@ public class FunctionTests {
 							session.createQuery("select 1 where 1 in :list", Integer.class)
 									.setParameterList("list",List.of())
 									.list().size() );
+					assertEquals( 0,
+							session.createQuery( "select e from EntityWithOneToOne e where e.other in (:list)" )
+									.setParameter( "list", null )
+									.list().size() );
 				}
 		);
 	}
+
 
 	@Test
 	public void testMaxGreatest(SessionFactoryScope scope) {

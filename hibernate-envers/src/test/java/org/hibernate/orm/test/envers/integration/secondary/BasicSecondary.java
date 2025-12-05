@@ -4,75 +4,71 @@
  */
 package org.hibernate.orm.test.envers.integration.secondary;
 
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class BasicSecondary extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {SecondaryTestEntity.class})
+@SessionFactory
+public class BasicSecondary {
 	private Integer id;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SecondaryTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		SecondaryTestEntity ste = new SecondaryTestEntity( "a", "1" );
 
 		// Revision 1
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-
-		em.persist( ste );
-
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			em.persist( ste );
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-
-		ste = em.find( SecondaryTestEntity.class, ste.getId() );
-		ste.setS1( "b" );
-		ste.setS2( "2" );
-
-		em.getTransaction().commit();
-
-		//
+		scope.inTransaction( em -> {
+			SecondaryTestEntity entity = em.find( SecondaryTestEntity.class, ste.getId() );
+			entity.setS1( "b" );
+			entity.setS2( "2" );
+		} );
 
 		id = ste.getId();
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( SecondaryTestEntity.class, id ) );
+	public void testRevisionsCounts(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1, 2 ), auditReader.getRevisions( SecondaryTestEntity.class, id ) );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfId() {
+	public void testHistoryOfId(SessionFactoryScope scope) {
 		SecondaryTestEntity ver1 = new SecondaryTestEntity( id, "a", "1" );
 		SecondaryTestEntity ver2 = new SecondaryTestEntity( id, "b", "2" );
 
-		assert getAuditReader().find( SecondaryTestEntity.class, id, 1 ).equals( ver1 );
-		assert getAuditReader().find( SecondaryTestEntity.class, id, 2 ).equals( ver2 );
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( ver1, auditReader.find( SecondaryTestEntity.class, id, 1 ) );
+			assertEquals( ver2, auditReader.find( SecondaryTestEntity.class, id, 2 ) );
+		} );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	public void testTableNames() {
-		Assert.assertEquals("secondary_AUD",
-						metadata().getEntityBinding(
-								"org.hibernate.orm.test.envers.integration.secondary.SecondaryTestEntity_AUD"
-						)
-						.getJoins().get( 0 ).getTable().getName()
-		);
+	public void testTableNames(DomainModelScope scope) {
+		assertEquals( "secondary_AUD", scope.getDomainModel()
+				.getEntityBinding( "org.hibernate.orm.test.envers.integration.secondary.SecondaryTestEntity_AUD" )
+				.getJoins().get( 0 ).getTable().getName() );
 	}
 }

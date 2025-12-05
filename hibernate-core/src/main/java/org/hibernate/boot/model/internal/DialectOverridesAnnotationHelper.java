@@ -15,7 +15,6 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -29,43 +28,37 @@ public class DialectOverridesAnnotationHelper {
 	private static Map<Class<? extends Annotation>, Class<? extends Annotation>> buildOverrideMap() {
 		// not accessed concurrently
 		final Map<Class<? extends Annotation>, Class<? extends Annotation>> results = new HashMap<>();
-
-		final Class<?>[] dialectOverrideMembers = DialectOverride.class.getNestMembers();
-		for ( Class<?> dialectOverrideMember : dialectOverrideMembers ) {
-			if ( !dialectOverrideMember.isAnnotation() ) {
-				continue;
+		for ( Class<?> dialectOverrideMember : DialectOverride.class.getNestMembers() ) {
+			if ( dialectOverrideMember.isAnnotation() ) {
+				final var overrideAnnotation =
+						dialectOverrideMember.getAnnotation( DialectOverride.OverridesAnnotation.class );
+				if ( overrideAnnotation != null ) {
+					// The "real" annotation.  e.g. `org.hibernate.annotations.Formula`
+					final var baseAnnotation = overrideAnnotation.value();
+					// the "override" annotation.  e.g. `org.hibernate.annotations.DialectOverride.Formula`
+					//noinspection unchecked
+					final var dialectOverrideAnnotation = (Class<? extends Annotation>) dialectOverrideMember;
+					results.put( baseAnnotation, dialectOverrideAnnotation );
+				}
 			}
-
-			final DialectOverride.OverridesAnnotation overrideAnnotation = dialectOverrideMember.getAnnotation( DialectOverride.OverridesAnnotation.class );
-			if ( overrideAnnotation == null ) {
-				continue;
-			}
-
-			// The "real" annotation.  e.g. `org.hibernate.annotations.Formula`
-			final Class<? extends Annotation> baseAnnotation = overrideAnnotation.value();
-
-			// the "override" annotation.  e.g. `org.hibernate.annotations.DialectOverride.Formula`
-			//noinspection unchecked
-			final Class<? extends Annotation> dialectOverrideAnnotation = (Class<? extends Annotation>) dialectOverrideMember;
-
-			results.put( baseAnnotation, dialectOverrideAnnotation );
 		}
-
 		return results;
 	}
 
 	public static <A extends Annotation, O extends Annotation> Class<O> getOverrideAnnotation(Class<A> annotationType) {
 		final Class<O> overrideAnnotation = findOverrideAnnotation( annotationType );
-		if ( overrideAnnotation != null ) {
+		if ( overrideAnnotation == null ) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Specified Annotation type (%s) does not have an override form",
+							annotationType.getName()
+					)
+			);
+		}
+		else {
 			return overrideAnnotation;
 		}
-		throw new HibernateException(
-				String.format(
-						Locale.ROOT,
-						"Specified Annotation type (%s) does not have an override form",
-						annotationType.getName()
-				)
-		);
 	}
 
 	public static <A extends Annotation, O extends Annotation> Class<O> findOverrideAnnotation(Class<A> annotationType) {
@@ -77,18 +70,16 @@ public class DialectOverridesAnnotationHelper {
 			AnnotationTarget element,
 			Class<T> annotationType,
 			MetadataBuildingContext context) {
-		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
-		final Class<? extends Annotation> overrideAnnotation = OVERRIDE_MAP.get( annotationType );
-
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var overrideAnnotation = OVERRIDE_MAP.get( annotationType );
 		if ( overrideAnnotation != null ) {
 			// the requested annotation does have a DialectOverride variant - look for matching one of those...
 			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
-
 			final Annotation[] overrides = element.getRepeatedAnnotationUsages( overrideAnnotation, modelsContext );
 			if ( isNotEmpty( overrides ) ) {
-				for ( int i = 0; i < overrides.length; i++ ) {
+				for ( Annotation annotation : overrides ) {
 					//noinspection unchecked
-					final DialectOverrider<T> override = (DialectOverrider<T>) overrides[i];
+					final var override = (DialectOverrider<T>) annotation;
 					if ( override.matches( dialect ) ) {
 						return override.override();
 					}
@@ -96,11 +87,7 @@ public class DialectOverridesAnnotationHelper {
 			}
 		}
 
-		// no override was found.  return the base annotation (if one)
+		// No override was found. Return the base annotation (if one)
 		return element.getAnnotationUsage( annotationType, modelsContext );
-	}
-
-	public static boolean overrideMatchesDialect(DialectOverrider<?> override, Dialect dialect) {
-		return override.matches( dialect );
 	}
 }

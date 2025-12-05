@@ -65,7 +65,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARCHAR ) );
+		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARCHAR ) );
 		return descriptor instanceof AdjustableJdbcType
 				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
 				: descriptor;

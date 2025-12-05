@@ -4,55 +4,50 @@
  */
 package org.hibernate.orm.test.pc;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeMergeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@Jpa(
+		annotatedClasses = {
 				Person.class,
 				Phone.class
-		};
-	}
+		}
+)
+public class CascadeMergeTest {
 
 	@Test
-	public void mergeTest() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void mergeTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
+			person.setId( 1L );
+			person.setName( "John Doe" );
 
 			Phone phone = new Phone();
-			phone.setId(1L);
-			phone.setNumber("123-456-7890");
+			phone.setId( 1L );
+			phone.setNumber( "123-456-7890" );
 
-			person.addPhone(phone);
+			person.addPhone( phone );
 
-			entityManager.persist(person);
+			entityManager.persist( person );
 
-		});
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
+		scope.inTransaction( entityManager -> {
 			//tag::pc-cascade-merge-example[]
-			Phone phone = entityManager.find(Phone.class, 1L);
+			Phone phone = entityManager.find( Phone.class, 1L );
 			Person person = phone.getOwner();
 
-			person.setName("John Doe Jr.");
-			phone.setNumber("987-654-3210");
+			person.setName( "John Doe Jr." );
+			phone.setNumber( "987-654-3210" );
 
 			entityManager.clear();
 
-			entityManager.merge(person);
+			entityManager.merge( person );
 			//end::pc-cascade-merge-example[]
-		});
+		} );
 	}
 }

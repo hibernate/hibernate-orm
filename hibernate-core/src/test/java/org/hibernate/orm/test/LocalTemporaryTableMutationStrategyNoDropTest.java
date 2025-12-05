@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test;
 
-import java.util.Map;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -13,34 +16,30 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
+import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -52,14 +51,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 )
 @SessionFactory
 @ServiceRegistry(
-		settings = {
-				@Setting(name = LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, value = "false")
-		},
 		services = @ServiceRegistry.Service(
 				role = ParameterMarkerStrategy.class,
 				impl = LocalTemporaryTableMutationStrategyNoDropTest.ParameterMarkerStrategyImpl.class
 		)
 )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @JiraKey("HHH-16486")
 public class LocalTemporaryTableMutationStrategyNoDropTest {
 
@@ -69,10 +66,10 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 	public void testGetSqlTruncateCommand(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					StandardTemporaryTableExporter standardTemporaryTableExporter
-							= createStandardTemporaryTableExporter( session );
-					TemporaryTable idTable = createTemporaryTable( scope, session );
-					String sqlTruncateCommand = standardTemporaryTableExporter.getSqlTruncateCommand(
+					final TemporaryTableExporter temporaryTableExporter =
+							scope.getSessionFactory().getJdbcServices().getDialect().getTemporaryTableExporter();
+					final TemporaryTable idTable = createTemporaryTable( scope );
+					final String sqlTruncateCommand = temporaryTableExporter.getSqlTruncateCommand(
 							idTable,
 							null,
 							session
@@ -84,25 +81,15 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 
 	}
 
-	private static StandardTemporaryTableExporter createStandardTemporaryTableExporter(SessionImplementor session) {
-		return new StandardTemporaryTableExporter( getDialect() );
-	}
-
-	private static Dialect getDialect() {
-		return new TestDialect();
-	}
-
-	private static TemporaryTable createTemporaryTable(
-			SessionFactoryScope scope,
-			SessionImplementor session) {
-		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		Dialect dialect = getDialect();
+	private static TemporaryTable createTemporaryTable(SessionFactoryScope scope) {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		return TemporaryTable.createIdTable(
-				session.getEntityPersister( null, new TestEntity() ),
+				scope.getMetadataImplementor().getEntityBinding( TestEntity.class.getName() ),
 				basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-				dialect,
-				new ModelCreationContext( sessionFactory, scope, dialect, jdbcServices )
+				TemporaryTableKind.PERSISTENT,
+				jdbcServices.getDialect(),
+				new ModelCreationContext( sessionFactory, scope, jdbcServices )
 		);
 	}
 
@@ -112,20 +99,6 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 			return MARKER;
 		}
 	}
-
-	public static class TestDialect extends Dialect {
-
-		@Override
-		public boolean supportsTemporaryTables() {
-			return true;
-		}
-
-		@Override
-		public TemporaryTableKind getSupportedTemporaryTableKind() {
-			return TemporaryTableKind.PERSISTENT;
-		}
-	}
-
 
 	@Entity(name = "ParentEntity")
 	@Inheritance(strategy = InheritanceType.JOINED)
@@ -146,13 +119,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 
 		private final SessionFactoryImplementor sessionFactory;
 		private final SessionFactoryScope scope;
-		private final Dialect dialect;
 		private final JdbcServices jdbcServices;
 
-		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, Dialect dialect, JdbcServices jdbcServices) {
+		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, JdbcServices jdbcServices) {
 			this.sessionFactory = sessionFactory;
 			this.scope = scope;
-			this.dialect = dialect;
 			this.jdbcServices = jdbcServices;
 		}
 
@@ -164,6 +135,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public BootstrapContext getBootstrapContext() {
 			return null;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return sessionFactory.getTypeConfiguration();
 		}
 
 		@Override
@@ -188,7 +164,7 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 
 		@Override
 		public Dialect getDialect() {
-			return dialect;
+			return jdbcServices.getDialect();
 		}
 
 		@Override
@@ -239,6 +215,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public GeneratorSettings getGeneratorSettings() {
 			return this;
+		}
+
+		@Override
+		public Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass) {
+			return null;
 		}
 	}
 }

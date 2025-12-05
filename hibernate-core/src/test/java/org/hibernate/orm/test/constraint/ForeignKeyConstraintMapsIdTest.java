@@ -11,22 +11,50 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Table;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12320")
-public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ForeignKeyConstraintMapsIdTest.Post.class,
+				ForeignKeyConstraintMapsIdTest.PostDetails.class
+		}
+)
+@SessionFactory
+public class ForeignKeyConstraintMapsIdTest {
+
+	@Test
+	public void testForeignKeyNameSetForMapsIdJoinColumn(SessionFactoryScope scope) {
+		MetadataImplementor metadata = scope.getMetadataImplementor();
+		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( Table table : namespace.getTables() ) {
+				if ( table.getName().equals( "Post" ) ) {
+					for ( var foreignKey : table.getForeignKeyCollection() ) {
+						if ( foreignKey.getColumn( 0 ).getName().equals( "PD_ID" ) ) {
+							assertThat( foreignKey.getName() ).isEqualTo( "FK_PD" );
+							return;
+						}
+					}
+				}
+			}
+		}
+		fail( "Expected to find a Foreign Key mapped to column PD_ID but failed to locate it" );
+	}
+
 	@Entity(name = "Post")
 	public static class Post {
 		@Id
@@ -75,27 +103,5 @@ public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalT
 		public void setUserName(String userName) {
 			this.userName = userName;
 		}
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Post.class, PostDetails.class };
-	}
-
-	@Test
-	public void testForeignKeyNameSetForMapsIdJoinColumn() {
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
-			for ( Table table : namespace.getTables() ) {
-				if ( table.getName().equals( "Post" ) ) {
-					for ( var foreignKey : table.getForeignKeyCollection() ) {
-						if ( foreignKey.getColumn( 0 ).getName().equals( "PD_ID" ) ) {
-							assertEquals( "FK_PD", foreignKey.getName() );
-							return;
-						}
-					}
-				}
-			}
-		}
-		fail( "Expected to find a Foreign Key mapped to column PD_ID but failed to locate it" );
 	}
 }

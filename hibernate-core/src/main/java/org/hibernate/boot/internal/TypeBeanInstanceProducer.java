@@ -11,7 +11,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeBootstrapContext;
 import org.hibernate.service.ServiceRegistry;
 
-import java.lang.reflect.Constructor;
 import java.util.Map;
 
 import static org.hibernate.internal.util.ReflectHelper.getConstructorOrNull;
@@ -33,7 +32,7 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		final Constructor<? extends B> bootstrapContextAwareConstructor =
+		final var bootstrapContextAwareConstructor =
 				getConstructorOrNull( beanType, TypeBootstrapContext.class );
 		if ( bootstrapContextAwareConstructor != null ) {
 			try {
@@ -44,7 +43,7 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 			}
 		}
 		else {
-			final Constructor<? extends B> constructor = getConstructorOrNull( beanType );
+			final var constructor = getConstructorOrNull( beanType );
 			if ( constructor != null ) {
 				try {
 					return constructor.newInstance();

@@ -41,24 +41,25 @@ public class DelayedPostInsertIdentifier
 				}
 			}
 		}
-		this.identifier = value;
+		identifier = value;
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object  instanceof DelayedPostInsertIdentifier that) ) {
 			return false;
 		}
-		final DelayedPostInsertIdentifier that = (DelayedPostInsertIdentifier) o;
-		return identifier == that.identifier;
+		else {
+			return identifier == that.identifier;
+		}
 	}
 
 	@Override
 	public int hashCode() {
-		return (int) ( identifier ^ ( identifier >>> 32 ) );
+		return Long.hashCode( identifier );
 	}
 
 	@Override

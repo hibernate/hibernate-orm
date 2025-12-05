@@ -23,6 +23,14 @@ The goal of _object/relational mapping_ (ORM) is to eliminate fragile and untype
 ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
 Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
 
+Actually, the problem that object/relational mapping solves has been mischaracterized for decades, and has very little to do with any so-called "mismatch" between classes and tables. The real problem is:
+
+1. Data is stored in **normalized tables**.
+2. The process of efficiently reading data from tables **<<join-fetch,denormalizes the data with joins>>**.
+3. In an object-oriented program, we often want to work with data in something quite close to its **original normalized form**.
+
+Therefore, the principal task of object/relational mapping is to _renormalize the data after reading it from the database_. This need exists even if the classes in our program are identical to the database tables.
+
 [TIP]
 // .ORM or SQL?
 ====
@@ -191,7 +199,6 @@ dependencies {
 
     // Agroal connection pool
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    runtimeOnly 'io.agroal:agroal-pool:2.7.1'
 
     // logging via Log4j
     runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.3'

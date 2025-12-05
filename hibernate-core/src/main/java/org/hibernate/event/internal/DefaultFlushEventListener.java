@@ -5,13 +5,10 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
-import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -26,37 +23,41 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 * @param event The flush event to be handled.
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EventMonitor eventMonitor = source.getEventMonitor();
-		if ( persistenceContext.getNumberOfManagedEntities() > 0
-				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			final DiagnosticEvent flushEvent = eventMonitor.beginFlushEvent();
-			try {
-				source.getEventListenerManager().flushStart();
+		final var source = event.getSession();
 
+		final var eventMonitor = source.getEventMonitor();
+		final var flushEvent = eventMonitor.beginFlushEvent();
+
+		final var eventListenerManager = source.getEventListenerManager();
+		eventListenerManager.flushStart();
+
+		try {
+			final var persistenceContext = source.getPersistenceContextInternal();
+			if ( persistenceContext.getNumberOfManagedEntities() > 0
+					|| persistenceContext.getCollectionEntriesSize() > 0 ) {
+				EVENT_LISTENER_LOGGER.executingFlush();
 				flushEverythingToExecutions( event );
 				performExecutions( source );
 				postFlush( source );
-			}
-			finally {
-				eventMonitor.completeFlushEvent( flushEvent, event );
-				source.getEventListenerManager().flushEnd(
-						event.getNumberOfEntitiesProcessed(),
-						event.getNumberOfCollectionsProcessed()
-				);
-			}
+				postPostFlush( source );
 
-			postPostFlush( source );
-
-			final StatisticsImplementor statistics = source.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.flush();
+				final var statistics = source.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.flush();
+				}
+			}
+			else if ( source.getActionQueue().hasAnyQueuedActions() ) {
+				EVENT_LISTENER_LOGGER.executingFlush();
+				// execute any queued unloaded-entity deletions
+				performExecutions( source );
 			}
 		}
-		else if ( source.getActionQueue().hasAnyQueuedActions() ) {
-			// execute any queued unloaded-entity deletions
-			performExecutions( source );
+		finally {
+			eventMonitor.completeFlushEvent( flushEvent, event );
+			eventListenerManager.flushEnd(
+					event.getNumberOfEntitiesProcessed(),
+					event.getNumberOfCollectionsProcessed()
+			);
 		}
 	}
 }

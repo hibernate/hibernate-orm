@@ -4,63 +4,50 @@
  */
 package org.hibernate.test.c3p0;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
+import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-12749")
 @RequiresDialect(H2Dialect.class)
-public class C3P0DefaultIsolationLevelTest extends
-		BaseNonConfigCoreFunctionalTestCase {
-
-	private C3P0ProxyConnectionProvider connectionProvider;
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( sfb );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-		};
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		connectionProvider = new C3P0ProxyConnectionProvider();
-		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-		settings.put( AvailableSettings.ISOLATION, "READ_COMMITTED" );
-	}
+@ServiceRegistry(
+		settings = @Setting( name = ISOLATION, value = "READ_COMMITTED" ),
+		settingProviders = @SettingProvider( settingName = CONNECTION_PROVIDER, provider = C3P0DefaultIsolationLevelTest.ConnectionProviderProvider.class )
+)
+@DomainModel(annotatedClasses = C3P0DefaultIsolationLevelTest.Person.class)
+@SessionFactory(useCollectingStatementInspector = true)
+public class C3P0DefaultIsolationLevelTest {
+	private static final C3P0ProxyConnectionProvider connectionProvider = new C3P0ProxyConnectionProvider();
 
 	@Test
-	public void testStoredProcedureOutParameter() throws SQLException {
-		clearSpies();
+	public void testStoredProcedureOutParameter(SessionFactoryScope factoryScope) throws SQLException {
+		var sqlCollector = factoryScope.getCollectingStatementInspector();
+		sqlCollector.clear();
+		connectionProvider.clear();
 
-		doInHibernate( this::sessionFactory, session -> {
+		factoryScope.inTransaction( (session) -> {
 			Person person = new Person();
 			person.id = 1L;
 			person.name = "Vlad Mihalcea";
@@ -68,29 +55,25 @@ public class C3P0DefaultIsolationLevelTest extends
 			session.persist( person );
 		} );
 
-		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
-		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).toLowerCase().startsWith( "insert into" ) );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ).toLowerCase() ).startsWith( "insert into " );
 		Connection connectionSpy = connectionProvider.getConnectionSpyMap().keySet().iterator().next();
 		verify( connectionSpy, never() ).setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
 
-		clearSpies();
+		sqlCollector.clear();
+		connectionProvider.clear();
 
-		doInHibernate( this::sessionFactory, session -> {
+		factoryScope.inTransaction( (session) -> {
 			Person person = session.find( Person.class, 1L );
-
-			assertEquals( "Vlad Mihalcea", person.name );
+			assertThat( person.name ).isEqualTo( "Vlad Mihalcea" );
 		} );
 
-		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
-		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).toLowerCase().startsWith( "select" ) );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ).toLowerCase() ).startsWith( "select " );
 		connectionSpy = connectionProvider.getConnectionSpyMap().keySet().iterator().next();
 		verify( connectionSpy, never() ).setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
 	}
 
-	private void clearSpies() {
-		sqlStatementInterceptor.getSqlQueries().clear();
-		connectionProvider.clear();
-	}
 
 	@Entity(name = "Person")
 	public static class Person {
@@ -101,4 +84,11 @@ public class C3P0DefaultIsolationLevelTest extends
 		private String name;
 	}
 
+
+	public static class ConnectionProviderProvider implements SettingProvider.Provider<C3P0ProxyConnectionProvider> {
+		@Override
+		public C3P0ProxyConnectionProvider getSetting() {
+			return connectionProvider;
+		}
+	}
 }

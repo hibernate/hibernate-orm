@@ -210,11 +210,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
@@ -398,5 +393,14 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
 	}
 }

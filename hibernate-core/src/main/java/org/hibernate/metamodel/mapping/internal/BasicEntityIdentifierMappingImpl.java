@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -16,21 +17,16 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -64,10 +60,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final String rootTable;
 	private final String pkColumnName;
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
 	private final boolean insertable;
 	private final boolean updateable;
 
@@ -75,6 +72,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final SessionFactoryImplementor sessionFactory;
 
+	@Deprecated(forRemoval = true, since = "7.2")
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
 			Supplier<?> instanceCreator,
@@ -89,8 +87,42 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean updateable,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
+		this(
+				entityPersister,
+				instanceCreator,
+				attributeName,
+				rootTable,
+				pkColumnName,
+				columnDefinition,
+				length,
+				null,
+				precision,
+				scale,
+				insertable,
+				updateable,
+				idType,
+				creationProcess
+		);
+	}
+
+	public BasicEntityIdentifierMappingImpl(
+			EntityPersister entityPersister,
+			Supplier<?> instanceCreator,
+			String attributeName,
+			String rootTable,
+			String pkColumnName,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean insertable,
+			boolean updateable,
+			BasicType<?> idType,
+			MappingModelCreationProcess creationProcess) {
 		this.columnDefinition = columnDefinition;
 		this.length = length;
+		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.insertable = insertable;
@@ -103,9 +135,9 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		this.idType = (BasicType<Object>) idType;
 		this.entityPersister = entityPersister;
 
-		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
-				.getBootModel()
-				.getEntityBinding( entityPersister.getEntityName() );
+		final var bootEntityDescriptor =
+				creationProcess.getCreationContext().getBootModel()
+						.getEntityBinding( entityPersister.getEntityName() );
 
 		propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
@@ -148,7 +180,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object getIdentifier(Object entity) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		final var lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
@@ -214,8 +246,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-
+		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -251,8 +282,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
-				.getSqlExpressionResolver();
+		final var expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableReference rootTableReference;
 		try {
 			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
@@ -324,37 +354,42 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public String getCustomReadExpression() {
+	public @Nullable String getCustomReadExpression() {
 		return null;
 	}
 
 	@Override
-	public String getCustomWriteExpression() {
+	public @Nullable String getCustomWriteExpression() {
 		return null;
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return null;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 
@@ -402,15 +437,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-				fetchParent.getNavigablePath()
-		);
-
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var tableGroup =
+				sqlAstCreationState.getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath() );
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
-		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
+		final var sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
+		final var selectionType = sqlSelection.getExpressionType();
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
@@ -421,7 +455,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				true,
 				creationState,
 				// if the expression type is different that the expected type coerce the value
-				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType(),
+				selectionType != null
+					&& selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType(),
 				!sqlSelection.isVirtual()
 		);
 	}

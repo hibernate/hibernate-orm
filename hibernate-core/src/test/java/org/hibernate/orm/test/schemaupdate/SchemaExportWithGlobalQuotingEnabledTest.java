@@ -4,80 +4,64 @@
  */
 package org.hibernate.orm.test.schemaupdate;
 
-import java.sql.SQLException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.CustomRunner;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import java.sql.SQLException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-9866")
-@RunWith(CustomRunner.class)
 @RequiresDialect(MySQLDialect.class)
+@org.hibernate.testing.orm.junit.ServiceRegistry(settings = @Setting(name = GLOBALLY_QUOTED_IDENTIFIERS, value = "true"))
+@DomainModel(annotatedClasses = {SchemaExportWithGlobalQuotingEnabledTest.MyEntity.class, SchemaExportWithGlobalQuotingEnabledTest.Role.class})
 public class SchemaExportWithGlobalQuotingEnabledTest {
-	protected ServiceRegistry serviceRegistry;
-	protected MetadataImplementor metadata;
-
 	@Test
-	public void testSchemaExport() throws Exception {
+	public void testSchemaExport(DomainModelScope modelScope) {
 		SchemaExport schemaExport = new SchemaExport();
-		schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
+		schemaExport.create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), modelScope.getDomainModel() );
 
+		//noinspection unchecked
 		List<SQLException> exceptions = schemaExport.getExceptions();
 		for ( SQLException exception : exceptions ) {
 			assertThat( exception.getMessage(), exception.getSQLState(), not( "42000" ) );
 		}
 	}
 
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.addAnnotatedClass( Role.class )
-				.buildMetadata();
-
+	@BeforeEach
+	public void setUp(DomainModelScope modelScope) {
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
-		new SchemaExport().create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
+		new SchemaExport().create( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), modelScope.getDomainModel() );
 		System.out.println( "********* Completed SchemaExport for START-UP *************************" );
 	}
 
-	@After
-	public void tearDown() {
+	@AfterEach
+	public void tearDown(DomainModelScope modelScope) {
 		System.out.println( "********* Starting SchemaExport (drop) for TEAR-DOWN *************************" );
-		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), metadata );
+		new SchemaExport().drop( EnumSet.of( TargetType.STDOUT, TargetType.DATABASE ), modelScope.getDomainModel() );
 		System.out.println( "********* Completed SchemaExport (drop) for TEAR-DOWN *************************" );
-
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
 	}
 
 	@Entity

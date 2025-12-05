@@ -11,9 +11,10 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -43,14 +44,14 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private GraphSemantic graphSemantic;
 
 	private Integer batchSize;
-	private boolean sessionCheckingEnabled;
-	private boolean returnOfDeletedEntitiesEnabled;
-	private boolean orderedReturnEnabled = true;
+	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
+	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
+	protected OrderingMode orderingMode = OrderingMode.ORDERED;
 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
-	public MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
+	MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
 		this.session = session;
 		this.entityPersister = entityPersister;
 	}
@@ -116,8 +117,8 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	@Override
-	public boolean isSessionCheckingEnabled() {
-		return sessionCheckingEnabled;
+	public SessionCheckMode getSessionCheckMode() {
+		return sessionCheckMode;
 	}
 
 	@Override
@@ -127,29 +128,29 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
-		this.sessionCheckingEnabled = enabled;
+		this.sessionCheckMode = enabled ? SessionCheckMode.ENABLED : SessionCheckMode.DISABLED;
 		return this;
 	}
 
 	@Override
-	public boolean isReturnOfDeletedEntitiesEnabled() {
-		return returnOfDeletedEntitiesEnabled;
+	public RemovalsMode getRemovalsMode() {
+		return removalsMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		this.returnOfDeletedEntitiesEnabled = enabled;
+		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
 		return this;
 	}
 
 	@Override
-	public boolean isOrderReturnEnabled() {
-		return orderedReturnEnabled;
+	public OrderingMode getOrderingMode() {
+		return orderingMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		this.orderedReturnEnabled = enabled;
+		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
 	}
 
@@ -167,7 +168,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	public List<T> perform(Supplier<List<T>> executor) {
-		final CacheMode sessionCacheMode = session.getCacheMode();
+		final var sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 		if ( cacheMode != null ) {
 			// naive check for now...
@@ -179,16 +180,20 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		}
 
 		try {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			final HashSet<String> fetchProfiles =
+			final var influencers = session.getLoadQueryInfluencers();
+			final var fetchProfiles =
 					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final EffectiveEntityGraph effectiveEntityGraph =
-					influencers.applyEntityGraph( rootGraph, graphSemantic );
+			final var effectiveEntityGraph =
+					rootGraph == null
+							? null
+							: influencers.applyEntityGraph( rootGraph, graphSemantic );
 			try {
 				return executor.get();
 			}
 			finally {
-				effectiveEntityGraph.clear();
+				if ( effectiveEntityGraph != null ) {
+					effectiveEntityGraph.clear();
+				}
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

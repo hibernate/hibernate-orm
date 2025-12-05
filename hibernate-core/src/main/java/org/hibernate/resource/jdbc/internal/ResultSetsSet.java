@@ -6,8 +6,6 @@ package org.hibernate.resource.jdbc.internal;
 
 import java.sql.ResultSet;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -75,9 +73,9 @@ final class ResultSetsSet {
 	//Any entry will do, so we take the first one if there's any.
 	private void scaleDown() {
 		if ( more != null && !more.isEmpty() ) {
-			Iterator<Map.Entry<ResultSet, ResultSet>> iterator = more.entrySet().iterator();
-			Map.Entry<ResultSet, ResultSet> entry = iterator.next();
-			final ResultSet resultSet = entry.getKey();
+			var iterator = more.entrySet().iterator();
+			var entry = iterator.next();
+			final var resultSet = entry.getKey();
 			iterator.remove();
 			first = resultSet;
 		}

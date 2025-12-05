@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -59,13 +60,13 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 //		return path.getNodeType().findSubPathSource( name );
 		return path.getReferencedPathSource().findSubPathSource( name );
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 //		final DomainType<?> domainType = path.getNodeType().getPathType();
 		final DomainType<?> domainType = path.getReferencedPathSource().getPathType();
 		if ( domainType instanceof BasicDomainType<?> ) {

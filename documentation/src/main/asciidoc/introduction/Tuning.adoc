@@ -92,7 +92,10 @@ The following settings are common to all connection pools supported by Hibernate
 | link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#ISOLATION[`hibernate.connection.isolation`] | The default transaction isolation level
 |===
 
-A popular alternative to Agroal is HikariCP.
+:hikaricp: https://github.com/brettwooldridge/HikariCP
+
+A popular alternative to Agroal is {hikaricp}[HikariCP].
+Integration with HikariCP is provided by the module `org.hibernate.orm:hibernate-hikaricp`.
 Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
 .Container-managed datasources
@@ -122,7 +125,13 @@ The default fetch size can be overridden for a given query by calling link:{doc-
 [WARNING]
 ====
 The Oracle JDBC driver defaults to a JDBC fetch size of 10.
-You should _always_ set explicitly `hibernate.jdbc.fetch_size` if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
+You should _always_ set `hibernate.jdbc.fetch_size` explicitly if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
+====
+
+[TIP]
+====
+The MySQL JDBC driver ignores the fetch size by default.
+The JDBC connection property `useCursorFetch=true` enables the use of server-side cursors, and with this setting the driver respects the fetch size.
 ====
 
 [[statement-batching]]
@@ -890,10 +899,48 @@ This is quite different to what happens with the first-level cache.
 
 Entity instances aren't automatically evicted from the session cache when they're no longer needed.
 Instead, they stay pinned in memory until the session they belong to is discarded by your program.
+So if you query many entities from within a single persistence context, you might experience very poor performance.
+In such cases, it becomes necessary to manage the session cache manually.
 
 The methods `detach()` and `clear()` allow you to remove entities from the session cache, making them available for garbage collection.
 Since most sessions are rather short-lived, you won't need these operations very often.
 And if you find yourself thinking you _do_ need them in a certain situation, you should strongly consider an alternative solution: a _stateless session_.
+
+[TIP]
+====
+The very best way to avoid having too many entities pinned in the session cache is to not load them from the database in the first place.
+Many operations can be performed more efficiently on the database server.
+This is especially true for bulk operations.
+
+To update many entities at once, use an `update` statement:
+
+[source, hql]
+----
+session.createMutationQuery(
+        """
+        update Book as b
+            set b.totalSales =
+                coalesce((select sum(quantity) from OrderItem where book = b), 0)
+        """
+        ).executeUpdate();
+----
+
+To insert many entities at once, use `insert ... select`:
+
+[source, hql]
+----
+session.createMutationQuery(
+        """
+        insert into OrderQueue (id, isbn, quantity, customerId)
+            select o.id, i.quantity, i.book.isbn, o.customer.id
+            from Order o join o.items i
+            where o.status = PENDING
+        """
+        ).executeUpdate();
+----
+
+For more complicated operations, consider using a stored procedure.
+====
 
 [[stateless-sessions]]
 === Stateless sessions
@@ -902,7 +949,7 @@ An arguably-underappreciated feature of Hibernate is the link:{doc-javadoc-url}o
 
 You may obtain a stateless session from the `SessionFactory`:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 StatelessSession ss = getSessionFactory().openStatelessSession();
 ----
@@ -1000,8 +1047,14 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
 Therefore, the `find()`, `lock()`, and `refresh()` methods of the session accept an optional link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`].
-We can also specify a `LockMode` for a query.
-The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
+Here's the simplest way to execute a `select ... for update` in Hibernate:
+
+[source,java]
+Book book = session.find(Book.class, isbn, LockMode.PESSIMISTIC_WRITE);
+
+We can also link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setLockMode(jakarta.persistence.LockModeType)[specify] a `LockMode` for a query.
+
+A lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes
 [%breakable,cols="26,~"]
@@ -1038,6 +1091,17 @@ JPA has its own `LockModeType`, which enumerates most of the same modes.
 However, JPA's `LockModeType.READ` is a synonym for `OPTIMISTIC` -- it's not the same as Hibernate's `LockMode.READ`.
 Similarly, `LockModeType.WRITE` is a synonym for `OPTIMISTIC_FORCE_INCREMENT` and is not the same as `LockMode.WRITE`.
 ====
+
+A pessimistic lock request may be combined with an explicit `Timeout`.
+
+[source,java]
+session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeout.seconds(2))
+
+The interface link:{doc-javadoc-url}/org/hibernate/Timeouts.html[`Timeouts`] defines some special instances of `Timeout` which may be used to request use of link:{doc-javadoc-url}/org/hibernate/Timeouts.html#NO_WAIT[`for update nowait`] or link:{doc-javadoc-url}/org/hibernate/Timeouts.html#SKIP_LOCKED[`for update skip locked`] on databases which support these options.
+
+[source,java]
+session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeouts.NO_WAIT)
+
 
 [[statistics]]
 === Collecting statistics

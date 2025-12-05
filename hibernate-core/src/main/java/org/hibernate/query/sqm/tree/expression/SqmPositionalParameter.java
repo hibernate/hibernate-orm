@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -28,7 +30,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	public SqmPositionalParameter(
 			int position,
 			boolean canBeMultiValued,
-			SqmBindableType<T> expressibleType,
+			@Nullable SqmBindableType<T> expressibleType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, expressibleType, nodeBuilder );
 		this.position = position;
@@ -54,7 +56,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public Integer getPosition() {
+	public @NonNull Integer getPosition() {
 		return position;
 	}
 
@@ -85,14 +87,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof SqmPositionalParameter<T> positionalParameter
-				? getPosition().compareTo( positionalParameter.getPosition() )
-				: 1;
-	}
-
-	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmPositionalParameter<?> that
 			&& position == that.position;
 	}
@@ -100,5 +95,15 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	@Override
 	public int hashCode() {
 		return position;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -27,7 +27,7 @@ public interface JdbcOperationQueryCall extends JdbcOperationQueryAnonBlock {
 	 * @apiNote Note that REF_CURSOR parameters should be handled via
 	 * {@link #getCallRefCursorExtractors()}
 	 */
-	List<JdbcCallParameterExtractor> getParameterExtractors();
+	List<JdbcCallParameterExtractor<?>> getParameterExtractors();
 
 	/**
 	 * Extractors for REF_CURSOR (ResultSet) parameters

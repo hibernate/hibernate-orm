@@ -12,19 +12,13 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -133,33 +127,33 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public final void makeEntityManaged() {
 		nullifyTransientReferencesIfNotAlready();
-		final Object version = getVersion( getState(), getPersister() );
-		final PersistenceContext persistenceContextInternal = getSession().getPersistenceContextInternal();
-		final EntityHolder entityHolder = persistenceContextInternal.addEntityHolder(
-				getEntityKey(),
-				getInstance()
-		);
-		final EntityEntry entityEntry = persistenceContextInternal.addEntry(
+		final var persister = getPersister();
+		final var key = getEntityKey();
+		final Object[] state = getState();
+		final Object version = getVersion( state, persister );
+		final var persistenceContext = getSession().getPersistenceContextInternal();
+		final var entityHolder = persistenceContext.addEntityHolder( key, getInstance() );
+		final var entityEntry = persistenceContext.addEntry(
 				getInstance(),
-				getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY,
-				getState(),
+				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+				state,
 				getRowId(),
-				getEntityKey().getIdentifier(),
+				key.getIdentifier(),
 				version,
 				LockMode.WRITE,
 				isExecuted,
-				getPersister(),
+				persister,
 				isVersionIncrementDisabled
 		);
 		entityHolder.setEntityEntry( entityEntry );
 		if ( isEarlyInsert() ) {
-			addCollectionsByKeyToPersistenceContext( persistenceContextInternal, getState() );
+			addCollectionsByKeyToPersistenceContext( persistenceContext, state );
 		}
 	}
 
 	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
 		for ( int i = 0; i < objects.length; i++ ) {
-			final AttributeMapping attributeMapping = getPersister().getAttributeMapping( i );
+			final var attributeMapping = getPersister().getAttributeMapping( i );
 			if ( attributeMapping.isEmbeddedAttributeMapping() ) {
 				visitEmbeddedAttributeMapping(
 						attributeMapping.asEmbeddedAttributeMapping(),
@@ -182,13 +176,12 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object object,
 			PersistenceContext persistenceContext) {
 		if ( object != null ) {
-			final EmbeddableMappingType descriptor = attributeMapping.getEmbeddableTypeDescriptor();
-			final EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType = descriptor.findSubtypeBySubclass(
-					object.getClass().getName()
-			);
-			final AttributeMappingsList attributeMappings = descriptor.getAttributeMappings();
+			final var descriptor = attributeMapping.getEmbeddableTypeDescriptor();
+			final var concreteEmbeddableType =
+					descriptor.findSubtypeBySubclass( object.getClass().getName() );
+			final var attributeMappings = descriptor.getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attribute = attributeMappings.get( i );
+				final var attribute = attributeMappings.get( i );
 				if ( concreteEmbeddableType.declaresAttribute( attribute ) ) {
 					if ( attribute.isPluralAttributeMapping() ) {
 						addCollectionKey(
@@ -214,7 +207,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object object,
 			PersistenceContext persistenceContext) {
 		if ( object instanceof PersistentCollection ) {
-			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
+			final var collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
 			final Object key = AbstractEntityPersister.getCollectionKey(
 					collectionPersister,
 					getInstance(),
@@ -222,7 +215,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 					getSession()
 			);
 			if ( key != null ) {
-				final CollectionKey collectionKey = new CollectionKey( collectionPersister, key );
+				final var collectionKey = new CollectionKey( collectionPersister, key );
 				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) object );
 			}
 		}
@@ -243,13 +236,17 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	protected abstract Object getRowId();
 
+	private NaturalIdResolutions getNaturalIdResolutions() {
+		return getSession().getPersistenceContextInternal().getNaturalIdResolutions();
+	}
+
 	@Override
 	public void afterDeserialize(EventSource session) {
 		super.afterDeserialize( session );
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
-			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
+			final var entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
 			this.state = entityEntry.getLoadedState();
 		}
 	}
@@ -259,9 +256,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
 		// before save, we need to add a natural id cross-reference to the persistence-context
-		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
+		final var naturalIdMapping = getPersister().getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
-			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+			getNaturalIdResolutions().manageLocalResolution(
 					getId(),
 					naturalIdMapping.extractNaturalIdFromEntityState( state ),
 					getPersister(),
@@ -276,24 +273,26 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @param generatedId The generated entity identifier
 	 */
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
-		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
+		final var persister = getPersister();
+		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state );
+			final var resolutions = getNaturalIdResolutions();
 			if ( isEarlyInsert() ) {
 				// with early insert, we still need to add a local (transactional) natural id cross-reference
-				getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+				resolutions.manageLocalResolution(
 						generatedId,
 						naturalIdValues,
-						getPersister(),
+						persister,
 						CachedNaturalIdValueSource.INSERT
 				);
 			}
 			// after save, we need to manage the shared cache entries
-			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
+			resolutions.manageSharedResolution(
 					generatedId,
 					naturalIdValues,
 					null,
-					getPersister(),
+					persister,
 					CachedNaturalIdValueSource.INSERT
 			);
 		}

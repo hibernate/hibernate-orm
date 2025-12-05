@@ -6,40 +6,38 @@ package org.hibernate.orm.test.schema;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ColumnDefaultTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-		};
+@SuppressWarnings("JUnitMalformedDeclaration")
+@Jpa(annotatedClasses = ColumnDefaultTest.Person.class)
+public class ColumnDefaultTest {
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void test() {
+	public void test(EntityManagerFactoryScope factories) {
 		//tag::schema-generation-column-default-value-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Person person = new Person();
+		factories.inTransaction( entityManager -> {
+			var person = new Person();
 			person.setId(1L);
 			entityManager.persist(person);
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factories.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
-			assertEquals("N/A", person.getName());
-			assertEquals(Long.valueOf(-1L), person.getClientId());
+			assertEquals( "N/A", person.getName() );
+			assertEquals( Long.valueOf(-1L), person.getClientId() );
 		});
 		//end::schema-generation-column-default-value-persist-example[]
 	}

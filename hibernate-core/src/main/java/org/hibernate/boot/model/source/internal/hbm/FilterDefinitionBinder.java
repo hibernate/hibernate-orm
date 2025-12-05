@@ -14,79 +14,71 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
-import org.jboss.logging.Logger;
-
 import jakarta.xml.bind.JAXBElement;
 
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 
 /**
  * @author Steve Ebersole
  */
 class FilterDefinitionBinder {
-	private static final Logger log = Logger.getLogger( FilterDefinitionBinder.class );
 
 	/**
 	 * Handling for a {@code <filter-def/>} declaration.
 	 *
 	 * @param context Access to information relative to the mapping document containing this binding
-	 * @param jaxbFilterDefinitionMapping The {@code <filter-def/>} JAXB mapping
+	 * @param filterDefinitionMapping The {@code <filter-def/>} JAXB mapping
 	 */
-	@SuppressWarnings("unchecked")
 	static void processFilterDefinition(
 			HbmLocalMetadataBuildingContext context,
-			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
+			JaxbHbmFilterDefinitionType filterDefinitionMapping) {
 		Map<String, JdbcMapping> parameterMap = null;
-		String condition = jaxbFilterDefinitionMapping.getCondition();
+		final String condition = filterDefinitionMapping.getCondition();
 
-		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {
+		final var collector = context.getMetadataCollector();
+		final var basicTypeRegistry = collector.getTypeConfiguration().getBasicTypeRegistry();
+
+		for ( var content : filterDefinitionMapping.getContent() ) {
 			if ( content instanceof String string ) {
-				final String contentString = string.trim();
-				if ( isNotEmpty( contentString ) ) {
-					if ( condition != null && log.isDebugEnabled() ) {
-						log.debugf(
-								"filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one",
-								jaxbFilterDefinitionMapping.getName(),
+				if ( isNotBlank( string ) ) {
+					if ( condition != null && BOOT_LOGGER.isDebugEnabled() ) {
+						BOOT_LOGGER.filterDefDefinedMultipleConditions(
+								filterDefinitionMapping.getName(),
 								context.getOrigin().toString()
 						);
 					}
 				}
 			}
 			else {
-				final JaxbHbmFilterParameterType jaxbParameterMapping;
-				if ( content instanceof JaxbHbmFilterParameterType filterParameterType ) {
-					jaxbParameterMapping = filterParameterType;
-				}
-				else if ( content instanceof JAXBElement ) {
-					final JAXBElement<JaxbHbmFilterParameterType> jaxbElement = (JAXBElement<JaxbHbmFilterParameterType>) content;
-					jaxbParameterMapping = jaxbElement.getValue();
-				}
-				else {
-					throw new MappingException(
-							"Unable to decipher filter-def content type [" + content.getClass().getName() + "]",
-							context.getOrigin()
-					);
-				}
-
+				final var parameterMapping = filterParameterType( context, content );
 				if ( parameterMap == null ) {
 					parameterMap = new HashMap<>();
 				}
-
-				parameterMap.put(
-						jaxbParameterMapping.getParameterName(),
-						context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( jaxbParameterMapping.getParameterValueTypeName() )
-				);
+				parameterMap.put( parameterMapping.getParameterName(),
+						basicTypeRegistry.getRegisteredType( parameterMapping.getParameterValueTypeName() ) );
 			}
 		}
 
-		context.getMetadataCollector().addFilterDefinition(
-				new FilterDefinition(
-						jaxbFilterDefinitionMapping.getName(),
-						condition,
-						parameterMap
-				)
-		);
+		collector.addFilterDefinition( new FilterDefinition( filterDefinitionMapping.getName(), condition, parameterMap ) );
 
-		log.tracef( "Processed filter definition: %s", jaxbFilterDefinitionMapping.getName() );
+		BOOT_LOGGER.processedFilterDefinition( filterDefinitionMapping.getName() );
+	}
+
+	private static JaxbHbmFilterParameterType filterParameterType(
+			HbmLocalMetadataBuildingContext context, Serializable content) {
+		if ( content instanceof JaxbHbmFilterParameterType filterParameterType ) {
+			return filterParameterType;
+		}
+		else if ( content instanceof JAXBElement ) {
+			final var jaxbElement = (JAXBElement<JaxbHbmFilterParameterType>) content;
+			return jaxbElement.getValue();
+		}
+		else {
+			throw new MappingException(
+					"Unable to decipher filter-def content type [" + content.getClass().getName() + "]",
+					context.getOrigin()
+			);
+		}
 	}
 }

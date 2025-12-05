@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -21,6 +23,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
@@ -29,7 +32,6 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
  * @author Steve Ebersole
  */
 public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmBindableType<E>, SemanticPathPart {
-	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
 
@@ -38,11 +40,9 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 			EnumJavaType<E> referencedEnumTypeDescriptor,
 			String enumValueName,
 			NodeBuilder nodeBuilder) {
-		super( null, nodeBuilder );
-		this.enumValue = enumValue;
+		super( null, enumValue, nodeBuilder );
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
-		setExpressibleType( this );
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		final SqmEnumLiteral<E> expression = context.registerCopy(
 				this,
 				new SqmEnumLiteral<>(
-						enumValue,
+						getEnumValue(),
 						referencedEnumTypeDescriptor,
 						enumValueName,
 						nodeBuilder()
@@ -70,17 +70,22 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
+	public @NonNull SqmBindableType<E> getNodeType() {
+		return this;
+	}
+
+	@Override
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
 
 	@Override
-	public SqmDomainType<E> getSqmType() {
+	public @Nullable SqmDomainType<E> getSqmType() {
 		return null;
 	}
 
 	public E getEnumValue() {
-		return enumValue;
+		return castNonNull( getLiteralValue() );
 	}
 
 	@Override
@@ -90,7 +95,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public Class<E> getJavaType() {
-		return getJavaTypeDescriptor().getJavaTypeClass();
+		return referencedEnumTypeDescriptor.getJavaTypeClass();
 	}
 
 
@@ -128,7 +133,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	private Integer ordinalValue() {
-		return getExpressibleJavaType().toOrdinal( enumValue );
+		return getExpressibleJavaType().toOrdinal( getEnumValue() );
 	}
 
 	@Override
@@ -163,7 +168,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public SqmExpression<String> asString() {
-		return nodeBuilder().literal( getExpressibleJavaType().toName( enumValue ) );
+		return nodeBuilder().literal( getExpressibleJavaType().toName( getEnumValue() ) );
 	}
 
 	@Override
@@ -173,7 +178,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append( enumValue.getDeclaringClass().getTypeName() );
+		hql.append( getEnumValue().getDeclaringClass().getTypeName() );
 		hql.append( '.' );
 		hql.append( enumValueName );
 	}

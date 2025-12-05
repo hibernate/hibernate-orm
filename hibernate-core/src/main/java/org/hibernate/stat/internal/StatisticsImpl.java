@@ -14,13 +14,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -32,7 +29,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.log.StatisticsLogger.STATISTICS_LOGGER;
 
 /**
  * Implementation of {@link Statistics} based on the {@link java.util.concurrent} package.
@@ -41,8 +38,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Sanne Grinovero
  */
 public class StatisticsImpl implements StatisticsImplementor, Service {
-
-	private static final CoreMessageLogger log = messageLogger( StatisticsImpl.class );
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
@@ -128,8 +123,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
-		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		this.queryStatsMap = new StatsNamedContainer<>(
+		final var sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		queryStatsMap = new StatsNamedContainer<>(
 				sessionFactoryOptions.getQueryStatisticsMaxSize(),
 				20
 		);
@@ -140,12 +135,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
 
 		final List<String> entityNames = new ArrayList<>();
-		metamodel.forEachEntityDescriptor( (entityDescriptor) -> entityNames.add( entityDescriptor.getEntityName() ) );
-		this.allEntityNames = entityNames.toArray( new String[0] );
+		metamodel.forEachEntityDescriptor( entity -> entityNames.add( entity.getEntityName() ) );
+		allEntityNames = entityNames.toArray( new String[0] );
 
 		final List<String> collectionRoles = new ArrayList<>();
-		metamodel.forEachCollectionDescriptor( (collectionDescriptor) -> collectionRoles.add( collectionDescriptor.getRole() ) );
-		this.allCollectionRoles = collectionRoles.toArray( new String[0] );
+		metamodel.forEachCollectionDescriptor( collection -> collectionRoles.add( collection.getRole() ) );
+		allCollectionRoles = collectionRoles.toArray( new String[0] );
 	}
 
 	/**
@@ -212,7 +207,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		resetStart();
 
-		log.statisticsReset();
+		STATISTICS_LOGGER.statisticsReset();
 	}
 
 	private void resetStart(@UnknownInitialization StatisticsImpl this) {
@@ -238,10 +233,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public void setStatisticsEnabled(boolean enabled) {
 		isStatisticsEnabled = enabled;
 		if ( enabled ) {
-			log.statisticsEnabled();
+			STATISTICS_LOGGER.statisticsEnabled();
 		}
 		else {
-			log.statisticsDisabled();
+			STATISTICS_LOGGER.statisticsDisabled();
 		}
 	}
 
@@ -596,7 +591,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	public @Nullable CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-
 				new Function<>() {
 					@Override
 					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
@@ -607,13 +601,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	private @Nullable CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
-		final QueryResultsCache regionAccess = cache.getQueryResultsCacheStrictly( regionName );
-		if ( regionAccess == null ) {
-			return null; //this null value will be cached
-		}
-		else {
-			return new CacheRegionStatisticsImpl( regionAccess.getRegion() );
-		}
+		final var regionAccess = cache.getQueryResultsCacheStrictly( regionName );
+		return regionAccess == null
+				? null
+				: new CacheRegionStatisticsImpl( regionAccess.getRegion() ); //this null value will be cached
 	}
 
 
@@ -729,24 +720,22 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public void queryExecuted(String hql, int rows, long time) {
-		log.hql( hql, time, (long) rows );
+	public void queryExecuted(String query, int rows, long time) {
 		queryExecutionCount.increment();
 
 		boolean isLongestQuery;
 		//noinspection StatementWithEmptyBody
 		for ( long old = queryExecutionMaxTime.get();
-				( isLongestQuery = time > old ) && ( ! queryExecutionMaxTime.compareAndSet( old, time ) );
+				( isLongestQuery = time > old ) && !queryExecutionMaxTime.compareAndSet( old, time );
 				old = queryExecutionMaxTime.get() ) {
 			// nothing to do here given the odd loop structure...
 		}
-
 		if ( isLongestQuery ) {
-			queryExecutionMaxTimeQueryString = hql;
+			queryExecutionMaxTimeQueryString = query;
 		}
 
-		if ( hql != null ) {
-			getQueryStatistics( hql ).executed( rows, time );
+		if ( query != null ) {
+			getQueryStatistics( query ).executed( rows, time );
 		}
 	}
 
@@ -912,7 +901,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public void logSummary() {
-		log.logStatistics(
+		STATISTICS_LOGGER.logStatistics(
 				startTime.toEpochMilli(),
 				sessionOpenCount.sum(),
 				sessionCloseCount.sum(),
@@ -1018,17 +1007,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private CacheRegionStatisticsImpl instantiateCacheRegionStatistics(final String regionName) {
 		final Region region = cache.getRegion( regionName );
-
 		if ( region == null ) {
 			throw new IllegalArgumentException( "Unknown cache region : " + regionName );
 		}
-
 		if ( region instanceof QueryResultsRegion ) {
 			throw new IllegalArgumentException(
 					"Region name [" + regionName + "] referred to a query result region, not a domain data region"
 			);
 		}
-
 		return new CacheRegionStatisticsImpl( region );
 	}
 
@@ -1038,18 +1024,14 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private @Nullable CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
 		Region region = cache.getRegion( regionName );
-
 		if ( region == null ) {
-
 			if ( !queryCacheEnabled ) {
 				return null;
 			}
-
 			// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
 			// NOTE that this method is deprecated
 			region = cache.getQueryResultsCache( regionName ).getRegion();
 		}
-
 		return new CacheRegionStatisticsImpl( region );
 	}
 

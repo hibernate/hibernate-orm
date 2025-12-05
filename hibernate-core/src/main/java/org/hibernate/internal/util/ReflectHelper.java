@@ -31,6 +31,7 @@ import org.hibernate.property.access.spi.Getter;
 import jakarta.persistence.Transient;
 
 import static java.beans.Introspector.decapitalize;
+import static java.lang.Character.isLowerCase;
 import static java.lang.Thread.currentThread;
 
 /**
@@ -42,16 +43,15 @@ import static java.lang.Thread.currentThread;
  */
 public final class ReflectHelper {
 
+	public static final String RECORD_CLASS_NAME = Record.class.getName();
+	public static final String OBJECT_CLASS_NAME = Object.class.getName();
+
 	public static final Class<?>[] NO_PARAM_SIGNATURE = ArrayHelper.EMPTY_CLASS_ARRAY;
 
 	public static final Class<?>[] SINGLE_OBJECT_PARAM_SIGNATURE = new Class[] { Object.class };
 
 	private static final Method OBJECT_EQUALS;
 	private static final Method OBJECT_HASHCODE;
-	private static final Class<?> RECORD_CLASS;
-	private static final Method GET_RECORD_COMPONENTS;
-	private static final Method GET_NAME;
-	private static final Method GET_TYPE;
 
 	static {
 		Method eq;
@@ -65,25 +65,6 @@ public final class ReflectHelper {
 		}
 		OBJECT_EQUALS = eq;
 		OBJECT_HASHCODE = hash;
-
-		Class<?> recordClass = null;
-		Method getRecordComponents = null;
-		Method getName = null;
-		Method getType = null;
-		try {
-			recordClass = Class.forName( "java.lang.Record" );
-			getRecordComponents = Class.class.getMethod( "getRecordComponents" );
-			final Class<?> recordComponentClass = Class.forName( "java.lang.reflect.RecordComponent" );
-			getName = recordComponentClass.getMethod( "getName" );
-			getType = recordComponentClass.getMethod( "getType" );
-		}
-		catch (Exception e) {
-			// Ignore
-		}
-		RECORD_CLASS = recordClass;
-		GET_RECORD_COMPONENTS = getRecordComponents;
-		GET_NAME = getName;
-		GET_TYPE = getType;
 	}
 
 	/**
@@ -129,7 +110,7 @@ public final class ReflectHelper {
 			equals = extractEqualsMethod( clazz );
 		}
 		catch ( NoSuchMethodException nsme ) {
-			return false; //it's an interface so we can't really tell anything
+			return false; //it's an interface, so we can't really tell anything
 		}
 		return !OBJECT_EQUALS.equals( equals );
 	}
@@ -149,7 +130,7 @@ public final class ReflectHelper {
 			hashCode = extractHashCodeMethod( clazz );
 		}
 		catch ( NoSuchMethodException nsme ) {
-			return false; //it's an interface so we can't really tell anything
+			return false; //it's an interface, so we can't really tell anything
 		}
 		return !OBJECT_HASHCODE.equals( hashCode );
 	}
@@ -182,7 +163,7 @@ public final class ReflectHelper {
 	 */
 	public static Class<?> classForName(String name, Class<?> caller) throws ClassNotFoundException {
 		try {
-			final ClassLoader classLoader = currentThread().getContextClassLoader();
+			final var classLoader = currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass( name );
 			}
@@ -209,7 +190,7 @@ public final class ReflectHelper {
 	@Deprecated
 	public static Class<?> classForName(String name) throws ClassNotFoundException {
 		try {
-			final ClassLoader classLoader = currentThread().getContextClassLoader();
+			final var classLoader = currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass(name);
 			}
@@ -247,7 +228,7 @@ public final class ReflectHelper {
 			String name,
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			final Class<?> clazz = classLoaderService.classForName( className );
+			final var clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnTypeClass();
 		}
 		catch ( ClassLoadingException e ) {
@@ -260,7 +241,7 @@ public final class ReflectHelper {
 			String name,
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			final Class<?> clazz = classLoaderService.classForName( className );
+			final var clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassLoadingException e ) {
@@ -297,7 +278,7 @@ public final class ReflectHelper {
 		}
 
 		try {
-			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			final var constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			ensureAccessibility( constructor );
 			return constructor;
 		}
@@ -314,7 +295,7 @@ public final class ReflectHelper {
 		}
 
 		try {
-			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			final var constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			ensureAccessibility( constructor );
 			return () -> {
 				try {
@@ -345,7 +326,8 @@ public final class ReflectHelper {
 	 */
 	public static boolean isAbstractClass(Class<?> clazz) {
 		final int modifier = clazz.getModifiers();
-		return Modifier.isAbstract(modifier) || Modifier.isInterface(modifier);
+		return Modifier.isAbstract( modifier )
+			|| Modifier.isInterface( modifier );
 	}
 
 	/**
@@ -370,20 +352,19 @@ public final class ReflectHelper {
 	public static <T> Constructor<T> getConstructorOrNull(
 			Class<T> clazz,
 			Class<?>... constructorArgs) {
-		Constructor<T> constructor = null;
 		try {
-			constructor = clazz.getDeclaredConstructor( constructorArgs );
+			final var constructor = clazz.getDeclaredConstructor( constructorArgs );
 			try {
 				ensureAccessibility( constructor );
 			}
 			catch ( SecurityException e ) {
-				constructor = null;
+				return null;
 			}
+			return constructor;
 		}
 		catch ( NoSuchMethodException ignore ) {
+			return null;
 		}
-
-		return constructor;
 	}
 
 	public static Method getMethod(Class<?> clazz, Method method) {
@@ -458,7 +439,7 @@ public final class ReflectHelper {
 		Class<?> checkClass = containerClass;
 		Method getter = null;
 
-		if ( isRecord( containerClass ) ) {
+		if ( containerClass.isRecord() ) {
 			try {
 				getter = containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
 			}
@@ -501,7 +482,7 @@ public final class ReflectHelper {
 	private static Method getGetterOrNull(Class<?>[] interfaces, String propertyName) {
 		Method getter = null;
 		for ( int i = 0; getter == null && i < interfaces.length; ++i ) {
-			final Class<?> anInterface = interfaces[i];
+			final var anInterface = interfaces[i];
 			if ( !shouldSkipInterfaceCheck( anInterface ) ) {
 				getter = getGetterOrNull( anInterface, propertyName );
 				if ( getter == null ) {
@@ -524,7 +505,7 @@ public final class ReflectHelper {
 	 * @throws MappingException If the {@code containerClass} has both a get- and an is- form.
 	 */
 	public static Method getGetterOrNull(Class<?> containerClass, String propertyName) {
-		if ( isRecord( containerClass ) ) {
+		if ( containerClass.isRecord() ) {
 			try {
 				return containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
 			}
@@ -577,7 +558,8 @@ public final class ReflectHelper {
 		// verify that the Class<?> does not also define a method with the same stem name with 'is'
 		try {
 			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			if ( !Modifier.isStatic( isMethod.getModifiers() ) && isMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( isMethod.getModifiers() )
+					&& isMethod.getAnnotation( Transient.class ) == null ) {
 				// No such method should throw the caught exception.  So if we get here, there was
 				// such a method.
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
@@ -766,7 +748,7 @@ public final class ReflectHelper {
 	private static Method setterOrNull(Class<?>[] interfaces, String propertyName, Class<?> propertyType, String likelyMethodName) {
 		Method setter = null;
 		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
-			final Class<?> anInterface = interfaces[i];
+			final var anInterface = interfaces[i];
 			if ( !shouldSkipInterfaceCheck( anInterface ) ) {
 				setter = setterOrNull( anInterface, propertyName, propertyType, likelyMethodName );
 				if ( setter == null ) {
@@ -805,7 +787,7 @@ public final class ReflectHelper {
 
 	private static String likelySetterMethodNameForProperty(final String propertyName) {
 		final char firstCharacter = propertyName.charAt( 0 );
-		return Character.isLowerCase( firstCharacter )
+		return isLowerCase( firstCharacter )
 				? "set" + Character.toUpperCase( firstCharacter ) + propertyName.substring( 1 )
 				: "set" + propertyName;
 	}
@@ -818,7 +800,8 @@ public final class ReflectHelper {
 	 * as an abstract - but again, that is such an edge case...
 	 */
 	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
-		for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
+		final var declaringClass = field.getDeclaringClass();
+		for ( Method method : declaringClass.getDeclaredMethods() ) {
 			if ( method.getParameterCount() == 0 // if the method has parameters, skip it
 					&& !Modifier.isStatic( method.getModifiers() )
 					&& method.getReturnType().isAssignableFrom( field.getType() ) ) {
@@ -845,9 +828,9 @@ public final class ReflectHelper {
 				}
 			}
 		}
-		if ( isRecord( field.getDeclaringClass() ) ) {
+		if ( declaringClass.isRecord() ) {
 			try {
-				return field.getDeclaringClass().getMethod( field.getName(), NO_PARAM_SIGNATURE );
+				return declaringClass.getMethod( field.getName(), NO_PARAM_SIGNATURE );
 			}
 			catch (NoSuchMethodException e) {
 				// Ignore
@@ -857,16 +840,17 @@ public final class ReflectHelper {
 		return null;
 	}
 
+	@Deprecated(forRemoval = true)
 	public static boolean isRecord(Class<?> declaringClass) {
-		return RECORD_CLASS != null && RECORD_CLASS.isAssignableFrom( declaringClass );
+		return declaringClass.isRecord();
 	}
 
 	public static Class<?>[] getRecordComponentTypes(Class<?> javaType) {
 		try {
-			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
-			final Class<?>[] componentTypes = new Class[recordComponents.length];
+			final var recordComponents = javaType.getRecordComponents();
+			final var componentTypes = new Class[recordComponents.length];
 			for (int i = 0; i < recordComponents.length; i++ ) {
-				componentTypes[i] = (Class<?>) GET_TYPE.invoke( recordComponents[i] );
+				componentTypes[i] = recordComponents[i].getType();
 			}
 			return componentTypes;
 		}
@@ -880,10 +864,10 @@ public final class ReflectHelper {
 
 	public static String[] getRecordComponentNames(Class<?> javaType) {
 		try {
-			final Object[] recordComponents = (Object[]) GET_RECORD_COMPONENTS.invoke( javaType );
-			final String[] componentNames = new String[recordComponents.length];
+			final var recordComponents = javaType.getRecordComponents();
+			final var componentNames = new String[recordComponents.length];
 			for (int i = 0; i < recordComponents.length; i++ ) {
-				componentNames[i] = (String) GET_NAME.invoke( recordComponents[i] );
+				componentNames[i] = recordComponents[i].getName();
 			}
 			return componentNames;
 		}

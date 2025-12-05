@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Component;
@@ -34,6 +33,7 @@ import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
+import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
  * Some extra data to the inheritance position of a class.
@@ -72,14 +72,14 @@ public class InheritanceState {
 	}
 
 	private void extractInheritanceType(ClassDetails classDetails) {
-		final Inheritance inheritanceAnn = classDetails.getDirectAnnotationUsage( Inheritance.class );
-		final MappedSuperclass mappedSuperAnn = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
-		if ( mappedSuperAnn != null ) {
+		final var inheritance = classDetails.getDirectAnnotationUsage( Inheritance.class );
+		final var mappedSuperclass = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
+		if ( mappedSuperclass != null ) {
 			setEmbeddableSuperclass( true );
-			setType( inheritanceAnn == null ? null : inheritanceAnn.strategy() );
+			setType( inheritance == null ? null : inheritance.strategy() );
 		}
 		else {
-			setType( inheritanceAnn == null ? SINGLE_TABLE : inheritanceAnn.strategy() );
+			setType( inheritance == null ? SINGLE_TABLE : inheritance.strategy() );
 		}
 	}
 
@@ -97,12 +97,12 @@ public class InheritanceState {
 		ClassDetails candidate = classDetails;
 		do {
 			candidate = candidate.getSuperClass();
-			final InheritanceState currentState = states.get( candidate );
+			final var currentState = states.get( candidate );
 			if ( currentState != null && !currentState.isEmbeddableSuperclass() ) {
 				return currentState;
 			}
 		}
-		while ( candidate != null && !Object.class.getName().equals( candidate.getName() ) );
+		while ( candidate != null && !OBJECT_CLASS_NAME.equals( candidate.getName() ) );
 		return null;
 	}
 
@@ -112,12 +112,12 @@ public class InheritanceState {
 		ClassDetails superclass = classDetails;
 		do {
 			superclass = superclass.getSuperClass();
-			InheritanceState currentState = states.get( superclass );
+			final var currentState = states.get( superclass );
 			if ( currentState != null ) {
 				return currentState;
 			}
 		}
-		while ( superclass != null && !Object.class.getName().equals( superclass.getName() ) );
+		while ( superclass != null && !OBJECT_CLASS_NAME.equals( superclass.getName() ) );
 		return null;
 	}
 
@@ -194,7 +194,7 @@ public class InheritanceState {
 				return classDetails;
 			}
 			else {
-				final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
+				final var state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
 				return state == null ? null : state.getClassWithIdClass( true );
 			}
 		}
@@ -225,7 +225,7 @@ public class InheritanceState {
 	 */
 	private ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( classDetails );
+			final var inheritanceState = inheritanceStatePerClass.get( classDetails );
 			assert !inheritanceState.isEmbeddableSuperclass();
 
 			getMappedSuperclassesTillNextEntityOrdered();
@@ -235,7 +235,7 @@ public class InheritanceState {
 			final ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
 			for ( ClassDetails classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
-				final PropertyContainer container =
+				final var container =
 						new PropertyContainer( classToProcessForMappedSuperclass, classDetails, accessType );
 				idPropertyCount = addElementsOfClass( elements, container, buildingContext, idPropertyCount );
 			}
@@ -251,7 +251,7 @@ public class InheritanceState {
 
 	private AccessType determineDefaultAccessType() {
 		for ( ClassDetails candidate = classDetails; candidate != null; candidate = candidate.getSuperClass() ) {
-			if ( ( candidate.getSuperClass() == null || Object.class.getName().equals( candidate.getSuperClass().getName() ) )
+			if ( ( candidate.getSuperClass() == null || OBJECT_CLASS_NAME.equals( candidate.getSuperClass().getName() ) )
 					&& ( candidate.hasDirectAnnotationUsage( Entity.class ) || candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) )
 					&& candidate.hasDirectAnnotationUsage( Access.class ) ) {
 				return AccessType.getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
@@ -261,7 +261,7 @@ public class InheritanceState {
 		// FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations,
 		// but without an explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
 		for ( ClassDetails candidate = classDetails;
-				candidate != null && !Object.class.getName().equals( candidate.getName() );
+				candidate != null && !OBJECT_CLASS_NAME.equals( candidate.getName() );
 				candidate = candidate.getSuperClass() ) {
 			if ( candidate.hasDirectAnnotationUsage( Entity.class )
 				|| candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
@@ -296,7 +296,7 @@ public class InheritanceState {
 				superclassState = inheritanceStatePerClass.get( superClass );
 			}
 			while ( superClass != null
-					&& !Object.class.getName().equals( superClass.getClassName() )
+					&& !OBJECT_CLASS_NAME.equals( superClass.getClassName() )
 					&& superclassState == null );
 			currentClassInHierarchy = superClass;
 		}
@@ -304,14 +304,14 @@ public class InheritanceState {
 	}
 
 	private void addMappedSuperClassInMetadata(Component component) {
-		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( component.getTable() );
+		final var mappedSuperclass = processMappedSuperclass( component.getTable() );
 		if ( mappedSuperclass != null ) {
 			component.setMappedSuperclass( mappedSuperclass );
 		}
 	}
 
 	private void addMappedSuperClassInMetadata(PersistentClass persistentClass) {
-		org.hibernate.mapping.MappedSuperclass mappedSuperclass = processMappedSuperclass( persistentClass.getImplicitTable() );
+		final var mappedSuperclass = processMappedSuperclass( persistentClass.getImplicitTable() );
 		if ( mappedSuperclass != null ) {
 			persistentClass.setSuperMappedSuperclass( mappedSuperclass );
 		}
@@ -320,8 +320,8 @@ public class InheritanceState {
 	private org.hibernate.mapping.MappedSuperclass processMappedSuperclass(Table implicitTable) {
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-		final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
+		final var metadataCollector = buildingContext.getMetadataCollector();
+		final var superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
 		final PersistentClass superEntity =
 				superEntityState != null
 						? metadataCollector.getEntityBinding( superEntityState.getClassDetails().getName() )
@@ -329,11 +329,11 @@ public class InheritanceState {
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
-			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
+			final var parentSuperclass = mappedSuperclass;
 			// todo (jpa32) : causes the mapped-superclass Class reference to be loaded...
 			//		- but this is how it's always worked, so...
-			final ClassDetails mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
-			final Class<?> mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
+			final var mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
+			final var mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
 			//add MappedSuperclass if not already there
 			mappedSuperclass = metadataCollector.getMappedSuperclass( mappedSuperclassJavaType );
 			if ( mappedSuperclass == null ) {

@@ -4,20 +4,23 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import java.util.Arrays;
-
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.type.WrapperArrayHandling;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
+
 
 /**
  * Tests eager materialization and mutation of data mapped by
@@ -27,88 +30,102 @@ import junit.framework.AssertionFailedError;
  */
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseDialect.class)
-public class ImageTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ImageHolder.class
+		},
+		annotatedPackageNames = "org.hibernate.orm.test.annotations.lob"
+)
+@SessionFactory
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.WRAPPER_ARRAY_HANDLING,
+				provider = ImageTest.WrapperArrayHandlingProvider.class)
+)
+public class ImageTest {
 	private static final int ARRAY_SIZE = 10000;
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW );
+	public static class WrapperArrayHandlingProvider implements SettingProvider.Provider<WrapperArrayHandling> {
+		@Override
+		public WrapperArrayHandling getSetting() {
+			return WrapperArrayHandling.ALLOW;
+		}
 	}
 
 	@Test
-	public void testBoundedLongByteArrayAccess() {
-		byte[] original = buildRecursively(ARRAY_SIZE, true);
-		byte[] changed = buildRecursively(ARRAY_SIZE, false);
+	public void testBoundedLongByteArrayAccess(SessionFactoryScope scope) {
+		byte[] original = buildRecursively( ARRAY_SIZE, true );
+		byte[] changed = buildRecursively( ARRAY_SIZE, false );
 
-		Session s = openSession();
-		s.beginTransaction();
-		ImageHolder entity = new ImageHolder();
-		s.persist(entity);
-		s.getTransaction().commit();
-		s.close();
+		ImageHolder e = new ImageHolder();
+		scope.inTransaction(
+				session ->
+						session.persist( e )
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		Assert.assertNull( entity.getLongByteArray() );
-		Assert.assertNull( entity.getDog() );
-		Assert.assertNull( entity.getPicByteArray() );
-		entity.setLongByteArray(original);
 		Dog dog = new Dog();
-		dog.setName("rabbit");
-		entity.setDog(dog);
-		entity.setPicByteArray(wrapPrimitive(original));
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					ImageHolder entity = session.get( ImageHolder.class, e.getId() );
+					assertThat( entity.getLongByteArray() ).isNull();
+					assertThat( entity.getDog() ).isNull();
+					assertThat( entity.getPicByteArray() ).isNull();
+					entity.setLongByteArray( original );
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-		assertEquals(original, entity.getLongByteArray());
-		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
-		assertEquals(original, unwrapNonPrimitive(entity.getPicByteArray()));
-		Assert.assertNotNull( entity.getDog() );
-		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
-		entity.setLongByteArray(changed);
-		entity.setPicByteArray(wrapPrimitive(changed));
-		dog.setName("papa");
-		entity.setDog(dog);
-		s.getTransaction().commit();
-		s.close();
+					dog.setName( "rabbit" );
+					entity.setDog( dog );
+					entity.setPicByteArray( wrapPrimitive( original ) );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
-		assertEquals(changed, entity.getLongByteArray());
-		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
-		assertEquals(changed, unwrapNonPrimitive(entity.getPicByteArray()));
-		Assert.assertNotNull( entity.getDog() );
-		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
-		entity.setLongByteArray(null);
-		entity.setPicByteArray(null);
-		entity.setDog(null);
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					ImageHolder entity = session.find( ImageHolder.class, e.getId() );
+					assertThat( entity.getLongByteArray().length ).isEqualTo( ARRAY_SIZE );
+					assertEquals( original, entity.getLongByteArray() );
+					assertThat( entity.getPicByteArray().length ).isEqualTo( ARRAY_SIZE );
+					assertEquals( original, unwrapNonPrimitive( entity.getPicByteArray() ) );
+					assertThat( entity.getDog() ).isNotNull();
+					assertThat( entity.getDog().getName() ).isEqualTo( dog.getName() );
+					entity.setLongByteArray( changed );
+					entity.setPicByteArray( wrapPrimitive( changed ) );
+					dog.setName( "papa" );
+					entity.setDog( dog );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = s.get( ImageHolder.class, entity.getId());
-		Assert.assertNull( entity.getLongByteArray() );
-		Assert.assertNull( entity.getDog() );
-		Assert.assertNull( entity.getPicByteArray() );
-		s.remove(entity);
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					ImageHolder entity =
+							session.find( ImageHolder.class, e.getId() );
+					assertThat( entity.getLongByteArray().length ).isEqualTo( ARRAY_SIZE );
+					assertEquals( changed, entity.getLongByteArray() );
+					assertThat( entity.getPicByteArray().length ).isEqualTo( ARRAY_SIZE );
+					assertEquals( changed, unwrapNonPrimitive( entity.getPicByteArray() ) );
+					assertThat( entity.getDog() ).isNotNull();
+					assertThat( entity.getDog().getName() ).isEqualTo( dog.getName() );
+					entity.setLongByteArray( null );
+					entity.setPicByteArray( null );
+					entity.setDog( null );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					ImageHolder entity = session.find( ImageHolder.class, e.getId() );
+					assertThat( entity.getLongByteArray() ).isNull();
+					assertThat( entity.getDog() ).isNull();
+					assertThat( entity.getPicByteArray() ).isNull();
+					session.remove( entity );
+				}
+		);
 	}
 
 	private Byte[] wrapPrimitive(byte[] bytes) {
 		int length = bytes.length;
 		Byte[] result = new Byte[length];
-		for (int index = 0; index < length; index++) {
-			result[index] = Byte.valueOf( bytes[index] );
+		for ( int index = 0; index < length; index++ ) {
+			result[index] = bytes[index];
 		}
 		return result;
 	}
@@ -116,17 +133,17 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	private byte[] unwrapNonPrimitive(Byte[] bytes) {
 		int length = bytes.length;
 		byte[] result = new byte[length];
-		for (int i = 0; i < length; i++) {
-			result[i] = bytes[i].byteValue();
+		for ( int i = 0; i < length; i++ ) {
+			result[i] = bytes[i];
 		}
 		return result;
 	}
 
 	private byte[] buildRecursively(int size, boolean on) {
 		byte[] data = new byte[size];
-		data[0] = mask(on);
-		for (int i = 0; i < size; i++) {
-			data[i] = mask(on);
+		data[0] = mask( on );
+		for ( int i = 0; i < size; i++ ) {
+			data[i] = mask( on );
 			on = !on;
 		}
 		return data;
@@ -138,18 +155,8 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 
 	public static void assertEquals(byte[] val1, byte[] val2) {
 		if ( !Arrays.equals( val1, val2 ) ) {
-			throw new AssertionFailedError("byte arrays did not match");
+			fail( "byte arrays did not match" );
 		}
-	}
-
-	@Override
-	protected String[] getAnnotatedPackages() {
-		return new String[] { "org.hibernate.orm.test.annotations.lob" };
-	}
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ImageHolder.class };
 	}
 
 }

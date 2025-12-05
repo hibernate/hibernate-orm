@@ -9,10 +9,8 @@ import java.sql.PreparedStatement;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
@@ -64,11 +62,11 @@ public class OneToOneType extends EntityType {
 	@Override
 	public boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		if ( propertyName != null ) {
-			final EntityPersister ownerPersister =
+			final var ownerPersister =
 					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 			final Object id = session.getContextEntityIdentifier( owner );
-			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
+			final var entityKey = session.generateEntityKey( id, ownerPersister );
 			return session.getPersistenceContextInternal().isPropertyNull( entityKey, getPropertyName() );
 		}
 		else {

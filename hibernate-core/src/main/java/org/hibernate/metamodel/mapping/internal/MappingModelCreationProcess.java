@@ -35,7 +35,7 @@ public class MappingModelCreationProcess {
 			EntityPersisterConcurrentMap entityPersisterMap,
 			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
-		final MappingModelCreationProcess process = new MappingModelCreationProcess(
+		final var process = new MappingModelCreationProcess(
 				entityPersisterMap,
 				collectionPersisterMap,
 				creationContext
@@ -75,13 +75,13 @@ public class MappingModelCreationProcess {
 	 * Instance-level trigger for {@link #process}
 	 */
 	private void execute() {
-		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
+		for ( var entityPersister : entityPersisterMap.values() ) {
 			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
 				inFlightEntityMappingType.linkWithSuperType( this );
 			}
 		}
 
-		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
+		for ( var entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
 			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
@@ -89,7 +89,7 @@ public class MappingModelCreationProcess {
 			}
 		}
 
-		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
+		for ( var collectionPersister : collectionPersisterMap.values() ) {
 			if ( collectionPersister instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
 				inFlightCollectionMapping.prepareMappingModel( this );
 			}
@@ -103,15 +103,15 @@ public class MappingModelCreationProcess {
 
 		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
-			// copy to avoid CCME
-			final ArrayList<PostInitCallbackEntry> copy = new ArrayList<>( postInitCallbacks );
+			// cope the callback list to avoid CCME
+			final var callbacks = new ArrayList<>( postInitCallbacks );
 
-			// NOTE : this is *not* the same as the lengths between `copy` and `postInitCallbacks`
+			// NOTE: this is *not* the same as the lengths between `callbacks` and `postInitCallbacks`
 			boolean anyCompleted = false;
 
 			//noinspection ForLoopReplaceableByForEach
-			for ( int i = 0; i < copy.size(); i++ ) {
-				final PostInitCallbackEntry callbackEntry = copy.get( i );
+			for ( int i = 0; i < callbacks.size(); i++ ) {
+				final var callbackEntry = callbacks.get( i );
 				try {
 					final boolean completed = callbackEntry.process();
 					if ( completed ) {
@@ -123,14 +123,14 @@ public class MappingModelCreationProcess {
 				catch (Exception e) {
 					if ( e instanceof NonTransientException ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-								"Mapping-model creation encountered non-transient error : %s",
+								"Mapping-model creation encountered non-transient error: %s",
 								e
 						);
 						throw e;
 					}
 					exceptions.put( callbackEntry, e );
 
-					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
+					final String format = "Mapping-model creation encountered (possibly) transient error: %s";
 					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
@@ -142,7 +142,7 @@ public class MappingModelCreationProcess {
 
 			if ( !anyCompleted ) {
 				// none of the remaining callbacks could complete fully, this is an error
-				final StringBuilder buff = new StringBuilder(
+				final var buff = new StringBuilder(
 						"PostInitCallback queue could not be processed..."
 				);
 				postInitCallbacks.forEach(
@@ -151,9 +151,8 @@ public class MappingModelCreationProcess {
 				);
 				buff.append( EOL );
 
-				final IllegalStateException illegalStateException = new IllegalStateException( buff.toString() );
-
-				for ( Map.Entry<PostInitCallbackEntry, Exception> entry : exceptions.entrySet() ) {
+				final var illegalStateException = new IllegalStateException( buff.toString() );
+				for ( var entry : exceptions.entrySet() ) {
 					illegalStateException.addSuppressed( entry.getValue() );
 				}
 				throw illegalStateException;
@@ -165,10 +164,8 @@ public class MappingModelCreationProcess {
 			String localName,
 			SubPartMappingProducer<T> subPartMappingProducer) {
 		assert currentlyProcessingRole != null;
-
 		final String initialRole = currentlyProcessingRole;
 		currentlyProcessingRole = currentlyProcessingRole + '#' + localName;
-
 		try {
 			return subPartMappingProducer.produceSubMapping( currentlyProcessingRole, this );
 		}
@@ -196,7 +193,7 @@ public class MappingModelCreationProcess {
 	}
 
 	private void withForeignKey(NavigableRole navigableRole, Consumer<ForeignKeyDescriptor> consumer) {
-		final ForeignKeyDescriptor keyDescriptor = keyDescriptorMap.get( navigableRole );
+		final var keyDescriptor = keyDescriptorMap.get( navigableRole );
 		if ( keyDescriptor != null ) {
 			consumer.accept( keyDescriptor );
 		}
@@ -215,9 +212,8 @@ public class MappingModelCreationProcess {
 	}
 
 	public void registerForeignKey(ModelPart keyOwner, ForeignKeyDescriptor keyDescriptor) {
-		final NavigableRole navigableRole = keyOwner.getNavigableRole();
+		final var navigableRole = keyOwner.getNavigableRole();
 		keyDescriptorMap.put( navigableRole, keyDescriptor );
-
 		final var waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
 		if ( waitingConsumers != null ) {
 			for ( int i = 0; i < waitingConsumers.size(); i++ ) {

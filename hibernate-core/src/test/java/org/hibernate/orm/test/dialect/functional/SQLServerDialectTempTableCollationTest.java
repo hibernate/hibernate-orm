@@ -13,51 +13,49 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Nathan Xu
  */
 @RequiresDialect( SQLServerDialect.class )
 @JiraKey( value = "HHH-3326" )
-public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTestCase {
+public class SQLServerDialectTempTableCollationTest extends BaseSessionFactoryFunctionalTest {
 
 	private String originalDBCollation;
 	private final String changedDBCollation = "SQL_Latin1_General_CP437_BIN";
 	private boolean collationChanged;
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		builder.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE );
 	}
 
-	@Override
+	@AfterEach
 	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
 		if ( originalDBCollation != null && collationChanged && !changedDBCollation.equals( originalDBCollation ) ) {
-			BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-			StandardServiceRegistryImpl serviceRegistry = buildServiceRegistry(
-					bootRegistry,
-					constructAndConfigureConfiguration( bootRegistry )
-			);
+			StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder().build();
 			try {
 				TransactionUtil.doWithJDBC(
-						serviceRegistry,
+						ssr,
 						connection -> {
 							try (Statement statement = connection.createStatement()) {
 								connection.setAutoCommit( true );
@@ -79,41 +77,40 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 				throw new RuntimeException( "Failed to revert back database collation to " + originalDBCollation, e );
 			}
 			finally {
-				serviceRegistry.destroy();
+				ssr.close();
 			}
 		}
 		// The alter database calls could lead to issues with existing connections, so we reset the shared pool here
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		SharedDriverManagerConnectionProvider.getInstance().reset();
 	}
 
 	@Override
-	protected void buildSessionFactory() {
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistryImpl serviceRegistry =
-				buildServiceRegistry( bootRegistry, constructAndConfigureConfiguration( bootRegistry ) );
+	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
+
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder().build();
 
 		try {
 			try {
 				TransactionUtil.doWithJDBC(
-						serviceRegistry,
+						ssr,
 						connection -> {
 							try (Statement statement = connection.createStatement()) {
 								connection.setAutoCommit( true );
 								try ( ResultSet rs = statement.executeQuery( "SELECT DATABASEPROPERTYEX(DB_NAME(),'collation')" ) ) {
 									rs.next();
 									String instanceCollation = rs.getString( 1 );
-									Assert.assertNotEquals( instanceCollation, changedDBCollation );
+									Assertions.assertNotEquals( instanceCollation, changedDBCollation );
 								}
 							}
 						}
 				);
 			}
 			catch (SQLException e) {
-				log.debug( e.getMessage() );
+				fail( e );
 			}
 			try {
 				TransactionUtil.doWithJDBC(
-						serviceRegistry,
+						ssr,
 						connection -> {
 							try (Statement statement = connection.createStatement()) {
 								connection.setAutoCommit( true );
@@ -126,10 +123,10 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 				);
 			}
 			catch (SQLException e) {
-				log.debug( e.getMessage() );
+				fail( e );
 			}
 			TransactionUtil.doWithJDBC(
-					serviceRegistry,
+					ssr,
 					connection -> {
 						try (Statement statement = connection.createStatement()) {
 							connection.setAutoCommit( true );
@@ -152,9 +149,9 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 			throw new RuntimeException( e );
 		}
 		finally {
-			serviceRegistry.destroy();
+			ssr.close();
 		}
-		super.buildSessionFactory();
+		return super.produceSessionFactory(model);
 	}
 
 	@Test
@@ -175,11 +172,6 @@ public class SQLServerDialectTempTableCollationTest extends BaseCoreFunctionalTe
 				Human.class,
 				Woman.class
 		};
-	}
-
-	@Override
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
 	}
 
 	@Entity(name = "Human")

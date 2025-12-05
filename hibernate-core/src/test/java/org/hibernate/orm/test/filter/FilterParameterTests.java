@@ -4,11 +4,14 @@
  */
 package org.hibernate.orm.test.filter;
 
-import java.sql.Types;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -18,38 +21,33 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.type.NumericBooleanConverter;
-import org.hibernate.type.YesNoConverter;
-
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.sql.Types;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.cfg.ManagedBeanSettings.JAKARTA_CDI_BEAN_MANAGER;
 
 /**
  * @author Steve Ebersole
@@ -67,7 +65,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			final EntityOne loaded = session.find( EntityOne.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -90,7 +88,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			final EntityOne loaded = session.find( EntityOne.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -110,7 +108,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testNumeric(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			final EntityTwo loaded = session.find( EntityTwo.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -133,7 +131,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			final EntityTwo loaded = session.find( EntityTwo.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -157,7 +155,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
-			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
+			final EntityThree loaded = session.find( EntityThree.class, 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
@@ -182,18 +180,20 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.applySetting( JAKARTA_CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
 			try {
 				scope.inTransaction( (session) -> {
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					//noinspection removal
 					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
+					//noinspection removal
 					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 3 )
 							.getSingleResultOrNull();
@@ -216,17 +216,19 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
-					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.applySetting( JAKARTA_CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
 			try {
 				scope.inTransaction( (session) -> {
 					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					//noinspection removal
 					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					//noinspection removal
 					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
 							.setParameter( "id", 2 )
 							.getSingleResultOrNull();
@@ -257,6 +259,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterYesNoConverter",
 			defaultCondition = "yes_no = :yesNo",
@@ -312,6 +315,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	}
 
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterNumberConverter",
 			defaultCondition = "zero_one = :zeroOne",
@@ -366,6 +370,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "filterMismatchConverter",
 			defaultCondition = "mismatch = :mismatch",
@@ -414,6 +419,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@FilterDef(
 			name = "departmentFilter",
 			defaultCondition = "department = :department",

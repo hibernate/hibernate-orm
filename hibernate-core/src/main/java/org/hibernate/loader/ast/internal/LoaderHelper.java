@@ -10,33 +10,29 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.newInstance;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -61,7 +57,7 @@ public class LoaderHelper {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
-			final EntityPersister persister = entry.getPersister();
+			final var persister = entry.getPersister();
 
 			if ( entry.getStatus().isDeletedOrGone()) {
 				throw new ObjectDeletedException(
@@ -82,12 +78,12 @@ public class LoaderHelper {
 
 			final boolean cachingEnabled = persister.canWriteToCache();
 			SoftLock lock = null;
-			Object ck = null;
+			Object cacheKey = null;
 			try {
 				if ( cachingEnabled ) {
-					final EntityDataAccess cache = persister.getCacheAccessStrategy();
-					ck = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
-					lock = cache.lockItem( session, ck, entry.getVersion() );
+					final var cache = persister.getCacheAccessStrategy();
+					cacheKey = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
+					lock = cache.lockItem( session, cacheKey, entry.getVersion() );
 				}
 
 				if ( persister.isVersioned() && entry.getVersion() == null ) {
@@ -110,8 +106,8 @@ public class LoaderHelper {
 					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 				}
 				else if ( entry.isExistsInDatabase() ) {
-					final EventMonitor eventMonitor = session.getEventMonitor();
-					final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
+					final var eventMonitor = session.getEventMonitor();
+					final var entityLockEvent = eventMonitor.beginEntityLockEvent();
 					boolean success = false;
 					try {
 						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
@@ -134,7 +130,7 @@ public class LoaderHelper {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
 				if ( cachingEnabled ) {
-					persister.getCacheAccessStrategy().unlockItem( session, ck, lock );
+					persister.getCacheAccessStrategy().unlockItem( session, cacheKey, lock );
 				}
 			}
 		}
@@ -176,17 +172,19 @@ public class LoaderHelper {
 		assert keys.getClass().isArray();
 
 		//noinspection unchecked
-		final JavaType<K> keyJavaType = (JavaType<K>) keyPart.getJavaType();
-		final Class<K> keyClass = keyJavaType.getJavaTypeClass();
+		final var keyJavaType = (JavaType<K>) keyPart.getJavaType();
+		final var keyClass = keyJavaType.getJavaTypeClass();
 
 		if ( keys.getClass().getComponentType().equals( keyClass ) ) {
 			return keys;
 		}
 
 		final K[] typedArray = createTypedArray( keyClass, keys.length );
-		final boolean coerce = !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
+		final boolean coerce =
+				!sessionFactory.getSessionFactoryOptions().getJpaCompliance()
+						.isLoadByIdComplianceEnabled();
 		if ( !coerce ) {
-			System.arraycopy( keys, 0, typedArray, 0, keys.length );
+			arraycopy( keys, 0, typedArray, 0, keys.length );
 		}
 		else {
 			for ( int i = 0; i < keys.length; i++ ) {
@@ -231,7 +229,7 @@ public class LoaderHelper {
 		assert jdbcOperation != null;
 		assert jdbcParameter != null;
 
-		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( 1);
+		final var bindings = new JdbcParameterBindingsImpl( 1);
 		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize ) );
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcOperation,

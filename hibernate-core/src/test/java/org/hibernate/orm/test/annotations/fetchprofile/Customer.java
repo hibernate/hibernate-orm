@@ -38,7 +38,7 @@ public class Customer {
 	private long customerNumber;
 
 	@OneToMany
-	private Set<Order> orders = new HashSet<Order>();
+	private Set<Order> orders = new HashSet<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Order lastOrder;

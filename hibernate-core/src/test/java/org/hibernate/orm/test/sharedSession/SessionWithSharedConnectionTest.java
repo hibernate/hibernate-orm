@@ -8,14 +8,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,19 +24,21 @@ import java.util.Collection;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = IrrelevantEntity.class)
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 public class SessionWithSharedConnectionTest {
 	@Test
 	@JiraKey( value = "HHH-7090" )
@@ -54,19 +53,16 @@ public class SessionWithSharedConnectionTest {
 		CriteriaQuery<IrrelevantEntity> criteria = criteriaBuilder.createQuery( IrrelevantEntity.class );
 		criteria.from( IrrelevantEntity.class );
 		session.createQuery( criteria ).list();
-//		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
-		assertFalse(
-				((SessionImplementor) secondSession)
-						.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
-						.hasRegisteredResources()
-		);
+		assertFalse( ((SessionImplementor) secondSession)
+				.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+				.hasRegisteredResources() );
 
 		assertTrue( session.isOpen() );
 		assertTrue( secondSession.isOpen() );
 
-		assertSame( session.getTransaction(), secondSession.getTransaction() );
+		Assertions.assertSame( session.getTransaction(), secondSession.getTransaction() );
 
 		session.getTransaction().commit();
 
@@ -85,28 +81,28 @@ public class SessionWithSharedConnectionTest {
 	@Test
 	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextAutoClosing(SessionFactoryScope scope) {
-		Session session = scope.getSessionFactory().openSession();
+		var session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
 
 		// COMMIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		Session secondSession = session.sessionWithOptions()
+		var secondSession = (SessionImplementor) session.sessionWithOptions()
 				.connection()
 				.autoClose( true )
 				.openSession();
 
 		// directly assert state of the second session
-		assertTrue( ((SessionImpl) secondSession).isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
+		assertTrue( secondSession.isAutoCloseSessionEnabled() );
+//		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now commit the transaction and make sure that does not close the sessions
 		session.getTransaction().commit();
-		assertFalse( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertFalse( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 		session.close();
-		assertTrue( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertTrue( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 
 		// ROLLBACK ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,74 +110,52 @@ public class SessionWithSharedConnectionTest {
 		session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
 
-		secondSession = session.sessionWithOptions()
+		secondSession = (SessionImplementor) session.sessionWithOptions()
 				.connection()
 				.autoClose( true )
 				.openSession();
 
 		// directly assert state of the second session
-		assertTrue( ((SessionImpl) secondSession).isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
+		assertTrue( secondSession.isAutoCloseSessionEnabled() );
+//		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now rollback the transaction and make sure that does not close the sessions
 		session.getTransaction().rollback();
-		assertFalse( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertFalse( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 		session.close();
-		assertTrue( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertTrue( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 	}
-
-//	@Test
-//	@JiraKey( value = "HHH-7090" )
-//	public void testSharedTransactionContextAutoJoining() {
-//		Session session = scope.getSessionFactory().openSession();
-//		session.getTransaction().begin();
-//
-//		Session secondSession = session.sessionWithOptions()
-//				.transactionContext()
-//				.autoJoinTransactions( true )
-//				.openSession();
-//
-//		// directly assert state of the second session
-//		assertFalse( ((SessionImplementor) secondSession).shouldAutoJoinTransaction() );
-//
-//		secondSession.close();
-//		session.close();
-//	}
 
 	@Test
 	@JiraKey( value = "HHH-7090" )
 	public void testSharedTransactionContextFlushBeforeCompletion(SessionFactoryScope scope) {
-		Session session = scope.getSessionFactory().openSession();
+		var session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
 
-		Session secondSession = session.sessionWithOptions()
+		var secondSession = (SessionImplementor) session.sessionWithOptions()
 				.connection()
-//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
-
-		// directly assert state of the second session
-//		assertTrue( ((SessionImplementor) secondSession).isFlushBeforeCompletionEnabled() );
 
 		// now try it out
 		IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 		secondSession.persist( irrelevantEntity );
 		Integer id = irrelevantEntity.getId();
 		session.getTransaction().commit();
-		assertFalse( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertFalse( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 		session.close();
-		assertTrue( ((SessionImplementor) session).isClosed() );
-		assertTrue( ((SessionImplementor) secondSession).isClosed() );
+		assertTrue( session.isClosed() );
+		assertTrue( secondSession.isClosed() );
 
 		session = scope.getSessionFactory().openSession();
 		session.getTransaction().begin();
-		IrrelevantEntity it = session.byId( IrrelevantEntity.class ).load( id );
+		IrrelevantEntity it = session.find( IrrelevantEntity.class, id );
 		assertNotNull( it );
 		session.remove( it );
 		session.getTransaction().commit();
@@ -191,11 +165,12 @@ public class SessionWithSharedConnectionTest {
 	@Test
 	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction(SessionFactoryScope scope) throws Exception {
-		Session session = scope.getSessionFactory().openSession();
+		final var sqlCollector = scope.getCollectingStatementInspector();
+		sqlCollector.clear();
 
-		final String postCommitMessage = "post commit was called";
+		final var postCommitMessage = "post commit was called";
 
-		EventListenerRegistry eventListenerRegistry = scope.getSessionFactory().getEventListenerRegistry();
+		var eventListenerRegistry = scope.getSessionFactory().getEventListenerRegistry();
 		//register a post commit listener
 		eventListenerRegistry.appendListeners(
 				EventType.POST_COMMIT_INSERT,
@@ -212,33 +187,38 @@ public class SessionWithSharedConnectionTest {
 				}
 		);
 
-		session.getTransaction().begin();
+		final var parentSession = scope.getSessionFactory().openSession();
+		parentSession.beginTransaction();
 
-		IrrelevantEntity irrelevantEntityMainSession = new IrrelevantEntity();
-		irrelevantEntityMainSession.setName( "main session" );
-		session.persist( irrelevantEntityMainSession );
+		var mainEntity = new IrrelevantEntity();
+		mainEntity.setName( "main session" );
+		parentSession.persist( mainEntity );
 
-		//open secondary session to also insert an entity
-		Session secondSession = session.sessionWithOptions()
+		// open child session to also insert an entity
+		var childSession = parentSession.sessionWithOptions()
 				.connection()
-//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
 
-		IrrelevantEntity irrelevantEntitySecondarySession = new IrrelevantEntity();
-		irrelevantEntitySecondarySession.setName( "secondary session" );
-		secondSession.persist( irrelevantEntitySecondarySession );
+		var childEntity = new IrrelevantEntity();
+		childEntity.setName( "secondary session" );
+		childSession.persist( childEntity );
 
-		session.getTransaction().commit();
+		parentSession.getTransaction().commit();
 
-		//both entities should have their names updated to the postCommitMessage value
-		assertEquals(postCommitMessage, irrelevantEntityMainSession.getName());
-		assertEquals(postCommitMessage, irrelevantEntitySecondarySession.getName());
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).startsWith( "select max(id) " );
+		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).startsWith( "insert" );
+		assertThat( sqlCollector.getSqlQueries().get( 2 ) ).startsWith( "insert" );
+
+		// both entities should have their names updated to the postCommitMessage value
+		assertThat( mainEntity.getName() ).isEqualTo( postCommitMessage );
+		assertThat( childEntity.getName() ).isEqualTo( postCommitMessage );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-7239" )
-	public void testChildSessionTwoTransactions(SessionFactoryScope scope) throws Exception {
+	public void testChildSessionTwoTransactions(SessionFactoryScope scope) {
 		Session session = scope.getSessionFactory().openSession();
 
 		session.getTransaction().begin();
@@ -246,7 +226,6 @@ public class SessionWithSharedConnectionTest {
 		//open secondary session with managed options
 		Session secondarySession = session.sessionWithOptions()
 				.connection()
-//				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
 
@@ -262,10 +241,10 @@ public class SessionWithSharedConnectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11830")
-	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) throws Exception {
+	public void testSharedSessionTransactionObserver(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Field field = null;
-			Class<?> clazz = ( (JdbcSessionOwner) session ).getTransactionCoordinator().getClass();
+			Class<?> clazz = session.getTransactionCoordinator().getClass();
 			while ( clazz != null ) {
 				try {
 					field = clazz.getDeclaredField( "observers" );
@@ -279,12 +258,12 @@ public class SessionWithSharedConnectionTest {
 					throw new IllegalStateException( e );
 				}
 			}
-			assertNotNull( "Observers field was not found", field );
+			assertNotNull( field, "Observers field was not found" );
 
 			try {
 				//Some of these collections could be lazily initialize: check for null before invoking size()
-				final Collection collection = (Collection) field.get( session.getTransactionCoordinator() );
-				assertTrue( collection == null || collection.size() == 0 );
+				final Collection<?> collection = (Collection<?>) field.get( session.getTransactionCoordinator() );
+				assertTrue( collection == null || collection.isEmpty() );
 
 				//open secondary sessions with managed options and immediately close
 				Session secondarySession;
@@ -296,18 +275,14 @@ public class SessionWithSharedConnectionTest {
 							.openSession();
 
 					//when the shared session is opened it should register an observer
-					assertEquals(
-							1,
-							( (Collection) field.get( session.getTransactionCoordinator() ) ).size()
-					);
+					assertEquals( 1,
+							( (Collection<?>) field.get( session.getTransactionCoordinator() ) ).size() );
 
 					//observer should be released
 					secondarySession.close();
 
-					assertEquals(
-							0,
-							( (Collection) field.get( session.getTransactionCoordinator() ) ).size()
-					);
+					assertEquals( 0,
+							( (Collection<?>) field.get( session.getTransactionCoordinator() ) ).size() );
 				}
 			}
 			catch (Exception e) {

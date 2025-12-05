@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa.graphs.mappedbyid;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.graphs.Company;
 import org.hibernate.orm.test.jpa.graphs.CompanyFetchProfile;
 import org.hibernate.orm.test.jpa.graphs.Course;
@@ -16,23 +15,35 @@ import org.hibernate.orm.test.jpa.graphs.Manager;
 import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Subgraph;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Nathan Xu
  */
-public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				Company.class,
+				CompanyFetchProfile.class,
+				Employee.class,
+				Manager.class,
+				Location.class,
+				Course.class,
+				Student.class
+		}
+)
+public class FetchGraphFindByIdTest {
 
 	private long companyId;
 
@@ -40,20 +51,18 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	@JiraKey(value = "HHH-8776")
-	public void testFetchGraphByFind() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
+	public void testFetchGraphByFind(EntityManagerFactoryScope scope) {
+		EntityGraph<Company> entityGraph = scope.fromTransaction( entityManager -> {
+			EntityGraph<Company> _entityGraph = entityManager.createEntityGraph( Company.class );
+			_entityGraph.addAttributeNodes( "location" );
+			_entityGraph.addAttributeNodes( "markets" );
+			return _entityGraph;
+		} );
 
-		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
-		entityGraph.addAttributeNodes( "location" );
-		entityGraph.addAttributeNodes( "markets" );
-
-		Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
-
-		Company company = entityManager.find( Company.class, companyId, properties );
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		Company company = scope.fromTransaction( entityManager -> {
+			Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
+			return entityManager.find( Company.class, companyId, properties );
+		} );
 
 		assertFalse( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
@@ -62,20 +71,17 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
 		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
 
-		entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
+		company = scope.fromTransaction( entityManager -> {
+			Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+			subgraph.addAttributeNodes( "managers" );
+			subgraph.addAttributeNodes( "friends" );
+			Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+			subSubgraph.addAttributeNodes( "managers" );
+			subSubgraph.addAttributeNodes( "friends" );
 
-		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
-		subgraph.addAttributeNodes( "managers" );
-		subgraph.addAttributeNodes( "friends" );
-		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
-		subSubgraph.addAttributeNodes( "managers" );
-		subSubgraph.addAttributeNodes( "friends" );
-
-		company = entityManager.find( Company.class, companyId, properties );
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+			Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
+			return entityManager.find( Company.class, companyId, properties );
+		} );
 
 		assertTrue( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
@@ -86,16 +92,12 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
 
 		boolean foundManager = false;
-		Iterator<Employee> employeeItr = company.employees.iterator();
-		while (employeeItr.hasNext()) {
-			Employee employee = employeeItr.next();
+		for ( Employee employee : company.employees ) {
 			assertTrue( Hibernate.isInitialized( employee.managers ) );
 			assertTrue( Hibernate.isInitialized( employee.friends ) );
 			// test 1 more level
-			Iterator<Manager> managerItr =  employee.managers.iterator();
-			while (managerItr.hasNext()) {
+			for ( Manager manager : employee.managers ) {
 				foundManager = true;
-				Manager manager = managerItr.next();
 				assertTrue( Hibernate.isInitialized( manager.managers ) );
 				assertTrue( Hibernate.isInitialized( manager.friends ) );
 			}
@@ -105,21 +107,18 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	@JiraKey(value = "HHH-8776")
-	public void testFetchGraphByFindTakingPrecedenceOverFetchProfile() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
+	public void testFetchGraphByFindTakingPrecedenceOverFetchProfile(EntityManagerFactoryScope scope) {
+		EntityGraph<CompanyFetchProfile> entityGraph = scope.fromTransaction( entityManager -> {
+			entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
+			EntityGraph<CompanyFetchProfile> _entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
+			_entityGraph.addAttributeNodes( "markets" );
+			return _entityGraph;
+		} );
 
-		entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
-
-		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
-		entityGraph.addAttributeNodes( "markets" );
-
-		Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
-
-		CompanyFetchProfile company = entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		CompanyFetchProfile company = scope.fromTransaction( entityManager -> {
+			Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
+			return entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
+		} );
 
 		assertFalse( Hibernate.isInitialized( company.employees ) );
 		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
@@ -128,20 +127,17 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
 		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
 
-		entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
+		company = scope.fromTransaction( entityManager -> {
+			Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+			subgraph.addAttributeNodes( "managers" );
+			subgraph.addAttributeNodes( "friends" );
+			Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+			subSubgraph.addAttributeNodes( "managers" );
+			subSubgraph.addAttributeNodes( "friends" );
 
-		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
-		subgraph.addAttributeNodes( "managers" );
-		subgraph.addAttributeNodes( "friends" );
-		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
-		subSubgraph.addAttributeNodes( "managers" );
-		subSubgraph.addAttributeNodes( "friends" );
-
-		company = entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+			Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
+			return entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
+		} );
 
 		assertTrue( Hibernate.isInitialized( company.employees ) );
 		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
@@ -151,16 +147,12 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
 
 		boolean foundManager = false;
-		Iterator<Employee> employeeItr = company.employees.iterator();
-		while (employeeItr.hasNext()) {
-			Employee employee = employeeItr.next();
+		for ( Employee employee : company.employees ) {
 			assertTrue( Hibernate.isInitialized( employee.managers ) );
 			assertTrue( Hibernate.isInitialized( employee.friends ) );
 			// test 1 more level
-			Iterator<Manager> managerItr =  employee.managers.iterator();
-			while (managerItr.hasNext()) {
+			for ( Manager manager : employee.managers ) {
 				foundManager = true;
-				Manager manager = managerItr.next();
 				assertTrue( Hibernate.isInitialized( manager.managers ) );
 				assertTrue( Hibernate.isInitialized( manager.friends ) );
 			}
@@ -168,58 +160,56 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		assertTrue(foundManager);
 	}
 
-	@Before
-	public void createData() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
+	@BeforeEach
+	public void createData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Manager manager1 = new Manager();
+					entityManager.persist( manager1 );
 
-		Manager manager1 = new Manager();
-		entityManager.persist( manager1 );
+					Manager manager2 = new Manager();
+					manager2.managers.add( manager1 );
+					entityManager.persist( manager2 );
 
-		Manager manager2 = new Manager();
-		manager2.managers.add( manager1 );
-		entityManager.persist( manager2 );
+					Employee employee = new Employee();
+					employee.managers.add( manager1 );
+					entityManager.persist( employee );
 
-		Employee employee = new Employee();
-		employee.managers.add( manager1 );
-		entityManager.persist( employee );
+					Location location = new Location();
+					location.address = "123 somewhere";
+					location.zip = 12345;
+					entityManager.persist( location );
 
-		Location location = new Location();
-		location.address = "123 somewhere";
-		location.zip = 12345;
-		entityManager.persist( location );
+					Company company = new Company();
+					company.employees.add( employee );
+					company.employees.add( manager1 );
+					company.employees.add( manager2 );
+					company.location = location;
+					company.markets.add( Market.SERVICES );
+					company.markets.add( Market.TECHNOLOGY );
+					company.phoneNumbers.add( "012-345-6789" );
+					company.phoneNumbers.add( "987-654-3210" );
+					entityManager.persist( company );
+					companyId = company.id;
 
-		Company company = new Company();
-		company.employees.add( employee );
-		company.employees.add( manager1 );
-		company.employees.add( manager2 );
-		company.location = location;
-		company.markets.add( Market.SERVICES );
-		company.markets.add( Market.TECHNOLOGY );
-		company.phoneNumbers.add( "012-345-6789" );
-		company.phoneNumbers.add( "987-654-3210" );
-		entityManager.persist( company );
-		companyId = company.id;
-
-		CompanyFetchProfile companyFetchProfile = new CompanyFetchProfile();
-		companyFetchProfile.employees.add( employee );
-		companyFetchProfile.employees.add( manager1 );
-		companyFetchProfile.employees.add( manager2 );
-		companyFetchProfile.location = location;
-		companyFetchProfile.markets.add( Market.SERVICES );
-		companyFetchProfile.markets.add( Market.TECHNOLOGY );
-		companyFetchProfile.phoneNumbers.add( "012-345-6789" );
-		companyFetchProfile.phoneNumbers.add( "987-654-3210" );
-		entityManager.persist( companyFetchProfile );
-		companyWithFetchProfileId = companyFetchProfile.id;
-
-		entityManager.getTransaction().commit();
-		entityManager.close();
+					CompanyFetchProfile companyFetchProfile = new CompanyFetchProfile();
+					companyFetchProfile.employees.add( employee );
+					companyFetchProfile.employees.add( manager1 );
+					companyFetchProfile.employees.add( manager2 );
+					companyFetchProfile.location = location;
+					companyFetchProfile.markets.add( Market.SERVICES );
+					companyFetchProfile.markets.add( Market.TECHNOLOGY );
+					companyFetchProfile.phoneNumbers.add( "012-345-6789" );
+					companyFetchProfile.phoneNumbers.add( "987-654-3210" );
+					entityManager.persist( companyFetchProfile );
+					companyWithFetchProfileId = companyFetchProfile.id;
+				}
+		);
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, CompanyFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 }

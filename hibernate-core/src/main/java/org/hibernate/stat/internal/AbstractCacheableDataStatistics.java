@@ -24,20 +24,20 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	private final @Nullable LongAdder cacheRemoveCount;
 
 	public AbstractCacheableDataStatistics(Supplier<@Nullable Region> regionSupplier) {
-		final Region region = regionSupplier.get();
+		final var region = regionSupplier.get();
 		if ( region == null ) {
-			this.cacheRegionName = null;
-			this.cacheHitCount = null;
-			this.cacheMissCount = null;
-			this.cachePutCount = null;
-			this.cacheRemoveCount = null;
+			cacheRegionName = null;
+			cacheHitCount = null;
+			cacheMissCount = null;
+			cachePutCount = null;
+			cacheRemoveCount = null;
 		}
 		else {
-			this.cacheRegionName = region.getName();
-			this.cacheHitCount = new LongAdder();
-			this.cacheMissCount = new LongAdder();
-			this.cachePutCount = new LongAdder();
-			this.cacheRemoveCount = new LongAdder();
+			cacheRegionName = region.getName();
+			cacheHitCount = new LongAdder();
+			cacheMissCount = new LongAdder();
+			cachePutCount = new LongAdder();
+			cacheRemoveCount = new LongAdder();
 		}
 	}
 
@@ -48,38 +48,34 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 
 	@Override
 	public long getCacheHitCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheHitCount ).sum();
 
-		return NullnessUtil.castNonNull( cacheHitCount ).sum();
 	}
 
 	@Override
 	public long getCachePutCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cachePutCount ).sum();
 
-		return NullnessUtil.castNonNull( cachePutCount ).sum();
 	}
 
 	@Override
 	public long getCacheMissCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheMissCount ).sum();
 
-		return NullnessUtil.castNonNull( cacheMissCount ).sum();
 	}
 
 	@Override
 	public long getCacheRemoveCount() {
-		if ( cacheRegionName == null ) {
-			return NOT_CACHED_COUNT;
-		}
+		return cacheRegionName == null
+				? NOT_CACHED_COUNT
+				: NullnessUtil.castNonNull( cacheRemoveCount ).sum();
 
-		return NullnessUtil.castNonNull( cacheRemoveCount ).sum();
 	}
 
 	public void incrementCacheHitCount() {
@@ -114,17 +110,13 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		NullnessUtil.castNonNull( cacheRemoveCount ).increment();
 	}
 
-	protected void appendCacheStats(StringBuilder buf) {
-		buf.append( ",cacheRegion=" ).append( cacheRegionName );
-
-		if ( cacheRegionName == null ) {
-			return;
+	protected void appendCacheStats(StringBuilder text) {
+		text.append( ",cacheRegion=" ).append( cacheRegionName );
+		if ( cacheRegionName != null ) {
+			text.append( ",cacheHitCount=" ).append( getCacheHitCount() )
+					.append( ",cacheMissCount=" ).append( getCacheMissCount() )
+					.append( ",cachePutCount=" ).append( getCachePutCount() )
+					.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
 		}
-
-		buf.append( ",cacheHitCount=" ).append( getCacheHitCount() )
-				.append( ",cacheMissCount=" ).append( getCacheMissCount() )
-				.append( ",cachePutCount=" ).append( getCachePutCount() )
-				.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
-
 	}
 }

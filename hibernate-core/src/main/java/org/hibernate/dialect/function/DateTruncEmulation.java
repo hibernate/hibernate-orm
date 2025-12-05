@@ -39,7 +39,6 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  */
 public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 	protected final String toDateFunction;
-	private final SqmFormat sqmFormat;
 
 	protected DateTruncEmulation(String toDateFunction, TypeConfiguration typeConfiguration) {
 		super(
@@ -49,7 +48,6 @@ public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL, TEMPORAL_UNIT )
 		);
 		this.toDateFunction = toDateFunction;
-		this.sqmFormat = new SqmFormat( "yyyy-MM-dd HH:mm:ss", typeConfiguration.getBasicTypeForJavaType( String.class ), null );
 	}
 
 	@Override
@@ -103,37 +101,31 @@ public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements
 			default:
 				throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
 		}
-		final SqmTypedNode<?> datetime = arguments.get( 0 );
-		final SqmExpression<?> formatExpression = queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor( "format" )
-				.generateSqmExpression(
-						asList(
-								datetime,
-								new SqmFormat(
-										pattern,
-										nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
-										nodeBuilder
-								)
-						),
-						null,
-						queryEngine
-				);
+		final var datetime = arguments.get( 0 );
+		final var formatExpression =
+				queryEngine.getSqmFunctionRegistry()
+						.getFunctionDescriptor( "format" )
+						.generateSqmExpression(
+								asList(
+										datetime,
+										new SqmFormat( pattern, nodeBuilder.getStringType(), nodeBuilder )
+								),
+								null,
+								queryEngine
+						);
 		final SqmExpression<?> formattedDatetime;
 		if ( literal != null ) {
-			formattedDatetime = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "concat" )
-					.generateSqmExpression(
-							asList(
-									formatExpression,
-									new SqmLiteral<>(
-											literal,
-											nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
-											nodeBuilder
-									)
-							),
-							null,
-							queryEngine
-					);
+			formattedDatetime =
+					queryEngine.getSqmFunctionRegistry()
+							.getFunctionDescriptor( "concat" )
+							.generateSqmExpression(
+									asList(
+											formatExpression,
+											new SqmLiteral<>( literal, nodeBuilder.getStringType(), nodeBuilder )
+									),
+									null,
+									queryEngine
+							);
 		}
 		else {
 			formattedDatetime = formatExpression;
@@ -143,7 +135,7 @@ public class DateTruncEmulation extends AbstractSqmFunctionDescriptor implements
 				this,
 				this,
 				// the first argument is needed for SybaseDateTruncEmulation
-				asList( datetime, formattedDatetime, sqmFormat ),
+				asList( datetime, formattedDatetime, new SqmFormat( "yyyy-MM-dd HH:mm:ss", nodeBuilder.getStringType(), nodeBuilder ) ),
 				impliedResultType,
 				null,
 				getReturnTypeResolver(),

@@ -4,46 +4,42 @@
  */
 package org.hibernate.orm.test.pc;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeRemoveTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@Jpa(
+		annotatedClasses = {
 				Person.class,
 				Phone.class
-		};
-	}
+		}
+)
+public class CascadeRemoveTest {
 
 	@Test
-	public void removeTest() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void removeTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
-			person.setId(1L);
-			person.setName("John Doe");
+			person.setId( 1L );
+			person.setName( "John Doe" );
 
 			Phone phone = new Phone();
-			phone.setId(1L);
-			phone.setNumber("123-456-7890");
+			phone.setId( 1L );
+			phone.setNumber( "123-456-7890" );
 
-			person.addPhone(phone);
-			entityManager.persist(person);
-		});
+			person.addPhone( phone );
+			entityManager.persist( person );
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::pc-cascade-remove-example[]
-			Person person = entityManager.find(Person.class, 1L);
+			Person person = entityManager.find( Person.class, 1L );
 
-			entityManager.remove(person);
+			entityManager.remove( person );
 			//end::pc-cascade-remove-example[]
-		});
+		} );
 	}
 }

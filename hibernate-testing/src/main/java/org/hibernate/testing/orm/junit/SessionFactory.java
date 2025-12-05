@@ -9,17 +9,35 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.function.Consumer;
 
 import org.hibernate.Interceptor;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-/**
- * @author Steve Ebersole
- */
+/// Defines the SessionFactory to be used for testing.
+/// Produces a [SessionFactoryScope] which can be injected via [JUnit][SessionFactoryScopeParameterResolver]
+/// or via [SessionFactoryScopeAware]; the JUnit approach should be preferred.
+///
+/// ```java
+/// @DomainModel(annotatedClasses=SomeEntity.class)
+/// @SessionFactory
+/// class SomeTest {
+///     @Test
+///     void testStuff(SessionFactoryScope factoryScope) {
+///         ...
+///     }
+/// }
+/// ```
+///
+/// @see SessionFactoryExtension
+/// @see SessionFactoryScope
+///
+/// @author Steve Ebersole
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )
@@ -48,12 +66,19 @@ public @interface SessionFactory {
 
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
-	/**
-	 * Shorthand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
-	 *
-	 * @see SQLStatementInspector
-	 */
+	/// Shorthand for `statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class`
+	///
+	/// @see SQLStatementInspector
 	boolean useCollectingStatementInspector() default false;
 
 	boolean applyCollectionsInDefaultFetchGroup() default true;
+
+	Class<? extends Consumer<SessionFactoryBuilder>> sessionFactoryConfigurer() default NoOpConfigurer.class;
+
+	class NoOpConfigurer implements Consumer<SessionFactoryBuilder> {
+
+		@Override
+		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+		}
+	}
 }

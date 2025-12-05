@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.insert;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -64,11 +63,11 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	private SqmInsertSelectStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
-			List<SqmPath<?>> insertionTargetPaths,
-			SqmConflictClause<T> conflictClause,
+			@Nullable List<SqmPath<?>> insertionTargetPaths,
+			@Nullable SqmConflictClause<T> conflictClause,
 			SqmQueryPart<?> selectQueryPart) {
 		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.selectQueryPart = selectQueryPart;
@@ -80,9 +79,10 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( existing != null ) {
 			return existing;
 		}
+		final var newQuerySource = context.getQuerySource();
 		final SqmInsertSelectStatement<T> sqmInsertSelectStatementCopy = new SqmInsertSelectStatement<>(
 				nodeBuilder(),
-				context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+				newQuerySource == null ? getQuerySource() : newQuerySource,
 				copyParameters( context ),
 				copyCteStatements( context ),
 				getTarget().copy( context ),
@@ -95,8 +95,9 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 		sqmInsertSelectStatementCopy.setInsertionTargetPaths( copyInsertionTargetPaths( context ) );
 
-		if ( getConflictClause() != null ) {
-			sqmInsertSelectStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		final var conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			sqmInsertSelectStatementCopy.setConflictClause( conflictClause.copy( context ) );
 		}
 
 		return sqmInsertSelectStatementCopy;
@@ -140,7 +141,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public JpaPredicate getRestriction() {
+	public @Nullable JpaPredicate getRestriction() {
 		// insert has no predicate
 		return null;
 	}
@@ -152,13 +153,13 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public SqmInsertSelectStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
 
 	@Override
-	public SqmInsertSelectStatement<T> onConflict(JpaConflictClause<T> conflictClause) {
+	public SqmInsertSelectStatement<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
 		super.onConflict( conflictClause );
 		return this;
 	}
@@ -175,19 +176,30 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( !(object instanceof SqmInsertSelectStatement<?> that) ) {
-			return false;
-		}
-		return Objects.equals( selectQueryPart, that.selectQueryPart )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
-			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.equals( that )
+			&& selectQueryPart.equals( that.selectQueryPart );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( selectQueryPart, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
+		int result = super.hashCode();
+		result = 31 * result + selectQueryPart.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.isCompatible( that )
+			&& selectQueryPart.isCompatible( that.selectQueryPart );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + selectQueryPart.cacheHashCode();
+		return result;
 	}
 }

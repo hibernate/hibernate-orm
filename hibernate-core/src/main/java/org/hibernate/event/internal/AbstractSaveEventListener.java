@@ -14,22 +14,17 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -38,6 +33,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirti
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -50,7 +46,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Steve Ebersole.
  */
 public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
 
 	private CallbackRegistry callbackRegistry;
 
@@ -76,7 +71,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			String entityName,
 			C context,
 			EventSource source) {
-		final EntityPersister persister = source.getEntityPersister( entityName, entity );
+		final var persister = source.getEntityPersister( entityName, entity );
 		return performSave( entity, requestedId, persister, false, context, source, false );
 	}
 
@@ -101,8 +96,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-		final EntityPersister persister = source.getEntityPersister( entityName, entity );
-		final Generator generator = persister.getGenerator();
+		final var persister = source.getEntityPersister( entityName, entity );
+		final var generator = persister.getGenerator();
 		final boolean generatedOnExecution = generator.generatedOnExecution( entity, source );
 		final boolean generatedBeforeExecution = generator.generatedBeforeExecution( entity, source );
 		final Object generatedId;
@@ -160,10 +155,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 				// TODO: define toString()s for generators
-				LOG.tracef(
-						"Generated identifier [%s] using generator '%s'",
+				EVENT_LISTENER_LOGGER.generatedId(
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
 				);
@@ -201,9 +195,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		callbackRegistry.preCreate( entity );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
-		processIfManagedEntity( entity, (managedEntity) -> managedEntity.$$_hibernate_setUseTracker( true ) );
+		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );
 
-		final Generator generator = persister.getGenerator();
+		final var generator = persister.getGenerator();
 		if ( !generator.generatesOnInsert() || generator instanceof CompositeNestedGeneratedValueGenerator ) {
 			id = persister.getIdentifier( entity, source );
 			if ( id == null ) {
@@ -212,17 +206,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			}
 		}
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.persisting(
+					infoString( persister, id, source.getFactory() ) );
 		}
 
-		final EntityKey key = useIdentityColumn ? null : entityKey( id, persister, source );
+		final var key = useIdentityColumn ? null : entityKey( id, persister, source );
 		return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
 	}
 
 	private static EntityKey entityKey(Object id, EntityPersister persister, EventSource source) {
-		final EntityKey key = source.generateEntityKey( id, persister );
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var key = source.generateEntityKey( id, persister );
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object old = persistenceContext.getEntity( key );
 		if ( old != null ) {
 			if ( persistenceContext.getEntry( old ).getStatus() == Status.DELETED ) {
@@ -264,12 +259,12 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		final Object id = key == null ? null : key.getIdentifier();
 
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		final EntityEntry original = persistenceContext.addEntry(
+		final var original = persistenceContext.addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -287,7 +282,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		cascadeBeforeSave( source, persister, entity, context );
 
-		final AbstractEntityInsertAction insert = addInsertAction(
+		final var insert = addInsertAction(
 				cloneAndSubstituteValues( entity, persister, context, source, id ),
 				id,
 				entity,
@@ -303,9 +298,9 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
 
-		final EntityEntry newEntry = persistenceContext.getEntry( entity );
+		final var newEntry = persistenceContext.getEntry( entity );
 		if ( newEntry != original ) {
-			final EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
+			final var extraState = newEntry.getExtraState( EntityEntryExtraState.class );
 			if ( extraState == null ) {
 				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
 			}
@@ -365,7 +360,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EventSource source,
 			boolean delayIdentityInserts) {
 		if ( useIdentityColumn ) {
-			final EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
+			final var insert = new EntityIdentityInsertAction(
 					values,
 					entity,
 					persister,
@@ -377,7 +372,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			return insert;
 		}
 		else {
-			final EntityInsertAction insert = new EntityInsertAction(
+			final var insert = new EntityInsertAction(
 					id,
 					values,
 					entity,
@@ -412,7 +407,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object[] values,
 			Type[] types,
 			EventSource source) {
-		final WrapVisitor visitor = new WrapVisitor( entity, id, source );
+		final var visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();
@@ -466,7 +461,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object entity,
 			C context) {
 		// cascade-save to many-to-one BEFORE the parent is saved
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(
@@ -497,7 +492,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			Object entity,
 			C context) {
 		// cascade-save to collections AFTER the collection owner was saved
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
 			Cascade.cascade(

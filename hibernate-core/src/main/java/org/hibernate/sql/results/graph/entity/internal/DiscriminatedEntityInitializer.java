@@ -9,14 +9,9 @@ import java.util.function.BiConsumer;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -30,6 +25,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -73,20 +69,15 @@ public class DiscriminatedEntityInitializer
 		this.parent = parent;
 		this.fetchedPart = fetchedPart;
 		this.navigablePath = fetchedNavigable;
-		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
-		this.discriminatorValueAssembler = discriminatorFetch.createAssembler( this, creationState );
-		this.keyValueAssembler = keyFetch.createAssembler( this, creationState );
 		this.eager = eager;
 		this.resultInitializer = resultInitializer;
-		final Initializer<?> initializer = keyValueAssembler.getInitializer();
-		if ( initializer == null ) {
-			this.keyIsEager = false;
-			this.hasLazySubInitializer = false;
-		}
-		else {
-			this.keyIsEager = initializer.isEager();
-			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
-		}
+
+		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
+		discriminatorValueAssembler = discriminatorFetch.createAssembler( this, creationState );
+		keyValueAssembler = keyFetch.createAssembler( this, creationState );
+
+		keyIsEager = keyValueAssembler.isEager();
+		hasLazySubInitializer = keyValueAssembler.hasLazySubInitializers();
 	}
 
 	@Override
@@ -110,33 +101,33 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	public void resolveKey(DiscriminatedEntityInitializerData data) {
-		if ( data.getState() != State.UNINITIALIZED ) {
-			return;
-		}
+		if ( data.getState() == State.UNINITIALIZED ) {
+			// resolve the key and the discriminator, and then use those to load the indicated entity
 
-		// resolve the key and the discriminator, and then use those to load the indicated entity
-
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
-
-		if ( discriminatorValue == null ) {
-			data.setState( State.MISSING );
-			data.concreteDescriptor = null;
-			data.entityIdentifier = null;
-			data.setInstance( null );
-			// null association
-			assert keyValueAssembler.assemble( rowProcessingState ) == null;
-		}
-		else {
-			data.setState( State.KEY_RESOLVED );
-			data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-			data.entityIdentifier = keyValueAssembler.assemble( rowProcessingState );
+			final var rowProcessingState = data.getRowProcessingState();
+			final Object discriminatorValue =
+					discriminatorValueAssembler.assemble( rowProcessingState );
+			if ( discriminatorValue == null ) {
+				data.setState( State.MISSING );
+				data.concreteDescriptor = null;
+				data.entityIdentifier = null;
+				data.setInstance( null );
+				// null association
+				assert keyValueAssembler.assemble( rowProcessingState ) == null;
+			}
+			else {
+				data.setState( State.KEY_RESOLVED );
+				data.concreteDescriptor =
+						fetchedPart.resolveDiscriminatorValue( discriminatorValue )
+								.getEntityPersister();
+				data.entityIdentifier = keyValueAssembler.assemble( rowProcessingState );
+			}
 		}
 	}
 
 	@Override
 	public void resolveState(DiscriminatedEntityInitializerData data) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		discriminatorValueAssembler.resolveState( rowProcessingState );
 		keyValueAssembler.resolveState( rowProcessingState );
 	}
@@ -148,7 +139,7 @@ public class DiscriminatedEntityInitializer
 				data.setState( State.MISSING );
 			}
 			else {
-				final Initializer<?> initializer = keyValueAssembler.getInitializer();
+				final var initializer = keyValueAssembler.getInitializer();
 				if ( initializer != null ) {
 					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
 				}
@@ -159,43 +150,56 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	public void resolveInstance(DiscriminatedEntityInitializerData data) {
-		if ( data.getState() != State.KEY_RESOLVED ) {
-			return;
-		}
-
-		data.setState( State.INITIALIZED );
-
-		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-		final EntityKey entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
-		if ( holder != null ) {
-			final Object instance = holder.getEntity();
-			data.setInstance( instance );
-			if ( holder.getEntityInitializer() == null ) {
-				if ( instance != null && Hibernate.isInitialized( instance ) ) {
-					return;
-				}
+		if ( data.getState() == State.KEY_RESOLVED ) {
+			data.setState( State.INITIALIZED );
+			final var session = data.getRowProcessingState().getSession();
+			final Object identifier = data.entityIdentifier;
+			final var concreteDescriptor = data.concreteDescriptor;
+			final var entityKey = new EntityKey( identifier, concreteDescriptor );
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final var holder = persistenceContext.getEntityHolder( entityKey );
+			final Object instance;
+			if ( holder != null ) {
+				instance = holder.getEntity();
+				data.setInstance( instance );
 			}
-			else if ( holder.getEntityInitializer() != this ) {
+			else {
+				instance = null;
+			}
+			if ( !isResolved( holder, instance ) ) {
+				data.setInstance( session.internalLoad(
+						concreteDescriptor.getEntityName(),
+						identifier,
+						eager,
+						// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
+						false
+				) );
+			}
+		}
+	}
+
+	private boolean isResolved(EntityHolder holder, Object instance) {
+		if ( holder == null ) {
+			return false;
+		}
+		else {
+			final var initializer = holder.getEntityInitializer();
+			if ( initializer == null ) {
+				return instance != null && Hibernate.isInitialized( instance );
+			}
+			else if ( initializer != this ) {
 				// the entity is already being loaded elsewhere
-				return;
+				return true;
 			}
 			else if ( instance == null ) {
 				// todo: maybe mark this as resolved instead?
 				assert holder.getProxy() == null : "How to handle this case?";
-				return;
+				return true;
+			}
+			else {
+				return false;
 			}
 		}
-
-		data.setInstance( session.internalLoad(
-				data.concreteDescriptor.getEntityName(),
-				data.entityIdentifier,
-				eager,
-				// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
-				false
-		) );
 	}
 
 	@Override
@@ -207,67 +211,91 @@ public class DiscriminatedEntityInitializer
 			data.setInstance( null );
 		}
 		else {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
-			if ( lazyInitializer == null ) {
-				data.setState( State.INITIALIZED );
-				if ( keyIsEager ) {
-					final SharedSessionContractImplementor session = rowProcessingState.getSession();
-					data.concreteDescriptor = session.getEntityPersister( null, instance );
-					data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
-				}
-			}
-			else if ( lazyInitializer.isUninitialized() ) {
-				data.setState( eager ? State.RESOLVED : State.INITIALIZED );
-				if ( keyIsEager ) {
-					// Read the discriminator from the result set if necessary
-					final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
-					data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-				}
-			}
-			else {
-				data.setState( State.INITIALIZED );
-				if ( keyIsEager ) {
-					data.concreteDescriptor = rowProcessingState.getSession().getEntityPersister( null, lazyInitializer.getImplementation() );
-					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-				}
-			}
-			data.setInstance( instance );
+			resolve( instance, data );
+			final var rowProcessingState = data.getRowProcessingState();
 			if ( keyIsEager ) {
-				final Initializer<?> initializer = keyValueAssembler.getInitializer();
+				final var initializer = keyValueAssembler.getInitializer();
 				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
 			else if ( rowProcessingState.needsResolveState() ) {
-				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+				// Resolve the state of the identifier if result caching is enabled, and this is not a query cache hit
 				discriminatorValueAssembler.resolveState( rowProcessingState );
 				keyValueAssembler.resolveState( rowProcessingState );
 			}
 		}
 	}
 
+	private void resolve(
+			Object instance,
+			DiscriminatedEntityInitializerData data) {
+		final var rowProcessingState = data.getRowProcessingState();
+		final var session = rowProcessingState.getSession();
+		final var lazyInitializer = extractLazyInitializer( instance );
+		if ( lazyInitializer == null ) {
+			data.setState( State.INITIALIZED );
+			data.concreteDescriptor = session.getEntityPersister( null, instance );
+			data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
+		}
+		else if ( lazyInitializer.isUninitialized() ) {
+			data.setState( eager ? State.RESOLVED : State.INITIALIZED );
+			// Read the discriminator from the result set if necessary
+			final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
+			data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+		}
+		else {
+			data.setState( State.INITIALIZED );
+			data.concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+		}
+
+		final var entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
+		final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
+				entityKey
+		);
+
+		if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			// the existing entity instance is detached or transient
+			if ( entityHolder != null ) {
+				final var managed = entityHolder.getManagedObject();
+				data.setInstance( managed );
+				data.entityIdentifier = entityHolder.getEntityKey().getIdentifier();
+				data.setState( !eager || entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
+			}
+			else {
+				data.setState( State.RESOLVED );
+				initializeInstance( data );
+			}
+		}
+		else {
+			data.setInstance( instance );
+		}
+	}
+
 	@Override
 	public void initializeInstance(DiscriminatedEntityInitializerData data) {
-		if ( data.getState() != State.RESOLVED ) {
-			return;
+		if ( data.getState() == State.RESOLVED ) {
+			data.setState( State.INITIALIZED );
+			data.setInstance( data.getRowProcessingState().getSession()
+					.internalLoad(
+							data.concreteDescriptor.getEntityName(),
+							data.entityIdentifier,
+							eager,
+							// should not be null since we checked already.
+							// null would indicate bad data (ala, not-found handling)
+							false
+					) );
 		}
-		data.setState( State.INITIALIZED );
-		data.setInstance( data.getRowProcessingState().getSession().internalLoad(
-				data.concreteDescriptor.getEntityName(),
-				data.entityIdentifier,
-				eager,
-				// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
-				false
-		) );
 	}
 
 	@Override
 	public void initializeInstanceFromParent(Object parentInstance, DiscriminatedEntityInitializerData data) {
-		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
-		final Object instance = attributeMapping != null
-				? attributeMapping.getValue( parentInstance )
-				: parentInstance;
+		final var attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance =
+				attributeMapping != null
+						? attributeMapping.getValue( parentInstance )
+						: parentInstance;
 		if ( instance == null ) {
 			data.setState( State.MISSING );
 			data.setInstance( null );
@@ -288,7 +316,7 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
-		final Initializer<?> initializer = keyValueAssembler.getInitializer();
+		final var initializer = keyValueAssembler.getInitializer();
 		if ( initializer != null ) {
 			consumer.accept( initializer, data.getRowProcessingState() );
 		}
@@ -331,7 +359,8 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	public String toString() {
-		return "DiscriminatedEntityInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "DiscriminatedEntityInitializer("
+				+ toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

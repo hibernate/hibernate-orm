@@ -14,8 +14,8 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.OrderingMode;
+import org.hibernate.RemovalsMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -27,7 +27,7 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 /**
  * @author Steve Ebersole
  */
-public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
+class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 	private final SharedSessionContractImplementor session;
 
@@ -38,10 +38,10 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private GraphSemantic graphSemantic;
 
 	private Integer batchSize;
-	private boolean returnOfDeletedEntitiesEnabled;
-	private boolean orderedReturnEnabled = true;
+	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
+	private OrderingMode orderingMode = OrderingMode.ORDERED;
 
-	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
+	NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}
@@ -92,13 +92,13 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		returnOfDeletedEntitiesEnabled = enabled;
+		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
 		return this;
 	}
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		orderedReturnEnabled = enabled;
+		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
 		return this;
 	}
 
@@ -119,12 +119,12 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		try {
-			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
-			final GraphSemantic initialGraphSemantic = effectiveEntityGraph.getSemantic();
-			final RootGraphImplementor<?> initialGraph = effectiveEntityGraph.getGraph();
+			final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+			final var initialGraphSemantic = effectiveEntityGraph.getSemantic();
+			final var initialGraph = effectiveEntityGraph.getGraph();
 			final boolean hadInitialGraph = initialGraphSemantic != null;
 
 			if ( graphSemantic != null ) {
@@ -135,7 +135,9 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
-				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
+				return (List<T>)
+						entityDescriptor.getMultiNaturalIdLoader()
+								.multiLoad( ids, this, session );
 			}
 			finally {
 				if ( graphSemantic != null ) {
@@ -163,13 +165,13 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
-	public boolean isReturnOfDeletedEntitiesEnabled() {
-		return returnOfDeletedEntitiesEnabled;
+	public RemovalsMode getRemovalsMode() {
+		return removalsMode;
 	}
 
 	@Override
-	public boolean isOrderReturnEnabled() {
-		return orderedReturnEnabled;
+	public OrderingMode getOrderingMode() {
+		return orderingMode;
 	}
 
 	@Override

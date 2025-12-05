@@ -4,14 +4,14 @@
  */
 package org.hibernate.tool.schema;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 
 /**
  * Enumerates the various types of sources understood by the schema management
  * tooling.
  *
- * @see AvailableSettings#JAKARTA_HBM2DDL_CREATE_SOURCE
- * @see AvailableSettings#JAKARTA_HBM2DDL_DROP_SOURCE
+ * @see SchemaToolingSettings#JAKARTA_HBM2DDL_CREATE_SOURCE
+ * @see SchemaToolingSettings#JAKARTA_HBM2DDL_DROP_SOURCE
  *
  * @author Steve Ebersole
  */
@@ -27,13 +27,13 @@ public enum SourceType {
 	 * The scripts for schema creation and dropping come from different sources:
 	 * <ul>
 	 * <li>The creation DDL script is identified by the setting
-	 * {@value AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}.
+	 * {@value SchemaToolingSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}.
 	 * <li>The drop DDL script is identified by the setting
-	 * {@value AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}.
+	 * {@value SchemaToolingSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}.
 	 * </ul>
 	 *
-	 * @see AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
-	 * @see AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
+	 * @see SchemaToolingSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+	 * @see SchemaToolingSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
 	 */
 	SCRIPT,
 	/**
@@ -77,7 +77,7 @@ public enum SourceType {
 		if ( name.isEmpty() ) {
 			return METADATA;
 		}
-		for ( SourceType sourceType: values() ) {
+		for ( var sourceType: values() ) {
 			if ( sourceType.toString().equalsIgnoreCase(name) ) {
 				return sourceType;
 			}

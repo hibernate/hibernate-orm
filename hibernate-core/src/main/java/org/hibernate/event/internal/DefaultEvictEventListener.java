@@ -8,18 +8,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -32,7 +28,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class DefaultEvictEventListener implements EvictEventListener {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultEvictEventListener.class );
 
 	/**
 	 * Handle the given evict event.
@@ -42,8 +37,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 */
 	@Override
 	public void onEvict(EvictEvent event) throws HibernateException {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
@@ -54,23 +49,23 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
-			final EntityPersister persister =
+			final var persister =
 					source.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( lazyInitializer.getEntityName() );
-			final EntityKey key = source.generateEntityKey( id, persister );
-			final EntityHolder holder = persistenceContext.detachEntity( key );
+			final var key = source.generateEntityKey( id, persister );
+			final var holder = persistenceContext.detachEntity( key );
 			// if the entity has been evicted then its holder is null
 			if ( holder != null && !lazyInitializer.isUninitialized() ) {
 				final Object entity = holder.getEntity();
 				if ( entity != null ) {
-					final EntityEntry entry = persistenceContext.removeEntry( entity );
+					final var entry = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, entry.getPersister(), event.getSession() );
 				}
 			}
 			lazyInitializer.unsetSession();
 		}
 		else {
-			final EntityEntry entry = persistenceContext.getEntry( object );
+			final var entry = persistenceContext.getEntry( object );
 			if ( entry != null ) {
 				doEvict( object, entry.getEntityKey(), entry.getPersister(), source );
 			}
@@ -89,7 +84,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		final String entityName = source.getSession().guessEntityName( object );
 		if ( entityName != null ) {
 			try {
-				final EntityPersister persister =
+				final var persister =
 						source.getFactory().getMappingMetamodel()
 								.getEntityDescriptor( entityName );
 				if ( persister != null ) {
@@ -108,11 +103,11 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EntityPersister persister,
 			final EventSource session)
 			throws HibernateException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evicting " + infoString( persister ) );
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.evicting( infoString( persister ) );
 		}
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.hasNaturalIdentifier() ) {
 			persistenceContext.getNaturalIdResolutions().handleEviction( key.getIdentifier(), object, persister );
 		}

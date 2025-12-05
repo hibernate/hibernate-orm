@@ -4,32 +4,42 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
-
-import org.hibernate.HibernateException;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database
- * value as the lo value, rather than the hi value.
+ * Optimizer which uses a pool of values, backed by a <em>logical sequence</em>.
+ * A logical sequence is usually just an unpooled sequence or table generator.
+ * <p>
+ * The pool size is controlled by the {@code allocationSize} of a
+ * {@linkplain jakarta.persistence.SequenceGenerator sequence generator} or
+ * {@linkplain jakarta.persistence.TableGenerator sequence generator}.
+ * <p>
+ * From time to time, the optimizer allocates a range of values to itself,
+ * interpreting the next value retrieved from the logical sequence as the
+ * lower bound on the range of newly allocated ids. Thus, the generated ids
+ * begin with the value retrieved from the logical sequence.
+ * <p>
+ * The {@link PooledOptimizer} is similar, but interprets the current value
+ * of the logical sequence as an upper bound on the range of already-allocated
+ * ids.
  *
  * @author Steve Ebersole
  *
  * @see PooledOptimizer
+ * @see jakarta.persistence.SequenceGenerator#allocationSize
+ * @see jakarta.persistence.TableGenerator#allocationSize
  */
 public class PooledLoOptimizer extends AbstractOptimizer {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			PooledLoOptimizer.class.getName()
-	);
 
 	private static class GenerationState {
 		// last value read from db source
@@ -51,21 +61,20 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
-		LOG.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
+		OPTIMIZER_MESSAGE_LOGGER.creatingPooledLoOptimizer( incrementSize, returnClass.getName() );
 	}
 
 	@Override
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
 		try {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lastSourceValue == null
 					|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
 				generationState.lastSourceValue = callback.getNextValue();
 				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
 				generationState.value = generationState.lastSourceValue.copy();
-				// handle cases where initial-value is less that one (hsqldb for instance).
+				// handle cases where the initial value is less than one (hsqldb, for instance)
 				while ( generationState.value.lt( 1 ) ) {
 					generationState.value.increment();
 				}
@@ -84,6 +93,12 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
+	@Override
+	public void reset() {
+		noTenantState = null;
+		tenantSpecificState = null;
+	}
+
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {
 			if ( noTenantState == null ) {
@@ -92,21 +107,27 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 			return noTenantState;
 		}
 		else {
-			GenerationState state;
-			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<>();
-				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
-			}
-			else {
-				state = tenantSpecificState.get( tenantIdentifier );
-				if ( state == null ) {
-					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
-				}
-			}
-			return state;
+			return generationState( tenantIdentifier );
 		}
+	}
+
+	private GenerationState generationState(String tenantIdentifier) {
+		if ( tenantSpecificState == null ) {
+			tenantSpecificState = new ConcurrentHashMap<>();
+			return assignNewStateToTenant( tenantIdentifier );
+		}
+		else {
+			final var state = tenantSpecificState.get( tenantIdentifier );
+			return state == null
+					? assignNewStateToTenant( tenantIdentifier )
+					: state;
+		}
+	}
+
+	private GenerationState assignNewStateToTenant(String tenantIdentifier) {
+		final var newState = new GenerationState();
+		tenantSpecificState.put( tenantIdentifier, newState );
+		return newState;
 	}
 
 	private GenerationState noTenantGenerationState() {
@@ -124,5 +145,10 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	@Override
 	public boolean applyIncrementSizeToSourceValues() {
 		return true;
+	}
+
+	@Override
+	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
+		return databaseValue;
 	}
 }

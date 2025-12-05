@@ -4,35 +4,34 @@
  */
 package org.hibernate.internal;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
+import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.Map;
 import java.util.Properties;
-import java.util.ServiceConfigurationError;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.type.SerializationException;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.internal.log.SubSystemLogging;
 
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -40,52 +39,24 @@ import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
- * 00001 to 10000 inclusively.
- * <p>
- * New messages must be added after the last message defined to ensure message codes are unique.
+ * Miscellaneous logging related to Hibernate ORM Core.
  */
+@SubSystemLogging(
+		name = SessionLogging.NAME,
+		description = "Miscellaneous logging related to Hibernate ORM Core"
+)
 @MessageLogger(projectCode = "HHH")
-@ValidIdRange(min=2,max = 20000)
+@ValidIdRange(min = 1, max = 8000)
 @Internal
 public interface CoreMessageLogger extends BasicLogger {
 
-	@LogMessage(level = WARN)
-	@Message(value = "Already session bound on call to bind(); make sure you clean up your sessions", id = 2)
-	void alreadySessionBound();
+	String NAME = SubSystemLogging.BASE + ".core";
 
-	@LogMessage(level = WARN)
-	@Message(value = "Configuration settings with for connection provider '%s' are set, but the connection provider is not on the classpath; these properties will be ignored",
-			id = 22)
-	void providerClassNotFound(String c3p0ProviderClassName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
-	void cachedFileNotFound(String path, FileNotFoundException error);
+	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
 
 	@LogMessage(level = INFO)
-	@Message(value = "Second-level cache region factory [%s]", id = 25)
-	void regionFactory(String name);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Second-level cache disabled", id = 26)
-	void noRegionFactory();
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Instantiating factory [%s] with settings: %s", id = 30)
-	void instantiatingFactory(String uuid, Map<String, Object> settings);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Closing factory [%s]", id = 31)
-	void closingFactory(String uuid);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Serializing factory [%s]", id = 32)
-	void serializingFactory(String uuid);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Deserialized factory [%s]", id = 33)
-	void deserializedFactory(String uuid);
+	@Message(value = "Hibernate ORM core version %s", id = 1)
+	void version(String versionString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Composite id class does not override equals(): %s", id = 38)
@@ -100,37 +71,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	void containsJoinFetchedCollection(String role);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Defining %s=true ignored in HEM", id = 59)
-	void definingFlushBeforeCompletionIgnoredInHem(String flushBeforeCompletion);
-
-	@LogMessage(level = WARN)
-	@Message(value = "DEPRECATED: use [%s] instead with custom [%s] implementation", id = 65)
-	void deprecatedUuidGenerator(String name, String name2);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Duplicate generator name %s", id = 69)
-	void duplicateGeneratorName(String name);
-
-	@LogMessage(level = INFO)
-	@Message(value = "entity listener duplication, first event definition will be used: %s", id = 73)
-	void duplicateListener(String className);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Found more than one <persistence-unit-metadata>, subsequent ignored", id = 74)
-	void duplicateMetadata();
-
-	@LogMessage(level = WARN)
 	@Message(value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names",
 			id = 84)
 	void entityMappedAsNonAbstract(String name);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception in interceptor afterTransactionCompletion()", id = 87)
-	void exceptionInAfterTransactionCompletionInterceptor(@Cause Throwable e);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception in interceptor beforeTransactionCompletion()", id = 88)
-	void exceptionInBeforeTransactionCompletionInterceptor(@Cause Throwable e);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Sub-resolver threw unexpected exception, continuing to next: %s", id = 89)
@@ -146,26 +89,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
 
-	@LogMessage(level = WARN)
-	@Message(value = "GUID identifier generated: %s", id = 113)
-	void guidGenerated(String result);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Handling transient entity in delete processing", id = 114)
-	void handlingTransientEntity();
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)
-	void hql(String hql, Long valueOf, Long valueOf2);
-
-	@LogMessage(level = WARN)
-	@Message(value = "HSQLDB supports only READ_UNCOMMITTED isolation", id = 118)
-	void hsqldbSupportsOnlyReadCommittedIsolation();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Ignoring unique constraints specified on table generator [%s]", id = 120)
-	void ignoringTableGeneratorConstraints(String name);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, getter method of property: %s", id = 122)
 	void illegalPropertyGetterArgument(String name, String propertyName);
@@ -173,14 +96,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "IllegalArgumentException in class: %s, setter method of property: %s", id = 123)
 	void illegalPropertySetterArgument(String name, String propertyName);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Instantiating explicit connection provider: %s", id = 130)
-	void instantiatingExplicitConnectionProvider(String providerClassName);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Array element type error\n%s", id = 132)
-	void invalidArrayElementType(String message);
 
 	@LogMessage(level = INFO)
 	@Message(value = "java.sql.Types mapped the same code [%s] multiple times; was [%s]; now [%s]", id = 141)
@@ -200,36 +115,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Narrowing proxy to %s - this operation breaks ==", id = 179)
 	void narrowingProxy(Class<?> concreteProxyClass);
 
-	@LogMessage(level = WARN)
-	@Message(value = "No appropriate connection provider encountered, assuming application will be supplying connections",
-			id = 181)
-	void noAppropriateConnectionProvider();
-
 	@LogMessage(level = INFO)
 	@Message(value = "No default (no-argument) constructor for class [%s] (class must be instantiated by Interceptor)",
 			id = 182)
 	void noDefaultConstructor(String name);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193)
-	void overridingTransactionStrategyDangerous(String transactionStrategy);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Package not found or no package-info.java: %s", id = 194)
-	void packageNotFound(String packageName);
-
-	@LogMessage(level = WARN)
-	@Message(value = "LinkageError while attempting to load package: %s", id = 195)
-	void linkageError(String packageName, @Cause LinkageError e);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Pooled optimizer source reported [%s] as the initial value; use of 1 or greater highly recommended",
-			id = 201)
-	void pooledOptimizerReportedInitialValue(IntegralDataTypeHolder value);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Processing PersistenceUnitInfo [name: %s]", id = 204)
-	void processingPersistenceUnitInfoName(String persistenceUnitName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Loaded properties from resource hibernate.properties: %s", id = 205)
@@ -239,16 +128,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "'hibernate.properties' not found", id = 206)
 	void propertiesNotFound();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Reading mappings from cache file: %s", id = 219)
-	void readingCachedMappings(File cachedFile);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Reading mappings from file: %s", id = 220)
-	void readingMappingsFromFile(String path);
-
 	@LogMessage(level = WARN)
-	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide",
+	@Message(
+			value = """
+					Recognized obsolete hibernate namespace %s.\
+					Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide""",
 			id = 223)
 	void recognizedObsoleteHibernateNamespace(String oldHibernateNamespace, String hibernateNamespace);
 
@@ -279,14 +163,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void startTime(long startTime);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Synchronization [%s] was already registered", id = 259)
-	void synchronizationAlreadyRegistered(Synchronization synchronization);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception calling user Synchronization [%s]: %s", id = 260)
-	void synchronizationFailed(Synchronization synchronization, Throwable t);
-
-	@LogMessage(level = INFO)
 	@Message(value = "Table not found: %s", id = 262)
 	void tableNotFound(String name);
 
@@ -305,10 +181,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Error accessing type info result set: %s", id = 273)
 	void unableToAccessTypeInfoResultSet(String string);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to apply constraints on DDL for %s", id = 274)
-	void unableToApplyConstraints(String className, @Cause Exception e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to cleanup temporary id table after use [%s]", id = 283)
@@ -334,14 +206,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not close stream on hibernate.properties: %s", id = 297)
 	void unableToCloseStreamError(IOException error);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Unable to construct current session context [%s]", id = 302)
-	void unableToConstructCurrentSessionContext(String impl, @Cause Throwable e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to close temporary session used to load lazy collection associated to no session", id = 303)
-	void unableToCloseTemporarySession();
-
 	@LogMessage(level = WARN)
 	@Message(value = "Could not copy system properties, system properties will be ignored", id = 304)
 	void unableToCopySystemProperties();
@@ -354,37 +218,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Error creating schema ", id = 306)
 	void unableToCreateSchema(@Cause Exception e);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Could not deserialize cache file [%s]: %s", id = 307)
-	void unableToDeserializeCache(String path, SerializationException error);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318)
-	void unableToFindPersistenceXmlInClasspath();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to interpret specified optimizer [%s], falling back to noop", id = 321)
-	void unableToLocateCustomOptimizerClass(String type);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to instantiate specified optimizer [%s], falling back to noop", id = 322)
-	void unableToInstantiateOptimizer(String type);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to instantiate UUID generation strategy class: %s", id = 325)
-	void unableToInstantiateUuidGenerationStrategy(Exception ignore);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Error performing load command", id = 327)
-	void unableToLoadCommand(@Cause HibernateException e);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Problem loading properties from hibernate.properties", id = 329)
 	void unableToLoadProperties();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate requested UUID generation strategy class: %s", id = 334)
-	void unableToLocateUuidGenerationStrategy(String strategyClassName);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to log SQLWarnings: %s", id = 335)
@@ -397,14 +233,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Unable to mark for rollback on TransientObjectException: ", id = 338)
 	void unableToMarkForRollbackOnTransientObjectException(@Cause Exception e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection metadata: %s", id = 339)
-	void unableToObtainConnectionMetadata(SQLException error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 342)
-	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
@@ -427,11 +255,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToRunSchemaUpdate(@Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "I/O reported error writing cached file: %s: %s", id = 378)
-	void unableToWriteCachedFile(String path, String message);
-
-	@LogMessage(level = WARN)
-	@Message(value = "The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk HQL/JPQL will not work properly",
+	@Message(
+			value = """
+					The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction;\
+					multi-table, bulk HQL/JPQL will not work properly""",
 			id = 393)
 	void unsupportedMultiTableBulkHqlJpaql(int majorVersion, int minorVersion, int buildId);
 
@@ -440,98 +267,27 @@ public interface CoreMessageLogger extends BasicLogger {
 	void usingOldDtd();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead",
-			id = 409)
-	void usingUuidHexGenerator(String name, String name2);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Hibernate ORM core version %s", id = 412)
-	void version(String versionString);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Warnings creating temp table: %s", id = 413)
 	void warningsCreatingTempTable(SQLWarning warning);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Write locks via update not supported for non-versioned entities [%s]", id = 416)
-	void writeLocksNotSupported(String entityName);
-
-	@LogMessage(level = WARN)
 	@Message(
-			id = 437,
 			value = """
-					Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity.
-					The unsaved transient entity must be saved in an operation prior to saving these dependent entities.
-						Unsaved transient entity: %s
-						Dependent entities: %s
-						Non-nullable associations: %s"""
-	)
-	void cannotResolveNonNullableTransientDependencies(
-			String transientEntityString,
-			Set<String> dependentEntityStrings,
-			Set<String> nonNullableAssociationPaths);
-
-	@LogMessage(level = WARN)
-	@Message(
-			value = "Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
-					"However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
-					"to execute the query in the database",
+					Dialect [%s] limits the number of elements in an IN predicate to %s entries.  \
+					However, the given parameter list [%s] contained %s entries, which will likely cause failures \
+					to execute the query in the database""",
 			id = 443
 	)
 	void tooManyInExpressions(String dialectName, int limit, String paramName, int size);
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
-					"separate select (follow-on locking); results will be locked after initial query executes",
+			value = """
+					Encountered request for locking however dialect reports that database prefers locking be done in a \
+					separate select (follow-on locking); results will be locked after initial query executes""",
 			id = 444
 	)
 	void usingFollowOnLocking();
-
-	@LogMessage(level = WARN)
-	@Message(
-			value = "Alias-specific lock modes requested, which is not currently supported with follow-on locking; " +
-					"all acquired locks will be [%s]",
-			id = 445
-	)
-	void aliasSpecificLockingWithFollowOnLocking(LockMode lockMode);
-
-	@LogMessage(level = WARN)
-	@Message(
-			value = "Explicit use of UPGRADE_SKIPLOCKED in lock() calls is not recommended; use normal UPGRADE locking instead",
-			id = 447
-	)
-	void explicitSkipLockedLockCombo();
-
-	@LogMessage(level = INFO)
-	@Message(value = "'" + JAKARTA_VALIDATION_MODE + "' named multiple values: %s", id = 448)
-	void multipleValidationModes(String modes);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 449,
-			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify 'attributeName' " +
-					"using 'key'/'value' as required by spec; attempting to DoTheRightThing"
-	)
-	void nonCompliantMapConversion(String collectionRole);
-
-	// 458-466 reserved for use by main branch (ORM 5.0.0)
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
-	void creatingPooledLoOptimizer(int incrementSize, String name);
-
-	@LogMessage(level = WARN)
-	@Message(value = "An unexpected session is defined for a collection, but the collection is not connected to that session. A persistent collection may only be associated with one session at a time. Overwriting session. %s", id = 470)
-	void logUnexpectedSessionInCollectionNotConnected(String msg);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Cannot unset session in a collection because an unexpected session is defined. A persistent collection may only be associated with one session at a time. %s", id = 471 )
-	void logCannotUnsetUnexpectedSessionInCollection(String msg);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Omitting cached file [%s] as the mapping file is newer", id = 473)
-	void cachedFileObsolete(File cachedFile);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
@@ -549,8 +305,16 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unsuccessful: %s", id = 478)
 	void unsuccessfulSchemaManagementCommand(String command);
 
+	@LogMessage(level = DEBUG)
+	@Message( value = "Error performing delayed DROP command [%s]", id = 479 )
+	void unsuccessfulDelayedDropCommand(CommandAcceptanceException e);
+
 	@LogMessage(level = WARN)
-	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
+	@Message(
+			value = """
+					A ManagedEntity was associated with a stale PersistenceContext.\
+					A ManagedEntity may only be associated with one PersistenceContext at a time; %s""",
+			id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
 
 	@LogMessage(level = ERROR)
@@ -560,12 +324,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 487)
-	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQuery(@Nullable String sourceQuery, String querySpaces);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 488)
-	void immutableEntityUpdateQueryAllowed(String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQueryAllowed(@Nullable String sourceQuery, String querySpaces);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)
@@ -576,37 +340,19 @@ public interface CoreMessageLogger extends BasicLogger {
 	void usingJtaPlatform(String jtaPlatformClassName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "'%1$s.%2$s' uses both @NotFound and FetchType.LAZY. @ManyToOne and " +
-			"@OneToOne associations mapped with @NotFound are forced to EAGER fetching.", id = 491)
-	void ignoreNotFoundWithFetchTypeLazy(String entity, String association);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: %s", id = 494)
 	void ignoreQueuedOperationsOnMerge(String collectionInfoString);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Attaching an uninitialized collection with queued operations to a session: %s", id = 495)
-	void queuedOperationWhenAttachToSession(String collectionInfoString);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
-	void queuedOperationWhenDetachFromSession(String collectionInfoString);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)
-	void queuedOperationWhenDetachFromSessionOnRollback(String collectionInfoString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "The [%s] property of the [%s] entity was modified, but it won't be updated because the property is immutable.", id = 502)
 	void ignoreImmutablePropertyModification(String propertyName, String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)
+	@Message(value = """
+			Multiple configuration properties defined to create schema.\
+			Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.""",
+			id = 504)
 	void multipleSchemaCreationSettingsDefined();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
-	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Multi-table insert is not available due to missing identity and window function support for: %s", id = 509)
@@ -617,7 +363,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	void fetchModeJoinWithLazyWarning(String role);
 
 	@LogMessage(level = WARN)
-	@Message(value = "The %2$s version for [%s] is no longer supported, hence certain features may not work properly. The minimum supported version is %3$s. Check the community dialects project for available legacy versions.", id = 511)
+	@Message(
+			value = """
+					The %2$s version for [%s] is no longer supported, hence certain features may not work properly.\
+					The minimum supported version is %3$s. Check the community dialects project for available legacy versions.""",
+			id = 511)
 	void unsupportedDatabaseVersion(String databaseName, String actualVersion, String minimumVersion);
 
 	@LogMessage(level = DEBUG)
@@ -625,24 +375,25 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, String cause);
 
+	@LogMessage(level = DEBUG)
+	@Message(
+			id = 517,
+			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
+	)
+	void unusedMappedSuperclass(String name);
+
 	@LogMessage(level = WARN)
-	@Message(value = "Failed to discover types for enhancement from class: %s",
-			id = 516)
-	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "JDBCException was thrown for a transaction marked for rollback. " +
-			" This is probably due to an operation failing fast due to the transaction being marked for rollback.",
-			id = 520)
-	void jdbcExceptionThrownWithTransactionRolledBack(@Cause JDBCException e);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Flushing and evicting managed instance of type [%s] before removing detached instance with same id",
-			id = 530)
-	void flushAndEvictOnRemove(String entityName);
+	@Message(
+			id = 519,
+			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
+	)
+	void invalidJSONColumnType(String actual, String expected);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s", id = 15007)
+	@Message(
+			id = 5001,
+			value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s"
+	)
 	void illegalArgumentOnStaticMetamodelFieldInjection(
 			String name,
 			String name2,
@@ -650,194 +401,249 @@ public interface CoreMessageLogger extends BasicLogger {
 			String name4);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate static metamodel field: %s#%s; this may or may not indicate a problem with the static metamodel", id = 15011)
+	@Message(
+			id = 5002,
+			value = "Unable to locate static metamodel field: %s#%s; this may or may not indicate a problem with the static metamodel"
+	)
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Returning null (as required by JPA spec) rather than throwing EntityNotFoundException " +
-			"since the entity of type '%s' with id [%s] does not exist", id = 15013)
-	void ignoringEntityNotFound(String entityName, String identifier);
+	@Message( id = 6001, value = "Error creating temp table" )
+	void errorCreatingTempTable(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)
-	@Message(
-			id = 15015,
-			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
-	)
-	void unusedMappedSuperclass(String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 15018,
-			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
-	)
-	void duplicatedPersistenceUnitName(String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 15019,
-			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
-	)
-	void invalidJSONColumnType(String actual, String expected);
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Closing logical connection", id = 456)
-	void closingLogicalConnection();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Logical connection closed", id = 457)
-	void logicalConnectionClosed();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics initialized", id = 460)
-	void statisticsInitialized();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics collection enabled", id = 461)
-	void statisticsEnabled();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics collection disabled", id = 462)
-	void statisticsDisabled();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Statistics reset", id = 463)
-	void statisticsReset();
-
-	@LogMessage(level = TRACE)
-	@Message(value = "Initializing service: %s", id = 500)
-	void initializingService(String serviceRole);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service: %s", id = 369)
-	void unableToStopService(String serviceRole, @Cause Exception e);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Ignoring ServiceConfigurationError caught while instantiating service: %s", id = 505)
-	void ignoringServiceConfigurationError(String serviceContract, @Cause ServiceConfigurationError error);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Encountered request for service by non-primary service role [%s -> %s]", id = 450)
-	void alternateServiceRole(String requestedRole, String targetRole);
+	@Message( id = 6002, value = "Unable to create temporary table [%s]: '%s' failed" )
+	void unableToCreateTempTable(String qualifiedTableName, String creationCommand, @Cause SQLException e);
 
 	@LogMessage(level = DEBUG)
-	@Message(
-			id = 401,
-			value = """
-					Logging session metrics:
-						%s ns acquiring %s JDBC connections
-						%s ns releasing %s JDBC connections
-						%s ns preparing %s JDBC statements
-						%s ns executing %s JDBC statements
-						%s ns executing %s JDBC batches
-						%s ns performing %s second-level cache puts
-						%s ns performing %s second-level cache hits
-						%s ns performing %s second-level cache misses
-						%s ns executing %s flushes (flushing a total of %s entities and %s collections)
-						%s ns executing %s pre-partial-flushes
-						%s ns executing %s partial-flushes (flushing a total of %s entities and %s collections)
-					"""
-	)
-	void sessionMetrics(
-			long jdbcConnectionAcquisitionTime,
-			int jdbcConnectionAcquisitionCount,
-			long jdbcConnectionReleaseTime,
-			int jdbcConnectionReleaseCount,
-			long jdbcPrepareStatementTime,
-			int jdbcPrepareStatementCount,
-			long jdbcExecuteStatementTime,
-			int jdbcExecuteStatementCount,
-			long jdbcExecuteBatchTime,
-			int jdbcExecuteBatchCount,
-			long cachePutTime,
-			int cachePutCount,
-			long cacheHitTime,
-			int cacheHitCount,
-			long cacheMissTime,
-			int cacheMissCount,
-			long flushTime,
-			int flushCount,
-			long flushEntityCount,
-			long flushCollectionCount,
-			long prePartialFlushTime,
-			int prePartialFlushCount,
-			long partialFlushTime,
-			int partialFlushCount,
-			long partialFlushEntityCount,
-			long partialFlushCollectionCount);
+	@Message( id = 6003, value = "Error dropping temp table" )
+	void errorDroppingTempTable(@Cause Exception e);
 
-	@LogMessage(level = INFO)
-	@Message(
-			id = 400,
-			value = """
-					Logging statistics:
-						Start time: %s
-						Sessions opened (closed): %s (%s)
-						Transactions started (successful): %s (%s)
-						Optimistic lock failures: %s
-						Flushes: %s
-						Connections obtained: %s
-						Statements prepared (closed): %s (%s)
-						Second-level cache puts: %s
-						Second-level cache hits (misses): %s (%s)
-						Entities loaded: %s
-						Entities fetched: %s (minimize this)
-						Entities updated, upserted, inserted, deleted: %s, %s, %s, %s
-						Collections loaded: %s
-						Collections fetched: %s (minimize this)
-						Collections updated, removed, recreated: %s, %s, %s
-						Natural id queries executed on database: %s
-						Natural id cache puts: %s
-						Natural id cache hits (misses): %s (%s)
-						Max natural id query execution time: %s ms
-						Queries executed on database: %s
-						Query cache puts: %s
-						Query cache hits (misses): %s (%s)
-						Max query execution time: %s ms
-						Update timestamps cache puts: %s
-						Update timestamps cache hits (misses): %s (%s)
-						Query plan cache hits (misses): %s (%s)
-					"""
-	)
-	void logStatistics(
-			long startTime,
-			long sessionOpenCount,
-			long sessionCloseCount,
-			long transactionCount,
-			long committedTransactionCount,
-			long optimisticFailureCount,
-			long flushCount,
-			long connectCount,
-			long prepareStatementCount,
-			long closeStatementCount,
-			long secondLevelCachePutCount,
-			long secondLevelCacheHitCount,
-			long secondLevelCacheMissCount,
-			long entityLoadCount,
-			long entityFetchCount,
-			long entityUpdateCount,
-			long entityUpsertCount,
-			long entityInsertCount,
-			long entityDeleteCount,
-			long collectionLoadCount,
-			long collectionFetchCount,
-			long collectionUpdateCount,
-			long collectionRemoveCount,
-			long collectionRecreateCount,
-			long naturalIdQueryExecutionCount,
-			long naturalIdCachePutCount,
-			long naturalIdCacheHitCount,
-			long naturalIdCacheMissCount,
-			long naturalIdQueryExecutionMaxTime,
-			long queryExecutionCount,
-			long queryCachePutCount,
-			long queryCacheHitCount,
-			long queryCacheMissCount,
-			long queryExecutionMaxTime,
-			long updateTimestampsCachePutCount,
-			long updateTimestampsCacheHitCount,
-			long updateTimestampsCacheMissCount,
-			long queryPlanCacheHitCount,
-			long queryPlanCacheMissCount);
+	@LogMessage(level = DEBUG)
+	@Message( id = 6004, value = "Unable to drop temporary table [%s]: '%s' failed" )
+	void unableToDropTempTable(String qualifiedTableName, String creationCommand, @Cause SQLException e);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6005, value = "Cascading %s to child entity '%s'" )
+	void cascading(CascadingAction<?> delete, String childEntityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6006, value = "Cascading %s to collection '%s'" )
+	void cascadingCollection(CascadingAction<?> delete, String collectionRole);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6007, value = "Done cascading %s to collection '%s'" )
+	void doneCascadingCollection(CascadingAction<?> delete, String collectionRole);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6008, value = "Processing cascade %s for entity '%s'" )
+	void processingCascade(CascadingAction<?> action, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6009, value = "Processing cascade %s for entity '%s'" )
+	void doneProcessingCascade(CascadingAction<?> action, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6011, value = "Deleting orphaned child entity instance of type '%s'" )
+	void deletingOrphanOfType(String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6012, value = "Deleting orphaned child entity instance: %s" )
+	void deletingOrphan(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6013, value = "Deleting orphans for collection '%s'" )
+	void deletingOrphans(String role);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6014, value = "Done deleting orphans for collection '%s'" )
+	void doneDeletingOrphans(String role);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6021, value = "Collection dirty: %s" )
+	void collectionDirty(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6022, value = "Reset storedSnapshot to %s for %s" )
+	void resetStoredSnapshot(Serializable storedSnapshot, CollectionEntry collectionEntry);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6041, value = "Building session factory using provided StandardServiceRegistry" )
+	void buildingFactoryWithProvidedRegistry();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6042, value = "Building session factory using internal StandardServiceRegistryBuilder" )
+	void buildingFactoryWithInternalRegistryBuilder();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6043, value = "Found collection with unloaded owner: %s" )
+	void collectionWithUnloadedOwner(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6044, value = "Forcing collection initialization" )
+	void forcingCollectionInitialization();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6045, value = "Collection dereferenced: %s" )
+	void collectionDereferenced(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6046, value = "Skipping uninitialized bytecode-lazy collection: %s" )
+	void skippingUninitializedBytecodeLazyCollection(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6047, value = "Collection found: %s, was: %s (initialized)" )
+	void collectionFoundInitialized(String is, String was);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6048, value = "Collection found: %s, was: %s (uninitialized)" )
+	void collectionFoundUninitialized(String is, String was);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6049, value = "Created collection wrapper for: %s" )
+	void createdCollectionWrapper(String s);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6051, value = "Starting serialization of [%s] EntityEntry entries" )
+	void startingEntityEntrySerialization(int count);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6052, value = "Starting deserialization of [%s] EntityEntry entries" )
+	void startingEntityEntryDeserialization(int count);
+
+	@LogMessage(level = ERROR)
+	@Message( id = 6053, value = "Unable to deserialize [%s]" )
+	void unableToDeserialize(String entityEntryClassName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6061, value = "Extracted generated values for entity %s - %s" )
+	void extractedGeneratedValues(String info, String results);
+
+	@LogMessage(level = WARN)
+	@Message( id = 6062, value = "Could not resolve type name [%s] as Java type" )
+	void couldNotResolveTypeName(String typeName, @Cause ClassLoadingException exception);
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 6063, value = "Problem releasing GenerationTarget [%s]" )
+	void problemReleasingGenerationTarget(GenerationTarget target, @Cause Exception e);
+
+	@LogMessage(level = WARN)
+	@Message( id = 6064, value = "Unable to close temp session" )
+	void unableToCLoseTempSession();
+
+	// AbstractEntityPersister
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6565, value = "Initializing lazy properties from datastore (triggered for '%s')" )
+	void initializingLazyPropertiesFromDatastore(String fieldName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6566, value = "Initializing lazy properties from second-level cache" )
+	void initializingLazyPropertiesFromSecondLevelCache();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6567, value = "Done initializing lazy properties" )
+	void doneInitializingLazyProperties();
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6568, value = "Resolving unique key [%s] to identifier for entity [%s]" )
+	void resolvingUniqueKeyToIdentifier(Object key, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6569, value = "Reading entity version: %s" )
+	void readingEntityVersion(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6570, value = "Fetching entity: %s" )
+	void fetchingEntity(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6571, value = "%s is dirty" )
+	void propertyIsDirty(String qualifiedProperty);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6572, value = "Forcing version increment [%s]" )
+	void forcingVersionIncrement(String info);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6573, value = "Getting current natural-id snapshot state for `%s#%s" )
+	void gettingCurrentNaturalIdSnapshot(String entityName, Object id);
+
+	@LogMessage(level = TRACE)
+	@Message( id = 6574, value = "Initializing lazy properties of: %s, field access: %s" )
+	void initializingLazyPropertiesOf(String info, String fieldName);
+
+	// TransactionImpl
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6581, value = "TransactionImpl created on closed Session/EntityManager")
+	void transactionCreatedOnClosedSession();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6582, value = "TransactionImpl created in JPA compliant mode")
+	void transactionCreatedInJpaCompliantMode();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6583, value = "Beginning transaction")
+	void beginningTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6584, value = "Committing transaction")
+	void committingTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6585, value = "Rolling back transaction")
+	void rollingBackTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6586, value = "rollback() called with inactive transaction")
+	void rollbackCalledOnInactiveTransaction();
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6587, value = "setRollbackOnly() called with inactive transaction")
+	void setRollbackOnlyCalledOnInactiveTransaction();
+
+	// session builders
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6588, value = "Opening session [tenant=%s]")
+	void openingSession(Object tenantIdentifier);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 6589, value = "Opening stateless session [tenant=%s]")
+	void openingStatelessSession(Object tenantIdentifier);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6591, value = "Identifier unsaved-value strategy %s")
+	void idUnsavedValueStrategy(String strategy);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6592, value = "Identifier unsaved-value [%s]")
+	void idUnsavedValue(@Nullable Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6593, value = "Version unsaved-value strategy %s")
+	void versionUnsavedValueStrategy(String strategy);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 6594, value = "Version unsaved-value [%s]")
+	void versionUnsavedValue(@Nullable Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 601, value = "Attempting to resolve script source setting: %s")
+	void attemptingToResolveScriptSourceSetting(String scriptSourceSettingString);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 602, value = "Attempting to create non-existent script target file: %s")
+	void attemptingToCreateScriptTarget(String absolutePath);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 603, value = "Could not create non-existent script target file")
+	void couldNotCreateScriptTarget(@Cause Exception e);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 604, value = "Attempting to resolve writer for URL: %s")
+	void attemptingToCreateWriter(URL url);
 }

@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -22,6 +20,7 @@ import java.util.List;
 import static java.lang.Character.isDigit;
 import static java.lang.Integer.parseInt;
 import static java.util.Collections.emptyList;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor.filterClauseSupported;
 
@@ -31,7 +30,6 @@ import static org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionD
  * @author Steve Ebersole
  */
 public class PatternRenderer {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
 
 	private final String[] chunks;
 	private final int[] paramIndexes;
@@ -98,7 +96,7 @@ public class PatternRenderer {
 					vararg = paramList.size();
 				}
 				else {
-					final int paramNumber = parseInt( index.toString() );
+					final int paramNumber = parameterIndex( pattern, index.toString() );
 					paramList.add( paramNumber );
 					index.setLength(0);
 					if ( paramNumber > max ) {
@@ -126,6 +124,21 @@ public class PatternRenderer {
 		}
 		this.paramIndexes = paramIndexes;
 		this.argumentRenderingModes = argumentRenderingModes;
+	}
+
+	private static int parameterIndex(String pattern, String index) {
+		if ( index.isEmpty() ) {
+			throw new IllegalArgumentException( "Missing parameter index in pattern: '" + pattern + "'" );
+		}
+		final int paramNumber;
+		try {
+			paramNumber = parseInt( index );
+		}
+		catch (NumberFormatException nfe) {
+			throw new IllegalArgumentException( "Illegal parameter index '" + index
+												+ "' in pattern: '" + pattern + "'", nfe );
+		}
+		return paramNumber;
 	}
 
 	public boolean hasVarargs() {
@@ -187,7 +200,7 @@ public class PatternRenderer {
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
 		if ( numberOfArguments < maxParamIndex ) {
-			LOG.missingArguments( maxParamIndex, numberOfArguments );
+			CORE_LOGGER.missingArguments( maxParamIndex, numberOfArguments );
 		}
 
 		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
@@ -222,9 +235,9 @@ public class PatternRenderer {
 					sqlAppender.appendSql( chunks[i] );
 				}
 				if ( arg != null ) {
-					if ( caseWrapper &&
-							!( arg instanceof Distinct ) &&
-							!( arg instanceof Star ) ) {
+					if ( caseWrapper
+							&& !( arg instanceof Distinct )
+							&& !( arg instanceof Star ) ) {
 						translator.getCurrentClauseStack().push( Clause.WHERE );
 						sqlAppender.appendSql( "case when " );
 						filter.accept( translator );

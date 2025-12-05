@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany;
+
 import java.io.Serializable;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
@@ -81,8 +82,8 @@ public class Woman implements Serializable {
 
 	public boolean equals(Object obj) {
 		//a NPE can occurs, but I don't expect equals to be used before pk is set
-		if ( obj != null && obj instanceof Woman ) {
-			return getId().equals( ( (Woman) obj ).getId() );
+		if ( obj instanceof Woman w ) {
+			return getId().equals( w.getId() );
 		}
 		else {
 			return false;

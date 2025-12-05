@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.insert;
 
 import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -22,6 +23,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
@@ -49,7 +52,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public <Y, X extends Y> SqmConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, X value) {
+	public <Y, X extends Y> SqmConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value) {
 		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
@@ -61,7 +64,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public <Y, X extends Y> SqmConflictUpdateAction<T> set(Path<Y> attribute, X value) {
+	public <Y, X extends Y> SqmConflictUpdateAction<T> set(Path<Y> attribute, @Nullable X value) {
 		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
@@ -73,7 +76,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public SqmConflictUpdateAction<T> set(String attributeName, Object value) {
+	public SqmConflictUpdateAction<T> set(String attributeName, @Nullable Object value) {
 		final SqmPath sqmPath = getTarget().get(attributeName);
 		final SqmExpression expression;
 		if ( value instanceof SqmExpression ) {
@@ -96,24 +99,26 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 	}
 
 	@Override
-	public SqmConflictUpdateAction<T> where(Expression<Boolean> restriction) {
+	public SqmConflictUpdateAction<T> where(@Nullable Expression<Boolean> restriction) {
 		initAndGetWhereClause().setPredicate( (SqmPredicate) restriction );
 		return this;
 	}
 
 	@Override
-	public SqmConflictUpdateAction<T> where(Predicate... restrictions) {
+	public SqmConflictUpdateAction<T> where(Predicate @Nullable... restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
-		whereClause.setPredicate(null);
-		for ( Predicate restriction : restrictions ) {
-			whereClause.applyPredicate( (SqmPredicate) restriction );
+		whereClause.setPredicate( null );
+		if ( restrictions != null ) {
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
 		}
 		return this;
 	}
 
 	@Override
-	public SqmPredicate getRestriction() {
+	public @Nullable SqmPredicate getRestriction() {
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
@@ -149,7 +154,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		return setClause;
 	}
 
-	public SqmWhereClause getWhereClause() {
+	public @Nullable SqmWhereClause getWhereClause() {
 		return whereClause;
 	}
 
@@ -161,9 +166,38 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		sb.append( " do update" );
 		setClause.appendHqlString( sb, context );
 
-		if ( whereClause != null && whereClause.getPredicate() != null ) {
+		final SqmPredicate predicate = whereClause == null ? null : whereClause.getPredicate();
+		if ( predicate != null ) {
 			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb, context );
+			predicate.appendHqlString( sb, context );
 		}
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmConflictUpdateAction<?> that
+			&& setClause.equals( that.getSetClause() )
+			&& Objects.equals( whereClause, that.getWhereClause() );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = setClause.hashCode();
+		result = 31 * result + Objects.hashCode( whereClause );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmConflictUpdateAction<?> that
+				&& setClause.isCompatible( that.getSetClause() )
+				&& SqmCacheable.areCompatible( whereClause, that.getWhereClause() );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = setClause.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( whereClause );
+		return result;
 	}
 }

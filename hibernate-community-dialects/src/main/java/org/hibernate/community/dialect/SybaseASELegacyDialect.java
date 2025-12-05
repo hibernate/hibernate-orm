@@ -4,11 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
@@ -20,6 +16,8 @@ import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -30,8 +28,8 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -46,8 +44,12 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
@@ -101,23 +103,18 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				// On Sybase ASE, the 'bit' type cannot be null,
-				// and cannot have indexes (while we don't use
-				// tinyint to store signed bytes, we can use it
-				// to store boolean values)
-				return "tinyint";
-			case BIGINT:
-				// Sybase ASE didn't introduce 'bigint' until version 15.0
-				return getVersion().isBefore( 15 ) ? "numeric(19,0)" : super.columnType( sqlTypeCode );
-			case DATE:
-				return getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
-			case TIME:
-				return getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			// On Sybase ASE, the 'bit' type cannot be null,
+			// and cannot have indexes (while we don't use
+			// tinyint to store signed bytes, we can use it
+			// to store boolean values)
+			case BOOLEAN ->  "tinyint";
+			// Sybase ASE didn't introduce 'bigint' until version 15.0
+			case BIGINT -> getVersion().isBefore( 15 ) ? "numeric(19,0)" : super.columnType( sqlTypeCode );
+			case DATE -> getVersion().isSameOrAfter( 12 ) ? "date" : super.columnType( sqlTypeCode );
+			case TIME -> getVersion().isSameOrAfter( 12 ) ? "time" : super.columnType( sqlTypeCode );
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -286,31 +283,25 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch ( unit ) {
-			case NANOSECOND:
-				return "dateadd(ms,?2/1000000,?3)";
+		return switch ( unit ) {
+			case NANOSECOND -> "dateadd(ms,?2/1000000,?3)";
 //				return "dateadd(mcs,?2/1000,?3)";
-			case NATIVE:
-				return "dateadd(ms,?2,?3)";
+			case NATIVE -> "dateadd(ms,?2,?3)";
 //				return "dateadd(mcs,?2,?3)";
-			default:
-				return "dateadd(?1,?2,?3)";
-		}
+			default -> "dateadd(?1,?2,?3)";
+		};
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch ( unit ) {
-			case NANOSECOND:
-				return "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";
+		return switch ( unit ) {
+			case NANOSECOND -> "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";
 //				return "(cast(datediff(mcs,?2,?3) as numeric(21))*1000)";
 //				}
-			case NATIVE:
-				return "cast(datediff(ms,?2,?3) as numeric(21))";
+			case NATIVE -> "cast(datediff(ms,?2,?3) as numeric(21))";
 //				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
-			default:
-				return "datediff(?1,?2,?3)";
-		}
+			default -> "datediff(?1,?2,?3)";
+		};
 	}
 
 
@@ -552,11 +543,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 255;
-	}
+		}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE_LEGACY;
 	}
 
 	@Override
@@ -594,15 +585,9 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// It does support skipping locked rows only for READ locking
-		return false;
-	}
-
-	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		final String lockHint = super.appendLockHint( mode, tableName );
-		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
+		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeout().milliseconds() == SKIP_LOCKED_MILLI
 				? lockHint + " readpast"
 				: lockHint;
 	}

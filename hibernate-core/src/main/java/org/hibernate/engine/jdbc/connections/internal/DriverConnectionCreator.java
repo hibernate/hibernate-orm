@@ -9,7 +9,7 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * A specialized {@link ConnectionCreator} which uses {@link Driver#connect(String, Properties)}
@@ -22,7 +22,7 @@ public class DriverConnectionCreator extends BasicConnectionCreator {
 
 	public DriverConnectionCreator(
 			Driver driver,
-			ServiceRegistryImplementor serviceRegistry,
+			ServiceRegistry serviceRegistry,
 			String url,
 			Properties connectionProps,
 			Boolean autocommit,

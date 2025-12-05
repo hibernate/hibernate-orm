@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -19,8 +21,6 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
-
 /**
  * @author Steve Ebersole
  */
@@ -31,14 +31,14 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	public SqmTreatedMapJoin(
 			SqmMapJoin<L, K, V> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias) {
+			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedMapJoin(
 			SqmMapJoin<L, K, V> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		super(
 				wrappedPath.getLhs(),
@@ -59,7 +59,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 			NavigablePath navigablePath,
 			SqmMapJoin<L, K, V> wrappedPath,
 			SqmTreatableDomainType<S> treatTarget,
-			String alias,
+			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
@@ -106,7 +106,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	@Override
-	public SqmBindableType<S> getNodeType() {
+	public @NonNull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -121,42 +121,34 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(Class<S1> treatJavaType) {
-		return super.treatAs( treatJavaType );
+	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedMapJoin<L, K, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(EntityDomainType<S1> treatTarget) {
-		return super.treatAs( treatTarget );
+	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return (SqmTreatedMapJoin<L, K, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(Class<S1> treatJavaType, String alias) {
-		return super.treatAs( treatJavaType, alias );
-	}
-
-	@Override
-	public <S1 extends S> SqmTreatedMapJoin<L, K, S, S1> treatAs(EntityDomainType<S1> treatTarget, String alias) {
-		return super.treatAs( treatTarget, alias );
-	}
-
-	@Override
-	public SqmTreatedMapJoin<L, K, V, S> on(JpaExpression<Boolean> restriction) {
+	public SqmTreatedMapJoin<L, K, V, S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedMapJoin<L, K, V, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedMapJoin<L, K, V, S> on(Expression<Boolean> restriction) {
+	public SqmTreatedMapJoin<L, K, V, S> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmTreatedMapJoin<L, K, V, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedMapJoin<L, K, V, S> on(JpaPredicate... restrictions) {
+	public SqmTreatedMapJoin<L, K, V, S> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmTreatedMapJoin<L, K, V, S>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmTreatedMapJoin<L, K, V, S> on(Predicate... restrictions) {
+	public SqmTreatedMapJoin<L, K, V, S> on(Predicate @Nullable... restrictions) {
 		return (SqmTreatedMapJoin<L, K, V, S>) super.on( restrictions );
 	}
 
@@ -167,18 +159,5 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 		hql.append( " as " );
 		hql.append( treatTarget.getTypeName() );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedMapJoin<?, ?, ?, ?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getTypeName(), that.treatTarget.getTypeName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
 }

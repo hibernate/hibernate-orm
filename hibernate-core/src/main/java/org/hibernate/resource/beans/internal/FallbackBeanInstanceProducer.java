@@ -4,12 +4,11 @@
  */
 package org.hibernate.resource.beans.internal;
 
-import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
  * {@link BeanInstanceProducer} implementation based on direct instantiation.
@@ -22,8 +21,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
-	private static final Logger log = Logger.getLogger( FallbackBeanInstanceProducer.class );
-
 	/**
 	 * Singleton access
 	 */
@@ -34,9 +31,9 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		log.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
+		BEANS_MSG_LOGGER.creatingManagedBeanUsingDirectInstantiation( beanType.getName() );
 		try {
-			final Constructor<B> constructor = beanType.getDeclaredConstructor();
+			final var constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );
 			return constructor.newInstance();
 		}

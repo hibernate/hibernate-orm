@@ -40,8 +40,7 @@ public class StructHelper {
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
-		final StructAttributeValues attributeValues =
-				new StructAttributeValues( numberOfAttributeMappings, rawJdbcValues );
+		final var attributeValues = new StructAttributeValues( numberOfAttributeMappings, rawJdbcValues );
 		int jdbcIndex = 0;
 		for ( int i = 0; i < size; i++ ) {
 			jdbcIndex += injectAttributeValue(
@@ -89,7 +88,7 @@ public class StructHelper {
 			Object[] rawJdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) {
-		final JdbcMapping jdbcMapping = modelPart.getSingleJdbcMapping();
+		final var jdbcMapping = modelPart.getSingleJdbcMapping();
 		final Object jdbcValue = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValues[jdbcIndex], options );
 		attributeValues.setAttributeValue( attributeIndex, jdbcMapping.convertToDomainValue( jdbcValue ) );
 		return 1;
@@ -111,7 +110,7 @@ public class StructHelper {
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			final Object[] subJdbcValues = new Object[jdbcValueCount];
 			System.arraycopy( rawJdbcValues, jdbcIndex, subJdbcValues, 0, subJdbcValues.length );
-			final StructAttributeValues subValues = getAttributeValues( embeddableMappingType, subJdbcValues, options );
+			final var subValues = getAttributeValues( embeddableMappingType, subJdbcValues, options );
 			attributeValues.setAttributeValue( attributeIndex, instantiate( embeddableMappingType, subValues ) );
 			return jdbcValueCount;
 		}
@@ -199,7 +198,7 @@ public class StructHelper {
 		}
 		else {
 			// the discriminator here is the composite class because it gets converted to the domain type when extracted
-			final Class<?> discriminatorClass = (Class<?>) attributeValues.getDiscriminator();
+			final var discriminatorClass = (Class<?>) attributeValues.getDiscriminator();
 			return representationStrategy.getInstantiatorForClass( discriminatorClass.getName() );
 		}
 	}
@@ -224,8 +223,8 @@ public class StructHelper {
 			if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 				return 0;
 			}
-			final ForeignKeyDescriptor foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-			final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+			final var foreignKeyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+			final var keyPart = foreignKeyDescriptor.getKeyPart();
 			final Object foreignKeyValue = foreignKeyDescriptor.getAssociationKeyFromSide(
 					attributeValues[attributeIndex],
 					ForeignKeyDescriptor.Nature.TARGET,
@@ -284,10 +283,10 @@ public class StructHelper {
 		else {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
+			final var jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final Object relationalValue = jdbcMapping.convertToRelationalValue( attributeValues[attributeIndex] );
 			if ( relationalValue != null ) {
-				final JavaType<?> javaType = jdbcMapping.getJdbcJavaType();
+				final var javaType = jdbcMapping.getJdbcJavaType();
 				injectCastJdbcValue( jdbcValues, jdbcIndex, options, jdbcMapping, javaType, relationalValue );
 			}
 		}

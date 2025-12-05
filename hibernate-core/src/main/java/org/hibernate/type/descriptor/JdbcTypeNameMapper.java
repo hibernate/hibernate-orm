@@ -10,11 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.unmodifiableMap;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * (Badly named) helper for dealing with standard JDBC types as defined by {@link java.sql.Types}
@@ -22,7 +21,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Steve Ebersole
  */
 public final class JdbcTypeNameMapper {
-	private static final CoreMessageLogger LOG = messageLogger( JdbcTypeNameMapper.class );
 
 	private static final Map<Integer, String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
 	private static final Map<Integer, String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
@@ -35,7 +33,7 @@ public final class JdbcTypeNameMapper {
 				final int code = field.getInt( null );
 				final String old = map.put( code, field.getName() );
 				if ( old != null ) {
-					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
+					CORE_LOGGER.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
 				}
 			}
 			catch ( IllegalAccessException e ) {

@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFrom;
@@ -78,7 +79,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	/**
 	 * The treats associated with this SqmFrom
 	 */
-	List<SqmTreatedFrom<?,?,?>> getSqmTreats();
+	List<SqmTreatedFrom<?,?,@Nullable ?>> getSqmTreats();
 
 	default boolean hasTreats() {
 		return !isEmpty( getSqmTreats() );
@@ -91,10 +92,46 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget);
 
 	@Override
-	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
+
+	// Since equals only does "syntactic" equality to understand if a node in an expression and predicate is equal,
+	// also define a method to do deep equality checking for the SqmFromClause
+	default boolean deepEquals(SqmFrom<?, ?> object) {
+		return equals( object );
+	}
+
+	// Since isCompatible only does "syntactic" equality to understand if a node in an expression and predicate is compatible,
+	// also define a method to do deep compatibility checking for the SqmFromClause
+	default boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return isCompatible( object );
+	}
+
+	static boolean areDeepEqual(List<? extends SqmFrom<?, ?>> theseFroms, List<? extends SqmFrom<?, ?>> thoseFroms) {
+		if ( theseFroms.size() != thoseFroms.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < theseFroms.size(); i++ ) {
+			if ( !theseFroms.get( i ).deepEquals( thoseFroms.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static boolean areDeepCompatible(List<? extends SqmFrom<?, ?>> theseFroms, List<? extends SqmFrom<?, ?>> thoseFroms) {
+		if ( theseFroms.size() != thoseFroms.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < theseFroms.size(); i++ ) {
+			if ( !theseFroms.get( i ).isDeepCompatible( thoseFroms.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

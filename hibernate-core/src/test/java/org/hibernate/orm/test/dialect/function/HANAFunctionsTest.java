@@ -4,114 +4,88 @@
  */
 package org.hibernate.orm.test.dialect.function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigDecimal;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.query.Query;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @RequiresDialect(HANADialect.class)
-public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
+@DomainModel(xmlMappings = {"org/hibernate/orm/test/dialect/function/Product.hbm.xml"})
+@SessionFactory
+public class HANAFunctionsTest {
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			Product product = new Product();
+			product.setLength( 100 );
+			product.setPrice( new BigDecimal( "1.298" ) );
+			session.persist( product );
+		} );
 	}
 
-	@Override
-	public String[] getMappings() {
-		return new String[]{ "dialect/function/Product.hbm.xml" };
-	}
-
-	@Override
-	protected void afterSessionFactoryBuilt() {
-		Product product = new Product();
-		product.setLength( 100 );
-		product.setPrice( new BigDecimal( 1.298 ) );
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			s.persist( product );
-			tx.commit();
-		}
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-12546")
-	public void testLocateFunction() {
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where locate('.', cast(p.price as string)) > 0", Product.class );
-			Product p = q.uniqueResult();
+	public void testLocateFunction(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where locate('.', cast(p.price as string)) > 0", Product.class ).uniqueResult();
 			assertNotNull( p );
 			assertEquals( 100, p.getLength() );
 			assertEquals( BigDecimal.valueOf( 1.29 ), p.getPrice() );
-			tx.commit();
-		}
-
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where locate('.', cast(p.price as string)) = 0", Product.class );
-			Product p = q.uniqueResult();
+		} );
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where locate('.', cast(p.price as string)) = 0", Product.class ).uniqueResult();
 			assertNull( p );
-			tx.commit();
-		}
+		} );
 
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where locate('.', cast(p.price as string), 3) > 0", Product.class );
-			Product p = q.uniqueResult();
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where locate('.', cast(p.price as string), 3) > 0", Product.class ).uniqueResult();
 			assertNull( p );
-			tx.commit();
-		}
+		} );
 
 	}
 
 	@Test
-	public void testSubstringFunction() {
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where substring(cast(p.price as string), 1, 2) = '1.'", Product.class );
-			Product p = q.uniqueResult();
+	public void testSubstringFunction(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where substring(cast(p.price as string), 1, 2) = '1.'", Product.class ).uniqueResult();
 			assertNotNull( p );
 			assertEquals( 100, p.getLength() );
 			assertEquals( BigDecimal.valueOf( 1.29 ), p.getPrice() );
-			tx.commit();
-		}
+		} );
 
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where substring(cast(p.price as string), 1, 2) = '.1'", Product.class );
-			Product p = q.uniqueResult();
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where substring(cast(p.price as string), 1, 2) = '.1'", Product.class ).uniqueResult();
 			assertNull( p );
-			tx.commit();
-		}
+		} );
 
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where substring(cast(p.price as string), 1) = '1.29'", Product.class );
-			Product p = q.uniqueResult();
+		scope.inTransaction(  session -> {
+			Product p = session.createQuery( "select p from Product p where substring(cast(p.price as string), 1) = '1.29'", Product.class ).uniqueResult();
 			assertNotNull( p );
 			assertEquals( 100, p.getLength() );
 			assertEquals( BigDecimal.valueOf( 1.29 ), p.getPrice() );
-			tx.commit();
-		}
+		} );
 
-		try ( Session s = openSession() ) {
-			Transaction tx = s.beginTransaction();
-			Query<Product> q = s.createQuery( "select p from Product p where substring(cast(p.price as string), 1) = '1.'", Product.class );
-			Product p = q.uniqueResult();
+		scope.inTransaction(   session -> {
+			Product p = session.createQuery( "select p from Product p where substring(cast(p.price as string), 1) = '1.'", Product.class ).uniqueResult();
 			assertNull( p );
-			tx.commit();
-		}
+		} );
 	}
 
 }

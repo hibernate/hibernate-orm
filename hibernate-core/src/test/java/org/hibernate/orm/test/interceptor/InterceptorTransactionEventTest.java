@@ -5,31 +5,35 @@
 package org.hibernate.orm.test.interceptor;
 
 import org.hibernate.Interceptor;
-import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests, whether {@link Interceptor} gets the transaction events
  */
-public class InterceptorTransactionEventTest extends BaseCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SessionFactory
+public class InterceptorTransactionEventTest {
 
 	@Test
-	public void testTransactionEvents() {
+	public void testTransactionEvents(SessionFactoryScope factoryScope) {
 		LoggingInterceptor interceptor = new LoggingInterceptor();
 
-		Session s = openSession(interceptor);
-		Transaction tx = s.beginTransaction();
-		// Do nothing, open and closing the transaction is enough
-		tx.commit();
-		s.close();
+		factoryScope.inTransaction(
+				(sf) -> sf.withOptions().interceptor( interceptor ).openSession(),
+				(s) -> {
+					// Do nothing, open and closing the transaction is enough
+				}
+		);
 
-		assertTrue("afterTransactionBeginCalled not called", interceptor.isAfterTransactionBeginCalled());
-		assertTrue("afterTransactionCompletionCalled not called", interceptor.isAfterTransactionCompletionCalled());
-		assertTrue("beforeTransactionCompletionCalled not called", interceptor.isBeforeTransactionCompletionCalled());
+		Assertions.assertTrue( interceptor.isAfterTransactionBeginCalled(), "afterTransactionBeginCalled not called" );
+		Assertions.assertTrue( interceptor.isAfterTransactionCompletionCalled(),
+				"afterTransactionCompletionCalled not called" );
+		Assertions.assertTrue( interceptor.isBeforeTransactionCompletionCalled(),
+				"beforeTransactionCompletionCalled not called" );
 	}
 
 	private static class LoggingInterceptor implements Interceptor {

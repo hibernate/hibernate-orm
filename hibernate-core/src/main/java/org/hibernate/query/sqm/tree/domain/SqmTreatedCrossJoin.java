@@ -4,15 +4,19 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.spi.NavigablePath;
-
-import java.util.Objects;
 
 /**
  * A TREAT form of {@linkplain SqmCrossJoin}
@@ -24,16 +28,30 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	private final SqmCrossJoin wrappedPath;
 	private final SqmEntityDomainType treatTarget;
 
+	public SqmTreatedCrossJoin(
+			SqmCrossJoin<?> wrappedPath,
+			SqmEntityDomainType<?> treatTarget) {
+		//noinspection unchecked
+		super(
+				wrappedPath.getNavigablePath()
+						.treatAs( treatTarget.getHibernateEntityName(), null ),
+				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
+				null,
+				wrappedPath.getRoot()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	private SqmTreatedCrossJoin(
 			NavigablePath navigablePath,
 			SqmCrossJoin<?> wrappedPath,
-			SqmEntityDomainType<?> treatTarget,
-			String alias) {
+			SqmEntityDomainType<?> treatTarget) {
 		//noinspection unchecked
 		super(
 				navigablePath,
 				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
-				alias,
+				null,
 				wrappedPath.getRoot()
 		);
 		this.wrappedPath = wrappedPath;
@@ -51,13 +69,17 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 				new SqmTreatedCrossJoin(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
-						treatTarget,
-						getExplicitAlias()
+						treatTarget
 				)
 		);
 		//noinspection unchecked
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public void setExplicitAlias(@Nullable String explicitAlias) {
+		throw new UnsupportedOperationException("Treated cross joins doesn't support explicit alias");
 	}
 
 	@Override
@@ -78,7 +100,7 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmBindableType getNodeType() {
+	public @NonNull SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 
@@ -103,39 +125,30 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedCrossJoin that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getName(), that.treatTarget.getName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
+	public SqmTreatedCrossJoin on(Predicate @Nullable ... restrictions) {
+		return (SqmTreatedCrossJoin) super.on( restrictions );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( treatTarget.getName(), wrappedPath.getNavigablePath() );
+	public SqmTreatedCrossJoin on(JpaPredicate @Nullable ... restrictions) {
+		return (SqmTreatedCrossJoin) super.on( restrictions );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public SqmTreatedCrossJoin treatAs(Class treatJavaType, String alias) {
-		return super.treatAs( treatJavaType, alias );
+	public SqmTreatedCrossJoin on(@Nullable Expression restriction) {
+		//noinspection unchecked
+		return (SqmTreatedCrossJoin) super.on( restriction );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public SqmTreatedCrossJoin treatAs(EntityDomainType treatTarget, String alias) {
-		return super.treatAs( treatTarget, alias );
+	public SqmTreatedCrossJoin on(@Nullable JpaExpression restriction) {
+		//noinspection unchecked
+		return (SqmTreatedCrossJoin) super.on( restriction );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public SqmTreatedCrossJoin treatAs(Class treatAsType) {
-		return super.treatAs( treatAsType );
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public SqmTreatedCrossJoin treatAs(EntityDomainType treatAsType) {
-		return super.treatAs( treatAsType );
+	public SqmTreatedCrossJoin treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return wrappedPath.treatAs( treatTarget, alias, fetch );
 	}
 }

@@ -4,7 +4,9 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -41,8 +43,17 @@ public class H2FormatJsonJdbcType extends JsonJdbcType {
 	}
 
 	@Override
-	public void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
+	public void appendWriteExpression(
+			String writeExpression,
+			@Nullable Size size,
+			SqlAppender appender,
+			Dialect dialect) {
 		appender.append( writeExpression );
 		appender.append( " format json" );
+	}
+
+	@Override
+	public boolean isWriteExpressionTyped(Dialect dialect) {
+		return true;
 	}
 }

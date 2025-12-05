@@ -38,7 +38,9 @@ public interface ConfigurationService extends Service {
 	 * @param converter The converter to apply
 	 * @param <T> The Java type of the conversion
 	 *
-	 * @return The converted (typed) setting.  May return {@code null} (see {@link #getSetting(String, Class, Object)})
+	 * @return The converted (typed) setting.
+	 *         May return {@code null}
+	 *         (see {@link #getSetting(String, Class, Object)})
 	 */
 	<T> @Nullable T getSetting(String name, Converter<T> converter);
 
@@ -64,7 +66,11 @@ public interface ConfigurationService extends Service {
 	 * @param <T> The Java type of the conversion
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
+	 *
+	 * @deprecated Use {@link #getSetting(String, Converter, Object)}.
+	 *             This method does not report errors correctly.
 	 */
+	@Deprecated(since = "7.2")
 	<T> @PolyNull T getSetting(String name, Class<T> expected, @PolyNull T defaultValue);
 
 	/**

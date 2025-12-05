@@ -4,21 +4,22 @@
  */
 package org.hibernate.orm.test.bootstrap.schema;
 
-import java.util.Properties;
-
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+import java.util.Properties;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
+@BaseUnitTest
 public class SchemaToolingAutoActionTests {
+
 	@Test
 	public void testLegacySettingAsAction() {
 		final Properties props = new Properties();
@@ -26,7 +27,7 @@ public class SchemaToolingAutoActionTests {
 
 		final ActionGrouping actionGrouping = ActionGrouping.interpret( props );
 
-		assertThat( actionGrouping.getDatabaseAction(), is( Action.CREATE_DROP ) );
+		assertThat( actionGrouping.databaseAction() ).isEqualTo( Action.CREATE_DROP );
 
 	}
 }

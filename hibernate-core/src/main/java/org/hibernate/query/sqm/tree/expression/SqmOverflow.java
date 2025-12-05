@@ -4,7 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -16,10 +18,10 @@ import java.util.Objects;
 public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 
 	private final SqmExpression<T> separatorExpression;
-	private final SqmExpression<T> fillerExpression;
+	private final @Nullable SqmExpression<T> fillerExpression;
 	private final boolean withCount;
 
-	public SqmOverflow(SqmExpression<T> separatorExpression, SqmExpression<T> fillerExpression, boolean withCount) {
+	public SqmOverflow(SqmExpression<T> separatorExpression, @Nullable SqmExpression<T> fillerExpression, boolean withCount) {
 		super( separatorExpression.getNodeType(), separatorExpression.nodeBuilder() );
 		this.separatorExpression = separatorExpression;
 		this.fillerExpression = fillerExpression;
@@ -48,7 +50,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 		return separatorExpression;
 	}
 
-	public SqmExpression<T> getFillerExpression() {
+	public @Nullable SqmExpression<T> getFillerExpression() {
 		return fillerExpression;
 	}
 
@@ -81,15 +83,34 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmOverflow<?> that
 			&& this.withCount == that.withCount
-			&& Objects.equals( this.separatorExpression, that.separatorExpression )
+			&& this.separatorExpression.equals( that.separatorExpression )
 			&& Objects.equals( this.fillerExpression, that.fillerExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( separatorExpression, fillerExpression, withCount );
+		int result = separatorExpression.hashCode();
+		result = 31 * result + Objects.hashCode( fillerExpression );
+		result = 31 * result + Boolean.hashCode( withCount );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmOverflow<?> that
+			&& this.withCount == that.withCount
+			&& this.separatorExpression.isCompatible( that.separatorExpression )
+			&& SqmCacheable.areCompatible( this.fillerExpression, that.fillerExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = separatorExpression.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( fillerExpression );
+		result = 31 * result + Boolean.hashCode( withCount );
+		return result;
 	}
 }

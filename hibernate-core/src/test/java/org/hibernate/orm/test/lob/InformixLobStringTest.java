@@ -4,79 +4,78 @@
  */
 package org.hibernate.orm.test.lob;
 
-import java.sql.Clob;
-import java.sql.SQLException;
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hamcrest.MatcherAssert;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.Hibernate.getLobHelper;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
  * @author VladoKuruc
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-8511")
-//@RequiresDialect(InformixDialect.class)
-public class InformixLobStringTest extends BaseCoreFunctionalTestCase {
-
+@DomainModel(annotatedClasses = InformixLobStringTest.TestEntity.class)
+@SessionFactory
+public class InformixLobStringTest {
 	private final String value1 = "xxxxxxxxxx".repeat( 20 );
 	private final String value2 = "yyyyyyyyyy".repeat( 20 );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {TestEntity.class};
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		TestEntity entity = new TestEntity();
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	void setUp(SessionFactoryScope factoryScope) {
+		var entity = new TestEntity();
+		factoryScope.inTransaction( (session) -> {
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
 			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			final TestEntity testEntity = session.find( TestEntity.class, entity.getId() );
-			assertThat( testEntity.getFirstLobField(), is( value1 ) );
+		factoryScope.inTransaction( (session) -> {
+			var testEntity = session.find( TestEntity.class, entity.getId() );
+			MatcherAssert.assertThat( testEntity.getFirstLobField(), is( value1 ) );
 		} );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
 	@JiraKey("HHH-8511")
-	public void testHqlQuery() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Query query = session.createQuery( "from TestEntity" );
-
+	public void testHqlQuery(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			//noinspection removal
+			var query = session.createQuery( "from TestEntity", TestEntity.class );
 			final List<TestEntity> results = query.list();
-
-			assertThat( results.size(), is( 1 ) );
+			MatcherAssert.assertThat( results.size(), is( 1 ) );
 
 			final TestEntity testEntity = results.get( 0 );
-			assertThat( testEntity.getFirstLobField(), is( value1 ) );
-			assertThat( testEntity.getSecondLobField(), is( value2 ) );
+			MatcherAssert.assertThat( testEntity.getFirstLobField(), is( value1 ) );
+			MatcherAssert.assertThat( testEntity.getSecondLobField(), is( value2 ) );
 			final Clob clobField = testEntity.getClobField();
 			try {
-
-				assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value2 ) );
+				MatcherAssert.assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value2 ) );
 			}
 			catch (SQLException e) {
-				fail( e.getMessage() );
+				Assertions.fail( e.getMessage() );
 			}
 		} );
 	}
@@ -126,8 +125,4 @@ public class InformixLobStringTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
 }

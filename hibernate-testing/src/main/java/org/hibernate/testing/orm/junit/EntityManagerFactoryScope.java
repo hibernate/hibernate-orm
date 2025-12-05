@@ -18,7 +18,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 /**
  * @author Steve Ebersole
  */
-public interface EntityManagerFactoryScope {
+public interface EntityManagerFactoryScope extends AutoCloseable {
 	EntityManagerFactory getEntityManagerFactory();
 	void releaseEntityManagerFactory();
 
@@ -38,4 +38,7 @@ public interface EntityManagerFactoryScope {
 		return ((SessionFactoryImplementor) getEntityManagerFactory()).getJdbcServices().getDialect();
 	}
 
+	default void dropData() {
+		((SessionFactoryImplementor) getEntityManagerFactory()).getSchemaManager().truncateMappedObjects();
+	}
 }

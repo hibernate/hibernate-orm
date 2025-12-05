@@ -34,7 +34,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 				mutabilityPlan,
 				value.isNullable(),
 				bootProperty.isInsertable(),
-				bootProperty.isUpdateable(),
+				bootProperty.isUpdatable(),
 				bootProperty.isOptimisticLocked(),
 				bootProperty.isSelectable()
 		);

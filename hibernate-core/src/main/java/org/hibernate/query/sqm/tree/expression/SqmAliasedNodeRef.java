@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
@@ -22,7 +23,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 
 	private final int position;
 	// The navigable path is optionally set in case this is a reference to an attribute of a selection
-	private final NavigablePath navigablePath;
+	private final @Nullable NavigablePath navigablePath;
 
 	public SqmAliasedNodeRef(int position, SqmBindableType<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
@@ -61,7 +62,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		return position;
 	}
 
-	public NavigablePath getNavigablePath() {
+	public @Nullable NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
 
@@ -83,7 +84,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmAliasedNodeRef that
 			&& position == that.position
 			&& Objects.equals( navigablePath == null ? null : navigablePath.getLocalName(),
@@ -93,5 +94,15 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	@Override
 	public int hashCode() {
 		return Objects.hash( position, navigablePath == null ? null : navigablePath.getLocalName() );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

@@ -4,77 +4,71 @@
  */
 package org.hibernate.orm.test.associations.any;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Vlad Mihalcea
  */
-public class AnyTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			IntegerProperty.class,
-			StringProperty.class,
-			PropertyHolder.class,
-			PropertyHolder2.class,
-		};
-	}
-
-	@Override
-	protected String[] getAnnotatedPackages() {
-		return new String[] {
-			getClass().getPackage().getName()
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				IntegerProperty.class,
+				StringProperty.class,
+				PropertyHolder.class,
+				PropertyHolder2.class,
+		},
+		annotatedPackageNames = "org.hibernate.orm.test.associations.any"
+)
+@SessionFactory
+public class AnyTest {
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 
-		doInHibernate(this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			//tag::associations-any-persist-example[]
 			IntegerProperty ageProperty = new IntegerProperty();
-			ageProperty.setId(1L);
-			ageProperty.setName("age");
-			ageProperty.setValue(23);
+			ageProperty.setId( 1L );
+			ageProperty.setName( "age" );
+			ageProperty.setValue( 23 );
 
-			session.persist(ageProperty);
+			session.persist( ageProperty );
 
 			StringProperty nameProperty = new StringProperty();
-			nameProperty.setId(1L);
-			nameProperty.setName("name");
-			nameProperty.setValue("John Doe");
+			nameProperty.setId( 1L );
+			nameProperty.setName( "name" );
+			nameProperty.setValue( "John Doe" );
 
-			session.persist(nameProperty);
+			session.persist( nameProperty );
 
 			PropertyHolder namePropertyHolder = new PropertyHolder();
-			namePropertyHolder.setId(1L);
-			namePropertyHolder.setProperty(nameProperty);
+			namePropertyHolder.setId( 1L );
+			namePropertyHolder.setProperty( nameProperty );
 
-			session.persist(namePropertyHolder);
+			session.persist( namePropertyHolder );
 			//end::associations-any-persist-example[]
-		});
+		} );
 
-		doInHibernate(this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			//tag::associations-any-query-example[]
-			PropertyHolder propertyHolder = session.get(PropertyHolder.class, 1L);
+			PropertyHolder propertyHolder = session.get( PropertyHolder.class, 1L );
 
-			assertEquals("name", propertyHolder.getProperty().getName());
-			assertEquals("John Doe", propertyHolder.getProperty().getValue());
+			assertThat( propertyHolder.getProperty().getName() ).isEqualTo( "name" );
+			assertThat( propertyHolder.getProperty().getValue() ).isEqualTo( "John Doe" );
 			//end::associations-any-query-example[]
-		});
+		} );
 	}
 
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-16938" )
-	public void testMetaAnnotated() {
-		doInHibernate( this::sessionFactory, session -> {
+	@Jira("https://hibernate.atlassian.net/browse/HHH-16938")
+	public void testMetaAnnotated(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final StringProperty nameProperty = new StringProperty();
 			nameProperty.setId( 2L );
 			nameProperty.setName( "name2" );
@@ -85,15 +79,15 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 			namePropertyHolder.setProperty( nameProperty );
 			session.persist( namePropertyHolder );
 		} );
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			final PropertyHolder2 propertyHolder = session.get( PropertyHolder2.class, 2L );
-			assertEquals( "name2", propertyHolder.getProperty().getName() );
-			assertEquals( "Mario Rossi", propertyHolder.getProperty().getValue() );
+			assertThat( propertyHolder.getProperty().getName() ).isEqualTo( "name2" );
+			assertThat( propertyHolder.getProperty().getValue() ).isEqualTo( "Mario Rossi" );
 			final String propertyType = session.createNativeQuery(
 					"select property_type from property_holder2",
 					String.class
 			).getSingleResult();
-			assertEquals( "S", propertyType );
+			assertThat( propertyType ).isEqualTo( "S" );
 		} );
 	}
 }

@@ -4,12 +4,6 @@
  */
 package org.hibernate.boot.model.process.internal;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
@@ -26,12 +20,20 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.hibernate.boot.archive.scan.internal.ScannerLogger.SCANNER_LOGGER;
 
@@ -222,17 +224,27 @@ public class ScanningCoordinator {
 
 		if ( xmlMappingBinderAccess != null ) { // xml mapping is not disabled
 			for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
+				//noinspection unchecked,rawtypes
+				managedResources.addXmlBinding( (Binding) InputStreamAccessXmlSource.fromStreamAccess(
+						mappingFileDescriptor.getStreamAccess(),
+						xmlMappingBinderAccess.getMappingBinder()
+				) );
 				nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
 			}
 
 			for ( String name : nonLocatedMappingFileNames ) {
+				final Origin origin = new Origin( SourceType.RESOURCE, name );
 				final URL url = classLoaderService.locateResource( name );
 				if ( url == null ) {
-					throw new MappingException( "Unable to resolve explicitly named mapping file: " + name,
-							new Origin( SourceType.RESOURCE, name ) );
+					throw new MappingException( "Unable to resolve explicitly named mapping file: " + name, origin );
 				}
-				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( new UrlInputStreamAccess( url ) ) );
+				final UrlInputStreamAccess urlInputStreamAccess = new UrlInputStreamAccess( url );
+				//noinspection unchecked,rawtypes
+				managedResources.addXmlBinding( (Binding) InputStreamAccessXmlSource.fromStreamAccess(
+						urlInputStreamAccess,
+						origin,
+						xmlMappingBinderAccess.getMappingBinder()
+				) );
 			}
 		}
 

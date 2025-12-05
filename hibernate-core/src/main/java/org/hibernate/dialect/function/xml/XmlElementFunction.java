@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function.xml;
 
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -20,7 +19,6 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmXmlAttributesExpression;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
@@ -55,7 +53,8 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 									String functionName,
 									BindingContext bindingContext) {
 								//noinspection unchecked
-								final String elementName = ( (SqmLiteral<String>) arguments.get( 0 ) ).getLiteralValue();
+								final var literal = (SqmLiteral<String>) arguments.get( 0 );
+								final String elementName = literal.getLiteralValue();
 								if ( !XmlHelper.isValidXmlName( elementName ) ) {
 									throw new FunctionArgumentException(
 											String.format(
@@ -66,8 +65,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 								}
 								if ( arguments.size() > 1
 										&& arguments.get( 1 ) instanceof SqmXmlAttributesExpression attributesExpression ) {
-									final Map<String, SqmExpression<?>> attributes = attributesExpression.getAttributes();
-									for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
+									for ( var entry : attributesExpression.getAttributes().entrySet() ) {
 										if ( !XmlHelper.isValidXmlName( entry.getKey() ) ) {
 											throw new FunctionArgumentException(
 													String.format(
@@ -125,7 +123,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 		if ( arguments.attributes() != null ) {
 			sqlAppender.appendSql( ",xmlattributes" );
 			char separator = '(';
-			for ( Map.Entry<String, Expression> entry : arguments.attributes().getAttributes().entrySet() ) {
+			for ( var entry : arguments.attributes().getAttributes().entrySet() ) {
 				sqlAppender.appendSql( separator );
 				entry.getValue().accept( walker );
 				sqlAppender.appendSql( " as " );
@@ -148,10 +146,9 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 			@Nullable XmlAttributes attributes,
 			List<Expression> content) {
 		static XmlElementArguments extract(List<? extends SqlAstNode> arguments) {
-			final Literal elementName = (Literal) arguments.get( 0 );
+			final var elementName = (Literal) arguments.get( 0 );
 			final XmlAttributes attributes;
 			final List<Expression> content;
-
 			int index = 1;
 			if ( arguments.size() > index
 					&& arguments.get( index ) instanceof XmlAttributes xmlAttributes ) {

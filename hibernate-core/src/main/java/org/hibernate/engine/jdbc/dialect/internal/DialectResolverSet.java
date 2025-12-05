@@ -13,8 +13,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.
@@ -23,7 +23,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class DialectResolverSet implements DialectResolver {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DialectResolverSet.class );
 
 	private final List<DialectResolver> resolvers;
 
@@ -52,7 +51,7 @@ public class DialectResolverSet implements DialectResolver {
 				throw e;
 			}
 			catch ( Exception e ) {
-				LOG.exceptionInSubResolver( e.getMessage() );
+				CORE_LOGGER.exceptionInSubResolver( e.getMessage() );
 			}
 		}
 

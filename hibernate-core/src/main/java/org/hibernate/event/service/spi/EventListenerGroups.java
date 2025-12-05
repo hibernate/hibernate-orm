@@ -31,6 +31,7 @@ import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreFlushEventListener;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.event.spi.PreUpdateEventListener;
@@ -40,6 +41,8 @@ import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.service.ServiceRegistry;
 
 import java.util.Objects;
+
+import static org.hibernate.event.spi.EventType.*;
 
 /**
  * Holds the {@link org.hibernate.event.spi event} listener groups for the various event types.
@@ -55,6 +58,7 @@ public final class EventListenerGroups {
 	// All session events need to be iterated frequently;
 	// CollectionAction and EventAction also need most of these very frequently:
 	public final EventListenerGroup<AutoFlushEventListener> eventListenerGroup_AUTO_FLUSH;
+	public final EventListenerGroup<PreFlushEventListener> eventListenerGroup_PRE_FLUSH;
 	public final EventListenerGroup<ClearEventListener> eventListenerGroup_CLEAR;
 	public final EventListenerGroup<DeleteEventListener> eventListenerGroup_DELETE;
 	public final EventListenerGroup<DirtyCheckEventListener> eventListenerGroup_DIRTY_CHECK;
@@ -96,50 +100,44 @@ public final class EventListenerGroups {
 	public EventListenerGroups(ServiceRegistry serviceRegistry) {
 		Objects.requireNonNull( serviceRegistry );
 
-		final EventListenerRegistry eventListenerRegistry =
-				serviceRegistry.requireService( EventListenerRegistry.class );
+		final var eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
 
 		// Pre-compute all iterators on Event listeners:
 
-		this.eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, EventType.AUTO_FLUSH );
-		this.eventListenerGroup_CLEAR = listeners( eventListenerRegistry, EventType.CLEAR );
-		this.eventListenerGroup_DELETE = listeners( eventListenerRegistry, EventType.DELETE );
-		this.eventListenerGroup_DIRTY_CHECK = listeners( eventListenerRegistry, EventType.DIRTY_CHECK );
-		this.eventListenerGroup_EVICT = listeners( eventListenerRegistry, EventType.EVICT );
-		this.eventListenerGroup_FLUSH = listeners( eventListenerRegistry, EventType.FLUSH );
-		this.eventListenerGroup_FLUSH_ENTITY = listeners( eventListenerRegistry, EventType.FLUSH_ENTITY );
-		this.eventListenerGroup_INIT_COLLECTION = listeners( eventListenerRegistry, EventType.INIT_COLLECTION );
-		this.eventListenerGroup_LOAD = listeners( eventListenerRegistry, EventType.LOAD );
-		this.eventListenerGroup_LOCK = listeners( eventListenerRegistry, EventType.LOCK );
-		this.eventListenerGroup_MERGE = listeners( eventListenerRegistry, EventType.MERGE );
-		this.eventListenerGroup_PERSIST = listeners( eventListenerRegistry, EventType.PERSIST );
-		this.eventListenerGroup_PERSIST_ONFLUSH = listeners( eventListenerRegistry, EventType.PERSIST_ONFLUSH );
-		this.eventListenerGroup_POST_COLLECTION_RECREATE = listeners( eventListenerRegistry,
-				EventType.POST_COLLECTION_RECREATE );
-		this.eventListenerGroup_POST_COLLECTION_REMOVE = listeners( eventListenerRegistry,
-				EventType.POST_COLLECTION_REMOVE );
-		this.eventListenerGroup_POST_COLLECTION_UPDATE = listeners( eventListenerRegistry,
-				EventType.POST_COLLECTION_UPDATE );
-		this.eventListenerGroup_POST_COMMIT_DELETE = listeners( eventListenerRegistry, EventType.POST_COMMIT_DELETE );
-		this.eventListenerGroup_POST_COMMIT_INSERT = listeners( eventListenerRegistry, EventType.POST_COMMIT_INSERT );
-		this.eventListenerGroup_POST_COMMIT_UPDATE = listeners( eventListenerRegistry, EventType.POST_COMMIT_UPDATE );
-		this.eventListenerGroup_POST_DELETE = listeners( eventListenerRegistry, EventType.POST_DELETE );
-		this.eventListenerGroup_POST_INSERT = listeners( eventListenerRegistry, EventType.POST_INSERT );
-		this.eventListenerGroup_POST_LOAD = listeners( eventListenerRegistry, EventType.POST_LOAD );
-		this.eventListenerGroup_POST_UPDATE = listeners( eventListenerRegistry, EventType.POST_UPDATE );
-		this.eventListenerGroup_POST_UPSERT = listeners( eventListenerRegistry, EventType.POST_UPSERT );
-		this.eventListenerGroup_PRE_COLLECTION_RECREATE = listeners( eventListenerRegistry,
-				EventType.PRE_COLLECTION_RECREATE );
-		this.eventListenerGroup_PRE_COLLECTION_REMOVE = listeners( eventListenerRegistry,
-				EventType.PRE_COLLECTION_REMOVE );
-		this.eventListenerGroup_PRE_COLLECTION_UPDATE = listeners( eventListenerRegistry,
-				EventType.PRE_COLLECTION_UPDATE );
-		this.eventListenerGroup_PRE_DELETE = listeners( eventListenerRegistry, EventType.PRE_DELETE );
-		this.eventListenerGroup_PRE_INSERT = listeners( eventListenerRegistry, EventType.PRE_INSERT );
-		this.eventListenerGroup_PRE_LOAD = listeners( eventListenerRegistry, EventType.PRE_LOAD );
-		this.eventListenerGroup_PRE_UPDATE = listeners( eventListenerRegistry, EventType.PRE_UPDATE );
-		this.eventListenerGroup_PRE_UPSERT = listeners( eventListenerRegistry, EventType.PRE_UPSERT );
-		this.eventListenerGroup_REFRESH = listeners( eventListenerRegistry, EventType.REFRESH );
-		this.eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, EventType.REPLICATE );
+		eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, AUTO_FLUSH );
+		eventListenerGroup_PRE_FLUSH = listeners( eventListenerRegistry, PRE_FLUSH );
+		eventListenerGroup_CLEAR = listeners( eventListenerRegistry, CLEAR );
+		eventListenerGroup_DELETE = listeners( eventListenerRegistry, DELETE );
+		eventListenerGroup_DIRTY_CHECK = listeners( eventListenerRegistry, DIRTY_CHECK );
+		eventListenerGroup_EVICT = listeners( eventListenerRegistry, EVICT );
+		eventListenerGroup_FLUSH = listeners( eventListenerRegistry, FLUSH );
+		eventListenerGroup_FLUSH_ENTITY = listeners( eventListenerRegistry, FLUSH_ENTITY );
+		eventListenerGroup_INIT_COLLECTION = listeners( eventListenerRegistry, INIT_COLLECTION );
+		eventListenerGroup_LOAD = listeners( eventListenerRegistry, LOAD );
+		eventListenerGroup_LOCK = listeners( eventListenerRegistry, LOCK );
+		eventListenerGroup_MERGE = listeners( eventListenerRegistry, MERGE );
+		eventListenerGroup_PERSIST = listeners( eventListenerRegistry, PERSIST );
+		eventListenerGroup_PERSIST_ONFLUSH = listeners( eventListenerRegistry, PERSIST_ONFLUSH );
+		eventListenerGroup_POST_COLLECTION_RECREATE = listeners( eventListenerRegistry, POST_COLLECTION_RECREATE );
+		eventListenerGroup_POST_COLLECTION_REMOVE = listeners( eventListenerRegistry, POST_COLLECTION_REMOVE );
+		eventListenerGroup_POST_COLLECTION_UPDATE = listeners( eventListenerRegistry, POST_COLLECTION_UPDATE );
+		eventListenerGroup_POST_COMMIT_DELETE = listeners( eventListenerRegistry, POST_COMMIT_DELETE );
+		eventListenerGroup_POST_COMMIT_INSERT = listeners( eventListenerRegistry, POST_COMMIT_INSERT );
+		eventListenerGroup_POST_COMMIT_UPDATE = listeners( eventListenerRegistry, POST_COMMIT_UPDATE );
+		eventListenerGroup_POST_DELETE = listeners( eventListenerRegistry, POST_DELETE );
+		eventListenerGroup_POST_INSERT = listeners( eventListenerRegistry, POST_INSERT );
+		eventListenerGroup_POST_LOAD = listeners( eventListenerRegistry, POST_LOAD );
+		eventListenerGroup_POST_UPDATE = listeners( eventListenerRegistry, POST_UPDATE );
+		eventListenerGroup_POST_UPSERT = listeners( eventListenerRegistry, POST_UPSERT );
+		eventListenerGroup_PRE_COLLECTION_RECREATE = listeners( eventListenerRegistry, PRE_COLLECTION_RECREATE );
+		eventListenerGroup_PRE_COLLECTION_REMOVE = listeners( eventListenerRegistry, PRE_COLLECTION_REMOVE );
+		eventListenerGroup_PRE_COLLECTION_UPDATE = listeners( eventListenerRegistry, PRE_COLLECTION_UPDATE );
+		eventListenerGroup_PRE_DELETE = listeners( eventListenerRegistry, PRE_DELETE );
+		eventListenerGroup_PRE_INSERT = listeners( eventListenerRegistry, PRE_INSERT );
+		eventListenerGroup_PRE_LOAD = listeners( eventListenerRegistry, PRE_LOAD );
+		eventListenerGroup_PRE_UPDATE = listeners( eventListenerRegistry, PRE_UPDATE );
+		eventListenerGroup_PRE_UPSERT = listeners( eventListenerRegistry, PRE_UPSERT );
+		eventListenerGroup_REFRESH = listeners( eventListenerRegistry, REFRESH );
+		eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, REPLICATE );
 	}
 }

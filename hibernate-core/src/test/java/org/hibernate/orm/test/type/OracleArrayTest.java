@@ -4,8 +4,9 @@
  */
 package org.hibernate.orm.test.type;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.dialect.OracleDialect;
-
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -13,12 +14,12 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Assert;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
@@ -28,6 +29,10 @@ import jakarta.persistence.Id;
 @RequiresDialect(OracleDialect.class)
 @JiraKey("HHH-10999")
 public class OracleArrayTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -38,8 +43,8 @@ public class OracleArrayTest {
 			session.clear();
 
 			ArrayHolder arrayHolder = session.find( ArrayHolder.class, 1 );
-			Assert.assertEquals( expected.getIntArray(), arrayHolder.getIntArray() );
-			Assert.assertEquals( expected.getTextArray(), arrayHolder.getTextArray() );
+			assertArrayEquals( expected.getIntArray(), arrayHolder.getIntArray() );
+			assertArrayEquals( expected.getTextArray(), arrayHolder.getTextArray() );
 		} );
 	}
 

@@ -6,23 +6,23 @@ package org.hibernate.orm.test.resource.transaction;
 
 import jakarta.transaction.Status;
 import jakarta.transaction.Synchronization;
-
 import org.hibernate.orm.test.resource.common.SynchronizationCollectorImpl;
 import org.hibernate.orm.test.resource.common.SynchronizationErrorImpl;
 import org.hibernate.resource.transaction.LocalSynchronizationException;
 import org.hibernate.resource.transaction.NullSynchronizationException;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Unit tests for SynchronizationRegistryStandardImpl.
  *
  * @author Steve Ebersole
  */
+@BaseUnitTest
 public class SynchronizationRegistryStandardImplTests {
 	@Test
 	public void basicUsageTests() {

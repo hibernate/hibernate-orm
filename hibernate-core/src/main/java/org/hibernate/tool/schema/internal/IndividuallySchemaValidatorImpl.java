@@ -7,9 +7,7 @@ package org.hibernate.tool.schema.internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -36,13 +34,12 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect,
 			Namespace namespace) {
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( schemaFilter.includeTable( table )
 					&& table.isPhysicalTable()
 					&& contributableInclusionFilter.matches( table ) ) {
-				final TableInformation tableInformation = databaseInformation.getTableInformation(
-						table.getQualifiedTableName()
-				);
+				final var tableInformation =
+						databaseInformation.getTableInformation( table.getQualifiedTableName() );
 				validateTable( table, tableInformation, metadata, options, dialect );
 			}
 		}

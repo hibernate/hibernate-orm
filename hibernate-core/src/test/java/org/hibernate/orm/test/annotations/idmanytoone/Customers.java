@@ -24,7 +24,7 @@ public class Customers implements Serializable {
 	private int customerID;
 
 	@OneToMany(mappedBy="owner", cascade= CascadeType.ALL, targetEntity=ShoppingBaskets.class)
-	private java.util.Set shoppingBasketses = new java.util.HashSet();
+	private java.util.Set<ShoppingBaskets> shoppingBasketses = new java.util.HashSet<>();
 
 	public void setCustomerID(int value) {
 		this.customerID = value;
@@ -38,11 +38,11 @@ public class Customers implements Serializable {
 		return getCustomerID();
 	}
 
-	public void setShoppingBasketses(java.util.Set value) {
+	public void setShoppingBasketses(java.util.Set<ShoppingBaskets> value) {
 		this.shoppingBasketses = value;
 	}
 
-	public java.util.Set getShoppingBasketses() {
+	public java.util.Set<ShoppingBaskets> getShoppingBasketses() {
 		return shoppingBasketses;
 	}
 

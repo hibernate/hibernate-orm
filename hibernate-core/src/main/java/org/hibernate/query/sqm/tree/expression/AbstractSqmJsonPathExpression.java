@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.QuotingHelper;
@@ -19,6 +20,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -92,7 +94,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		passingExpressions.put( identifier, expression );
 	}
 
-	protected Map<String, SqmExpression<?>> copyPassingExpressions(SqmCopyContext context) {
+	protected @Nullable Map<String, SqmExpression<?>> copyPassingExpressions(SqmCopyContext context) {
 		if ( passingExpressions == null ) {
 			return null;
 		}
@@ -115,6 +117,7 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 	}
 
 	protected void appendPassingExpressionHqlString(StringBuilder sb, SqmRenderContext context) {
+		final var passingExpressions = this.passingExpressions;
 		if ( passingExpressions != null && !passingExpressions.isEmpty() ) {
 			sb.append( " passing " );
 			for ( Map.Entry<String, SqmExpression<?>> entry : passingExpressions.entrySet() ) {
@@ -123,5 +126,33 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 				QuotingHelper.appendDoubleQuoteEscapedString( sb, entry.getKey() );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(@Nullable Object other) {
+		return super.equals( other )
+			&& other instanceof AbstractSqmJsonPathExpression<?> that
+			&& Objects.equals( passingExpressions, that.passingExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( passingExpressions );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object other) {
+		return super.isCompatible( other )
+			&& other instanceof AbstractSqmJsonPathExpression<?> that
+			&& SqmCacheable.areCompatible( passingExpressions, that.passingExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( passingExpressions );
+		return result;
 	}
 }

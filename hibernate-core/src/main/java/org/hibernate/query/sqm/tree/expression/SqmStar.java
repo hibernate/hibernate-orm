@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -37,12 +38,22 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof SqmStar;
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmStar;
 	}
 
 	@Override
 	public int hashCode() {
 		return 1;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return equals( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return hashCode();
 	}
 }

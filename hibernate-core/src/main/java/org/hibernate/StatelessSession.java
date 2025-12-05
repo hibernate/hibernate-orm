@@ -54,8 +54,8 @@ import java.util.List;
  * Certain rules applying to stateful sessions are relaxed in a stateless
  * session:
  * <ul>
- * <li>it is not necessary to discard a session and its entities after an
- *     exception is thrown by a stateless sessions, and
+ * <li>it's not necessary to discard a stateless session and its entities
+ *     after an exception is thrown by the stateless session, and
  * <li>when an exception is thrown by a stateless session, the current
  *     transaction is not automatically marked for rollback.
  * </ul>
@@ -79,10 +79,6 @@ import java.util.List;
  * @author Gavin King
  */
 public interface StatelessSession extends SharedSessionContract {
-	/**
-	 * Close the stateless session and release the JDBC connection.
-	 */
-	void close();
 
 	/**
 	 * Insert a record.
@@ -101,7 +97,9 @@ public interface StatelessSession extends SharedSessionContract {
 	Object insert(Object entity);
 
 	/**
-	 * Insert multiple records.
+	 * Insert multiple records in the same order as the entity
+	 * instances representing the new records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of transient instances to be inserted
 	 *
@@ -134,7 +132,9 @@ public interface StatelessSession extends SharedSessionContract {
 	void update(Object entity);
 
 	/**
-	 * Update multiple records.
+	 * Update multiple records in the same order as the entity
+	 * instances representing the records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of detached instances to be updated
 	 *
@@ -165,7 +165,9 @@ public interface StatelessSession extends SharedSessionContract {
 	void delete(Object entity);
 
 	/**
-	 * Delete multiple records.
+	 * Delete multiple records in the same order as the entity
+	 * instances representing the records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of detached instances to be deleted
 	 *
@@ -210,9 +212,11 @@ public interface StatelessSession extends SharedSessionContract {
 	void upsert(Object entity);
 
 	/**
-	 * Perform an upsert, that is, to insert the record if it does
-	 * not exist, or update the record if it already exists, for
-	 * each given record.
+	 * Upsert multiple records, that is, for a given record,
+	 * insert the record if it does not exist or update the
+	 * record if it already exists, in the same order as the
+	 * entity instances representing the records occur in
+	 * the given list.
 	 *
 	 * @param entities a list of detached instances and new
 	 *                 instances with assigned identifiers

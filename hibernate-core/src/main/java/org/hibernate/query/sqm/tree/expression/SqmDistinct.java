@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -12,7 +13,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
-import java.util.Objects;
 
 /**
  * @author Gavin King
@@ -46,7 +46,7 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public SqmBindableType<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return expression.getNodeType();
 	}
 
@@ -62,13 +62,24 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmDistinct<?> that
-			&& Objects.equals( this.expression, that.expression );
+			&& expression.equals( that.expression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode( expression );
+		return expression.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmDistinct<?> that
+			&& expression.isCompatible( that.expression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return expression.cacheHashCode();
 	}
 }

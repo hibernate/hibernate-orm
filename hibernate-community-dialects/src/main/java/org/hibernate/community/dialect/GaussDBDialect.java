@@ -16,6 +16,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
+import org.hibernate.community.dialect.lock.internal.GaussDBLockingSupport;
 import org.hibernate.community.dialect.sequence.GaussDBSequenceSupport;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
@@ -29,6 +30,7 @@ import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -73,7 +75,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
@@ -148,6 +153,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <a href="https://support.huaweicloud.com/function-gaussdb/index.html">GaussDB documentation</a>.
  *
  * @author liubao
+ * @author chen zhida
  *
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
@@ -1122,6 +1128,11 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return GaussDBLockingSupport.LOCKING_SUPPORT;
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? " for update nowait"
@@ -1368,5 +1379,10 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
+	}
+
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorPostgreSQLImpl( extractionContext );
 	}
 }

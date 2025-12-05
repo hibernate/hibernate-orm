@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.quote;
+
 import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

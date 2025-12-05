@@ -203,7 +203,7 @@ public class QueryPredicateAndParameterComparableTest {
 	}
 
 	@Entity(name = "submissions")
-	public class Submission {
+	public static class Submission {
 
 		private int submissionid;
 

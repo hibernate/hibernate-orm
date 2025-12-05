@@ -11,11 +11,11 @@ import jakarta.persistence.Table;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Andrea Boriero

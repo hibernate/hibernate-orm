@@ -13,25 +13,30 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12018")
-public class EntitySameMapKeyMultiMapValueTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		EntitySameMapKeyMultiMapValueTest.SomeEntity.class,
+		EntitySameMapKeyMultiMapValueTest.OtherEntity.class
+})
+public class EntitySameMapKeyMultiMapValueTest {
 
 	private Integer otherEntityId;
 	private Integer someEntityId;
@@ -83,15 +88,9 @@ public class EntitySameMapKeyMultiMapValueTest extends BaseEnversJPAFunctionalTe
 		}
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SomeEntity.class, OtherEntity.class };
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			final SomeEntity someEntity = new SomeEntity();
 			final OtherEntity otherEntity = new OtherEntity();
 			entityManager.persist( otherEntity );
@@ -101,17 +100,16 @@ public class EntitySameMapKeyMultiMapValueTest extends BaseEnversJPAFunctionalTe
 
 			this.otherEntityId = otherEntity.getId();
 			this.someEntityId = someEntity.getId();
-
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final SomeEntity someEntity = entityManager.find( SomeEntity.class, someEntityId );
 			final OtherEntity otherEntity = entityManager.find( OtherEntity.class, otherEntityId );
 			someEntity.getMap().put( otherEntity, SomeEntity.Status.B );
 			entityManager.merge( someEntity );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			final SomeEntity someEntity = entityManager.find( SomeEntity.class, someEntityId );
 			someEntity.getMap().clear();
 			entityManager.merge( someEntity );
@@ -119,51 +117,63 @@ public class EntitySameMapKeyMultiMapValueTest extends BaseEnversJPAFunctionalTe
 	}
 
 	@Test
-	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( OtherEntity.class, otherEntityId ) );
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( SomeEntity.class, someEntityId ) );
+	public void testRevisionCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( OtherEntity.class, otherEntityId ) );
+			assertEquals( Arrays.asList( 1, 2, 3 ), auditReader.getRevisions( SomeEntity.class, someEntityId ) );
+		} );
 	}
 
 	@Test
-	public void blockTest() {
-		final AuditReader reader = getAuditReader();
+	public void blockTest(EntityManagerFactoryScope scope) {
+		scope.fromEntityManager( AuditReaderFactory::get );
 		System.out.println( "Halt" );
 	}
 
 	@Test
-	public void testRevisionOne() {
-		final SomeEntity someEntity = getAuditReader().find( SomeEntity.class, someEntityId, 1 );
-		assertNotNull( someEntity );
-		assertFalse( someEntity.getMap().isEmpty() );
-		assertEquals( 1, someEntity.getMap().size() );
+	public void testRevisionOne(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final SomeEntity someEntity = auditReader.find( SomeEntity.class, someEntityId, 1 );
+			assertNotNull( someEntity );
+			assertFalse( someEntity.getMap().isEmpty() );
+			assertEquals( 1, someEntity.getMap().size() );
 
-		final OtherEntity otherEntity = getAuditReader().find( OtherEntity.class, otherEntityId, 1 );
-		assertNotNull( otherEntity );
+			final OtherEntity otherEntity = auditReader.find( OtherEntity.class, otherEntityId, 1 );
+			assertNotNull( otherEntity );
 
-		final Map.Entry<OtherEntity, SomeEntity.Status> entry = someEntity.getMap().entrySet().iterator().next();
-		assertEquals( otherEntity, entry.getKey() );
-		assertEquals( SomeEntity.Status.A, entry.getValue() );
+			final Map.Entry<OtherEntity, SomeEntity.Status> entry = someEntity.getMap().entrySet().iterator().next();
+			assertEquals( otherEntity, entry.getKey() );
+			assertEquals( SomeEntity.Status.A, entry.getValue() );
+		} );
 	}
 
 	@Test
-	public void testRevisionTwo() {
-		final SomeEntity someEntity = getAuditReader().find( SomeEntity.class, someEntityId, 2 );
-		assertNotNull( someEntity );
-		assertFalse( someEntity.getMap().isEmpty() );
-		assertEquals( 1, someEntity.getMap().size() );
+	public void testRevisionTwo(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final SomeEntity someEntity = auditReader.find( SomeEntity.class, someEntityId, 2 );
+			assertNotNull( someEntity );
+			assertFalse( someEntity.getMap().isEmpty() );
+			assertEquals( 1, someEntity.getMap().size() );
 
-		final OtherEntity otherEntity = getAuditReader().find( OtherEntity.class, otherEntityId, 2 );
-		assertNotNull( otherEntity );
+			final OtherEntity otherEntity = auditReader.find( OtherEntity.class, otherEntityId, 2 );
+			assertNotNull( otherEntity );
 
-		final Map.Entry<OtherEntity, SomeEntity.Status> entry = someEntity.getMap().entrySet().iterator().next();
-		assertEquals( otherEntity, entry.getKey() );
-		assertEquals( SomeEntity.Status.B, entry.getValue() );
+			final Map.Entry<OtherEntity, SomeEntity.Status> entry = someEntity.getMap().entrySet().iterator().next();
+			assertEquals( otherEntity, entry.getKey() );
+			assertEquals( SomeEntity.Status.B, entry.getValue() );
+		} );
 	}
 
 	@Test
-	public void testRevisionThree() {
-		final SomeEntity someEntity = getAuditReader().find( SomeEntity.class, someEntityId, 3 );
-		assertNotNull( someEntity );
-		assertTrue( someEntity.getMap().isEmpty() );
+	public void testRevisionThree(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			final SomeEntity someEntity = auditReader.find( SomeEntity.class, someEntityId, 3 );
+			assertNotNull( someEntity );
+			assertTrue( someEntity.getMap().isEmpty() );
+		} );
 	}
 }

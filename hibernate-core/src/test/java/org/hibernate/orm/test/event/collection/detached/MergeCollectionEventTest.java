@@ -4,82 +4,81 @@
  */
 package org.hibernate.orm.test.event.collection.detached;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.hibernate.Session;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
-import org.hibernate.metamodel.CollectionClassification;
-
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-7928" )
-public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
+@JiraKey(value = "HHH-7928")
+@DomainModel(
+		annotatedClasses = {
+				Character.class, Alias.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"),
+				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+		}
+)
+@BootstrapServiceRegistry(integrators = MergeCollectionEventTest.ConfigurerIntegrator.class)
+@SessionFactory
+public class MergeCollectionEventTest {
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
-	}
+	private static AggregatedCollectionEventListener.IntegratorImpl collectionListenerIntegrator;
 
-	private AggregatedCollectionEventListener.IntegratorImpl collectionListenerIntegrator =
-			new AggregatedCollectionEventListener.IntegratorImpl();
-
-	@Before
-	public void resetListener() {
+	@BeforeEach
+	void setUp(SessionFactoryScope scope) {
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		collectionListenerIntegrator.getListener().reset();
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Character.class, Alias.class };
-	}
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
-		builder.applyIntegrator( collectionListenerIntegrator );
-	}
-
-	@Override
-	protected void cleanupTestData() throws Exception {
-		sessionFactory().getSchemaManager().truncate();
+	@AfterEach
+	void cleanupTestData(SessionFactoryScope scope) throws Exception {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
-	public void testCollectionEventHandlingOnMerge() {
+	public void testCollectionEventHandlingOnMerge(SessionFactoryScope scope) {
 		final AggregatedCollectionEventListener listener = collectionListenerIntegrator.getListener();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// This first bit really is just preparing the entities.  There is generally no collection
 		// events of real interest during this part
 
-		Session s = openSession();
-		s.beginTransaction();
 		Character paul = new Character( 1, "Paul Atreides" );
-		s.persist( paul );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( paul );
+		} );
 
 		assertEquals( 2, listener.getEventEntryList().size() );
 		checkListener( 0, PreCollectionRecreateEvent.class, paul, Collections.EMPTY_LIST );
@@ -87,12 +86,10 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 		listener.reset();
 
-		s = openSession();
-		s.beginTransaction();
 		Character paulo = new Character( 2, "Paulo Atreides" );
-		s.persist( paulo );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( paulo );
+		} );
 
 		assertEquals( 2, listener.getEventEntryList().size() );
 		checkListener( 0, PreCollectionRecreateEvent.class, paulo, Collections.EMPTY_LIST );
@@ -100,12 +97,10 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 		listener.reset();
 
-		s = openSession();
-		s.beginTransaction();
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
-		s.persist( alias1 );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( alias1 );
+		} );
 
 		assertEquals( 2, listener.getEventEntryList().size() );
 		checkListener( 0, PreCollectionRecreateEvent.class, alias1, Collections.EMPTY_LIST );
@@ -113,12 +108,10 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 		listener.reset();
 
-		s = openSession();
-		s.beginTransaction();
 		Alias alias2 = new Alias( 2, "Usul" );
-		s.persist( alias2 );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction( s -> {
+			s.persist( alias2 );
+		} );
 
 		assertEquals( 2, listener.getEventEntryList().size() );
 		checkListener( 0, PreCollectionRecreateEvent.class, alias2, Collections.EMPTY_LIST );
@@ -137,48 +130,46 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		paulo.associateAlias( alias1 );
 		paulo.associateAlias( alias2 );
 
-		s = openSession();
-		s.beginTransaction();
-		s.merge( alias1 );
+		scope.inTransaction( s -> {
+			s.merge( alias1 );
 
-		assertEquals( 0, listener.getEventEntryList().size() );
+			assertEquals( 0, listener.getEventEntryList().size() );
 
-		// this is where HHH-7928 (problem with HHH-6361 fix) shows up...
-		s.flush();
+			// this is where HHH-7928 (problem with HHH-6361 fix) shows up...
+			s.flush();
 
-		assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
-		checkListener( 0, PreCollectionUpdateEvent.class, alias1, Collections.EMPTY_LIST );
-		checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1.getCharacters() );
-		checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
-		checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
-		checkListener( 4, PreCollectionUpdateEvent.class, alias2, Collections.EMPTY_LIST );
-		checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
-		checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
-		checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
+			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
+			checkListener( 0, PreCollectionUpdateEvent.class, alias1, Collections.EMPTY_LIST );
+			checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1.getCharacters() );
+			checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
+			checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
+			checkListener( 4, PreCollectionUpdateEvent.class, alias2, Collections.EMPTY_LIST );
+			checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
+			checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
+			checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
 
-		List<Character> alias1CharactersSnapshot = copy( alias1.getCharacters() );
-		List<Character> alias2CharactersSnapshot = copy( alias2.getCharacters() );
+			List<Character> alias1CharactersSnapshot = copy( alias1.getCharacters() );
+			List<Character> alias2CharactersSnapshot = copy( alias2.getCharacters() );
 
-		listener.reset();
+			listener.reset();
 
-		s.merge( alias2 );
+			s.merge( alias2 );
 
-		assertEquals( 0, listener.getEventEntryList().size() );
+			assertEquals( 0, listener.getEventEntryList().size() );
 
-		s.flush();
+			s.flush();
 
-		assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
-		checkListener( 0, PreCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
-		checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
+			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
+			checkListener( 0, PreCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
+			checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
 //		checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
 //		checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
-		checkListener( 4, PreCollectionUpdateEvent.class, alias2, alias2CharactersSnapshot );
-		checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
+			checkListener( 4, PreCollectionUpdateEvent.class, alias2, alias2CharactersSnapshot );
+			checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
 //		checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
 //		checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
 
-		s.getTransaction().commit();
-		s.close();
+		} );
 
 //
 //		checkListener(listeners, listeners.getInitializeCollectionListener(),
@@ -208,8 +199,8 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		assertEquals( expectedOwner.getId(), event.getAffectedOwnerIdOrNull() );
 
 		if ( event instanceof PreCollectionUpdateEvent
-				|| event instanceof PreCollectionRemoveEvent
-				|| event instanceof PostCollectionRecreateEvent ) {
+			|| event instanceof PreCollectionRemoveEvent
+			|| event instanceof PostCollectionRecreateEvent ) {
 			List<Identifiable> snapshot = (List) eventEntry.getSnapshotAtTimeOfEventHandling();
 			assertEquals( expectedCollectionEntrySnapshot.size(), snapshot.size() );
 			for ( int i = 0; i < expectedCollectionEntrySnapshot.size(); i++ ) {
@@ -225,5 +216,22 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		ArrayList<T> copy = new ArrayList<T>( source.size() );
 		copy.addAll( source );
 		return copy;
+	}
+
+	public static class ConfigurerIntegrator implements Integrator {
+		public ConfigurerIntegrator() {
+			collectionListenerIntegrator = new AggregatedCollectionEventListener.IntegratorImpl();
+		}
+
+		@Override
+		public void integrate(Metadata metadata, BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
+			collectionListenerIntegrator.integrate( metadata, bootstrapContext, sessionFactory );
+		}
+
+		@Override
+		public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+			collectionListenerIntegrator.disintegrate( sessionFactory, serviceRegistry );
+			collectionListenerIntegrator = null;
+		}
 	}
 }

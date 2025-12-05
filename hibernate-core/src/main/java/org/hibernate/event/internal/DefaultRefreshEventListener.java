@@ -10,31 +10,24 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -45,7 +38,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultRefreshEventListener.class );
 
 	@Override
 	public void onRefresh(RefreshEvent event) throws HibernateException {
@@ -59,8 +51,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 */
 	@Override
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
 			handleUninitializedProxy( event, refreshedAlready, source, object, persistenceContext );
@@ -71,7 +63,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refresh( event, refreshedAlready, entity );
 			}
 			else {
-				LOG.trace( "Already refreshed" );
+				EVENT_LISTENER_LOGGER.alreadyRefreshed();
 			}
 		}
 	}
@@ -82,13 +74,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			EventSource source,
 			Object object,
 			PersistenceContext persistenceContext) {
-		final boolean isTransient = isTransient( event, source, object );
+		final boolean isTransient = !source.isManaged( object );
 		// If refreshAlready is nonempty then the refresh is the result of a cascade refresh and the
 		// refresh of the parent will take care of initializing the lazy entity and setting the
 		// correct lock. This is needed only when the refresh is called directly on a lazy entity.
 		if ( refreshedAlready.isEmpty() ) {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
-			final EntityPersister persister = getPersister( lazyInitializer, source, object, isTransient );
+			final var lazyInitializer = extractLazyInitializer( object );
+			final var persister = getPersister( lazyInitializer, source, object, isTransient );
 			refresh(
 					event,
 					null,
@@ -125,15 +117,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static boolean isTransient(RefreshEvent event, EventSource source, Object object) {
-		final String entityName = event.getEntityName();
-		return entityName == null ? !source.contains( object ) : !source.contains( entityName, object );
-	}
-
 	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( object );
+		final var source = event.getSession();
+		final var persistenceContext = source.getPersistenceContextInternal();
+		final var entry = persistenceContext.getEntry( object );
 
 		final EntityPersister persister;
 		final Object id;
@@ -145,16 +132,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
 						+ "' because it has a null identifier" );
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.refreshingTransient(
+						infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
 			}
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
+			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+				EVENT_LISTENER_LOGGER.refreshing(
+						infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(
@@ -227,16 +216,16 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// multiple actions queued during the same flush
 				previousVersion = persister.getVersion( object );
 			}
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
+			final var cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( source, ck, previousVersion );
-			cache.remove( source, ck );
-			source.getActionQueue().registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+			final SoftLock lock = cache.lockItem( source, cacheKey, previousVersion );
+			cache.remove( source, cacheKey );
+			source.getActionQueue().registerCallback( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 		}
 	}
 
@@ -249,53 +238,57 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			LazyInitializer lazyInitializer,
 			Object id,
 			PersistenceContext persistenceContext) {
-		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
-		LockOptions lockOptionsToUse = event.getLockOptions();
-		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
+		// Handle the requested lock mode, if any, in relation to the current
+		// lock mode, if any, of the entry.
+		final var lockOptions = event.getLockOptions();
+		final var requestedLockMode = lockOptions.getLockMode();
+		final LockOptions lockOptionsToUse;
 		final LockMode postRefreshLockMode;
-		if ( entry != null ) {
-			final LockMode currentLockMode = entry.getLockMode();
-			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
-				// the requested lock-mode is less restrictive than the current one
-				//		- pass along the current lock-mode (after accounting for WRITE)
-				lockOptionsToUse = lockOptionsToUse.makeCopy();
-				if ( currentLockMode == LockMode.WRITE
-						|| currentLockMode == LockMode.PESSIMISTIC_WRITE
-						|| currentLockMode == LockMode.PESSIMISTIC_READ ) {
-					// our transaction should already hold the exclusive lock on
-					// the underlying row - so READ should be sufficient.
-					//
-					// in fact, this really holds true for any current lock-mode that indicates we
-					// hold an exclusive lock on the underlying row - but we *need* to handle
-					// WRITE specially because the Loader/Locker mechanism does not allow for WRITE
-					// locks
-					lockOptionsToUse.setLockMode( LockMode.READ );
-					// and prepare to reset the entry lock-mode to the previous lock mode after
-					// the refresh completes
-					postRefreshLockMode = currentLockMode;
-				}
-				else {
-					lockOptionsToUse.setLockMode( currentLockMode );
-					postRefreshLockMode = null;
-				}
-			}
-			else {
-				postRefreshLockMode = null;
-			}
-		}
-		else {
+		if ( entry == null ) {
+			// Should never happen now that we can't refresh detached entities.
+			lockOptionsToUse = lockOptions;
 			postRefreshLockMode = null;
 		}
+		else {
+			final var currentLockMode = entry.getLockMode();
+			if ( requestedLockMode.greaterThan( currentLockMode )
+					|| currentLockMode == LockMode.NONE
+					|| currentLockMode == LockMode.READ ) {
+				// Either the current transaction does not hold an exclusive
+				// lock or we're upgrading to a more restrictive lock mode.
+				// Nothing special to do in this case.
+				lockOptionsToUse = lockOptions;
+				postRefreshLockMode = null;
+			}
+			else {
+				// The requested lock mode is no more restrictive than the
+				// exclusive lock already held. Preserve the current mode.
+				lockOptionsToUse = lockOptions.makeCopy();
+				// The current transaction already holds an exclusive lock,
+				// so refreshing with READ is sufficient. Also see HHH-19937;
+				// we want to avoid dupe version checks.
+				lockOptionsToUse.setLockMode( LockMode.READ );
+				// But prepare to reset the entry lock mode to the previous
+				// lock mode after the refresh completes, except in the case
+				// where the two lock modes belong to the same level, in which
+				// case we will need to reset the entry to the requested mode.
+				postRefreshLockMode =
+						requestedLockMode.lessThan( currentLockMode )
+								? currentLockMode
+								: requestedLockMode;
+			}
+		}
 
+		// Go ahead and reload the entity from the database.
 		final Object result = persister.load( id, object, lockOptionsToUse, source );
 		if ( result != null ) {
-			// apply postRefreshLockMode, if needed
+			// Apply the preserved postRefreshLockMode, if any.
 			if ( postRefreshLockMode != null ) {
-				// if we get here, there was a previous entry, and we need to reset its lock mode
-				//		- however, the refresh operation actually creates a new entry, so get it
+				// If we get here, there was a previous entry, and a lock was already held.
+				// But the refresh operation created a new entry with a less restrictive
+				// lock mode recorded. So we need to reset the lock mode of the new entry.
 				persistenceContext.getEntry( result ).setLockMode( postRefreshLockMode );
 			}
-
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
@@ -328,24 +321,24 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
-		final SessionFactoryImplementor factory = source.getFactory();
-		final ActionQueue actionQueue = source.getActionQueue();
-		final MappingMetamodelImplementor metamodel = factory.getMappingMetamodel();
+		final var factory = source.getFactory();
+		final var actionQueue = source.getActionQueue();
+		final var metamodel = factory.getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type instanceof CollectionType collectionType ) {
-				final CollectionPersister collectionPersister =
+				final var collectionPersister =
 						metamodel.getCollectionDescriptor( collectionType.getRole() );
 				if ( collectionPersister.hasCache() ) {
-					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
-					final Object ck = cache.generateCacheKey(
+					final var cache = collectionPersister.getCacheAccessStrategy();
+					final Object cacheKey = cache.generateCacheKey(
 						id,
 						collectionPersister,
 						factory,
 						source.getTenantIdentifier()
 					);
-					final SoftLock lock = cache.lockItem( source, ck, null );
-					cache.remove( source, ck );
-					actionQueue.registerProcess( (success, session) -> cache.unlockItem( session, ck, lock ) );
+					final var lock = cache.lockItem( source, cacheKey, null );
+					cache.remove( source, cacheKey );
+					actionQueue.registerCallback( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 				}
 			}
 			else if ( type instanceof ComponentType compositeType ) {

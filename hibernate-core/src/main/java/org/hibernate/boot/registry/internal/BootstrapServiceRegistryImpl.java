@@ -16,8 +16,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
@@ -28,6 +26,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -40,8 +40,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BootstrapServiceRegistryImpl.class );
 
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
@@ -107,17 +105,16 @@ public class BootstrapServiceRegistryImpl
 				classLoaderService
 		);
 
-		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
-				strategySelector
+				new StrategySelectorImpl( classLoaderService )
 		);
 
 		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
-				IntegratorServiceImpl.create( providedIntegrators, classLoaderService )
+				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
 		);
 	}
 
@@ -186,7 +183,7 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
-		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
+		final var binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
 
@@ -208,24 +205,20 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public synchronized void destroy() {
-		if ( !active ) {
-			return;
-		}
-		active = false;
-		destroy( classLoaderServiceBinding );
-		destroy( strategySelectorBinding );
-		destroy( integratorServiceBinding );
-
-		if ( childRegistries != null ) {
-			for ( ServiceRegistry serviceRegistry : childRegistries ) {
-				if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
-					serviceRegistryImplementor.destroy();
+		if ( active ) {
+			active = false;
+			destroy( classLoaderServiceBinding );
+			destroy( strategySelectorBinding );
+			destroy( integratorServiceBinding );
+			if ( childRegistries != null ) {
+				for ( var serviceRegistry : childRegistries ) {
+					serviceRegistry.destroy();
 				}
 			}
 		}
 	}
 
-	private synchronized void destroy(ServiceBinding serviceBinding) {
+	private synchronized void destroy(ServiceBinding<?> serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
 
@@ -266,7 +259,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( binding.getServiceRole().getName(), e );
+				SERVICE_LOGGER.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -277,10 +270,7 @@ public class BootstrapServiceRegistryImpl
 			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
-			LOG.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
-					child
-			);
+			SERVICE_LOGGER.childAlreadyRegistered( child );
 		}
 	}
 
@@ -292,11 +282,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.trace( "Automatically destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.destroyingBootstrapRegistry();
 				destroy();
 			}
 			else {
-				LOG.trace( "Skipping destroying bootstrap registry after deregistration of every child ServiceRegistry" );
+				SERVICE_LOGGER.skippingBootstrapRegistryDestruction();
 			}
 		}
 	}

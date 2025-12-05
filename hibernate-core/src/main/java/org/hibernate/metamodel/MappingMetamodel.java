@@ -78,14 +78,14 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * Get an entity mapping descriptor based on its Class.
 	 *
-	 * @throws IllegalArgumentException if the name does not refer to an entity
+	 * @throws IllegalArgumentException if the class is not an entity class
 	 *
 	 * @see #findEntityDescriptor
 	 */
 	EntityPersister getEntityDescriptor(Class<?> entityJavaType);
 
 	/**
-	 * Find an entity mapping descriptor based on its Hibernate entity-name.
+	 * Find an entity mapping descriptor based on its Hibernate entity name.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */

@@ -44,14 +44,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * @author Gavin King
  */
-@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SkipForDialect(dialectClass = SQLServerDialect.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/tm/Item.hbm.xml",
 		concurrencyStrategy = "transactional"
 )
-@SessionFactory(
-		generateStatistics = true
-)
+@SessionFactory(generateStatistics = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.AUTO_CLOSE_SESSION, value = "true"),
@@ -80,13 +79,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 						provider = CMTTest.ConnectionHandlingProvider.class
 				)
 		}
-
 )
 public class CMTTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 

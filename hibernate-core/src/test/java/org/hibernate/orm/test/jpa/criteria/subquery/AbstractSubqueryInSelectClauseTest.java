@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,19 +15,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Before;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractSubqueryInSelectClauseTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Person.class, Document.class };
-	}
-
-	@Before
-	public void initData() {
-		doInJPA( this::entityManagerFactory, em -> {
+	@BeforeEach
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person p1 = new Person();
 			Person p2 = new Person();
 			Document d = new Document();
@@ -42,10 +36,15 @@ public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManag
 			d.getContacts().put( 1, p1 );
 			d.getContacts().put( 2, p2 );
 
-			em.persist( p1 );
-			em.persist( p2 );
-			em.persist( d );
+			entityManager.persist( p1 );
+			entityManager.persist( p2 );
+			entityManager.persist( d );
 		} );
+	}
+
+	@AfterEach
+	public void cleanupTestData(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Document")
@@ -53,7 +52,7 @@ public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManag
 
 		private Integer id;
 
-		private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
+		private Map<Integer, Person> contacts = new HashMap<>();
 
 		@Id
 		@GeneratedValue
@@ -82,7 +81,7 @@ public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManag
 
 		private Integer id;
 
-		private Map<Integer, String> localized = new HashMap<Integer, String>();
+		private Map<Integer, String> localized = new HashMap<>();
 
 		@Id
 		@GeneratedValue

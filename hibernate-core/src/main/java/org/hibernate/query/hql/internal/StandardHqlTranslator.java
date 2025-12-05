@@ -96,7 +96,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		// Build the parse tree
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
-		// try to use SLL(k)-based parsing first - its faster
+		// try to use SLL(k)-based parsing first - it's faster
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
@@ -104,9 +104,14 @@ public class StandardHqlTranslator implements HqlTranslator {
 		try {
 			return hqlParser.statement();
 		}
-		catch ( ParseCancellationException e) {
+		catch (ParseCancellationException e) {
+			// When resetting the parser, its CommonTokenStream will seek(0) i.e. restart emitting buffered tokens.
+			// This is enough when reusing the lexer and parser, and it would be wrong to also reset the lexer.
+			// Resetting the lexer causes it to hand out tokens again from the start, which will then append to the
+			// CommonTokenStream and cause a wrong parse
+			// hqlLexer.reset();
+
 			// reset the input token stream and parser state
-			hqlLexer.reset();
 			hqlParser.reset();
 
 			// fall back to LL(k)-based parsing
@@ -125,7 +130,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		}
 		catch ( ParsingException ex ) {
 			// Note that this is supposed to represent a bug in the parser
-			// Ee wrap and rethrow in order to attach the HQL query to the error
+			// We wrap and rethrow in order to attach the HQL query to the error
 			throw new QueryException( "Failed to interpret HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}

@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.manytoone;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
@@ -15,56 +12,53 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Chris Cranford
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-13044")
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class ManyToOneMapsIdFlushModeTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ParentEntity.class, ChildEntity.class };
-	}
-
+@RequiresDialectFeature(feature= DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(annotatedClasses = { ManyToOneMapsIdFlushModeTest.ParentEntity.class, ManyToOneMapsIdFlushModeTest.ChildEntity.class })
+@SessionFactory
+public class ManyToOneMapsIdFlushModeTest {
 	@Test
-	public void testFlushModeCommitWithMapsIdAndIdentity() {
-		final ParentEntity parent = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.setFlushMode( FlushModeType.COMMIT );
+	public void testFlushModeCommitWithMapsIdAndIdentity(SessionFactoryScope factoryScope) {
+		final ParentEntity parent = factoryScope.fromTransaction( (session) -> {
+			session.setFlushMode( FlushModeType.COMMIT );
 
-			final ParentEntity parentEntity = new ParentEntity();
+			var parentEntity = new ParentEntity();
 			parentEntity.setData( "test" );
 
-			final ChildEntity childEntity = new ChildEntity();
+			var childEntity = new ChildEntity();
 			parentEntity.addChild( childEntity );
 
-			entityManager.persist( parentEntity );
-			entityManager.persist( childEntity );
+			session.persist( parentEntity );
+			session.persist( childEntity );
 
 			return parentEntity;
 		} );
 
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final ParentEntity parentEntity = entityManager.find( ParentEntity.class, parent.getId() );
-			assertNotNull( parentEntity );
-			assertNotNull( parentEntity.getChildren() );
-			assertTrue( !parentEntity.getChildren().isEmpty() );
+		factoryScope.inTransaction( (session) -> {
+			final ParentEntity parentEntity = session.find( ParentEntity.class, parent.getId() );
+			Assertions.assertNotNull( parentEntity );
+			Assertions.assertNotNull( parentEntity.getChildren() );
+			Assertions.assertFalse( parentEntity.getChildren().isEmpty() );
 
 			final ChildEntity childEntity = parentEntity.getChildren().iterator().next();
-			assertNotNull( childEntity );
-			assertEquals( parentEntity.getId(), childEntity.getId() );
+			Assertions.assertNotNull( childEntity );
+			Assertions.assertEquals( parentEntity.getId(), childEntity.getId() );
 		} );
 	}
 

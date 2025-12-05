@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.internal;
 import java.util.List;
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.QueryLogging;
@@ -135,7 +136,7 @@ import jakarta.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
-	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
+	private static final Logger LOG = Logger.getLogger( SqmTreePrinter.class );
 
 	private static final Logger LOGGER = QueryLogging.subLogger( "sqm.ast" );
 	private static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
@@ -199,7 +200,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			continuation.run();
 		}
 		catch (Exception e) {
-			log.debugf( e, "Error processing stanza {%s}", name );
+			LOG.debugf( e, "Error processing stanza {%s}", name );
 		}
 		finally {
 			if ( indentContinuation ) {
@@ -229,7 +230,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			continuation.run();
 		}
 		catch (Exception e) {
-			log.debugf( e, "Error processing stanza {%s}", name );
+			LOG.debugf( e, "Error processing stanza {%s}", name );
 		}
 		finally {
 			if ( indentContinuation ) {
@@ -777,7 +778,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitTreatedPath(SqmTreatedPath<?,?> sqmTreatedPath) {
+	public Object visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
 		return null;
 	}
 
@@ -926,7 +927,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitWhereClause(SqmWhereClause whereClause) {
+	public Object visitWhereClause(@Nullable SqmWhereClause whereClause) {
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
 			processStanza(
 					"where",

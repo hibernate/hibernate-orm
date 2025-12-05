@@ -4,11 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -32,7 +34,7 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 
 	private SqmCorrelatedCrossJoin(
 			SqmEntityDomainType<T> joinedEntityDescriptor,
-			String alias,
+			@Nullable String alias,
 			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmCrossJoin<T> correlationParent) {
@@ -87,15 +89,29 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 		return new SqmCorrelatedCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
-				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
-				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.resolveFromByPath( getRoot().getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.resolveFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedCrossJoin( this );
+	}
+
+	@Override
+	public boolean deepEquals(SqmFrom<?, ?> other) {
+		return super.deepEquals( other )
+			&& other instanceof SqmCorrelatedCrossJoin<?> that
+			&& correlationParent.equals( that.correlationParent );
+	}
+
+	@Override
+	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+		return super.isDeepCompatible( other )
+			&& other instanceof SqmCorrelatedCrossJoin<?> that
+			&& correlationParent.isCompatible( that.correlationParent );
 	}
 
 }

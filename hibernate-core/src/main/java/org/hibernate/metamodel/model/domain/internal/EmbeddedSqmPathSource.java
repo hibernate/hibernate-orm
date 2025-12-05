@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -21,7 +22,7 @@ public class EmbeddedSqmPathSource<J>
 
 	public EmbeddedSqmPathSource(
 			String localPathName,
-			SqmPathSource<J> pathModel,
+			@Nullable SqmPathSource<J> pathModel,
 			SqmEmbeddableDomainType<J> domainType,
 			BindableType jpaBindableType,
 			boolean isGeneric) {
@@ -36,7 +37,7 @@ public class EmbeddedSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		return getPathType().findSubPathSource( name );
 	}
 
@@ -46,7 +47,7 @@ public class EmbeddedSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return new SqmEmbeddedValuedSimplePath<>(
 				pathModel instanceof SqmJoinable<?, ?> sqmJoinable
 						? sqmJoinable.createNavigablePath( lhs, null )

@@ -21,10 +21,11 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 	private Table table;
 	private KeyValue key;
 
-	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( superclass, metadataBuildingContext );
+	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
+		super( superclass, buildingContext );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
@@ -43,7 +44,7 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 	}
 
 	public void validate(Metadata mapping) throws MappingException {
-		super.validate(mapping);
+		super.validate( mapping );
 		if ( key != null && !key.isValid( mapping ) ) {
 			throw new MappingException(
 					"subclass key mapping has wrong number of columns: " +

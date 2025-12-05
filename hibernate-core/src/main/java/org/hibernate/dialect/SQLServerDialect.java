@@ -4,21 +4,12 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -33,12 +24,16 @@ import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
+import org.hibernate.dialect.temptable.SQLServerLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
@@ -64,10 +59,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -94,7 +89,16 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -492,6 +496,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.hex( "convert(varchar(MAX), ?1, 2)" );
 		functionFactory.sha( "hashbytes('SHA2_256', ?1)" );
 		functionFactory.md5( "hashbytes('MD5', ?1)" );
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.regexpLike_predicateFunction();
+		}
 	}
 
 	/**
@@ -639,14 +646,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		final LockMode lockMode = lockModeForAlias( lockOptions, tableName );
-		final int timeOut = lockOptions.getTimeOut();
+		final LockMode lockMode = lockOptions.getLockMode();
+		final int timeOut = lockOptions.getTimeout().milliseconds();
 
-		final String writeLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-		final String readLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+		final String writeLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? "updlock" : "updlock,holdlock";
+		final String readLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? "updlock" : "holdlock";
 
-		final String noWaitStr = timeOut == LockOptions.NO_WAIT ? ",nowait" : "";
-		final String skipLockStr = timeOut == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+		final String noWaitStr = timeOut == Timeouts.NO_WAIT_MILLI ? ",nowait" : "";
+		final String skipLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? ",readpast" : "";
 
 		return tableName + switch (lockMode) {
 			case PESSIMISTIC_WRITE, WRITE -> " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
@@ -657,11 +664,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		};
 	}
 
-	private static LockMode lockModeForAlias(LockOptions lockOptions, String tableName) {
-		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-		return lockMode == null ? lockOptions.getLockMode() : lockMode;
+	@Override
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SQL_SERVER;
 	}
-
 
 	/**
 	 * The current_timestamp is more accurate, but only known to be supported in SQL Server 7.0 and later and
@@ -725,21 +731,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsNonQueryWithCTE() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
 	}
 
 	@Override
@@ -1083,12 +1074,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
-			case Types.CHAR, Types.NCHAR, Types.VARCHAR, Types.NVARCHAR, Types.LONGVARCHAR, Types.LONGNVARCHAR ->
-					"collate database_default";
-			default -> "";
-		};
+		return SQLServerLocalTemporaryTableStrategy.INSTANCE.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
 	}
 
 	@Override

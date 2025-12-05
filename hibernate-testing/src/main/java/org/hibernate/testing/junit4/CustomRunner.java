@@ -324,9 +324,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						effectiveSkipForDialect.minorVersion(),
 						effectiveSkipForDialect.microVersion(),
 						dialect,
-						effectiveSkipForDialect.matchSubTypes()
-								? DialectFilterExtension.VersionMatchMode.SAME_OR_OLDER
-								: DialectFilterExtension.VersionMatchMode.SAME
+						effectiveSkipForDialect.versionMatchMode()
 				);
 
 				if ( versionsMatch ) {
@@ -502,9 +500,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 						matchingMinorVersion,
 						matchingMicroVersion,
 						dialect,
-						requiresDialect.matchSubTypes()
-								? DialectFilterExtension.VersionMatchMode.SAME_OR_NEWER
-								: DialectFilterExtension.VersionMatchMode.SAME
+						requiresDialect.versionMatchMode()
 				);
 			}
 			else {

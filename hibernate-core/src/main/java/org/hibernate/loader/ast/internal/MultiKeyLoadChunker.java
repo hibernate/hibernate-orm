@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -91,7 +91,6 @@ public class MultiKeyLoadChunker<K> {
 		int start = 0;
 		while ( numberOfKeysLeft > 0 ) {
 			processChunk( keys, start, sqlExecutionContextCreator, keyCollector, startListener, boundaryListener, session );
-
 			start += chunkSize;
 			numberOfKeysLeft -= chunkSize;
 		}
@@ -108,7 +107,7 @@ public class MultiKeyLoadChunker<K> {
 		startListener.chunkStartNotification( startIndex );
 
 		final int parameterCount = chunkSize * keyColumnCount;
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterCount );
+		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterCount );
 
 		int nonNullCounter = 0;
 		int bindCount = 0;
@@ -140,22 +139,20 @@ public class MultiKeyLoadChunker<K> {
 		}
 		assert bindCount == jdbcParameters.size();
 
-		if ( nonNullCounter == 0 ) {
-			// there are no non-null keys in the chunk
-			return;
+		if ( nonNullCounter != 0 ) {
+			session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
+					jdbcSelect,
+					jdbcParameterBindings,
+					sqlExecutionContextCreator.createContext( jdbcParameterBindings, session ),
+					RowTransformerStandardImpl.instance(),
+					null,
+					nonNullCounter,
+					ManagedResultConsumer.INSTANCE
+			);
+
+			boundaryListener.chunkBoundaryNotification( startIndex, nonNullCounter );
 		}
-
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
-				jdbcSelect,
-				jdbcParameterBindings,
-				sqlExecutionContextCreator.createContext( jdbcParameterBindings, session ),
-				RowTransformerStandardImpl.instance(),
-				null,
-				nonNullCounter,
-				ManagedResultConsumer.INSTANCE
-		);
-
-		boundaryListener.chunkBoundaryNotification( startIndex, nonNullCounter );
+		// otherwise, there are no non-null keys in the chunk
 	}
 
 }

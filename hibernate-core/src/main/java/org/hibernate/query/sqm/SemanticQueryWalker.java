@@ -6,6 +6,7 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -16,6 +17,8 @@ import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCteJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
@@ -173,6 +176,14 @@ public interface SemanticQueryWalker<T> {
 
 	T visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> joinedFromElement);
 
+	default T visitCorrelatedCteJoin(SqmCorrelatedCteJoin<?> join){
+		return visitQualifiedCteJoin( join );
+	}
+
+	default T visitCorrelatedDerivedJoin(SqmCorrelatedDerivedJoin<?> join){
+		return visitQualifiedDerivedJoin( join );
+	}
+
 	default T visitCorrelatedCrossJoin(SqmCorrelatedCrossJoin<?> join) {
 		return visitCrossJoin( join );
 	}
@@ -255,7 +266,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFunctionPath(SqmFunctionPath<?> functionPath);
 
-	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
+	T visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath);
 
 	T visitCorrelation(SqmCorrelation<?, ?> correlation);
 
@@ -370,7 +381,7 @@ public interface SemanticQueryWalker<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// predicates
 
-	T visitWhereClause(SqmWhereClause whereClause);
+	T visitWhereClause(@Nullable SqmWhereClause whereClause);
 
 	T visitGroupedPredicate(SqmGroupedPredicate predicate);
 

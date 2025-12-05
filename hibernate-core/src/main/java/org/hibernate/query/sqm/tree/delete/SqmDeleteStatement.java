@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.delete;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.query.criteria.JpaCriteriaDelete;
@@ -54,7 +53,7 @@ public class SqmDeleteStatement<T>
 	public SqmDeleteStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target) {
 		super( builder, querySource, parameters, cteStatements, target );
@@ -66,11 +65,12 @@ public class SqmDeleteStatement<T>
 		if ( existing != null ) {
 			return existing;
 		}
+		final var newQuerySource = context.getQuerySource();
 		final SqmDeleteStatement<T> statement = context.registerCopy(
 				this,
 				new SqmDeleteStatement<>(
 						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+						newQuerySource == null ? getQuerySource() : newQuerySource,
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context )
@@ -86,13 +86,13 @@ public class SqmDeleteStatement<T>
 	}
 
 	@Override
-	public SqmDeleteStatement<T> where(Expression<Boolean> restriction) {
+	public SqmDeleteStatement<T> where(@Nullable Expression<Boolean> restriction) {
 		setWhere( restriction );
 		return this;
 	}
 
 	@Override
-	public SqmDeleteStatement<T> where(Predicate... restrictions) {
+	public SqmDeleteStatement<T> where(Predicate @Nullable... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
@@ -112,20 +112,6 @@ public class SqmDeleteStatement<T>
 		SqmFromClause.appendJoins( root, hql, context );
 		SqmFromClause.appendTreatJoins( root, hql, context );
 		super.appendHqlString( hql, context );
-	}
-
-	@Override
-	public boolean equals(Object node) {
-		return node instanceof SqmDeleteStatement<?> that
-			&& super.equals( node )
-			&& Objects.equals( this.getTarget(), that.getTarget() )
-			&& Objects.equals( this.getWhereClause(), that.getWhereClause() )
-			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), getTarget(), getWhereClause(), getCteStatements() );
 	}
 
 	@Override

@@ -22,15 +22,11 @@ public final class SessionAssociationMarkers {
 	transient SharedSessionContractImplementor session; //TODO by resetting this one field on Session#close we might be able to avoid iterating on all managed instances to de-associate them? Only if we guarantee all managed types use this.
 
 	public SessionAssociationMarkers(final SharedSessionContractImplementor session) {
-		this.allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions()
-				.isInitializeLazyStateOutsideTransactionsEnabled();
-		if ( this.allowLoadOutsideTransaction ) {
-			this.sessionFactoryUuid = session.getFactory().getUuid();
-		}
-		else {
-			this.sessionFactoryUuid = null;
-		}
 		this.session = session;
+		allowLoadOutsideTransaction =
+				session.getFactory().getSessionFactoryOptions()
+						.isInitializeLazyStateOutsideTransactionsEnabled();
+		sessionFactoryUuid = allowLoadOutsideTransaction ? session.getFactory().getUuid() : null;
 	}
 
 	/**
@@ -38,30 +34,28 @@ public final class SessionAssociationMarkers {
 	 * state.
 	 */
 	private SessionAssociationMarkers() {
-		this.allowLoadOutsideTransaction = false;
-		this.sessionFactoryUuid = null;
-		this.session = null;
+		session = null;
+		sessionFactoryUuid = null;
+		allowLoadOutsideTransaction = false;
 	}
 
 	/**
 	 * Copying constructor for when we're allowed to load outside of transactions
 	 * and need to transparently reassociated to the SessionFactory having the
 	 * specified UUID.
-	 * @param sessionFactoryUuid
+	 *
+	 * @param uuid The UUID of the SessionFactory
 	 */
-	private SessionAssociationMarkers(String sessionFactoryUuid) {
-		this.allowLoadOutsideTransaction = true;
-		this.sessionFactoryUuid = sessionFactoryUuid;
-		this.session = null;
+	private SessionAssociationMarkers(String uuid) {
+		session = null;
+		sessionFactoryUuid = uuid;
+		allowLoadOutsideTransaction = true;
 	}
 
 	public SessionAssociationMarkers deAssociatedCopy() {
-		if ( allowLoadOutsideTransaction ) {
-			return new SessionAssociationMarkers( sessionFactoryUuid );
-		}
-		else {
-			return NON_ASSOCIATED;
-		}
+		return allowLoadOutsideTransaction
+				? new SessionAssociationMarkers( sessionFactoryUuid )
+				: NON_ASSOCIATED;
 	}
 
 	/**
@@ -70,7 +64,7 @@ public final class SessionAssociationMarkers {
 	 * Removes the reference to the session; useful on Session close.
 	 */
 	public void sessionClosed() {
-		this.session = null;
+		session = null;
 	}
 
 }

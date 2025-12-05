@@ -33,10 +33,15 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-13393" )
 @DomainModel( annotatedClasses = ZoneMappingTests.ZoneMappingTestEntity.class )
 @SessionFactory
 public class ZoneMappingTests {
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
+	}
 
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
@@ -91,11 +96,6 @@ public class ZoneMappingTests {
 			assertThat( entity.getZoneId() ).isEqualTo( zoneId );
 			assertThat( entity.getZoneOffset() ).isEqualTo( zoneOffset );
 		} );
-	}
-
-	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "ZoneMappingTestEntity" )

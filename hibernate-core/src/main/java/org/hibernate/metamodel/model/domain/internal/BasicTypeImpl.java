@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -40,7 +41,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, J
 	}
 
 	@Override
-	public SqmDomainType<J> getSqmType() {
+	public @Nullable SqmDomainType<J> getSqmType() {
 		return this;
 	}
 

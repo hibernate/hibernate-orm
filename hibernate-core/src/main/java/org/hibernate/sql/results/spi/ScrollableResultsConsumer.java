@@ -7,16 +7,16 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.FetchingScrollableResultsImpl;
-import org.hibernate.internal.ScrollableResultsImpl;
+import org.hibernate.internal.scrollable.FetchingScrollableResultsImpl;
+import org.hibernate.internal.scrollable.ScrollableResultsImpl;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
  * @author Steve Ebersole
@@ -41,7 +41,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
-			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
 		rowReader.startLoading( rowProcessingState );

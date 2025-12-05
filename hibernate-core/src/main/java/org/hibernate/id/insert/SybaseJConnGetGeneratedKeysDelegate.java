@@ -8,8 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
@@ -33,8 +31,9 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		final BasicEntityIdentifierMapping identifierMapping =
-				(BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping();
+		final var identifierMapping =
+				(BasicEntityIdentifierMapping)
+						persister.getRootEntityDescriptor().getIdentifierMapping();
 		return dialect().getIdentityColumnSupport()
 				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );
 	}
@@ -44,10 +43,10 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
-		JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		final JdbcServices jdbcServices = session.getJdbcServices();
+		final var jdbcCoordinator = session.getJdbcCoordinator();
+		final var jdbcServices = session.getJdbcServices();
 
-		ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
+		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
 		try {
 			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 		}

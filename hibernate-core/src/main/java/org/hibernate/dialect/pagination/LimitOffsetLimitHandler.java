@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.pagination;
 
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
 /**
  * A {@link LimitHandler} for databases like PostgreSQL, H2,
  * and HSQL that support the syntax {@code LIMIT n OFFSET m}.
@@ -18,6 +20,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 		protected String offsetOnlyClause() {
 			return " offset ?";
 		}
+		@Override
+		protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+			return " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		}
 	};
 
 	@Override
@@ -26,8 +32,24 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		final String limit = " limit " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+		return hasFirstRow
+				? limit + " offset " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null )
+				: limit;
+	}
+
+	@Override
 	protected String offsetOnlyClause() {
 		return " limit " + Integer.MAX_VALUE + " offset ?";
+	}
+
+	@Override
+	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " limit "
+				+ Integer.MAX_VALUE
+				+ " offset "
+				+ parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
 	}
 
 	@Override
@@ -38,5 +60,10 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	public boolean supportsOffset() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

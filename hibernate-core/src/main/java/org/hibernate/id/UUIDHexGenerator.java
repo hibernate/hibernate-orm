@@ -9,9 +9,8 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
@@ -30,7 +29,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  */
 @Deprecated(since = "6")
 public class UUIDHexGenerator extends AbstractUUIDGenerator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDHexGenerator.class );
 
 	/**
 	 * The configuration parameter specifying the separator to use.
@@ -44,7 +42,9 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 	public UUIDHexGenerator() {
 		if ( !WARNED ) {
 			WARNED = true;
-			LOG.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
+			DEPRECATION_LOGGER.deprecatedUuidHexGenerator(
+					UUIDHexGenerator.class.getName(),
+					UUIDGenerator.class.getName() );
 		}
 	}
 

@@ -9,30 +9,35 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.tool.hbm2ddl.SchemaValidator;
-
-import org.junit.Test;
-
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.tool.hbm2ddl.SchemaValidator;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10718")
-public class TableNamesWithUnderscoreTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Entity1.class,
-				Entity01.class
-		};
+@DomainModel(annotatedClasses = {
+		TableNamesWithUnderscoreTest.Entity1.class,
+		TableNamesWithUnderscoreTest.Entity01.class
+})
+@SessionFactory
+public class TableNamesWithUnderscoreTest {
+	@BeforeEach
+	public void setUp(SessionFactoryScope factoryScope) {
+		// force schema export
+		factoryScope.getSessionFactory();
 	}
 
 	@Test
-	public void testSchemaValidationDoesNotFailDueToAMoreThanOneTableFound() {
-		new SchemaValidator().validate( metadata() );
+	public void testSchemaValidationDoesNotFailDueToAMoreThanOneTableFound(DomainModelScope modelScope) {
+		new SchemaValidator().validate( modelScope.getDomainModel() );
 	}
 
 	@Entity(name = "Entity1")

@@ -4,58 +4,56 @@
  */
 package org.hibernate.orm.test.envers.integration.naming;
 
-import jakarta.persistence.EntityManager;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.orm.test.envers.integration.naming.entities.Child;
+import org.hibernate.orm.test.envers.integration.naming.entities.Parent;
 import org.hibernate.orm.test.envers.tools.TestTools;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import ee.estonia.entities.Child;
-import ee.estonia.entities.Parent;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-6738")
-public class EstonianTableAlias extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@DomainModel(annotatedClasses = {Parent.class, Child.class})
+@SessionFactory
+public class EstonianTableAlias {
 	private Long parentId = null;
 	private Long childId = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Parent.class, Child.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(SessionFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		Parent parent = new Parent( "parent" );
-		Child child = new Child( "child" );
-		parent.getCollection().add( child );
-		em.persist( child );
-		em.persist( parent );
-		em.getTransaction().commit();
-
-		parentId = parent.getId();
-		childId = child.getId();
+		scope.inTransaction( em -> {
+			Parent parent = new Parent( "parent" );
+			Child child = new Child( "child" );
+			parent.getCollection().add( child );
+			em.persist( child );
+			em.persist( parent );
+			parentId = parent.getId();
+			childId = child.getId();
+		} );
 	}
 
 	@Test
-	public void testAuditChildTableAlias() {
+	public void testAuditChildTableAlias(SessionFactoryScope scope) {
 		Parent parent = new Parent( "parent", parentId );
 		Child child = new Child( "child", childId );
 
-		Parent ver1 = getAuditReader().find( Parent.class, parentId, 1 );
+		scope.inSession( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			Parent ver1 = auditReader.find( Parent.class, parentId, 1 );
 
-		Assert.assertEquals( parent, ver1 );
-		Assert.assertEquals( TestTools.makeSet( child ), ver1.getCollection() );
+			assertEquals( parent, ver1 );
+			assertEquals( TestTools.makeSet( child ), ver1.getCollection() );
+		} );
 	}
 }

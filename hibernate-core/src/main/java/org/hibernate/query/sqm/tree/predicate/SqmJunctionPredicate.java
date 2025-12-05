@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -37,7 +39,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 			SqmPredicate leftHandPredicate,
 			SqmPredicate rightHandPredicate,
 			NodeBuilder nodeBuilder) {
-		super( leftHandPredicate.getExpressible(), nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = new ArrayList<>( 2 );
 		this.predicates.add( leftHandPredicate );
@@ -48,7 +50,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 			BooleanOperator booleanOperator,
 			List<SqmPredicate> predicates,
 			NodeBuilder nodeBuilder) {
-		super( predicates.get( 0 ).getNodeType(), nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.booleanOperator = booleanOperator;
 		this.predicates = predicates;
 	}
@@ -137,16 +139,30 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		if ( !(object instanceof SqmJunctionPredicate that) ) {
-			return false;
-		}
-		return booleanOperator == that.booleanOperator
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
 			&& Objects.equals( predicates, that.predicates );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( booleanOperator, predicates );
+		int result = booleanOperator.hashCode();
+		result = 31 * result + Objects.hashCode( predicates );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmJunctionPredicate that
+			&& booleanOperator == that.booleanOperator
+			&& SqmCacheable.areCompatible( predicates, that.predicates );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = booleanOperator.hashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( predicates );
+		return result;
 	}
 }

@@ -25,7 +25,7 @@ public interface TransactionCoordinatorBuilder extends Service {
 	interface Options {
 		/**
 		 * Indicates whether an active transaction should be automatically joined.  Only relevant
-		 * for JTA-based TransactionCoordinator instances.
+		 * for JTA-based {@link TransactionCoordinator} instances.
 		 *
 		 * @return {@code true} indicates the active transaction should be auto joined; {@code false}
 		 * indicates it should not (until {@link TransactionCoordinator#explicitJoin} is called).

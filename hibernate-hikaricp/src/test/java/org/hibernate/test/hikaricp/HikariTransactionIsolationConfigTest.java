@@ -9,21 +9,27 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTest;
+import org.hibernate.test.hikaricp.util.GradleParallelTestingHikariCPConnectionProvider;
+import org.hibernate.testing.orm.common.BaseTransactionIsolationConfigTest;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#getNetworkTimeout() so this fails")
-@SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
-@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
-@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
+@SkipForDialect(dialectClass = SybaseDialect.class,
+		matchSubTypes = true,
+		reason = "The jTDS driver doesn't implement Connection#getNetworkTimeout() so this fails")
+@SkipForDialect(dialectClass = TiDBDialect.class,
+		reason = "Doesn't support SERIALIZABLE isolation")
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase cannot change isolation level in autocommit mode")
+@SkipForDialect(dialectClass = GaussDBDialect.class,
+		reason = "GaussDB does not support SERIALIZABLE isolation")
 public class HikariTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
-	protected ConnectionProvider getConnectionProviderUnderTest() {
-		return new HikariCPConnectionProvider();
+	protected ConnectionProvider getConnectionProviderUnderTest(ServiceRegistryScope registryScope) {
+		return new GradleParallelTestingHikariCPConnectionProvider();
 	}
 }

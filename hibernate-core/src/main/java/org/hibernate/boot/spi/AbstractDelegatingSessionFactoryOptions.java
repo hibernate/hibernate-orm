@@ -18,6 +18,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.TenantSchemaMapper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -143,6 +145,16 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy() {
 		return delegate.getCustomSqmMultiTableInsertStrategy();
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+		return delegate.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationContext );
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
+		return delegate.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	@Override
@@ -527,6 +539,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
 		return delegate.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
+	public boolean isPreferLocaleLanguageTagEnabled() {
+		return delegate.isPreferLocaleLanguageTagEnabled();
 	}
 
 	@Override

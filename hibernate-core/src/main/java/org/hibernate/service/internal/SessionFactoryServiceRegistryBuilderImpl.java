@@ -15,17 +15,23 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder;
 
+import static org.hibernate.service.internal.StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList;
+
 /**
  * @author Steve Ebersole
  */
 public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryServiceRegistryBuilder {
 	private final ServiceRegistryImplementor parent;
 
-	private final List<SessionFactoryServiceInitiator<?>> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
-	private final List<ProvidedService<?>> providedServices = new ArrayList<>();
+	private final List<SessionFactoryServiceInitiator<?>> initiators = buildStandardServiceInitiatorList();
+	private final List<ProvidedService<? extends Service>> providedServices = new ArrayList<>();
 
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
+		if ( parent != null ) {
+			// Parent takes precedence over the standard service initiators
+			initiators.removeIf( initiator -> parent.locateServiceBinding( initiator.getServiceInitiated() ) != null );
+		}
 	}
 
 	/**

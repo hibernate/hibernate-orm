@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
 import jakarta.persistence.Tuple;
@@ -17,16 +14,23 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-13111")
+@Jpa(
+		annotatedClasses = {AbstractSubqueryInSelectClauseTest.Person.class, AbstractSubqueryInSelectClauseTest.Document.class}
+)
 public class SubqueryInSelectClauseTest extends AbstractSubqueryInSelectClauseTest {
 
 	@Test
-	public void testSubqueryInSelectClause() {
-		doInJPA( this::entityManagerFactory, em -> {
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+	public void testSubqueryInSelectClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<Document> document = query.from( Document.class );
 			Join<?, ?> contacts = document.join( "contacts", JoinType.LEFT );
@@ -35,10 +39,10 @@ public class SubqueryInSelectClauseTest extends AbstractSubqueryInSelectClauseTe
 			Root<Person> person = personCount.from( Person.class );
 			personCount.select( cb.count( person ) ).where( cb.equal( personCount.correlate( contacts ).get( "id" ), person.get( "id" ) ) );
 
-			query.multiselect( document.get( "id" ), personCount.getSelection() );
+			query.multiselect( document.get( "id" ), personCount );
 
-			List<?> l = em.createQuery( query ).getResultList();
-			assertEquals( 2, l.size() );
+			List<?> l = entityManager.createQuery( query ).getResultList();
+			Assertions.assertEquals( 2, l.size() );
 		} );
 	}
 }

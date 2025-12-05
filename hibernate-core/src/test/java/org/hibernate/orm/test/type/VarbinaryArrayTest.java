@@ -36,6 +36,7 @@ import jakarta.persistence.TypedQuery;
  * Test mapping arrays with {@code @JdbcTypeCode(Type.VARBINARY)},
  * which is useful to revert to pre-6.1 behavior for array mapping in particular.
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = VarbinaryArrayTest.EntityWithArrays.class
 )
@@ -190,7 +191,7 @@ public class VarbinaryArrayTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@ParameterizedTest
@@ -219,7 +220,7 @@ public class VarbinaryArrayTest {
 
 	@ParameterizedTest
 	@MethodSource("perTypeArguments")
-	@SkipForDialect( dialectClass = HANADialect.class, matchSubTypes = true,
+	@SkipForDialect( dialectClass = HANADialect.class,
 			reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus queries")

@@ -17,25 +17,29 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.OracleServerConfiguration;
+import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.OracleBooleanJdbcType;
 import org.hibernate.dialect.type.OracleJdbcHelper;
 import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.OracleJsonJdbcType;
 import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.OracleTypes;
-import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
-import org.hibernate.dialect.type.OracleXmlJdbcType;
 import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
@@ -45,13 +49,15 @@ import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.community.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.dialect.lock.internal.OracleLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
+import org.hibernate.dialect.type.OracleXmlJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -77,11 +83,11 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -95,8 +101,11 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorOracleImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -116,9 +125,6 @@ import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
 
 import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -204,16 +210,58 @@ public class OracleLegacyDialect extends Dialect {
 		}
 	};
 
+	// Is it an Autonomous Database Cloud Service?
+	protected final boolean autonomous;
+
+	// Is MAX_STRING_SIZE set to EXTENDED?
+	protected final boolean extended;
+
+	// Is the database accessed using a database service protected by Application Continuity.
+	protected final boolean applicationContinuity;
+
+	protected final int driverMajorVersion;
+	protected final int driverMinorVersion;
+
+	private final LockingSupport lockingSupport;
+
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
 	public OracleLegacyDialect(DatabaseVersion version) {
-		super(version);
+		super( version );
+		lockingSupport = new OracleLockingSupport( version );
+		autonomous = false;
+		extended = false;
+		applicationContinuity = false;
+		driverMajorVersion = 19;
+		driverMinorVersion = 0;
 	}
 
 	public OracleLegacyDialect(DialectResolutionInfo info) {
-		super(info);
+		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
+	}
+
+	public OracleLegacyDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
+		super( info );
+		lockingSupport = new OracleLockingSupport( getVersion() );
+		autonomous = serverConfiguration.isAutonomous();
+		extended = serverConfiguration.isExtended();
+		applicationContinuity = serverConfiguration.isApplicationContinuity();
+		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+	}
+
+	public boolean isAutonomous() {
+		return autonomous;
+	}
+
+	public boolean isExtended() {
+		return extended;
+	}
+
+	public boolean isApplicationContinuity() {
+		return applicationContinuity;
 	}
 
 	@Override
@@ -369,6 +417,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**
@@ -1214,33 +1263,27 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return OracleLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1250,7 +1293,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	/**
@@ -1385,18 +1428,8 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 10 );
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1671,10 +1704,10 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public boolean useInputStreamToInsertBlob() {
-		// see HHH-18206
-		return false;
+		// If application continuity is enabled, don't use stream bindings, since a replay could otherwise fail
+		// if the underlying stream doesn't support mark and reset
+		return !isApplicationContinuity();
 	}
-
 
 	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
@@ -1740,4 +1773,8 @@ public class OracleLegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 9 );
 	}
 
+	@Override
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return new InformationExtractorOracleImpl( extractionContext );
+	}
 }

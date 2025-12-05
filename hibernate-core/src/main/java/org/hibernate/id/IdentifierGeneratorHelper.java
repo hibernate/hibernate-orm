@@ -20,19 +20,16 @@ import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -46,7 +43,6 @@ import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
  */
 @Internal
 public final class IdentifierGeneratorHelper {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
@@ -85,18 +81,17 @@ public final class IdentifierGeneratorHelper {
 
 	public static Object getForeignId(
 			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
-		final EntityPersister entityDescriptor =
-				sessionImplementor.getFactory().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
-		if ( sessionImplementor instanceof SessionImplementor statefulSession
-				&& statefulSession.contains( entityName, object ) ) {
+		if ( sessionImplementor.isManaged( object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
 		}
 		else {
-			return identifier( sessionImplementor, entityType( propertyName, entityDescriptor ),
-					associatedEntity( entityName, propertyName, object, entityDescriptor ) );
+			final var persister =
+					sessionImplementor.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
+			return identifier( sessionImplementor, entityType( propertyName, persister ),
+					associatedEntity( entityName, propertyName, object, persister ) );
 		}
 	}
 
@@ -111,19 +106,19 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	private static Object identifier(
-			SharedSessionContractImplementor sessionImplementor,
+			SharedSessionContractImplementor session,
 			EntityType foreignValueSourceType,
 			Object associatedEntity) {
 		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
 		try {
-			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
+			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, session );
 		}
 		catch (TransientObjectException toe) {
-			if ( sessionImplementor instanceof Session statefulSession ) {
+			if ( session instanceof Session statefulSession ) {
 				statefulSession.persist( associatedEntityName, associatedEntity );
-				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
+				return session.getContextEntityIdentifier( associatedEntity );
 			}
-			else if ( sessionImplementor instanceof StatelessSession statelessSession ) {
+			else if ( session instanceof StatelessSession statelessSession ) {
 				return statelessSession.insert( associatedEntityName, associatedEntity );
 			}
 			else {
@@ -133,10 +128,9 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	private static EntityType entityType(String propertyName, EntityPersister entityDescriptor) {
-		final Type propertyType = entityDescriptor.getPropertyType( propertyName );
-		if ( propertyType instanceof EntityType ) {
+		if ( entityDescriptor.getPropertyType( propertyName ) instanceof EntityType entityType ) {
 			// the normal case
-			return (EntityType) propertyType;
+			return entityType;
 		}
 		else {
 			// try identifier mapper
@@ -176,7 +170,7 @@ public final class IdentifierGeneratorHelper {
 
 		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
 			// TODO : bind it as 'exact type'?  Not sure if that gains us anything...
-			LOG.tracef( "binding parameter [%s] - [%s]", position, value );
+			CORE_LOGGER.tracef( "binding parameter [%s] - [%s]", position, value );
 			preparedStatement.setLong( position, value );
 		}
 
@@ -248,7 +242,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BasicHolder copy = new BasicHolder( exactType );
+			final var copy = new BasicHolder( exactType );
 			copy.value = value;
 			return copy;
 		}
@@ -303,14 +297,16 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( !(o instanceof BasicHolder that) ) {
+			else if ( !(object instanceof BasicHolder that) ) {
 				return false;
 			}
-			return value == that.value;
+			else {
+				return this.value == that.value;
+			}
 		}
 
 		@Override
@@ -328,7 +324,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final BigDecimal rsValue = resultSet.getBigDecimal( 1 );
+			final var rsValue = resultSet.getBigDecimal( 1 );
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
@@ -413,7 +409,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BigIntegerHolder copy = new BigIntegerHolder();
+			final var copy = new BigIntegerHolder();
 			copy.value = value;
 			return copy;
 		}
@@ -459,14 +455,16 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( !(o instanceof BigIntegerHolder that) ) {
+			else if ( !(object instanceof BigIntegerHolder that) ) {
 				return false;
 			}
-			return Objects.equals( value, that.value );
+			else {
+				return Objects.equals( this.value, that.value );
+			}
 		}
 
 		@Override
@@ -484,7 +482,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final BigDecimal rsValue = resultSet.getBigDecimal( 1 );
+			final var rsValue = resultSet.getBigDecimal( 1 );
 			if ( resultSet.wasNull() ) {
 				return initialize( defaultValue );
 			}
@@ -569,7 +567,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder copy() {
-			BigDecimalHolder copy = new BigDecimalHolder();
+			final var copy = new BigDecimalHolder();
 			copy.value = value;
 			return copy;
 		}
@@ -615,14 +613,16 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( !(o instanceof BigDecimalHolder that) ) {
+			else if ( !(object instanceof BigDecimalHolder that) ) {
 				return false;
 			}
-			return Objects.equals( this.value, that.value );
+			else {
+				return Objects.equals( this.value, that.value );
+			}
 		}
 
 		@Override
@@ -632,8 +632,6 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	public static ImplicitDatabaseObjectNamingStrategy getNamingStrategy(Properties params, ServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-
 		final String namingStrategySetting = coalesceSuppliedValues(
 				() -> {
 					final String localSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, params );
@@ -643,8 +641,8 @@ public final class IdentifierGeneratorHelper {
 					return localSetting;
 				},
 				() -> {
-					final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
-					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, configurationService.getSettings() );
+					final var settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+					final String globalSetting = getString( ID_DB_STRUCTURE_NAMING_STRATEGY, settings );
 					if ( globalSetting != null ) {
 						INCUBATION_LOGGER.incubatingSetting( ID_DB_STRUCTURE_NAMING_STRATEGY );
 					}
@@ -652,8 +650,8 @@ public final class IdentifierGeneratorHelper {
 				},
 				StandardNamingStrategy.class::getName
 		);
-
-		return strategySelector.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
+		return serviceRegistry.requireService( StrategySelector.class )
+				.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
 	}
 
 	/**

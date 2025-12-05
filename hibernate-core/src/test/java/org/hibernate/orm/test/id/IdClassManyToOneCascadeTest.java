@@ -12,32 +12,35 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-12251" )
-public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				SomeEntity.class,
-				ReferencedEntity.class
-		};
+@DomainModel(annotatedClasses = {
+		IdClassManyToOneCascadeTest.SomeEntity.class,
+		IdClassManyToOneCascadeTest.ReferencedEntity.class
+})
+@SessionFactory
+public class IdClassManyToOneCascadeTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testMergeCascadesToManyToOne() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testMergeCascadesToManyToOne(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			ReferencedEntity referencedEntity = new ReferencedEntity();
 			referencedEntity.setId( 42L );
 
@@ -47,14 +50,13 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 
 			SomeEntity merged = entityManager.merge(someEntity);
 
-			assertTrue( entityManager.contains( merged.getReferencedEntity() ) );
+			Assertions.assertTrue( entityManager.contains( merged.getReferencedEntity() ) );
 		} );
 	}
 
 	@Test
-	public void testPersistCascadesToManyToOne() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testPersistCascadesToManyToOne(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			ReferencedEntity referencedEntity = new ReferencedEntity();
 			referencedEntity.setId( 42L );
 
@@ -64,7 +66,7 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 
 			entityManager.persist( someEntity );
 
-			assertTrue( entityManager.contains( referencedEntity ) );
+			Assertions.assertTrue( entityManager.contains( referencedEntity ) );
 		} );
 	}
 

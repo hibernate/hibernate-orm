@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.BasicType;
 
 import static java.util.Arrays.asList;
 
@@ -60,25 +61,39 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	}
 
 	@Override
-	SqmExpression<Long> asLong();
+	default SqmExpression<Long> asLong() {
+		return cast( Long.class );
+	}
 
 	@Override
-	SqmExpression<Integer> asInteger();
+	default SqmExpression<Integer> asInteger() {
+		return cast( Integer.class );
+	}
 
 	@Override
-	SqmExpression<Float> asFloat();
+	default SqmExpression<Float> asFloat() {
+		return cast( Float.class );
+	}
 
 	@Override
-	SqmExpression<Double> asDouble();
+	default SqmExpression<Double> asDouble() {
+		return cast( Double.class );
+	}
 
 	@Override
-	SqmExpression<BigDecimal> asBigDecimal();
+	default SqmExpression<BigDecimal> asBigDecimal() {
+		return cast( BigDecimal.class );
+	}
 
 	@Override
-	SqmExpression<BigInteger> asBigInteger();
+	default SqmExpression<BigInteger> asBigInteger() {
+		return cast( BigInteger.class );
+	}
 
 	@Override
-	SqmExpression<String> asString();
+	default SqmExpression<String> asString() {
+		return cast( String.class );
+	}
 
 	@Override
 	<X> SqmExpression<X> as(Class<X> type);
@@ -120,14 +135,18 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		else {
 			final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
 			final SqmCastTarget<?> target = new SqmCastTarget<>( (ReturnableType<?>) type, nodeBuilder() );
-			return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
+			return queryEngine.getSqmFunctionRegistry().getFunctionDescriptor( "cast" )
 					.generateSqmExpression( asList( this, target ), (ReturnableType<X>) type, queryEngine );
 		}
 	}
 
 	@Override
 	default <X> SqmExpression<X> cast(Class<X> type) {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
+		final BasicType<X> basicType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+		if ( basicType == null ) {
+			throw new IllegalArgumentException( "Couldn't determine basic type for java type: " + type.getName() );
+		}
+		return castAs( basicType );
 	}
 
 	@Override

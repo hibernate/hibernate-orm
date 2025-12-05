@@ -9,9 +9,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-/**
- * Manages all of the MessageKeyWatcher defined by LoggingInspectionsScope
- */
+/// Manages all the MessageKeyWatcher defined by LoggingInspectionsScope
+///
+/// @see LoggingInspections
+/// @see LoggingInspectionsExtension
+/// @see LoggingInspectionsScopeResolver
+///
+/// @author Steve Ebersole
 public class LoggingInspectionsScope {
 	private final Map<String, Map<String,MessageKeyWatcherImpl>> watcherMap = new HashMap<>();
 
@@ -45,7 +49,7 @@ public class LoggingInspectionsScope {
 					watcher = existingWatcher;
 				}
 				else {
-					watcher = new MessageKeyWatcherImpl( messageKey );
+					watcher = new MessageKeyWatcherImpl( messageKey, message.resetBeforeEach() );
 					messageKeyWatcherMap.put( loggerKey, watcher );
 				}
 				watcher.addLogger( logger );
@@ -54,9 +58,13 @@ public class LoggingInspectionsScope {
 	}
 
 	public void resetWatchers() {
-		watcherMap.forEach(
-				(messageKey,loggerMap) -> loggerMap.forEach( (logger,watcher) -> watcher.reset() )
-		);
+		watcherMap.forEach( (messageKey,loggerMap) -> {
+			loggerMap.forEach( (logger,watcher) -> {
+				if ( watcher.isResetBeforeEach() ) {
+					watcher.reset();
+				}
+			} );
+		} );
 	}
 
 	public MessageKeyWatcher getWatcher(String messageKey, String loggerName) {
@@ -67,5 +75,16 @@ public class LoggingInspectionsScope {
 	public MessageKeyWatcher getWatcher(String messageKey, Class<?> loggerNameClass) {
 		final Map<String, MessageKeyWatcherImpl> messageKeyWatcherMap = watcherMap.get( messageKey );
 		return messageKeyWatcherMap.get( loggerNameClass.getName() );
+	}
+
+	public boolean wereAnyTriggered() {
+		for ( Map.Entry<String, Map<String, MessageKeyWatcherImpl>> watcherMapEntry : watcherMap.entrySet() ) {
+			for ( Map.Entry<String, MessageKeyWatcherImpl> messageWatcherEntry : watcherMapEntry.getValue().entrySet() ) {
+				if ( messageWatcherEntry.getValue().wasTriggered() ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

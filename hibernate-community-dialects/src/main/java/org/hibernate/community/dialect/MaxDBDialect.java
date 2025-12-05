@@ -13,11 +13,14 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPD
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.community.dialect.temptable.MaxDBLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -255,6 +258,11 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.STANDARD_SUPPORT;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return MaxDBSequenceSupport.INSTANCE;
 	}
@@ -278,40 +286,29 @@ public class MaxDBDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> "temp." + TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> "temp." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return MaxDBLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
@@ -321,7 +318,7 @@ public class MaxDBDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "ignore rollback";
+		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override

@@ -4,23 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.Assert;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
@@ -49,6 +32,22 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
@@ -56,8 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				EqualityComparisonTest.Address.class,
 				EqualityComparisonTest.Phone.class,
 				EqualityComparisonTest.Product.class
-		}
-		, properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+		},
+		properties = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 )
 public class EqualityComparisonTest {
 
@@ -124,7 +123,7 @@ public class EqualityComparisonTest {
 							product.get( Product_.getSingularAttribute( "partNumber", Long.class ) ),
 							373767373
 					);
-					Assert.assertEquals( Long.class, predicate.getLeftHandExpression().getJavaType() );
+					assertEquals( Long.class, predicate.getLeftHandExpression().getJavaType() );
 					cquery.where( predicate );
 					entityManager.createQuery( cquery ).getResultList();
 
@@ -132,7 +131,7 @@ public class EqualityComparisonTest {
 							cb.length( product.get( Product_.getSingularAttribute( "name", String.class ) ) ),
 							4L
 					);
-					Assert.assertEquals( Integer.class, predicate.getLeftHandExpression().getJavaType() );
+					assertEquals( Integer.class, predicate.getLeftHandExpression().getJavaType() );
 					cquery.where( predicate );
 					entityManager.createQuery( cquery ).getResultList();
 				}

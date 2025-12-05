@@ -5,162 +5,166 @@
 package org.hibernate.orm.test.envers.integration.onetomany.embeddedid;
 
 import java.util.Arrays;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @JiraKey(value = "HHH-7157")
-@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'CONSTANT' is not escaped even though autoQuoteKeywords is enabled")
-public class MapsIdTest extends BaseEnversJPAFunctionalTestCase {
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'CONSTANT' is not escaped even though autoQuoteKeywords is enabled")
+@EnversTest
+@Jpa(annotatedClasses = {Person.class, PersonTuple.class, Constant.class})
+public class MapsIdTest {
 	private PersonTuple tuple1Ver1 = null;
 	private PersonTuple tuple2Ver1 = null;
 	private PersonTuple tuple2Ver2 = null;
 	private Person personCVer1 = null;
 	private Person personCVer2 = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Person.class, PersonTuple.class, Constant.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
-		EntityManager em = getEntityManager();
-
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		em.getTransaction().begin();
-		Person personA = new Person( "Peter" );
-		Person personB = new Person( "Mary" );
-		em.persist( personA );
-		em.persist( personB );
-		Constant cons = new Constant( "USD", "US Dollar" );
-		em.persist( cons );
-		PersonTuple tuple1 = new PersonTuple( true, personA, personB, cons );
-		em.persist( tuple1 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Person personA = new Person( "Peter" );
+			Person personB = new Person( "Mary" );
+			em.persist( personA );
+			em.persist( personB );
+			Constant cons = new Constant( "USD", "US Dollar" );
+			em.persist( cons );
+			PersonTuple tuple1 = new PersonTuple( true, personA, personB, cons );
+			em.persist( tuple1 );
 
-		tuple1Ver1 = new PersonTuple(
-				tuple1.isHelloWorld(),
-				tuple1.getPersonA(),
-				tuple1.getPersonB(),
-				tuple1.getConstant()
-		);
+			tuple1Ver1 = new PersonTuple(
+					tuple1.isHelloWorld(),
+					tuple1.getPersonA(),
+					tuple1.getPersonB(),
+					tuple1.getConstant()
+			);
+		} );
 
 		// Revision 2
-		em.getTransaction().begin();
-		cons = em.find( Constant.class, cons.getId() );
-		Person personC1 = new Person( "Lukasz" );
-		em.persist( personC1 );
-		PersonTuple tuple2 = new PersonTuple( true, personA, personC1, cons );
-		em.persist( tuple2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Constant cons = em.find( Constant.class, "USD" );
+			Person personA = em.createQuery( "select p from Person p where p.name = 'Peter'", Person.class ).getSingleResult();
+			Person personC1 = new Person( "Lukasz" );
+			em.persist( personC1 );
+			PersonTuple tuple2 = new PersonTuple( true, personA, personC1, cons );
+			em.persist( tuple2 );
 
-		tuple2Ver1 = new PersonTuple(
-				tuple2.isHelloWorld(),
-				tuple2.getPersonA(),
-				tuple2.getPersonB(),
-				tuple2.getConstant()
-		);
-		personCVer1 = new Person( personC1.getId(), personC1.getName() );
-		personCVer1.getPersonBTuples().add( tuple2Ver1 );
+			tuple2Ver1 = new PersonTuple(
+					tuple2.isHelloWorld(),
+					tuple2.getPersonA(),
+					tuple2.getPersonB(),
+					tuple2.getConstant()
+			);
+			personCVer1 = new Person( personC1.getId(), personC1.getName() );
+			personCVer1.getPersonBTuples().add( tuple2Ver1 );
+		} );
 
 		// Revision 3
-		em.getTransaction().begin();
-		tuple2 = em.find( PersonTuple.class, tuple2.getPersonTupleId() );
-		tuple2.setHelloWorld( false );
-		em.merge( tuple2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			PersonTuple tuple2 = em.createQuery(
+				"select pt from PersonTuple pt where pt.personB.name = 'Lukasz'",
+				PersonTuple.class
+			).getSingleResult();
+			tuple2.setHelloWorld( false );
+			em.merge( tuple2 );
 
-		tuple2Ver2 = new PersonTuple(
-				tuple2.isHelloWorld(),
-				tuple2.getPersonA(),
-				tuple2.getPersonB(),
-				tuple2.getConstant()
-		);
+			tuple2Ver2 = new PersonTuple(
+					tuple2.isHelloWorld(),
+					tuple2.getPersonA(),
+					tuple2.getPersonB(),
+					tuple2.getConstant()
+			);
+		} );
 
 		// Revision 4
-		em.getTransaction().begin();
-		Person personC2 = em.find( Person.class, personC1.getId() );
-		personC2.setName( "Robert" );
-		em.merge( personC2 );
-		em.getTransaction().commit();
+		scope.inTransaction( em -> {
+			Person personC2 = em.createQuery( "select p from Person p where p.name = 'Lukasz'", Person.class ).getSingleResult();
+			personC2.setName( "Robert" );
+			em.merge( personC2 );
 
-		personCVer2 = new Person( personC2.getId(), personC2.getName() );
-		personCVer2.getPersonBTuples().add( tuple2Ver1 );
-
-		em.close();
+			personCVer2 = new Person( personC2.getId(), personC2.getName() );
+			personCVer2.getPersonBTuples().add( tuple2Ver1 );
+		} );
 	}
 
 	@Test
-	public void testRevisionsCounts() {
-		Assert.assertEquals(
-				Arrays.asList( 1 ), getAuditReader().getRevisions(
-				PersonTuple.class,
-				tuple1Ver1.getPersonTupleId()
-		)
-		);
-		Assert.assertEquals(
-				Arrays.asList( 2, 3 ), getAuditReader().getRevisions(
-				PersonTuple.class,
-				tuple2Ver1.getPersonTupleId()
-		)
-		);
-		Assert.assertEquals(
-				Arrays.asList( 2, 4 ), getAuditReader().getRevisions(
-				Person.class,
-				personCVer1.getId()
-		)
-		);
+	public void testRevisionsCounts(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals(
+					Arrays.asList( 1 ),
+					auditReader.getRevisions( PersonTuple.class, tuple1Ver1.getPersonTupleId() )
+			);
+			assertEquals(
+					Arrays.asList( 2, 3 ),
+					auditReader.getRevisions( PersonTuple.class, tuple2Ver1.getPersonTupleId() )
+			);
+			assertEquals(
+					Arrays.asList( 2, 4 ),
+					auditReader.getRevisions( Person.class, personCVer1.getId() )
+			);
+		} );
 	}
 
 	@Test
-	public void testHistoryOfTuple1() {
-		PersonTuple tuple = getAuditReader().find( PersonTuple.class, tuple1Ver1.getPersonTupleId(), 1 );
+	public void testHistoryOfTuple1(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			PersonTuple tuple = auditReader.find( PersonTuple.class, tuple1Ver1.getPersonTupleId(), 1 );
 
-		Assert.assertEquals( tuple1Ver1, tuple );
-		Assert.assertEquals( tuple1Ver1.isHelloWorld(), tuple.isHelloWorld() );
-		Assert.assertEquals( tuple1Ver1.getPersonA().getId(), tuple.getPersonA().getId() );
-		Assert.assertEquals( tuple1Ver1.getPersonB().getId(), tuple.getPersonB().getId() );
+			assertEquals( tuple1Ver1, tuple );
+			assertEquals( tuple1Ver1.isHelloWorld(), tuple.isHelloWorld() );
+			assertEquals( tuple1Ver1.getPersonA().getId(), tuple.getPersonA().getId() );
+			assertEquals( tuple1Ver1.getPersonB().getId(), tuple.getPersonB().getId() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfTuple2() {
-		PersonTuple tuple = getAuditReader().find( PersonTuple.class, tuple2Ver2.getPersonTupleId(), 2 );
+	public void testHistoryOfTuple2(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			PersonTuple tuple = auditReader.find( PersonTuple.class, tuple2Ver2.getPersonTupleId(), 2 );
 
-		Assert.assertEquals( tuple2Ver1, tuple );
-		Assert.assertEquals( tuple2Ver1.isHelloWorld(), tuple.isHelloWorld() );
-		Assert.assertEquals( tuple2Ver1.getPersonA().getId(), tuple.getPersonA().getId() );
-		Assert.assertEquals( tuple2Ver1.getPersonB().getId(), tuple.getPersonB().getId() );
+			assertEquals( tuple2Ver1, tuple );
+			assertEquals( tuple2Ver1.isHelloWorld(), tuple.isHelloWorld() );
+			assertEquals( tuple2Ver1.getPersonA().getId(), tuple.getPersonA().getId() );
+			assertEquals( tuple2Ver1.getPersonB().getId(), tuple.getPersonB().getId() );
 
-		tuple = getAuditReader().find( PersonTuple.class, tuple2Ver2.getPersonTupleId(), 3 );
+			tuple = auditReader.find( PersonTuple.class, tuple2Ver2.getPersonTupleId(), 3 );
 
-		Assert.assertEquals( tuple2Ver2, tuple );
-		Assert.assertEquals( tuple2Ver2.isHelloWorld(), tuple.isHelloWorld() );
-		Assert.assertEquals( tuple2Ver2.getPersonA().getId(), tuple.getPersonA().getId() );
-		Assert.assertEquals( tuple2Ver2.getPersonB().getId(), tuple.getPersonB().getId() );
+			assertEquals( tuple2Ver2, tuple );
+			assertEquals( tuple2Ver2.isHelloWorld(), tuple.isHelloWorld() );
+			assertEquals( tuple2Ver2.getPersonA().getId(), tuple.getPersonA().getId() );
+			assertEquals( tuple2Ver2.getPersonB().getId(), tuple.getPersonB().getId() );
+		} );
 	}
 
 	@Test
-	public void testHistoryOfPersonC() {
-		Person person = getAuditReader().find( Person.class, personCVer1.getId(), 2 );
+	public void testHistoryOfPersonC(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			Person person = auditReader.find( Person.class, personCVer1.getId(), 2 );
 
-		Assert.assertEquals( personCVer1, person );
-		Assert.assertEquals( personCVer1.getPersonATuples(), person.getPersonATuples() );
-		Assert.assertEquals( personCVer1.getPersonBTuples(), person.getPersonBTuples() );
+			assertEquals( personCVer1, person );
+			assertEquals( personCVer1.getPersonATuples(), person.getPersonATuples() );
+			assertEquals( personCVer1.getPersonBTuples(), person.getPersonBTuples() );
 
-		person = getAuditReader().find( Person.class, personCVer2.getId(), 4 );
+			person = auditReader.find( Person.class, personCVer2.getId(), 4 );
 
-		Assert.assertEquals( personCVer2, person );
+			assertEquals( personCVer2, person );
+		} );
 	}
 }

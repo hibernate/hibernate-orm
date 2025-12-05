@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -46,7 +47,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	public AbstractSqmDmlStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
-			Set<SqmParameter<?>> parameters,
+			@Nullable Set<SqmParameter<?>> parameters,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<E> target) {
 		super( builder, querySource, parameters );
@@ -64,7 +65,7 @@ public abstract class AbstractSqmDmlStatement<E>
 
 	protected void putAllCtes(SqmCteContainer cteContainer) {
 		for ( SqmCteStatement<?> cteStatement : cteContainer.getCteStatements() ) {
-			if ( cteStatements.putIfAbsent( cteStatement.getName(), cteStatement ) != null ) {
+			if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
 				throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
 			}
 		}
@@ -78,7 +79,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
@@ -88,7 +89,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
@@ -204,5 +205,35 @@ public abstract class AbstractSqmDmlStatement<E>
 			}
 			sb.setLength( sb.length() - 2 );
 		}
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof AbstractSqmDmlStatement<?> that
+			&& getClass() == that.getClass()
+			&& getTarget().equals( that.getTarget() )
+			&& Objects.equals( cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = getTarget().hashCode();
+		result = 31 * result + Objects.hashCode( cteStatements );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof AbstractSqmDmlStatement<?> that
+			&& getClass() == that.getClass()
+			&& getTarget().isCompatible( that.getTarget() )
+			&& SqmCacheable.areCompatible( cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = getTarget().cacheHashCode();
+		result = 31 * result + SqmCacheable.cacheHashCode( cteStatements );
+		return result;
 	}
 }

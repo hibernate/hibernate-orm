@@ -8,7 +8,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ParameterTypeException;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -16,7 +15,6 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.OutputableType;
-import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -30,10 +28,12 @@ import org.hibernate.type.ProcedureParameterNamedBinder;
 
 import jakarta.persistence.ParameterMode;
 
+import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
+
 /**
  * @author Steve Ebersole
  */
-public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements ProcedureParameterImplementor<T> {
+class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements ProcedureParameterImplementor<T> {
 
 	private final String name;
 	private final Integer position;
@@ -43,7 +43,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	/**
 	 * Used for named Query parameters
 	 */
-	public ProcedureParameterImpl(
+	ProcedureParameterImpl(
 			String name,
 			ParameterMode mode,
 			Class<T> javaType,
@@ -101,12 +101,16 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	public JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) {
-		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
-		final boolean isNamed = procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && this.name != null;
-		final SharedSessionContractImplementor session = procedureCall.getSession();
+		final QueryParameterBinding<T> binding =
+				procedureCall.getParameterBindings()
+						.getBinding( this );
+		final boolean isNamed =
+				procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
+						&& name != null;
+		final var session = procedureCall.getSession();
 
-		final OutputableType<T> typeToUse = (OutputableType<T>)
-				BindingTypeHelper.resolveTemporalPrecision(
+		final var typeToUse = (OutputableType<T>)
+				resolveTemporalPrecision(
 						binding == null ? null : binding.getExplicitTemporalPrecision(),
 						getBindableType( binding ),
 						session.getFactory().getQueryEngine().getCriteriaBuilder()
@@ -116,14 +120,20 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		final JdbcParameterBinder parameterBinder;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
-		final ExtractedDatabaseMetaData databaseMetaData =
+		final var databaseMetaData =
 				session.getFactory().getJdbcServices().getJdbcEnvironment()
 						.getExtractedDatabaseMetaData();
 		final boolean passProcedureParameterNames =
-				session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames();
+				session.getFactory().getSessionFactoryOptions()
+						.isPassProcedureParameterNames();
 		switch ( mode ) {
 			case REF_CURSOR:
-				jdbcParamName = this.name != null && databaseMetaData.supportsNamedParameters() && passProcedureParameterNames ? this.name : null;
+				jdbcParamName =
+						name != null
+							&& databaseMetaData.supportsNamedParameters()
+							&& passProcedureParameterNames
+								? name
+								: null;
 				refCursorExtractor = new JdbcCallRefCursorExtractorImpl( startIndex );
 				parameterBinder = null;
 				parameterExtractor = null;
@@ -151,12 +161,21 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				break;
 		}
 
-		return new JdbcCallParameterRegistrationImpl( jdbcParamName, startIndex, mode, typeToUse, parameterBinder, parameterExtractor, refCursorExtractor );
+		return new JdbcCallParameterRegistrationImpl(
+				jdbcParamName,
+				startIndex,
+				mode,
+				typeToUse,
+				parameterBinder,
+				parameterExtractor,
+				refCursorExtractor
+		);
 	}
 
 	private BindableType<T> getBindableType(QueryParameterBinding<T> binding) {
-		if ( getHibernateType() != null ) {
-			return getHibernateType();
+		final var type = getHibernateType();
+		if ( type != null ) {
+			return type;
 		}
 		else if ( binding != null ) {
 			//noinspection unchecked
@@ -175,7 +194,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			ExtractedDatabaseMetaData databaseMetaData) {
 		return isNamed && passProcedureParameterNames
 			&& canDoNameParameterBinding( typeToUse, procedureCall, databaseMetaData )
-				? this.name
+				? name
 				: null;
 	}
 
@@ -203,8 +222,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 					)
 			);
 		}
-		else if ( typeToUse instanceof BasicType<?> ) {
-			return new JdbcParameterImpl( (BasicType<T>) typeToUse );
+		else if ( typeToUse instanceof BasicType<?> basicType ) {
+			return new JdbcParameterImpl( basicType );
 		}
 		else {
 			throw new UnsupportedOperationException();
@@ -217,8 +236,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			ExtractedDatabaseMetaData databaseMetaData) {
 		return procedureCall.getFunctionReturn() == null
 			&& databaseMetaData.supportsNamedParameters()
-			&& hibernateType instanceof ProcedureParameterNamedBinder
-			&& ( (ProcedureParameterNamedBinder<?>) hibernateType ).canDoSetting();
+			&& hibernateType instanceof ProcedureParameterNamedBinder<?> binder
+			&& binder.canDoSetting();
 	}
 
 	@Override
@@ -227,19 +246,21 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null ) {
+		else if ( object == null ) {
 			return false;
 		}
-		if ( !(o instanceof ProcedureParameterImpl<?> that) ) {
+		else if ( !(object instanceof ProcedureParameterImpl<?> that) ) {
 			return false;
 		}
-		return Objects.equals( name, that.name )
-			&& Objects.equals( position, that.position )
-			&& mode == that.mode;
+		else {
+			return Objects.equals( name, that.name )
+				&& Objects.equals( position, that.position )
+				&& mode == that.mode;
+		}
 	}
 
 	@Override

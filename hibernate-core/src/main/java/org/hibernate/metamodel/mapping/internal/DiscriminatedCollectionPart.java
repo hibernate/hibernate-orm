@@ -67,7 +67,6 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 		this.nature = nature;
 		this.partRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
-
 		this.associationMapping = DiscriminatedAssociationMapping.from(
 				partRole,
 				baseAssociationJtd,
@@ -117,7 +116,6 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		associationMapping.getDiscriminatorPart().forEachSelectable( offset, consumer );
 		associationMapping.getKeyPart().forEachSelectable( offset + 1, consumer );
-
 		return 2;
 	}
 
@@ -139,7 +137,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return associationMapping.getDiscriminatorPart().isPartitioned()
-				|| associationMapping.getKeyPart().isPartitioned();
+			|| associationMapping.getKeyPart().isPartitioned();
 	}
 
 	@Override
@@ -250,13 +248,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public Fetchable getFetchable(int position) {
-		switch ( position ) {
-			case 0:
-				return getDiscriminatorPart();
-			case 1:
-				return getKeyPart();
-		}
-		throw new IndexOutOfBoundsException(position);
+		return switch ( position ) {
+			case 0 -> getDiscriminatorPart();
+			case 1 -> getKeyPart();
+			default -> throw new IndexOutOfBoundsException( position );
+		};
 	}
 
 	@Override
@@ -272,12 +268,9 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		final int base = getDiscriminatorPart().getJdbcTypeCount();
-		if ( index >= base ) {
-			return getKeyPart().getJdbcMapping( index - base );
-		}
-		else {
-			return getDiscriminatorPart().getJdbcMapping( index );
-		}
+		return index >= base
+				? getKeyPart().getJdbcMapping( index - base )
+				: getDiscriminatorPart().getJdbcMapping( index );
 	}
 
 	@Override
@@ -351,8 +344,8 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final TableGroup tableGroup = createRootTableGroupJoin(
+		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final var tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,

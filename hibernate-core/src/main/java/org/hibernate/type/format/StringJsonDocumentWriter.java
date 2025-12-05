@@ -173,7 +173,8 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				if ( this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY ) ) {
 					this.processingStates.pop();
 				}
-				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_ARRAY );
+				final JsonProcessingState arrayStart = this.processingStates.pop();
+				assert arrayStart.equals( JsonProcessingState.STARTING_ARRAY );
 				break;
 			case ENDING_OBJECT:
 				// when ending an object, we have one or two states.
@@ -185,7 +186,8 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				if ( this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT ) ) {
 					this.processingStates.pop();
 				}
-				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_OBJECT );
+				final JsonProcessingState objectStart = this.processingStates.pop();
+				assert objectStart.equals( JsonProcessingState.STARTING_OBJECT );
 				break;
 			default:
 				//nothing to do for the other ones.
@@ -417,6 +419,16 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 
 		@Override
 		public void appendSql(boolean value) {
+			sb.append( value );
+		}
+
+		@Override
+		public void appendSql(double value) {
+			sb.append( value );
+		}
+
+		@Override
+		public void appendSql(float value) {
 			sb.append( value );
 		}
 

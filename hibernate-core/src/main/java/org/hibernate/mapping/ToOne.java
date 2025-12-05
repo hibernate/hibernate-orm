@@ -6,17 +6,15 @@ package org.hibernate.mapping;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MappingContext;
 
 import java.util.Objects;
 
 import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
+import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 
 /**
  * A mapping model object representing an association where the target side has cardinality one.
@@ -93,8 +91,8 @@ public abstract sealed class ToOne
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final ClassLoaderService cls = getBuildingContext().getBootstrapContext().getClassLoaderService();
-			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
+			final var classLoaderService = getBootstrapContext().getClassLoaderService();
+			referencedEntityName = reflectedPropertyClass( className, propertyName, classLoaderService ).getName();
 		}
 	}
 
@@ -171,11 +169,12 @@ public abstract sealed class ToOne
 
 	@Override
 	public int[] sortProperties() {
-		final PersistentClass entityBinding = getMetadata().getEntityBinding( referencedEntityName );
+		final var entityBinding = getMetadata().getEntityBinding( referencedEntityName );
 		if ( entityBinding != null ) {
-			final Value value = referencedPropertyName == null
-					? entityBinding.getIdentifier()
-					: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
+			final var value =
+					referencedPropertyName == null
+							? entityBinding.getIdentifier()
+							: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
 			if ( value instanceof Component component ) {
 				final int[] originalPropertyOrder = component.sortProperties();
 				if ( !sorted ) {
@@ -197,28 +196,29 @@ public abstract sealed class ToOne
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
-		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
-			if ( isConstrained() ) {
-				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
-				final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
-				if ( owner instanceof Join join ) {
-					// Here we handle the case of a foreign key that refers to the
-					// primary key of a secondary table of the referenced entity
-					final ForeignKey foreignKey = getTable().createForeignKey(
-							getForeignKeyName(),
-							getConstraintColumns(),
-							referencedEntity.getEntityName(),
-							getForeignKeyDefinition(),
-							getForeignKeyOptions(),
-							join.getKey().getColumns()
-					);
-					foreignKey.setOnDeleteAction( getOnDeleteAction() );
-					foreignKey.setReferencedTable( join.getTable() );
-				}
-				else {
-					// it's just a reference to the primary key of the main table
-					createForeignKeyOfEntity( referencedEntity.getEntityName() );
-				}
+		if ( isForeignKeyEnabled()
+				&& referencedPropertyName == null
+				&& !hasFormula()
+				&& isConstrained() ) {
+			final var firstColumn = joinColumns.getJoinColumns().get( 0 );
+			final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
+			if ( owner instanceof Join join ) {
+				// Here we handle the case of a foreign key that refers to the
+				// primary key of a secondary table of the referenced entity
+				final var foreignKey = getTable().createForeignKey(
+						getForeignKeyName(),
+						getConstraintColumns(),
+						referencedEntity.getEntityName(),
+						getForeignKeyDefinition(),
+						getForeignKeyOptions(),
+						join.getKey().getColumns()
+				);
+				foreignKey.setOnDeleteAction( getOnDeleteAction() );
+				foreignKey.setReferencedTable( join.getTable() );
+			}
+			else {
+				// it's just a reference to the primary key of the main table
+				createForeignKeyOfEntity( referencedEntity.getEntityName() );
 			}
 		}
 	}

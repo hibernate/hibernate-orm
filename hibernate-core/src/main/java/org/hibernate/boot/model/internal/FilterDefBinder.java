@@ -12,14 +12,10 @@ import java.util.function.Supplier;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.usertype.UserType;
@@ -31,17 +27,16 @@ import static org.hibernate.boot.model.internal.AnnotationHelper.resolveAttribut
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Gavin King
  */
 public class FilterDefBinder {
-	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		annotatedElement.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> {
 			bindFilterDef( usage, context );
 		} );
@@ -55,7 +50,7 @@ public class FilterDefBinder {
 
 		final Map<String, JdbcMapping> paramJdbcMappings;
 		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
-		final ParamDef[] explicitParameters = filterDef.parameters();
+		final var explicitParameters = filterDef.parameters();
 		if ( isEmpty( explicitParameters ) ) {
 			paramJdbcMappings = emptyMap();
 			parameterResolvers = emptyMap();
@@ -63,10 +58,10 @@ public class FilterDefBinder {
 		else {
 			paramJdbcMappings = new HashMap<>();
 			parameterResolvers = new HashMap<>();
-			for ( ParamDef explicitParameter : explicitParameters ) {
+			for ( var explicitParameter : explicitParameters ) {
 				final String parameterName = explicitParameter.name();
-				final Class<?> typeClassDetails = explicitParameter.type();
-				final JdbcMapping jdbcMapping = resolveFilterParamType( typeClassDetails, context );
+				final var typeClassDetails = explicitParameter.type();
+				final var jdbcMapping = resolveFilterParamType( typeClassDetails, context );
 				if ( jdbcMapping == null ) {
 					throw new MappingException(
 							String.format(
@@ -79,14 +74,15 @@ public class FilterDefBinder {
 				}
 				paramJdbcMappings.put( parameterName, jdbcMapping );
 
-				final Class<? extends Supplier> resolverClass = explicitParameter.resolver();
+				final var resolverClass = explicitParameter.resolver();
 				if ( !Supplier.class.equals( resolverClass ) ) {
-					parameterResolvers.put( explicitParameter.name(), resolveParamResolver( resolverClass, context ) );
+					parameterResolvers.put( explicitParameter.name(),
+							resolveParamResolver( resolverClass, context ) );
 				}
 			}
 		}
 
-		final FilterDefinition filterDefinition = new FilterDefinition(
+		final var filterDefinition = new FilterDefinition(
 				name,
 				filterDef.defaultCondition(),
 				filterDef.autoEnabled(),
@@ -95,17 +91,16 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding filter definition: " + filterDefinition.getFilterName() );
-		}
+		BOOT_LOGGER.bindingFilterDefinition( filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static ManagedBean<? extends Supplier<?>> resolveParamResolver(Class<? extends Supplier> resolverClass, MetadataBuildingContext context) {
 		assert resolverClass != Supplier.class;
-		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getManagedBeanRegistry()
+		final var bootstrapContext = context.getBootstrapContext();
+		return (ManagedBean<? extends Supplier<?>>)
+				bootstrapContext.getManagedBeanRegistry()
 						.getBean( resolverClass, bootstrapContext.getCustomTypeProducer() );
 	}
 

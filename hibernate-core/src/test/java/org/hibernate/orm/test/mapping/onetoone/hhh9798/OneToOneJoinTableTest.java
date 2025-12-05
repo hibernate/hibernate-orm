@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @JiraKey(value = "HHH-9798")
 @DomainModel( annotatedClasses = { Shipment.class, Item.class } )

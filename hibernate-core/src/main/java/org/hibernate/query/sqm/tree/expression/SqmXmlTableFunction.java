@@ -11,6 +11,7 @@ import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
 import org.hibernate.query.criteria.JpaXmlTableFunction;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -38,7 +39,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @since 7.0
@@ -58,7 +62,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		this(
 				descriptor,
 				renderer,
-				Arrays.asList( xpath, document, null ),
+				createArgumentsList( xpath, document ),
 				argumentsValidator,
 				setReturningTypeResolver,
 				nodeBuilder,
@@ -66,6 +70,9 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		);
 	}
 
+	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings({"uninitialized", "assignment", "argument"})
 	private SqmXmlTableFunction(
 			SqmSetReturningFunctionDescriptor descriptor,
 			SetReturningFunctionRenderer renderer,
@@ -77,6 +84,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		super( descriptor, renderer, arguments, argumentsValidator, setReturningTypeResolver, nodeBuilder, "xmltable" );
 		this.columns = new Columns( this, columnDefinitions );
 		arguments.set( arguments.size() - 1, this.columns );
+	}
+
+	private static List<SqmTypedNode<?>> createArgumentsList(SqmExpression<String> xpath, SqmExpression<?> document) {
+		// Since the last argument is the Columns object, though that needs the `this` reference,
+		// we need to construct an array with a null slot at the end, where the Columns instance is put into.
+		// Suppress nullness checks as this will eventually turn non-nullable
+		@SuppressWarnings("nullness")
+		final SqmTypedNode<?>[] array = new SqmTypedNode[] {xpath, document, null};
+		return Arrays.asList( array );
 	}
 
 	@Override
@@ -109,9 +125,8 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 
 	@Override
 	protected List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
-		final List<SqlAstNode> sqlAstNodes = super.resolveSqlAstArguments( sqmArguments, walker );
 		// The last argument is the SqmXmlTableFunction.Columns which will convert to null, so remove that
-		sqlAstNodes.remove( sqlAstNodes.size() - 1 );
+		final List<SqlAstNode> sqlAstNodes = super.resolveSqlAstArguments( sqmArguments, 0, sqmArguments.size() - 1, walker );
 
 		final List<XmlTableColumnDefinition> definitions = new ArrayList<>( columns.columnDefinitions.size() );
 		for ( ColumnDefinition columnDefinition : columns.columnDefinitions ) {
@@ -149,7 +164,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	}
 
 	@Override
-	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type, String xpath) {
+	public <X> JpaXmlTableColumnNode<X> valueColumn(String columnName, Class<X> type, @Nullable String xpath) {
 		return valueColumn( columnName, nodeBuilder().castTarget( type ), xpath );
 	}
 
@@ -188,7 +203,21 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 	}
 
-	sealed interface ColumnDefinition {
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmXmlTableFunction<?> that
+			&& super.isCompatible( object )
+			&& columns.isCompatible( that.columns );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + columns.cacheHashCode();
+		return result;
+	}
+
+	sealed interface ColumnDefinition extends SqmCacheable {
 
 		String name();
 
@@ -266,6 +295,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 				sb.append( " path " );
 				QuotingHelper.appendSingleQuoteEscapedString( sb, xpath );
 			}
+			final var defaultExpression = this.defaultExpression;
 			if ( defaultExpression != null ) {
 				sb.append( " default " );
 				defaultExpression.appendHqlString( sb, context );
@@ -282,6 +312,24 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		@Override
 		public String name() {
 			return name;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof QueryColumnDefinition that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( xpath, that.xpath )
+				&& SqmCacheable.areCompatible( defaultExpression, that.defaultExpression );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( xpath );
+			result = 31 * result + SqmCacheable.cacheHashCode( defaultExpression );
+			return result;
 		}
 
 	}
@@ -352,6 +400,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 				sb.append( " path " );
 				QuotingHelper.appendSingleQuoteEscapedString( sb, xpath );
 			}
+			final var defaultExpression = this.defaultExpression;
 			if ( defaultExpression != null ) {
 				sb.append( " default " );
 				defaultExpression.appendHqlString( sb, context );
@@ -361,13 +410,31 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		@Override
 		public int populateTupleType(int offset, String[] componentNames, SqmExpressible<?>[] componentTypes) {
 			componentNames[offset] = name;
-			componentTypes[offset] = type.getNodeType();
+			componentTypes[offset] = castNonNull( type.getNodeType() );
 			return 1;
 		}
 
 		@Override
 		public String name() {
 			return name;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof ValueColumnDefinition<?> that
+				&& name.equals( that.name )
+				&& type.equals( that.type )
+				&& Objects.equals( xpath, that.xpath )
+				&& SqmCacheable.areCompatible( defaultExpression, that.defaultExpression );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			int result = name.hashCode();
+			result = 31 * result + type.hashCode();
+			result = 31 * result + Objects.hashCode( xpath );
+			result = 31 * result + SqmCacheable.cacheHashCode( defaultExpression );
+			return result;
 		}
 
 	}
@@ -394,6 +461,16 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			componentNames[offset] = name;
 			componentTypes[offset] = type;
 			return 1;
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return equals( object );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return hashCode();
 		}
 	}
 
@@ -435,7 +512,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				definitions.add( columnDefinition.copy( context ) );
 			}
-			return new Columns( context.getCopy( table ), definitions );
+			return new Columns( castNonNull( context.getCopy( table ) ), definitions );
 		}
 
 		private void addColumn(ColumnDefinition columnDefinition) {
@@ -481,8 +558,32 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 				}
 			}
 
-			// No-op since this object is going to be visible as function argument
-			return null;
+			// This is fine since this object is going to be visible as function argument only for logging purposes
+
+			//noinspection unchecked
+			return (X) this;
+		}
+
+		@Override
+		public boolean equals(@Nullable Object object) {
+			return object instanceof Columns that
+				&& Objects.equals( columnDefinitions, that.columnDefinitions );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode( columnDefinitions );
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof Columns that
+				&& SqmCacheable.areCompatible( columnDefinitions, that.columnDefinitions );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return SqmCacheable.cacheHashCode( columnDefinitions );
 		}
 	}
 }

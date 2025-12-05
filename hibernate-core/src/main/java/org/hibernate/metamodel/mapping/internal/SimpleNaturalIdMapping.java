@@ -28,7 +28,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -69,11 +68,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		if ( !isMutable() ) {
-			final EntityPersister persister = getDeclaringType().getEntityPersister();
+			final var persister = getDeclaringType().getEntityPersister();
 			final Object naturalId = extractNaturalIdFromEntityState( currentState );
-			final Object snapshot = loadedState == null
-					? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
-					: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
+			final Object snapshot =
+					loadedState == null
+							? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
+							: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 			if ( !areEqual( naturalId, snapshot, session ) ) {
 				throw new HibernateException(
 						String.format(
@@ -109,10 +109,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	@Override
 	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue != null ) {
-			final Class<?> naturalIdValueClass = naturalIdValue.getClass();
+			final var naturalIdValueClass = naturalIdValue.getClass();
 			if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 				// be flexible
-				final Object[] values = (Object[]) naturalIdValue;
+				final var values = (Object[]) naturalIdValue;
 				if ( values.length == 1 ) {
 					naturalIdValue = values[0];
 				}

@@ -9,6 +9,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
@@ -242,7 +243,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTable implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTables();
+			return dialect.getLocalTemporaryTableStrategy() != null || dialect.getGlobalTemporaryTableStrategy() != null;
 		}
 	}
 
@@ -260,7 +261,13 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTableIdentity implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTablePrimaryKey();
+			return dialect.getLocalTemporaryTableStrategy() != null
+				&& dialect.getLocalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				|| dialect.getGlobalTemporaryTableStrategy() != null
+					&& dialect.getGlobalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				// Persistent tables definitely support identity
+				|| dialect.getLocalTemporaryTableStrategy() == null
+					&& dialect.getGlobalTemporaryTableStrategy() == null;
 		}
 	}
 
@@ -301,6 +308,13 @@ abstract public class DialectChecks {
 		@Override
 		public boolean isMatch(Dialect dialect) {
 			return dialect.rowId("") != null;
+		}
+	}
+
+	public static class SupportsDmlTargetColumnQualifier implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return dialect.getDmlTargetColumnQualifierSupport() != DmlTargetColumnQualifierSupport.NONE;
 		}
 	}
 }

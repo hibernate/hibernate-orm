@@ -4,13 +4,15 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Gavin King
@@ -57,6 +59,11 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	}
 
 	@Override
+	public @NonNull SqmBindableType<Long> getNodeType() {
+		return castNonNull( super.getNodeType() );
+	}
+
+	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
@@ -69,14 +76,30 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmByUnit that
-			&& Objects.equals( this.unit, that.unit )
-			&& Objects.equals( this.duration, that.duration );
+			&& this.unit.equals( that.unit )
+			&& this.duration.equals( that.duration );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( unit, duration );
+		int result = unit.hashCode();
+		result = 31 * result + duration.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmByUnit that
+			&& this.unit.isCompatible( that.unit )
+			&& this.duration.isCompatible( that.duration );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = unit.cacheHashCode();
+		result = 31 * result + duration.cacheHashCode();
+		return result;
 	}
 }

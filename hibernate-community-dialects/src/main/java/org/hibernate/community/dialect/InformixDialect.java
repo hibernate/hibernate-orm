@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.function.InformixRegexpLikeFunction;
 import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
@@ -30,24 +31,28 @@ import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.TrimFunction;
+import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
@@ -108,6 +113,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
@@ -364,6 +370,8 @@ public class InformixDialect extends Dialect {
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		final BasicType<String> stringBasicType =
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+		final BasicType<Boolean> booleanBasicType =
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN );
 
 		functionRegistry.registerAlternateKey( "var_samp", "variance" );
 
@@ -405,6 +413,8 @@ public class InformixDialect extends Dialect {
 		// parameter arguments to trim() require a cast
 		functionContributions.getFunctionRegistry().register( "trim",
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
+
+		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
 	}
 
 	@Override
@@ -463,7 +473,7 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
-			case SECOND -> "to_number(to_char(?2,'%S.%F3'))";
+			case SECOND -> getVersion().isBefore( 11, 70 ) ?	"to_number(to_char(?2,'%S%F3'))" : "to_number(to_char(?2,'%S.%F3'))";
 			case MINUTE -> "to_number(to_char(?2,'%M'))";
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
@@ -533,8 +543,8 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getTruncateTableStatement(String tableName) {
-		return super.getTruncateTableStatement( tableName )
-			+ " reuse storage keep statistics";
+		return super.getTruncateTableStatement( tableName ) + " reuse storage"
+				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
 	}
 
 	@Override
@@ -568,6 +578,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		// TODO: need a custom impl, because:
+		//       1. Informix does not support 'skip locked'
+		//       2. Informix does not allow 'for update' with joins
+		return LockingSupportSimple.STANDARD_SUPPORT;
+	}
+
+	// TODO: remove once we have a custom LockingSupport impl
+	@Override @Deprecated(forRemoval = true)
+	public boolean supportsSkipLocked() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return getVersion().isSameOrAfter( 11, 70 );
 	}
@@ -583,9 +607,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		// multi-column check constraints are created using 'alter table'
+	public boolean supportsNamedColumnCheck() {
+		// It seems the constraint name is ignored on column level
 		return false;
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		final String constraint = " check (" + checkConstraint.getConstraint() + ")";
+		final String constraintWithName =
+				isBlank( constraintName )
+						? constraint
+						: constraint + " constraint " + constraintName;
+		return appendCheckConstraintOptions( checkConstraint, constraintWithName );
 	}
 
 	@Override
@@ -743,7 +778,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select sysdate";
+		return "select sysdate" + (getVersion().isBefore( 12, 10 ) ? " from informix.systables where tabid=1" : "");
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -839,30 +874,14 @@ public class InformixDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -871,23 +890,28 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return InformixLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "with no log";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temp table";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.NONE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
@@ -1115,8 +1139,23 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isBefore( 12,10 ) ?	" from " + getDual() + " dual" : "";
+	}
+
+	@Override
 	public boolean supportsCrossJoin() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsIntersect(){
+		return getVersion().isSameOrAfter( 12,10 );
+	}
+
+	public boolean supportsSubqueryOnMutatingTable() {
+		//tested on version 11.50, 14.10
+		return getVersion().isAfter( 11, 50);
 	}
 
 	@Override
@@ -1135,6 +1174,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 14,10 );
+	}
+
+	@Override
 	public boolean requiresColumnListInCreateView() {
 		return true;
 	}
@@ -1150,6 +1194,6 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
-		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+		return getVersion().isSameOrAfter( 12,10 ) ? DmlTargetColumnQualifierSupport.TABLE_ALIAS : DmlTargetColumnQualifierSupport.NONE;
 	}
 }

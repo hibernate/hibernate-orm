@@ -4,6 +4,28 @@
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hamcrest.MatcherAssert;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,104 +34,70 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
+import static org.hibernate.cfg.JdbcSettings.SHOW_SQL;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-12271")
-@RequiresDialectFeature(DialectChecks.SupportDropConstraints.class)
-public class ForeignKeyDropTest extends BaseUnitTestCase {
-	private File output;
-	private MetadataImplementor metadata;
-	private StandardServiceRegistry ssr;
-	private SchemaExport schemaExport;
-
-	@Before
-	public void setUp() throws Exception {
-		output = File.createTempFile( "update_script", ".sql" );
-		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.applySetting( Environment.FORMAT_SQL, "false" )
-				.applySetting( Environment.SHOW_SQL, "true" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( ParentEntity.class )
-				.addAnnotatedClass( ChildEntity.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
-		schemaExport = new SchemaExport().setHaltOnError( false ).setOutputFile( output.getAbsolutePath() );
-	}
-
+@BaseUnitTest
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportDropConstraints.class)
+@ServiceRegistry(settings = {
+		@Setting(name = HBM2DDL_AUTO, value = "none"),
+		@Setting(name = FORMAT_SQL, value = "false"),
+		@Setting(name = SHOW_SQL, value = "true")
+})
+@DomainModel(annotatedClasses = {
+		ForeignKeyDropTest.ParentEntity.class,
+		ForeignKeyDropTest.ChildEntity.class
+})
+public class ForeignKeyDropTest {
 	@Test
 	@JiraKey(value = "HHH-11236")
-	public void testForeignKeyDropIsCorrectlyGenerated() throws Exception {
+	public void testForeignKeyDropIsCorrectlyGenerated(
+			ServiceRegistryScope registryScope,
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
 
-		schemaExport
-				.drop( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
+		final var scriptFile = new File( tmpDir, "script.sql" );
 
-		assertThat(
-				"The ddl foreign key drop command has not been properly generated",
-				checkDropForeignKeyConstraint( "CHILD_ENTITY" ),
-				is( true )
-		);
+		final var schemaExport = new SchemaExport().setHaltOnError( false ).setOutputFile( scriptFile.getAbsolutePath() );
+		schemaExport.drop( EnumSet.of( TargetType.SCRIPT, TargetType.DATABASE ), metadata );
+
+		final Dialect dialect = registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect();
+		MatcherAssert.assertThat( "The ddl foreign key drop command has not been properly generated",
+				checkDropForeignKeyConstraint( "CHILD_ENTITY", scriptFile, dialect ), is( true ) );
 	}
 
-	@After
-	public void tearDown() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
-
-	protected Dialect getDialect() {
-		return ssr.getService( JdbcEnvironment.class ).getDialect();
-	}
-
-	private boolean checkDropForeignKeyConstraint(String tableName) throws IOException {
+	private boolean checkDropForeignKeyConstraint(
+			String tableName,
+			File scriptFile,
+			Dialect dialect) throws IOException {
 		boolean matches = false;
-		String regex = getDialect().getAlterTableString( tableName );
-		regex += " " + getDialect().getDropForeignKeyString() + " ";
+		String regex = dialect.getAlterTableString( tableName );
+		regex += " " + dialect.getDropForeignKeyString() + " ";
 
-		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			regex += "if exists ";
 		}
 		regex += "fk(.)*";
-		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}
 
-		return isMatching( matches, regex.toLowerCase() );
+		return isMatching( matches, regex.toLowerCase(), scriptFile );
 	}
 
-	private boolean isMatching(boolean matches, String regex) throws IOException {
-		List<String> commands = Files.readAllLines( output.toPath() );
+	private boolean isMatching(boolean matches, String regex, File scriptFile) throws IOException {
+		List<String> commands = Files.readAllLines( scriptFile.toPath() );
 
 		Pattern p = Pattern.compile( regex );
 		for ( String line : commands ) {
@@ -121,6 +109,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 		return matches;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "ParentEntity")
 	@Table(name = "PARENT_ENTITY")
 	public static class ParentEntity {
@@ -132,6 +121,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 		Set<ChildEntity> children;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "ChildEntity")
 	@Table(name = "CHILD_ENTITY")
 	public static class ChildEntity {

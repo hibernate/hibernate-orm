@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -11,6 +12,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -26,7 +28,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	public SqmCteRoot(
 			SqmCteStatement<T> cte,
-			String alias) {
+			@Nullable String alias) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<cte>>", alias ),
 				cte,
@@ -39,7 +41,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 			NavigablePath navigablePath,
 			SqmCteStatement<T> cte,
 			SqmPathSource<T> pathSource,
-			String alias) {
+			@Nullable String alias) {
 		super(
 				navigablePath,
 				pathSource,
@@ -83,13 +85,12 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmEntityDomainType<T> getModel() {
-		// Or should we throw an exception instead?
-		return null;
+		throw new UnsupportedOperationException( "Cte root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
 	public String getEntityName() {
-		return null;
+		throw new UnsupportedOperationException( "Cte root does not have an entity type. Use getReferencedPathSource() instead." );
 	}
 
 	@Override
@@ -99,18 +100,18 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		throw new UnsupportedOperationException();
+		return new SqmCorrelatedDerivedRoot<>( this );
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmCteRoot<?> that
-			&& super.equals( object )
-			&& Objects.equals( this.cte, that.cte );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), cte );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteRoot<?>) object).cte.getCteTable().getCteName() );
 	}
 }

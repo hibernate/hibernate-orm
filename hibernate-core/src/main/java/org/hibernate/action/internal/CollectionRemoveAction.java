@@ -7,16 +7,12 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * The action for removing a collection
@@ -104,16 +100,16 @@ public final class CollectionRemoveAction extends CollectionAction {
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();
-		final SharedSessionContractImplementor session = getSession();
+		final var session = getSession();
 		if ( !emptySnapshot ) {
 			// an existing collection that was either nonempty or uninitialized
 			// is replaced by null or a different collection
 			// (if the collection is uninitialized, Hibernate has no way of
 			// knowing if the collection is actually empty without querying the db)
-			final CollectionPersister persister = getPersister();
+			final var persister = getPersister();
 			final Object key = getKey();
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
+			final var eventMonitor = session.getEventMonitor();
+			final var event = eventMonitor.beginCollectionRemoveEvent();
 			boolean success = false;
 			try {
 				persister.remove( key, session );
@@ -131,7 +127,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		evict();
 		postRemove();
 
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.removeCollection( getPersister().getRole() );
 		}

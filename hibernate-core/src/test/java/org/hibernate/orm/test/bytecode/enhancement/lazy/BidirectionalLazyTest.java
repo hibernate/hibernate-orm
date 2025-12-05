@@ -274,7 +274,7 @@ public class BidirectionalLazyTest {
 			final boolean isEmployerNullified) {
 		final SessionImplementor sessionImplementor = (SessionImplementor) session;
 		final EntityEntry entityEntry = sessionImplementor.getPersistenceContext().getEntry( employee );
-		final int propertyNumber = entityEntry.getPersister().getEntityMetamodel().getPropertyIndex( "employer" );
+		final int propertyNumber = entityEntry.getPersister().getPropertyIndex( "employer" );
 		assertEquals(
 				employer,
 				entityEntry.getLoadedState()[propertyNumber]

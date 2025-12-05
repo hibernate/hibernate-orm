@@ -63,9 +63,9 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getIdentifier() );
-			getCollectionTable().setPrimaryKey(pk);
+			final var primaryKey = new PrimaryKey( getCollectionTable() );
+			primaryKey.addColumns( getIdentifier() );
+			getCollectionTable().setPrimaryKey(primaryKey);
 		}
 		// create an index on the key columns??
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -32,12 +33,12 @@ public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T> {
 
-	private final String name;
+	private final @Nullable String name;
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
-			String name,
-			BindableType<? super T> type,
+			@Nullable String name,
+			@Nullable BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
@@ -58,22 +59,22 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		return name;
 	}
 
-	public T getValue() {
+	public @Nullable T getValue() {
 		return null;
 	}
 
 	@Override
-	public Integer getPosition() {
+	public @Nullable Integer getPosition() {
 		// for criteria anyway, these cannot be positional
 		return null;
 	}
 
 	@Override
-	public Integer getTupleLength() {
+	public @Nullable Integer getTupleLength() {
 		// TODO: we should be able to do much better than this!
 		return null;
 	}
@@ -94,7 +95,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public BindableType<T> getAnticipatedType() {
+	public @Nullable BindableType<T> getAnticipatedType() {
 		return getHibernateType();
 	}
 
@@ -110,18 +111,18 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public BindableType<T> getHibernateType() {
+	public @Nullable BindableType<T> getHibernateType() {
 		return getNodeType();
 	}
 
 	@Override
-	public Class<T> getParameterType() {
+	public @Nullable Class<T> getParameterType() {
 		final SqmExpressible<T> nodeType = getNodeType();
 		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmBindableType<?> newType) {
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
 		super.internalApplyInferableType( newType );
 	}
 
@@ -145,25 +146,28 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public int compareTo(SqmParameter<T> parameter) {
-		return parameter instanceof JpaCriteriaParameter<T>
-				? Integer.compare( hashCode(), parameter.hashCode() )
-				: 1;
-	}
-
-	// we can use value equality if the parameter has a name
-	// otherwise we must fall back to identity equality
-
-	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return this == object
 			|| object instanceof JpaCriteriaParameter<?> that
-				&& this.name != null && that.name != null
-				&& Objects.equals( this.name, that.name );
+				&& name != null
+				&& Objects.equals( name, that.name );
 	}
 
 	@Override
 	public int hashCode() {
 		return name == null ? super.hashCode() : name.hashCode();
+	}
+
+	// For caching, we can consider two parameters to be compatible if they are unnamed, or they have the same name
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return getClass() == object.getClass()
+			&& Objects.equals( name, ((JpaCriteriaParameter<?>) object).name );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return name == null ? 0 : name.hashCode();
 	}
 }

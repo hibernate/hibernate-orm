@@ -11,27 +11,20 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Bid.class
-		};
-	}
+@Jpa(annotatedClasses = {UpdateTimestampTest.Bid.class})
+public class UpdateTimestampTest {
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::mapping-generated-UpdateTimestamp-persist-example[]
 			Bid bid = new Bid();
 			bid.setUpdatedBy("John Doe");
@@ -40,7 +33,7 @@ public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
 			//end::mapping-generated-UpdateTimestamp-persist-example[]
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::mapping-generated-UpdateTimestamp-update-example[]
 			Bid bid = entityManager.find(Bid.class, 1L);
 

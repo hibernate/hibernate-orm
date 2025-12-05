@@ -9,9 +9,11 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
-/**
- * @author Steve Ebersole
- */
+/// Support for [LoggingInspectionsScope].
+///
+/// @see LoggingInspections
+///
+/// @author Steve Ebersole
 public class LoggingInspectionsExtension implements TestInstancePostProcessor, BeforeEachCallback {
 	private static final String KEY = LoggingInspectionsExtension.class.getName();
 

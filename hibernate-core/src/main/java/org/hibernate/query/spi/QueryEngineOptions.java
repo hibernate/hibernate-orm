@@ -7,6 +7,8 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -74,6 +76,22 @@ public interface QueryEngineOptions {
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_INSERT_STRATEGY
 	 */
 	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
+
+	/**
+	 * Contract for handling SQM trees representing mutation (UPDATE or DELETE) queries
+	 * where the target of the mutation is a multi-table entity.
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_MUTATION_STRATEGY
+	 */
+	SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext);
+
+	/**
+	 * Contract for handling SQM trees representing insertion (INSERT) queries where the
+	 * target of the mutation is a multi-table entity.
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_INSERT_STRATEGY
+	 */
+	SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext);
 
 	/**
 	 * @see org.hibernate.cfg.JpaComplianceSettings

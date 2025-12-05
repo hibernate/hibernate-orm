@@ -51,9 +51,6 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -125,6 +122,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +158,7 @@ public abstract class MockSessionFactory
 	private final MappingMetamodelImpl metamodel;
 
 	private final MetadataImplementor bootModel;
-	private final MetadataContext metadataContext;
+//	private final MetadataContext metadataContext;
 
 	private final NodeBuilder nodeBuilder;
 	private final SqlTranslationEngine sqlTranslationEngine;
@@ -190,7 +188,7 @@ public abstract class MockSessionFactory
 						true,
 						classLoaderService,
 						new StrategySelectorImpl( classLoaderService ),
-						() -> emptyList()
+						Collections::emptyList
 				),
 //				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
 				singletonList(MockJdbcServicesInitiator.INSTANCE),
@@ -225,15 +223,15 @@ public abstract class MockSessionFactory
 				this
 		);
 
-		metadataContext = new MetadataContext(
-				metamodel.getJpaMetamodel(),
-				metamodel,
-				bootModel,
-				JpaStaticMetamodelPopulationSetting.DISABLED,
-				JpaMetamodelPopulationSetting.DISABLED,
-				this,
-				classLoaderService
-		);
+//		metadataContext = new MetadataContext(
+//				metamodel.getJpaMetamodel(),
+//				metamodel,
+//				bootModel,
+//				JpaStaticMetamodelPopulationSetting.DISABLED,
+//				JpaMetamodelPopulationSetting.DISABLED,
+//				this,
+//				classLoaderService
+//		);
 
 		typeConfiguration = new TypeConfiguration();
 		typeConfiguration.scope((MetadataBuildingContext) this);
@@ -445,6 +443,11 @@ public abstract class MockSessionFactory
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
 		return MetadataBuildingContext.super.isPreferNativeEnumTypesEnabled();
+	}
+
+	@Override
+	public boolean isPreferLocaleLanguageTagEnabled() {
+		return MetadataBuildingContext.super.isPreferLocaleLanguageTagEnabled();
 	}
 
 	@Override
@@ -893,7 +896,7 @@ public abstract class MockSessionFactory
 		public JavaType<?> getJavaConstantType(String className, String fieldName) {
 			return MockSessionFactory.this.getTypeConfiguration()
 					.getJavaTypeRegistry()
-					.getDescriptor( javaConstantType( className, fieldName ) );
+					.resolveDescriptor( javaConstantType( className, fieldName ) );
 		}
 
 		@Override
@@ -925,7 +928,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
@@ -946,7 +949,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmSingularPersistentAttribute<? super X, ?> findVersionAttribute() {
+		public @Nullable SqmSingularPersistentAttribute<? super X, ?> findVersionAttribute() {
 			final BasicType<?> type = getVersionType(getHibernateEntityName());
 			if (type == null) {
 				return null;
@@ -962,8 +965,7 @@ public abstract class MockSessionFactory
 						false,
 						true,
 						false,
-						false,
-						metadataContext
+						false
 				);
 			}
 		}
@@ -974,7 +976,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPathSource<?> getIdentifierDescriptor() {
+		public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
 			final Type type = getIdentifierType(getHibernateEntityName());
 			if (type instanceof BasicDomainType<?> basicDomainType) {
 				return new BasicSqmPathSource<>(
@@ -1001,7 +1003,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 			switch (name) {
 				case EntityIdentifierMapping.ID_ROLE_NAME:
 					return getIdentifierDescriptor();
@@ -1036,7 +1038,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPersistentAttribute<? super X, ?> findAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<? super X, ?> findAttribute(String name) {
 			final var attribute = super.findAttribute(name);
 			if (attribute != null) {
 				return attribute;
@@ -1048,7 +1050,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
@@ -1077,8 +1079,7 @@ public abstract class MockSessionFactory
 					false,
 					false,
 					true,
-					false,
-					metadataContext
+					false
 			);
 		}
 		else if ( type.isComponentType() ) {
@@ -1093,8 +1094,7 @@ public abstract class MockSessionFactory
 					false,
 					false,
 					true,
-					false,
-					metadataContext
+					false
 			);
 		}
 		else {
@@ -1110,8 +1110,7 @@ public abstract class MockSessionFactory
 					false,
 					false,
 					true,
-					false,
-					metadataContext
+					false
 			);
 		}
 	}
@@ -1153,7 +1152,7 @@ public abstract class MockSessionFactory
 		property.setName(name);
 		final JavaType<?> collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor(collectionType.getReturnedClass());
+						.resolveDescriptor(collectionType.getReturnedClass());
 		final SqmDomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
 		final CollectionClassification classification = collectionType.getCollectionClassification();
 		return switch ( classification ) {
@@ -1169,8 +1168,7 @@ public abstract class MockSessionFactory
 							owner,
 							property,
 							null
-					),
-					metadataContext
+					)
 			);
 			case BAG, ID_BAG -> new BagAttributeImpl(
 					new PluralAttributeBuilder<>(
@@ -1183,8 +1181,7 @@ public abstract class MockSessionFactory
 							owner,
 							property,
 							null
-					),
-					metadataContext
+					)
 			);
 			case SET, SORTED_SET, ORDERED_SET -> new SetAttributeImpl(
 					new PluralAttributeBuilder<>(
@@ -1197,8 +1194,7 @@ public abstract class MockSessionFactory
 							owner,
 							property,
 							null
-					),
-					metadataContext
+					)
 			);
 			case MAP, SORTED_MAP, ORDERED_MAP -> new MapAttributeImpl(
 					new PluralAttributeBuilder<>(
@@ -1211,8 +1207,7 @@ public abstract class MockSessionFactory
 							owner,
 							property,
 							null
-					),
-					metadataContext
+					)
 			);
 			default -> null;
 		};
@@ -1222,7 +1217,7 @@ public abstract class MockSessionFactory
 		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
-			public SqmPersistentAttribute<T, ?> findAttribute(String name) {
+			public @Nullable SqmPersistentAttribute<T, ?> findAttribute(String name) {
 				return createAttribute(
 						name,
 						entityName,

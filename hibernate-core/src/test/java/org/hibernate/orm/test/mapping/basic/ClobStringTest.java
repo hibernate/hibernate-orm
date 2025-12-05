@@ -8,28 +8,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ClobStringTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = {ClobStringTest.Product.class} )
+public class ClobStringTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction( entityManager -> {
 			final Product product = new Product();
 			product.setId(1);
 			product.setName("Mobile phone");
@@ -38,7 +31,7 @@ public class ClobStringTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(product);
 			return product.getId();
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Product product = entityManager.find(Product.class, productId);
 			assertEquals("My product warranty", product.getWarranty());
 		});

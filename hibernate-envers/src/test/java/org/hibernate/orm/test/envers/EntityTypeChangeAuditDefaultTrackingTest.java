@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.envers;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
@@ -14,20 +11,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping;
 import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Map;
+
 
 /**
  * @author Vlad Mihalcea
@@ -37,62 +34,48 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Customer.class,
-			CustomTrackingRevisionEntity.class
+				Customer.class,
+				CustomTrackingRevisionEntity.class
 		};
 	}
 
 	@Test
 	public void testLifecycle() {
-		final EntityManagerFactory testEmf = produceEntityManagerFactory();
+		try (final EntityManagerFactory testEmf = produceEntityManagerFactory()) {
 
-		TransactionUtil.doInJPA( () -> testEmf, entityManager -> {
-			Customer customer = new Customer();
-			customer.setId(1L);
-			customer.setFirstName("John");
-			customer.setLastName("Doe");
+			TransactionUtil.doInJPA( () -> testEmf, entityManager -> {
+				Customer customer = new Customer();
+				customer.setId( 1L );
+				customer.setFirstName( "John" );
+				customer.setLastName( "Doe" );
 
-			entityManager.persist(customer);
-		});
+				entityManager.persist( customer );
+			} );
 
-		EntityManagerFactory entityManagerFactory = null;
-		try {
-			Map settings = buildSettings();
-			settings.put(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList(
-					ApplicationCustomer.class,
-					CustomTrackingRevisionEntity.class
-				)
-			);
-			settings.put(
-					AvailableSettings.HBM2DDL_AUTO,
-					"update"
-			);
-			entityManagerFactory =  Bootstrap
-			.getEntityManagerFactoryBuilder(
-				new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
-				settings)
-			.build()
-			.unwrap(SessionFactoryImplementor.class);
+			try (EntityManagerFactory entityManagerFactory = buildEntityManagerFactory()) {
+				entityManagerFactory.runInTransaction( entityManager -> {
+					ApplicationCustomer customer = new ApplicationCustomer();
+					customer.setId( 2L );
+					customer.setFirstName( "John" );
+					customer.setLastName( "Doe Jr." );
 
-			final EntityManagerFactory emf = entityManagerFactory;
-
-			doInJPA(() -> emf, entityManager -> {
-				ApplicationCustomer customer = new ApplicationCustomer();
-				customer.setId(2L);
-				customer.setFirstName("John");
-				customer.setLastName("Doe Jr.");
-
-				entityManager.persist(customer);
-			});
-		}
-		finally {
-			if ( entityManagerFactory != null ) {
-				entityManagerFactory.close();
+					entityManager.persist( customer );
+				} );
 			}
-			testEmf.close();
 		}
+	}
+
+	private EntityManagerFactory buildEntityManagerFactory() {
+		Map<Object, Object> settings = buildSettings();
+		settings.put(
+				AvailableSettings.LOADED_CLASSES,
+				Arrays.asList( ApplicationCustomer.class, CustomTrackingRevisionEntity.class )
+		);
+		settings.put( AvailableSettings.HBM2DDL_AUTO, "update" );
+		return Bootstrap.getEntityManagerFactoryBuilder(
+						new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+						settings )
+				.build();
 	}
 
 	@Audited
@@ -198,7 +181,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
 	public static class CustomTrackingRevisionEntity
-		extends TrackingModifiedEntitiesRevisionMapping {
+			extends TrackingModifiedEntitiesRevisionMapping {
 
 	}
 	//end::envers-tracking-modified-entities-revchanges-example[]

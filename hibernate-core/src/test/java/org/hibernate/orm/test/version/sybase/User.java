@@ -11,24 +11,25 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class User {
-	private Long id;
+	private Integer id;
 	private byte[] timestamp;
 	private String username;
-	private Set groups;
-	private Set permissions;
+	private Set<Group> groups;
+	private Set<Permission> permissions;
 
 	public User() {
 	}
 
-	public User(String username) {
+	public User(Integer id, String username) {
+		this.id = id;
 		this.username = username;
 	}
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	protected void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -48,19 +49,19 @@ public class User {
 		this.username = username;
 	}
 
-	public Set getGroups() {
+	public Set<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(Set groups) {
+	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
 
-	public Set getPermissions() {
+	public Set<Permission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(Set permissions) {
+	public void setPermissions(Set<Permission> permissions) {
 		this.permissions = permissions;
 	}
 }

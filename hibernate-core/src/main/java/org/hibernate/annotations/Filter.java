@@ -33,6 +33,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  * <p>
+ * Similarly, the filter could be applied to a one-to-many association
+ * like this:
+ * <pre>
+ * &#64;OneToMany(mappedBy = "provider")
+ * &#64;Filter(name = "Current",
+ *         deduceAliasInjectionPoints = false,
+ *         condition = "{alias}.year = extract(year from current_date)")
+ * List&lt;Course&gt; courses;
+ * </pre>
+ * <p>
  * If an entity or collection has no {@code @Filter} annotation
  * with the name of a given filter, it is not affected by that
  * filter.
@@ -90,11 +100,11 @@ public @interface Filter {
 
 	/**
 	 * Explicitly specifies how aliases are interpolated into
-	 * the {@link #condition} SQL expression. Each {@link
-	 * SqlFragmentAlias} specifies a placeholder name and the
-	 * table whose alias should be interpolated. Placeholders
-	 * are of form {@code {name}} where {@code name} matches
-	 * a {@link SqlFragmentAlias#alias}.
+	 * the {@linkplain #condition SQL expression}. Each listed
+	 * {@link SqlFragmentAlias} specifies a placeholder name
+	 * and the table whose alias should be interpolated.
+	 * Placeholders are of form {@code {name}} where {@code name}
+	 * matches a given {@link SqlFragmentAlias#alias alias}.
 	 */
 	SqlFragmentAlias[] aliases() default {};
 }

@@ -4,148 +4,132 @@
  */
 package org.hibernate.orm.test.schemavalidation;
 
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Map;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
-import org.hibernate.tool.schema.SourceType;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.spi.SourceDescriptor;
-import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.time.Instant;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * Test that an existing timestamp with timezone column works for fields that use java.time.Instant.
  */
 @JiraKey(value = "HHH-15548")
-@RunWith(Parameterized.class)
-public class InstantValidationTest implements ExecutionOptions {
-	@Parameterized.Parameters
-	public static Collection<String> parameters() {
-		return Arrays.asList(
-				JdbcMetadaAccessStrategy.GROUPED.toString(),
-				JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("extractorStrategies")
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = InstantValidationTest.TestEntityOld.class)
+public class InstantValidationTest implements ServiceRegistryProducer {
+	static List<JdbcMetadataAccessStrategy> extractorStrategies() {
+		return List.of(
+				JdbcMetadataAccessStrategy.GROUPED,
+				JdbcMetadataAccessStrategy.INDIVIDUALLY
 		);
 	}
 
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
+	private final JdbcMetadataAccessStrategy extractorStrategy;
 
-	private StandardServiceRegistry ssr;
-	private MetadataImplementor metadata;
-	private MetadataImplementor oldMetadata;
-
-	@Before
-	public void beforeTest() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting(
-						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						jdbcMetadataExtractorStrategy
-				)
-				.build();
-		oldMetadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntityOld.class )
-				.buildMetadata();
-		oldMetadata.orderColumns( false );
-		oldMetadata.validate();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
-
-		try {
-			dropSchema();
-			// create the schema
-			createSchema();
-		}
-		catch (Exception e) {
-			tearDown();
-			throw e;
-		}
+	public InstantValidationTest(JdbcMetadataAccessStrategy extractorStrategy) {
+		this.extractorStrategy = extractorStrategy;
 	}
 
-	@After
-	public void tearDown() {
-		dropSchema();
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder
+				.applySetting( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, extractorStrategy )
+				.build();
+	}
+
+	@BeforeEach
+	void setUp(DomainModelScope modelScope) {
+		final var model = modelScope.getDomainModel();
+		model.orderColumns( false );
+		model.validate();
+
+		dropSchema( model );
+		createSchema( model );
+	}
+
+	private void dropSchema(MetadataImplementor model) {
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), model );
+	}
+
+	private void createSchema(MetadataImplementor model) {
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), model );
+	}
+
+	@AfterEach
+	void tearDown(DomainModelScope modelScope) {
+		final var model = modelScope.getDomainModel();
+		model.orderColumns( false );
+		model.validate();
+
+		dropSchema( model );
 	}
 
 	@Test
-	public void testValidation() {
-		doValidation();
+	void testValidation(ServiceRegistryScope registryScope) {
+		final var newModel = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( TestEntity.class )
+				.buildMetadata();
+		newModel.orderColumns( false );
+		newModel.validate();
+
+		final var tool = registryScope.getRegistry().requireService( SchemaManagementTool.class );
+
+		final var execOptions = new ExecutionOptions() {
+			final Map<String, Object> settings = registryScope.getRegistry().requireService( ConfigurationService.class ).getSettings();
+
+			@Override
+			public Map<String, Object> getConfigurationValues() {
+				return settings;
+			}
+
+			@Override
+			public boolean shouldManageNamespaces() {
+				return false;
+			}
+
+			@Override
+			public ExceptionHandler getExceptionHandler() {
+				return ExceptionHandlerLoggedImpl.INSTANCE;
+			}
+		};
+
+		tool.getSchemaValidator( null ).doValidation( newModel, execOptions, ContributableMatcher.ALL );
 	}
 
-	private void doValidation() {
-		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null )
-				.doValidation( metadata, this, ContributableMatcher.ALL );
-	}
-
-	private void createSchema() {
-		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( null ).doCreation(
-				oldMetadata,
-				this,
-				ContributableMatcher.ALL,
-				new SourceDescriptor() {
-					@Override
-					public SourceType getSourceType() {
-						return SourceType.METADATA;
-					}
-
-					@Override
-					public ScriptSourceInput getScriptSourceInput() {
-						return null;
-					}
-				},
-				new TargetDescriptor() {
-					@Override
-					public EnumSet<TargetType> getTargetTypes() {
-						return EnumSet.of( TargetType.DATABASE );
-					}
-
-					@Override
-					public ScriptTargetOutput getScriptTargetOutput() {
-						return null;
-					}
-				}
-		);
-	}
-
-	private void dropSchema() {
-		new SchemaExport()
-				.drop( EnumSet.of( TargetType.DATABASE ), oldMetadata );
-	}
-
+	@SuppressWarnings("unused")
 	@Entity(name = "TestEntity")
 	public static class TestEntityOld {
 		@Id
@@ -155,6 +139,7 @@ public class InstantValidationTest implements ExecutionOptions {
 		Instant instantVal;
 	}
 
+	@SuppressWarnings("unused")
 	@Entity(name = "TestEntity")
 	public static class TestEntity {
 		@Id
@@ -162,20 +147,5 @@ public class InstantValidationTest implements ExecutionOptions {
 
 		@Column(name = "instantVal")
 		Instant instantVal;
-	}
-
-	@Override
-	public Map<String,Object> getConfigurationValues() {
-		return ssr.requireService( ConfigurationService.class ).getSettings();
-	}
-
-	@Override
-	public boolean shouldManageNamespaces() {
-		return false;
-	}
-
-	@Override
-	public ExceptionHandler getExceptionHandler() {
-		return ExceptionHandlerLoggedImpl.INSTANCE;
 	}
 }

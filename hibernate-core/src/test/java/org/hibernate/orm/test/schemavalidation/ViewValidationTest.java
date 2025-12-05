@@ -8,103 +8,94 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.SkipForDialect;
-
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.jdbc.JdbcUtils;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.EnumSet;
+import java.util.List;
+
+import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * @author Andrea Boriero
  */
-@RequiresDialects({
-		@RequiresDialect(PostgreSQLDialect.class),
-		@RequiresDialect(H2Dialect.class)
-})
-@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/10028")
-public class ViewValidationTest extends BaseCoreFunctionalTestCase {
-	private StandardServiceRegistry ssr;
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(H2Dialect.class)
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("extractorStrategies")
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = ViewValidationTest.TestEntity.class)
+public class ViewValidationTest implements ServiceRegistryProducer {
+	static List<JdbcMetadataAccessStrategy> extractorStrategies() {
+		return List.of(
+				JdbcMetadataAccessStrategy.GROUPED,
+				JdbcMetadataAccessStrategy.INDIVIDUALLY
+		);
+	}
+
+	private final JdbcMetadataAccessStrategy extractorStrategy;
+
+	public ViewValidationTest(JdbcMetadataAccessStrategy extractorStrategy) {
+		this.extractorStrategy = extractorStrategy;
+	}
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {TestEntity.class};
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder
+				.applySetting( ENABLE_SYNONYMS, true )
+				.applySetting( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, extractorStrategy )
+				.build();
 	}
 
-	@Before
-	public void setUp() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
+	@BeforeEach
+	void setUp(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
+		JdbcUtils.withConnection( registryScope.getRegistry(), connection -> {
+			try (var statement = connection.createStatement()) {
+				statement.execute( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" );
+			}
 		} );
 	}
 
-	@After
-	public void tearDown() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
+	@AfterEach
+	void tearDown(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		JdbcUtils.withConnection( registryScope.getRegistry(), connection -> {
+			try (var statement = connection.createStatement()) {
+				statement.execute( "DROP VIEW test_synonym CASCADE" );
+			}
 		} );
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), modelScope.getDomainModel() );
 	}
 
 	@Test
-	public void testSynonymUsingGroupedSchemaValidator() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
-				.applySetting(
-						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.GROUPED
-				)
-				.build();
-		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
-	@Test
-	public void testSynonymUsingIndividuallySchemaValidator() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
-				.applySetting(
-						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
-						JdbcMetadaAccessStrategy.INDIVIDUALLY
-				)
-				.build();
-		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	public void testSynonymValidation(DomainModelScope modelScope) {
+		new SchemaValidator().validate( modelScope.getDomainModel() );
 	}
 
 	@Entity
 	@Table(name = "test_entity")
-	private static class TestEntity {
+	public static class TestEntity {
 		@Id
 		private Long id;
 

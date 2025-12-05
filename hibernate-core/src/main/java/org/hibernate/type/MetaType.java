@@ -37,13 +37,13 @@ public class MetaType extends AbstractType {
 		this.implicitValueStrategy = implicitValueStrategy;
 
 		if ( explicitValueMappings == null || explicitValueMappings.isEmpty() ) {
-			this.discriminatorValuesToEntityNameMap = new HashMap<>();
-			this.entityNameToDiscriminatorValueMap = new HashMap<>();
+			discriminatorValuesToEntityNameMap = new HashMap<>();
+			entityNameToDiscriminatorValueMap = new HashMap<>();
 		}
 		else {
-			this.discriminatorValuesToEntityNameMap = explicitValueMappings;
-			this.entityNameToDiscriminatorValueMap = new HashMap<>();
-			for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
+			discriminatorValuesToEntityNameMap = explicitValueMappings;
+			entityNameToDiscriminatorValueMap = new HashMap<>();
+			for ( var entry : discriminatorValuesToEntityNameMap.entrySet() ) {
 				entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
 			}
 		}

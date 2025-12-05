@@ -8,7 +8,7 @@ As an ORM tool, probably the single most important thing you need to tell Hibern
 This is ultimately the function of the `org.hibernate.engine.jdbc.connections.spi.ConnectionProvider` interface.
 Hibernate provides some out of the box implementations of this interface.
 `ConnectionProvider` is also an extension point so you can also use custom implementations from third parties or written yourself.
-The `ConnectionProvider` to use is defined by the `hibernate.connection.provider_class` setting. See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cfg/AvailableSettings.html#CONNECTION_PROVIDER[`org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER`]
+The `ConnectionProvider` to use is defined by the `hibernate.connection.provider_class` setting. See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/cfg/AvailableSettings.html#CONNECTION_PROVIDER[`org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER`]
 
 Generally speaking, applications should not have to configure a `ConnectionProvider` explicitly if using one of the Hibernate-provided implementations.
 Hibernate will internally determine which `ConnectionProvider` to use based on the following algorithm:
@@ -143,7 +143,7 @@ Again, this is only supported for JDBC standard isolation levels, not for isolat
 === Connection handling
 
 The connection handling mode is defined by the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] enumeration which provides the following strategies:
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/PhysicalConnectionHandlingMode.html[`PhysicalConnectionHandlingMode`] enumeration which provides the following strategies:
 
 `IMMEDIATE_ACQUISITION_AND_HOLD`::
 The `Connection` will be acquired as soon as the `Session` is opened and held until the `Session` is closed.
@@ -189,8 +189,8 @@ and no connection leak false positive is being reported, then you should conside
 ==== User-provided connections
 
 If the current `Session` was created using the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html[`SessionBuilder`] and a JDBC `Connection` was provided via the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html#connection-java.sql.Connection-[`SessionBuilder#connection`] method, then the user-provided `Connection` is going to be used, and
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html[`SessionBuilder`] and a JDBC `Connection` was provided via the
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html#connection-java.sql.Connection-[`SessionBuilder#connection`] method, then the user-provided `Connection` is going to be used, and
 the connection handling mode will be `IMMEDIATE_ACQUISITION_AND_HOLD`.
 
 Therefore for user-provided connection, the connection is acquired right away and held until the current `Session` is closed, without being influenced by the Jakarta Persistence or Hibernate transaction context.
@@ -205,5 +205,7 @@ Hibernate abstracts over variations between dialects of SQL via the class `org.h
 - There's a subclass of `Dialect` for each supported relational database in the package `org.hibernate.dialect`.
 - Additional community-supported ``Dialect``s are available in the separate module `hibernate-community-dialects`.
 
-In Hibernate 6, it's no longer necessary to explicitly specify a dialect using the configuration property `hibernate.dialect`, and so setting that property is now discouraged.
-(An exception is the case of custom user-written ``Dialect``s.)
+Starting with Hibernate 6, it's no longer necessary to explicitly specify a dialect using the configuration property `hibernate.dialect`, and so setting that property is now discouraged.
+An exception is the case of custom or link:{doc-dialect-url}#third-party-dialects[third-party] ``Dialect``s.
+
+NOTE: For information about available dialects and compatible database versions, see the link:{doc-dialect-url}[dialect guide].

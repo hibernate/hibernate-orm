@@ -4,8 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
 import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
@@ -34,7 +33,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void beforeCompletion() {
-		JTA_LOGGER.trace( "Synchronization coordinator: beforeCompletion()" );
+		JTA_LOGGER.synchronizationCoordinatorBeforeCompletion();
 		if ( target.isActive() ) {
 			target.beforeCompletion();
 		}
@@ -42,13 +41,12 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void afterCompletion(int status) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
+		JTA_LOGGER.synchronizationCoordinatorAfterCompletion( status );
+		doAfterCompletion( isCommitted( status ), false );
 	}
 
 	protected void doAfterCompletion(boolean successful, boolean delayed) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)",
-				successful, delayed );
+		JTA_LOGGER.synchronizationCoordinatorDoAfterCompletion( successful, delayed );
 		try {
 			target.afterCompletion( successful, delayed );
 		}

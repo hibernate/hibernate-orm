@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/lob/SerializableMappings.hbm.xml"
 )
@@ -34,58 +35,46 @@ public class SerializableTypeTest {
 		final String changedPayloadText = "Changed payload";
 		final String empty = "";
 
-		SerializableHolder serializableHolder = scope.fromTransaction(
-				session -> {
-					SerializableHolder holder = new SerializableHolder();
-					session.persist( holder );
-					return holder;
-				}
-		);
+		var serializableHolder = scope.fromTransaction(session -> {
+			var holder = new SerializableHolder();
+			session.persist( holder );
+			return holder;
+		} );
 
-		Long id = serializableHolder.getId();
+		var id = serializableHolder.getId();
 
-		scope.inTransaction(
-				session -> {
-					SerializableHolder holder = session.get( SerializableHolder.class, id );
-					assertNull( holder.getSerialData() );
-					holder.setSerialData( new SerializableData( initialPayloadText ) );
-				}
-		);
+		scope.inTransaction( session -> {
+			var holder = session.find( SerializableHolder.class, id );
+			assertNull( holder.getSerialData() );
+			holder.setSerialData( new SerializableData( initialPayloadText ) );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					SerializableHolder holder = session.get( SerializableHolder.class, id );
-					SerializableData serialData = (SerializableData) holder.getSerialData();
-					assertEquals( initialPayloadText, serialData.getPayload() );
-					holder.setSerialData( new SerializableData( changedPayloadText ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			var holder = session.find( SerializableHolder.class, id );
+			var serialData = (SerializableData) holder.getSerialData();
+			assertEquals( initialPayloadText, serialData.getPayload() );
+			holder.setSerialData( new SerializableData( changedPayloadText ) );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					SerializableHolder holder = session.get( SerializableHolder.class, id );
-					SerializableData serialData = (SerializableData) holder.getSerialData();
-					assertEquals( changedPayloadText, serialData.getPayload() );
-					holder.setSerialData( null );
-				}
-		);
+		scope.inTransaction(session -> {
+			var holder = session.find( SerializableHolder.class, id );
+			var serialData = (SerializableData) holder.getSerialData();
+			assertEquals( changedPayloadText, serialData.getPayload() );
+			holder.setSerialData( null );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					SerializableHolder holder = session.get( SerializableHolder.class, id );
-					assertNull( holder.getSerialData() );
-					holder.setSerialData( new SerializableData( empty ) );
-				}
-		);
+		scope.inTransaction(session -> {
+			var holder = session.find( SerializableHolder.class, id );
+			assertNull( holder.getSerialData() );
+			holder.setSerialData( new SerializableData( empty ) );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					SerializableHolder holder = session.get( SerializableHolder.class, id );
-					SerializableData serialData = (SerializableData) holder.getSerialData();
-					assertEquals( empty, serialData.getPayload() );
-					session.remove( holder );
-				}
-		);
+		scope.inTransaction( session -> {
+			var holder = session.find( SerializableHolder.class, id );
+			var serialData = (SerializableData) holder.getSerialData();
+			assertEquals( empty, serialData.getPayload() );
+			session.remove( holder );
+		} );
 	}
 
 }

@@ -4,18 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.PessimisticLockException;
@@ -44,14 +33,21 @@ import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.LockingSupportParameterized;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.community.dialect.temptable.SingleStoreLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -113,7 +109,17 @@ import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
@@ -177,6 +183,15 @@ public class SingleStoreDialect extends Dialect {
 	private final SingleStoreTableType explicitTableType;
 	private final boolean isForUpdateLockingEnabled;
 
+	private final LockingSupport lockingSupport = new LockingSupportParameterized(
+			PessimisticLockStyle.NONE,
+			RowLockStrategy.NONE,
+			LockTimeoutType.NONE,
+			LockTimeoutType.NONE,
+			LockTimeoutType.NONE,
+			OuterJoinLockingType.UNSUPPORTED
+	);
+
 	public SingleStoreDialect() {
 		this( MINIMUM_VERSION, null, false );
 	}
@@ -220,8 +235,7 @@ public class SingleStoreDialect extends Dialect {
 	private static boolean getUpdateForEnabled(DialectResolutionInfo info) {
 		return ConfigurationHelper.getBoolean(
 				SINGLE_STORE_FOR_UPDATE_LOCK_ENABLED,
-				info.getConfigurationValues(),
-				false
+				info.getConfigurationValues()
 		);
 	}
 
@@ -262,22 +276,15 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch ( unit ) {
-			case SECOND:
-				return "(second(?2)+microsecond(?2)/1e6)";
-			case WEEK:
-				return "weekofyear(?2)";
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
-			case EPOCH:
-				return "unix_timestamp(?2)";
-			default:
-				return "?1(?2)";
-		}
+		return switch ( unit ) {
+			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
+			case WEEK -> "weekofyear(?2)";
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
+			case EPOCH -> "unix_timestamp(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -310,14 +317,11 @@ public class SingleStoreDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		String fromType = fromTemporalType == TemporalType.TIME ? "to_timestamp(?2, 'HH24:MI:SS.FF6')" : "?2";
 		String toType = toTemporalType == TemporalType.TIME ? "to_timestamp(?3, 'HH24:MI:SS.FF6')" : "?3";
-		switch ( unit ) {
-			case NANOSECOND:
-				return String.format( "timestampdiff(microsecond,%s,%s)*1e3", fromType, toType );
-			case NATIVE:
-				return String.format( "timestampdiff(microsecond,%s,%s)", fromType, toType );
-			default:
-				return String.format( "timestampdiff(?1,%s,%s)", fromType, toType );
-		}
+		return switch ( unit ) {
+			case NANOSECOND -> String.format( "timestampdiff(microsecond,%s,%s)*1e3", fromType, toType );
+			case NATIVE -> String.format( "timestampdiff(microsecond,%s,%s)", fromType, toType );
+			default -> String.format( "timestampdiff(?1,%s,%s)", fromType, toType );
+		};
 	}
 
 	@Override
@@ -636,6 +640,7 @@ public class SingleStoreDialect extends Dialect {
 		functionRegistry.register( "json_mergepatch", new SingleStoreJsonMergepatchFunction( typeConfiguration ) );
 		functionRegistry.register( "json_array_append", new SingleStoreJsonArrayAppendFunction( typeConfiguration ) );
 		functionRegistry.register( "json_array_insert", new SingleStoreJsonArrayInsertFunction( typeConfiguration ) );
+		commonFunctionFactory.regexpLike_regexp();
 	}
 
 
@@ -684,34 +689,22 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bit";
-			case TIMESTAMP:
-				return "datetime($p)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case TIME_WITH_TIMEZONE:
-				return "time($p)";
-			case SqlTypes.NUMERIC:
-				return columnType( DECIMAL );
-			case FLOAT:
-				// Avoid using float type because
-				// SingleStore has potential inaccuracy when using the = or != comparison operators on FLOAT columns in WHERE clause
-				return columnType( DOUBLE );
-			case NCHAR:
-				return "char($l) character set utf8";
-			case NVARCHAR:
-				return "varchar($l) character set utf8";
-			case BLOB:
-				return "longblob";
-			case NCLOB:
-				return "longtext character set utf8";
-			case CLOB:
-				return "longtext";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "bit";
+			case TIMESTAMP -> "datetime($p)";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+			case TIME_WITH_TIMEZONE -> "time($p)";
+			case SqlTypes.NUMERIC -> columnType( DECIMAL );
+			// Avoid using float type because
+			// SingleStore has potential inaccuracy when using the = or != comparison operators on FLOAT columns in WHERE clause
+			case FLOAT -> columnType( DOUBLE );
+			case NCHAR -> "char($l) character set utf8";
+			case NVARCHAR -> "varchar($l) character set utf8";
+			case BLOB -> "longblob";
+			case NCLOB -> "longtext character set utf8";
+			case CLOB -> "longtext";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -729,30 +722,15 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case BIT:
-				//special case for casting to Boolean
-				return "unsigned";
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				return "signed";
-			case CHAR:
-			case VARCHAR:
-			case LONG32VARCHAR:
-				return "char";
-			case NCHAR:
-			case NVARCHAR:
-			case LONG32NVARCHAR:
-				return "char character set utf8";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "binary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			//special case for casting to Boolean
+			case BOOLEAN, BIT -> "unsigned";
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			case CHAR, VARCHAR, LONG32VARCHAR -> "char";
+			case NCHAR, NVARCHAR, LONG32NVARCHAR -> "char character set utf8";
+			case BINARY, VARBINARY, LONG32VARBINARY ->  "binary";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -1069,26 +1047,16 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableMutationStrategy( TemporaryTable.createIdTable(
-				rootEntityDescriptor,
-				basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-				this,
-				runtimeModelCreationContext
-		), runtimeModelCreationContext.getSessionFactory() );
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableInsertStrategy( TemporaryTable.createEntityTable(
-				rootEntityDescriptor,
-				name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-				this,
-				runtimeModelCreationContext
-		), runtimeModelCreationContext.getSessionFactory() );
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1097,25 +1065,28 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateCommand() {
-		return "create temporary table if not exists";
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE;
 	}
 
-	//SingleStore throws an error on drop temporary table if there are uncommited statements within transaction.
-	//Just 'drop table' statement causes implicit commit, so using 'delete from'.
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
+	}
+
 	@Override
 	public String getTemporaryTableDropCommand() {
-		return "delete from";
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override
@@ -1178,8 +1149,8 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1286,11 +1257,6 @@ public class SingleStoreDialect extends Dialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
 	}
 
 	@Override

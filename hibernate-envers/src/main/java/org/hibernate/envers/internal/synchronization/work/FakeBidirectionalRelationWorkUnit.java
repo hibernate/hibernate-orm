@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -181,7 +182,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 			return revisionType;
 		}
 
-		public void generateData(SessionImplementor sessionImplementor, Map<String, Object> data) {
+		public void generateData(SharedSessionContractImplementor sessionImplementor, Map<String, Object> data) {
 			// If the revision type is "DEL", it means that the object is removed from the collection. Then the
 			// new owner will in fact be null.
 			rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(

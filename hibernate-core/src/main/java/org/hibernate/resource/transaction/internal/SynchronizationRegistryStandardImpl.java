@@ -7,11 +7,11 @@ package org.hibernate.resource.transaction.internal;
 import java.util.LinkedHashSet;
 import jakarta.transaction.Synchronization;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.LocalSynchronizationException;
 import org.hibernate.resource.transaction.NullSynchronizationException;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistryImplementor;
+
+import static org.hibernate.resource.transaction.internal.SynchronizationLogging.SYNCHRONIZATION_LOGGER;
 
 /**
  * The standard implementation of the {@link org.hibernate.resource.transaction.spi.SynchronizationRegistry} contract.
@@ -19,7 +19,6 @@ import org.hibernate.resource.transaction.spi.SynchronizationRegistryImplementor
  * @author Steve Ebersole
  */
 public class SynchronizationRegistryStandardImpl implements SynchronizationRegistryImplementor {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SynchronizationRegistryStandardImpl.class );
 
 	private LinkedHashSet<Synchronization> synchronizations;
 
@@ -44,20 +43,20 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 		final boolean added = synchronizations.add( synchronization );
 		if ( !added ) {
-			log.synchronizationAlreadyRegistered( synchronization );
+			SYNCHRONIZATION_LOGGER.synchronizationAlreadyRegistered( synchronization );
 		}
 	}
 
 	@Override
 	public void notifySynchronizationsBeforeTransactionCompletion() {
-		log.trace( "Notifying Synchronizations (before completion)" );
+		SYNCHRONIZATION_LOGGER.notifyingSynchronizationsBefore();
 		if ( synchronizations != null ) {
-			for ( Synchronization synchronization : synchronizations ) {
+			for ( var synchronization : synchronizations ) {
 				try {
 					synchronization.beforeCompletion();
 				}
 				catch (Throwable t) {
-					log.synchronizationFailed( synchronization, t );
+					SYNCHRONIZATION_LOGGER.synchronizationFailed( synchronization, t );
 					throw new LocalSynchronizationException(
 							"Exception calling user Synchronization (beforeCompletion): " + synchronization.getClass().getName(),
 							t
@@ -69,15 +68,15 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void notifySynchronizationsAfterTransactionCompletion(int status) {
-		log.tracef( "Notifying Synchronizations (after completion with status %s)", status );
+		SYNCHRONIZATION_LOGGER.notifyingSynchronizationsAfter( status );
 		if ( synchronizations != null ) {
 			try {
-				for ( Synchronization synchronization : synchronizations ) {
+				for ( var synchronization : synchronizations ) {
 					try {
 						synchronization.afterCompletion( status );
 					}
 					catch (Throwable t) {
-						log.synchronizationFailed( synchronization, t );
+						SYNCHRONIZATION_LOGGER.synchronizationFailed( synchronization, t );
 						throw new LocalSynchronizationException(
 								"Exception calling user Synchronization (afterCompletion): " + synchronization.getClass().getName(),
 								t
@@ -93,7 +92,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void clearSynchronizations() {
-		log.trace( "Clearing local Synchronizations" );
+		SYNCHRONIZATION_LOGGER.clearingSynchronizations();
 		if ( synchronizations != null ) {
 			synchronizations.clear();
 		}

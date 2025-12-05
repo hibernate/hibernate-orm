@@ -12,9 +12,10 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.cfg.AvailableSettings.MERGE_ENTITY_COPY_OBSERVER;
+import static org.hibernate.event.internal.EntityCopyLogging.EVENT_COPY_LOGGER;
 
 /**
  * Looks for the configuration property {@value AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
@@ -27,7 +28,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 public class EntityCopyObserverFactoryInitiator implements StandardServiceInitiator<EntityCopyObserverFactory> {
 
 	public static final EntityCopyObserverFactoryInitiator INSTANCE = new EntityCopyObserverFactoryInitiator();
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyObserverFactoryInitiator.class );
 
 	@Override
 	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
@@ -37,20 +37,17 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		}
 		else if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
-					EntityCopyNotAllowedObserver.SHORT_NAME );
+			EVENT_COPY_LOGGER.configuredEntityCopyObserverStrategy( EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
-					EntityCopyAllowedObserver.SHORT_NAME );
+			EVENT_COPY_LOGGER.configuredEntityCopyObserverStrategy( EntityCopyAllowedObserver.SHORT_NAME );
 			return EntityCopyAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
-			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
-					EntityCopyAllowedLoggedObserver.SHORT_NAME );
+			EVENT_COPY_LOGGER.configuredEntityCopyObserverStrategy( EntityCopyAllowedLoggedObserver.SHORT_NAME );
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
 		else {
@@ -58,18 +55,17 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			// this might look excessive, but it also happens to test eagerly
 			// (at boot) that we can actually construct these and that they
 			// are indeed of the right type.
-			final EntityCopyObserver exampleInstance =
+			final var exampleInstance =
 					registry.requireService( StrategySelector.class )
 							.resolveStrategy( EntityCopyObserver.class, value );
-			final Class<? extends EntityCopyObserver> observerType = exampleInstance.getClass();
-			LOG.tracef( "Configured EntityCopyObserver is a custom implementation of type '%s'",
-					observerType.getName() );
+			final var observerType = exampleInstance.getClass();
+			EVENT_COPY_LOGGER.configuredEntityCopyObserverCustomImplementation( observerType.getName() );
 			return new EntityCopyObserverFactoryFromClass( observerType );
 		}
 	}
 
 	private Object getConfigurationValue(final Map<?,?> configurationValues) {
-		final Object value = configurationValues.get( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER );
+		final Object value = configurationValues.get( MERGE_ENTITY_COPY_OBSERVER );
 		if ( value == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
 		}
@@ -88,15 +84,14 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 
 	private record EntityCopyObserverFactoryFromClass(Class<? extends EntityCopyObserver> observerClass)
 			implements EntityCopyObserverFactory {
-
 		@Override
-			public EntityCopyObserver createEntityCopyObserver() {
-				try {
-					return observerClass.newInstance();
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Could not instantiate class of type " + observerClass.getName() );
-				}
+		public EntityCopyObserver createEntityCopyObserver() {
+			try {
+				return observerClass.newInstance();
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Could not instantiate class of type " + observerClass.getName() );
 			}
 		}
+	}
 }

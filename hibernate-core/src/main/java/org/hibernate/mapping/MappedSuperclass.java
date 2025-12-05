@@ -67,16 +67,15 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return declaredProperties;
 	}
 
-	public void addDeclaredProperty(Property p) {
+	public void addDeclaredProperty(Property property) {
 		//Do not add duplicate properties
-		//TODO is it efficient enough?
-		String name = p.getName();
-		for (Property declaredProperty : declaredProperties) {
+		final String name = property.getName();
+		for ( var declaredProperty : declaredProperties ) {
 			if ( name.equals( declaredProperty.getName() ) ) {
 				return;
 			}
 		}
-		declaredProperties.add(p);
+		declaredProperties.add( property );
 	}
 
 	public Class<?> getMappedClass() {
@@ -141,7 +140,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 			if ( superMappedSuperclass != null ) {
 				propagatedMapper = superMappedSuperclass.getIdentifierMapper();
 			}
-			if (propagatedMapper == null && superPersistentClass != null){
+			if ( propagatedMapper == null && superPersistentClass != null ) {
 				propagatedMapper = superPersistentClass.getIdentifierMapper();
 			}
 		}
@@ -164,7 +163,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean hasProperty(String name) {
-		for ( Property property : getDeclaredProperties() ) {
+		for ( var property : getDeclaredProperties() ) {
 			if ( property.getName().equals( name ) ) {
 				return true;
 			}
@@ -183,8 +182,8 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	 */
 	public boolean isPropertyDefinedInHierarchy(String name) {
 		return hasProperty( name )
-			|| getSuperMappedSuperclass() != null && getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name )
-			|| getSuperPersistentClass() != null && getSuperPersistentClass().isPropertyDefinedInHierarchy( name );
+			|| superMappedSuperclass != null && superMappedSuperclass.isPropertyDefinedInHierarchy( name )
+			|| superPersistentClass != null && superPersistentClass.isPropertyDefinedInHierarchy( name );
 	}
 
 	public void prepareForMappingModel() {
@@ -213,10 +212,9 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 
 	@Override
 	public IdentifiableTypeClass getSuperType() {
-		if ( superPersistentClass != null ) {
-			return superPersistentClass;
-		}
-		return superMappedSuperclass;
+		return superPersistentClass != null
+				? superPersistentClass
+				: superMappedSuperclass;
 	}
 
 	@Override
@@ -229,10 +227,10 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return implicitTable;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public void applyProperty(Property property) {
-		assert property.getValue().getTable() != null;
-		assert property.getValue().getTable().equals( getImplicitTable() );
+		assert property.getValue().getTable() != null
+			&& property.getValue().getTable().equals( getImplicitTable() );
 		addDeclaredProperty( property );
 	}
 }

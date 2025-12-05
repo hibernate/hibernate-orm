@@ -10,8 +10,6 @@ import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.jboss.logging.Logger;
-
 /**
  * TimestampsRegionAccess implementation for cases where query results caching
  * (or second level caching overall) is disabled.
@@ -19,8 +17,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TimestampsCacheDisabledImpl implements TimestampsCache {
-	private static final Logger log = Logger.getLogger( TimestampsCacheDisabledImpl.class );
-
 	@Override
 	public TimestampsRegion getRegion() {
 		return null;
@@ -28,12 +24,12 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 
 	@Override
 	public void preInvalidate(String[] spaces, SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#preInvalidate - disabled" );
+		//noop
 	}
 
 	@Override
 	public void invalidate(String[] spaces, SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#invalidate - disabled" );
+		//noop
 	}
 
 	@Override
@@ -41,7 +37,7 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );
+		//noop
 		return false;
 	}
 
@@ -50,7 +46,7 @@ public class TimestampsCacheDisabledImpl implements TimestampsCache {
 			Collection<String> spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session) {
-		log.trace( "TimestampsRegionAccess#isUpToDate - disabled" );
+		//noop
 		return false;
 	}
 }

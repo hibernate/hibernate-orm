@@ -209,6 +209,56 @@ public interface DatabaseVersion {
 	}
 
 	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(DatabaseVersion other) {
+		return isSameOrBefore( other.getDatabaseMajorVersion(), other.getDatabaseMinorVersion() );
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(Integer otherMajor, Integer otherMinor) {
+		return isSameOrBefore(
+				(int) otherMajor,
+				otherMinor == null ? NO_VERSION : otherMinor
+		);
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor) {
+		final int major = getDatabaseMajorVersion();
+
+		return major <= otherMajor;
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor, int otherMinor) {
+		final int major = getDatabaseMajorVersion();
+		final int minor = getDatabaseMinorVersion();
+
+		return major < otherMajor
+			|| ( major == otherMajor && minor <= otherMinor );
+	}
+
+	/**
+	 * {@link #isSame} or {@link #isBefore}
+	 */
+	default boolean isSameOrBefore(int otherMajor, int otherMinor, int otherMicro) {
+		final int major = getDatabaseMajorVersion();
+		final int minor = getDatabaseMinorVersion();
+		final int micro = getDatabaseMicroVersion();
+
+		return major < otherMajor
+			|| ( major == otherMajor && minor < otherMinor )
+			|| ( major == otherMajor && minor == otherMinor && micro <= otherMicro );
+	}
+
+	/**
 	 * Determine whether this version comes after the passed one
 	 */
 	default boolean isAfter(DatabaseVersion other) {

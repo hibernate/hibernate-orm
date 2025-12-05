@@ -4,48 +4,52 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.orm.test.util.SchemaUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AttributeOverrideTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Test
-	public void testMapKeyValue() throws Exception {
-		assertTrue( isColumnPresent( "PropertyRecord_parcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "PropertyRecord_parcels", "SQUARE_FEET") );
-		assertTrue( isColumnPresent( "PropertyRecord_parcels", "STREET_NAME") );
-
-		//legacy mappings
-		assertTrue( isColumnPresent( "LegacyParcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "LegacyParcels", "SQUARE_FEET") );
-		assertTrue( isColumnPresent( "LegacyParcels", "STREET_NAME") );
-	}
-
-	@Test
-	public void testElementCollection() throws Exception {
-		assertTrue( isColumnPresent( "PropertyRecord_unsortedParcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "PropertyRecord_unsortedParcels", "SQUARE_FEET") );
-
-		//legacy mappings
-		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET") );
-	}
-
-	public boolean isColumnPresent(String tableName, String columnName) {
-		return SchemaUtil.isColumnPresent( tableName, columnName, metadata() );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@DomainModel(
+		annotatedClasses = {
 				PropertyInfo.class,
 				PropertyRecord.class,
 				Address.class
-		};
+		}
+)
+@SessionFactory
+public class AttributeOverrideTest {
+
+	@Test
+	public void testMapKeyValue(SessionFactoryScope scope) {
+		assertThatColumnIsPresent( "PropertyRecord_parcels", "ASSESSMENT", scope );
+		assertThatColumnIsPresent( "PropertyRecord_parcels", "SQUARE_FEET", scope );
+		assertThatColumnIsPresent( "PropertyRecord_parcels", "STREET_NAME", scope );
+
+		//legacy mappings
+		assertThatColumnIsPresent( "LegacyParcels", "ASSESSMENT", scope );
+		assertThatColumnIsPresent( "LegacyParcels", "SQUARE_FEET", scope );
+		assertThatColumnIsPresent( "LegacyParcels", "STREET_NAME", scope );
+	}
+
+	@Test
+	public void testElementCollection(SessionFactoryScope scope) {
+		assertThatColumnIsPresent( "PropertyRecord_unsortedParcels", "ASSESSMENT", scope );
+		assertThatColumnIsPresent( "PropertyRecord_unsortedParcels", "SQUARE_FEET", scope );
+
+		//legacy mappings
+		assertThatColumnIsPresent( "PropertyRecord_legacyUnsortedParcels", "ASSESSMENT", scope );
+		assertThatColumnIsPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET", scope );
+	}
+
+	public void assertThatColumnIsPresent(String tableName, String columnName, SessionFactoryScope scope) {
+		assertThat( SchemaUtil.isColumnPresent( tableName, columnName, scope.getMetadataImplementor() ) )
+				.describedAs( "Column [" + columnName + "] is not present" )
+				.isTrue();
 	}
 }

@@ -4,50 +4,46 @@
  */
 package org.hibernate.orm.test.associations;
 
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa(
+		annotatedClasses = {
+				OneToManyUnidirectionalTest.Person.class,
+				OneToManyUnidirectionalTest.Phone.class,
+		}
+)
+public class OneToManyUnidirectionalTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::associations-one-to-many-unidirectional-lifecycle-example[]
 			Person person = new Person();
-			Phone phone1 = new Phone("123-456-7890");
-			Phone phone2 = new Phone("321-654-0987");
+			Phone phone1 = new Phone( "123-456-7890" );
+			Phone phone2 = new Phone( "321-654-0987" );
 
-			person.getPhones().add(phone1);
-			person.getPhones().add(phone2);
-			entityManager.persist(person);
+			person.getPhones().add( phone1 );
+			person.getPhones().add( phone2 );
+			entityManager.persist( person );
 			entityManager.flush();
 
-			person.getPhones().remove(phone1);
+			person.getPhones().remove( phone1 );
 			//end::associations-one-to-many-unidirectional-lifecycle-example[]
-		});
+		} );
 	}
 
 	//tag::associations-one-to-many-unidirectional-example[]
@@ -63,7 +59,7 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-many-unidirectional-example[]
+		//end::associations-one-to-many-unidirectional-example[]
 
 		public Person() {
 		}
@@ -72,7 +68,7 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 			return phones;
 		}
 
-	//tag::associations-one-to-many-unidirectional-example[]
+		//tag::associations-one-to-many-unidirectional-example[]
 	}
 
 	@Entity(name = "Phone")
@@ -87,7 +83,7 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-many-unidirectional-example[]
+		//end::associations-one-to-many-unidirectional-example[]
 
 		public Phone() {
 		}
@@ -103,7 +99,7 @@ public class OneToManyUnidirectionalTest extends BaseEntityManagerFunctionalTest
 		public String getNumber() {
 			return number;
 		}
-	//tag::associations-one-to-many-unidirectional-example[]
+		//tag::associations-one-to-many-unidirectional-example[]
 	}
 	//end::associations-one-to-many-unidirectional-example[]
 }

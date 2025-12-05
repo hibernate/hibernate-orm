@@ -15,7 +15,6 @@ public class IncomparableComparator implements Comparator {
 	public static final IncomparableComparator INSTANCE = new IncomparableComparator();
 
 	@Override
-	@SuppressWarnings("ComparatorMethodParameterNotUsed")
 	public int compare(Object o1, Object o2) {
 		return 0;
 	}

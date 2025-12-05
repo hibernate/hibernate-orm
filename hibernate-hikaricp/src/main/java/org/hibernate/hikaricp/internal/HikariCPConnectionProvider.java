@@ -7,7 +7,6 @@ package org.hibernate.hikaricp.internal;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.sql.DataSource;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -16,7 +15,7 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
-import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -24,8 +23,16 @@ import org.hibernate.service.spi.Stoppable;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getSchema;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasCatalog;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.hasSchema;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
+import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -42,7 +49,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Serial
 	private static final long serialVersionUID = -9131625057941275711L;
-	private boolean isMetadataAccessAllowed = true;
 
 	/**
 	 * HikariCP configuration.
@@ -59,15 +65,14 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// *************************************************************************
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) throws HibernateException {
+	public void configure(Map<String, Object> configuration) throws HibernateException {
 		try {
-			isMetadataAccessAllowed = allowJdbcMetadataAccess( configurationValues );
-			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
-			hikariConfig = loadConfiguration( configurationValues );
+			CONNECTION_INFO_LOGGER.configureConnectionPool( "HikariCP" );
+			hikariConfig = loadConfiguration( configuration );
 			hikariDataSource = new HikariDataSource( hikariConfig );
 		}
 		catch (Exception e) {
-			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
+			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );
 			throw new ConnectionProviderConfigurationException(
 					"Could not configure HikariCP: " + e.getMessage(),  e );
 		}
@@ -94,51 +99,62 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
-		return new DatabaseConnectionInfoImpl(
-				HikariCPConnectionProvider.class,
-				hikariConfig.getJdbcUrl(),
-				// Attempt to resolve the driver name from the dialect,
-				// in case it wasn't explicitly set and access to the
-				// database metadata is allowed
-				isBlank( hikariConfig.getDriverClassName() )
-						? extractDriverNameFromMetadata()
-						: hikariConfig.getDriverClassName(),
-				dialect.getVersion(),
-				Boolean.toString( hikariConfig.isAutoCommit() ),
-				hikariConfig.getTransactionIsolation(),
-				hikariConfig.getMinimumIdle(),
-				hikariConfig.getMaximumPoolSize()
-		);
-	}
-
-	private String extractDriverNameFromMetadata() {
-		if ( isMetadataAccessAllowed ) {
-			try ( Connection conn = getConnection() ) {
-				return conn.getMetaData().getDriverName();
+		try ( var connection = hikariDataSource.getConnection() ) {
+			final var info = new DatabaseConnectionInfoImpl(
+					HikariCPConnectionProvider.class,
+					hikariConfig.getJdbcUrl(),
+					// Attempt to resolve the driver name from the dialect,
+					// in case it wasn't explicitly set and access to the
+					// database metadata is allowed
+					isBlank( hikariConfig.getDriverClassName() )
+							? getDriverName( connection )
+							: hikariConfig.getDriverClassName(),
+					dialect.getClass(),
+					dialect.getVersion(),
+					hasSchema( connection ),
+					hasCatalog( connection ),
+					hikariConfig.getSchema() != null
+							? hikariConfig.getSchema()
+							: getSchema( connection ),
+					hikariConfig.getCatalog() != null
+							? hikariConfig.getCatalog()
+							: getCatalog( connection ),
+					Boolean.toString( hikariConfig.isAutoCommit() ),
+					hikariConfig.getTransactionIsolation() != null
+							? hikariConfig.getTransactionIsolation()
+							: toIsolationNiceName( getIsolation( connection ) ),
+					hikariConfig.getMinimumIdle(),
+					hikariConfig.getMaximumPoolSize(),
+					getFetchSize( connection )
+			);
+			if ( !connection.getAutoCommit() ) {
+				connection.rollback();
 			}
-			catch (SQLException e) {
-				// Do nothing
-			}
+			return info;
 		}
-		return null;
+		catch (SQLException e) {
+			throw new JDBCConnectionException( "Could not create connection", e );
+		}
 	}
 
 	@Override
 	public boolean isUnwrappableAs(Class<?> unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType )
-			|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-			|| DataSource.class.isAssignableFrom( unwrapType );
+		return unwrapType.isAssignableFrom( HikariCPConnectionProvider.class )
+			|| unwrapType.isAssignableFrom( HikariDataSource.class )
+			|| unwrapType.isAssignableFrom( HikariConfig.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( unwrapType.isAssignableFrom( HikariCPConnectionProvider.class ) ) {
 			return (T) this;
 		}
-		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+		else if ( unwrapType.isAssignableFrom( HikariDataSource.class ) ) {
 			return (T) hikariDataSource;
+		}
+		else if ( unwrapType.isAssignableFrom( HikariConfig.class ) ) {
+			return (T) hikariConfig;
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );
@@ -152,7 +168,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void stop() {
 		if ( hikariDataSource != null ) {
-			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( "HikariCP" );
+			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( "HikariCP" );
 			hikariDataSource.close();
 		}
 	}

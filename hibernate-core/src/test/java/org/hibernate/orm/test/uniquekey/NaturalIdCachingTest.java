@@ -4,60 +4,58 @@
  */
 package org.hibernate.orm.test.uniquekey;
 
-import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.junit.Test;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-public class NaturalIdCachingTest extends BaseCoreFunctionalTestCase {
+import java.io.Serializable;
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				PropertyHolder.class,
-				Property.class
-		};
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		NaturalIdCachingTest.PropertyHolder.class,
+		NaturalIdCachingTest.Property.class
+})
+@SessionFactory(generateStatistics = true)
+public class NaturalIdCachingTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure(configuration);
-		configuration.setProperty(AvailableSettings.SHOW_SQL, true);
-		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, true);
-	}
-
 
 	@Test
-	public void test() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope factoryScope) {
+		final StatisticsImplementor statistics = factoryScope.getSessionFactory().getStatistics();
+		assertTrue( statistics.isStatisticsEnabled() );
+
+		factoryScope.inTransaction( session -> {
 			Property property = new Property( 1, 1, 1 );
 			session.persist( property );
 			session.persist( new PropertyHolder( 1, property ) );
 			session.persist( new PropertyHolder( 2, property ) );
 		} );
 
-		assertThat(sessionFactory().getStatistics().getEntityInsertCount(), is(3L));
-		sessionFactory().getStatistics().clear();
+		assertEquals( 3L, statistics.getEntityInsertCount() );
+		statistics.clear();
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.byId( PropertyHolder.class ).load( 1 );
-			session.byId( PropertyHolder.class ).load( 2 );
+		factoryScope.inTransaction( session -> {
+			session.find( PropertyHolder.class, 1 );
+			session.find( PropertyHolder.class, 2 );
 		} );
 
-		assertThat( sessionFactory().getStatistics().getEntityLoadCount(), is(3L) );
-		assertThat( sessionFactory().getStatistics().getPrepareStatementCount(), is(3L) );
+		assertEquals( 3L, statistics.getEntityLoadCount() );
+		assertEquals( 3L, statistics.getPrepareStatementCount() );
 	}
 
 	@Entity(name = "PropertyHolder")

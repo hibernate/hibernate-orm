@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
@@ -635,7 +636,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<String> toString(Expression<Character> character);
 
 	@Override
-	<T> JpaExpression<T> literal(T value);
+	<T> JpaExpression<T> literal(@Nullable T value);
 
 	<T> List<? extends JpaExpression<T>> literals(T... values);
 
@@ -765,7 +766,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
-	<T> JpaExpression<T> value(T value);
+	<T> JpaExpression<T> value(@Nullable T value);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);
@@ -997,6 +998,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaPredicate notIlike(Expression<String> x, String pattern, Expression<Character> escapeChar);
 
 	JpaPredicate notIlike(Expression<String> x, String pattern, char escapeChar);
+
+	JpaPredicate likeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate ilikeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate notLikeRegexp(Expression<String> x, String pattern);
+
+	JpaPredicate notIlikeRegexp(Expression<String> x, String pattern);
 
 	@Override
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression);
@@ -2782,6 +2791,43 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
+
+	/**
+	 * Concatenates the array elements with a separator, as specified by the arguments. Null array elements are replaced
+	 * with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	/**
+	 * Concatenates the array elements with a separator, as specified by the arguments. Null array elements are replaced
+	 * with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue);
+
+	/**
+	 * Concatenates the array elements with a separator, as specified by the arguments. Null array elements are replaced
+	 * with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression);
+
+	/**
+	 * Concatenates the array elements with a separator, as specified by the arguments. Null array elements are replaced
+	 * with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue);
+
 	/**
 	 * Whether an array contains an element.
 	 *
@@ -3404,6 +3450,42 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+
+	/**
+	 * Concatenates the collection elements with a separator, as specified by the arguments. Null collection elements
+	 * are replaced with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	/**
+	 * Concatenates the collection elements with a separator, as specified by the arguments. Null collection elements
+	 * are replaced with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue);
+
+	/**
+	 * Concatenates the collection elements with a separator, as specified by the arguments. Null collection elements
+	 * are replaced with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression);
+
+	/**
+	 * Concatenates the collection elements with a separator, as specified by the arguments. Null collection elements
+	 * are replaced with the given default element.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue);
 
 	/**
 	 * Whether a basic collection contains an element.

@@ -4,147 +4,121 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.Session;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test originally written to help verify/diagnose HHH-10125
  *
  * @author Steve Ebersole
  */
-public class MapFunctionExpressionsTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings({"JUnitMalformedDeclaration", "deprecation"})
+@JiraKey("HHH-10125")
+@DomainModel(annotatedClasses = {
+		MapFunctionExpressionsTest.Address.class,
+		MapFunctionExpressionsTest.AddressType.class,
+		MapFunctionExpressionsTest.Contact.class
+})
+@SessionFactory
+public class MapFunctionExpressionsTest {
 
-	@Before
-	public void prepareTestData() {
-		Session s = openSession();
-		s.getTransaction().begin();
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( s -> {
+			AddressType homeType = new AddressType( 1, "home" );
+			s.persist( homeType );
 
-		AddressType homeType = new AddressType( 1, "home" );
-		s.persist( homeType );
+			Address address = new Address( 1, "Main St.", "Somewhere, USA" );
+			s.persist( address );
 
-		Address address = new Address( 1, "Main St.", "Somewhere, USA" );
-		s.persist( address );
-
-		Contact contact = new Contact( 1, "John" );
-		contact.addresses.put( homeType, address );
-		s.persist( contact );
-
-		s.getTransaction().commit();
-		s.close();
+			Contact contact = new Contact( 1, "John" );
+			contact.addresses.put( homeType, address );
+			s.persist( contact );
+		} );
 	}
 
-	@After
-	public void cleanUpTestData() {
-		Session s = openSession();
-		s.getTransaction().begin();
-
-		s.remove( s.get( Contact.class, 1 ) );
-
-		s.remove( s.get( Address.class, 1 ) );
-		s.remove( s.get( AddressType.class, 1 ) );
-
-		s.getTransaction().commit();
-		s.close();
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testMapKeyExpressionInWhere() {
-		// NOTE : JPA requires that an alias be used in the key() expression.  Hibernate allows
-		//		path or alias.
+	public void testMapKeyExpressionInWhere(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			// NOTE : JPA requires that an alias be used in the key() expression.
+			// 		Hibernate allows path or alias.
 
-		Session s = openSession();
-		s.getTransaction().begin();
+			// JPA form
+			var results = s.createQuery( "select c from Contact c join c.addresses a where key(a) is not null" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Contact.class );
 
-		// JPA form
-		List contacts = s.createQuery( "select c from Contact c join c.addresses a where key(a) is not null" ).list();
-		assertEquals( 1, contacts.size() );
-		Contact contact = assertTyping( Contact.class, contacts.get( 0 ) );
-
-		// Hibernate additional form
-		contacts = s.createQuery( "select c from Contact c where key(c.addresses) is not null" ).list();
-		assertEquals( 1, contacts.size() );
-		contact = assertTyping( Contact.class, contacts.get( 0 ) );
-
-		s.getTransaction().commit();
-		s.close();
+			// Hibernate additional form
+			results = s.createQuery( "select c from Contact c where key(c.addresses) is not null" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Contact.class );
+		} );
 	}
 
 	@Test
-	public void testMapKeyExpressionInSelect() {
-		// NOTE : JPA requires that an alias be used in the key() expression.  Hibernate allows
-		//		path or alias.
+	public void testMapKeyExpressionInSelect(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			// NOTE : JPA requires that an alias be used in the key() expression.
+			// 		Hibernate allows path or alias.
 
-		Session s = openSession();
-		s.getTransaction().begin();
+			// JPA form
+			var results = s.createQuery( "select key(a) from Contact c join c.addresses a" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( AddressType.class );
 
-		// JPA form
-		List types = s.createQuery( "select key(a) from Contact c join c.addresses a" ).list();
-		assertEquals( 1, types.size() );
-		assertTyping( AddressType.class, types.get( 0 ) );
-
-		// Hibernate additional form
-		types = s.createQuery( "select key(c.addresses) from Contact c" ).list();
-		assertEquals( 1, types.size() );
-		assertTyping( AddressType.class, types.get( 0 ) );
-
-		s.getTransaction().commit();
-		s.close();
+			// Hibernate additional form
+			results = s.createQuery( "select key(c.addresses) from Contact c" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( AddressType.class );
+		} );
 	}
 
 	@Test
-	public void testMapValueExpressionInSelect() {
-		Session s = openSession();
-		s.getTransaction().begin();
+	public void testMapValueExpressionInSelect(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			var results = s.createQuery( "select value(a) from Contact c join c.addresses a" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Address.class );
 
-		List addresses = s.createQuery( "select value(a) from Contact c join c.addresses a" ).list();
-		assertEquals( 1, addresses.size() );
-		assertTyping( Address.class, addresses.get( 0 ) );
-
-		addresses = s.createQuery( "select value(c.addresses) from Contact c" ).list();
-		assertEquals( 1, addresses.size() );
-		assertTyping( Address.class, addresses.get( 0 ) );
-
-		s.getTransaction().commit();
-		s.close();
+			results = s.createQuery( "select value(c.addresses) from Contact c" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Address.class );
+		} );
 	}
 
 	@Test
-	public void testMapEntryExpressionInSelect() {
-		Session s = openSession();
-		s.getTransaction().begin();
+	public void testMapEntryExpressionInSelect(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			var results = s.createQuery( "select entry(a) from Contact c join c.addresses a" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Map.Entry.class );
 
-		List addresses = s.createQuery( "select entry(a) from Contact c join c.addresses a" ).list();
-		assertEquals( 1, addresses.size() );
-		assertTyping( Map.Entry.class, addresses.get( 0 ) );
-
-		addresses = s.createQuery( "select entry(c.addresses) from Contact c" ).list();
-		assertEquals( 1, addresses.size() );
-		assertTyping( Map.Entry.class, addresses.get( 0 ) );
-
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Address.class, AddressType.class, Contact.class };
+			results = s.createQuery( "select entry(c.addresses) from Contact c" ).list();
+			assertEquals( 1, results.size() );
+			assertThat( results.get(0) ).isInstanceOf( Map.Entry.class );
+		} );
 	}
 
 	@Entity(name = "AddressType")
@@ -165,7 +139,6 @@ public class MapFunctionExpressionsTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Entity(name = "Address")
 	@Table(name = "address")
-//	@Embeddable
 	public static class Address {
 		@Id
 		public Integer id;
@@ -191,11 +164,7 @@ public class MapFunctionExpressionsTest extends BaseNonConfigCoreFunctionalTestC
 		@OneToMany
 		@JoinTable(name = "contact_address")
 		@MapKeyJoinColumn(name="address_type_id", referencedColumnName="id")
-//		@JoinColumn
-//		@ElementCollection
-//		@MapKeyEnumerated(EnumType.STRING)
-//		@MapKeyColumn(name = "addr_type")
-		Map<AddressType, Address> addresses = new HashMap<AddressType, Address>();
+		Map<AddressType, Address> addresses = new HashMap<>();
 
 		public Contact() {
 		}

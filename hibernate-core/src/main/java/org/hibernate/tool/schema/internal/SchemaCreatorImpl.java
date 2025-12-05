@@ -14,11 +14,8 @@ import java.util.Set;
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -27,18 +24,12 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.spi.GenerationTarget;
-import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
@@ -51,6 +42,7 @@ import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
@@ -63,7 +55,6 @@ import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabl
  * @author Steve Ebersole
  */
 public class SchemaCreatorImpl extends AbstractSchemaPopulator implements SchemaCreator {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
 	private final HibernateSchemaManagementTool tool;
 	private final SchemaFilter schemaFilter;
@@ -101,8 +92,8 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
-			final Map<String, Object> configuration = options.getConfigurationValues();
-			final JdbcContext jdbcContext = tool.resolveJdbcContext( configuration );
+			final var configuration = options.getConfigurationValues();
+			final var jdbcContext = tool.resolveJdbcContext( configuration );
 			doCreation(
 					metadata,
 					jdbcContext.getDialect(),
@@ -122,7 +113,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		for ( GenerationTarget target : targets ) {
+		for ( var target : targets ) {
 			target.prepare();
 		}
 
@@ -130,12 +121,12 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			performCreation( metadata, dialect, options, contributableInclusionFilter, sourceDescriptor, targets );
 		}
 		finally {
-			for ( GenerationTarget target : targets ) {
+			for ( var target : targets ) {
 				try {
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
+					CORE_LOGGER.problemReleasingGenerationTarget( target, e );
 				}
 			}
 		}
@@ -148,9 +139,9 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			ContributableMatcher contributableInclusionFilter,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		final SqlScriptCommandExtractor commandExtractor = getCommandExtractor();
+		final var commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 		final boolean format = interpretFormattingEnabled( options.getConfigurationValues() );
-		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
+		final var formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
 		switch ( sourceDescriptor.getSourceType() ) {
 			case SCRIPT:
@@ -170,10 +161,6 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 		}
 
 		applyImportSources( options, commandExtractor, format, dialect, targets );
-	}
-
-	private SqlScriptCommandExtractor getCommandExtractor() {
-		return tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 	}
 
 	@Override
@@ -216,7 +203,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final SqlStringGenerationContext context = createSqlStringGenerationContext(options, metadata);
+		final var context = createSqlStringGenerationContext(options, metadata);
 		final Set<String> exportIdentifiers = setOfSize(50);
 
 		createSchemasAndCatalogs(metadata, options, schemaFilter, dialect, formatter, context, targets);
@@ -245,7 +232,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 	}
 
 	private static void executeInitCommands(Metadata metadata, ExecutionOptions options, Formatter formatter, GenerationTarget[] targets) {
-		for ( InitCommand initCommand : metadata.getDatabase().getInitCommands() ) {
+		for ( var initCommand : metadata.getDatabase().getInitCommands() ) {
 			// todo: this should alo probably use the DML formatter...
 			applySqlStrings( initCommand.initCommands(), formatter, options, targets);
 		}
@@ -259,7 +246,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
+		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
@@ -283,14 +270,14 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			// foreign keys must be created after unique keys for numerous DBs (see HHH-8390)
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Table table : namespace.getTables() ) {
 					if ( schemaFilter.includeTable( table )
 							&& contributableInclusionMatcher.matches( table ) ) {
 						// foreign keys
-						for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
+						for ( var foreignKey : table.getForeignKeyCollection() ) {
 							applySqlStrings(
 									dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata, context ),
 									formatter,
@@ -314,7 +301,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				// sequences
 				createSequences(
@@ -369,12 +356,12 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets,
 			Namespace namespace) {
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				// indexes
-				for ( Index index : table.getIndexes().values() ) {
+				for ( var index : table.getIndexes().values() ) {
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
 							dialect.getIndexExporter().getSqlCreateStrings( index, metadata, context ),
@@ -384,7 +371,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					);
 				}
 				// unique keys
-				for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
+				for ( var uniqueKey : table.getUniqueKeys().values() ) {
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
 							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata, context ),
@@ -408,7 +395,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets,
 			Namespace namespace) {
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
 					&& schemaFilter.includeTable( table )
@@ -422,7 +409,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 				);
 			}
 		}
-		for ( Table table : namespace.getTables() ) {
+		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& table.isView()
 					&& schemaFilter.includeTable( table )
@@ -449,7 +436,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets,
 			Namespace namespace) {
-		for ( Sequence sequence : namespace.getSequences() ) {
+		for ( var sequence : namespace.getSequences() ) {
 			if ( schemaFilter.includeSequence( sequence )
 					&& contributableInclusionMatcher.matches( sequence ) ) {
 				checkExportIdentifier( sequence, exportIdentifiers);
@@ -471,7 +458,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
-		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
+		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
@@ -494,7 +481,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( UserDefinedType userDefinedType : namespace.getDependencyOrderedUserDefinedTypes() ) {
 					applySqlStrings(
@@ -517,15 +504,16 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		final boolean tryToCreateCatalogs = options.shouldManageNamespaces() && dialect.canCreateCatalog();
-		final boolean tryToCreateSchemas = options.shouldManageNamespaces() && dialect.canCreateSchema();
+		final boolean manageNamespaces = options.shouldManageNamespaces();
+		final boolean tryToCreateCatalogs = manageNamespaces && dialect.canCreateCatalog();
+		final boolean tryToCreateSchemas = manageNamespaces && dialect.canCreateSchema();
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
-			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( schemaFilter.includeNamespace( namespace ) ) {
-					Namespace.Name logicalName = namespace.getName();
-					Namespace.Name physicalName = namespace.getPhysicalName();
+					final var logicalName = namespace.getName();
+					final var physicalName = namespace.getPhysicalName();
 
 					if ( tryToCreateCatalogs ) {
 						final Identifier catalogLogicalName = logicalName.catalog();
@@ -572,35 +560,35 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 	 *
 	 * @return The generation commands
 	 */
+	@Internal
 	public List<String> generateCreationCommands(Metadata metadata, final boolean manageNamespaces) {
-		final JournalingGenerationTarget target = new JournalingGenerationTarget();
+		final var target = new JournalingGenerationTarget();
+		final var metadataImplementor = (MetadataImplementor) metadata;
+		createFromMetadata(
+				metadata,
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return manageNamespaces;
+					}
 
-		final MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
-		final Dialect dialect =
+					@Override
+					public Map<String,Object> getConfigurationValues() {
+						return Collections.emptyMap();
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerHaltImpl.INSTANCE;
+					}
+				},
 				metadataImplementor.getMetadataBuildingOptions()
 						.getServiceRegistry()
 						.requireService( JdbcEnvironment.class )
-						.getDialect();
-
-		final ExecutionOptions options = new ExecutionOptions() {
-			@Override
-			public boolean shouldManageNamespaces() {
-				return manageNamespaces;
-			}
-
-			@Override
-			public Map<String,Object> getConfigurationValues() {
-				return Collections.emptyMap();
-			}
-
-			@Override
-			public ExceptionHandler getExceptionHandler() {
-				return ExceptionHandlerHaltImpl.INSTANCE;
-			}
-		};
-
-		createFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
-
+						.getDialect(),
+				FormatStyle.NONE.getFormatter(),
+				target
+		);
 		return target.commands;
 	}
 
@@ -612,7 +600,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Metadata metadata,
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
-		final ServiceRegistry serviceRegistry =
+		final var serviceRegistry =
 				( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
 						.getServiceRegistry();
 		doCreation(

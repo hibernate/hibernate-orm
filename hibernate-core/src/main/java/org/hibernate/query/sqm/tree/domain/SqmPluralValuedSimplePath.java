@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -19,10 +21,12 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * An SqmPath for plural attribute paths
@@ -44,7 +48,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			NavigablePath navigablePath,
 			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
 			SqmPath<?> lhs,
-			String explicitAlias,
+			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		// We need to do an unchecked cast here: PluralPersistentAttribute implements path source with
 		//  the element type, but paths generated from it must be collection-typed.
@@ -79,7 +83,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 	}
 
 	@Override
-	public JavaType<C> getJavaTypeDescriptor() {
+	public @NonNull JavaType<C> getJavaTypeDescriptor() {
 		return getPluralAttribute().getAttributeJavaType();
 	}
 
@@ -113,18 +117,18 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final NavigablePath navigablePath =
-				getNavigablePath().getParent()
+				getParentNavigablePath()
 						.append( getNavigablePath().getLocalName(), alias )
 						.append( CollectionPart.Nature.ELEMENT.getName() );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		SqmFrom<?, ?> path = pathRegistry.findFromByPath( navigablePath.getParent() );
+		final SqmFrom<?, ?> path = pathRegistry.findFromByPath( castNonNull( navigablePath.getParent() ) );
+		final SqmAttributeJoin<Object, ?> join;
 		if ( path == null ) {
 			final SqmPathSource<C> referencedPathSource = getReferencedPathSource();
 			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
-			final SqmJoin<Object, ?> join;
 			final SqmExpression<?> index;
 			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
 				join = new SqmListJoin<>(
@@ -154,11 +158,15 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			}
 			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
 			parent.addSqmJoin( join );
-			pathRegistry.register( path = join );
+			pathRegistry.register( join );
+		}
+		else {
+			//noinspection unchecked
+			join = (SqmAttributeJoin<Object, ?>) path;
 		}
 		final SqmIndexedCollectionAccessPath<Object> result = new SqmIndexedCollectionAccessPath<>(
 				navigablePath,
-				path,
+				join,
 				selector
 		);
 		pathRegistry.register( result );
@@ -171,12 +179,12 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 	}
 
 	@Override
-	public <S extends C> SqmTreatedPath<C, S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends C> SqmTreatedPath<C, S> treatAs(Class<S> treatJavaType) {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
 	@Override
-	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 }

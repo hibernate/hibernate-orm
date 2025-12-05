@@ -8,59 +8,57 @@ import java.sql.Connection;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-/**
- * Allows creation of a new {@link Session} with specific options.
- *
- * @author Steve Ebersole
- *
- * @see SessionFactory#withOptions()
- */
-public interface SessionBuilder {
-	/**
-	 * Opens a session with the specified options.
-	 *
-	 * @return The session
-	 */
+/// Allows creation of a new [Session] with specific options
+/// overriding the defaults from the [SessionFactory].
+///
+/// ```java
+/// try (var session = sessionFactory.withOptions()
+/// 		.tenantIdentifier(tenantId)
+/// 		.initialCacheMode(CacheMode.PUT)
+/// 		.flushMode(FlushMode.COMMIT)
+/// 		.interceptor(new Interceptor() {
+/// 			@Override
+/// 			public void preFlush(Iterator<Object> entities) {
+/// 				...
+/// 			}
+/// 		})
+/// 		.openSession()) {
+/// 			...
+/// 		}
+/// }
+/// ```
+///
+/// @see SessionFactory#withOptions()
+/// @see SharedSessionBuilder
+///
+/// @author Steve Ebersole
+public interface SessionBuilder extends CommonBuilder {
+	/// Open the session using the specified options.
+	/// @see #open
 	Session openSession();
 
-	/**
-	 * Adds a specific interceptor to the session options.
-	 *
-	 * @param interceptor The interceptor to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
+	default Session open() {
+		return openSession();
+	}
+
+	@Override
 	SessionBuilder interceptor(Interceptor interceptor);
 
-	/**
-	 * Signifies that no {@link Interceptor} should be used.
-	 * <p>
-	 * By default, if no {@code Interceptor} is explicitly specified, the
-	 * {@code Interceptor} associated with the {@link SessionFactory} is
-	 * inherited by the new {@link Session}.
-	 * <p>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	@Override
 	SessionBuilder noInterceptor();
 
-	/**
-	 * Applies the given statement inspection function to the session.
-	 *
-	 * @param operator An operator which accepts a SQL string, returning
-	 *                 a processed SQL string to be used by Hibernate
-	 *                 instead of the given original SQL. Alternatively.
-	 *                 the operator may work by side effect, and simply
-	 *                 return the original SQL.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @since 7.0
-	 */
+	@Override
+	SessionBuilder noSessionInterceptorCreation();
+
+	@Override
+	SessionBuilder noStatementInspector();
+
+	@Override
 	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**
@@ -84,6 +82,7 @@ public interface SessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	SessionBuilder connection(Connection connection);
 
 	/**
@@ -96,6 +95,7 @@ public interface SessionBuilder {
 	 *
 	 * @since 7.0
 	 */
+	@Override
 	SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
 
 	/**
@@ -163,7 +163,14 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 * @since 6.4
 	 */
+	@Override
 	SessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	@Override
+	SessionBuilder readOnly(boolean readOnly);
+
+	@Override
+	SessionBuilder initialCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of
@@ -189,6 +196,7 @@ public interface SessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
@@ -212,4 +220,28 @@ public interface SessionBuilder {
 	 * @since 7.0
 	 */
 	SessionBuilder identifierRollback(boolean identifierRollback);
+
+	/**
+	 * Specify the default batch fetch size for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
+	 * @see Session#setFetchBatchSize(int)
+	 *
+	 * @since 7.2
+	 */
+	SessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
+
+	/**
+	 * Specify whether subselect fetching is enabled for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
+	 * @see Session#setSubselectFetchingEnabled(boolean)
+	 *
+	 * @since 7.2
+	 */
+	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 }

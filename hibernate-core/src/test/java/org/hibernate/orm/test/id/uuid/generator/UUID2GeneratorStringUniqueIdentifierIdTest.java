@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.id.uuid.generator;
 
-import java.util.HashSet;
-import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -13,57 +11,63 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( SQLServerDialect.class )
-@JiraKey( value = "HHH-12943" )
-public class UUID2GeneratorStringUniqueIdentifierIdTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { FooEntity.class };
+@SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialect(SQLServerDialect.class)
+@JiraKey("HHH-12943")
+@DomainModel(annotatedClasses = UUID2GeneratorStringUniqueIdentifierIdTest.FooEntity.class)
+@SessionFactory
+public class UUID2GeneratorStringUniqueIdentifierIdTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testPaginationQuery() {
-		String id = doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testPaginationQuery(SessionFactoryScope factoryScope) {
+		var fooId = factoryScope.fromTransaction( (session) -> {
 			FooEntity entity = new FooEntity();
 			entity.getFooValues().add("one");
 			entity.getFooValues().add("two");
 			entity.getFooValues().add("three");
 
-			entityManager.persist(entity);
+			session.persist(entity);
 
 			return entity.getId();
 		} );
 
-		assertNotNull(id);
+		assertNotNull( fooId );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			FooEntity entity = entityManager.find(FooEntity.class, id.toUpperCase());
+		factoryScope.inTransaction( session -> {
+			FooEntity entity = session.find(FooEntity.class, fooId.toUpperCase());
 			assertNotNull(entity);
 
-			assertTrue(entity.getFooValues().size() == 3);
+			assertEquals( 3, entity.getFooValues().size() );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			FooEntity entity = entityManager.find(FooEntity.class, id);
+		factoryScope.inTransaction( entityManager -> {
+			FooEntity entity = entityManager.find(FooEntity.class, fooId);
 			assertNotNull(entity);
 
-			assertTrue(entity.getFooValues().size() == 3);
+			assertEquals( 3, entity.getFooValues().size() );
 		} );
 	}
 

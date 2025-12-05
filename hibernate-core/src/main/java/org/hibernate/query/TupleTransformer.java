@@ -10,15 +10,15 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import java.util.List;
 
 /**
- * Defines some transformation applied to each result of a {@link Query}
- * before the results are packaged as a {@link List} and returned to the caller.  Each result
- * is received as a tuple (that is, as an {@code Object[]}), and may be transformed to
- * some other type.
+ * Defines some transformation applied to each result of a {@link Query} before
+ * the results are packaged as a {@link List} and returned to the caller. Each
+ * result is received as a tuple (that is, as an {@code Object[]}), and may be
+ * transformed to some other type.
  *
- * @implNote Every {@code TupleTransformer} is automatically wrapped in an instance of
- * {@link RowTransformerTupleTransformerAdapter}, adapting it to the
- * {@link org.hibernate.sql.results.spi.RowTransformer} contract, which is always
- * used to actually process the results internally.
+ * @implNote Every {@code TupleTransformer} is automatically wrapped in an
+ * instance of {@link RowTransformerTupleTransformerAdapter}, adapting it to
+ * the {@link org.hibernate.sql.results.spi.RowTransformer} contract, which is
+ * always used to actually process the results internally.
  *
  * @see Query#setTupleTransformer
  * @see Query#list

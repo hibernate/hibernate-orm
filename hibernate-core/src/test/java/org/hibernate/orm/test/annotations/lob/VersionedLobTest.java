@@ -4,21 +4,27 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 /**
  * @author Gail Badner
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+@DomainModel(
+		annotatedClasses = {
+				VersionedBook.class,
+				VersionedCompiledCode.class
+		}
+)
 public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCompiledCode> {
 	@Override
 	protected Class<VersionedBook> getBookClass() {
@@ -40,144 +46,136 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		return compiledCode.getId();
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				VersionedBook.class,
-				VersionedCompiledCode.class
-		};
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testVersionUnchangedPrimitiveCharArray() throws Exception {
+	public void testVersionUnchangedPrimitiveCharArray(SessionFactoryScope scope) {
 		VersionedBook book = createBook();
 		Editor editor = new Editor();
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
-		book.setCode2( new char[] { 'r' } );
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( book );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		VersionedBook loadedBook = getBookClass().cast( s.get( getBookClass(), getId( book ) ) );
-		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
-		s.flush();
-		assertEquals( loadedBook.getVersion(), Integer.valueOf( 0 ) );
-		s.remove( loadedBook );
-		tx.commit();
-		s.close();
+		book.setCode2( new char[] {'r'} );
+
+		scope.inTransaction(
+				session ->
+						session.persist( book )
+		);
+
+		scope.inTransaction(
+				session -> {
+					VersionedBook loadedBook = getBookClass().cast( session.find( getBookClass(), getId( book ) ) );
+					assertThat( loadedBook.getVersion() ).isEqualTo( 0 );
+					session.flush();
+					assertThat( loadedBook.getVersion() ).isEqualTo( 0 );
+					session.remove( loadedBook );
+				}
+		);
 
 	}
 
 	@Test
-	public void testVersionUnchangedCharArray() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testVersionUnchangedCharArray(SessionFactoryScope scope) {
 		VersionedBook b = createBook();
-		b.setShortDescription( "Hibernate Bible" );
-		b.setCode( new Character[] { 'a', 'b', 'c' } );
-		s.persist( b );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					b.setShortDescription( "Hibernate Bible" );
+					b.setCode( new Character[] {'a', 'b', 'c'} );
+					session.persist( b );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		VersionedBook b2 = getBookClass().cast( s.get( getBookClass(), getId( b ) ) );
-		assertNotNull( b2 );
-		assertEquals( b2.getCode()[1].charValue(), b.getCode()[1].charValue() );
-		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.flush();
-		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.remove( b2 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					VersionedBook b2 = getBookClass().cast( session.find( getBookClass(), getId( b ) ) );
+					assertThat( b2 ).isNotNull();
+					assertThat( b2.getCode()[1].charValue() ).isEqualTo( b.getCode()[1].charValue() );
+					assertThat( b2.getVersion() ).isEqualTo( 0 );
+					session.flush();
+					assertThat( b2.getVersion() ).isEqualTo( 0 );
+					session.remove( b2 );
+				}
+		);
 	}
 
 	@Test
-	public void testVersionUnchangedString() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testVersionUnchangedString(SessionFactoryScope scope) {
 		VersionedBook b = createBook();
-		b.setShortDescription( "Hibernate Bible" );
-		b.setFullText( "Hibernate in Action aims to..." );
-		s.persist( b );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					b.setShortDescription( "Hibernate Bible" );
+					b.setFullText( "Hibernate in Action aims to..." );
+					session.persist( b );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		VersionedBook b2 = getBookClass().cast( s.get( getBookClass(), getId( b ) ) );
-		assertNotNull( b2 );
-		assertEquals( b2.getFullText(), b.getFullText() );
-		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.flush();
-		assertEquals( b2.getVersion(), Integer.valueOf( 0 ) );
-		s.remove( b2 );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					VersionedBook b2 = getBookClass().cast( session.find( getBookClass(), getId( b ) ) );
+					assertThat( b2 ).isNotNull();
+					assertThat( b2.getFullText() ).isEqualTo( b.getFullText() );
+					assertThat( b2.getVersion() ).isEqualTo( 0 );
+					session.flush();
+					assertThat( b2.getVersion() ).isEqualTo( 0 );
+					session.remove( b2 );
+				}
+		);
 	}
 
 	@Test
-	@JiraKey( value = "HHH-5811")
-	public void testVersionUnchangedByteArray() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	@JiraKey(value = "HHH-5811")
+	public void testVersionUnchangedByteArray(SessionFactoryScope scope) {
 		VersionedCompiledCode cc = createCompiledCode();
-		Byte[] header = new Byte[2];
-		header[0] = new Byte( ( byte ) 3 );
-		header[1] = new Byte( ( byte ) 0 );
-		cc.setHeader( header );
-		s.persist( cc );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		VersionedCompiledCode recompiled = getCompiledCodeClass().cast( s.get( getCompiledCodeClass(), getId( cc ) ) );
-		assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
-		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.flush();
-		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.remove( recompiled );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Byte[] header = new Byte[2];
+					header[0] = 3;
+					header[1] = 0;
+					cc.setHeader( header );
+					session.persist( cc );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					VersionedCompiledCode recompiled = getCompiledCodeClass().cast(
+							session.find( getCompiledCodeClass(), getId( cc ) ) );
+					assertThat( recompiled.getHeader()[1] ).isEqualTo( cc.getHeader()[1] );
+					assertThat( recompiled.getVersion() ).isEqualTo( 0 );
+					session.flush();
+					assertThat( recompiled.getVersion() ).isEqualTo( 0 );
+					session.remove( recompiled );
+				}
+		);
 	}
 
 	@Test
-	public void testVersionUnchangedPrimitiveByteArray() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+	public void testVersionUnchangedPrimitiveByteArray(SessionFactoryScope scope) {
 		VersionedCompiledCode cc = createCompiledCode();
 		int codeSize = 5;
-		byte[] full = new byte[codeSize];
-		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = ( byte ) ( 1 + i );
-		}
-		cc.setFullCode( full );
-		s.persist( cc );
-		tx.commit();
-		s.close();
-		s = openSession();
-		tx = s.beginTransaction();
-		VersionedCompiledCode recompiled = getCompiledCodeClass().cast( s.get( getCompiledCodeClass(), getId( cc ) ) );
-		assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
-		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.flush();
-		assertEquals( recompiled.getVersion(), Integer.valueOf( 0 ) );
-		s.remove( recompiled );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					byte[] full = new byte[codeSize];
+					for ( int i = 0; i < codeSize; i++ ) {
+						full[i] = (byte) (1 + i);
+					}
+					cc.setFullCode( full );
+					session.persist( cc );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					VersionedCompiledCode recompiled = getCompiledCodeClass().cast(
+							session.find( getCompiledCodeClass(), getId( cc ) ) );
+					assertThat( recompiled.getFullCode()[codeSize - 1] ).isEqualTo( cc.getFullCode()[codeSize - 1] );
+					assertThat( recompiled.getVersion() ).isEqualTo( 0 );
+					session.flush();
+					assertThat( recompiled.getVersion() ).isEqualTo( 0 );
+					session.remove( recompiled );
+				}
+		);
 	}
 }

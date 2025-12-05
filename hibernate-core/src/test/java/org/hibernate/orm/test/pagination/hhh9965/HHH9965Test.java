@@ -4,14 +4,18 @@
  */
 package org.hibernate.orm.test.pagination.hhh9965;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Created on 17/12/17.
@@ -19,39 +23,27 @@ import static org.junit.Assert.fail;
  * @author Reda.Housni-Alaoui
  */
 @JiraKey(value = "HHH-9965")
-public class HHH9965Test extends BaseCoreFunctionalTestCase {
-
-	@Test
-	public void testHHH9965() {
-		Session session = openSession();
-		session.beginTransaction();
-
-		String hql = "SELECT s FROM Shop s join fetch s.products";
-
-		try{
-			session.createQuery(hql)
-					.setMaxResults(3)
-					.list();
-			fail("Pagination over collection fetch failure was expected");
-		} catch (Exception e){
-			log.info(e.getMessage());
-		}
-
-		session.getTransaction().commit();
-		session.close();
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure(cfg);
-		cfg.setProperty( Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, true );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
+@DomainModel(
+		annotatedClasses = {
 				Shop.class,
 				Product.class
-		};
+		}
+)
+@ServiceRegistry(
+		settings = @Setting(name = Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, value = "true")
+)
+@SessionFactory
+public class HHH9965Test {
+
+	@Test
+	public void testHHH9965(SessionFactoryScope scope) {
+		assertThrows( HibernateException.class, () -> scope.inTransaction(
+				session -> {
+					session.createSelectionQuery( "SELECT s FROM Shop s join fetch s.products", Shop.class )
+							.setMaxResults( 3 )
+							.list();
+					fail( "Pagination over collection fetch failure was expected" );
+				} )
+		);
 	}
 }

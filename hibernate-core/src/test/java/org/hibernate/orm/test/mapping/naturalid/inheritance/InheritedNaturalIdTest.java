@@ -26,8 +26,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -48,7 +48,7 @@ public class InheritedNaturalIdTest {
 		assertThat( uidMetadata.isNullable(), is( true ) );
 
 		final EntityPersister rootEntityPersister = userMapping.getEntityPersister();
-		final int uidLegacyPropertyIndex = rootEntityPersister.getEntityMetamodel().getPropertyIndex( "uid" );
+		final int uidLegacyPropertyIndex = rootEntityPersister.getPropertyIndex( "uid" );
 		assertThat( uidLegacyPropertyIndex, is ( 0 ) );
 		assertThat( rootEntityPersister.getPropertyNullability()[ uidLegacyPropertyIndex ], is( true ) );
 	}
@@ -124,7 +124,7 @@ public class InheritedNaturalIdTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final System loaded = session.byId( System.class ).load( 1L );
+					final System loaded = session.find( System.class, 1L );
 					assertThat( loaded, nullValue() );
 				}
 

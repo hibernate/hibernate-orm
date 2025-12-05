@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -11,7 +12,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
-import java.util.Objects;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier applied to a subquery as
@@ -44,7 +44,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	public SqmModifiedSubQueryExpression(
 			SqmSubQuery<T> subQuery,
 			Modifier modifier,
-			SqmBindableType<T> resultType,
+			@Nullable SqmBindableType<T> resultType,
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.subQuery = subQuery;
@@ -92,14 +92,30 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmModifiedSubQueryExpression<?> that
 			&& modifier == that.modifier
-			&& Objects.equals( subQuery, that.subQuery );
+			&& subQuery.equals( that.subQuery );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( subQuery, modifier );
+		int result = subQuery.hashCode();
+		result = 31 * result + modifier.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmModifiedSubQueryExpression<?> that
+			&& modifier == that.modifier
+			&& subQuery.isCompatible( that.subQuery );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = subQuery.cacheHashCode();
+		result = 31 * result + modifier.hashCode();
+		return result;
 	}
 }

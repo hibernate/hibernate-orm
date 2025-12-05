@@ -4,23 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -35,15 +19,19 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.HypotheticalSetWindowEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -58,11 +46,10 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
@@ -88,9 +75,24 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-
-import jakarta.persistence.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -722,16 +724,8 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		// Lock timeouts are only supported when specified as part of the transaction
-		return false;
-	}
-
-	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		// "WITH LOCK can only be used with a top-level, single-table SELECT statement"
-		// https://www.firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-dml-select.html#fblangref25-dml-with-lock
-		return false;
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override
@@ -1029,30 +1023,14 @@ public class FirebirdDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		return getVersion().isBefore( 2,1  )
 				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableMutationStrategy(
-					TemporaryTable.createIdTable(
-							entityDescriptor,
-							name -> TemporaryTable.ID_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-				);
+				: new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		return getVersion().isBefore( 2, 1 )
 				? super.getFallbackSqmInsertStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+				: new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1061,8 +1039,13 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	private final FirebirdIndexExporter indexExporter = new FirebirdIndexExporter( this );

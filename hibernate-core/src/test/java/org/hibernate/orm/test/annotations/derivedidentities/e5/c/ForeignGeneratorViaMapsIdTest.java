@@ -4,45 +4,47 @@
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e5.c;
 
-import org.hibernate.Session;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.orm.test.util.SchemaUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ForeignGeneratorViaMapsIdTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Test
-	public void testForeignGenerator() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata() ) );
-
-		Person e = new Person();
-		Session s = openSession(  );
-		s.getTransaction().begin();
-		s.persist( e );
-		MedicalHistory d = new MedicalHistory();
-		d.patient = e;
-		s.persist( d );
-		s.flush();
-		s.clear();
-		d = s.get( MedicalHistory.class, e.id);
-		assertEquals( e.id, d.id );
-		s.remove( d );
-		s.remove( d.patient );
-		s.getTransaction().rollback();
-		s.close();
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
+@SessionFactory
+@DomainModel(
+		annotatedClasses = {
 				MedicalHistory.class,
 				Person.class
-		};
+		}
+)
+public class ForeignGeneratorViaMapsIdTest {
+
+	@Test
+	public void testForeignGenerator(SessionFactoryScope scope) {
+		MetadataImplementor metadata = scope.getMetadataImplementor();
+
+		assertThat( SchemaUtil.isColumnPresent( "MedicalHistory", "patient_id", metadata ) ).isTrue();
+
+		Person e = new Person();
+		scope.inTransaction(
+				session -> {
+					session.persist( e );
+					MedicalHistory d = new MedicalHistory();
+					d.patient = e;
+					session.persist( d );
+					session.flush();
+					session.clear();
+					d = session.find( MedicalHistory.class, e.id );
+					assertThat( d.id ).isEqualTo( e.id );
+					session.remove( d );
+					session.remove( d.patient );
+				}
+		);
 	}
 }

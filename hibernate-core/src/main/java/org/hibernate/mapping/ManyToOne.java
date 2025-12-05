@@ -79,12 +79,12 @@ public final class ManyToOne extends ToOne {
 
 			final String referencedEntityName = getReferencedEntityName();
 			final String referencedPropertyName = getReferencedPropertyName();
-			final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
+			final var referencedClass = persistentClasses.get( referencedEntityName );
 			if ( referencedClass == null ) {
 				throw new MappingException( "Referenced entity '" + referencedEntityName + "' does not exist" );
 
 			}
-			final Property property = referencedClass.getReferencedProperty( referencedPropertyName );
+			final var property = referencedClass.getReferencedProperty( referencedPropertyName );
 			if ( property==null ) {
 				throw new MappingException( "Referenced entity '" + referencedEntityName
 						+ "' has no property named '" + referencedPropertyName + "'" );
@@ -96,7 +96,7 @@ public final class ManyToOne extends ToOne {
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
-					final ForeignKey foreignKey = getTable().createForeignKey(
+					final var foreignKey = getTable().createForeignKey(
 							getForeignKeyName(),
 							getConstraintColumns(),
 							getType().getAssociatedEntityName(),

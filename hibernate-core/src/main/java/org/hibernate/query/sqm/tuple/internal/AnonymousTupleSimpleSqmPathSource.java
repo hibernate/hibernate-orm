@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.internal.PathHelper;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -61,7 +62,7 @@ public class AnonymousTupleSimpleSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return new SqmBasicValuedSimplePath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				this,

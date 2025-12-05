@@ -1,6 +1,5 @@
 ﻿[[entity]]
 === Entity types
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-mapping: {core-test-base}/mapping
@@ -405,7 +404,7 @@ For details on mapping the identifier, see the <<chapters/domain/identifiers.ado
 [[entity-sql-query-mapping]]
 ==== Mapping the entity to a SQL query
 
-You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
+You can map an entity to a SQL query using the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
 
 [[mapping-Subselect-example]]
 .`@Subselect` entity mapping
@@ -464,14 +463,14 @@ Hibernate will trigger a Persistence Context flush if there are pending `Account
 
 When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
 
 [[entity-concrete-proxy-mapping]]
 .Root entity class annotated with `@ConcreteProxy`
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
 ----
 ====
 
@@ -482,7 +481,7 @@ In the following example we load the parent's lazy association and resolve to th
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
 ----
 
 [source,sql]
@@ -506,7 +505,7 @@ In the following example, you can see how Hibernate issues a query to resolve th
 ====
 [source,java]
 ----
-include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
+include::{example-dir-proxy}/concrete/ConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
 ----
 
 [source,sql]

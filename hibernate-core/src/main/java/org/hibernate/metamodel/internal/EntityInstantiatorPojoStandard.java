@@ -9,21 +9,19 @@ import java.lang.reflect.Constructor;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * Support for instantiating entity values as POJO representation
  */
 public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPojo {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
 
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
@@ -31,23 +29,23 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
-			EntityMetamodel entityMetamodel,
+			EntityPersister persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
-		super( entityMetamodel, persistentClass, javaType );
+		super( persister, persistentClass, javaType );
 		proxyInterface = persistentClass.getProxyInterface();
 		constructor = isAbstract() ? null : resolveConstructor( getMappedPojoClass() );
 		applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 		if ( applyBytecodeInterception ) {
-			this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
-					entityMetamodel.getName(),
-					entityMetamodel.getBytecodeEnhancementMetadata()
+			loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+					persister.getEntityName(),
+					persister.getBytecodeEnhancementMetadata()
 							.getLazyAttributesMetadata()
 							.getLazyAttributeNames()
 			);
 		}
 		else {
-			this.loadingInterceptorState = null;
+			loadingInterceptorState = null;
 		}
 	}
 
@@ -56,7 +54,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 			return getDefaultConstructor( mappedPojoClass);
 		}
 		catch ( PropertyNotFoundException e ) {
-			LOG.noDefaultConstructor( mappedPojoClass.getName() );
+			CORE_LOGGER.noDefaultConstructor( mappedPojoClass.getName() );
 			return null;
 		}
 	}

@@ -7,7 +7,8 @@ package org.hibernate.boot.model.relational;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.replace;
 
 /**
  * A simple implementation of {@link AbstractAuxiliaryDatabaseObject} in which the
@@ -144,10 +145,20 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	private String injectCatalogAndSchema(String ddlString, SqlStringGenerationContext context) {
-		Identifier defaultedCatalogName = context.catalogWithDefault( catalogName == null ? null : context.toIdentifier( catalogName ) );
-		Identifier defaultedSchemaName = context.schemaWithDefault( schemaName == null ? null : context.toIdentifier( schemaName ) );
-		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, defaultedCatalogName == null ? "" : defaultedCatalogName.getText() );
-		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, defaultedSchemaName == null ? "" : defaultedSchemaName.getText() );
-		return rtn;
+		final Identifier defaultedCatalogName =
+				context.catalogWithDefault( catalogName == null ? null
+						: context.toIdentifier( catalogName ) );
+		final Identifier defaultedSchemaName =
+				context.schemaWithDefault( schemaName == null ? null
+						: context.toIdentifier( schemaName ) );
+		String result =
+				replace( ddlString,
+						CATALOG_NAME_PLACEHOLDER,
+						defaultedCatalogName == null ? "" : defaultedCatalogName.getText() );
+		result =
+				replace( result,
+						SCHEMA_NAME_PLACEHOLDER,
+						defaultedSchemaName == null ? "" : defaultedSchemaName.getText() );
+		return result;
 	}
 }

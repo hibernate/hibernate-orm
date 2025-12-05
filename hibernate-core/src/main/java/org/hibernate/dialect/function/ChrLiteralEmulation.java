@@ -43,12 +43,13 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 								new ArgumentsValidator() {
 									@Override
 									public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, BindingContext bindingContext) {
-										if ( !( arguments.get( 0 ) instanceof SqmLiteral<?> ) ) {
+										final var arg = arguments.get( 0 );
+										if ( !( arg instanceof SqmLiteral<?> ) ) {
 											throw new QueryException(
 													String.format(
 															Locale.ROOT,
 															"Emulation of function chr() supports only integer literals, but %s argument given",
-															arguments.get( 0 ).getClass().getName()
+															arg.getClass().getName()
 													)
 											);
 										}
@@ -71,7 +72,7 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		@SuppressWarnings("unchecked")
-		final QueryLiteral<Number> literal = (QueryLiteral<Number>) arguments.get( 0 );
+		final var literal = (QueryLiteral<Number>) arguments.get( 0 );
 		sqlAppender.appendSql( '\'' );
 		sqlAppender.appendSql( (char) literal.getLiteralValue().intValue() );
 		sqlAppender.appendSql( '\'' );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -16,7 +17,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 
 /**
  * Reference to the key-side (as opposed to the target-side) of the
@@ -35,7 +37,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 			SqmPath<?> toOnePath) {
 		super(
 				navigablePath,
-				(SqmPathSource<T>) pathDomainType( toOnePath ).getIdentifierDescriptor(),
+				(SqmPathSource<T>) castNonNull( pathDomainType( toOnePath ).getIdentifierDescriptor() ),
 				toOnePath,
 				toOnePath.nodeBuilder()
 		);
@@ -52,6 +54,11 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
+	public @NonNull SqmPath<?> getLhs() {
+		return castNonNull( super.getLhs() );
+	}
+
+	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitFkExpression( this );
 	}
@@ -61,18 +68,6 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		hql.append( "fk(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmFkExpression<?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.getLhs(), that.getLhs() );
-	}
-
-	@Override
-	public int hashCode() {
-		return getLhs().hashCode();
 	}
 
 	@Override

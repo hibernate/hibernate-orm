@@ -11,44 +11,36 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(value= DialectChecks.SupportsSequences.class, jiraKey = "HHH-10320" )
-public class SequenceExportTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void prepare() {
-		ssr = ServiceRegistryUtil.serviceRegistry();
-	}
-
-	@After
-	public void destroy() {
-		StandardServiceRegistryBuilder.destroy( ssr );
-	}
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-10320")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class )
+@ServiceRegistry
+public class SequenceExportTest implements ServiceRegistryProducer {
 
 	@Test
-	@JiraKey( value = "HHH-9936" )
-	public void testMultipleUsesOfDefaultSequenceName() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+	@JiraKey("HHH-9936")
+	public void testMultipleUsesOfDefaultSequenceName(ServiceRegistryScope registryScope) {
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClass( Entity1.class )
 				.addAnnotatedClass( Entity2.class )
 				.buildMetadata();
@@ -70,9 +62,9 @@ public class SequenceExportTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-9936" )
-	public void testMultipleUsesOfExplicitSequenceName() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+	@JiraKey("HHH-9936")
+	public void testMultipleUsesOfExplicitSequenceName(ServiceRegistryScope registryScope) {
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClass( Entity3.class )
 				.addAnnotatedClass( Entity4.class )
 				.buildMetadata();
@@ -90,6 +82,11 @@ public class SequenceExportTest extends BaseUnitTestCase {
 
 		assertThat( namespaceCount ).isEqualTo( 1 );
 		assertThat( sequenceCount ).isEqualTo( 1 );
+	}
+
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return ServiceRegistryUtil.applySettings( builder ).build();
 	}
 
 	@Entity( name = "Entity1" )

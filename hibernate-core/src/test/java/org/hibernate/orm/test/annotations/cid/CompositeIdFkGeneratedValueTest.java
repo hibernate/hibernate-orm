@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This tests the design demonstrated in the <a href=
- * 'https://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#identifiers-composite-nonaggregated'>user
+ * 'https://docs.hibernate.org/orm/7.2/userguide/html_single/#identifiers-composite-nonaggregated'>user
  * guide</a>, example "&#64;{@link IdClass} with partial identifier generation using &#64;{@link GeneratedValue}". The
  * getters and setters have been omitted for clarity of the code. A separate test has been made for
  * {@link GenerationType#SEQUENCE}, {@link GenerationType#TABLE}, and

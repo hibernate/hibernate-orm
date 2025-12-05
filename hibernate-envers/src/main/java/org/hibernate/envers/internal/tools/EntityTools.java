@@ -4,29 +4,28 @@
  */
 package org.hibernate.envers.internal.tools;
 
-import java.util.Objects;
-
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import java.util.Objects;
 
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class EntityTools {
-	public static boolean entitiesEqual(SessionImplementor session, String entityName, Object obj1, Object obj2) {
+	public static boolean entitiesEqual(SharedSessionContractImplementor session, String entityName, Object obj1, Object obj2) {
 		final Object id1 = getIdentifier( session, entityName, obj1 );
 		final Object id2 = getIdentifier( session, entityName, obj2 );
 
 		return Objects.deepEquals( id1, id2 );
 	}
 
-	public static Object getIdentifier(SessionImplementor session, String entityName, Object obj) {
+	public static Object getIdentifier(SharedSessionContractImplementor session, String entityName, Object obj) {
 		if ( obj == null ) {
 			return null;
 		}
@@ -86,7 +85,7 @@ public abstract class EntityTools {
 	/**
 	 * @return Java class mapped to specified entity name.
 	 */
-	public static Class getEntityClass(SessionImplementor sessionImplementor, String entityName) {
+	public static Class getEntityClass(SharedSessionContractImplementor sessionImplementor, String entityName) {
 		final EntityPersister entityPersister = sessionImplementor.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );

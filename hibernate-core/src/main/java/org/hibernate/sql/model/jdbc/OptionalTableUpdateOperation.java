@@ -148,19 +148,22 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 
 					if ( !wasUpdated ) {
-						MODEL_MUTATION_LOGGER.tracef(
-								"Upsert update altered no rows; performing insert (%s)",
-								tableMapping.getTableName()
-						);
+						MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
 						try {
 							performInsert( jdbcValueBindings, session );
 						}
 						catch (ConstraintViolationException cve) {
-							throw cve.getKind() == UNIQUE
+							if ( cve.getKind() == UNIQUE ) {
+								// Ignore primary key violation if the insert is composed of just the primary key
+								if ( !valueBindings.isEmpty() ) {
 									// assume it was the primary key constraint which was violated,
 									// due to a new version of the row existing in the database
-									? new StaleStateException( mutationTarget.getRolePath(), cve )
-									: cve;
+									throw new StaleStateException( mutationTarget.getRolePath(), cve );
+								}
+							}
+							else {
+								throw cve;
+							}
 						}
 					}
 				}
@@ -300,7 +303,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private boolean performUpdate(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "Performing update (%s)", tableMapping.getTableName() );
+		MODEL_MUTATION_LOGGER.performingUpdate( tableMapping.getTableName() );
 
 		final JdbcServices jdbcServices = session.getJdbcServices();
 		final var statementGroup = new PreparedStatementGroupSingleTable( createJdbcUpdate( session ), session );

@@ -8,11 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Filter;
-import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Collection of {@link FilterFragmentPredicate} sub-predicates, each
@@ -24,7 +25,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 public class FilterPredicate implements Predicate {
 	private final List<FilterFragmentPredicate> fragments = new ArrayList<>();
 
-	private List<FilterJdbcParameter> parameters;
+//	private List<FilterJdbcParameter> parameters;
 
 	public FilterPredicate() {
 	}
@@ -34,23 +35,23 @@ public class FilterPredicate implements Predicate {
 	}
 
 	public void applyFragment(String processedFragment, Filter filter, List<String> parameterNames) {
-		fragments.add( new FilterFragmentPredicate( processedFragment, filter, parameterNames ) );
+		applyFragment( new FilterFragmentPredicate( processedFragment, filter, parameterNames ) );
 	}
 
-	public void applyParameter(FilterJdbcParameter parameter) {
-		if ( parameters == null ) {
-			parameters = new ArrayList<>();
-		}
-		parameters.add( parameter );
-	}
+//	public void applyParameter(FilterJdbcParameter parameter) {
+//		if ( parameters == null ) {
+//			parameters = new ArrayList<>();
+//		}
+//		parameters.add( parameter );
+//	}
 
 	public List<FilterFragmentPredicate> getFragments() {
 		return fragments;
 	}
 
-	public List<FilterJdbcParameter> getParameters() {
-		return parameters;
-	}
+//	public List<FilterJdbcParameter> getParameters() {
+//		return parameters;
+//	}
 
 	@Override
 	public boolean isEmpty() {
@@ -67,13 +68,30 @@ public class FilterPredicate implements Predicate {
 		return null;
 	}
 
+	private static List<FilterFragmentParameter> fragmentParameters(Filter filter, List<String> parameterNames) {
+		if ( CollectionHelper.isEmpty( parameterNames ) ) {
+			return null;
+		}
+		else {
+			final int parameterCount = parameterNames.size();
+			final List<FilterFragmentParameter> parameters = arrayList( parameterCount );
+			for ( int i = 0; i < parameterCount; i++ ) {
+				final String paramName = parameterNames.get( i );
+				final Object paramValue = filter.getParameterValue( paramName );
+				final var jdbcMapping = filter.getFilterDefinition().getParameterJdbcMapping( paramName );
+				parameters.add( new FilterFragmentParameter( filter.getName(), paramName, jdbcMapping, paramValue ) );
+			}
+			return parameters;
+		}
+	}
+
 	public static class FilterFragmentParameter {
 		private final String filterName;
 		private final String parameterName;
 		private final JdbcMapping valueMapping;
 		private final Object value;
 
-		public FilterFragmentParameter(String filterName, String parameterName, JdbcMapping valueMapping, Object value) {
+		FilterFragmentParameter(String filterName, String parameterName, JdbcMapping valueMapping, Object value) {
 			this.filterName = filterName;
 			this.parameterName = parameterName;
 			this.valueMapping = valueMapping;
@@ -102,23 +120,10 @@ public class FilterPredicate implements Predicate {
 		private final String sqlFragment;
 		private final List<FilterFragmentParameter> parameters;
 
-		public FilterFragmentPredicate(String sqlFragment, Filter filter, List<String> parameterNames) {
+		FilterFragmentPredicate(String sqlFragment, Filter filter, List<String> parameterNames) {
 			this.filter = filter;
 			this.sqlFragment = sqlFragment;
-
-			if ( CollectionHelper.isEmpty( parameterNames ) ) {
-				parameters = null;
-			}
-			else {
-				parameters = CollectionHelper.arrayList( parameterNames.size() );
-				for ( int i = 0; i < parameterNames.size(); i++ ) {
-					final String paramName = parameterNames.get( i );
-					final Object paramValue = filter.getParameterValue( paramName );
-					final JdbcMapping jdbcMapping = filter.getFilterDefinition().getParameterJdbcMapping( paramName );
-
-					parameters.add( new FilterFragmentParameter( filter.getName(), paramName, jdbcMapping, paramValue ) );
-				}
-			}
+			this.parameters = fragmentParameters( filter, parameterNames );
 		}
 
 		public Filter getFilter() {

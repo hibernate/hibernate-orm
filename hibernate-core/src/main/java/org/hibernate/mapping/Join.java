@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;
@@ -40,13 +41,10 @@ public class Join implements AttributeContainer, Serializable {
 	// Custom SQL
 	private String customSQLInsert;
 	private boolean customInsertCallable;
-	private ExecuteUpdateResultCheckStyle insertCheckStyle;
 	private String customSQLUpdate;
 	private boolean customUpdateCallable;
-	private ExecuteUpdateResultCheckStyle updateCheckStyle;
 	private String customSQLDelete;
 	private boolean customDeleteCallable;
-	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
 	private Supplier<? extends Expectation> insertExpectation;
 	private Supplier<? extends Expectation> updateExpectation;
@@ -62,6 +60,11 @@ public class Join implements AttributeContainer, Serializable {
 	@Override
 	public boolean contains(Property property) {
 		return properties.contains( property );
+	}
+
+	@Override
+	public Property getProperty(String propertyName) throws MappingException {
+		throw new UnsupportedOperationException(); //TODO
 	}
 
 	public void addMappedSuperclassProperty(Property property ) {
@@ -81,6 +84,7 @@ public class Join implements AttributeContainer, Serializable {
 		return properties.contains( property );
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
@@ -110,7 +114,7 @@ public class Join implements AttributeContainer, Serializable {
 	}
 
 	public void createForeignKey() {
-		final ForeignKey foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
+		final var foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
 		if ( disableForeignKeyCreation ) {
 			foreignKey.disableCreation();
 		}
@@ -118,10 +122,9 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey primaryKey = new PrimaryKey( table );
+		final var primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(primaryKey);
-
 		primaryKey.addColumns( getKey() );
 	}
 
@@ -132,7 +135,6 @@ public class Join implements AttributeContainer, Serializable {
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertCheckStyle = checkStyle;
 		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -147,7 +149,6 @@ public class Join implements AttributeContainer, Serializable {
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateCheckStyle = checkStyle;
 		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
@@ -162,7 +163,6 @@ public class Join implements AttributeContainer, Serializable {
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteCheckStyle = checkStyle;
 		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 

@@ -7,67 +7,69 @@ package org.hibernate.orm.test.envers.integration.proxy;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class QueryingWithProxyObjectTest extends BaseEnversFunctionalTestCase {
+@Jpa(annotatedClasses = {StrTestEntity.class})
+@EnversTest
+public class QueryingWithProxyObjectTest {
 	private Integer id = null;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1
-		getSession().getTransaction().begin();
-		StrTestEntity ste = new StrTestEntity( "data" );
-		getSession().persist( ste );
-		getSession().getTransaction().commit();
-		id = ste.getId();
-		getSession().close();
+		id = scope.fromTransaction( em -> {
+			StrTestEntity ste = new StrTestEntity( "data" );
+			em.persist( ste );
+			return ste.getId();
+		} );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-4760")
 	@SuppressWarnings("unchecked")
-	public void testQueryingWithProxyObject() {
-		StrTestEntity originalSte = new StrTestEntity( "data", id );
-		// Load the proxy instance
-		StrTestEntity proxySte = (StrTestEntity) getSession().getReference( StrTestEntity.class, id );
+	public void testQueryingWithProxyObject(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			StrTestEntity originalSte = new StrTestEntity( "data", id );
+			// Load the proxy instance
+			StrTestEntity proxySte = em.getReference( StrTestEntity.class, id );
 
-		Assert.assertTrue( getAuditReader().isEntityClassAudited( proxySte.getClass() ) );
+			var auditReader = AuditReaderFactory.get( em );
 
-		StrTestEntity ste = getAuditReader().find( proxySte.getClass(), proxySte.getId(), 1 );
-		Assert.assertEquals( originalSte, ste );
+			assertTrue( auditReader.isEntityClassAudited( proxySte.getClass() ) );
 
-		List<Number> revisions = getAuditReader().getRevisions( proxySte.getClass(), proxySte.getId() );
-		Assert.assertEquals( Arrays.asList( 1 ), revisions );
+			StrTestEntity ste = auditReader.find( proxySte.getClass(), proxySte.getId(), 1 );
+			assertEquals( originalSte, ste );
 
-		List<StrTestEntity> entities = getAuditReader().createQuery()
-				.forEntitiesAtRevision( proxySte.getClass(), 1 )
-				.getResultList();
-		Assert.assertEquals( Arrays.asList( originalSte ), entities );
+			List<Number> revisions = auditReader.getRevisions( proxySte.getClass(), proxySte.getId() );
+			assertEquals( Arrays.asList( 1 ), revisions );
 
-		ste = (StrTestEntity) getAuditReader().createQuery()
-				.forRevisionsOfEntity( proxySte.getClass(), true, false )
-				.getSingleResult();
-		Assert.assertEquals( originalSte, ste );
+			List<StrTestEntity> entities = auditReader.createQuery()
+					.forEntitiesAtRevision( proxySte.getClass(), 1 )
+					.getResultList();
+			assertEquals( Arrays.asList( originalSte ), entities );
 
-		ste = (StrTestEntity) getAuditReader().createQuery()
-				.forEntitiesModifiedAtRevision( proxySte.getClass(), 1 )
-				.getSingleResult();
-		Assert.assertEquals( originalSte, ste );
+			ste = (StrTestEntity) auditReader.createQuery()
+					.forRevisionsOfEntity( proxySte.getClass(), true, false )
+					.getSingleResult();
+			assertEquals( originalSte, ste );
 
+			ste = (StrTestEntity) auditReader.createQuery()
+					.forEntitiesModifiedAtRevision( proxySte.getClass(), 1 )
+					.getSingleResult();
+			assertEquals( originalSte, ste );
+		} );
 	}
 }

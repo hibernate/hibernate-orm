@@ -26,6 +26,26 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * @author Steve Ebersole
  */
 public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
+
+	/**
+	 * Obtain a {@link StatelessSession} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	SharedStatelessSessionBuilder statelessWithOptions();
+
+	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 */
+	SharedSessionBuilder sessionWithOptions();
+
 	/**
 	 * Obtain the tenant identifier associated with this session, as a string.
 	 *

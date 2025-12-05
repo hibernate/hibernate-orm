@@ -4,163 +4,121 @@
  */
 package org.hibernate.orm.test.schemavalidation;
 
-import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Map;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
-import org.hibernate.tool.schema.SourceType;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
+import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.spi.SourceDescriptor;
-import org.hibernate.tool.schema.spi.TargetDescriptor;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.sql.Types;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * @author Steve Ebersole
  */
 @JiraKey(value = "HHH-9693")
-@RunWith(Parameterized.class)
-public class LongVarcharValidationTest implements ExecutionOptions {
-	@Parameterized.Parameters
-	public static Collection<String> parameters() {
-		return Arrays.asList(
-				JdbcMetadaAccessStrategy.GROUPED.toString(),
-				JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
+@TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ParameterizedClass
+@MethodSource("extractorStrategies")
+@ServiceRegistryFunctionalTesting
+@DomainModel(annotatedClasses = LongVarcharValidationTest.Translation.class)
+public class LongVarcharValidationTest implements ServiceRegistryProducer {
+	static List<JdbcMetadataAccessStrategy> extractorStrategies() {
+		return List.of(
+				JdbcMetadataAccessStrategy.GROUPED,
+				JdbcMetadataAccessStrategy.INDIVIDUALLY
 		);
 	}
 
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
+	private final JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy;
 
-	private StandardServiceRegistry ssr;
+	public LongVarcharValidationTest(JdbcMetadataAccessStrategy jdbcMetadataExtractorStrategy) {
+		this.jdbcMetadataExtractorStrategy = jdbcMetadataExtractorStrategy;
+	}
 
-	@Before
-	public void beforeTest() {
-		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
+	@Override
+	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		return builder
+				.applySetting( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();
 	}
 
-	@After
-	public void afterTest() {
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
 	@Test
-	public void testValidation() {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Translation.class )
-				.buildMetadata();
+	public void testValidation(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		MetadataImplementor metadata = modelScope.getDomainModel();
 		metadata.orderColumns( false );
 		metadata.validate();
-
 
 		// create the schema
 		createSchema( metadata );
 
 		try {
-			doValidation( metadata );
+			doValidation( registryScope.getRegistry(), metadata );
 		}
 		finally {
 			dropSchema( metadata );
 		}
 	}
 
-	private void doValidation(MetadataImplementor metadata) {
-		ssr.getService( SchemaManagementTool.class ).getSchemaValidator( null ).doValidation(
-				metadata,
-				this,
-				ContributableMatcher.ALL
-		);
+	private void doValidation(ServiceRegistry serviceRegistry, MetadataImplementor metadata) {
+		serviceRegistry.requireService( SchemaManagementTool.class )
+				.getSchemaValidator( null )
+				.doValidation( metadata, executionOptions( serviceRegistry ), ContributableMatcher.ALL );
+	}
+
+	private ExecutionOptions executionOptions(ServiceRegistry serviceRegistry) {
+		return new ExecutionOptions() {
+			final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+
+			@Override
+			public Map<String, Object> getConfigurationValues() {
+				return settings;
+			}
+
+			@Override
+			public boolean shouldManageNamespaces() {
+				return false;
+			}
+
+			@Override
+			public ExceptionHandler getExceptionHandler() {
+				return ExceptionHandlerLoggedImpl.INSTANCE;
+			}
+		};
 	}
 
 	private void createSchema(MetadataImplementor metadata) {
-		ssr.getService( SchemaManagementTool.class ).getSchemaCreator( null ).doCreation(
-				metadata,
-				this,
-				ContributableMatcher.ALL,
-				new SourceDescriptor() {
-					@Override
-					public SourceType getSourceType() {
-						return SourceType.METADATA;
-					}
-
-					@Override
-					public ScriptSourceInput getScriptSourceInput() {
-						return null;
-					}
-				},
-				new TargetDescriptor() {
-					@Override
-					public EnumSet<TargetType> getTargetTypes() {
-						return EnumSet.of( TargetType.DATABASE );
-					}
-
-					@Override
-					public ScriptTargetOutput getScriptTargetOutput() {
-						return null;
-					}
-				}
-		);
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
 	private void dropSchema(MetadataImplementor metadata) {
-		ssr.getService( SchemaManagementTool.class ).getSchemaDropper( null ).doDrop(
-				metadata,
-				this,
-				ContributableMatcher.ALL,
-				new SourceDescriptor() {
-					@Override
-					public SourceType getSourceType() {
-						return SourceType.METADATA;
-					}
-
-					@Override
-					public ScriptSourceInput getScriptSourceInput() {
-						return null;
-					}
-				},
-				new TargetDescriptor() {
-					@Override
-					public EnumSet<TargetType> getTargetTypes() {
-						return EnumSet.of( TargetType.DATABASE );
-					}
-
-					@Override
-					public ScriptTargetOutput getScriptTargetOutput() {
-						return null;
-					}
-				}
-		);
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
 	@Entity(name = "Translation")
@@ -170,20 +128,5 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 		public Integer id;
 		@JdbcTypeCode(Types.LONGVARCHAR)
 		String text;
-	}
-
-	@Override
-	public Map<String,Object> getConfigurationValues() {
-		return ssr.requireService( ConfigurationService.class ).getSettings();
-	}
-
-	@Override
-	public boolean shouldManageNamespaces() {
-		return false;
-	}
-
-	@Override
-	public ExceptionHandler getExceptionHandler() {
-		return ExceptionHandlerLoggedImpl.INSTANCE;
 	}
 }

@@ -6,7 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collection;
 
-import org.hibernate.metamodel.internal.MetadataContext;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -21,8 +21,8 @@ public class BagAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Collection<E>, E>
 		implements SqmBagPersistentAttribute<X, E> {
 
-	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
-		super( xceBuilder, metadataContext );
+	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder) {
+		super( xceBuilder );
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class BagAttributeImpl<X, E>
 	public SqmAttributeJoin<X,E> createSqmJoin(
 			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
-			String alias,
+			@Nullable String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
 		return new SqmBagJoin<>(

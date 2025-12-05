@@ -9,14 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -32,6 +30,10 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	private final QueryResultsRegion cacheRegion;
 	private final TimestampsCache timestampsCache;
+
+	private record CacheItem(long timestamp, List<?> results)
+			implements Serializable {
+	}
 
 	QueryResultsCacheImpl(
 			QueryResultsRegion cacheRegion,
@@ -49,22 +51,19 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	public boolean put(
 			final QueryKey key,
 			final List<?> results,
-			final SharedSessionContractImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) {
+		final var synchronization = session.getCacheTransactionSynchronization();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.cachingQueryResults(
 					cacheRegion.getName(),
-					session.getCacheTransactionSynchronization().getCachingTimestamp() );
+					synchronization.getCachingTimestamp() );
 		}
-
-		final CacheItem cacheItem = new CacheItem(
-				session.getCacheTransactionSynchronization().getCachingTimestamp(),
-				deepCopy( results )
-		);
-
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cachePutEvent = eventMonitor.beginCachePutEvent();
+		final var listenerManager = session.getEventListenerManager();
+		final var cacheItem = new CacheItem( synchronization.getCachingTimestamp(), deepCopy( results ) );
 		try {
-			session.getEventListenerManager().cachePutStart();
+			listenerManager.cachePutStart();
 			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
@@ -75,9 +74,8 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 					true,
 					EventMonitor.CacheActionDescription.QUERY_RESULT
 			);
-			session.getEventListenerManager().cachePutEnd();
+			listenerManager.cachePutEnd();
 		}
-
 		return true;
 	}
 
@@ -89,13 +87,13 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	public List<?> get(
 			final QueryKey key,
 			final Set<String> spaces,
-			final SharedSessionContractImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		if ( loggerTraceEnabled ) {
 			L2CACHE_LOGGER.checkingCachedQueryResults( cacheRegion.getName() );
 		}
 
-		final CacheItem cacheItem = getCachedData( key, session );
+		final var cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
 			if ( loggerTraceEnabled ) {
 				L2CACHE_LOGGER.queryResultsNotFound();
@@ -122,14 +120,14 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	public List<?> get(
 			final QueryKey key,
 			final String[] spaces,
-			final SharedSessionContractImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 
 		if ( loggerTraceEnabled ) {
 			L2CACHE_LOGGER.checkingCachedQueryResults( cacheRegion.getName() );
 		}
 
-		final CacheItem cacheItem = getCachedData( key, session );
+		final var cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
 			if ( loggerTraceEnabled ) {
 				L2CACHE_LOGGER.queryResultsNotFound();
@@ -152,37 +150,29 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
-		CacheItem cachedItem = null;
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
+		final var eventMonitor = session.getEventMonitor();
+		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
+		final var eventListenerManager = session.getEventListenerManager();
+		boolean success = false;
 		try {
-			session.getEventListenerManager().cacheGetStart();
-			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
+			eventListenerManager.cacheGetStart();
+			final var item = (CacheItem) cacheRegion.getFromCache( key, session );
+			success = item != null;
+			return item;
 		}
 		finally {
 			eventMonitor.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheRegion,
-					cachedItem != null
+					success
 			);
-			session.getEventListenerManager().cacheGetEnd( cachedItem != null );
+			eventListenerManager.cacheGetEnd( success );
 		}
-		return cachedItem;
 	}
 
 	@Override
 	public String toString() {
 		return "QueryResultsCache(" + cacheRegion.getName() + ')';
-	}
-
-	static class CacheItem implements Serializable {
-		private final Long timestamp;
-		private final List<?> results;
-
-		CacheItem(long timestamp, List<?> results) {
-			this.timestamp = Long.valueOf( timestamp );
-			this.results = results;
-		}
 	}
 }

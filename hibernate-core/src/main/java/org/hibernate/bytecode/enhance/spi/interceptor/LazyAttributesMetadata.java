@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
@@ -42,24 +41,24 @@ public class LazyAttributesMetadata implements Serializable {
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
 		int x = 0;
-		final List<Property> properties = mappedEntity.getPropertyClosure();
+		final var properties = mappedEntity.getPropertyClosure();
 		for ( int i=0; i<properties.size(); i++ ) {
-			final Property property = properties.get(i);
+			final var property = properties.get(i);
 			final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					property,
 					isEnhanced,
 					entityName -> {
-						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						final var entityBinding = metadata.getEntityBinding( entityName );
 						assert entityBinding != null;
 						return entityBinding.hasSubclasses();
 					},
 					collectionsInDefaultFetchGroupEnabled
 			);
 			if ( lazy ) {
-				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
+				final var lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 
-				final Set<String> attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
+				final var attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
 						lazyAttributeDescriptor.getFetchGroupName(),
 						k -> new LinkedHashSet<>()
 				);
@@ -71,7 +70,7 @@ public class LazyAttributesMetadata implements Serializable {
 			return new LazyAttributesMetadata( mappedEntity.getEntityName() );
 		}
 
-		for ( Map.Entry<String, Set<String>> entry : fetchGroupToAttributesMap.entrySet() ) {
+		for ( var entry : fetchGroupToAttributesMap.entrySet() ) {
 			entry.setValue( unmodifiableSet( entry.getValue() ) );
 		}
 
@@ -144,8 +143,9 @@ public class LazyAttributesMetadata implements Serializable {
 	}
 
 	public List<LazyAttributeDescriptor> getFetchGroupAttributeDescriptors(String groupName) {
-		final List<LazyAttributeDescriptor> list = new ArrayList<>();
-		for ( String attributeName : fetchGroupToAttributeMap.get( groupName ) ) {
+		final var attributeNames = fetchGroupToAttributeMap.get( groupName );
+		final List<LazyAttributeDescriptor> list = new ArrayList<>( attributeNames.size() );
+		for ( String attributeName : attributeNames ) {
 			list.add( lazyAttributeDescriptorMap.get( attributeName ) );
 		}
 		return list;

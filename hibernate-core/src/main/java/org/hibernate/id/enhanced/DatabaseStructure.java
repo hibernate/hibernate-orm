@@ -9,10 +9,11 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Table;
 
 /**
- * Encapsulates definition of the underlying data structure backing a
- * sequence-style generator.
+ * Encapsulates definition of the underlying data structure backing
+ * a {@linkplain SequenceStyleGenerator sequence-style} generator.
  *
  * @author Steve Ebersole
  */
@@ -87,6 +88,21 @@ public interface DatabaseStructure extends ExportableProducer {
 	 */
 	@Override
 	void registerExportables(Database database);
+
+	/**
+	 * Register additional database objects which need to be aware of the
+	 * table for which this structure is used to generate values. Used to
+	 * deal with automatic sequence resynchronization after data import.
+	 *
+	 * @param table The table for which this structure is used to generate values
+	 * @param optimizer The {@link Optimizer} for this generator
+	 *
+	 * @see org.hibernate.relational.SchemaManager#resynchronizeGenerators()
+	 *
+	 * @since 7.2
+	 */
+	default void registerExtraExportables(Table table, Optimizer optimizer) {
+	}
 
 	/**
 	 * Initializes this structure, in particular pre-generates SQL as necessary.

@@ -7,8 +7,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
@@ -37,9 +37,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
 
-	protected AbstractPluralAttribute(
-			PluralAttributeBuilder<D,C,E,?> builder,
-			MetadataContext metadataContext) {
+	protected AbstractPluralAttribute(PluralAttributeBuilder<D,C,E,?> builder) {
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
@@ -75,7 +73,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
 			return elementPathSource;
 		}
@@ -83,7 +81,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return CollectionPart.Nature.ELEMENT.getName().equals( name )
 				? elementPathSource
 				: elementPathSource.findSubPathSource( name, includeSubtypes );
@@ -148,7 +146,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<E> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		// We need an unchecked cast here : PluralPersistentAttribute implements path source with its element type
 		//  but resolving paths from it must produce collection-typed expressions.
 		return (SqmPath<E>) new SqmPluralValuedSimplePath<>(
@@ -160,7 +158,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+	public NavigablePath createNavigablePath(SqmPath<?> parent, @Nullable String alias) {
 		if ( parent == null ) {
 			throw new IllegalArgumentException(
 					"`lhs` cannot be null for a sub-navigable reference - " + getName()

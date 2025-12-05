@@ -1,6 +1,5 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 
@@ -41,8 +40,7 @@ which means that accessing `accountsPayableXrefId` will not force the loading of
 
 [NOTE]
 ====
-As a hopefully temporary legacy hold-over, it is currently required that all lazy singular associations (many-to-one and one-to-one) also include `@LazyToOne(LazyToOneOption.NO_PROXY)`.
-The plan is to relax that requirement later.
+For existing codebases, it is recommended to remove usages of @LazyToOne, such as `@LazyToOne(LazyToOneOption.NO_PROXY)`, and instead rely on default lazy loading behavior or explicitly configure fetch strategies using `@OneToOne` or `@ManyToOne` annotations with `fetch = FetchType.LAZY` where necessary, such as `@OneToOne(fetch = FetchType.LAZY)`.
 ====
 
 [[BytecodeEnhancement-dirty-tracking]]
@@ -57,6 +55,10 @@ However, in a persistence context with a large number of associated entities, it
 If your application does not need to care about "internal state changing data-type" use cases, bytecode-enhanced dirty tracking might be a worthwhile alternative to consider, especially in terms of performance.
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
 During the flush time, Hibernate asks your entity what has changed rather than having to perform the state-diff calculations.
+
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
 
 [[BytecodeEnhancement-dirty-tracking-bidirectional]]
 ==== Bidirectional association management
@@ -93,7 +95,10 @@ include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnh
 ----
 ====
 
-Bytecode-enhanced bi-directional association management makes that first example work by managing the "other side" of a bi-directional association whenever one side is manipulated.
+Bytecode-enhanced bidirectional association management makes that first example work by managing the "other side" of a bidirectional association whenever one side is manipulated.
+
+[IMPORTANT]
+Hibernate's bidirectional association management bytecode enhancement feature has been deprecated.  Users should instead manage both sides of such associations directly.
 
 [[BytecodeEnhancement-dirty-tracking-optimizations]]
 ==== Internal performance optimizations

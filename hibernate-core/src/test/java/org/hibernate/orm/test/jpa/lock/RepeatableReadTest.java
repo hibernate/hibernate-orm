@@ -24,11 +24,13 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -41,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true)
 public class RepeatableReadTest extends AbstractJPATest {
 
-	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+	private final SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
@@ -64,9 +66,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		String check = "EJB3 Specification";
 		Item it = new Item( check );
 		inTransaction(
-				session -> {
-					session.persist( it );
-				}
+				session -> session.persist( it )
 		);
 
 		Long itemId = it.getId();
@@ -75,13 +75,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		// Now, open a new Session and re-load the item...
 		inTransaction(
 				s1 -> {
-					Item item = s1.get( Item.class, itemId );
+					Item item = s1.find( Item.class, itemId );
 
 					// now that the item is associated with the persistence-context of that session,
 					// open a new session and modify it "behind the back" of the first session
 					inTransaction(
 							s2 -> {
-								Item item2 = s2.get( Item.class, itemId );
+								Item item2 = s2.find( Item.class, itemId );
 								item2.setName( "EJB3 Persistence Spec" );
 							}
 					);
@@ -90,7 +90,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 					// returns said item and make sure we get the previously associated state
 					// (i.e., the old name and the old version)
 					Item item2 = (Item) s1.createQuery( "select i from Item i" ).list().get( 0 );
-					assertTrue( item == item2 );
+					assertSame( item, item2 );
 					assertEquals( check, item2.getName(), "encountered non-repeatable read" );
 					assertEquals( initialVersion, item2.getVersion(), "encountered non-repeatable read" );
 
@@ -106,7 +106,9 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
+			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
@@ -114,9 +116,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		String check = "EJB3 Specification";
 		Item it = new Item( check );
 		inTransaction(
-				session -> {
-					session.persist( it );
-				}
+				session -> session.persist( it )
 		);
 
 		Long itemId = it.getId();
@@ -127,13 +127,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 				s1 -> {
 					s1.beginTransaction();
 					try {
-						Item item = s1.get( Item.class, itemId );
+						Item item = s1.find( Item.class, itemId );
 
 						// now that the item is associated with the persistence-context of that session,
 						// open a new session and modify it "behind the back" of the first session
 						inTransaction(
 								s2 -> {
-									Item item2 = s2.get( Item.class, itemId );
+									Item item2 = s2.find( Item.class, itemId );
 									item2.setName( "EJB3 Persistence Spec" );
 								}
 						);
@@ -142,8 +142,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 						// and make sure we get the already associated state (i.e., the old
 						// name and the old version)
 						s1.lock( item, LockMode.READ );
-						Item item2 = (Item) s1.get( Item.class, itemId );
-						assertTrue( item == item2 );
+						Item item2 = (Item) s1.find( Item.class, itemId );
+						assertSame( item, item2 );
 						assertEquals( check, item2.getName(), "encountered non-repeatable read" );
 						assertEquals( initialVersion, item2.getVersion(), "encountered non-repeatable read" );
 
@@ -153,7 +153,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 						fail( "expected UPGRADE lock failure" );
 					}
 					catch (OptimisticLockException expected) {
-						assertTrue( expected.getCause() instanceof StaleObjectStateException );
+						assertInstanceOf( StaleObjectStateException.class, expected.getCause() );
 						// this is the expected behavior
 					}
 					catch (SQLGrammarException t) {
@@ -184,11 +184,9 @@ public class RepeatableReadTest extends AbstractJPATest {
 	@Test
 	public void testStaleNonVersionedInstanceFoundInQueryResult() {
 		String check = "Lock Modes";
-		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
+		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( "0.0" ) );
 		inTransaction(
-				session -> {
-					session.persist( p );
-				}
+				session -> session.persist( p )
 		);
 
 		Long partId = p.getId();
@@ -197,13 +195,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 		inTransaction(
 				s1 -> {
-					Part part = s1.get( Part.class, partId );
+					Part part = s1.find( Part.class, partId );
 
 					// now that the item is associated with the persistence-context of that session,
 					// open a new session and modify it "behind the back" of the first session
 					inTransaction(
 							s2 -> {
-								Part part2 = s2.get( Part.class, partId );
+								Part part2 = s2.find( Part.class, partId );
 								part2.setName( "Lock Mode Types" );
 							}
 					);
@@ -212,7 +210,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 					// returns said part and make sure we get the previously associated state
 					// (i.e., the old name)
 					Part part2 = (Part) s1.createQuery( "select p from Part p" ).list().get( 0 );
-					assertTrue( part == part2 );
+					assertSame( part, part2 );
 					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 				}
 		);
@@ -230,17 +228,17 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
+			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleNonVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
 		}
 		String check = "Lock Modes";
-		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
+		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( "0.0" ) );
 		inTransaction(
-				session -> {
-					session.persist( p );
-				}
+				session -> session.persist( p )
 		);
 
 		Long partId = p.getId();
@@ -248,13 +246,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		// Now, open a new Session and re-load the part...
 		inTransaction(
 				s1 -> {
-					Part part = s1.get( Part.class, partId );
+					Part part = s1.find( Part.class, partId );
 
 					// now that the item is associated with the persistence-context of that session,
 					// open a new session and modify it "behind the back" of the first session
 					inTransaction(
 							s2 -> {
-								Part part2 = s2.get( Part.class, partId );
+								Part part2 = s2.find( Part.class, partId );
 								part2.setName( "Lock Mode Types" );
 							}
 					);
@@ -263,8 +261,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 					// and make sure we get the already associated state (i.e., the old
 					// name and the old version)
 					s1.lock( part, LockMode.READ );
-					Part part2 = s1.get( Part.class, partId );
-					assertTrue( part == part2 );
+					Part part2 = s1.find( Part.class, partId );
+					assertSame( part, part2 );
 					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 
 					// then acquire an UPGRADE lock; this should fail
@@ -276,8 +274,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 						s1.getTransaction().rollback();
 						s1.beginTransaction();
 					}
-					part2 = s1.get( Part.class, partId );
-					assertTrue( part == part2 );
+					part2 = s1.find( Part.class, partId );
+					assertSame( part, part2 );
 					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 				}
 		);
@@ -285,7 +283,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session -> {
-					Part part = session.get( Part.class, partId );
+					Part part = session.find( Part.class, partId );
 					session.remove( part );
 					session.remove( part.getItem() );
 				}

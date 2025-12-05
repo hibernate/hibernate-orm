@@ -7,8 +7,9 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -63,8 +64,7 @@ public class SingularAttributeImpl<D,J>
 			boolean isIdentifier,
 			boolean isVersion,
 			boolean isOptional,
-			boolean isGeneric,
-			MetadataContext metadataContext) {
+			boolean isGeneric) {
 		super(
 				declaringType,
 				name,
@@ -126,12 +126,12 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
 		return sqmPathSource.findSubPathSource( name );
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+	public @Nullable SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return sqmPathSource.findSubPathSource( name, includeSubtypes );
 	}
 
@@ -141,7 +141,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmBindableType<J> getExpressible() {
+	public @NonNull SqmBindableType<J> getExpressible() {
 		return sqmPathSource.getExpressible();
 	}
 
@@ -154,7 +154,7 @@ public class SingularAttributeImpl<D,J>
 	public SqmJoin<D,J> createSqmJoin(
 			SqmFrom<?,D> lhs,
 			SqmJoinType joinType,
-			String alias,
+			@Nullable String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
 		final NodeBuilder nodeBuilder = creationState.getCreationContext().getNodeBuilder();
@@ -189,7 +189,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+	public NavigablePath createNavigablePath(SqmPath<?> parent, @Nullable String alias) {
 		if ( parent == null ) {
 			throw new IllegalArgumentException(
 					"LHS cannot be null for a sub-navigable reference - " + getName()
@@ -210,8 +210,7 @@ public class SingularAttributeImpl<D,J>
 				SqmDomainType<J> attributeType,
 				Member member,
 				AttributeClassification attributeClassification,
-				boolean isGeneric,
-				MetadataContext metadataContext) {
+				boolean isGeneric) {
 			super(
 					declaringType,
 					name,
@@ -222,13 +221,12 @@ public class SingularAttributeImpl<D,J>
 					true,
 					false,
 					false,
-					isGeneric,
-					metadataContext
+					isGeneric
 			);
 		}
 
 		@Override
-		public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+		public NavigablePath createNavigablePath(SqmPath<?> parent, @Nullable String alias) {
 			if ( parent == null ) {
 				throw new IllegalArgumentException(
 						"LHS cannot be null for a sub-navigable reference - " + getName()
@@ -260,8 +258,7 @@ public class SingularAttributeImpl<D,J>
 				String name,
 				AttributeClassification attributeClassification,
 				SqmDomainType<Y> attributeType,
-				Member member,
-				MetadataContext metadataContext) {
+				Member member) {
 			super(
 					declaringType,
 					name,
@@ -272,8 +269,7 @@ public class SingularAttributeImpl<D,J>
 					false,
 					true,
 					false,
-					false,
-					metadataContext
+					false
 			);
 		}
 	}
@@ -311,7 +307,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
 		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
 	}
 

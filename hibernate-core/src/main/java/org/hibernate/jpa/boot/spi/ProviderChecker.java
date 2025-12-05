@@ -7,11 +7,13 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_PERSISTENCE_PROVIDER;
+import static org.hibernate.cfg.PersistenceSettings.JPA_PERSISTENCE_PROVIDER;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Helper for handling checks to see whether Hibernate is the requested
@@ -21,14 +23,12 @@ import org.jboss.logging.Logger;
  */
 public final class ProviderChecker {
 
-	private static final Logger log = Logger.getLogger( ProviderChecker.class );
-
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
 	 * {@link jakarta.persistence.spi.PersistenceProvider}?
-	 *
-	 * Note that in the case of no requested provider being named we assume we are the
-	 * provider (the calls got to us somehow...)
+	 * <p></p>
+	 * Note that in the case of no requested provider being named, we
+	 * assume we are the provider. (The calls got to us somehow...)
 	 *
 	 * @param persistenceUnit The {@code <persistence-unit/>} descriptor.
 	 * @param integration The integration values.
@@ -48,10 +48,7 @@ public final class ProviderChecker {
 	 * @return {@code true} if Hibernate should be the provider; {@code false} otherwise.
 	 */
 	public static boolean hibernateProviderNamesContain(String requestedProviderName) {
-		log.tracef(
-				"Checking requested PersistenceProvider name [%s] against Hibernate provider names",
-				requestedProviderName
-		);
+		JPA_LOGGER.checkingRequestedPersistenceProviderName( requestedProviderName );
 		return HibernatePersistenceProvider.class.getName().equals( requestedProviderName );
 	}
 
@@ -69,24 +66,21 @@ public final class ProviderChecker {
 	public static String extractRequestedProviderName(PersistenceUnitDescriptor persistenceUnit, Map integration) {
 		final String integrationProviderName = extractProviderName( integration );
 		if ( integrationProviderName != null ) {
-			log.debugf( "Integration provided explicit PersistenceProvider [%s]", integrationProviderName );
+			JPA_LOGGER.integrationProvidedExplicitPersistenceProvider( integrationProviderName );
 			return integrationProviderName;
 		}
 
 		final String persistenceUnitRequestedProvider = extractProviderName( persistenceUnit );
 		if ( persistenceUnitRequestedProvider != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
-						"Persistence-unit [%s] requested PersistenceProvider [%s]",
-						persistenceUnit.getName(),
-						persistenceUnitRequestedProvider
-				);
-			}
+			JPA_LOGGER.persistenceUnitRequestedPersistenceProvider(
+					persistenceUnit.getName(),
+					persistenceUnitRequestedProvider
+			);
 			return persistenceUnitRequestedProvider;
 		}
 
 		// NOTE: if no provider requested, we assume we are the provider (the calls got to us somehow...)
-		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
+		JPA_LOGGER.noPersistenceProviderExplicitlySpecified();
 		return HibernatePersistenceProvider.class.getName();
 	}
 
@@ -96,14 +90,13 @@ public final class ProviderChecker {
 		}
 
 		final String setting = NullnessHelper.coalesceSuppliedValues(
-				() -> (String) integration.get(AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ),
+				() -> (String) integration.get( JAKARTA_PERSISTENCE_PROVIDER ),
 				() -> {
-					final String value = (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER );
+					final String value = (String) integration.get( JPA_PERSISTENCE_PROVIDER );
 					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.JPA_PERSISTENCE_PROVIDER,
-								AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER
-						);
+						DEPRECATION_LOGGER.deprecatedSetting(
+								JPA_PERSISTENCE_PROVIDER,
+								JAKARTA_PERSISTENCE_PROVIDER );
 					}
 					return value;
 				}

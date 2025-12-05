@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -43,7 +42,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
 		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SingularAttributeMapping naturalIdMapping = naturalIdMapping().getAttribute();
+		final var naturalIdMapping = naturalIdMapping().getAttribute();
 		if ( bindValue == null ) {
 			naturalIdMapping.forEachSelectable(
 					(index, selectable) -> {

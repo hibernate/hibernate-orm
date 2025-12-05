@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entitynonentity;
+
 import jakarta.persistence.MappedSuperclass;
 
 /**

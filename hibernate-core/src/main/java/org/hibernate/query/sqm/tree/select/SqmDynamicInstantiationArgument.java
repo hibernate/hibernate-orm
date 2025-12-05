@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -18,12 +19,12 @@ import java.util.Objects;
  */
 public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	private final SqmSelectableNode<T> selectableNode;
-	private final String alias;
+	private final @Nullable String alias;
 	private final NodeBuilder nodeBuilder;
 
 	public SqmDynamicInstantiationArgument(
 			SqmSelectableNode<T> selectableNode,
-			String alias,
+			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		this.selectableNode = selectableNode;
 		this.alias = alias;
@@ -44,7 +45,7 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 		return selectableNode;
 	}
 
-	public String getAlias() {
+	public @Nullable String getAlias() {
 		return alias;
 	}
 
@@ -67,14 +68,30 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmDynamicInstantiationArgument<?> that
-			&& Objects.equals( selectableNode, that.selectableNode )
+			&& selectableNode.equals( that.selectableNode )
 			&& Objects.equals( alias, that.alias );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( selectableNode, alias );
+		int result = selectableNode.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmDynamicInstantiationArgument<?> that
+			&& selectableNode.isCompatible( that.selectableNode )
+			&& Objects.equals( alias, that.alias );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = selectableNode.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 }

@@ -5,13 +5,15 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isCommitted;
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
- * Extension of SynchronizationCallbackCoordinatorNonTrackingImpl that adds checking of whether a rollback comes from
- * a thread other than the application thread (thread used to register the Synchronization)
+ * Extension of {@link SynchronizationCallbackCoordinatorNonTrackingImpl} that adds
+ * checking of whether a rollback comes from a thread other than the application
+ * thread (thread used to register the {@code Synchronization})
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -42,7 +44,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 
 	@Override
 	public void afterCompletion(int status) {
-		JTA_LOGGER.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+		JTA_LOGGER.synchronizationCoordinatorAfterCompletion( status );
 
 		// The whole concept of "tracking" comes down to this code block.
 		// Essentially, we need to see if we can process the callback immediately. So here we check whether the
@@ -50,7 +52,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// As far as we know, this can only ever happen in the rollback case where the transaction had been rolled
 		// back on a separate "reaper" thread. Since we know the transaction status and that check is not as heavy
 		// as accessing the current thread, we check that first
-		if ( JtaStatusHelper.isRollback( status ) ) {
+		if ( isRollback( status ) ) {
 			// We are processing a rollback, see if it is the same thread
 			final long currentThreadId = Thread.currentThread().getId();
 			final boolean isRegistrationThread = currentThreadId == registrationThreadId;
@@ -64,7 +66,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		}
 
 		// otherwise, do the callback immediately
-		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
+		doAfterCompletion( isCommitted( status ), false );
 	}
 
 	@Override

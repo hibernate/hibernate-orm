@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -12,7 +14,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +31,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		super(
 				wrappedPath.getNavigablePath().treatAs( treatTarget.getTypeName() ),
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
-				null,
+				castNonNull( wrappedPath.getLhs() ),
 				wrappedPath.nodeBuilder()
 		);
 		this.wrappedPath = wrappedPath;
@@ -44,7 +46,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		super(
 				navigablePath,
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
-				null,
+				castNonNull( wrappedPath.getLhs() ),
 				wrappedPath.nodeBuilder()
 		);
 		this.wrappedPath = wrappedPath;
@@ -80,7 +82,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public SqmBindableType<S> getNodeType() {
+	public @NonNull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -95,13 +97,9 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
-		return wrappedPath.getLhs();
-	}
-
-	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitTreatedPath( this );
+		// Cast needed for Checker Framework
+		return walker.visitTreatedPath( (SqmTreatedPath<?, @Nullable ?>) this );
 	}
 
 	@Override
@@ -118,18 +116,5 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		hql.append( " as " );
 		hql.append( treatTarget.getTypeName() );
 		hql.append( ')' );
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedEmbeddedValuedSimplePath<?, ?> that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getTypeName(), that.treatTarget.getTypeName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( treatTarget.getTypeName(), wrappedPath.getNavigablePath() );
 	}
 }

@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IndexedCollection;
@@ -20,7 +19,6 @@ import org.hibernate.mapping.Map;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -30,12 +28,10 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -48,13 +44,13 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.EntityType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyOrder;
 
@@ -123,16 +119,16 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		// to allow deferring the initialization of the target table group, omitting it if possible.
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
-		if ( getTargetKeyPropertyNames().contains( name ) ) {
-			final ModelPart keyPart = foreignKey.getKeyPart();
-			if ( keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
-					&& keyPart instanceof VirtualModelPart ) {
-				return embeddableValuedModelPart.findSubPart( name, targetType );
-			}
-			return keyPart;
+		if ( foreignKey != null && getTargetKeyPropertyNames().contains( name ) ) {
+			final var keyPart = foreignKey.getKeyPart();
+			return keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart
+				&& keyPart instanceof VirtualModelPart
+					? embeddableValuedModelPart.findSubPart( name, targetType )
+					: keyPart;
 		}
-
-		return super.findSubPart( name, targetType );
+		else {
+			return super.findSubPart( name, targetType );
+		}
 	}
 
 	@Override
@@ -258,8 +254,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
+		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final var lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
@@ -270,7 +266,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				creationState
 		);
 
-		final TableGroupJoin join = new TableGroupJoin(
+		final var join = new TableGroupJoin(
 				navigablePath,
 				joinType,
 				lazyTableGroup,
@@ -301,16 +297,16 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			boolean fetched,
 			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
+		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
-		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+		final var sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
 				explicitSourceAlias,
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
 
-		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
+		final var lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
 				fetched,
@@ -331,11 +327,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		);
 
 		if ( predicateConsumer != null ) {
-			final TableReference keySideTableReference = lhs.resolveTableReference(
-					navigablePath,
-					foreignKey.getKeyTable()
-			);
-
+			final var keySideTableReference =
+					lhs.resolveTableReference( navigablePath, foreignKey.getKeyTable() );
 			lazyTableGroup.setTableGroupInitializerCallback(
 					tableGroup -> predicateConsumer.accept(
 							foreignKey.generateJoinPredicate(
@@ -372,17 +365,18 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			MappingModelCreationProcess creationProcess) {
 		if ( fkTargetModelPartName != null ) {
 			// @OneToMany + @JoinTable w/ @JoinColumn( referencedColumnName="fkTargetModelPartName" )
-			fkTargetModelPart = resolveNamedTargetPart( fkTargetModelPartName, getAssociatedEntityMappingType(), collectionDescriptor );
+			fkTargetModelPart =
+					resolveNamedTargetPart( fkTargetModelPartName, getAssociatedEntityMappingType(), collectionDescriptor );
 		}
 		else if ( getNature() == Nature.INDEX ) {
 			assert bootCollectionDescriptor.isIndexed();
 
-			final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
+			final var pluralAttribute = collectionDescriptor.getAttributeMapping();
 			final String mapKeyPropertyName = ( (Map) bootCollectionDescriptor ).getMapKeyPropertyName();
-			if ( StringHelper.isNotEmpty( mapKeyPropertyName ) ) {
+			if ( isNotEmpty( mapKeyPropertyName ) ) {
 				// @MapKey( name="fkTargetModelPartName" )
-				final EntityCollectionPart elementDescriptor = (EntityCollectionPart) pluralAttribute.getElementDescriptor();
-				final EntityMappingType entityMappingType = elementDescriptor.getEntityMappingType();
+				final var elementDescriptor = (EntityCollectionPart) pluralAttribute.getElementDescriptor();
+				final var entityMappingType = elementDescriptor.getEntityMappingType();
 				fkTargetModelPart = resolveNamedTargetPart( mapKeyPropertyName, entityMappingType, collectionDescriptor );
 			}
 			else {
@@ -390,8 +384,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 //				fkTargetModelPart = getAssociatedEntityMappingType().getIdentifierMapping();
 			}
 		}
-		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
-			final ModelPart mappedByPart =
+		else if ( isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
+			final var mappedByPart =
 					resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(),
 							getAssociatedEntityMappingType(), collectionDescriptor );
 			if ( mappedByPart instanceof ToOneAttributeMapping
@@ -419,7 +413,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				// create the foreign-key from the join-table (author_book) to the part table (Book) :
 				//		`author_book.book_id -> Book.id`
 
-				final ManyToOne elementDescriptor = (ManyToOne) bootCollectionDescriptor.getElement();
+				final var elementDescriptor = (ManyToOne) bootCollectionDescriptor.getElement();
 				assert elementDescriptor.isReferenceToPrimaryKey();
 
 				final String collectionTableName = collectionDescriptor.getTableName();
@@ -433,7 +427,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
-				final PluralAttributeMapping manyToManyInverse = (PluralAttributeMapping) mappedByPart;
+				final var manyToManyInverse = (PluralAttributeMapping) mappedByPart;
 				if ( manyToManyInverse.getKeyDescriptor() == null ) {
 					// the collection-key is not yet ready, we need to wait
 					return false;
@@ -479,8 +473,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			String collectionTableName,
 			ManyToOne elementBootDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final EntityMappingType associatedEntityMapping = getAssociatedEntityMappingType();
-		final EntityIdentifierMapping associatedIdMapping = associatedEntityMapping.getIdentifierMapping();
+		final var associatedEntityMapping = getAssociatedEntityMappingType();
+		final var associatedIdMapping = associatedEntityMapping.getIdentifierMapping();
 		assert associatedIdMapping != null;
 
 		// NOTE : `elementBootDescriptor` describes the key side of the fk
@@ -490,12 +484,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		// and need to create the inverse (key) selectable-mappings and composite model-part
 
 		if ( associatedIdMapping.getNature() == EntityIdentifierMapping.Nature.SIMPLE ) {
-			final BasicEntityIdentifierMapping targetModelPart = (BasicEntityIdentifierMapping) associatedIdMapping;
+			final var targetModelPart = (BasicEntityIdentifierMapping) associatedIdMapping;
 
 			assert elementBootDescriptor.getColumns().size() == 1;
 			final Column keyColumn = elementBootDescriptor.getColumns().get( 0 );
 
-			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
+			final var keySelectableMapping = SelectableMappingImpl.from(
 					collectionTableName,
 					keyColumn,
 					targetModelPart.getJdbcMapping(),
@@ -508,7 +502,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					creationProcess.getCreationContext()
 			);
 
-			final BasicAttributeMapping keyModelPart = BasicAttributeMapping.withSelectableMapping(
+			final var keyModelPart = BasicAttributeMapping.withSelectableMapping(
 					associatedEntityMapping,
 					targetModelPart,
 					targetModelPart.getPropertyAccess(),
@@ -530,9 +524,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			);
 		}
 		else {
-			final CompositeIdentifierMapping targetModelPart = (CompositeIdentifierMapping) associatedIdMapping;
+			final var targetModelPart = (CompositeIdentifierMapping) associatedIdMapping;
 
-			final SelectableMappings keySelectableMappings = SelectableMappingsImpl.from(
+			final var keySelectableMappings = SelectableMappingsImpl.from(
 					collectionTableName,
 					elementBootDescriptor,
 					getPropertyOrder( elementBootDescriptor, creationProcess ),
@@ -568,7 +562,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			String targetPartName,
 			EntityMappingType entityMappingType,
 			CollectionPersister collectionDescriptor) {
-		final ModelPart namedPart = entityMappingType.findByPath( targetPartName );
+		final var namedPart = entityMappingType.findByPath( targetPartName );
 		if ( namedPart == null ) {
 			// This is expected to happen when processing a
 			// PostInitCallbackEntry because the callbacks
@@ -624,7 +618,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				( (CollectionMutationTarget) getCollectionDescriptor() )
 						.getCollectionTableMapping().getTableName();
 
-		final BasicValuedModelPart basicFkTarget = fkTargetModelPart.asBasicValuedModelPart();
+		final var basicFkTarget = fkTargetModelPart.asBasicValuedModelPart();
 		if ( basicFkTarget != null ) {
 			return createSimpleForeignKeyDescriptor(
 					fkBootDescriptorSource,
@@ -660,15 +654,15 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Value fkBootDescriptorSource,
 			MappingModelCreationProcess creationProcess) {
 		final int selectableCount = foreignKeyDescriptor.getJdbcTypeCount();
-		final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+		final var keyPart = foreignKeyDescriptor.getKeyPart();
 		for ( int i = 0; i < selectableCount; i++ ) {
-			final SelectableMapping selectable = keyPart.getSelectable( i );
+			final var selectable = keyPart.getSelectable( i );
 			if ( selectable.isInsertable() != fkBootDescriptorSource.isColumnInsertable( i )
 				|| selectable.isUpdateable() != fkBootDescriptorSource.isColumnUpdateable( i ) ) {
-				final AttributeMapping attributeMapping = keyPart.asAttributeMapping();
-				final ManagedMappingType declaringType =
+				final var attributeMapping = keyPart.asAttributeMapping();
+				final var declaringType =
 						attributeMapping == null ? null : attributeMapping.getDeclaringType();
-				final SelectableMappings selectableMappings = SelectableMappingsImpl.from(
+				final var selectableMappings = SelectableMappingsImpl.from(
 						keyPart.getContainingTableExpression(),
 						fkBootDescriptorSource,
 						getPropertyOrder( fkBootDescriptorSource, creationProcess ),
@@ -710,8 +704,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			columnInsertable = fkBootDescriptorSource.isColumnInsertable( 0 );
 			columnUpdateable = fkBootDescriptorSource.isColumnUpdateable( 0 );
 		}
-		final SimpleValue fkValue = (SimpleValue) fkBootDescriptorSource;
-		final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
+		final var fkValue = (SimpleValue) fkBootDescriptorSource;
+		final var keySelectableMapping = SelectableMappingImpl.from(
 				fkKeyTableName,
 				fkBootDescriptorSource.getSelectables().get( 0 ),
 				basicFkTargetPart.getJdbcMapping(),

@@ -15,11 +15,9 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 
 import org.jboss.logging.Logger;
 
-/**
- * JUnit 5 extension used to support {@link FailureExpected} handling
- *
- * @author Steve Ebersole
- */
+/// JUnit Jupiter extension used to support [FailureExpected] handling
+///
+/// @author Steve Ebersole
 public class FailureExpectedExtension
 		implements ExecutionCondition, BeforeEachCallback, AfterEachCallback, TestExecutionExceptionHandler {
 

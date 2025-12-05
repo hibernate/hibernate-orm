@@ -18,10 +18,6 @@ import org.hibernate.sql.exec.spi.JdbcParameters;
  * @author Steve Ebersole
  */
 public class JdbcParametersImpl implements JdbcParameters {
-	/**
-	 * Singleton access
-	 */
-	public static final JdbcParametersImpl NO_PARAMETERS = new JdbcParametersImpl();
 
 	private Set<JdbcParameter> jdbcParameters;
 

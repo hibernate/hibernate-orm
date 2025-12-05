@@ -100,7 +100,7 @@ public class ComponentInWhereClauseTest {
 		scope.inTransaction(
 				entityManager -> {
 					final String hql = "from Employee e where size( e.projects.previousProjects ) = 2";
-					final List resultsList = entityManager.createQuery( hql ).getResultList();
+					final List<?> resultsList = entityManager.createQuery( hql ).getResultList();
 					assertThat( resultsList.size(), is( 1 ) );
 				}
 		);

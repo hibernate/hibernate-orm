@@ -4,21 +4,20 @@
  */
 package org.hibernate.engine.config.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * The standard {@link ConfigurationService} implementation.
@@ -26,11 +25,6 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
  * @author Steve Ebersole
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			ConfigurationServiceImpl.class.getName()
-	);
 
 	private final Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;
@@ -62,11 +56,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	@Override
 	public <T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue) {
 		final Object value = settings.get( name );
-		if ( value == null ) {
-			return defaultValue;
-		}
-
-		return converter.convert( value );
+		return value == null ? defaultValue : converter.convert( value );
 	}
 
 	@Override
@@ -96,7 +86,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 						.classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
-				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );
+				CORE_LOGGER.debugf( "Unable to locate %s implementation class %s",
+						expected.getName(), candidate.toString() );
 				target = null;
 			}
 		}
@@ -105,10 +96,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 				return target.newInstance();
 			}
 			catch ( Exception e ) {
-				LOG.debugf(
-						"Unable to instantiate %s class %s", expected.getName(),
-						target.getName()
-				);
+				CORE_LOGGER.debugf( "Unable to instantiate %s class %s",
+						expected.getName(), target.getName() );
 			}
 		}
 		return null;

@@ -21,6 +21,11 @@ import jakarta.persistence.Timeout;
 @Incubating
 public interface Timeouts {
 	/**
+	 * Timeout of 1 second.
+	 */
+	Timeout ONE_SECOND = Timeout.seconds( 1 );
+
+	/**
 	 * Raw magic millisecond value for {@linkplain #NO_WAIT}
 	 */
 	int NO_WAIT_MILLI = 0;
@@ -75,18 +80,42 @@ public interface Timeouts {
 	}
 
 	/**
-	 * Is the timeout value a real value, as opposed to one of the
-	 * "magic values".  Functionally, returns whether the value is
-	 * greater than zero.
+	 * Whether the given timeout is one of the magic values - <ul>
+	 *     <li>{@linkplain #NO_WAIT}
+	 *     <li>{@linkplain #WAIT_FOREVER}
+	 *     <li>{@linkplain #SKIP_LOCKED}
+	 * </ul>
+	 *
+	 * @see #isMagicValue(int)
+	 */
+	static boolean isMagicValue(Timeout timeout) {
+		return !isRealTimeout( timeout );
+	}
+
+	/**
+	 * Whether the given value is one of the magic values - <ul>
+	 *     <li>{@linkplain #NO_WAIT_MILLI}
+	 *     <li>{@linkplain #WAIT_FOREVER_MILLI}
+	 *     <li>{@linkplain #SKIP_LOCKED_MILLI}
+	 * </ul>
+	 *
+	 * @see #isRealTimeout(int)
+	 */
+	static boolean isMagicValue(int millis) {
+		return !isRealTimeout( millis );
+	}
+
+	/**
+	 * Whether the timeout value is a real value, as opposed to one of the "magic values".
+	 * Functionally, returns whether the {@linkplain Timeout#milliseconds() value} is greater than zero.
 	 */
 	static boolean isRealTimeout(Timeout timeout) {
 		return isRealTimeout( timeout.milliseconds() );
 	}
 
 	/**
-	 * Is the timeout value a real value, as opposed to one of the
-	 * "magic values".  Functionally, returns whether the value is
-	 * greater than zero.
+	 * Whether the timeout value is a real value, as opposed to one of the "magic values".
+	 * Functionally, returns whether the value is greater than zero.
 	 */
 	static boolean isRealTimeout(int timeoutInMilliseconds) {
 		return timeoutInMilliseconds > 0;
@@ -106,5 +135,15 @@ public interface Timeouts {
 		// should never be negative here...
 		assert timeoutInMilliseconds >= 0;
 		return timeoutInMilliseconds == 0 ? 0 : Math.max( 1, Math.round( timeoutInMilliseconds / 1e3f ) );
+	}
+
+	static int fromHint(Object factoryHint) {
+		if ( factoryHint instanceof Timeout timeout ) {
+			return timeout.milliseconds();
+		}
+		if ( factoryHint instanceof Integer number ) {
+			return number;
+		}
+		return Integer.parseInt( factoryHint.toString() );
 	}
 }

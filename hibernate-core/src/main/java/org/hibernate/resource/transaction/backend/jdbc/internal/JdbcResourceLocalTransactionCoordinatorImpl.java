@@ -25,7 +25,6 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * An implementation of {@link TransactionCoordinator} based on managing a
@@ -91,7 +90,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	@Override
 	public void explicitJoin() {
 		// nothing to do here, but log a warning
-		JDBC_MESSAGE_LOGGER.callingJoinTransactionOnNonJtaEntityManager();
+		JDBC_LOGGER.callingJoinTransactionOnNonJtaEntityManager();
 	}
 
 	@Override
@@ -150,7 +149,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		// report entering into a "transactional context"
 		transactionCoordinatorOwner.startTransactionBoundary();
 
-		JDBC_LOGGER.trace( "Notifying resource-local transaction observers after begin" );
+		JDBC_LOGGER.notifyingResourceLocalObserversAfterBegin();
 
 		// trigger the Transaction-API-only after-begin callback
 		transactionCoordinatorOwner.afterTransactionBegin();
@@ -162,12 +161,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	private void beforeCompletionCallback() {
-		JDBC_LOGGER.trace( "Notifying resource-local transaction observers before completion" );
+		JDBC_LOGGER.notifyingResourceLocalObserversBeforeCompletion();
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( TransactionObserver observer : observers() ) {
-				observer.beforeCompletion();
+			for ( var transactionObserver : observers() ) {
+				transactionObserver.beforeCompletion();
 			}
 		}
 		catch (RuntimeException e) {
@@ -180,12 +179,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	private void afterCompletionCallback(boolean successful) {
-		JDBC_LOGGER.trace( "Notifying resource-local transaction observers after completion" );
+		JDBC_LOGGER.notifyingResourceLocalObserversAfterCompletion();
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, false );
+		for ( var transactionObserver : observers() ) {
+			transactionObserver.afterCompletion( successful, false );
 		}
 	}
 
@@ -262,14 +261,14 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
-					JDBC_LOGGER.debug( "Encountered failure rolling back failed commit", e2 );
+					JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
 				}
 				throw e;
 			}
 		}
 
 		private void commitRollbackOnly() {
-			JDBC_LOGGER.trace( "On commit, transaction was marked for rollback only, rolling back" );
+			JDBC_LOGGER.onCommitMarkedRollbackOnlyRollingBack();
 			rollback();
 			if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
 				throw new RollbackException( "Transaction was marked for rollback only" );
@@ -291,7 +290,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public TransactionStatus getStatus() {
-			final TransactionStatus status = jdbcResourceTransaction.getStatus();
+			final var status = jdbcResourceTransaction.getStatus();
 			return rollbackOnly && status == TransactionStatus.ACTIVE
 					? TransactionStatus.MARKED_ROLLBACK
 					: status;
@@ -301,7 +300,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void markRollbackOnly() {
 			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
 				if ( JDBC_LOGGER.isTraceEnabled() ) {
-					JDBC_LOGGER.trace( "JDBC transaction marked for rollback only (exception provided for stack trace)",
+					JDBC_LOGGER.jdbcTransactionMarkedForRollbackOnly(
 							new Exception( "exception just for purpose of providing stack trace" ) );
 				}
 				rollbackOnly = true;

@@ -17,10 +17,7 @@ import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import static org.hibernate.internal.util.ReflectHelper.isRecord;
 
 /**
  * EmbeddableRepresentationStrategy for an IdClass mapping
@@ -33,21 +30,15 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 			IdClassEmbeddable idClassEmbeddable,
 			boolean simplePropertyOrder,
 			Supplier<String[]> attributeNamesAccess) {
-		this.idClassType = idClassEmbeddable.getMappedJavaType();
-		final Class<?> javaTypeClass = idClassType.getJavaTypeClass();
-		if ( isRecord( javaTypeClass ) ) {
-			if ( simplePropertyOrder ) {
-				this.instantiator = new EmbeddableInstantiatorRecordStandard( javaTypeClass );
-			}
-			else {
-				this.instantiator = EmbeddableInstantiatorRecordIndirecting.of(
-						javaTypeClass,
-						attributeNamesAccess.get()
-				);
-			}
+		idClassType = idClassEmbeddable.getMappedJavaType();
+		final var javaTypeClass = idClassType.getJavaTypeClass();
+		if ( javaTypeClass.isRecord() ) {
+			instantiator = simplePropertyOrder
+					? new EmbeddableInstantiatorRecordStandard( javaTypeClass )
+					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get() );
 		}
 		else {
-			this.instantiator = new EmbeddableInstantiatorPojoStandard(
+			instantiator = new EmbeddableInstantiatorPojoStandard(
 					idClassType.getJavaTypeClass(),
 					() -> idClassEmbeddable
 			);
@@ -76,7 +67,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	@Override
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
-		final PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
 
 		if ( strategy == null ) {
 			throw new HibernateException(

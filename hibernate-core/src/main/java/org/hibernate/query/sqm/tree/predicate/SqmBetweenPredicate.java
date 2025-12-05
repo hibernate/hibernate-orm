@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -12,7 +13,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -99,17 +99,39 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmBetweenPredicate that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( expression, that.expression )
-			&& Objects.equals( lowerBound, that.lowerBound )
-			&& Objects.equals( upperBound, that.upperBound );
+			&& expression.equals( that.expression )
+			&& lowerBound.equals( that.lowerBound )
+			&& upperBound.equals( that.upperBound );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( isNegated(), expression, lowerBound, upperBound );
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + expression.hashCode();
+		result = 31 * result + lowerBound.hashCode();
+		result = 31 * result + upperBound.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBetweenPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& expression.isCompatible( that.expression )
+			&& lowerBound.isCompatible( that.lowerBound )
+			&& upperBound.isCompatible( that.upperBound );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = Boolean.hashCode( isNegated() );
+		result = 31 * result + expression.cacheHashCode();
+		result = 31 * result + lowerBound.cacheHashCode();
+		result = 31 * result + upperBound.cacheHashCode();
+		return result;
 	}
 
 	@Override

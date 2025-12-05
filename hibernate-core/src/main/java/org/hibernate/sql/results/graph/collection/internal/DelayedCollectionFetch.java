@@ -41,12 +41,9 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		// lazy attribute
-		if ( unfetched ) {
-			return new UnfetchedCollectionAssembler( getFetchedMapping() );
-		}
-		else {
-			return super.createAssembler( parent, creationState );
-		}
+		return unfetched
+				? new UnfetchedCollectionAssembler( getFetchedMapping() )
+				: super.createAssembler( parent, creationState );
 	}
 
 	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {

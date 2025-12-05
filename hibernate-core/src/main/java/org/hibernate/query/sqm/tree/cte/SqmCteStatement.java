@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -32,6 +34,8 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Subquery;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  * @author Christian Beikov
@@ -41,15 +45,18 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	private final SqmCteTable<T> cteTable;
 	private SqmSelectQuery<?> cteDefinition;
 	private CteMaterialization materialization;
-	private CteSearchClauseKind searchClauseKind;
-	private List<JpaSearchOrder> searchBySpecifications;
-	private String searchAttributeName;
-	private List<JpaCteCriteriaAttribute> cycleAttributes;
-	private String cycleMarkAttributeName;
-	private String cyclePathAttributeName;
-	private SqmLiteral<Object> cycleValue;
-	private SqmLiteral<Object> noCycleValue;
+	private @Nullable CteSearchClauseKind searchClauseKind;
+	private List<SqmSearchClauseSpecification> searchBySpecifications;
+	private @Nullable String searchAttributeName;
+	private List<SqmCteTableColumn> cycleAttributes;
+	private @Nullable String cycleMarkAttributeName;
+	private @Nullable String cyclePathAttributeName;
+	private @Nullable SqmLiteral<Object> cycleValue;
+	private @Nullable SqmLiteral<Object> noCycleValue;
 
+	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(
 			String name,
 			SqmSelectQuery<T> cteDefinition,
@@ -64,6 +71,9 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		this.cteTable = SqmCteTable.createStatementTable( name, this, cteDefinition );
 	}
 
+	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(
 			String name,
 			SqmSelectQuery<T> nonRecursiveQueryPart,
@@ -112,20 +122,18 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			NodeBuilder builder,
 			SqmCteContainer cteContainer,
 			SqmCteTable<T> cteTable,
-			SqmSelectQuery<?> cteDefinition,
 			CteMaterialization materialization,
-			CteSearchClauseKind searchClauseKind,
-			List<JpaSearchOrder> searchBySpecifications,
-			String searchAttributeName,
-			List<JpaCteCriteriaAttribute> cycleAttributes,
-			String cycleMarkAttributeName,
-			String cyclePathAttributeName,
-			SqmLiteral<Object> cycleValue,
-			SqmLiteral<Object> noCycleValue) {
+			@Nullable CteSearchClauseKind searchClauseKind,
+			List<SqmSearchClauseSpecification> searchBySpecifications,
+			@Nullable String searchAttributeName,
+			List<SqmCteTableColumn> cycleAttributes,
+			@Nullable String cycleMarkAttributeName,
+			@Nullable String cyclePathAttributeName,
+			@Nullable SqmLiteral<Object> cycleValue,
+			@Nullable SqmLiteral<Object> noCycleValue) {
 		super( builder );
 		this.cteContainer = cteContainer;
 		this.cteTable = cteTable;
-		this.cteDefinition = cteDefinition;
 		this.materialization = materialization;
 		this.searchClauseKind = searchClauseKind;
 		this.searchBySpecifications = searchBySpecifications;
@@ -149,7 +157,6 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 						nodeBuilder(),
 						cteContainer,
 						cteTable,
-						null,
 						materialization,
 						searchClauseKind,
 						searchBySpecifications,
@@ -168,7 +175,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public String getName() {
+	public @Nullable String getName() {
 		return cteTable.getName();
 	}
 
@@ -197,50 +204,52 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public CteSearchClauseKind getSearchClauseKind() {
+	public @Nullable CteSearchClauseKind getSearchClauseKind() {
 		return searchClauseKind;
 	}
 
 	@Override
 	public List<JpaSearchOrder> getSearchBySpecifications() {
-		return searchBySpecifications;
+		//noinspection unchecked
+		return (List<JpaSearchOrder>) (List<?>) searchBySpecifications;
 	}
 
 	@Override
-	public String getSearchAttributeName() {
+	public @Nullable String getSearchAttributeName() {
 		return searchAttributeName;
 	}
 
 	@Override
 	public List<JpaCteCriteriaAttribute> getCycleAttributes() {
-		return cycleAttributes;
+		//noinspection unchecked
+		return (List<JpaCteCriteriaAttribute>) (List<?>) cycleAttributes;
 	}
 
 	@Override
-	public String getCycleMarkAttributeName() {
+	public @Nullable String getCycleMarkAttributeName() {
 		return cycleMarkAttributeName;
 	}
 
 	@Override
-	public String getCyclePathAttributeName() {
+	public @Nullable String getCyclePathAttributeName() {
 		return cyclePathAttributeName;
 	}
 
 	@Override
-	public Object getCycleValue() {
+	public @Nullable Object getCycleValue() {
 		return cycleValue == null ? null : cycleValue.getLiteralValue();
 	}
 
 	@Override
-	public Object getNoCycleValue() {
+	public @Nullable Object getNoCycleValue() {
 		return noCycleValue == null ? null : noCycleValue.getLiteralValue();
 	}
 
-	public SqmLiteral<Object> getCycleLiteral() {
+	public @Nullable SqmLiteral<Object> getCycleLiteral() {
 		return cycleValue;
 	}
 
-	public SqmLiteral<Object> getNoCycleLiteral() {
+	public @Nullable SqmLiteral<Object> getNoCycleLiteral() {
 		return noCycleValue;
 	}
 
@@ -270,7 +279,8 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			}
 			this.searchClauseKind = kind;
 			this.searchAttributeName = searchAttributeName;
-			this.searchBySpecifications = orders;
+			//noinspection unchecked
+			this.searchBySpecifications = (List<SqmSearchClauseSpecification>) (List<?>) orders;
 		}
 	}
 
@@ -297,7 +307,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			if ( cycleValueLiteral.getNodeType() != noCycleValueLiteral.getNodeType() ) {
 				throw new IllegalArgumentException( "Inconsistent types for cycle mark values: [" + cycleValueLiteral.getNodeType() + ", " + noCycleValueLiteral.getNodeType() + "]" );
 			}
-			final List<JpaCteCriteriaAttribute> attributes = new ArrayList<>( cycleAttributes.size() );
+			final List<SqmCteTableColumn> attributes = new ArrayList<>( cycleAttributes.size() );
 			for ( JpaCteCriteriaAttribute cycleAttribute : cycleAttributes ) {
 				if ( !cteTable.getAttributes().contains( cycleAttribute ) ) {
 					throw new IllegalArgumentException(
@@ -306,7 +316,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 									"' passed, which is not part of the JpaCteCriteria!"
 					);
 				}
-				attributes.add( cycleAttribute );
+				attributes.add( (SqmCteTableColumn) cycleAttribute );
 			}
 			this.cycleMarkAttributeName = cycleMarkAttributeName;
 			this.cyclePathAttributeName = cyclePathAttributeName;
@@ -396,21 +406,22 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			hql.append( " set " );
 			hql.append( getCycleMarkAttributeName() );
 			hql.append( " to " );
-			getCycleLiteral().appendHqlString( hql, context );
+			castNonNull( getCycleLiteral() ).appendHqlString( hql, context );
 			hql.append( " default " );
-			getNoCycleLiteral().appendHqlString( hql, context );
-			if ( getCyclePathAttributeName() != null ) {
+			castNonNull( getNoCycleLiteral() ).appendHqlString( hql, context );
+			final String cyclePathAttributeName = getCyclePathAttributeName();
+			if ( cyclePathAttributeName != null ) {
 				hql.append( " using " );
-				hql.append( getCyclePathAttributeName() );
+				hql.append( cyclePathAttributeName );
 			}
 		}
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmCteStatement<?> that
-			&& Objects.equals( cteTable, that.cteTable )
-			&& Objects.equals( cteDefinition, that.cteDefinition )
+			&& cteTable.equals( that.cteTable )
+			&& cteDefinition.equals( that.cteDefinition )
 			&& materialization == that.materialization
 			&& searchClauseKind == that.searchClauseKind
 			&& Objects.equals( searchBySpecifications, that.searchBySpecifications )
@@ -424,8 +435,50 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( cteTable, cteDefinition, materialization,
-				searchClauseKind, searchBySpecifications, searchAttributeName,
-				cycleAttributes, cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue );
+		int result = cteTable.hashCode();
+		result = 31 * result + cteDefinition.hashCode();
+		result = 31 * result + materialization.hashCode();
+		result = 31 * result + Objects.hashCode( searchClauseKind );
+		result = 31 * result + Objects.hashCode( searchBySpecifications );
+		result = 31 * result + Objects.hashCode( searchAttributeName );
+		result = 31 * result + Objects.hashCode( cycleAttributes );
+		result = 31 * result + Objects.hashCode( cycleMarkAttributeName );
+		result = 31 * result + Objects.hashCode( cyclePathAttributeName );
+		result = 31 * result + Objects.hashCode( cycleValue );
+		result = 31 * result + Objects.hashCode( noCycleValue );
+		return result;
 	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmCteStatement<?> that
+			&& cteTable.isCompatible( that.cteTable )
+			&& cteDefinition.isCompatible( that.cteDefinition )
+			&& materialization == that.materialization
+			&& searchClauseKind == that.searchClauseKind
+			&& SqmCacheable.areCompatible( searchBySpecifications, that.searchBySpecifications )
+			&& Objects.equals( searchAttributeName, that.searchAttributeName )
+			&& SqmCacheable.areCompatible( cycleAttributes, that.cycleAttributes )
+			&& Objects.equals( cycleMarkAttributeName, that.cycleMarkAttributeName )
+			&& Objects.equals( cyclePathAttributeName, that.cyclePathAttributeName )
+			&& SqmCacheable.areCompatible( cycleValue, that.cycleValue )
+			&& SqmCacheable.areCompatible( noCycleValue, that.noCycleValue );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = cteTable.cacheHashCode();
+		result = 31 * result + cteDefinition.cacheHashCode();
+		result = 31 * result + materialization.hashCode();
+		result = 31 * result + Objects.hashCode( searchClauseKind );
+		result = 31 * result + SqmCacheable.cacheHashCode( searchBySpecifications );
+		result = 31 * result + Objects.hashCode( searchAttributeName );
+		result = 31 * result + SqmCacheable.cacheHashCode( cycleAttributes );
+		result = 31 * result + Objects.hashCode( cycleMarkAttributeName );
+		result = 31 * result + Objects.hashCode( cyclePathAttributeName );
+		result = 31 * result + SqmCacheable.cacheHashCode( cycleValue );
+		result = 31 * result + SqmCacheable.cacheHashCode( noCycleValue );
+		return result;
+	}
+
 }

@@ -18,12 +18,12 @@ public class StandardStatementCreator implements JdbcSelectExecutor.StatementCre
 	static final StandardStatementCreator[] INSTANCES;
 
 	static {
-		final ScrollMode[] values = ScrollMode.values();
-		final StandardStatementCreator[] instances = new StandardStatementCreator[values.length + 1];
-		for ( int i = 0; i < values.length; i++ ) {
-			instances[i] = new StandardStatementCreator( values[i] );
+		final var scrollModes = ScrollMode.values();
+		final var instances = new StandardStatementCreator[scrollModes.length + 1];
+		for ( int i = 0; i < scrollModes.length; i++ ) {
+			instances[i] = new StandardStatementCreator( scrollModes[i] );
 		}
-		instances[values.length] = new StandardStatementCreator( null );
+		instances[scrollModes.length] = new StandardStatementCreator( null );
 		INSTANCES = instances;
 	}
 
@@ -40,10 +40,9 @@ public class StandardStatementCreator implements JdbcSelectExecutor.StatementCre
 	}
 
 	@Override
-	public PreparedStatement createStatement(ExecutionContext executionContext, String sql) throws SQLException {
-		return executionContext.getSession()
-				.getJdbcCoordinator()
-				.getStatementPreparer()
+	public PreparedStatement createStatement(ExecutionContext executionContext, String sql)
+			throws SQLException {
+		return executionContext.getSession().getJdbcCoordinator().getStatementPreparer()
 				.prepareQueryStatement( sql, false, scrollMode );
 	}
 }

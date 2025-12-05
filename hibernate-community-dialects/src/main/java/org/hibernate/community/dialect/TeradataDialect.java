@@ -4,13 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Map;
-
 import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.naming.Identifier;
@@ -18,14 +13,18 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
+import org.hibernate.community.dialect.lock.internal.TeradataLockingSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.community.dialect.temptable.TeradataGlobalTemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -34,16 +33,20 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NonLockingClauseStrategy;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -57,6 +60,13 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -105,24 +115,19 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "role" );
 		registerKeyword( "account" );
 		registerKeyword( "class" );
+		registerKeyword( "title" );
 	}
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case TINYINT:
-				return "byteint";
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN,TINYINT -> "byteint";
 			//'bigint' has been there since at least version 13
-			case BIGINT:
-				return getVersion().isBefore( 13 ) ? "numeric(19,0)" : "bigint";
-			case BINARY:
-				return "byte($l)";
-			case VARBINARY:
-				return "varbyte($l)";
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case BIGINT -> getVersion().isBefore( 13 ) ? "numeric(19,0)" : "bigint";
+			case BINARY -> "byte($l)";
+			case VARBINARY -> "varbyte($l)";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -319,30 +324,14 @@ public class TeradataDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -351,8 +340,13 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return TeradataGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit preserve rows";
+		return TeradataGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
@@ -526,19 +520,25 @@ public class TeradataDialect extends Dialect {
 				return constraintName;
 			} );
 
+	private final LockingSupport lockingSupport = new TeradataLockingSupport();
+
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
+	protected LockingClauseStrategy buildLockingClauseStrategy(
+			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
+			LockOptions lockOptions,
+			Set<NavigablePath> rootPathsForLocking) {
+		if ( getVersion().isBefore( 14 ) ) {
+			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+		}
+		// we'll reuse the StandardLockingClauseStrategy for the collecting
+		// aspect and just handle the special rendering in the SQL AST translator
+		return super.buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
 	}
 
 	@Override
@@ -552,7 +552,7 @@ public class TeradataDialect extends Dialect {
 			return super.getWriteLockString( timeout );
 		}
 		String sMsg = " Locking row for write ";
-		if ( timeout == LockOptions.NO_WAIT ) {
+		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return sMsg + " nowait ";
 		}
 		return sMsg;
@@ -564,7 +564,7 @@ public class TeradataDialect extends Dialect {
 			return super.getReadLockString( timeout );
 		}
 		String sMsg = " Locking row for read  ";
-		if ( timeout == LockOptions.NO_WAIT ) {
+		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return sMsg + " nowait ";
 		}
 		return sMsg;
@@ -641,6 +641,14 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntax() {
 		return false;
+	}
+
+	/**
+	 * Teradata uses the syntax DELETE FROM <tablename> ALL instead of TRUNCATE <tablename>
+	 * @param tableName the name of the table
+	 */
+	public String getTruncateTableStatement(String tableName) {
+		return "delete from " + tableName + " all";
 	}
 
 	@Override

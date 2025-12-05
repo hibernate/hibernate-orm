@@ -19,7 +19,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
@@ -36,7 +35,7 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
@@ -47,7 +46,7 @@ import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOG
  * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final boolean TRACE_ENABLED = JDBC_MESSAGE_LOGGER.isTraceEnabled();
+	private static final boolean TRACE_ENABLED = JDBC_LOGGER.isTraceEnabled();
 
 	private transient final LogicalConnectionImplementor logicalConnection;
 	private transient final JdbcSessionOwner owner;
@@ -80,14 +79,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
 	private static LogicalConnectionImplementor createLogicalConnection(
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner) {
-		final ResourceRegistry resourceRegistry =
+		final var resourceRegistry =
 				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
 		return userSuppliedConnection == null
 				? new LogicalConnectionManagedImpl( owner, resourceRegistry )
@@ -103,7 +102,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.owner = owner;
 		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
@@ -147,13 +146,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.closingJdbcCoordinator( hashCode() );
+			JDBC_LOGGER.closingJdbcCoordinator( hashCode() );
 		}
-		Connection connection;
+		final Connection connection;
 		try {
 			if ( currentBatch != null ) {
-				JDBC_MESSAGE_LOGGER.closingUnreleasedBatch( hashCode() );
+				JDBC_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
+				currentBatch = null;
 			}
 		}
 		finally {
@@ -173,14 +173,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 					currentBatch.execute();
 				}
 				finally {
-					currentBatch.release();
+					if ( currentBatch != null ) {
+						currentBatch.release();
+						currentBatch = null;
+					}
 				}
 			}
 		}
 
-		currentBatch = owner.getJdbcSessionContext().getBatchBuilder()
-				.buildBatch( key, batchSize, statementGroupSupplier, this );
-
+		currentBatch =
+				owner.getJdbcSessionContext().getBatchBuilder()
+						.buildBatch( key, batchSize, statementGroupSupplier, this );
 		return currentBatch;
 	}
 
@@ -191,7 +194,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -199,12 +205,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
-			BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch( currentBatch.getKey().toLoggableString() );
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			try {
 				currentBatch.execute();
 			}
 			finally {
-				currentBatch.release();
+				if ( currentBatch != null ) { // abortBatch() might have been called
+					currentBatch.release();
+					currentBatch = null;
+				}
 			}
 		}
 	}
@@ -212,8 +224,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void abortBatch() {
 		if ( currentBatch != null ) {
-			BATCH_MESSAGE_LOGGER.abortBatch( currentBatch.getKey() .toLoggableString());
+			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
+				BATCH_MESSAGE_LOGGER.abortBatch(
+						currentBatch.getKey().toLoggableString() );
+			}
 			currentBatch.release();
+			currentBatch = null;
 		}
 	}
 
@@ -271,16 +287,16 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
+		final var connectionReleaseMode = connectionReleaseMode();
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
+			JDBC_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
 			}
 			else if ( hasRegisteredResources() ) {
-				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to registered resources" );
+				JDBC_LOGGER.trace( "Skipping aggressive release due to registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();
@@ -309,7 +325,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
-		final Connection connection = getLogicalConnection().getPhysicalConnection();
+		final var connection = getLogicalConnection().getPhysicalConnection();
 		try {
 			final T result = work.accept( new WorkExecutor<>(), connection );
 			afterStatementExecution();
@@ -334,7 +350,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 //			LOG.tracef( "Registering last query statement [%s] @%s", statement, hashCode() );
 //		}
 		if ( statement instanceof JdbcWrapper ) {
-			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
+			final var wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
 		}
 		else {
@@ -358,7 +374,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	private SqlExceptionHelper safeSqlExceptionHelper() {
-		final SqlExceptionHelper sqlExceptionHelper = sqlExceptionHelper();
+		final var sqlExceptionHelper = sqlExceptionHelper();
 		//Should always be non-null, but to make sure as the implementation is lazy:
 		return sqlExceptionHelper == null ? new SqlExceptionHelper( false ) : sqlExceptionHelper;
 	}
@@ -381,7 +397,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionBegin() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionAfterBegin( hashCode() );
+			JDBC_LOGGER.transactionAfterBegin( hashCode() );
 		}
 		owner.afterTransactionBegin();
 	}
@@ -389,7 +405,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void beforeTransactionCompletion() {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionBeforeCompletion( hashCode() );
+			JDBC_LOGGER.transactionBeforeCompletion( hashCode() );
 		}
 		owner.beforeTransactionCompletion();
 		logicalConnection.beforeTransactionCompletion();
@@ -398,7 +414,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		if ( TRACE_ENABLED ) {
-			JDBC_MESSAGE_LOGGER.transactionAfterCompletion(
+			JDBC_LOGGER.transactionAfterCompletion(
 					successful ? "successful" : "unsuccessful",
 					hashCode() );
 		}

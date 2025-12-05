@@ -358,7 +358,7 @@ This is our first glimpse of the advantages of using Jakarta Data repositories w
 ====
 
 If there is no `Book` with the given `isbn` in the database, the method throws `EmptyResultException`.
-There's two ways around this if that's not what we want:
+There are two ways around this if that's not what we want:
 
 - declare the method to return `Optional`, or
 - annotate the method `@jakarta.annotation.Nullable`.
@@ -405,7 +405,7 @@ Furthermore, if the parameter type is a list or array of the entity field type, 
 List<Book> books(String[] ibsn);
 ----
 
-Or course, an automatic query method might have multiple parameters.
+Of course, an automatic query method might have multiple parameters.
 
 [source,java]
 ----
@@ -468,7 +468,7 @@ List<Book> booksByTitle(String pattern);
 You might notice that:
 
 - The `from` clause is not required in JDQL, and is inferred from the return type of the repository method.
-- Since Jakarta Persistence 3.2, neither the `select` cause nor entity aliases (identification variables) are required in JPQL, finally standardizing a very old feature of HQL.
+- Since Jakarta Persistence 3.2, neither the `select` clause nor entity aliases (identification variables) are required in JPQL, finally standardizing a very old feature of HQL.
 
 This allows simple queries to be written in a very compact form.
 
@@ -499,7 +499,7 @@ The JPQL specification provides the `select new` construct for this.
 
 [source,java]
 ----
-@Query("select new AuthorBookSummary(b.isbn, a.ssn, a.name, b.title " +
+@Query("select new AuthorBookSummary(b.isbn, a.ssn, a.name, b.title) " +
        "from Author a join books b " +
        "where title like :pattern")
 List<AuthorBookSummary> summariesForTitle(String pattern);

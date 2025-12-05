@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.function.array;
 
-import java.lang.reflect.Array;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -81,12 +80,11 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 
 	@AllowReflection
 	public static <T> BasicType<?> resolveJsonArrayType(DomainType<T> elementType, TypeConfiguration typeConfiguration) {
-		final Class<?> arrayClass = Array.newInstance( elementType.getJavaType(), 0 ).getClass();
 		@SuppressWarnings("unchecked")
-		final BasicPluralJavaType<T> arrayJavaType =
+		final var arrayJavaType =
 				(BasicPluralJavaType<T>)
 						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( arrayClass );
+								.resolveArrayDescriptor( elementType.getJavaType() );
 		final JdbcTypeIndicators currentBaseSqlTypeIndicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
@@ -96,7 +94,12 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 				new DelegatingJdbcTypeIndicators( currentBaseSqlTypeIndicators ) {
 					@Override
 					public Integer getExplicitJdbcTypeCode() {
-						return SqlTypes.JSON;
+						return SqlTypes.JSON_ARRAY;
+					}
+
+					@Override
+					public  int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+						return SqlTypes.JSON_ARRAY;
 					}
 				}
 		);

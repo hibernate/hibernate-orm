@@ -14,6 +14,7 @@ import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -33,8 +34,8 @@ public class SqlStringGenerationContextImpl
 			JdbcEnvironment jdbcEnvironment,
 			Database database,
 			Map<String, Object> configurationMap) {
-		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
-		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
+		final String defaultCatalog = (String) configurationMap.get( MappingSettings.DEFAULT_CATALOG );
+		final String defaultSchema = (String) configurationMap.get( MappingSettings.DEFAULT_SCHEMA );
 		return create( jdbcEnvironment, database, defaultCatalog, defaultSchema, false );
 	}
 
@@ -48,8 +49,8 @@ public class SqlStringGenerationContextImpl
 			JdbcEnvironment jdbcEnvironment,
 			Database database,
 			Map<String, Object> configurationMap) {
-		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
-		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
+		final String defaultCatalog = (String) configurationMap.get( MappingSettings.DEFAULT_CATALOG );
+		final String defaultSchema = (String) configurationMap.get( MappingSettings.DEFAULT_SCHEMA );
 		return create( jdbcEnvironment, database, defaultCatalog, defaultSchema, true );
 	}
 
@@ -74,27 +75,34 @@ public class SqlStringGenerationContextImpl
 			String defaultCatalog,
 			String defaultSchema,
 			boolean forMigration) {
-		final Namespace.Name implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
-		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		final NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
-
-		Identifier actualDefaultCatalog = null;
-		if ( nameQualifierSupport.supportsCatalogs() ) {
-			actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
-			if ( actualDefaultCatalog == null ) {
-				actualDefaultCatalog = implicitNamespaceName.catalog();
-			}
-		}
-
-		Identifier actualDefaultSchema = null;
-		if ( nameQualifierSupport.supportsSchemas() ) {
-			actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
-			if ( defaultSchema == null ) {
-				actualDefaultSchema = implicitNamespaceName.schema();
-			}
-		}
-
+		final var implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
+		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		final var nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+		final Identifier actualDefaultCatalog =
+				actualDefaultCatalog( defaultCatalog, nameQualifierSupport, identifierHelper, implicitNamespaceName );
+		final Identifier actualDefaultSchema =
+				actualDefaultSchema( defaultSchema, nameQualifierSupport, identifierHelper, implicitNamespaceName );
 		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema, forMigration );
+	}
+
+	private static Identifier actualDefaultSchema(String defaultSchema, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, Namespace.Name implicitNamespaceName) {
+		if ( nameQualifierSupport.supportsSchemas() ) {
+			Identifier actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
+			return actualDefaultSchema == null ? implicitNamespaceName.schema() : actualDefaultSchema;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static Identifier actualDefaultCatalog(String defaultCatalog, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, Namespace.Name implicitNamespaceName) {
+		if ( nameQualifierSupport.supportsCatalogs() ) {
+			final Identifier actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
+			return actualDefaultCatalog == null ? implicitNamespaceName.catalog() : actualDefaultCatalog;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public static SqlStringGenerationContext forTests(JdbcEnvironment jdbcEnvironment) {
@@ -123,12 +131,12 @@ public class SqlStringGenerationContextImpl
 			Identifier defaultCatalog,
 			Identifier defaultSchema,
 			boolean migration) {
-		this.dialect = jdbcEnvironment.getDialect();
-		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
 		this.migration = migration;
+		dialect = jdbcEnvironment.getDialect();
+		identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
 	}
 
 	@Override
@@ -138,7 +146,9 @@ public class SqlStringGenerationContextImpl
 
 	@Override
 	public Identifier toIdentifier(String text) {
-		return identifierHelper != null ? identifierHelper.toIdentifier( text ) : Identifier.toIdentifier( text );
+		return identifierHelper != null
+				? identifierHelper.toIdentifier( text )
+				: Identifier.toIdentifier( text );
 	}
 
 	@Override
@@ -168,16 +178,21 @@ public class SqlStringGenerationContextImpl
 
 	@Override
 	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
-		QualifiedSequenceName nameToFormat;
+		return qualifiedObjectNameFormatter.format( nameToFormat( qualifiedName ), dialect );
+	}
+
+	private QualifiedSequenceName nameToFormat(QualifiedSequenceName qualifiedName) {
 		if ( qualifiedName.getCatalogName() != null
 				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
-			nameToFormat = new QualifiedSequenceName( null,
-					schemaWithDefault( qualifiedName.getSchemaName() ), qualifiedName.getSequenceName() );
+			return new QualifiedSequenceName(
+					null,
+					schemaWithDefault( qualifiedName.getSchemaName() ),
+					qualifiedName.getSequenceName()
+			);
 		}
 		else {
-			nameToFormat = qualifiedName;
+			return qualifiedName;
 		}
-		return qualifiedObjectNameFormatter.format( nameToFormat, dialect );
 	}
 
 	@Override

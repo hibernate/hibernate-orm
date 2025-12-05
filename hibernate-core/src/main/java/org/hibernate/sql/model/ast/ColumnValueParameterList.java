@@ -35,12 +35,14 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 
 	@Override
 	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
-		add(
-				new ColumnValueParameter(
-						new ColumnReference( tableReference, selectableMapping ),
-						parameterUsage
-				)
-		);
+		addColumValueParameter( selectableMapping );
+	}
+
+	public ColumnValueParameter addColumValueParameter(SelectableMapping selectableMapping) {
+		final ColumnValueParameter columnValueParameter =
+				new ColumnValueParameter( new ColumnReference( tableReference, selectableMapping ), parameterUsage );
+		add( columnValueParameter );
+		return columnValueParameter;
 	}
 
 	public void apply(Object parameterRef) {

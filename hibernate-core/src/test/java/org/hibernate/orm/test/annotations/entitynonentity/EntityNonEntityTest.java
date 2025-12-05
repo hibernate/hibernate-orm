@@ -4,104 +4,98 @@
  */
 package org.hibernate.orm.test.annotations.entitynonentity;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Emmanuel Bernard
  */
-public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testMix() {
-		GSM gsm = new GSM();
-		gsm.brand = "Sony";
-		gsm.frequency = 900;
-		gsm.isNumeric = true;
-		gsm.number = 2;
-		gsm.species = "human";
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( gsm );
-		tx.commit();
-		s.clear();
-		tx = s.beginTransaction();
-		gsm = s.get( GSM.class, gsm.id );
-		assertEquals( "top mapped superclass", 2, gsm.number );
-		assertNull( "non entity between mapped superclass and entity", gsm.species );
-		assertTrue( "mapped superclass under entity", gsm.isNumeric );
-		assertNull( "non entity under entity", gsm.brand );
-		assertEquals( "leaf entity", 900, gsm.frequency );
-		s.remove( gsm );
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	@JiraKey( value = "HHH-9856" )
-	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
-		try {
-			sessionFactory().getMappingMetamodel().findEntityDescriptor(Cellular.class);
-			sessionFactory().getMappingMetamodel().getEntityDescriptor( Cellular.class );
-
-		}
-		catch (UnknownEntityTypeException ignore) {
-			// expected
-		}
-
-		try {
-			sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( Cellular.class.getName() );
-		}
-		catch (UnknownEntityTypeException ignore) {
-			// expected
-		}
-
-		Session s = openSession();
-		s.beginTransaction();
-		try {
-			s.get( Cellular.class, 1 );
-			fail( "Expecting a failure" );
-		}
-		catch (UnknownEntityTypeException ignore) {
-			// expected
-		}
-		finally {
-			s.getTransaction().commit();
-			s.close();
-		}
-
-		s = openSession();
-		s.beginTransaction();
-		try {
-			s.get( Cellular.class.getName(), 1 );
-			fail( "Expecting a failure" );
-		}
-		catch (UnknownEntityTypeException ignore) {
-			// expected
-		}
-		finally {
-			s.getTransaction().commit();
-			s.close();
-		}
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+@DomainModel(
+		annotatedClasses = {
 				Phone.class,
 				Voice.class,
 				// Adding Cellular here is a test for HHH-9855
 				Cellular.class,
 				GSM.class
-		};
+		}
+)
+@SessionFactory
+public class EntityNonEntityTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						scope.getSessionFactory().getSchemaManager().truncateMappedObjects()
+		);
+	}
+
+	@Test
+	public void testMix(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					GSM gsm = new GSM();
+					gsm.brand = "Sony";
+					gsm.frequency = 900;
+					gsm.isNumeric = true;
+					gsm.number = 2;
+					gsm.species = "human";
+					session.persist( gsm );
+					session.getTransaction().commit();
+					session.clear();
+					session.beginTransaction();
+					gsm = session.get( GSM.class, gsm.id );
+
+					assertThat( gsm.number )
+							.describedAs( "top mapped superclass" )
+							.isEqualTo( 2 );
+					assertThat( gsm.species )
+							.describedAs( "non entity between mapped superclass and entity" )
+							.isNull();
+					assertThat( gsm.isNumeric )
+							.describedAs( "mapped superclass under entity" )
+							.isTrue();
+					assertThat( gsm.brand )
+							.describedAs( "non entity under entity" )
+							.isNull();
+					assertThat( gsm.frequency )
+							.describedAs( "leaf entity" )
+							.isEqualTo( 900 );
+
+					session.remove( gsm );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey(value = "HHH-9856")
+	public void testGetAndFindNonEntityThrowsIllegalArgumentException(SessionFactoryScope scope) {
+		assertThrows( UnknownEntityTypeException.class, () -> {
+			scope.getSessionFactory().getMappingMetamodel().findEntityDescriptor( Cellular.class );
+			scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Cellular.class );
+		} );
+
+		assertThrows( UnknownEntityTypeException.class, () ->
+				scope.getSessionFactory().getMappingMetamodel().getMappingMetamodel()
+						.getEntityDescriptor( Cellular.class.getName() )
+		);
+
+		assertThrows( UnknownEntityTypeException.class, () -> scope.inTransaction(
+				session ->
+						session.get( Cellular.class, 1 )
+		) );
+
+		assertThrows( UnknownEntityTypeException.class, () -> scope.inTransaction(
+				session ->
+						session.get( Cellular.class.getName(), 1 )
+		) );
 	}
 }

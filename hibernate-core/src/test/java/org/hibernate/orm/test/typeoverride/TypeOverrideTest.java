@@ -15,7 +15,6 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -54,7 +53,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
 		if ( CockroachDialect.class.isInstance( dialect ) ) {
 			assertSame(
-					VarbinaryJdbcType.INSTANCE,
+					BlobJdbcType.MATERIALIZED,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}

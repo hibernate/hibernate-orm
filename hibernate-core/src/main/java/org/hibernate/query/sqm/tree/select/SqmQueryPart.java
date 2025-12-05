@@ -7,11 +7,13 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -27,10 +29,10 @@ import static java.util.Collections.emptyList;
 public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<T> {
 	private final NodeBuilder nodeBuilder;
 
-	private SqmOrderByClause orderByClause;
+	private @Nullable SqmOrderByClause orderByClause;
 
-	private SqmExpression<? extends Number> offsetExpression;
-	private SqmExpression<? extends Number> fetchExpression;
+	private @Nullable SqmExpression<? extends Number> offsetExpression;
+	private @Nullable SqmExpression<? extends Number> fetchExpression;
 	private FetchClauseType fetchClauseType = FetchClauseType.ROWS_ONLY;
 
 	public SqmQueryPart(NodeBuilder nodeBuilder) {
@@ -78,37 +80,37 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return nodeBuilder;
 	}
 
-	public SqmOrderByClause getOrderByClause() {
+	public @Nullable SqmOrderByClause getOrderByClause() {
 		return orderByClause;
 	}
 
-	public void setOrderByClause(SqmOrderByClause orderByClause) {
+	public void setOrderByClause(@Nullable SqmOrderByClause orderByClause) {
 		this.orderByClause = orderByClause;
 	}
 
-	public SqmExpression<? extends Number> getFetchExpression() {
+	public @Nullable SqmExpression<? extends Number> getFetchExpression() {
 		return fetchExpression;
 	}
 
-	public SqmExpression<? extends Number> getOffsetExpression() {
+	public @Nullable SqmExpression<? extends Number> getOffsetExpression() {
 		return offsetExpression;
 	}
 
-	public void setOffsetExpression(SqmExpression<? extends Number> offsetExpression) {
+	public void setOffsetExpression(@Nullable SqmExpression<? extends Number> offsetExpression) {
 		if ( offsetExpression != null ) {
 			offsetExpression.applyInferableType( nodeBuilder.getIntegerType() );
 		}
 		this.offsetExpression = offsetExpression;
 	}
 
-	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression) {
+	public void setFetchExpression(@Nullable SqmExpression<? extends Number> fetchExpression) {
 		setFetchExpression( fetchExpression, FetchClauseType.ROWS_ONLY );
 	}
 
-	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression, FetchClauseType fetchClauseType) {
+	public void setFetchExpression(@Nullable SqmExpression<? extends Number> fetchExpression, FetchClauseType fetchClauseType) {
 		if ( fetchExpression == null ) {
 			this.fetchExpression = null;
-			this.fetchClauseType = null;
+			this.fetchClauseType = FetchClauseType.ROWS_ONLY;
 		}
 		else {
 			if ( fetchClauseType == null ) {
@@ -130,39 +132,41 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public List<SqmSortSpecification> getSortSpecifications() {
-		return getOrderByClause() == null ? emptyList() : getOrderByClause().getSortSpecifications();
+		final SqmOrderByClause orderByClause = getOrderByClause();
+		return orderByClause == null ? emptyList() : orderByClause.getSortSpecifications();
 	}
 
 	@Override
 	public SqmQueryPart<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
-		if ( getOrderByClause() == null ) {
-			setOrderByClause( new SqmOrderByClause() );
+		SqmOrderByClause orderByClause = getOrderByClause();
+		if ( orderByClause == null ) {
+			setOrderByClause( orderByClause = new SqmOrderByClause() );
 		}
 
 		//noinspection unchecked
-		getOrderByClause().setSortSpecifications( (List<SqmSortSpecification>) sortSpecifications );
+		orderByClause.setSortSpecifications( (List<SqmSortSpecification>) sortSpecifications );
 
 		return this;
 	}
 
 	@Override
-	public JpaExpression<? extends Number> getOffset() {
+	public @Nullable JpaExpression<? extends Number> getOffset() {
 		return getOffsetExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setOffset(JpaExpression<? extends Number> offset) {
+	public SqmQueryPart<T> setOffset(@Nullable JpaExpression<? extends Number> offset) {
 		setOffsetExpression( (SqmExpression<? extends Number>) offset );
 		return this;
 	}
 
 	@Override
-	public JpaExpression<? extends Number> getFetch() {
+	public @Nullable JpaExpression<? extends Number> getFetch() {
 		return getFetchExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setFetch(JpaExpression<? extends Number> fetch) {
+	public SqmQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
@@ -176,20 +180,22 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	public abstract void validateQueryStructureAndFetchOwners();
 
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( orderByClause != null && !orderByClause.getSortSpecifications().isEmpty() ) {
+		final List<SqmSortSpecification> sortSpecifications = getSortSpecifications();
+		if ( !sortSpecifications.isEmpty() ) {
 			hql.append( " order by " );
-			final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
 			sortSpecifications.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < sortSpecifications.size(); i++ ) {
 				hql.append( ", " );
 				sortSpecifications.get( i ).appendHqlString( hql, context );
 			}
 
+			final SqmExpression<? extends Number> offsetExpression = this.offsetExpression;
 			if ( offsetExpression != null ) {
 				hql.append( " offset " );
 				offsetExpression.appendHqlString( hql, context );
 				hql.append( " rows " );
 			}
+			final SqmExpression<? extends Number> fetchExpression = this.fetchExpression;
 			if ( fetchExpression != null ) {
 				hql.append( " fetch first " );
 				fetchExpression.appendHqlString( hql, context );
@@ -204,8 +210,9 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
 			&& Objects.equals( orderByClause, that.orderByClause )
 			&& Objects.equals( offsetExpression, that.offsetExpression )
 			&& Objects.equals( fetchExpression, that.fetchExpression )
@@ -214,6 +221,29 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( orderByClause, offsetExpression, fetchExpression, fetchClauseType );
+		int result = Objects.hashCode( orderByClause );
+		result = 31 * result + Objects.hashCode( offsetExpression );
+		result = 31 * result + Objects.hashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmQueryPart<?> that
+			&& getClass() == that.getClass()
+			&& SqmCacheable.areCompatible( orderByClause, that.orderByClause )
+			&& SqmCacheable.areCompatible( offsetExpression, that.offsetExpression )
+			&& SqmCacheable.areCompatible( fetchExpression, that.fetchExpression )
+			&& fetchClauseType == that.fetchClauseType;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = SqmCacheable.cacheHashCode( orderByClause );
+		result = 31 * result + SqmCacheable.cacheHashCode( offsetExpression );
+		result = 31 * result + SqmCacheable.cacheHashCode( fetchExpression );
+		result = 31 * result + fetchClauseType.hashCode();
+		return result;
 	}
 }

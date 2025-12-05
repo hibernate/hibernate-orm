@@ -4,32 +4,37 @@
  */
 package org.hibernate.orm.test.fetchprofiles;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.FetchProfile;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.metamodel.CollectionClassification;
-
+import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-@JiraKey( value = "HHH-12297")
-public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-12297")
+@DomainModel(annotatedClasses = {
+		CollectionLoadedInTwoPhaseLoadTest.Person.class,
+		CollectionLoadedInTwoPhaseLoadTest.OrgUnit.class
+})
+@SessionFactory(generateStatistics = true)
+public class CollectionLoadedInTwoPhaseLoadTest {
 
 	// NOTE
 	// there are two fetch profiles because when I use only one the relation OrgUnit.people
@@ -44,39 +49,40 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 	private final String P_1 = "p_1";
 	private final String P_2 = "p_2";
 
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
-	}
-
 	@Test
-	public void testIfEverythingIsLoaded() {
-		createSampleData();
-		sessionFactory().getStatistics().clear();
+	public void testIfEverythingIsLoaded(SessionFactoryScope factoryScope) {
+		final StatisticsImplementor statistics = factoryScope.getSessionFactory().getStatistics();
+		assert statistics.isStatisticsEnabled();
+		statistics.clear();
+
+		final OrgUnit ou1 = factoryScope.fromTransaction( (session) -> {
+			session.enableFetchProfile( FETCH_PROFILE_NAME );
+			session.enableFetchProfile( FETCH_PROFILE_NAME_2 );
+			return session.find( OrgUnit.class, OU_1 );
+		} );
+
+		assertEquals( 4, statistics.getEntityLoadCount() );
+
 		try {
-			OrgUnit ou1 = this.loadOrgUnitWithFetchProfile( OU_1 );
 			Person p1 = ou1.findPerson( P_1 );
 			OrgUnit ou2 = p1.findOrgUnit( OU_2 );
 			Person p2 = ou2.findPerson( P_2 );
 			@SuppressWarnings( "unused" )
 			String email = p2.getEmail();
-			assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
 		}
 		catch (LazyInitializationException e) {
 			fail( "Everything should be initialized" );
 		}
 	}
 
-	public OrgUnit loadOrgUnitWithFetchProfile(String groupId) {
-		return doInHibernate( this::sessionFactory, session -> {
-			session.enableFetchProfile( FETCH_PROFILE_NAME );
-			session.enableFetchProfile( FETCH_PROFILE_NAME_2 );
-			return session.get( OrgUnit.class, groupId );
-		} );
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
 	}
 
-	private void createSampleData() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	void createSampleData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
 			OrgUnit ou1 = new OrgUnit( OU_1, "org unit one" );
 			OrgUnit ou2 = new OrgUnit( OU_2, "org unit two" );
 			Person p1 = new Person( P_1, "p1@coompany.com" );
@@ -88,14 +94,6 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 
 			session.persist( ou1 );
 		} );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				OrgUnit.class
-		};
 	}
 
 	@Entity(name = "OrgUnit")

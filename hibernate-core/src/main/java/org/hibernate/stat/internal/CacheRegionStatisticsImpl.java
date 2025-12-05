@@ -7,6 +7,7 @@ package org.hibernate.stat.internal;
 import java.io.Serializable;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.spi.ExtendedStatisticsSupport;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheRegionStatistics;
@@ -17,7 +18,8 @@ import org.hibernate.stat.CacheRegionStatistics;
  * @author Alex Snaps
  */
 public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Serializable {
-	private final transient Region region;
+	private final String regionName;
+	private final transient @Nullable ExtendedStatisticsSupport extendedStatisticsSupport;
 
 	private final LongAdder hitCount = new LongAdder();
 	private final LongAdder missCount = new LongAdder();
@@ -25,12 +27,16 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 	private final LongAdder removeCount = new LongAdder();
 
 	CacheRegionStatisticsImpl(Region region) {
-		this.region = region;
+		regionName = region.getName();
+		extendedStatisticsSupport =
+				region instanceof ExtendedStatisticsSupport extended
+						? extended
+						: null;
 	}
 
 	@Override
 	public String getRegionName() {
-		return region.getName();
+		return regionName;
 	}
 
 	@Override
@@ -55,23 +61,23 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public long getElementCountInMemory() {
-		return region instanceof ExtendedStatisticsSupport extended
-				? extended.getElementCountInMemory()
-				: NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getElementCountInMemory();
 	}
 
 	@Override
 	public long getElementCountOnDisk() {
-		return region instanceof ExtendedStatisticsSupport extended
-				? extended.getElementCountOnDisk()
-				: NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getElementCountOnDisk();
 	}
 
 	@Override
 	public long getSizeInMemory() {
-		return region instanceof ExtendedStatisticsSupport extended
-				? extended.getSizeInMemory()
-				: NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return extendedStatisticsSupport == null
+				? NO_EXTENDED_STAT_SUPPORT_RETURN
+				: extendedStatisticsSupport.getSizeInMemory();
 	}
 
 	void incrementHitCount() {
@@ -93,16 +99,18 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public String toString() {
-		String buf = "CacheRegionStatistics" +
-				"[region=" + region.getName() +
-				",hitCount=" + this.hitCount +
-				",missCount=" + this.missCount +
-				",putCount=" + this.putCount +
-				",removeCount=" + this.removeCount +
-				",elementCountInMemory=" + this.getElementCountInMemory() +
-				",elementCountOnDisk=" + this.getElementCountOnDisk() +
-				",sizeInMemory=" + this.getSizeInMemory() +
-				']';
-		return buf;
+		final var string =
+				new StringBuilder("CacheRegionStatistics")
+						.append( "[region=" ).append( regionName )
+						.append( ",hitCount=" ).append( hitCount )
+						.append( ",missCount=" ).append( missCount )
+						.append( ",putCount=" ).append( putCount )
+						.append( ",removeCount=" ).append( removeCount );
+		if ( extendedStatisticsSupport != null ) {
+			string.append( ",elementCountInMemory=" ).append( getElementCountInMemory() )
+					.append( ",elementCountOnDisk=" ).append( getElementCountOnDisk() )
+					.append( ",sizeInMemory=" ).append( getSizeInMemory() );
+		}
+		return string.append( ']' ).toString();
 	}
 }

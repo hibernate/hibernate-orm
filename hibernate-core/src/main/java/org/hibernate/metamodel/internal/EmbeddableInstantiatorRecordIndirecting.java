@@ -36,8 +36,8 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 		}
 
 		try {
-			final Object[] originalValues = valuesAccess.getValues();
-			final Object[] values = new Object[originalValues.length];
+			final var originalValues = valuesAccess.getValues();
+			final var values = new Object[originalValues.length];
 			for ( int i = 0; i < values.length; i++ ) {
 				values[i] = originalValues[index[i]];
 			}
@@ -62,8 +62,8 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 			}
 
 			try {
-				final Object[] originalValues = valuesAccess.getValues();
-				final Object[] values = new Object[index.length];
+				final var originalValues = valuesAccess.getValues();
+				final var values = new Object[index.length];
 				for ( int i = 0; i < values.length; i++ ) {
 					final int index = this.index[i];
 					if ( index >= 0 ) {

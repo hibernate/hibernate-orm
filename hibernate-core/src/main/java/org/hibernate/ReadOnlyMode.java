@@ -22,9 +22,10 @@ public enum ReadOnlyMode implements FindOption {
 	/**
 	 * Specifies that an entity should be loaded in read-only mode.
 	 * <p>
-	 * Read-only entities are not dirty-checked and snapshots of
+	 * Read-only entities are not dirty-checked, and snapshots of
 	 * persistent state are not maintained. Read-only entities can
-	 * be modified, but changes are not persisted.
+	 * be modified, but a modification to a field of a read-only
+	 * entity is not made persistent
 	 */
 	READ_ONLY,
 	/**

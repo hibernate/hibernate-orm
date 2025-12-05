@@ -6,8 +6,8 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -77,13 +77,24 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmGroupedPredicate that
-			&& Objects.equals( subPredicate, that.subPredicate );
+			&& subPredicate.equals( that.subPredicate );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode( subPredicate );
+		return subPredicate.hashCode();
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmGroupedPredicate that
+			&& subPredicate.isCompatible( that.subPredicate );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return subPredicate.cacheHashCode();
 	}
 }

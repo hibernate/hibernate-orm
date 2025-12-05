@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.events;
 
-import java.util.Collection;
-import java.util.Collections;
-
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -15,57 +11,62 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.spi.EventEngineContributions;
 import org.hibernate.event.spi.EventEngineContributor;
 import org.hibernate.event.spi.EventType;
-
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.MatcherAssert.assertThat;
+import java.util.Collection;
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-13890")
-public class EventEngineContributionsTests extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
-		super.configureBootstrapServiceRegistryBuilder( bsrb );
-		bsrb.applyClassLoaderService( new TestingClassLoaderService() );
-	}
+@JiraKey(value = "HHH-13890")
+@BootstrapServiceRegistry(
+		javaServices = @BootstrapServiceRegistry.JavaService(role = EventEngineContributor.class,
+				impl = EventEngineContributionsTests.ConfiguredContributor.class)
+)
+@SessionFactory
+public class EventEngineContributionsTests {
 
 	@Test
-	public void testCustomEventAccess() {
-		final EventEngine eventEngine = sessionFactory().getEventEngine();
+	public void testCustomEventAccess(SessionFactoryScope scope) {
+		final EventEngine eventEngine = scope.getSessionFactory().getEventEngine();
 
 		{
-			final EventType<SexyRxySaveListener> saveEventType = eventEngine.findRegisteredEventType( SexyRxySaveListener.EVENT_NAME );
-			assertThat( saveEventType, sameInstance( TheContributor.INSTANCE.saveEventType ) );
-			assertThat( saveEventType.isStandardEvent(), is( false ) );
+			final EventType<SexyRxySaveListener> saveEventType = eventEngine.findRegisteredEventType(
+					SexyRxySaveListener.EVENT_NAME );
+			assertThat( saveEventType ).isSameAs( TheContributor.INSTANCE.saveEventType );
+			assertThat( saveEventType.isStandardEvent() ).isFalse();
 
 			final EventListenerRegistry listenerRegistry = eventEngine.getListenerRegistry();
-			final EventListenerGroup<SexyRxySaveListener> listenerGroup = listenerRegistry.getEventListenerGroup( saveEventType );
-			assertThat( listenerGroup.count(), is( 1 ) );
+			final EventListenerGroup<SexyRxySaveListener> listenerGroup = listenerRegistry.getEventListenerGroup(
+					saveEventType );
+			assertThat( listenerGroup.count() ).isEqualTo( 1 );
 
 			listenerGroup.fireEventOnEachListener( RxySaveEvent.INSTANCE, SexyRxySaveListener::doIt );
 
-			assertThat( SexyRxySaveListener.INSTANCE.didIt, is(true ) );
+			assertThat( SexyRxySaveListener.INSTANCE.didIt ).isTrue();
 		}
 
 		{
-			final EventType<SexyRxyPersistListener> persistEventType = eventEngine.findRegisteredEventType( SexyRxyPersistListener.EVENT_NAME );
-			assertThat( persistEventType, sameInstance( TheContributor.INSTANCE.persistEventType ) );
-			assertThat( persistEventType.isStandardEvent(), is( false ) );
+			final EventType<SexyRxyPersistListener> persistEventType = eventEngine.findRegisteredEventType(
+					SexyRxyPersistListener.EVENT_NAME );
+			assertThat( persistEventType ).isSameAs( TheContributor.INSTANCE.persistEventType );
+			assertThat( persistEventType.isStandardEvent() ).isFalse();
 
 			final EventListenerRegistry listenerRegistry = eventEngine.getListenerRegistry();
-			final EventListenerGroup<SexyRxyPersistListener> listenerGroup = listenerRegistry.getEventListenerGroup( persistEventType );
-			assertThat( listenerGroup.count(), is( 1 ) );
+			final EventListenerGroup<SexyRxyPersistListener> listenerGroup = listenerRegistry.getEventListenerGroup(
+					persistEventType );
+			assertThat( listenerGroup.count() ).isEqualTo( 1 );
 
 			listenerGroup.fireEventOnEachListener( RxyPersistEvent.INSTANCE, SexyRxyPersistListener::doIt );
 
-			assertThat( SexyRxyPersistListener.INSTANCE.didIt, is(true ) );
+			assertThat( SexyRxyPersistListener.INSTANCE.didIt ).isTrue();
 		}
 	}
 
@@ -101,6 +102,14 @@ public class EventEngineContributionsTests extends BaseNonConfigCoreFunctionalTe
 
 		public void doIt(RxyPersistEvent event) {
 			didIt = true;
+		}
+	}
+
+	public static class ConfiguredContributor implements EventEngineContributor {
+
+		@Override
+		public void contribute(EventEngineContributions target) {
+			TheContributor.INSTANCE.contribute( target );
 		}
 	}
 

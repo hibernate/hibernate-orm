@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.boot.ResourceStreamLocator;
@@ -11,6 +12,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -18,6 +20,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -30,10 +33,12 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -155,6 +160,34 @@ public class ArrayAggregateTest {
 			List<String[]> results = em.createQuery( cq ).getResultList();
 			assertEquals( 1, results.size() );
 			assertArrayEquals( new String[]{ "abc", "def", null }, results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19666")
+	public void testNonExistingArrayType(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Integer[]> results = em.createQuery( "select array_agg(e.id) within group (order by e.id) from EntityOfBasics e", Integer[].class )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertArrayEquals( new Integer[]{ 1, 2, 3 }, results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19681")
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void testJsonBJdbcArray(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			String sql = "select groupId, array_agg(json_values) " +
+					"from (VALUES (1,'[1,2]'::jsonb),(1,'[10,20]'::jsonb)) as row(groupId,json_values) " +
+					"group by groupId";
+
+			List<Object[]> result = session.createNativeQuery(sql, Object[].class).getResultList();
+			assertEquals(1,result.size());
+			assertEquals(2, result.get(0).length);
+			assertEquals( 1,result.get(0)[0] );
+			assertEquals( "[[1, 2], [10, 20]]", Arrays.toString((String[])result.get(0)[1]) );
 		} );
 	}
 

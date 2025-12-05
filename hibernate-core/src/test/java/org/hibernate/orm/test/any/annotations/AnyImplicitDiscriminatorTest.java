@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DomainModel(
 		annotatedPackageNames = "org.hibernate.orm.test.any.annotations",
@@ -244,7 +244,7 @@ public class AnyImplicitDiscriminatorTest {
 						final ImplicitPropertySet result = query.setParameter( "name", "string" ).uniqueResult();
 						assertNotNull( result );
 						assertNotNull( result.getSomeProperty() );
-						assertTrue( result.getSomeProperty() instanceof StringProperty );
+						assertInstanceOf( StringProperty.class, result.getSomeProperty() );
 						assertEquals( "Alex", result.getSomeProperty().asString() );
 						assertNotNull( result.getGeneralProperties() );
 						assertEquals( 1, result.getGeneralProperties().size() );
@@ -255,7 +255,7 @@ public class AnyImplicitDiscriminatorTest {
 						final ImplicitPropertySet result = query.setParameter( "name", "integer" ).uniqueResult();
 						assertNotNull( result );
 						assertNotNull( result.getSomeProperty() );
-						assertTrue( result.getSomeProperty() instanceof IntegerProperty );
+						assertInstanceOf( IntegerProperty.class, result.getSomeProperty() );
 						assertEquals( "33", result.getSomeProperty().asString() );
 						assertNotNull( result.getGeneralProperties() );
 						assertEquals( 1, result.getGeneralProperties().size() );
@@ -279,12 +279,12 @@ public class AnyImplicitDiscriminatorTest {
 
 					Property property = actualMap.getProperties().get( "name" );
 					assertNotNull( property );
-					assertTrue( property instanceof StringProperty );
+					assertInstanceOf( StringProperty.class, property );
 					assertEquals( "Alex", property.asString() );
 
 					property = actualMap.getProperties().get( "age" );
 					assertNotNull( property );
-					assertTrue( property instanceof IntegerProperty );
+					assertInstanceOf( IntegerProperty.class, property );
 					assertEquals( "33", property.asString() );
 				}
 		);
@@ -307,7 +307,7 @@ public class AnyImplicitDiscriminatorTest {
 
 					Property property = actualList.getSomeProperty();
 					assertNotNull( property );
-					assertTrue( property instanceof LongProperty );
+					assertInstanceOf( LongProperty.class, property );
 					assertEquals( "121", property.asString() );
 
 					assertEquals( "Alex", actualList.getGeneralProperties().get( 0 )
@@ -336,7 +336,7 @@ public class AnyImplicitDiscriminatorTest {
 				}
 		);
 
-		assertTrue( result.getSomeProperty() instanceof StringProperty );
+		assertInstanceOf( StringProperty.class, result.getSomeProperty() );
 		assertEquals( "Alex", result.getSomeProperty().asString() );
 	}
 

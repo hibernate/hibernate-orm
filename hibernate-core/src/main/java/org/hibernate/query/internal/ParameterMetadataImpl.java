@@ -6,7 +6,6 @@ package org.hibernate.query.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,8 +30,11 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import jakarta.persistence.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -52,10 +54,10 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	private final @Nullable QueryParameterBindingsImpl queryParameterBindingsTemplate;
 
 	private ParameterMetadataImpl() {
-		this.queryParameters = Collections.emptyMap();
-		this.queryParametersByName = null;
-		this.queryParametersByPosition = null;
-		this.queryParameterBindingsTemplate = null;
+		queryParameters = emptyMap();
+		queryParametersByName = null;
+		queryParametersByPosition = null;
+		queryParameterBindingsTemplate = null;
 	}
 
 	public ParameterMetadataImpl(Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> queryParameters) {
@@ -65,14 +67,14 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		Map<Integer, QueryParameterImplementor<?>> tempQueryParametersByPosition = null;
 		// if we have any ordinal parameters, make sure the numbers
 		// start with 1 and are contiguous
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
-			if ( queryParameter.getPosition() != null ) {
+		for ( var queryParameter : queryParameters.keySet() ) {
+			if ( queryParameter.isOrdinal() ) {
 				if ( tempQueryParametersByPosition == null ) {
 					tempQueryParametersByPosition = new HashMap<>();
 				}
 				tempQueryParametersByPosition.put( queryParameter.getPosition(), queryParameter );
 			}
-			else if ( queryParameter.getName() != null ) {
+			else if ( queryParameter.isNamed() ) {
 				if ( tempQueryParametersByName == null ) {
 					tempQueryParametersByName = new HashMap<>();
 				}
@@ -83,42 +85,42 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		if ( tempQueryParametersByPosition != null ) {
 			verifyOrdinalParamLabels( tempQueryParametersByPosition.keySet() );
 		}
-		this.queryParametersByPosition = tempQueryParametersByPosition;
-		this.queryParametersByName = tempQueryParametersByName;
-		this.queryParameterBindingsTemplate = QueryParameterBindingsImpl.from( this, null );
+		queryParametersByPosition = tempQueryParametersByPosition;
+		queryParametersByName = tempQueryParametersByName;
+		queryParameterBindingsTemplate = QueryParameterBindingsImpl.from( this, null );
 	}
 
 	public ParameterMetadataImpl(
 			Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters,
 			Map<String, QueryParameterImplementor<?>> namedQueryParameters) {
 		assert !isEmpty( positionalQueryParameters ) || !isEmpty( namedQueryParameters );
-		this.queryParameters = new LinkedHashMap<>();
+		queryParameters = new LinkedHashMap<>();
 		Map<String, QueryParameterImplementor<?>> tempQueryParametersByName = null;
 		Map<Integer, QueryParameterImplementor<?>> tempQueryParametersByPosition = null;
 		if ( positionalQueryParameters != null ) {
-			for ( QueryParameterImplementor<?> value : positionalQueryParameters.values() ) {
-				this.queryParameters.put( value, Collections.emptyList() );
+			for ( var queryParameter : positionalQueryParameters.values() ) {
+				queryParameters.put( queryParameter, emptyList() );
 				if ( tempQueryParametersByPosition == null ) {
 					tempQueryParametersByPosition = new HashMap<>();
 				}
-				tempQueryParametersByPosition.put( value.getPosition(), value );
+				tempQueryParametersByPosition.put( queryParameter.getPosition(), queryParameter );
 			}
 			if ( tempQueryParametersByPosition != null ) {
 				verifyOrdinalParamLabels( tempQueryParametersByPosition.keySet() );
 			}
 		}
 		if ( namedQueryParameters != null ) {
-			for ( QueryParameterImplementor<?> value : namedQueryParameters.values() ) {
+			for ( var queryParameter : namedQueryParameters.values() ) {
 				if ( tempQueryParametersByName == null ) {
 					tempQueryParametersByName = new HashMap<>();
 				}
-				this.queryParameters.put( value, Collections.emptyList() );
-				tempQueryParametersByName.put( value.getName(), value );
+				queryParameters.put( queryParameter, emptyList() );
+				tempQueryParametersByName.put( queryParameter.getName(), queryParameter );
 			}
 		}
-		this.queryParametersByPosition = tempQueryParametersByPosition;
-		this.queryParametersByName = tempQueryParametersByName;
-		this.queryParameterBindingsTemplate = QueryParameterBindingsImpl.from( this, null );
+		queryParametersByPosition = tempQueryParametersByPosition;
+		queryParametersByName = tempQueryParametersByName;
+		queryParameterBindingsTemplate = QueryParameterBindingsImpl.from( this, null );
 	}
 
 	private static void verifyOrdinalParamLabels(Set<Integer> labels) {
@@ -147,7 +149,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 										"Gap between '?%s' and '?%s' in ordinal parameter labels [%s] (ordinal parameters must be labelled sequentially)",
 										lastPosition,
 										sortedPosition,
-										StringHelper.join( ",", sortedLabels.iterator() )
+										join( ",", sortedLabels.iterator() )
 								)
 						);
 					}
@@ -176,13 +178,12 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
-		final List<SqmParameter<?>> sqmParameters =
-				queryParameters.get( (QueryParameterImplementor<T>) parameter );
+		final var sqmParameters = queryParameters.get( (QueryParameterImplementor<T>) parameter );
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
-		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-			final BindableType<?> nodeType = sqmParameter.getNodeType();
+		for ( var sqmParameter : sqmParameters ) {
+			final var nodeType = sqmParameter.getNodeType();
 			if ( nodeType != null ) {
 				//noinspection unchecked
 				return (BindableType<T>) nodeType;
@@ -209,7 +210,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
+		for ( var queryParameter : queryParameters.keySet() ) {
 			if ( filter.test( queryParameter ) ) {
 				return true;
 			}
@@ -224,7 +225,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			return parameterImplementor;
 		}
 
-		final String errorMessage = "Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";
+		final String errorMessage =
+				"Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";
 		throw new IllegalArgumentException(
 				errorMessage,
 				new UnknownParameterException( errorMessage )
@@ -247,15 +249,12 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> findQueryParameter(String name) {
-		if ( queryParametersByName == null ) {
-			return null;
-		}
-		return queryParametersByName.get( name );
+		return queryParametersByName == null ? null : queryParametersByName.get( name );
 	}
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(String name) {
-		final QueryParameterImplementor<?> parameter = findQueryParameter( name );
+		final var parameter = findQueryParameter( name );
 		if ( parameter != null ) {
 			return parameter;
 		}
@@ -293,7 +292,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
-		final QueryParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
+		final var queryParameter = findQueryParameter( positionLabel );
 		if ( queryParameter != null ) {
 			return queryParameter;
 		}

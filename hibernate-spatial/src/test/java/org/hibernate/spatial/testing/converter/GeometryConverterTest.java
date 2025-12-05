@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.testing.converter;
 
+import org.geolatte.geom.Geometry;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -11,26 +12,25 @@ import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spatial.GeolatteGeometryJavaType;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.tool.schema.Action;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.geolatte.geom.Geometry;
-
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
 /**
  * @author Steve Ebersole
  */
-public class GeometryConverterTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class GeometryConverterTest {
 
 	@Test
 	public void testConverterUsage() {
@@ -48,25 +48,20 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 
 				final TypeConfiguration typeConfiguration = sessionFactory.getMappingMetamodel().getTypeConfiguration();
 
-				assertThat(
-						typeConfiguration.getJavaTypeRegistry().getDescriptor( Geometry.class ),
-						sameInstance( GeolatteGeometryJavaType.GEOMETRY_INSTANCE )
-				);
+				assertThat( typeConfiguration.getJavaTypeRegistry().getDescriptor( Geometry.class ) )
+						.isSameAs( GeolatteGeometryJavaType.GEOMETRY_INSTANCE );
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?
 
-				final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( MyEntity.class );
-				final ConvertedBasicTypeImpl geometryAttributeType = assertTyping(
-						ConvertedBasicTypeImpl.class,
-						entityPersister.getPropertyType( "geometry" )
-				);
+				final EntityPersister entityPersister = sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( MyEntity.class );
+				Type geometryAttributeType = entityPersister.getPropertyType( "geometry" );
+				assertThat( geometryAttributeType ).isInstanceOf( ConvertedBasicTypeImpl.class );
+				BasicValueConverter valueConverter = ((ConvertedBasicTypeImpl) geometryAttributeType).getValueConverter();
+				assertThat( valueConverter ).isInstanceOf( JpaAttributeConverter.class );
 
-				final JpaAttributeConverter converter = assertTyping(
-						JpaAttributeConverter.class,
-						geometryAttributeType.getValueConverter()
-				);
-
-				assert GeometryConverter.class.equals( converter.getConverterBean().getBeanClass() );
+				assertThat( ((JpaAttributeConverter) valueConverter).getConverterBean().getBeanClass() ).isEqualTo(
+						GeometryConverter.class );
 			}
 		}
 	}

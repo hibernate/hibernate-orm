@@ -12,6 +12,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -63,6 +64,11 @@ public interface GeneratorCreationContext {
 	 * The entity identifier or id-bag property details.
 	 */
 	Property getProperty();
+
+	/**
+	 * The identifier.
+	 */
+	Value getValue();
 
 	/**
 	 * Mapping details for the identifier type.

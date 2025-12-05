@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
  * Contract for instantiating embeddable values.
  *
  * @apiNote Incubating until the proposed
- * {@code instantiate(IntFunction valueAccess, SessionFactoryImplementor sessionFactory)}
+ * {@code instantiate(IntFunction valueAccess)}
  * form can be implemented.
  *
  * @see org.hibernate.annotations.EmbeddableInstantiator

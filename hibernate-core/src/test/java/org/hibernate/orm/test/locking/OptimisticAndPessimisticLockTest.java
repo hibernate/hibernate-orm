@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -24,13 +25,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-@DomainModel(annotatedClasses = {
-		OptimisticAndPessimisticLockTest.EntityA.class
-})
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = OptimisticAndPessimisticLockTest.EntityA.class)
 @SessionFactory
 @JiraKey("HHH-16461")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
-@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
+		versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
+		reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 public class OptimisticAndPessimisticLockTest {
 
 	public Stream<LockMode> pessimisticLockModes() {

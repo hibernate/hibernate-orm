@@ -12,18 +12,18 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Batch support for natural-id multi loading
@@ -62,7 +62,7 @@ public class MultiNaturalIdLoadingBatcher {
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
 		sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
@@ -81,21 +81,21 @@ public class MultiNaturalIdLoadingBatcher {
 
 		this.keyValueResolver = keyValueResolver;
 
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
-		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( null, new QueryOptionsAdapter() {
-					@Override
-					public LockOptions getLockOptions() {
-						return lockOptions;
-					}
-				} );
+		this.jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlSelect )
+						.translate( null, new QueryOptionsAdapter() {
+							@Override
+							public LockOptions getLockOptions() {
+								return lockOptions;
+							}
+						} );
 		this.lockOptions = lockOptions;
 	}
 
 	public <E> List<E> multiLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
-		final ArrayList<E> multiLoadResults = CollectionHelper.arrayList( naturalIdValues.length );
-		final JdbcParameterBindingsImpl jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final ArrayList<E> multiLoadResults = arrayList( naturalIdValues.length );
+		final var jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
 		int offset = 0;
 		int size = 0;
@@ -115,8 +115,7 @@ public class MultiNaturalIdLoadingBatcher {
 
 			if ( offset == jdbcParameters.size() ) {
 				// we've hit the batch mark
-				final List<E> batchResults = performLoad( jdbcParamBindings, session, size );
-				multiLoadResults.addAll( batchResults );
+				multiLoadResults.addAll( performLoad( jdbcParamBindings, session, size ) );
 				jdbcParamBindings.clear();
 				offset = 0;
 				size = 0;
@@ -135,8 +134,7 @@ public class MultiNaturalIdLoadingBatcher {
 				);
 				size++;
 			}
-			final List<E> batchResults = performLoad( jdbcParamBindings, session, size );
-			multiLoadResults.addAll( batchResults );
+			multiLoadResults.addAll( performLoad( jdbcParamBindings, session, size ) );
 		}
 
 		return multiLoadResults;
@@ -146,23 +144,16 @@ public class MultiNaturalIdLoadingBatcher {
 			JdbcParameterBindings jdbcParamBindings,
 			SharedSessionContractImplementor session,
 			int size) {
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-
-		if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( entityDescriptor.getEntityPersister() ) ) {
-			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-					session.getPersistenceContext().getBatchFetchQueue(),
-					sqlSelect,
-					jdbcParameters,
-					jdbcParamBindings
-			);
-
-
-		}
-		else {
-			subSelectFetchableKeysHandler = null;
-		}
-
-
+		final var subSelectFetchableKeysHandler =
+				session.getLoadQueryInfluencers()
+					.hasSubselectLoadableCollections( entityDescriptor.getEntityPersister() )
+						? SubselectFetch.createRegistrationHandler(
+								session.getPersistenceContext().getBatchFetchQueue(),
+								sqlSelect,
+								jdbcParameters,
+								jdbcParamBindings
+						)
+						: null;
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,

@@ -6,10 +6,11 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noOperations;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +19,7 @@ public class UpdateCoordinatorNoOp implements UpdateCoordinator {
 	private final MutationOperationGroup operationGroup;
 
 	public UpdateCoordinatorNoOp(EntityPersister entityPersister) {
-		operationGroup = MutationOperationGroupFactory.noOperations( MutationType.UPDATE, entityPersister );
+		operationGroup = noOperations( MutationType.UPDATE, entityPersister );
 	}
 
 	@Override

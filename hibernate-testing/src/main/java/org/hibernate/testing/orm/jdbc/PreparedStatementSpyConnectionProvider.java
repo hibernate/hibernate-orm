@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
 import org.hibernate.testing.jdbc.JdbcSpies;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -61,7 +61,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 
 	public PreparedStatementSpyConnectionProvider(boolean forceSupportsAggressiveRelease) {
 		super(forceSupportsAggressiveRelease);
-		setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+		setConnectionProvider( SharedDriverManagerConnectionProvider.getInstance() );
 	}
 
 	protected Connection actualConnection() throws SQLException {

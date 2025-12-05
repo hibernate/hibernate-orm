@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -19,9 +21,9 @@ import static java.util.Collections.unmodifiableList;
 /**
  * @author Steve Ebersole
  */
-public class SqmOrderByClause implements Serializable {
+public class SqmOrderByClause implements Serializable, SqmCacheable {
 	private boolean hasPositionalSortItem;
-	private List<SqmSortSpecification> sortSpecifications;
+	private @Nullable List<SqmSortSpecification> sortSpecifications;
 
 	public SqmOrderByClause() {
 	}
@@ -30,7 +32,7 @@ public class SqmOrderByClause implements Serializable {
 		this.sortSpecifications = new ArrayList<>( estimateSize );
 	}
 
-	private SqmOrderByClause(boolean hasPositionalSortItem, List<SqmSortSpecification> sortSpecifications) {
+	private SqmOrderByClause(boolean hasPositionalSortItem, @Nullable List<SqmSortSpecification> sortSpecifications) {
 		this.hasPositionalSortItem = hasPositionalSortItem;
 		this.sortSpecifications = sortSpecifications;
 	}
@@ -88,13 +90,24 @@ public class SqmOrderByClause implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmOrderByClause that
 			&& Objects.equals( this.sortSpecifications, that.sortSpecifications );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( sortSpecifications );
+		return Objects.hashCode( sortSpecifications );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmOrderByClause that
+			&& SqmCacheable.areCompatible( this.sortSpecifications, that.sortSpecifications );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( sortSpecifications );
 	}
 }

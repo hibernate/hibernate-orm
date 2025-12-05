@@ -12,6 +12,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -20,6 +21,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -34,15 +37,24 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @JiraKey("HHH-17838")
 public class OneToOneJoinColumnsEmbeddedIdTest {
 
+	private static final String ENTITY_A_NAME = "a";
+	private static final String ENTITY_B_NAME = "B";
+
+	private static final Integer ENTITY_A_ID1 = 1;
+	private static final String ENTITY_A_ID2 = "1";
+
+	private static final Integer ENTITY_B_ID1 = 1;
+	private static final String ENTITY_B_ID2 = "1";
+
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityAKey entityAKey = new EntityAKey( 1, "1" );
-					EntityA entityA = new EntityA( entityAKey, "te1" );
+					EntityAKey entityAKey = new EntityAKey( ENTITY_A_ID1, ENTITY_A_ID2 );
+					EntityA entityA = new EntityA( entityAKey, ENTITY_A_NAME );
 
-					EntityBKey entityBKey = new EntityBKey( 1, "1" );
-					EntityB entityB = new EntityB( entityBKey, entityA );
+					EntityBKey entityBKey = new EntityBKey( ENTITY_B_ID1, ENTITY_B_ID2 );
+					EntityB entityB = new EntityB( entityBKey, entityA, ENTITY_B_NAME );
 
 					session.persist( entityA );
 					session.persist( entityB );
@@ -59,16 +71,19 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 	public void testFind(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityAKey entityAKey = new EntityAKey( 1, "1" );
+					EntityAKey entityAKey = new EntityAKey( ENTITY_A_ID1, ENTITY_A_ID2 );
 					EntityA entityA = session.find( EntityA.class, entityAKey );
 					assertThat( entityA ).isNotNull();
+					assertThat( entityA.getName() ).isEqualTo( ENTITY_A_NAME );
 
 					EntityB entityB = entityA.getEntityB();
 					assertThat( entityB ).isNotNull();
 
 					EntityBKey key = entityB.getEntityBKey();
-					assertThat( key.id1 ).isEqualTo( 1 );
-					assertThat( key.id2 ).isEqualTo( "1" );
+					assertThat( key.id1 ).isEqualTo( ENTITY_B_ID1 );
+					assertThat( key.id2 ).isEqualTo( ENTITY_B_ID2 );
+
+					assertThat( entityB.getName() ).isEqualTo( ENTITY_B_NAME );
 				}
 		);
 	}
@@ -77,23 +92,40 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 	public void testFind2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					EntityBKey entityBKey = new EntityBKey( 1, "1" );
+					EntityBKey entityBKey = new EntityBKey( ENTITY_B_ID1, ENTITY_B_ID2 );
 					EntityB entityB = session.find( EntityB.class, entityBKey );
 					assertThat( entityB ).isNotNull();
+					assertThat( entityB.getName() ).isEqualTo( ENTITY_B_NAME );
 
 					EntityA entityA = entityB.getEntityA();
 					assertThat( entityA ).isNotNull();
 
 					EntityAKey entityAKey = entityA.getEntityAKey();
-					assertThat( entityAKey.id1 ).isEqualTo( 1 );
-					assertThat( entityAKey.id2 ).isEqualTo( "1" );
+					assertThat( entityAKey.id1 ).isEqualTo( ENTITY_A_ID1 );
+					assertThat( entityAKey.id2 ).isEqualTo( ENTITY_A_ID2 );
 
-					assertThat( entityA.getName() ).isEqualTo( "te1" );
+					assertThat( entityA.getName() ).isEqualTo( ENTITY_A_NAME );
+				}
+		);
+	}
+
+	@Test
+	public void testNativeQuery2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String query = "select b.* from ENTITY_B b";
+					List<EntityB> entityBS = session.createNativeQuery( query, EntityB.class ).list();
+					assertThat( entityBS.size() ).isEqualTo( 1 );
+
+					EntityB entityB = entityBS.get( 0 );
+					assertThat( entityB.getName()).isEqualTo( ENTITY_B_NAME );
+					assertThat( entityB.getEntityA().getName()).isEqualTo( ENTITY_A_NAME );
 				}
 		);
 	}
 
 	@Entity(name = "EntityA")
+	@Table(name= "ENTITY_A")
 	public static class EntityA {
 
 		@EmbeddedId
@@ -144,9 +176,12 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 	}
 
 	@Entity(name = "EntityB")
+	@Table(name = "ENTITY_B")
 	public static class EntityB {
 		@EmbeddedId
 		private EntityBKey entityBKey;
+
+		private String name;
 
 		@OneToOne(optional = false, fetch = FetchType.LAZY)
 		@JoinColumns({
@@ -160,10 +195,11 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 		public EntityB() {
 		}
 
-		public EntityB(EntityBKey key, EntityA testEntity) {
+		public EntityB(EntityBKey key, EntityA testEntity, String name) {
 			this.entityBKey = key;
 			this.entityA = testEntity;
 			testEntity.entityB = this;
+			this.name = name;
 		}
 
 		public EntityBKey getEntityBKey() {
@@ -172,6 +208,10 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 
 		public EntityA getEntityA() {
 			return entityA;
+		}
+
+		public String getName() {
+			return name;
 		}
 	}
 

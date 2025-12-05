@@ -22,17 +22,17 @@ import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.internal.util.StringHelper;
 
-import org.jboss.logging.Logger;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractBinder<T> implements Binder<T> {
-	private static final Logger log = Logger.getLogger( AbstractBinder.class );
 
 	private final LocalXmlResourceResolver xmlResourceResolver;
 
@@ -53,7 +53,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (XMLStreamException e) {
-				log.debug( "Unable to close StAX reader", e );
+				JAXB_LOGGER.unableToCloseStaxReader( e );
 			}
 		}
 	}
@@ -98,7 +98,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 				eventReader.close();
 			}
 			catch (Exception e) {
-				log.debug( "Unable to close StAX reader", e );
+				JAXB_LOGGER.unableToCloseStaxReader( e );
 			}
 		}
 	}

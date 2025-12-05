@@ -13,27 +13,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
+@Jpa( annotatedClasses = {EmbeddableTypeElementCollectionTest.Person.class} )
+public class EmbeddableTypeElementCollectionTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.id = 1L;
 			//tag::collections-embeddable-type-collection-lifecycle-example[]

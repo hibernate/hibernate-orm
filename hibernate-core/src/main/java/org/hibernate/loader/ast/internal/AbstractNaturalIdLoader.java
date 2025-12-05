@@ -4,12 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -31,7 +25,6 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -39,24 +32,27 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
+import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.*;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.stat.spi.StatisticsImplementor;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
-import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_MESSAGE_LOGGER;
 
 /**
  * Base support for {@link NaturalIdLoader} implementations
@@ -91,14 +87,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
 
-		final LockOptions lockOptions =
+		final var lockOptions =
 				options.getLockOptions() == null
-						? LockOptions.NONE
+						? new LockOptions()
 						: options.getLockOptions();
 
-		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
+		final var sqlSelect = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				null,  // null here means to select everything
 				true,
@@ -111,7 +107,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				factory
 		);
 
-		final QuerySpec querySpec = sqlSelect.getQuerySpec();
+		final var querySpec = sqlSelect.getQuerySpec();
 		return executeNaturalIdQuery(
 				naturalIdValue,
 				lockOptions,
@@ -152,7 +148,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			TableGroup rootTableGroup,
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver) {
-		final TableReference tableReference =
+		final var tableReference =
 				rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(),
 						selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
@@ -171,7 +167,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	@Override
 	public Object resolveNaturalIdToId(Object naturalIdValue, SharedSessionContractImplementor session) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
-			NATURAL_ID_MESSAGE_LOGGER.retrievingIdForNaturalId(
+			NATURAL_ID_LOGGER.retrievingIdForNaturalId(
 					entityDescriptor.getEntityName(),
 					naturalIdValue instanceof Object[] array
 							? Arrays.toString( array )
@@ -179,23 +175,23 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			);
 		}
 
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
+		final var entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
+		final var rootQuerySpec = new QuerySpec( true );
 
-		final NavigablePath entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
-		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final var sqlAstCreationState =
+				new LoaderSqlAstCreationState(
+						rootQuerySpec,
+						new SqlAliasBaseManager(),
+						new SimpleFromClauseAccessImpl(),
+						LockOptions.NONE,
+						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
+						true,
+						new LoadQueryInfluencers( factory ),
+						factory.getSqlTranslationEngine()
+				);
 
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
-				rootQuerySpec,
-				new SqlAliasBaseManager(),
-				new SimpleFromClauseAccessImpl(),
-				LockOptions.NONE,
-				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
-				true,
-				new LoadQueryInfluencers( factory ),
-				factory.getSqlTranslationEngine()
-		);
-
-		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+		final var rootTableGroup = entityDescriptor.createRootTableGroup(
 				true,
 				entityPath,
 				null,
@@ -207,7 +203,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( entityPath, rootTableGroup );
 
-		final DomainResult<?> domainResult =
+		final var domainResult =
 				entityDescriptor.getIdentifierMapping().createDomainResult(
 						rootTableGroup.getNavigablePath()
 								.append( EntityIdentifierMapping.ID_ROLE_NAME ),
@@ -235,9 +231,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			Consumer<Predicate> predicateConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
 
-		final JdbcParameterBindings bindings =
+		final var bindings =
 				new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 		applyNaturalIdRestriction(
 				naturalIdMapping().normalizeInput( naturalIdValue ),
@@ -248,10 +244,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session
 		);
 
-		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
+		final var queryOptions = new SimpleQueryOptions( lockOptions, false );
 		final var jdbcSelect = createJdbcOperationQuerySelect( sqlSelect, factory, bindings, queryOptions );
 
-		final StatisticsImplementor statistics = factory.getStatistics();
+		final var statistics = factory.getStatistics();
 		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 		final long startTime = statisticsEnabled ? System.nanoTime() : -1L;
 
@@ -299,23 +295,23 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityIdentifierMapping identifierMapping = entityDescriptor().getIdentifierMapping();
+		final var factory = session.getFactory();
+		final var identifierMapping = entityDescriptor().getIdentifierMapping();
 
-		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
-		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
+		final var builder = JdbcParametersList.newBuilder();
+		final var sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor(),
 				singletonList( naturalIdMapping() ),
 				identifierMapping,
 				null,
 				1,
 				session.getLoadQueryInfluencers(),
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);
-		final JdbcParametersList jdbcParameters = builder.build();
-		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final var jdbcParameters = builder.build();
+		final var bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue( id, identifierMapping, jdbcParameters, session );
 		assert offset == jdbcParameters.size();
 
@@ -353,14 +349,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			Object jdbcValue,
 			SelectableMapping jdbcValueMapping,
 			SqlExpressionResolver expressionResolver) {
-		final Expression columnReference =
+		final var columnReference =
 				resolveColumnReference( rootTableGroup, jdbcValueMapping, expressionResolver );
 		if ( jdbcValue == null ) {
 			predicateConsumer.accept( new NullnessPredicate( columnReference ) );
 		}
 		else {
-			final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcValueMapping.getJdbcMapping() );
-			final ComparisonPredicate predicate =
+			final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
+			final var predicate =
 					new ComparisonPredicate( columnReference, ComparisonOperator.EQUAL, jdbcParameter );
 			predicateConsumer.accept( predicate );
 			jdbcParameterConsumer.accept( jdbcParameter,

@@ -4,8 +4,6 @@
  */
 package org.hibernate.id;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +14,14 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
@@ -47,7 +41,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @implNote This also implements the {@code increment} generation type in {@code hbm.xml} mappings.
  */
 public class IncrementGenerator implements IdentifierGenerator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	/**
 	 * A parameter identifying the column holding the id.
@@ -85,8 +78,9 @@ public class IncrementGenerator implements IdentifierGenerator {
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		returnClass = creationContext.getType().getReturnedClass();
 
-		final JdbcEnvironment jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
-		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
+		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
+
 		column = identifierHelper.normalizeQuoting( identifierHelper.toIdentifier( getString( COLUMN, PK, parameters ) ) )
 				.render( jdbcEnvironment.getDialect() );
 
@@ -101,14 +95,14 @@ public class IncrementGenerator implements IdentifierGenerator {
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		StringBuilder union = new StringBuilder();
+		final var union = new StringBuilder();
 		for ( int i = 0; i < physicalTableNames.size(); i++ ) {
 			final String tableName = context.format( physicalTableNames.get( i ) );
 			if ( physicalTableNames.size() > 1 ) {
 				union.append( "select max(" ).append( column ).append( ") as mx from " );
 			}
 			union.append( tableName );
-			final Dialect dialect = context.getDialect();
+			final var dialect = context.getDialect();
 			if ( i < physicalTableNames.size() - 1 ) {
 				union.append( " union " );
 				if ( dialect.supportsUnionAll() ) {
@@ -131,32 +125,34 @@ public class IncrementGenerator implements IdentifierGenerator {
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
 		previousValueHolder = getIntegralDataTypeHolder( returnClass );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Fetching initial value: %s", sql );
+		if ( CORE_LOGGER.isTraceEnabled() ) {
+			CORE_LOGGER.tracef( "Fetching initial value: %s", sql );
 		}
 		try {
-			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
-				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
+				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
 				try {
-					if ( rs.next() ) {
-						previousValueHolder.initialize( rs, 0L ).increment();
+					if ( resultSet.next() ) {
+						previousValueHolder.initialize( resultSet, 0L ).increment();
 					}
 					else {
 						previousValueHolder.initialize( 1L );
 					}
 					sql = null;
-					if ( LOG.isTraceEnabled() ) {
-						LOG.tracef( "First free id: %s", previousValueHolder.makeValue() );
+					if ( CORE_LOGGER.isTraceEnabled() ) {
+						CORE_LOGGER.tracef( "First free id: %s", previousValueHolder.makeValue() );
 					}
 				}
 				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
+					resourceRegistry.release( resultSet, statement );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
-				session.getJdbcCoordinator().afterStatementExecution();
+				resourceRegistry.release( statement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {

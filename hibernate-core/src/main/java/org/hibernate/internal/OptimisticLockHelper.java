@@ -4,20 +4,17 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.CacheMode;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.stat.internal.StatsHelper;
-import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
 public final class OptimisticLockHelper {
 
@@ -26,12 +23,12 @@ public final class OptimisticLockHelper {
 	}
 
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
-		final EntityPersister persister = entry.getPersister();
+		final var persister = entry.getPersister();
 		final Object previousVersion = entry.getVersion();
 		SoftLock lock = null;
 		final Object cacheKey;
 		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			cacheKey = cache.generateCacheKey(
 					entry.getId(),
 					persister,
@@ -55,31 +52,38 @@ public final class OptimisticLockHelper {
 					persister,
 					session
 			);
-			session.registerProcess( new CacheCleanupProcess(
-					cacheKey,
-					persister,
-					previousVersion,
-					nextVersion,
-					lock,
-					cacheEntry
-			) );
+			session.getTransactionCompletionCallbacks()
+					.registerCallback( new CacheCleanupProcess(
+							cacheKey,
+							persister,
+							previousVersion,
+							nextVersion,
+							lock,
+							cacheEntry
+					) );
 		}
 	}
 
-	private static Object updateCacheItem(Object entity, Object previousVersion, Object nextVersion, Object ck, EntityEntry entry, EntityPersister persister, SharedSessionContractImplementor session) {
+	private static Object updateCacheItem(
+			Object entity,
+			Object previousVersion,
+			Object nextVersion,
+			Object cacheKey,
+			EntityEntry entry,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
 		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-			persister.getCacheAccessStrategy().remove( session, ck );
+			persister.getCacheAccessStrategy().remove( session, cacheKey );
 		}
 		else if ( session.getCacheMode().isPutEnabled() ) {
 			//TODO: inefficient if that cache is just going to ignore the updated state!
-			final CacheEntry ce = persister.buildCacheEntry( entity, entry.getLoadedState(), nextVersion, session );
-			final Object cacheEntry = persister.getCacheEntryStructure().structure( ce );
-			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, ck, session );
-
-			final StatisticsImplementor statistics = session.getFactory().getStatistics();
+			final Object cacheEntry =
+					buildStructuredCacheEntry( entity, nextVersion, entry.getLoadedState(), persister, session );
+			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, cacheKey, session );
+			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
+						getRootEntityRole( persister ),
 						persister.getCacheAccessStrategy().getRegion().getName()
 				);
 			}
@@ -88,14 +92,21 @@ public final class OptimisticLockHelper {
 		return null;
 	}
 
-	private static boolean updateCache(EntityPersister persister, Object cacheEntry, Object previousVersion, Object nextVersion, Object ck, SharedSessionContractImplementor session) {
-		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
-		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+	private static boolean updateCache(
+			EntityPersister persister,
+			Object cacheEntry,
+			Object previousVersion,
+			Object nextVersion,
+			Object cacheKey,
+			SharedSessionContractImplementor session) {
+		final var eventMonitor = session.getEventMonitor();
+		final var cachePutEvent = eventMonitor.beginCachePutEvent();
+		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
+		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
-			session.getEventListenerManager().cachePutStart();
-			update = cacheAccessStrategy.update( session, ck, cacheEntry, nextVersion, previousVersion );
+			eventListenerManager.cachePutStart();
+			update = cacheAccessStrategy.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
 		finally {
@@ -107,17 +118,16 @@ public final class OptimisticLockHelper {
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE
 			);
-			session.getEventListenerManager().cachePutEnd();
+			eventListenerManager.cachePutEnd();
 		}
 	}
 
 	private static boolean isCacheInvalidationRequired(
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
 		return persister.isCacheInvalidationRequired()
-			|| session.getCacheMode() == CacheMode.GET
-			|| session.getCacheMode() == CacheMode.IGNORE;
+			// the cache has to be invalidated when CacheMode is GET or IGNORE
+			|| !session.getCacheMode().isPutEnabled();
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
@@ -128,7 +138,13 @@ public final class OptimisticLockHelper {
 		private final SoftLock lock;
 		private final Object cacheEntry;
 
-		private CacheCleanupProcess(Object cacheKey, EntityPersister persister, Object previousVersion, Object nextVersion, SoftLock lock, Object cacheEntry) {
+		private CacheCleanupProcess(
+				Object cacheKey,
+				EntityPersister persister,
+				Object previousVersion,
+				Object nextVersion,
+				SoftLock lock,
+				Object cacheEntry) {
 			this.cacheKey = cacheKey;
 			this.persister = persister;
 			this.previousVersion = previousVersion;
@@ -139,7 +155,7 @@ public final class OptimisticLockHelper {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final var cache = persister.getCacheAccessStrategy();
 			if ( cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}
@@ -154,14 +170,14 @@ public final class OptimisticLockHelper {
 				&& session.getCacheMode().isPutEnabled();
 		}
 
-		protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+		protected void cacheAfterUpdate(EntityDataAccess cache, Object cacheKey, SharedSessionContractImplementor session) {
+			final var eventListenerManager = session.getEventListenerManager();
+			final var eventMonitor = session.getEventMonitor();
+			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
-				put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
+				put = cache.afterUpdate( session, cacheKey, cacheEntry, nextVersion, previousVersion, lock );
 			}
 			finally {
 				eventMonitor.completeCachePutEvent(
@@ -172,10 +188,10 @@ public final class OptimisticLockHelper {
 						put,
 						EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 				);
-				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
-							StatsHelper.getRootEntityRole( persister ),
+							getRootEntityRole( persister ),
 							cache.getRegion().getName()
 					);
 				}

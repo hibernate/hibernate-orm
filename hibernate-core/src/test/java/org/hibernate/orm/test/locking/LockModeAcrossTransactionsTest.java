@@ -12,14 +12,21 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(annotatedClasses = LockModeAcrossTransactionsTest.Cached.class)
 class LockModeAcrossTransactionsTest {
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test void testWithEvict(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

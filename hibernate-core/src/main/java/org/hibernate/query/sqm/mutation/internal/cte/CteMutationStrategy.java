@@ -8,16 +8,20 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * @asciidoc
@@ -76,52 +80,56 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		if ( !dialect.supportsValuesList() ) {
-			throw new UnsupportedOperationException(
-					getClass().getSimpleName() +
-							" can only be used with Dialects that support VALUES lists"
-			);
-		}
-
-		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME, rootDescriptor );
+		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME,
+				runtimeModelCreationContext.getMetadata().getEntityBinding( rootDescriptor.getEntityName() ) );
 	}
 
 	@Override
-	public int executeDelete(
-			SqmDeleteStatement<?> sqmDelete,
-			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
-		checkMatch( sqmDelete );
+	public MultiTableHandlerBuildResult buildHandler(SqmDeleteOrUpdateStatement<?> sqmStatement, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context) {
+		final MutableObject<JdbcParameterBindings> firstJdbcParameterBindings = new MutableObject<>();
+		final MultiTableHandler multiTableHandler = sqmStatement instanceof SqmDeleteStatement<?> sqmDelete
+				? buildHandler( sqmDelete, domainParameterXref, context, firstJdbcParameterBindings)
+				: buildHandler( (SqmUpdateStatement<?>) sqmStatement, domainParameterXref, context, firstJdbcParameterBindings );
+		return new MultiTableHandlerBuildResult( multiTableHandler, firstJdbcParameterBindings.get() );
+	}
 
-		final CteDeleteHandler deleteHandler;
+	public MultiTableHandler buildHandler(SqmDeleteStatement<?> sqmDelete, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context, MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
+		checkMatch( sqmDelete );
 		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
-			deleteHandler = new CteSoftDeleteHandler(
+			return new CteSoftDeleteHandler(
 					idCteTable,
 					sqmDelete,
 					domainParameterXref,
 					this,
-					sessionFactory
+					sessionFactory,
+					context,
+					firstJdbcParameterBindingsConsumer
 			);
 		}
 		else {
-			deleteHandler = new CteDeleteHandler(
+			return new CteDeleteHandler(
 					idCteTable,
 					sqmDelete,
 					domainParameterXref,
 					this,
-					sessionFactory
+					sessionFactory,
+					context,
+					firstJdbcParameterBindingsConsumer
 			);
 		}
-		return deleteHandler.execute( context );
 	}
 
-	@Override
-	public int executeUpdate(
-			SqmUpdateStatement<?> sqmUpdate,
-			DomainParameterXref domainParameterXref,
-			DomainQueryExecutionContext context) {
+	public MultiTableHandler buildHandler(SqmUpdateStatement<?> sqmUpdate, DomainParameterXref domainParameterXref, DomainQueryExecutionContext context, MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		checkMatch( sqmUpdate );
-		return new CteUpdateHandler( idCteTable, sqmUpdate, domainParameterXref, this, sessionFactory ).execute( context );
+		return new CteUpdateHandler(
+				idCteTable,
+				sqmUpdate,
+				domainParameterXref,
+				this,
+				sessionFactory,
+				context,
+				firstJdbcParameterBindingsConsumer
+		);
 	}
 
 	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {

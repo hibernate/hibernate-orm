@@ -39,7 +39,7 @@ public interface FunctionReturnTypeResolver {
 	 */
 	@Deprecated(forRemoval = true)
 	default @Nullable ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
+			@Nullable ReturnableType<?> impliedType,
 			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
@@ -63,7 +63,7 @@ public interface FunctionReturnTypeResolver {
 	 * @return The resolved type.
 	 */
 	default @Nullable ReturnableType<?> resolveFunctionReturnType(
-			ReturnableType<?> impliedType,
+			@Nullable ReturnableType<?> impliedType,
 			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {

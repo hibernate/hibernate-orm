@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
@@ -264,6 +265,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 
 	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue);
+
+	@Override
 	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	@Override
@@ -502,6 +515,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression);
+
+	@Override
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue);
 
 	@Override
 	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
@@ -1113,7 +1138,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	SqmExpression<String> toString(Expression<Character> character);
 
 	@Override
-	<T> SqmExpression<T> literal(T value);
+	<T> SqmExpression<T> literal(@Nullable T value);
 
 	@Override
 	<T> List<? extends SqmExpression<T>> literals(T[] values);
@@ -1504,6 +1529,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	BasicType<Long> getLongType();
 
 	BasicType<Character> getCharacterType();
+
+	BasicType<String> getStringType();
 
 	JpaCompliance getJpaCompliance();
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
@@ -22,7 +21,6 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -37,8 +35,8 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -46,7 +44,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -64,17 +61,18 @@ import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_DISCRIMINATOR;
+import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_KEY;
 import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotBlank;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
-import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
 
 /**
  * @author Emmanuel Bernard
@@ -149,16 +147,15 @@ public class BinderHelper {
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final AttributeContainer columnOwner =
-					findReferencedColumnOwner( targetEntity, joinColumns.getJoinColumns().get(0), context );
+			final var firstJoinColumn = joinColumns.getJoinColumns().get( 0 );
+			final var columnOwner = findReferencedColumnOwner( targetEntity, firstJoinColumn, context );
 			checkColumnInSameTable( joinColumns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
-			final List<Property> properties =
-					findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
+			final var properties = findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
 			// create a Property along with the new synthetic
 			// Component if necessary (or reuse the existing
 			// Property that matches exactly)
-			final Property property = referencedProperty(
+			final var property = referencedProperty(
 					targetEntity,
 					associatedEntity,
 					propertyName,
@@ -195,8 +192,8 @@ public class BinderHelper {
 			// we should only get called for owning side of association
 			throw new AssertionFailure("no need to create synthetic properties for unowned collections");
 		}
-		for ( AnnotatedJoinColumn column: joinColumns.getJoinColumns() ) {
-			final AttributeContainer owner = findReferencedColumnOwner( targetEntity, column, context );
+		for ( var column: joinColumns.getJoinColumns() ) {
+			final var owner = findReferencedColumnOwner( targetEntity, column, context );
 			if ( owner == null ) {
 				throw new AnnotationException( "A '@JoinColumn' for association "
 						+ associationMessage( associatedEntity, joinColumns )
@@ -205,7 +202,7 @@ public class BinderHelper {
 						+ targetEntity.getEntityName() + "'" );
 			}
 			if ( owner != columnOwner) {
-				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+				final var firstColumn = joinColumns.getJoinColumns().get(0);
 				throw new AnnotationException( "The '@JoinColumn's for association "
 						+ associationMessage( associatedEntity, joinColumns )
 						+ " reference columns of different tables mapped by the target entity '"
@@ -244,7 +241,7 @@ public class BinderHelper {
 				&& ownerEntity == columnOwner
 				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
 			// no need to make a synthetic property
-			final Property property = properties.get( 0 );
+			final var property = properties.get( 0 );
 			// mark it unique
 			property.getValue().createUniqueKey( context );
 			return property;
@@ -268,29 +265,23 @@ public class BinderHelper {
 			String propertyName,
 			String syntheticPropertyName,
 			MetadataBuildingContext context) {
+		final var collector = context.getMetadataCollector();
 		if ( value instanceof ToOne toOne ) {
 			toOne.setReferencedPropertyName( syntheticPropertyName );
 			toOne.setReferenceToPrimaryKey( false );
-			context.getMetadataCollector().addUniquePropertyReference(
-					ownerEntity.getEntityName(),
-					syntheticPropertyName
-			);
+			collector.addUniquePropertyReference( ownerEntity.getEntityName(), syntheticPropertyName );
 		}
 		else if ( value instanceof Collection collection ) {
 			collection.setReferencedPropertyName( syntheticPropertyName );
 			//not unique because we could create a mtm wo association table
-			context.getMetadataCollector().addPropertyReference(
-					ownerEntity.getEntityName(),
-					syntheticPropertyName
-			);
+			collector.addPropertyReference( ownerEntity.getEntityName(), syntheticPropertyName );
 		}
 		else {
 			throw new AssertionFailure( "Property ref on an unexpected Value type: " + value.getClass().getName() );
 		}
 		final String associatedEntityName = associatedClass.getEntityName();
 		final String generatedName = inverse ? "inverse__" + associatedEntityName : associatedEntityName;
-		context.getMetadataCollector()
-				.addPropertyReferencedAssociation( generatedName, propertyName, syntheticPropertyName );
+		collector.addPropertyReferencedAssociation( generatedName, propertyName, syntheticPropertyName );
 	}
 
 	private static String syntheticPropertyName(
@@ -310,13 +301,10 @@ public class BinderHelper {
 			return "'" + associatedEntity.getEntityName() + "." + joinColumns.getPropertyName() + "'";
 		}
 		else {
-			final PropertyHolder propertyHolder = joinColumns.getPropertyHolder();
-			if ( propertyHolder != null ) {
-				return "'" + propertyHolder.getEntityName() + "." + joinColumns.getPropertyName() + "'";
-			}
-			else {
-				return "";
-			}
+			final var propertyHolder = joinColumns.getPropertyHolder();
+			return propertyHolder != null
+					? "'" + propertyHolder.getEntityName() + "." + joinColumns.getPropertyName() + "'"
+					: "";
 		}
 	}
 
@@ -331,6 +319,31 @@ public class BinderHelper {
 			AttributeContainer persistentClassOrJoin,
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
+			List<Property> properties) {
+		final var embeddedComponent =
+				embeddedComponent( ownerEntity, persistentClassOrJoin, context, properties );
+		final var result = new SyntheticProperty();
+		result.setName( syntheticPropertyName );
+		result.setPersistentClass( ownerEntity );
+		result.setUpdatable( false );
+		result.setInsertable( false );
+		result.setValue( embeddedComponent );
+		result.setPropertyAccessorName( EMBEDDED.getExternalName() );
+		if ( persistentClassOrJoin instanceof Join ) {
+			// the referenced column is in the joined table, add the synthetic property there
+			persistentClassOrJoin.addProperty( result );
+		}
+		else {
+			ownerEntity.addProperty( result );
+		}
+		embeddedComponent.createUniqueKey( context ); //make it unique
+		return result;
+	}
+
+	private static Component embeddedComponent(
+			PersistentClass ownerEntity,
+			AttributeContainer persistentClassOrJoin,
+			MetadataBuildingContext context,
 			List<Property> properties) {
 		final Component embeddedComponent;
 		if ( persistentClassOrJoin instanceof PersistentClass persistentClass ) {
@@ -348,22 +361,7 @@ public class BinderHelper {
 			embeddedComponent.addProperty( cloneProperty( ownerEntity, context, property ) );
 		}
 		embeddedComponent.sortProperties();
-		final Property result = new SyntheticProperty();
-		result.setName( syntheticPropertyName );
-		result.setPersistentClass( ownerEntity );
-		result.setUpdateable( false );
-		result.setInsertable( false );
-		result.setValue( embeddedComponent );
-		result.setPropertyAccessorName( "embedded" );
-		if ( persistentClassOrJoin instanceof Join ) {
-			// the referenced column is in the joined table, add the synthetic property there
-			persistentClassOrJoin.addProperty( result );
-		}
-		else {
-			ownerEntity.addProperty( result );
-		}
-		embeddedComponent.createUniqueKey( context ); //make it unique
-		return result;
+		return embeddedComponent;
 	}
 
 	/**
@@ -373,27 +371,27 @@ public class BinderHelper {
 	 */
 	private static Property cloneProperty(PersistentClass ownerEntity, MetadataBuildingContext context, Property property) {
 		if ( property.isComposite() ) {
-			final Component component = (Component) property.getValue();
-			final Component copy = new Component( context, component );
+			final var component = (Component) property.getValue();
+			final var copy = new Component( context, component );
 			copy.setComponentClassName( component.getComponentClassName() );
 			copy.setEmbedded( component.isEmbedded() );
 			for ( Property subproperty : component.getProperties() ) {
 				copy.addProperty( cloneProperty( ownerEntity, context, subproperty ) );
 			}
 			copy.sortProperties();
-			final Property result = new SyntheticProperty();
+			final var result = new SyntheticProperty();
 			result.setName( property.getName() );
 			result.setPersistentClass( ownerEntity );
-			result.setUpdateable( false );
+			result.setUpdatable( false );
 			result.setInsertable( false );
 			result.setValue(copy);
 			result.setPropertyAccessorName( property.getPropertyAccessorName() );
 			return result;
 		}
 		else {
-			final Property clone = shallowCopy( property );
+			final var clone = shallowCopy( property );
 			clone.setInsertable( false );
-			clone.setUpdateable( false );
+			clone.setUpdatable( false );
 			clone.setNaturalIdentifier( false );
 			clone.setValueGeneratorCreator( property.getValueGeneratorCreator() );
 			return clone;
@@ -405,7 +403,7 @@ public class BinderHelper {
 	 * and other attributes.
 	 */
 	public static Property shallowCopy(Property property) {
-		final Property clone = new SyntheticProperty();
+		final var clone = new SyntheticProperty();
 		clone.setCascade( property.getCascade() );
 		clone.setInsertable( property.isInsertable() );
 		clone.setLazy( property.isLazy() );
@@ -416,7 +414,7 @@ public class BinderHelper {
 		clone.setPersistentClass( property.getPersistentClass() );
 		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
 		clone.setSelectable( property.isSelectable() );
-		clone.setUpdateable( property.isUpdateable() );
+		clone.setUpdatable( property.isUpdatable() );
 		clone.setValue( property.getValue() );
 		return clone;
 	}
@@ -427,21 +425,20 @@ public class BinderHelper {
 			PersistentClass associatedEntity,
 			MetadataBuildingContext context) {
 
-		final Table referencedTable = columnOwner.getTable();
-
 		// Build the list of column names in the exact order they were
 		// specified by the @JoinColumn annotations.
 		final List<Column> orderedColumns = new ArrayList<>( columns.getJoinColumns().size() );
 		final Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		for ( AnnotatedJoinColumn joinColumn : columns.getJoinColumns() ) {
+		final var collector = context.getMetadataCollector();
+		final var referencedTable = columnOwner.getTable();
+		for ( var joinColumn : columns.getJoinColumns() ) {
 			if ( joinColumn.isReferenceImplicit() ) {
-				throw new AnnotationException("Association " + associationMessage( associatedEntity, columns )
+				throw new AnnotationException( "Association " + associationMessage( associatedEntity, columns )
 						+ " has a '@JoinColumn' which does not specify the 'referencedColumnName'"
 						+ " (when an association has multiple '@JoinColumn's, they must each specify their 'referencedColumnName')");
 			}
 			final String name = collector.getPhysicalColumnName( referencedTable, joinColumn.getReferencedColumn() );
-			final Column column = new Column( name );
+			final var column = new Column( name );
 			orderedColumns.add( column );
 			columnsToProperty.put( column, new LinkedHashSet<>() ); //need to use a LinkedHashSet here to make it deterministic
 		}
@@ -452,7 +449,7 @@ public class BinderHelper {
 		if ( columnOwner instanceof PersistentClass persistentClass ) {
 			// Process ToOne associations after Components, Basic and Id properties
 			final List<Property> toOneProperties = new ArrayList<>();
-			for ( Property property : persistentClass.getReferenceableProperties() ) {
+			for ( var property : persistentClass.getReferenceableProperties() ) {
 				if ( property.getValue() instanceof ToOne ) {
 					toOneProperties.add( property );
 				}
@@ -466,16 +463,16 @@ public class BinderHelper {
 			else {
 				// special case for entities with multiple @Id properties
 				final Component key = persistentClass.getIdentifierMapper();
-				for ( Property p : key.getProperties() ) {
+				for ( var p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
 			}
-			for ( Property property : toOneProperties ) {
+			for ( var property : toOneProperties ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {
-			for ( Property property : ((Join) columnOwner).getProperties() ) {
+			for ( var property : ((Join) columnOwner).getProperties() ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
@@ -554,28 +551,28 @@ public class BinderHelper {
 	}
 
 	private static void matchColumnsByProperty(Property property, Map<Column, Set<Property>> columnsToProperty) {
-		if ( property != null
-				&& NOOP != interpret( property.getPropertyAccessorName() )
-				&& EMBEDDED != interpret( property.getPropertyAccessorName() ) ) {
-			//TODO: we can't return subproperties because the caller
-			//      needs top level properties, but this results in
-			//      a limitation where I need to be referencing all
-			//      columns of an embeddable instead of just some
-//			if ( property.isComposite() ) {
-//				for ( Property sp : ( (Component) property.getValue() ).getProperties() ) {
-//					matchColumnsByProperty( sp, columnsToProperty );
+		if ( property != null ) {
+			final String propertyAccessorName = property.getPropertyAccessorName();
+			if ( !NOOP.getExternalName().equals( propertyAccessorName )
+				&& !EMBEDDED.getExternalName().equals( propertyAccessorName ) ) {
+				//TODO: we can't return subproperties because the caller
+				//      needs top level properties, but this results in
+				//      a limitation where I need to be referencing all
+				//      columns of an embeddable instead of just some
+//				if ( property.isComposite() ) {
+//					for ( Property sp : ( (Component) property.getValue() ).getProperties() ) {
+//						matchColumnsByProperty( sp, columnsToProperty );
+//					}
 //				}
-//			}
-//			else {
-			for ( Selectable selectable : property.getSelectables() ) {
-				//can be a Formula, so we don't cast
-				//noinspection SuspiciousMethodCalls
-				if ( columnsToProperty.containsKey( selectable ) ) {
-					//noinspection SuspiciousMethodCalls
-					columnsToProperty.get( selectable ).add( property );
+//				else {
+				for ( Selectable selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column column
+							&& columnsToProperty.containsKey( column ) ) {
+						columnsToProperty.get( column ).add( property );
+					}
 				}
+//				}
 			}
-//			}
 		}
 	}
 
@@ -584,112 +581,82 @@ public class BinderHelper {
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	public static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
-		Property property = null;
-		final Property idProperty = associatedClass.getIdentifierProperty();
+		final var idProperty = associatedClass.getIdentifierProperty();
 		final String idName = idProperty == null ? null : idProperty.getName();
 		try {
-			if ( isEmpty( propertyName ) || propertyName.equals( idName ) ) {
-				//default to id
-				property = idProperty;
-			}
-			else {
-				if ( propertyName.indexOf( idName + "." ) == 0 ) {
-					property = idProperty;
-					propertyName = propertyName.substring( idName.length() + 1 );
-				}
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreElements() ) {
-					String element = (String) tokens.nextElement();
-					if ( property == null ) {
-						property = associatedClass.getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
-					}
-				}
-			}
+			return isEmpty( propertyName ) || propertyName.equals( idName )
+					? idProperty // Default to id
+					: findProperty( associatedClass, propertyName, idProperty, idName );
 		}
 		catch ( MappingException e ) {
 			try {
-				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) {
-					return null;
-				}
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreElements() ) {
-					final String element = (String) tokens.nextElement();
-					if ( property == null ) {
-						property = associatedClass.getIdentifierMapper().getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
-					}
-				}
+				// if we do not find it, try to check the identifier mapper
+				return findPropertyUsingIdMapper( associatedClass, propertyName );
 			}
 			catch ( MappingException ee ) {
 				return null;
 			}
 		}
-		return property;
 	}
 
 	/**
 	 * Retrieve the property by path in a recursive way
 	 */
 	public static Property findPropertyByName(Component component, String propertyName) {
-		Property property = null;
 		try {
-			if ( isEmpty( propertyName ) ) {
-				// Do not expect to use a primary key for this case
-				return null;
-			}
-			else {
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreElements() ) {
-					final String element = (String) tokens.nextElement();
-					if ( property == null ) {
-						property = component.getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
-					}
-				}
-			}
+			return isEmpty( propertyName )
+					? null // Do not expect to use a primary key for this case
+					: findProperty( component, propertyName, null );
 		}
 		catch (MappingException e) {
 			try {
-				//if we do not find it try to check the identifier mapper
-				if ( component.getOwner().getIdentifierMapper() == null ) {
-					return null;
-				}
-				final StringTokenizer tokens = new StringTokenizer( propertyName, ".", false );
-				while ( tokens.hasMoreElements() ) {
-					final String element = (String) tokens.nextElement();
-					if ( property == null ) {
-						property = component.getOwner().getIdentifierMapper().getProperty( element );
-					}
-					else {
-						if ( !property.isComposite() ) {
-							return null;
-						}
-						property = ( (Component) property.getValue() ).getProperty( element );
-					}
-				}
+				// if we do not find it, try to check the identifier mapper
+				return findPropertyUsingIdMapper( component.getOwner(), propertyName );
 			}
 			catch (MappingException ee) {
 				return null;
 			}
 		}
+	}
+
+	private static Property findProperty(
+			PersistentClass associatedClass, String propertyName,
+			Property idProperty, String idName) {
+		Property property;
+		// Handle id property
+		final String name;
+		if ( propertyName.indexOf( idName + "." ) == 0 ) {
+			property = idProperty;
+			name = propertyName.substring( idName.length() + 1 );
+		}
+		else {
+			property = null;
+			name = propertyName;
+		}
+		return findProperty( associatedClass, name, property );
+	}
+
+	private static Property findProperty(AttributeContainer root, String name, Property property) {
+		final var tokens = new StringTokenizer( name, ".", false );
+		while ( tokens.hasMoreTokens() ) {
+			final String element = tokens.nextToken();
+			if ( property == null ) {
+				property = root.getProperty( element );
+			}
+			else if ( property.isComposite() ) {
+				final var value = (Component) property.getValue();
+				property = value.getProperty( element );
+			}
+			else {
+				return null;
+			}
+		}
 		return property;
+	}
+
+	private static Property findPropertyUsingIdMapper(PersistentClass associatedClass, String propertyName) {
+		final var identifierMapper = associatedClass.getIdentifierMapper();
+		return identifierMapper == null ? null : findProperty( identifierMapper, propertyName, null );
 	}
 
 	public static String getRelativePath(PropertyHolder propertyHolder, String propertyName) {
@@ -722,7 +689,7 @@ public class BinderHelper {
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {
-		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+		final var metadataCollector = context.getMetadataCollector();
 		PersistentClass current = persistentClass;
 		while ( current != null ) {
 			try {
@@ -758,45 +725,44 @@ public class BinderHelper {
 			EntityBinder entityBinder,
 			boolean optional,
 			MetadataBuildingContext context) {
-		final MemberDetails property = inferredData.getAttributeMember();
+		final var memberDetails = inferredData.getAttributeMember();
 
-		final Any value = new Any( context, keyColumns.getTable(), true );
-		value.setLazy( lazy );
-		value.setOnDeleteAction( onDeleteAction );
+		final var any = new Any( context, keyColumns.getTable(), true );
+		any.setLazy( lazy );
+		any.setOnDeleteAction( onDeleteAction );
 
-		final BasicValueBinder discriminatorValueBinder =
-				new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final var discriminatorValueBinder = new BasicValueBinder( ANY_DISCRIMINATOR, context );
 
 		// TODO: if there can be only one discriminator column,
 		//       why are we making a whole array of them??
-		final AnnotatedColumns discriminatorColumns = buildColumnOrFormulaFromAnnotation(
-				discriminatorColumn,
-				discriminatorFormula,
-				null,
-//				null,
-				nullability,
-				propertyHolder,
-				inferredData,
-				entityBinder.getSecondaryTables(),
-				context
-		);
+		final var discriminatorColumns =
+				buildColumnOrFormulaFromAnnotation(
+						discriminatorColumn,
+						discriminatorFormula,
+						null,
+//						null,
+						nullability,
+						propertyHolder,
+						inferredData,
+						entityBinder.getSecondaryTables(),
+						context
+				);
 		assert discriminatorColumns.getColumns().size() == 1;
 
-		discriminatorColumns.setTable( value.getTable() );
+		discriminatorColumns.setTable( any.getTable() );
 		discriminatorValueBinder.setColumns( discriminatorColumns );
 
 		discriminatorValueBinder.setReturnedClassName( inferredData.getTypeName() );
-		discriminatorValueBinder.setType( property, property.getType(), null, null );
+		discriminatorValueBinder.setType( memberDetails, memberDetails.getType() );
 
-		final BasicValue discriminatorDescriptor = discriminatorValueBinder.make();
-		value.setDiscriminator( discriminatorDescriptor );
+		final BasicValue discriminator = discriminatorValueBinder.make();
+		any.setDiscriminator( discriminator );
 		discriminatorValueBinder.fillSimpleValue();
 		// TODO: this is nasty
-		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
-		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
+		final var firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
+		firstDiscriminatorColumn.linkWithValue( discriminator );
 
-		final JavaType<?> discriminatorJavaType =
-				discriminatorDescriptor.resolve().getRelationalJavaType();
+		final var discriminatorJavaType = discriminator.resolve().getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
@@ -807,50 +773,50 @@ public class BinderHelper {
 				),
 				context.getBootstrapContext().getModelsContext()
 		);
-		value.setDiscriminatorValueMappings( discriminatorValueMappings );
+		any.setDiscriminatorValueMappings( discriminatorValueMappings );
 
 
-		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues =
-				property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		final var anyDiscriminatorImplicitValues =
+				memberDetails.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
 		if ( anyDiscriminatorImplicitValues != null ) {
-			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+			any.setImplicitDiscriminatorValueStrategy(
+					resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
-		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
-		final List<AnnotatedJoinColumn> columns = keyColumns.getJoinColumns();
+		final var keyValueBinder = new BasicValueBinder( ANY_KEY, context );
+		final var columns = keyColumns.getJoinColumns();
 		assert columns.size() == 1;
-		keyColumns.setTable( value.getTable() );
+		keyColumns.setTable( any.getTable() );
 		keyValueBinder.setColumns( keyColumns );
 		if ( !optional ) {
 			for ( AnnotatedJoinColumn column : columns ) {
 				column.setNullable( false );
 			}
 		}
-		keyValueBinder.setType( property, property.getType(), null, null );
+		keyValueBinder.setType( memberDetails, memberDetails.getType() );
 		final BasicValue keyDescriptor = keyValueBinder.make();
-		value.setKey( keyDescriptor );
+		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		keyColumns.checkPropertyConsistency();
 		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
-		return value;
+		return any;
 	}
 
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,
 			ModelsContext sourceModelContext) {
-		final AnyDiscriminatorValues valuesAnn =
+		final var anyDiscriminatorValues =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
-		if ( valuesAnn != null ) {
-			final AnyDiscriminatorValue[] nestedList = valuesAnn.value();
-			ArrayHelper.forEach( nestedList, consumer );
-			return;
+		if ( anyDiscriminatorValues != null ) {
+			ArrayHelper.forEach( anyDiscriminatorValues.value(), consumer );
 		}
-
-		final AnyDiscriminatorValue valueAnn =
-				property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
-		if ( valueAnn != null ) {
-			consumer.accept( valueAnn );
+		else {
+			final var anyDiscriminatorValue =
+					property.locateAnnotationUsage( AnyDiscriminatorValue.class, sourceModelContext );
+			if ( anyDiscriminatorValue != null ) {
+				consumer.accept( anyDiscriminatorValue );
+			}
 		}
 	}
 
@@ -859,7 +825,7 @@ public class BinderHelper {
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MetadataBuildingContext context) {
 		if ( declaringClass != null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			final var inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
 				throw new AssertionFailure(
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
@@ -878,9 +844,9 @@ public class BinderHelper {
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
+		for ( var aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
-			if ( isNotBlank( table ) ) {
+			if ( !table.isBlank() ) {
 				result.put( aliasAnnotation.alias(), table );
 			}
 		}
@@ -889,8 +855,8 @@ public class BinderHelper {
 
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
-		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
-			final Class<?> entityClass = aliasAnnotation.entity();
+		for ( var aliasAnnotation : aliases ) {
+			final var entityClass = aliasAnnotation.entity();
 			if ( entityClass != void.class ) {
 				result.put( aliasAnnotation.alias(), entityClass.getName() );
 			}
@@ -916,12 +882,8 @@ public class BinderHelper {
 			Cascade cascadeAnnotation,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
-		final EnumSet<CascadeType> cascades =
-				convertToHibernateCascadeType( cascadeTypes );
-		final CascadeType[] hibernateCascades =
-				cascadeAnnotation == null
-						? null
-						: cascadeAnnotation.value();
+		final var cascades = convertToHibernateCascadeType( cascadeTypes );
+		final var hibernateCascades = cascadeAnnotation == null ? null : cascadeAnnotation.value();
 		if ( !isEmpty( hibernateCascades ) ) {
 			addAll( cascades, hibernateCascades );
 		}
@@ -937,9 +899,9 @@ public class BinderHelper {
 	}
 
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
-		final EnumSet<CascadeType> cascadeTypes = EnumSet.noneOf( CascadeType.class );
+		final var cascadeTypes = EnumSet.noneOf( CascadeType.class );
 		if ( cascades != null ) {
-			for ( jakarta.persistence.CascadeType cascade: cascades ) {
+			for ( var cascade: cascades ) {
 				cascadeTypes.add( convertCascadeType( cascade ) );
 			}
 		}
@@ -958,8 +920,8 @@ public class BinderHelper {
 	}
 
 	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
-		final StringBuilder cascade = new StringBuilder();
-		for ( CascadeType cascadeType : cascadeTypes ) {
+		final var cascade = new StringBuilder();
+		for ( var cascadeType : cascadeTypes ) {
 			cascade.append( "," );
 			cascade.append( switch ( cascadeType ) {
 				case ALL -> "all";
@@ -999,7 +961,7 @@ public class BinderHelper {
 			PropertyHolder propertyHolder,
 			Map<String, PersistentClass> persistentClasses) {
 		if ( targetValue instanceof Collection collection ) {
-			final ToOne element = (ToOne) collection.getElement();
+			final var element = (ToOne) collection.getElement();
 			checkMappedByType( mappedBy, propertyName, propertyHolder, persistentClasses, element );
 		}
 		else if ( targetValue instanceof ToOne toOne ) {
@@ -1018,8 +980,7 @@ public class BinderHelper {
 		PersistentClass ownerClass = propertyHolder.getPersistentClass();
 		while ( ownerClass != null ) {
 			if ( checkReferencedClass( ownerClass, referencedClass ) ) {
-				// the two entities map to the same table
-				// so we are good
+				// the two entities map to the same table, so we are good
 				return;
 			}
 			ownerClass = ownerClass.getSuperPersistentClass();
@@ -1044,14 +1005,39 @@ public class BinderHelper {
 		return false;
 	}
 
-	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
+	static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
 		if ( foreignKey == null ) {
 			return false;
 		}
 		else {
-			final ConstraintMode mode = foreignKey.value();
+			final var mode = foreignKey.value();
 			return mode == NO_CONSTRAINT
 				|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+		}
+	}
+
+	static void handleForeignKeyConstraint(
+			SimpleValue key,
+			ForeignKey foreignKey,
+			ForeignKey nestedForeignKey,
+			MetadataBuildingContext context) {
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( noConstraint( foreignKey, noConstraintByDefault )
+				|| noConstraint( nestedForeignKey, noConstraintByDefault ) ) {
+			key.disableForeignKey();
+		}
+		else if ( foreignKey != null ) {
+			key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+			key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( foreignKey.options() );
+		}
+		else if ( noConstraintByDefault ) {
+			key.disableForeignKey();
+		}
+		else if ( nestedForeignKey != null ) {
+			key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
+			key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( nestedForeignKey.options() );
 		}
 	}
 
@@ -1076,14 +1062,12 @@ public class BinderHelper {
 //		where context.getMetadataCollector() can cache some of this - either the annotations themselves
 //		or even just the XPackage resolutions
 
-		final String declaringClassName = classDetails.getName();
-		final String packageName = qualifier( declaringClassName );
+		final String packageName = qualifier( classDetails.getName() );
 		if ( isEmpty( packageName ) ) {
 			return null;
 		}
 		else {
-			final ModelsContext modelsContext =
-					context.getBootstrapContext().getModelsContext();
+			final var modelsContext = context.getBootstrapContext().getModelsContext();
 			try {
 				return modelsContext.getClassDetailsRegistry()
 						.resolveClassDetails( packageName + ".package-info" )

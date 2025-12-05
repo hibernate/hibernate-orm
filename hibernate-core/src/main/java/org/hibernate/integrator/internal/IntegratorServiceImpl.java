@@ -12,41 +12,33 @@ import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
 public class IntegratorServiceImpl implements IntegratorService {
-	private static final Logger LOG = Logger.getLogger( IntegratorServiceImpl.class.getName() );
 
 	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();
 
-	private IntegratorServiceImpl() {
-	}
-
-	public static IntegratorServiceImpl create(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
-		IntegratorServiceImpl instance = new IntegratorServiceImpl();
-
-		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
-		// separate project/jars.
-		instance.addIntegrator( new BeanValidationIntegrator() );
-		instance.addIntegrator( new CollectionCacheInvalidator() );
+	public IntegratorServiceImpl(Iterable<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
+		// Register standard integrators.
+		// Envers, for example, needs to be handled by discovery because in separate project/jar.
+		addIntegrator( integrators, new BeanValidationIntegrator() );
+		addIntegrator( integrators, new CollectionCacheInvalidator() );
 
 		// register provided integrators
-		for ( Integrator integrator : providedIntegrators ) {
-			instance.addIntegrator( integrator );
+		for ( var integrator : providedIntegrators ) {
+			addIntegrator( integrators, integrator );
 		}
-		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
-			instance.addIntegrator( integrator );
+		for ( var integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
+			addIntegrator( integrators, integrator );
 		}
-
-		return instance;
 	}
 
-	private void addIntegrator(Integrator integrator) {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Adding Integrator [%s]", integrator.getClass().getName() );
+	private static void addIntegrator(LinkedHashSet<Integrator> integrators, Integrator integrator) {
+		if ( SERVICE_LOGGER.isDebugEnabled() ) {
+			SERVICE_LOGGER.addingIntegrator( integrator.getClass().getName() );
 		}
 		integrators.add( integrator );
 	}

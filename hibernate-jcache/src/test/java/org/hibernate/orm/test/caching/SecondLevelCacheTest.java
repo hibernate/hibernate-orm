@@ -35,7 +35,7 @@ import jakarta.persistence.Id;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 /**
@@ -74,7 +74,7 @@ public class SecondLevelCacheTest {
 			log.info("Native load by id");
 			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-entity-native-example[]
-			Person person = session.get(Person.class, 1L);
+			Person person = session.find(Person.class, 1L);
 			//end::caching-entity-native-example[]
 		});
 
@@ -208,7 +208,7 @@ public class SecondLevelCacheTest {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-management-cache-mode-entity-native-example[]
 			session.setCacheMode(CacheMode.REFRESH);
-			Person person = session.get(Person.class, 1L);
+			Person person = session.find(Person.class, 1L);
 			//end::caching-management-cache-mode-entity-native-example[]
 		});
 

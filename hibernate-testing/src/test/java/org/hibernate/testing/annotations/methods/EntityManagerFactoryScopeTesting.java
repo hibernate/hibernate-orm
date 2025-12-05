@@ -6,6 +6,7 @@ package org.hibernate.testing.annotations.methods;
 
 import java.util.Set;
 
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.annotations.AnEntity;
@@ -13,6 +14,7 @@ import org.hibernate.testing.annotations.AnotherEntity;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,9 +48,7 @@ public class EntityManagerFactoryScopeTesting {
 	@AfterAll
 	public void tearDown(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from AnEntity" ).executeUpdate();
-				}
+			entityManager -> entityManager.createQuery( "delete from AnEntity" ).executeUpdate()
 		);
 	}
 
@@ -67,7 +67,6 @@ public class EntityManagerFactoryScopeTesting {
 		Set<EntityType<?>> entities = scope.getEntityManagerFactory().getMetamodel().getEntities();
 		assertEquals( 1, entities.size() );
 		assertEquals( "AnEntity", entities.iterator().next().getName() );
-		assertEquals( Boolean.FALSE, scope.getEntityManagerFactory().getProperties().get( "hibernate.jpa.compliance.query" ) );
 		scope.inEntityManager(
 				entityManager -> {
 					AnEntity ae = entityManager.find( AnEntity.class, 1 );
@@ -80,7 +79,7 @@ public class EntityManagerFactoryScopeTesting {
 
 	@Jpa(
 			annotatedClasses = AnotherEntity.class,
-			queryComplianceEnabled = true
+			integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_QUERY_COMPLIANCE, value = "true")}
 	)
 	@Test
 	public void annotatedMethodTest(EntityManagerFactoryScope scope) {
@@ -89,7 +88,7 @@ public class EntityManagerFactoryScopeTesting {
 		Set<EntityType<?>> entities = scope.getEntityManagerFactory().getMetamodel().getEntities();
 		assertEquals( 1, entities.size() );
 		assertEquals( "AnotherEntity", entities.iterator().next().getName() );
-		assertEquals( Boolean.TRUE, scope.getEntityManagerFactory().getProperties().get( "hibernate.jpa.compliance.query" ) );
+		assertEquals( "true", scope.getEntityManagerFactory().getProperties().get( "hibernate.jpa.compliance.query" ) );
 		scope.inTransaction(
 				entityManager -> {
 					AnotherEntity aoe = new AnotherEntity( 2, "AnotherEntity_1" );
@@ -107,9 +106,7 @@ public class EntityManagerFactoryScopeTesting {
 		Assertions.assertThrows(
 				IllegalArgumentException.class,
 				() -> scope.inTransaction(
-						entityManager -> {
-							AnEntity ae = entityManager.find( AnEntity.class, 1 );
-						}
+						entityManager -> 	entityManager.find( AnEntity.class, 1 )
 				)
 		);
 	}

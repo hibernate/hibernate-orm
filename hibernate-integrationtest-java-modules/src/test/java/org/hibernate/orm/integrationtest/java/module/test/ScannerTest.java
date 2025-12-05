@@ -14,9 +14,10 @@ import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.orm.integrationtest.java.module.test.entity.Author;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * We need to test that the scanner works, including when there is a module-info.class
@@ -34,11 +35,11 @@ public class ScannerTest {
 				StandardScanParameters.INSTANCE
 		);
 		Set<ClassDescriptor> locatedClasses = scan.getLocatedClasses();
-		Assert.assertEquals( 1, locatedClasses.size() );
+		assertEquals( 1, locatedClasses.size() );
 		ClassDescriptor classDescriptor = locatedClasses.iterator().next();
-		Assert.assertNotNull( classDescriptor );
-		Assert.assertEquals( Author.class.getName(), classDescriptor.getName() );
-		Assert.assertEquals( ClassDescriptor.Categorization.MODEL, classDescriptor.getCategorization() );
+		assertNotNull( classDescriptor );
+		assertEquals( Author.class.getName(), classDescriptor.getName() );
+		assertEquals( ClassDescriptor.Categorization.MODEL, classDescriptor.getCategorization() );
 	}
 
 }

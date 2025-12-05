@@ -4,12 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -17,7 +21,6 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -26,19 +29,20 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDerivedJoin<T> {
+public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDerivedJoin<T>, SqmSingularValuedJoin<T, T> {
 	private final SqmSubQuery<T> subQuery;
 	private final boolean lateral;
 
 	public SqmDerivedJoin(
 			SqmSubQuery<T> subQuery,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean lateral,
 			SqmRoot<T> sqmRoot) {
@@ -58,7 +62,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 			SqmSubQuery<T> subQuery,
 			boolean lateral,
 			SqmPathSource<T> pathSource,
-			String alias,
+			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<T> sqmRoot) {
 		super(
@@ -115,11 +119,11 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	public SqmRoot<?> getRoot() {
-		return (SqmRoot<?>) super.getLhs();
+		return (SqmRoot<?>) castNonNull( super.getLhs() );
 	}
 
 	@Override
-	public SqmRoot<?> findRoot() {
+	public @NonNull SqmRoot<?> findRoot() {
 		return getRoot();
 	}
 
@@ -134,28 +138,28 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public SqmFrom<?,T> getLhs() {
+	public @Nullable SqmFrom<?,T> getLhs() {
 		// A derived-join has no LHS
 		return null;
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(JpaExpression<Boolean> restriction) {
+	public SqmDerivedJoin<T> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(Expression<Boolean> restriction) {
+	public SqmDerivedJoin<T> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(JpaPredicate... restrictions) {
+	public SqmDerivedJoin<T> on(JpaPredicate @Nullable... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(Predicate... restrictions) {
+	public SqmDerivedJoin<T> on(Predicate @Nullable... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
@@ -168,8 +172,8 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T,T> createCorrelation() {
-		throw new UnsupportedOperationException();
+	public SqmCorrelatedDerivedJoin<T> createCorrelation() {
+		return new SqmCorrelatedDerivedJoin<>( this );
 	}
 
 	@Override
@@ -183,27 +187,27 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> getAttribute() {
+	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
 		// none
 		return null;
 	}
@@ -220,15 +224,18 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmDerivedJoin<?> that
-			&& super.equals( object )
-			&& this.lateral == that.lateral
-			&& Objects.equals( this.subQuery, that.subQuery );
+	public boolean deepEquals(SqmFrom<?, ?> object) {
+		return super.deepEquals( object )
+			&& object instanceof SqmDerivedJoin<?> that
+			&& lateral == that.isLateral()
+			&& subQuery.equals( that.subQuery );
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash( super.hashCode(), subQuery, lateral );
+	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+		return super.isDeepCompatible( object )
+			&& object instanceof SqmDerivedJoin<?> that
+			&& lateral == that.isLateral()
+			&& subQuery.isCompatible( that.subQuery );
 	}
 }

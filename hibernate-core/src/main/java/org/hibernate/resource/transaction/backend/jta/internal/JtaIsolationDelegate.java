@@ -58,12 +58,11 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 			this.sqlExceptionConverter = sqlExceptionConverter::convert;
 		}
 		else {
-			SQLStateConversionDelegate delegate = new SQLStateConversionDelegate(
-					() -> {
+			var delegate =
+					new SQLStateConversionDelegate( () -> {
 						throw new AssertionFailure(
 								"Unexpected call to ConversionContext.getViolatedConstraintNameExtractor" );
-					}
-			);
+					} );
 			this.sqlExceptionConverter = (sqlException, message) -> delegate.convert( sqlException, message, null );
 		}
 	}
@@ -144,7 +143,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	private Transaction suspend() throws SystemException {
-		final Transaction surroundingTransaction = transactionManager.suspend();
+		final var surroundingTransaction = transactionManager.suspend();
 		if ( surroundingTransaction != null ) {
 			JTA_LOGGER.transactionSuspended( surroundingTransaction );
 		}
@@ -226,7 +225,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	private HibernateException convert(SQLException sqle, String message) {
-		final JDBCException jdbcException = sqlExceptionConverter.apply( sqle, message );
+		final var jdbcException = sqlExceptionConverter.apply( sqle, message );
 		return jdbcException == null ? new HibernateException( message, sqle ) : jdbcException;
 	}
 

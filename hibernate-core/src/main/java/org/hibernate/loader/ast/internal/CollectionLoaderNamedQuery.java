@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.QueryImplementor;
 
 import jakarta.persistence.Parameter;
 
@@ -38,7 +37,7 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		final QueryImplementor<?> query = namedQueryMemento.toQuery( session );
+		final var query = namedQueryMemento.toQuery( session );
 		//noinspection unchecked
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), key );
 		query.setHibernateFlushMode( FlushMode.MANUAL );
@@ -49,11 +48,10 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 			return persistentCollection;
 		}
 		else {
-			// using annotations we have no way to specify a @CollectionResult
-			final CollectionKey collectionKey = new CollectionKey( persister, key );
-			final PersistentCollection<?> collection =
+			// using annotations, we have no way to specify a @CollectionResult
+			final var collection =
 					session.getPersistenceContextInternal()
-							.getCollection( collectionKey );
+							.getCollection( new CollectionKey( persister, key ) );
 			for ( Object element : resultList ) {
 				if ( element != null
 						&& !persister.getElementType().getReturnedClass().isInstance( element ) ) {

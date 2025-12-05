@@ -8,14 +8,12 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -24,25 +22,25 @@ public class AcmeCorpPhysicalNamingStrategyTest {
 	private AcmeCorpPhysicalNamingStrategy strategy = new AcmeCorpPhysicalNamingStrategy();
 	private StandardServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void prepareServiceRegistry() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.build();
 	}
 
-	@After
+	@AfterEach
 	public void releaseServiceRegistry() {
-		if (serviceRegistry != null) {
-			StandardServiceRegistryBuilder.destroy(serviceRegistry);
+		if ( serviceRegistry != null ) {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
 	@Test
 	public void testTableNaming() {
 		{
-			Identifier in = Identifier.toIdentifier("accountNumber");
-			Identifier out = strategy.toPhysicalTableName(in, serviceRegistry.getService(JdbcEnvironment.class));
-			assertThat(out.getText(), equalTo("acct_num"));
+			Identifier in = Identifier.toIdentifier( "accountNumber" );
+			Identifier out = strategy.toPhysicalTableName( in, serviceRegistry.getService( JdbcEnvironment.class ) );
+			assertThat( out.getText() ).isEqualTo( "acct_num" );
 		}
 	}
 }

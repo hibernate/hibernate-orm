@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "JUnitMalformedDeclaration"})
 @SessionFactory
 public abstract class LongStringTest {
 	private static final int LONG_STRING_SIZE = 10000;
@@ -31,65 +31,53 @@ public abstract class LongStringTest {
 		String changed = buildRecursively( LONG_STRING_SIZE, 'y' );
 		String empty = "";
 
-		Long id = scope.fromTransaction(
-				session -> {
-					LongStringHolder entity = new LongStringHolder();
-					session.persist( entity );
-					return entity.getId();
-				}
-		);
+		var id = scope.fromTransaction(session -> {
+			var entity = new LongStringHolder();
+			session.persist( entity );
+			return entity.getId();
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongStringHolder entity = session.get( LongStringHolder.class, id );
-					assertNull( entity.getLongString() );
-					entity.setLongString( original );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongStringHolder.class, id );
+			assertNull( entity.getLongString() );
+			entity.setLongString( original );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongStringHolder entity = session.get( LongStringHolder.class, id );
-					assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
-					assertEquals( original, entity.getLongString() );
-					entity.setLongString( changed );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongStringHolder.class, id );
+			assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
+			assertEquals( original, entity.getLongString() );
+			entity.setLongString( changed );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongStringHolder entity = session.get( LongStringHolder.class, id );
-					assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
-					assertEquals( changed, entity.getLongString() );
-					entity.setLongString( null );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongStringHolder.class, id );
+			assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
+			assertEquals( changed, entity.getLongString() );
+			entity.setLongString( null );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongStringHolder entity = session.get( LongStringHolder.class, id );
-					assertNull( entity.getLongString() );
-					entity.setLongString( empty );
-				}
-		);
+		scope.inTransaction(session -> {
+			var entity = session.find( LongStringHolder.class, id );
+			assertNull( entity.getLongString() );
+			entity.setLongString( empty );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					LongStringHolder entity = session.get( LongStringHolder.class, id );
-					if ( entity.getLongString() != null ) {
-						if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
-							//Sybase uses a single blank to denote an empty string (this is by design). So, when inserting an empty string '', it is interpreted as single blank ' '.
-							assertEquals( empty.length(), entity.getLongString().trim().length() );
-							assertEquals( empty, entity.getLongString().trim() );
-						}
-						else {
-							assertEquals( empty.length(), entity.getLongString().length() );
-							assertEquals( empty, entity.getLongString() );
-						}
-					}
-					session.remove( entity );
+		scope.inTransaction(session -> {
+			var entity = session.find( LongStringHolder.class, id );
+			if ( entity.getLongString() != null ) {
+				if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
+					//Sybase uses a single blank to denote an empty string (this is by design). So, when inserting an empty string '', it is interpreted as single blank ' '.
+					assertEquals( empty.length(), entity.getLongString().trim().length() );
+					assertEquals( empty, entity.getLongString().trim() );
 				}
-		);
+				else {
+					assertEquals( empty.length(), entity.getLongString().length() );
+					assertEquals( empty, entity.getLongString() );
+				}
+			}
+			session.remove( entity );
+		} );
 	}
 
 	private String buildRecursively(int size, char baseChar) {

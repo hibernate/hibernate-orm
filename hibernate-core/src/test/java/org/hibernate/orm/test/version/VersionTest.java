@@ -5,150 +5,120 @@
 package org.hibernate.orm.test.version;
 
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Max Rydahl Andersen
  */
-public class VersionTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "org/hibernate/orm/test/version/PersonThing.hbm.xml" };
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "";
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/version/PersonThing.hbm.xml")
+@SessionFactory
+public class VersionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testVersionShortCircuitFlush() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Person gavin = new Person("Gavin");
-		new Thing("Passport", gavin);
-		s.persist(gavin);
-		t.commit();
-		s.close();
+	public void testVersionShortCircuitFlush(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			Person gavin = new Person("Gavin");
+			new Thing("Passport", gavin);
+			session.persist(gavin);
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		Thing passp = (Thing) s.get(Thing.class, "Passport");
-		passp.setLongDescription("blah blah blah");
-		s.createQuery("from Person").list();
-		s.createQuery("from Person").list();
-		s.createQuery("from Person").list();
-		t.commit();
-		s.close();
+		var passp = factoryScope.fromTransaction( (session) -> {
+			Thing loaded = session.find( Thing.class, "Passport" );
+			loaded.setLongDescription("blah blah blah");
+			session.createQuery("from Person").list();
+			session.createQuery("from Person").list();
+			session.createQuery("from Person").list();
+			return loaded;
+		} );
 
-		assertEquals( 1, passp.getVersion() );
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.createQuery("delete from Thing").executeUpdate();
-		s.createQuery("delete from Person").executeUpdate();
-		t.commit();
-		s.close();
+		assertThat( passp.getVersion() ).isEqualTo( 1 );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-11549")
-	public void testMetamodelContainsHbmVersion() {
-		try (Session session = openSession()) {
+	public void testMetamodelContainsHbmVersion(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			session.getMetamodel().entity( Person.class ).getAttribute( "version" );
-		}
+		} );
 	}
 
 	@Test
-	public void testCollectionVersion() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Person gavin = new Person("Gavin");
-		new Thing("Passport", gavin);
-		s.persist(gavin);
-		t.commit();
-		s.close();
+	public void testCollectionVersion(SessionFactoryScope factoryScope) {
+		final MutableObject<Person> gavinRef = new MutableObject<>();
 
-		assertEquals(0, gavin.getVersion());
+		factoryScope.inTransaction( (session) -> {
+			Person gavin = new Person("Gavin");
+			new Thing("Passport", gavin);
+			session.persist(gavin);
+			gavinRef.set( gavin );
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = getPerson( s );
-		new Thing("Laptop", gavin);
-		t.commit();
-		s.close();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 0 );
 
-		assertEquals(1, gavin.getVersion());
-		assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
+		factoryScope.inTransaction( (session) -> {
+			final Person gavin = session.find( Person.class, "Gavin" );
+			gavinRef.set( gavin );
+			new Thing("Laptop", gavin);
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = getPerson( s );
-		gavin.getThings().clear();
-		t.commit();
-		s.close();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 1 );
+		assertFalse( Hibernate.isInitialized( gavinRef.get().getThings() ) );
 
-		assertEquals(2, gavin.getVersion());
-		assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
+		factoryScope.inTransaction( (session) -> {
+			final Person gavin = session.find( Person.class, "Gavin" );
+			gavinRef.set( gavin );
+			gavin.getThings().clear();
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove(gavin);
-		t.commit();
-		s.close();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 2 );
+		assertTrue( Hibernate.isInitialized( gavinRef.get().getThings() ) );
 	}
 
 	@Test
-	public void testCollectionNoVersion() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Person gavin = new Person("Gavin");
-		new Task("Code", gavin);
-		s.persist(gavin);
-		t.commit();
-		s.close();
+	public void testCollectionNoVersion(SessionFactoryScope factoryScope) {
+		final MutableObject<Person> gavinRef = new MutableObject<>();
 
-		assertEquals(0, gavin.getVersion());
+		factoryScope.inTransaction( (session) -> {
+			Person gavin = new Person("Gavin");
+			new Task("Code", gavin);
+			session.persist(gavin);
+			gavinRef.set( gavin );
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = getPerson( s );
-		new Task("Document", gavin);
-		t.commit();
-		s.close();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 0 );
 
-		assertEquals(0, gavin.getVersion());
-		assertFalse( Hibernate.isInitialized( gavin.getTasks() ) );
+		factoryScope.inTransaction( (session) -> {
+			final Person gavin = session.find( Person.class, "Gavin" );
+			gavinRef.set( gavin );
+			new Task("Document", gavin);
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		gavin = getPerson( s );
-		gavin.getTasks().clear();
-		t.commit();
-		s.close();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 0 );
+		assertFalse( Hibernate.isInitialized( gavinRef.get().getTasks() ) );
 
-		assertEquals(0, gavin.getVersion());
-		assertTrue( Hibernate.isInitialized( gavin.getTasks() ) );
+		factoryScope.inTransaction( (session) -> {
+			final Person gavin = session.find( Person.class, "Gavin" );
+			gavinRef.set( gavin );
+			gavin.getTasks().clear();
+		} );
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove(gavin);
-		t.commit();
-		s.close();
-	}
-
-	private Person getPerson(Session s) {
-		return session.createQuery( "select p from Person p", Person.class ).uniqueResult();
+		assertThat( gavinRef.get().getVersion() ).isEqualTo( 0 );
+		assertTrue( Hibernate.isInitialized( gavinRef.get().getTasks() ) );
 	}
 }

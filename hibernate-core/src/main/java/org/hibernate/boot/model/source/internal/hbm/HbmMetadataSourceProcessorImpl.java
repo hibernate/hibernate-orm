@@ -16,7 +16,8 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * MetadataSourceProcessor implementation for processing {@code hbm.xml} mapping documents.
@@ -24,7 +25,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
 	private final Collection<MappingDocument> mappingDocuments;
 
@@ -41,13 +41,13 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	public HbmMetadataSourceProcessorImpl(
 			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
-		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+		final var hierarchyBuilder = new EntityHierarchyBuilder();
 
 		mappingDocuments = new ArrayList<>();
 
 		for ( var xmlBinding : xmlBindings ) {
 			if ( xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping hibernateMapping ) {
-				final MappingDocument mappingDocument = new MappingDocument(
+				final var mappingDocument = new MappingDocument(
 						"orm",
 						hibernateMapping,
 						xmlBinding.getOrigin(),
@@ -64,56 +64,56 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void prepare() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.prepare();
 		}
 	}
 
 	@Override
 	public void processTypeDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processTypeDefinitions();
 		}
 	}
 
 	@Override
 	public void processQueryRenames() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processQueryRenames();
 		}
 	}
 
 	@Override
 	public void processNamedQueries() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processNamedQueries();
 		}
 	}
 
 	@Override
 	public void processAuxiliaryDatabaseObjectDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processAuxiliaryDatabaseObjectDefinitions();
 		}
 	}
 
 	@Override
 	public void processFilterDefinitions() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processFilterDefinitions();
 		}
 	}
 
 	@Override
 	public void processFetchProfiles() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processFetchProfiles();
 		}
 	}
 
 	@Override
 	public void processIdentifierGenerators() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processIdentifierGenerators();
 		}
 	}
@@ -124,12 +124,11 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void processEntityHierarchies(Set<String> processedEntityNames) {
-		hierarchy_loop : for ( EntityHierarchySourceImpl entityHierarchy : entityHierarchies ) {
+		hierarchy_loop : for ( var entityHierarchy : entityHierarchies ) {
 			for ( String entityName : entityHierarchy.getContainedEntityNames() ) {
 				if ( processedEntityNames.contains( entityName ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed",
+					if ( BOOT_LOGGER.isDebugEnabled() ) {
+						BOOT_LOGGER.skippingHbmProcessingOfEntityHierarchy(
 								entityHierarchy.getRoot().getEntityNamingSource().getEntityName(),
 								entityName
 						);
@@ -137,7 +136,6 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 					continue hierarchy_loop;
 				}
 			}
-
 			modelBinder.bindEntityHierarchy( entityHierarchy );
 			processedEntityNames.addAll( entityHierarchy.getContainedEntityNames() );
 		}
@@ -148,14 +146,14 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 
 	@Override
 	public void processResultSetMappings() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.processResultSetMappings();
 		}
 	}
 
 	@Override
 	public void finishUp() {
-		for ( MappingDocument mappingDocument : mappingDocuments ) {
+		for ( var mappingDocument : mappingDocuments ) {
 			mappingDocument.finishUp();
 		}
 	}

@@ -10,553 +10,553 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gavin King
  */
-public class ProxyTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "proxy/DataPoint.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/proxy/DataPoint.hbm.xml"
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0")
+)
+public class ProxyTest {
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, 0 ); // problem on HSQLDB (go figure)
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
-	public void testFinalizeFiltered() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
+	public void testFinalizeFiltered(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
 
-		dp = s.getReference(DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
+					DataPoint d = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( d ) ).isFalse();
 
+					assertThrows( NoSuchMethodException.class, () ->
+							d.getClass().getDeclaredMethod( "finalize", (Class[]) null )
+					);
+
+					session.remove( d );
+				}
+		);
+	}
+
+	@Test
+	public void testProxyException(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
+
+					DataPoint d = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( d ) ).isFalse();
+
+					assertThrows( Exception.class, () -> d.exception() );
+
+					session.remove( d );
+				}
+		);
+	}
+
+	@Test
+	public void testProxyExceptionWithNewGetReference(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
+
+					DataPoint d = session.getReference( dp );
+					assertThat( Hibernate.isInitialized( d ) ).isFalse();
+
+					assertThrows( Exception.class, () -> d.exception() );
+
+					session.remove( d );
+				}
+		);
+	}
+
+	@Test
+	public void testProxyExceptionWithOldGetReference(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
+
+					DataPoint d = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( d ) ).isFalse();
+
+					assertThrows( Exception.class, () -> d.exception() );
+
+					session.remove( d );
+				}
+		);
+	}
+
+	@Test
+	public void testProxySerializationAfterSessionClosed(SessionFactoryScope scope) {
+		DataPoint d = scope.fromTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					return dp;
+				}
+		);
+		SerializationHelper.clone( d );
+
+		scope.inTransaction( session -> session.remove( d ) );
+	}
+
+	@Test
+	public void testInitializedProxySerializationAfterSessionClosed(SessionFactoryScope scope) {
+		DataPoint d = scope.fromTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					Hibernate.initialize( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					return dp;
+				}
+		);
+		SerializationHelper.clone( d );
+
+		scope.inTransaction( session -> session.remove( d ) );
+	}
+
+	@Test
+	public void testProxySerialization(SessionFactoryScope scope) {
+		Session s = scope.getSessionFactory().openSession();
+		Session sclone = null;
 		try {
-			dp.getClass().getDeclaredMethod( "finalize", (Class[]) null );
-			fail();
+			s.beginTransaction();
+			DataPoint dp = new DataPoint();
+			Object none = null;
+			try {
+				dp.setDescription( "a data point" );
+				dp.setX( new BigDecimal( "1.0" ) );
+				dp.setY( new BigDecimal( "2.0" ) );
+				s.persist( dp );
+				s.flush();
+				s.clear();
 
+				dp = s.getReference( DataPoint.class, dp.getId() );
+				assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+				dp.getId();
+				assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+				dp.getDescription();
+				assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+				none = s.getReference( DataPoint.class, 666L );
+
+				assertThat( Hibernate.isInitialized( none ) ).isFalse();
+
+				s.getTransaction().commit();
+			}
+			finally {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+			}
+			s.unwrap( SessionImplementor.class ).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
+
+			Object[] holder = new Object[] {s, dp, none};
+
+			holder = (Object[]) SerializationHelper.clone( holder );
+			sclone = (Session) holder[0];
+			dp = (DataPoint) holder[1];
+			none = holder[2];
+
+			//close the original:
+			s.close();
+			try {
+				sclone.beginTransaction();
+
+				DataPoint sdp = sclone.getReference( DataPoint.class, dp.getId() );
+				assertThat( sdp ).isSameAs( dp );
+				assertThat( sdp ).isNotInstanceOf( HibernateProxy.class );
+				Object snone = sclone.getReference( DataPoint.class, 666L );
+				assertThat( snone ).isSameAs( none );
+				assertThat( snone ).isInstanceOf( HibernateProxy.class );
+
+				sclone.remove( dp );
+
+				sclone.getTransaction().commit();
+			}
+			finally {
+				if ( sclone.getTransaction().isActive() ) {
+					sclone.getTransaction().rollback();
+				}
+			}
 		}
-		catch (NoSuchMethodException e) {}
-
-		s.remove(dp);
-		t.commit();
-		s.close();
+		finally {
+			if ( s.isOpen() ) {
+				s.close();
+			}
+			if ( sclone != null && sclone.isOpen() ) {
+				sclone.close();
+			}
+		}
 
 	}
 
 	@Test
-	public void testProxyException() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
+	public void testProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
 
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					DataPoint dp2 = session.get( DataPoint.class, dp.getId() );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.clear();
 
-		try {
-			dp.exception();
-			fail();
-		}
-		catch (Exception e) {
-			assertTrue( e.getClass()==Exception.class );
-		}
-		s.remove(dp);
-		t.commit();
-		s.close();
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.get( DataPoint.class, dp.getId(), LockMode.READ );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.find( DataPoint.class, dp.getId(), LockMode.READ );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.createQuery( "from DataPoint", DataPoint.class ).uniqueResult();
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.remove( dp );
+				}
+		);
 	}
 
 	@Test
-	public void testProxyExceptionWithNewGetReference() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
+	public void testProxyWithGetReference(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = new DataPoint();
+					dp.setDescription( "a data point" );
+					dp.setX( new BigDecimal( "1.0" ) );
+					dp.setY( new BigDecimal( "2.0" ) );
+					session.persist( dp );
+					session.flush();
+					session.clear();
 
-		dp = s.getReference(dp);
-		assertFalse( Hibernate.isInitialized(dp) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					DataPoint dp2 = session.get( DataPoint.class, dp.getId() );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.clear();
 
-		try {
-			dp.exception();
-			fail();
-		}
-		catch (Exception e) {
-			assertTrue( e.getClass()==Exception.class );
-		}
-		s.remove(dp);
-		t.commit();
-		s.close();
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					session.clear();
+
+					dp = session.getReference( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.getReference( dp );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.find( DataPoint.class, dp.getId(), LockMode.READ );
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.clear();
+
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					dp2 = session.createQuery( "from DataPoint", DataPoint.class ).uniqueResult();
+					assertThat( dp2 ).isSameAs( dp );
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
+					session.remove( dp );
+				}
+		);
 	}
 
 	@Test
-	public void testProxyExceptionWithOldGetReference() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
+	public void testSubsequentNonExistentProxyAccess(SessionFactoryScope scope) {
 
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
-
-		try {
-			dp.exception();
-			fail();
-		}
-		catch (Exception e) {
-			assertTrue( e.getClass()==Exception.class );
-		}
-		s.remove(dp);
-		t.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint proxy = session.getReference( DataPoint.class, (long) -1 );
+					assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+					try {
+						proxy.getDescription();
+						fail( "proxy access did not fail on non-existent proxy" );
+					}
+					catch (ObjectNotFoundException onfe) {
+						// expected
+					}
+					catch (Throwable e) {
+						fail( "unexpected exception type on non-existent proxy access : " + e );
+					}
+					// try it a second (subsequent) time...
+					try {
+						proxy.getDescription();
+						fail( "proxy access did not fail on non-existent proxy" );
+					}
+					catch (ObjectNotFoundException onfe) {
+						// expected
+					}
+					catch (Throwable e) {
+						fail( "unexpected exception type on non-existent proxy access : " + e );
+					}
+				}
+		);
 	}
 
+	@SuppressWarnings({"unchecked"})
 	@Test
-	public void testProxySerializationAfterSessionClosed() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		s.close();
-		SerializationHelper.clone( dp );
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( dp );
-		t.commit();
-		s.close();
-	}
-
-	@Test
-	public void testInitializedProxySerializationAfterSessionClosed() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		Hibernate.initialize( dp );
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.close();
-		SerializationHelper.clone( dp );
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( dp );
-		t.commit();
-		s.close();
-	}
-
-	@Test
-	public void testProxySerialization() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp.getId();
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp.getDescription();
-		assertTrue( Hibernate.isInitialized(dp) );
-		Object none = s.getReference( DataPoint.class, 666L);
-		assertFalse( Hibernate.isInitialized(none) );
-
-		t.commit();
-		s.unwrap( SessionImplementor.class ).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
-
-		Object[] holder = new Object[] { s, dp, none };
-
-		holder = (Object[]) SerializationHelper.clone(holder);
-		Session sclone = (Session) holder[0];
-		dp = (DataPoint) holder[1];
-		none = holder[2];
-
-		//close the original:
-		s.close();
-
-		t = sclone.beginTransaction();
-
-		DataPoint sdp = sclone.getReference( DataPoint.class, dp.getId());
-		assertSame(dp, sdp);
-		assertFalse(sdp instanceof HibernateProxy);
-		Object snone = sclone.getReference( DataPoint.class, 666L);
-		assertSame(none, snone);
-		assertTrue(snone instanceof HibernateProxy);
-
-		sclone.remove(dp);
-
-		t.commit();
-		sclone.close();
-
-	}
-
-	@Test
-	public void testProxy() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		DataPoint dp2 = s.get( DataPoint.class, dp.getId());
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.getReference( DataPoint.class, dp.getId() );
-		assertSame(dp, dp2);
-		assertFalse( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.get( DataPoint.class, dp.getId(), LockMode.READ );
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.find( DataPoint.class, dp.getId(), LockMode.READ );
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.remove( dp );
-		t.commit();
-		s.close();
-	}
-
-	@Test
-	public void testProxyWithGetReference() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription("a data point");
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
-		s.persist(dp);
-		s.flush();
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
-		DataPoint dp2 = s.get( DataPoint.class, dp.getId() );
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.getReference( DataPoint.class, dp.getId() );
-		assertSame(dp, dp2);
-		assertFalse( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( dp );
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.getReference( dp );
-		assertSame(dp, dp2);
-		assertFalse( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.find( DataPoint.class, dp.getId(), LockMode.READ );
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.clear();
-
-		dp = s.getReference( DataPoint.class, dp.getId() );
-		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = (DataPoint) s.createQuery("from DataPoint").uniqueResult();
-		assertSame(dp, dp2);
-		assertTrue( Hibernate.isInitialized(dp) );
-		s.remove( dp );
-		t.commit();
-		s.close();
-	}
-
-	@Test
-	public void testSubsequentNonExistentProxyAccess() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-
-		DataPoint proxy = s.getReference( DataPoint.class, (long) -1);
-		assertFalse( Hibernate.isInitialized( proxy ) );
-		try {
-			proxy.getDescription();
-			fail( "proxy access did not fail on non-existent proxy" );
-		}
-		catch( ObjectNotFoundException onfe ) {
-			// expected
-		}
-		catch( Throwable e ) {
-			fail( "unexpected exception type on non-existent proxy access : " + e );
-		}
-		// try it a second (subsequent) time...
-		try {
-			proxy.getDescription();
-			fail( "proxy access did not fail on non-existent proxy" );
-		}
-		catch( ObjectNotFoundException onfe ) {
-			// expected
-		}
-		catch( Throwable e ) {
-			fail( "unexpected exception type on non-existent proxy access : " + e );
-		}
-
-		t.commit();
-		s.close();
-	}
-
-	@SuppressWarnings( {"unchecked"})
-	@Test
-	public void testProxyEviction() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+	public void testProxyEviction(SessionFactoryScope scope) {
 		Container container = new Container( "container" );
-		container.setOwner( new Owner( "owner" ) );
-		container.setInfo( new Info( "blah blah blah" ) );
-		container.getDataPoints().add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
-		container.getDataPoints().add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
-		s.persist( container );
-		t.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					container.setOwner( new Owner( "owner" ) );
+					container.setInfo( new Info( "blah blah blah" ) );
+					container.getDataPoints()
+							.add( new DataPoint( new BigDecimal( 1 ), new BigDecimal( 1 ), "first data point" ) );
+					container.getDataPoints()
+							.add( new DataPoint( new BigDecimal( 2 ), new BigDecimal( 2 ), "second data point" ) );
+					session.persist( container );
+				}
+		);
 
-		s = openSession();
-		t = s.beginTransaction();
-		Container c = s.getReference( Container.class, container.getId() );
-		assertFalse( Hibernate.isInitialized( c ) );
-		s.evict( c );
-		try {
-			c.getName();
-			fail( "expecting LazyInitializationException" );
-		}
-		catch( LazyInitializationException e ) {
-			// expected result
-		}
+		scope.inTransaction(
+				session -> {
+					Container c = session.getReference( Container.class, container.getId() );
+					assertThat( Hibernate.isInitialized( c ) ).isFalse();
+					session.evict( c );
+					try {
+						c.getName();
+						fail( "expecting LazyInitializationException" );
+					}
+					catch (LazyInitializationException e) {
+						// expected result
+					}
 
-		c = s.getReference( Container.class, container.getId() );
-		assertFalse( Hibernate.isInitialized( c ) );
-		Info i = c.getInfo();
-		assertTrue( Hibernate.isInitialized( c ) );
-		assertFalse( Hibernate.isInitialized( i ) );
-		s.evict( c );
-		try {
-			i.getDetails();
-			fail( "expecting LazyInitializationException" );
-		}
-		catch( LazyInitializationException e ) {
-			// expected result
-		}
+					c = session.getReference( Container.class, container.getId() );
+					assertThat( Hibernate.isInitialized( c ) ).isFalse();
+					Info i = c.getInfo();
+					assertThat( Hibernate.isInitialized( c ) ).isTrue();
+					assertThat( Hibernate.isInitialized( i ) ).isFalse();
+					session.evict( c );
+					try {
+						i.getDetails();
+						fail( "expecting LazyInitializationException" );
+					}
+					catch (LazyInitializationException e) {
+						// expected result
+					}
 
-		s.remove( c );
-
-		t.commit();
-		s.close();
+					session.remove( c );
+				}
+		);
 	}
 
 	@Test
-	public void testFullyLoadedPCSerialization() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Long lastContainerId = null;
+	public void testFullyLoadedPCSerialization(SessionFactoryScope scope) {
 		int containerCount = 10;
 		int nestedDataPointCount = 5;
-		for ( int c_indx = 0; c_indx < containerCount; c_indx++ ) {
-			Owner owner = new Owner( "Owner #" + c_indx );
-			Container container = new Container( "Container #" + c_indx );
-			container.setOwner( owner );
-			for ( int dp_indx = 0; dp_indx < nestedDataPointCount; dp_indx++ ) {
-				DataPoint dp = new DataPoint();
-				dp.setDescription( "data-point [" + c_indx + ", " + dp_indx + "]" );
-// more HSQLDB fun...
-//				dp.setX( new BigDecimal( c_indx ) );
-				dp.setX( new BigDecimal( c_indx + dp_indx ) );
-				dp.setY( new BigDecimal( dp_indx ) );
-				container.getDataPoints().add( dp );
-			}
-			s.persist( container );
-			lastContainerId = container.getId();
-		}
-		t.commit();
-		s.close();
-
-		s = openSession();
-		s.setHibernateFlushMode( FlushMode.MANUAL );
-		t = s.beginTransaction();
-		// load the last container as a proxy
-		Container proxy = s.getReference( Container.class, lastContainerId );
-		assertFalse( Hibernate.isInitialized( proxy ) );
-		// load the rest back into the PC
-		List all = s.createQuery( "from Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :l" )
-				.setParameter( "l", lastContainerId.longValue() )
-				.list();
-		Container container = ( Container ) all.get( 0 );
-		s.remove( container );
-		// force a snapshot retrieval of the proxied container
-		SessionImpl sImpl = ( SessionImpl ) s;
-		sImpl.getPersistenceContext().getDatabaseSnapshot(
-				lastContainerId,
-				sImpl.getFactory().getMappingMetamodel().getEntityDescriptor(Container.class.getName())
+		Long lastContainerId = scope.fromTransaction(
+				session -> {
+					Long last = 0L;
+					for ( int c_indx = 0; c_indx < containerCount; c_indx++ ) {
+						Owner owner = new Owner( "Owner #" + c_indx );
+						Container container = new Container( "Container #" + c_indx );
+						container.setOwner( owner );
+						for ( int dp_indx = 0; dp_indx < nestedDataPointCount; dp_indx++ ) {
+							DataPoint dp = new DataPoint();
+							dp.setDescription( "data-point [" + c_indx + ", " + dp_indx + "]" );
+							// more HSQLDB fun...
+							//				dp.setX( new BigDecimal( c_indx ) );
+							dp.setX( new BigDecimal( c_indx + dp_indx ) );
+							dp.setY( new BigDecimal( dp_indx ) );
+							container.getDataPoints().add( dp );
+						}
+						session.persist( container );
+						last =  container.getId();
+					}
+					return last;
+				}
 		);
-		assertFalse( Hibernate.isInitialized( proxy ) );
-		t.commit();
 
-//		int iterations = 50;
-//		long cumulativeTime = 0;
-//		long cumulativeSize = 0;
-//		for ( int i = 0; i < iterations; i++ ) {
-//			final long start = System.currentTimeMillis();
-//			byte[] bytes = SerializationHelper.serialize( s );
-//			SerializationHelper.deserialize( bytes );
-//			final long end = System.currentTimeMillis();
-//			cumulativeTime += ( end - start );
-//			int size = bytes.length;
-//			cumulativeSize += size;
-////			System.out.println( "Iteration #" + i + " took " + ( end - start ) + " ms : size = " + size + " bytes" );
-//		}
-//		System.out.println( "Average time : " + ( cumulativeTime / iterations ) + " ms" );
-//		System.out.println( "Average size : " + ( cumulativeSize / iterations ) + " bytes" );
+		scope.inSession(
+				session -> {
+					session.setHibernateFlushMode( FlushMode.MANUAL );
+					try {
+						session.beginTransaction();
+						// load the last container as a proxy
+						Container proxy = session.getReference( Container.class, lastContainerId );
+						assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+						// load the rest back into the PC
+						List<Container> all = session.createQuery(
+										"from Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :l",
+										Container.class )
+								.setParameter( "l", lastContainerId )
+								.list();
+						Container container = all.get( 0 );
+						session.remove( container );
+						// force a snapshot retrieval of the proxied container
+						session.getPersistenceContext().getDatabaseSnapshot(
+								lastContainerId,
+								session.getFactory().getMappingMetamodel()
+										.getEntityDescriptor( Container.class.getName() )
+						);
+						assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+						session.getTransaction().commit();
+						byte[] bytes = SerializationHelper.serialize( session );
+						SerializationHelper.deserialize( bytes );
 
-		byte[] bytes = SerializationHelper.serialize( s );
-		SerializationHelper.deserialize( bytes );
-
-		t = s.beginTransaction();
-		int count = s.createQuery( "delete DataPoint" ).executeUpdate();
-		assertEquals( "unexpected DP delete count", ( containerCount * nestedDataPointCount ), count );
-		count = s.createQuery( "delete Container" ).executeUpdate();
-		assertEquals( "unexpected container delete count", containerCount, count );
-		count = s.createQuery( "delete Owner" ).executeUpdate();
-		assertEquals( "unexpected owner delete count", containerCount, count );
-		t.commit();
-		s.close();
+						session.beginTransaction();
+						int count = session.createMutationQuery( "delete DataPoint" ).executeUpdate();
+						assertThat( count )
+								.describedAs( "unexpected DP delete count" )
+								.isEqualTo( containerCount * nestedDataPointCount );
+						count = session.createMutationQuery( "delete Container" ).executeUpdate();
+						assertThat( count )
+								.describedAs( "unexpected container delete count" )
+								.isEqualTo( containerCount );
+						count = session.createMutationQuery( "delete Owner" ).executeUpdate();
+						assertThat( count )
+								.describedAs( "unexpected owner delete count" )
+								.isEqualTo( containerCount );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testRefreshLockInitializedProxy() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = newPersistentDataPoint( s );
+	public void testRefreshLockInitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = newPersistentDataPoint( session );
 
-		dp = s.getReference( DataPoint.class, dp.getId());
-		dp.getX();
-		assertTrue( Hibernate.isInitialized( dp ) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					dp.getX();
+					assertThat( Hibernate.isInitialized( dp ) ).isTrue();
 
-		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
-		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
+					session.refresh( dp, LockMode.PESSIMISTIC_WRITE );
+					assertThat( session.getCurrentLockMode( dp ) ).isSameAs( LockMode.PESSIMISTIC_WRITE );
 
-		s.remove( dp );
-		t.commit();
-		s.close();
+					session.remove( dp );
+				}
+		);
 	}
 
 	@Test
-	@JiraKey( "HHH-1645" )
-	public void testRefreshLockUninitializedProxy() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = newPersistentDataPoint( s );
+	@JiraKey("HHH-1645")
+	public void testRefreshLockUninitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = newPersistentDataPoint( session );
 
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized( dp ) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
 
-		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
-		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
+					session.refresh( dp, LockMode.PESSIMISTIC_WRITE );
+					assertThat( session.getCurrentLockMode( dp ) ).isSameAs( LockMode.PESSIMISTIC_WRITE );
 
-		s.remove( dp );
-		t.commit();
-		s.close();
+					session.remove( dp );
+				}
+		);
 	}
 
 	private static DataPoint newPersistentDataPoint(Session s) {
 		DataPoint dp = new DataPoint();
 		dp.setDescription( "a data point" );
-		dp.setX( new BigDecimal("1.0") );
-		dp.setY( new BigDecimal("2.0") );
+		dp.setX( new BigDecimal( "1.0" ) );
+		dp.setY( new BigDecimal( "2.0" ) );
 		s.persist( dp );
 		s.flush();
 		s.clear();
@@ -564,36 +564,36 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@JiraKey( "HHH-1645" )
-	public void testRefreshLockUninitializedProxyThenRead() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = newPersistentDataPoint( s );
+	@JiraKey("HHH-1645")
+	public void testRefreshLockUninitializedProxyThenRead(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = newPersistentDataPoint( session );
 
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
-		dp.getX();
-		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					session.refresh( dp, LockMode.PESSIMISTIC_WRITE );
+					dp.getX();
+					assertThat( session.getCurrentLockMode( dp ) ).isSameAs( LockMode.PESSIMISTIC_WRITE );
 
-		s.remove( dp );
-		t.commit();
-		s.close();
+					session.remove( dp );
+				}
+		);
 	}
 
 	@Test
-	public void testLockUninitializedProxy() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		DataPoint dp = newPersistentDataPoint( s );
+	public void testLockUninitializedProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = newPersistentDataPoint( session );
 
-		dp = s.getReference( DataPoint.class, dp.getId());
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.lock( dp, LockMode.PESSIMISTIC_WRITE );
-		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
+					dp = session.getReference( DataPoint.class, dp.getId() );
+					assertThat( Hibernate.isInitialized( dp ) ).isFalse();
+					session.lock( dp, LockMode.PESSIMISTIC_WRITE );
+					assertThat( session.getCurrentLockMode( dp ) ).isSameAs( LockMode.PESSIMISTIC_WRITE );
 
-		s.remove( dp );
-		t.commit();
-		s.close();
+					session.remove( dp );
+				}
+		);
 	}
 }

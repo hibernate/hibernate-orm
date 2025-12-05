@@ -4,20 +4,22 @@
  */
 package org.hibernate.orm.test.property;
 
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
-import org.hibernate.property.access.spi.PropertyAccess;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class PropertyAccessStrategyMapTest {
 
 	@Test
 	public void testBasicMapClass() {
@@ -31,19 +33,13 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNonMap() {
-		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
-
-		try {
-			accessStrategy.buildPropertyAccess( Date.class, "time", true );
-
-			fail("Should throw IllegalArgumentException");
-		}
-		catch (IllegalArgumentException e) {
-			assertEquals(
-				"Expecting class: [java.util.Map], but containerJavaType is of type: [java.util.Date] for propertyName: [time]",
-				e.getMessage()
-			);
-		}
+		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
+		IllegalArgumentException exception = assertThrows( IllegalArgumentException.class, () ->
+				accessStrategy.buildPropertyAccess( Date.class, "time", true )
+		);
+		assertThat( exception.getMessage() ).isEqualTo(
+				"Expecting class: [java.util.Map], but containerJavaType is of type: [java.util.Date] for propertyName: [time]"
+		);
 	}
 
 	private void testBasic(final Class<?> clazz) {
@@ -51,13 +47,15 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 		final String key = "testKey";
 		final String value = "testValue";
 
-		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
+		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
 		final PropertyAccess access = accessStrategy.buildPropertyAccess( clazz, key, true );
 
 		final HashMap<String, String> map = new HashMap<>();
 
-		access.getSetter().set( map, value );
-		assertEquals( value, map.get( key ) );
-		assertEquals( value, access.getGetter().get( map ) );
+		Setter setter = access.getSetter();
+		assertThat( setter ).isNotNull();
+		setter.set( map, value );
+		assertThat( map.get( key ) ).isEqualTo( value );
+		assertThat( access.getGetter().get( map ) ).isEqualTo( value );
 	}
 }

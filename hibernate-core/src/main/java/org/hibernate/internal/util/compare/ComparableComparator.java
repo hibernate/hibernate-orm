@@ -13,18 +13,17 @@ import java.util.Comparator;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class ComparableComparator<T extends Comparable> implements Comparator<T>, Serializable {
+public class ComparableComparator<T extends Comparable<T>> implements Comparator<T>, Serializable {
 
+	@SuppressWarnings("rawtypes")
 	public static final Comparator INSTANCE = new ComparableComparator();
 
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable> Comparator<T> instance() {
+	public static <T extends Comparable<T>> Comparator<T> instance() {
 		return INSTANCE;
 	}
 
-	@SuppressWarnings("unchecked")
-	public int compare(Comparable one, Comparable another) {
+	public int compare(T one, T another) {
 		return one.compareTo( another );
 	}
 }

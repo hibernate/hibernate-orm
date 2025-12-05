@@ -19,12 +19,16 @@ buildDir = "target"
 dependencies {
 	implementation gradleApi()
 
-	implementation "jakarta.inject:jakarta.inject-api:2.0.0"
+	implementation "jakarta.inject:jakarta.inject-api:2.0.1"
 
-	implementation 'io.smallrye:jandex:3.1.2'
+	implementation "org.glassfish.jaxb:jaxb-xjc:4.0.6"
+	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-tools:2.2.1"
+	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-plugins:2.2.1"
+
+	implementation 'io.smallrye:jandex:3.5.2'
 	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
-	implementation 'jakarta.json:jakarta.json-api:2.0.1'
+	implementation 'jakarta.json:jakarta.json-api:2.0.2'
 	implementation 'org.eclipse:yasson:2.0.4'
 	implementation 'org.jsoup:jsoup:1.21.1'
 
@@ -53,21 +57,9 @@ gradlePlugin {
 			id = 'org.hibernate.orm.antlr'
 			implementationClass = 'org.hibernate.orm.antlr.AntlrPlugin'
 		}
-		jakartaPlugin {
-			id = 'org.hibernate.orm.jakarta'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPlugin'
-		}
-		jakartaPublishPlugin {
-			id = 'org.hibernate.orm.jakarta-publish'
-			implementationClass = 'org.hibernate.orm.jakarta.JakartaPublishingPlugin'
-		}
 		reportsPlugin {
 			id = 'org.hibernate.orm.build.reports'
 			implementationClass = 'org.hibernate.orm.post.ReportGenerationPlugin'
-		}
-		docPubPlugin {
-			id = 'org.hibernate.orm.build.doc-pub'
-			implementationClass = 'org.hibernate.orm.docs.DocumentationPublishingPlugin'
 		}
 		envSettings {
 			id = 'org.hibernate.orm.build.env-settings'
@@ -106,7 +98,7 @@ gradlePlugin {
 
 spotless {
 	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
-	enforceCheck false
+	enforceCheck = false
 	java {
 		targetExclude( "**/target/**/*.java" )
 		licenseHeaderFile project.file("../shared/config/spotless/license.java")

@@ -10,33 +10,38 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11841")
-public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(xmlMappings = {
+		"mappings/collections/Category.hbm.xml",
+		"mappings/collections/Item.hbm.xml"
+})
+public class EntityMapCompositeElementTest {
 
-	private Category category;
-	private Item item;
+	private Long categoryId;
+	private Long itemId;
 
-	@Test
-	@Priority(10)
-	public void initData() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager-> {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager-> {
 			final Item item = new Item( "The Item" );
 			entityManager.persist( item );
 
@@ -46,45 +51,40 @@ public class EntityMapCompositeElementTest extends BaseEnversJPAFunctionalTestCa
 			category.setText( item, "The text" );
 			entityManager.persist( category );
 
-			this.category = category;
-			this.item = item;
+			this.categoryId = category.getId();
+			this.itemId = item.getId();
 		} );
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-11841", message = "Reverted fix in HHH-12018 and will be fixed in HHH-12043")
-	public void testRevisionHistory() {
-		final AuditReader reader = getAuditReader();
+	@FailureExpected(jiraKey = "HHH-11841", reason = "Reverted fix in HHH-12018 and will be fixed in HHH-12043")
+	public void testRevisionHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final AuditReader reader = AuditReaderFactory.get( em );
 
-		AuditQuery categoryQuery = reader.createQuery().forRevisionsOfEntity( Category.class, false, true )
-				.addOrder( AuditEntity.revisionProperty( "timestamp" ).asc() )
-				.add( AuditEntity.id().eq( category.getId() ) );
+			AuditQuery categoryQuery = reader.createQuery().forRevisionsOfEntity( Category.class, false, true )
+					.addOrder( AuditEntity.revisionProperty( "timestamp" ).asc() )
+					.add( AuditEntity.id().eq( categoryId ) );
 
-		@SuppressWarnings( "unchecked" )
-		List<Object[]> history = (List<Object[]>) categoryQuery.getResultList();
-		assertNotNull( history );
-		assertEquals( 1, history.size() );
+			@SuppressWarnings( "unchecked" )
+			List<Object[]> history = (List<Object[]>) categoryQuery.getResultList();
+			assertNotNull( history );
+			assertEquals( 1, history.size() );
 
-		final Category category = (Category) reader.createQuery().forEntitiesAtRevision( Category.class, 1 )
-				.add( AuditEntity.property( "id" ).eq( this.category.getId() ) )
-				.setMaxResults( 1 )
-				.getSingleResult();
+			final Item item = em.find( Item.class, itemId );
+			final Category category = (Category) reader.createQuery().forEntitiesAtRevision( Category.class, 1 )
+					.add( AuditEntity.property( "id" ).eq( this.categoryId ) )
+					.setMaxResults( 1 )
+					.getSingleResult();
 
-		assertEquals( this.category.getName(), category.getName() );
-		assertEquals( this.category.getDescription(), category.getDescription() );
-		assertEquals( "The text", category.getText( this.item ) );
+			assertEquals( "The Category", category.getName() );
+			assertEquals( "The description", category.getDescription() );
+			assertEquals( "The text", category.getText( item ) );
 
-		final Value value = category.getValue( this.item );
-		assertEquals( "The Value", value.getText() );
-		assertEquals( Long.valueOf( 4711L ), value.getNumberValue() );
-	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"mappings/collections/Category.hbm.xml",
-				"mappings/collections/Item.hbm.xml"
-		};
+			final Value value = category.getValue( item );
+			assertEquals( "The Value", value.getText() );
+			assertEquals( Long.valueOf( 4711L ), value.getNumberValue() );
+		} );
 	}
 
 	@Audited

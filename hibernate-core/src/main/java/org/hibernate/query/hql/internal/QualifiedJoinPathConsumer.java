@@ -37,7 +37,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
  * @author Steve Ebersole
  */
 public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
-	private static final Logger log = Logger.getLogger( QualifiedJoinPathConsumer.class );
+	private static final Logger LOG = Logger.getLogger( QualifiedJoinPathConsumer.class );
 
 	private final SqmCreationState creationState;
 	private final SqmRoot<?> sqmRoot;
@@ -45,6 +45,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private final SqmJoinType joinType;
 	private final boolean fetch;
 	private final String alias;
+	private final boolean allowReuse;
 
 	private ConsumerDelegate delegate;
 	private boolean nested;
@@ -54,11 +55,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			SqmJoinType joinType,
 			boolean fetch,
 			String alias,
+			boolean allowReuse,
 			SqmCreationState creationState) {
 		this.sqmRoot = sqmRoot;
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		this.allowReuse = allowReuse;
 		this.creationState = creationState;
 	}
 
@@ -72,6 +75,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		this.joinType = joinType;
 		this.fetch = fetch;
 		this.alias = alias;
+		// This constructor is only used for entity names, so no need for join reuse
+		this.allowReuse = false;
 		this.creationState = creationState;
 		this.delegate = new AttributeJoinDelegate(
 				sqmFrom,
@@ -102,7 +107,13 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, !nested && isTerminal, !( nested && isTerminal ) );
+			delegate.consumeIdentifier(
+					identifier,
+					!nested && isTerminal,
+					// Non-nested joins shall allow reuse, but nested ones (i.e. in treat)
+					// only allow join reuse for non-terminal parts
+					allowReuse && (!nested || !isTerminal)
+			);
 		}
 	}
 
@@ -192,7 +203,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
 				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-					if ( sqmJoin.getAlias() == null && sqmJoin.getModel() == subPathSource ) {
+					// In order for an HQL join to be reusable, it must have the same path source,
+					if ( sqmJoin.getModel() == subPathSource
+						// and must not have a join condition.
+						&& sqmJoin.getJoinPredicate() == null ) {
+						// We explicitly allow reusing implicit joins of any type
 						return sqmJoin;
 					}
 				}
@@ -206,6 +221,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 					return compatibleFetchJoin;
 				}
 			}
+		}
+		if ( !(subPathSource instanceof SqmJoinable) ) {
+			throw new SemanticException( "Joining on basic value elements is not supported",
+					((SemanticQueryBuilder<?>) creationState).getQuery() );
 		}
 		@SuppressWarnings("unchecked")
 		final SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
@@ -355,7 +374,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					log.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
+					LOG.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

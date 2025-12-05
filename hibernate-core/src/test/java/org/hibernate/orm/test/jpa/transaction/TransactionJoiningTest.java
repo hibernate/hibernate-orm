@@ -14,9 +14,9 @@ import jakarta.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.orm.test.jpa.txn.JtaTransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
@@ -280,7 +280,7 @@ public class TransactionJoiningTest {
 
 			em = scope.getEntityManagerFactory().createEntityManager();
 
-			final SessionImpl sImpl = em.unwrap( SessionImpl.class );
+			final SessionImplementor sImpl = em.unwrap( SessionImplementor.class );
 
 			final CountDownLatch latch = new CountDownLatch( 1 );
 

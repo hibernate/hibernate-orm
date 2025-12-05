@@ -47,7 +47,7 @@ public class NullPrecedenceHelper {
 	 * @return The recognized NullPrecedence, or {@code null}
 	 */
 	public static Nulls parse(String name) {
-		for ( Nulls value : Nulls.values() ) {
+		for ( var value : Nulls.values() ) {
 			if ( value.name().equalsIgnoreCase( name ) ) {
 				return value;
 			}
@@ -64,7 +64,7 @@ public class NullPrecedenceHelper {
 	 * @return The recognized NullPrecedence, or {@code defaultValue}.
 	 */
 	public static Nulls parse(String name, Nulls defaultValue) {
-		final Nulls value = parse( name );
+		final var value = parse( name );
 		return value != null ? value : defaultValue;
 	}
 

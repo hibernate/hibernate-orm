@@ -322,7 +322,7 @@ public class StructJdbcType implements StructuredJdbcType {
 						break;
 					case SqlTypes.ARRAY:
 						final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
-						final JdbcType elementJdbcType = elementType.getJdbcType();
+						final var elementJdbcType = elementType.getJdbcType();
 						final Object[] array;
 						final Object[] newArray;
 						switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
@@ -462,7 +462,7 @@ public class StructJdbcType implements StructuredJdbcType {
 				break;
 			case SqlTypes.ARRAY:
 				final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
-				final JdbcType elementJdbcType = elementType.getJdbcType();
+				final var elementJdbcType = elementType.getJdbcType();
 				final Object[] array;
 				final Object[] newArray;
 				switch ( elementJdbcType.getDefaultSqlTypeCode() ) {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -13,7 +15,7 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -88,7 +90,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public SqmBindableType getNodeType() {
+	public @NonNull SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 
@@ -98,14 +100,15 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public @Nullable SqmPath<?> getLhs() {
 		return wrappedPath.getLhs();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object accept(SemanticQueryWalker walker) {
-		return walker.visitTreatedPath( this );
+		// Cast needed for Checker Framework, because the class uses raw types
+		return castNonNull( walker.visitTreatedPath( this ) );
 	}
 
 	@Override
@@ -128,15 +131,8 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public boolean equals(Object object) {
-		return object instanceof SqmTreatedRoot that
-			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
-			&& Objects.equals( this.treatTarget.getName(), that.treatTarget.getName() )
-			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( wrappedPath.getNavigablePath(), treatTarget.getName() );
+	public SqmTreatedFrom treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+		//noinspection unchecked
+		return wrappedPath.treatAs( treatTarget, alias, fetch );
 	}
 }

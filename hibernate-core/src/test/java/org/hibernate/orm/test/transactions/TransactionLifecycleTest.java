@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.transactions;
 
 import org.hibernate.Session;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -13,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
-@DomainModel
 public class TransactionLifecycleTest {
 	@Test
 	void testCommit(SessionFactoryScope scope) {

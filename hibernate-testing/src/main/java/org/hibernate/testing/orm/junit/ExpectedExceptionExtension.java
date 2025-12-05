@@ -9,15 +9,13 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 
 import org.jboss.logging.Logger;
 
-/**
- * TestExecutionExceptionHandler used in conjunction with {@link ExpectedException}
- * to support annotating tests with a specific exception that indicates a
- * success (we are expecting that exception in that tested condition).
- *
- * @see ExpectedException
- *
- * @author Steve Ebersole
- */
+/// TestExecutionExceptionHandler used in conjunction with [ExpectedException]
+/// to support annotating tests with a specific exception that indicates a
+/// success (we are expecting that exception in that tested condition).
+///
+/// @see ExpectedException
+///
+/// @author Steve Ebersole
 public class ExpectedExceptionExtension implements TestExecutionExceptionHandler {
 	private static final Logger log = Logger.getLogger( ExpectedExceptionExtension.class );
 

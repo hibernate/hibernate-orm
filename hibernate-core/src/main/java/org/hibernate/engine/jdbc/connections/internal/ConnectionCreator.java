@@ -11,7 +11,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-interface ConnectionCreator {
+public interface ConnectionCreator {
 	/**
 	 * Obtain the URL to which this creator connects.  Intended just for informational (logging) purposes.
 	 *

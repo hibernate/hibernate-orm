@@ -5,9 +5,7 @@
 package org.hibernate.orm.test.schemafilter;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,96 +13,76 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.Table;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.cfg.JdbcSettings.FORMAT_SQL;
 
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-10937")
 @RequiresDialect(H2Dialect.class)
-public class SequenceFilterTest extends BaseUnitTestCase {
-	private StandardServiceRegistryImpl serviceRegistry;
-	private Metadata metadata;
-
-	@Before
-	public void setUp() {
-		Map settings = new HashMap();
-		settings.putAll( Environment.getProperties() );
-		settings.put( AvailableSettings.DIALECT, H2Dialect.class.getName() );
-		settings.put( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
-		settings.put( AvailableSettings.FORMAT_SQL, false );
-
-		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
-
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( Schema1Entity1.class );
-		ms.addAnnotatedClass( Schema2Entity2.class );
-		this.metadata = ms.buildMetadata();
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
-
+@ServiceRegistry(settings = @Setting(name=FORMAT_SQL, value = "false"))
+@DomainModel(annotatedClasses = {
+		SequenceFilterTest.Schema1Entity1.class,
+		SequenceFilterTest.Schema2Entity2.class
+})
+public class SequenceFilterTest {
 	@Test
-	public void createSchema_unfiltered() {
-		RecordingTarget target = doCreation( new DefaultSchemaFilter() );
+	public void createSchema_unfiltered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doCreation( new DefaultSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_CREATE ), containsExactly(
+		assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_CREATE ), containsExactly(
 				"entity_1_seq_gen",
 				"entity_2_seq_gen"
 		) );
 	}
 
 	@Test
-	public void createSchema_filtered() {
-		RecordingTarget target = doCreation( new TestSchemaFilter() );
+	public void createSchema_filtered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doCreation( new TestSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_CREATE ), containsExactly(
+		assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_CREATE ), containsExactly(
 				"entity_1_seq_gen"
 		) );
 	}
 
 	@Test
-	public void dropSchema_unfiltered() {
-		RecordingTarget target = doDrop( new DefaultSchemaFilter() );
+	public void dropSchema_unfiltered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doDrop( new DefaultSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_DROP ), containsExactly(
+		assertThat( target.getActions( RecordingTarget.Category.SEQUENCE_DROP ), containsExactly(
 				"entity_1_seq_gen",
 				"entity_2_seq_gen"
 		) );
 	}
 
 	@Test
-	public void dropSchema_filtered() {
-		RecordingTarget target = doDrop( new TestSchemaFilter() );
+	public void dropSchema_filtered(ServiceRegistryScope registryScope, DomainModelScope modelScope) {
+		RecordingTarget target = doDrop( new TestSchemaFilter(), registryScope, modelScope );
 
-		Assert.assertThat(
+		assertThat(
 				target.getActions( RecordingTarget.Category.SEQUENCE_DROP ),
 				containsExactly( "entity_1_seq_gen" )
 		);
@@ -147,7 +125,6 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 	}
 
 	private static class TestSchemaFilter implements SchemaFilter {
-
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
 			return true;
@@ -160,34 +137,36 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 
 		@Override
 		public boolean includeSequence(Sequence sequence) {
-			final String render = sequence.getName().render();
 			return !"entity_2_seq_gen".endsWith( sequence.getName().render() );
 		}
 	}
 
-	private RecordingTarget doCreation(SchemaFilter filter) {
+	private RecordingTarget doCreation(SchemaFilter filter, ServiceRegistryScope registryScope, DomainModelScope modelScope) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaCreatorImpl( serviceRegistry, filter ).doCreation( metadata, true, target );
+		new SchemaCreatorImpl( registryScope.getRegistry(), filter )
+				.doCreation( modelScope.getDomainModel(), true, target );
 		return target;
 	}
 
-	private RecordingTarget doDrop(SchemaFilter filter) {
+	private RecordingTarget doDrop(SchemaFilter filter, ServiceRegistryScope registryScope, DomainModelScope modelScope) {
 		RecordingTarget target = new RecordingTarget();
-		new SchemaDropperImpl( serviceRegistry, filter ).doDrop( metadata, true, target );
+		new SchemaDropperImpl( registryScope.getRegistry(), filter )
+				.doDrop( modelScope.getDomainModel(), true, target );
 		return target;
 	}
 
-	private BaseMatcher<Set<String>> containsExactly(Object... expected) {
-		return containsExactly( new HashSet( Arrays.asList( expected ) ) );
+	private BaseMatcher<Set<String>> containsExactly(String... expected) {
+		return containsExactly( new HashSet<>( Arrays.asList( expected ) ) );
 	}
 
-	private BaseMatcher<Set<String>> containsExactly(final Set expected) {
-		return new BaseMatcher<Set<String>>() {
+	private BaseMatcher<Set<String>> containsExactly(final Set<String> expected) {
+		return new BaseMatcher<>() {
 			@Override
 			public boolean matches(Object item) {
-				Set set = (Set) item;
+				//noinspection unchecked
+				var set = (Set<String>) item;
 				return set.size() == expected.size()
-						&& set.containsAll( expected );
+					&& set.containsAll( expected );
 			}
 
 			@Override

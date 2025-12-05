@@ -4,22 +4,23 @@
  */
 package org.hibernate.orm.test.connections;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * @author Steve Ebersole
  */
-public class ExplicitConnectionProviderInstanceTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ExplicitConnectionProviderInstanceTest  {
+
 	@Test
 	public void testPassingConnectionProviderInstanceToBootstrap() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()

@@ -26,7 +26,7 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
 		this.jaxbColumn.setUnique( columnDefaults.isUnique() );
 		this.jaxbColumn.setInsertable( columnDefaults.isInsertable() );
-		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
+		this.jaxbColumn.setUpdatable( columnDefaults.isUpdatable() );
 	}
 
 	public JaxbColumnImpl getTargetColumn() {

@@ -21,43 +21,40 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
-import org.junit.Test;
-
+import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.checkCollection;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-12913")
-public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTestCase {
+@EnversTest
+@Jpa(annotatedClasses = {
+		AuditOverrideAuditJoinTableTest.OtherAuditedEntity.class,
+		AuditOverrideAuditJoinTableTest.OtherOverrideAuditedEntity.class,
+		AuditOverrideAuditJoinTableTest.OtherAuditParentsAuditEntity.class
+})
+public class AuditOverrideAuditJoinTableTest {
 	private Long entityId;
 	private Long overrideEntityId;
 	private Long auditParentsEntityId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				OtherAuditedEntity.class,
-				OtherOverrideAuditedEntity.class,
-				OtherAuditParentsAuditEntity.class
-		};
-	}
-
-	@Test
-	@Priority(10)
-	public void initData() {
+	@BeforeClassTemplate
+	public void initData(EntityManagerFactoryScope scope) {
 		// Revision 1 - Persist audited subclass with non-audited super-type
-		entityId = doInJPA( this::entityManagerFactory, entityManager -> {
+		entityId = scope.fromTransaction( em -> {
 			final OtherAuditedEntity entity = new OtherAuditedEntity();
 			entity.setId( 1 );
 			entity.setVersion( Timestamp.valueOf( LocalDateTime.now() ) );
@@ -70,13 +67,13 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			list.add( "Entry2" );
 			entity.setSuperStringList( list );
 
-			entityManager.persist( entity );
+			em.persist( entity );
 
 			return entity.getId();
 		} );
 
 		// Revision 2 - Persist audited subclass with audit-override non-audited super-type
-		overrideEntityId = doInJPA( this::entityManagerFactory, entityManager -> {
+		overrideEntityId = scope.fromTransaction( em -> {
 			final OtherOverrideAuditedEntity entity = new OtherOverrideAuditedEntity();
 			entity.setId( 1 );
 			entity.setVersion( Timestamp.valueOf( LocalDateTime.now() ) );
@@ -89,13 +86,13 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			list.add( "Entry2" );
 			entity.setSuperStringList( list );
 
-			entityManager.persist( entity );
+			em.persist( entity );
 
 			return entity.getId();
 		} );
 
 		// Revision 3 - Persist audited subclass with audit-parents on non-audited super-type
-		auditParentsEntityId = doInJPA( this::entityManagerFactory, entityManager -> {
+		auditParentsEntityId = scope.fromTransaction( em -> {
 			final OtherAuditParentsAuditEntity entity = new OtherAuditParentsAuditEntity();
 			entity.setId( 1 );
 			entity.setVersion( Timestamp.valueOf( LocalDateTime.now() ) );
@@ -108,16 +105,16 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			list.add( "Entry2" );
 			entity.setSuperStringList( list );
 
-			entityManager.persist( entity );
+			em.persist( entity );
 
 			return entity.getId();
 		} );
 	}
 
 	@Test
-	public void testMetadataAuditSuperClassWithAuditJoinTable() {
+	public void testMetadataAuditSuperClassWithAuditJoinTable(EntityManagerFactoryScope scope) {
 		try {
-			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
+			scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 					.getMappingMetamodel()
 					.getEntityDescriptor( "SuperClass_StringList" );
 		}
@@ -127,9 +124,9 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	}
 
 	@Test
-	public void testMetadataNonAuditedSuperClassWithOverrideAuditJoinTable() {
+	public void testMetadataNonAuditedSuperClassWithOverrideAuditJoinTable(EntityManagerFactoryScope scope) {
 		try {
-			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
+			scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 					.getMappingMetamodel()
 					.getEntityDescriptor( "OOAE_StringList" );
 		}
@@ -139,9 +136,9 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	}
 
 	@Test
-	public void testMetadataNonAuditedSuperClassWithAuditParentsOverrideAuditJoinTable() {
+	public void testMetadataNonAuditedSuperClassWithAuditParentsOverrideAuditJoinTable(EntityManagerFactoryScope scope) {
 		try {
-			entityManagerFactory().unwrap( SessionFactoryImplementor.class )
+			scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 					.getMappingMetamodel()
 					.getEntityDescriptor( "OAPAE_StringList" );
 		}
@@ -151,33 +148,42 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	}
 
 	@Test
-	public void testNonAuditedSuperclassAuditJoinTableHistory() {
-		assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( OtherAuditedEntity.class,  entityId ) );
+	public void testNonAuditedSuperclassAuditJoinTableHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 1 ), auditReader.getRevisions( OtherAuditedEntity.class,  entityId ) );
 
-		OtherAuditedEntity rev = getAuditReader().find( OtherAuditedEntity.class, entityId, 1 );
-		assertNotNull( rev );
-		assertEquals( 2, rev.getSuperStringList().size() );
-		checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+			OtherAuditedEntity rev = auditReader.find( OtherAuditedEntity.class, entityId, 1 );
+			assertNotNull( rev );
+			assertEquals( 2, rev.getSuperStringList().size() );
+			checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+		} );
 	}
 
 	@Test
-	public void testNonAuditedSuperclassWithOverrideAuditJoinTableHistory() {
-		assertEquals( Arrays.asList( 2 ), getAuditReader().getRevisions( OtherOverrideAuditedEntity.class, overrideEntityId ) );
+	public void testNonAuditedSuperclassWithOverrideAuditJoinTableHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 2 ), auditReader.getRevisions( OtherOverrideAuditedEntity.class, overrideEntityId ) );
 
-		OtherOverrideAuditedEntity rev = getAuditReader().find( OtherOverrideAuditedEntity.class, overrideEntityId, 2 );
-		assertNotNull( rev );
-		assertEquals( 2, rev.getSuperStringList().size() );
-		checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+			OtherOverrideAuditedEntity rev = auditReader.find( OtherOverrideAuditedEntity.class, overrideEntityId, 2 );
+			assertNotNull( rev );
+			assertEquals( 2, rev.getSuperStringList().size() );
+			checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+		} );
 	}
 
 	@Test
-	public void testNonAuditedSuperclassWithAuditParentsOverrideAuditJoinTableHistory() {
-		assertEquals( Arrays.asList( 3 ), getAuditReader().getRevisions( OtherAuditParentsAuditEntity.class, auditParentsEntityId ) );
+	public void testNonAuditedSuperclassWithAuditParentsOverrideAuditJoinTableHistory(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var auditReader = AuditReaderFactory.get( em );
+			assertEquals( Arrays.asList( 3 ), auditReader.getRevisions( OtherAuditParentsAuditEntity.class, auditParentsEntityId ) );
 
-		OtherAuditParentsAuditEntity rev = getAuditReader().find( OtherAuditParentsAuditEntity.class, auditParentsEntityId, 3 );
-		assertNotNull( rev );
-		assertEquals( 2, rev.getSuperStringList().size() );
-		checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+			OtherAuditParentsAuditEntity rev = auditReader.find( OtherAuditParentsAuditEntity.class, auditParentsEntityId, 3 );
+			assertNotNull( rev );
+			assertEquals( 2, rev.getSuperStringList().size() );
+			checkCollection( rev.getSuperStringList(), "Entry1", "Entry2" );
+		} );
 	}
 
 	@MappedSuperclass

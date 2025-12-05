@@ -13,40 +13,35 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**
  * Tests MappedSuperclass/Entity overriding of Convert definitions
  *
  * @author Steve Ebersole
  */
-public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
-
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
+@DomainModel(annotatedClasses = {SimpleEmbeddableOverriddenConverterTest.Person.class})
+@SessionFactory(exportSchema = false)
+public class SimpleEmbeddableOverriddenConverterTest {
 
 	/**
 	 * Test outcome of annotations exclusively.
 	 */
 	@Test
-	public void testSimpleConvertOverrides() {
-		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
-		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
+	public void testSimpleConvertOverrides(SessionFactoryScope scope) {
+		final EntityPersister ep = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
+		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
 		BasicType<?> homeAddressCityType = (BasicType<?>) findCompositeAttributeType( homeAddressType, "city" );

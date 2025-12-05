@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -16,7 +18,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -93,7 +94,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Object value) {
+	public SqmInPredicate<T> value(@NonNull Object value) {
 		throw new UnsupportedOperationException(  );
 	}
 
@@ -128,15 +129,34 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmInSubQueryPredicate<?> that
 			&& this.isNegated() == that.isNegated()
-			&& Objects.equals( this.testExpression, that.testExpression )
-			&& Objects.equals( this.subQueryExpression, that.subQueryExpression );
+			&& this.testExpression.equals( that.testExpression )
+			&& this.subQueryExpression.equals( that.subQueryExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( testExpression, subQueryExpression, isNegated() );
+		int result = testExpression.hashCode();
+		result = 31 * result + subQueryExpression.hashCode();
+		result = 31 * result + Boolean.hashCode( isNegated() );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInSubQueryPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& this.testExpression.isCompatible( that.testExpression )
+			&& this.subQueryExpression.isCompatible( that.subQueryExpression );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = testExpression.cacheHashCode();
+		result = 31 * result + subQueryExpression.cacheHashCode();
+		result = 31 * result + Boolean.hashCode( isNegated() );
+		return result;
 	}
 }

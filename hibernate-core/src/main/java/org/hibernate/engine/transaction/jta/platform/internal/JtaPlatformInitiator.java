@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -12,12 +11,12 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Standard initiator for the standard {@link JtaPlatform}
@@ -26,8 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, JtaPlatformInitiator.class.getName() );
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
@@ -42,21 +39,21 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 						.resolveStrategy( JtaPlatform.class, setting );
 
 		if ( platform == null ) {
-			LOG.trace( "No JtaPlatform was specified, checking resolver" );
+			CORE_LOGGER.trace( "No JtaPlatform was specified, checking resolver" );
 			platform = registry.requireService( JtaPlatformResolver.class )
 					.resolveJtaPlatform( configurationValues, registry );
 		}
 
 		if ( platform == null ) {
-			LOG.trace( "No JtaPlatform was specified, checking fallback provider" );
+			CORE_LOGGER.trace( "No JtaPlatform was specified, checking fallback provider" );
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
 		if ( platform == null || platform instanceof NoJtaPlatform ) {
-			LOG.noJtaPlatform();
+			CORE_LOGGER.noJtaPlatform();
 		}
 		else {
-			LOG.usingJtaPlatform( platform.getClass().getName() );
+			CORE_LOGGER.usingJtaPlatform( platform.getClass().getName() );
 		}
 		return platform;
 	}

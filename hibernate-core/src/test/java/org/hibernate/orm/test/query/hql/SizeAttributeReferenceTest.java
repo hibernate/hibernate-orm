@@ -4,19 +4,19 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
-import org.hibernate.Session;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 /**
  * Historically HQL allowed syntax like {@code `... where someCollectionPath.size > 1`} where
@@ -25,41 +25,45 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@JiraKey( value = "HHH-10024" )
-public class SizeAttributeReferenceTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Test
-	public void controlGroup() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where size(c) > 1", EntityWithAttributeNamedSize.class ).list();
-		session.getTransaction().commit();
-		session.close();
-	}
+@JiraKey(value = "HHH-10024")
+@DomainModel(
+		annotatedClasses = {
+				SizeAttributeReferenceTest.EntityWithAttributeNamedSize.class
+		}
+)
+@SessionFactory
+public class SizeAttributeReferenceTest {
 
 	@Test
-	public void testSizeAttributeReference() {
-		Session session = openSession();
-		session.getTransaction().begin();
-		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where c.size = 'abc'", EntityWithAttributeNamedSize.class ).list();
-		session.getTransaction().commit();
-		session.close();
+	public void controlGroup(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where size(c) > 1",
+							EntityWithAttributeNamedSize.class ).list();
+				}
+		);
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { EntityWithAttributeNamedSize.class };
+	@Test
+	public void testSizeAttributeReference(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where c.size = 'abc'",
+							EntityWithAttributeNamedSize.class ).list();
+				}
+		);
 	}
 
-	@Entity( name = "EntityWithAttributeNamedSize" )
-	@Table( name = "EntityWithAttributeNamedSize" )
+	@Entity(name = "EntityWithAttributeNamedSize")
+	@Table(name = "EntityWithAttributeNamedSize")
 	public static class EntityWithAttributeNamedSize {
 		@Id
 		public Integer id;
 		@ManyToOne
 		public EntityWithAttributeNamedSize parent;
-		@OneToMany( mappedBy = "parent" )
+		@OneToMany(mappedBy = "parent")
 		public Set<EntityWithAttributeNamedSize> children;
-		@Column(name="`size`")
+		@Column(name = "`size`")
 		private String size;
 	}
 

@@ -4,23 +4,17 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import java.util.Iterator;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * @author Steve Ebersole
@@ -41,8 +35,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 
-		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT" );
-		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
+		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT" );
+		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -66,38 +60,30 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		}
 
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef(
-					"Inserting collection rows - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+			MODEL_MUTATION_LOGGER.insertingNewCollectionRows( mutationTarget.getRolePath(), id );
 		}
 
-		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
-		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+		final var pluralAttribute = mutationTarget.getTargetPart();
+		final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+		final var mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,
 				session
 		);
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		try {
-			final Iterator<?> entries = collection.entries( collectionDescriptor );
+			final var entries = collection.entries( collectionDescriptor );
 			collection.preInsert( collectionDescriptor );
 			if ( !entries.hasNext() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"No collection rows to insert - %s : %s",
-						mutationTarget.getRolePath(),
-						id
-				);
+				MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 				return;
 			}
 
 
 			int entryCount = 0;
-			final RowMutationOperations.Values insertRowValues = rowMutationOperations.getInsertRowValues();
+			final var insertRowValues = rowMutationOperations.getInsertRowValues();
 
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
@@ -118,8 +104,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done inserting %s collection rows : %s",
-					entryCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.doneInsertingCollectionRows( entryCount, mutationTarget.getRolePath() );
 
 		}
 		finally {
@@ -128,10 +113,10 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	}
 
 	private MutationOperationGroup createOperationGroup() {
-		assert mutationTarget.getTargetPart() != null;
-		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
+		assert mutationTarget.getTargetPart() != null
+			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation();
-		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, mutationTarget, operation );
+		final var operation = rowMutationOperations.getInsertRowOperation();
+		return singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 }

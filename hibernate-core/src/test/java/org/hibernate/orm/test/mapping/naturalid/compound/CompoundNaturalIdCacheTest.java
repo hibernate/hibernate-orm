@@ -7,7 +7,6 @@ package org.hibernate.orm.test.mapping.naturalid.compound;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.internal.NaturalIdResolutionsImpl;
 import org.hibernate.stat.NaturalIdStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -63,8 +62,6 @@ public class CompoundNaturalIdCacheTest {
 						EntityWithSimpleNaturalId withSimpleNaturalIdEntity = new EntityWithSimpleNaturalId();
 						withSimpleNaturalIdEntity.setName( str );
 						session.persist( withSimpleNaturalIdEntity );
-						NaturalIdResolutionsImpl naturalIdResolutions = (NaturalIdResolutionsImpl) session.getPersistenceContext()
-								.getNaturalIdResolutions();
 					}
 				}
 		);

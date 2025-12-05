@@ -8,15 +8,13 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * Collection second pass
@@ -24,8 +22,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Emmanuel Bernard
  */
 public abstract class CollectionSecondPass implements SecondPass {
-
-	private static final CoreMessageLogger LOG = messageLogger( CollectionSecondPass.class);
 
 	private final Collection collection;
 
@@ -36,14 +32,14 @@ public abstract class CollectionSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Second pass for collection: " + collection.getRole() );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.secondPassForCollection( collection.getRole() );
 		}
 
 		secondPass( persistentClasses );
 		collection.createAllKeys();
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() ) {
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -55,15 +51,15 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			LOG.trace( msg );
+			BOOT_LOGGER.mappedCollectionDetails( msg );
 		}
 	}
 
 	abstract public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException;
 
 	private static String columns(Value val) {
-		final StringBuilder columns = new StringBuilder();
-		for ( Selectable selectable : val.getSelectables() ) {
+		final var columns = new StringBuilder();
+		for ( var selectable : val.getSelectables() ) {
 			if ( !columns.isEmpty() ) {
 				columns.append( ", " );
 			}

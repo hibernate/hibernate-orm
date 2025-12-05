@@ -13,6 +13,14 @@ import java.lang.annotation.Target;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+/// Applies standard set of JUnit Jupiter [extensions][org.junit.jupiter.api.extension.Extension]
+/// useful for all testing.
+///
+/// @see FailureExpectedExtension
+/// @see ExpectedExceptionExtension
+/// @see DialectFilterExtension
+///
+/// @author Steve Ebersole
 @Inherited
 @Target( ElementType.TYPE )
 @Retention( RetentionPolicy.RUNTIME )

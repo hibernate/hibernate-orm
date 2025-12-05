@@ -7,20 +7,14 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -72,8 +66,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	public void execute() throws HibernateException {
 		nullifyTransientReferencesIfNotAlready();
 
-		final EntityPersister persister = getPersister();
-		final SharedSessionContractImplementor session = getSession();
+		final var persister = getPersister();
+		final var session = getSession();
 		final Object instance = getInstance();
 
 		setVeto( preInsert() );
@@ -82,19 +76,20 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+			final var eventMonitor = session.getEventMonitor();
+			final var event = eventMonitor.beginEntityInsertEvent();
 			boolean success = false;
+			final Object[] state = getState();
 			final GeneratedValues generatedValues;
 			try {
-				generatedValues = persister.getInsertCoordinator().insert( instance, getState(), session );
+				generatedValues = persister.getInsertCoordinator().insert( instance, state, session );
 				generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 				success = true;
 			}
 			finally {
 				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
 			}
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final var persistenceContext = session.getPersistenceContextInternal();
 			if ( persister.getRowIdMapping() != null ) {
 				rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
 				if ( rowId != null && isDelayed ) {
@@ -102,12 +97,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				}
 			}
 			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, getState(), generatedValues, session );
+				persister.processInsertGeneratedProperties( generatedId, instance, state, generatedValues, session );
 			}
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
 			persister.setIdentifier( instance, generatedId, session );
-			persistenceContext.registerInsertedKey( getPersister(), generatedId );
+			persistenceContext.registerInsertedKey( persister, generatedId );
 			entityKey = session.generateEntityKey( generatedId, persister );
 			persistenceContext.checkUniqueness( entityKey, getInstance() );
 		}
@@ -122,9 +117,9 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 		postInsert();
 
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() && !isVeto() ) {
-			statistics.insertEntity( getPersister().getEntityName() );
+			statistics.insertEntity( persister.getEntityName() );
 		}
 
 		markExecuted();
@@ -138,9 +133,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostInsertEventListener> group
-				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT;
-		for ( PostInsertEventListener listener : group.listeners() ) {
+		final var group = getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT;
+		for ( var listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
@@ -188,16 +182,16 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected boolean preInsert() {
-		final EventListenerGroup<PreInsertEventListener> listenerGroup
-				= getEventListenerGroups().eventListenerGroup_PRE_INSERT;
+		final var listenerGroup = getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
 			return false;
 		}
 		else {
-			final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
+			final PreInsertEvent event =
+					new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
 			boolean veto = false;
-			for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
+			for ( var listener : listenerGroup.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
 			return veto;

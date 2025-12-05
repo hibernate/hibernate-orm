@@ -6,12 +6,14 @@ package org.hibernate.query.sqm.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -121,7 +123,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		hql.append( getFunctionName() );
 		hql.append( '(' );
 		int i = 1;
-		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
+		if ( !arguments.isEmpty() && arguments.get( 0 ) instanceof SqmDistinct<?> ) {
 			arguments.get( 0 ).appendHqlString( hql, context );
 			if ( arguments.size() > 1 ) {
 				hql.append( ' ' );
@@ -156,5 +158,41 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 			filter.appendHqlString( hql, context );
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return super.equals( o )
+			&& o instanceof SelfRenderingSqmWindowFunction<?> that
+			&& Objects.equals( filter, that.filter )
+			&& Objects.equals( respectNulls, that.respectNulls )
+			&& Objects.equals( fromFirst, that.fromFirst );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( filter );
+		result = 31 * result + Objects.hashCode( respectNulls );
+		result = 31 * result + Objects.hashCode( fromFirst );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object o) {
+		return super.isCompatible( o )
+			&& o instanceof SelfRenderingSqmWindowFunction<?> that
+			&& SqmCacheable.areCompatible( filter, that.filter )
+			&& Objects.equals( respectNulls, that.respectNulls )
+			&& Objects.equals( fromFirst, that.fromFirst );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + Objects.hashCode( filter );
+		result = 31 * result + Objects.hashCode( respectNulls );
+		result = 31 * result + Objects.hashCode( fromFirst );
+		return result;
 	}
 }

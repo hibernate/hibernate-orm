@@ -6,7 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.internal.MetadataContext;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
@@ -21,8 +21,8 @@ public class SetAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Set<E>, E>
 		implements SqmSetPersistentAttribute<X, E> {
 
-	public SetAttributeImpl(PluralAttributeBuilder<X, Set<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
-		super( xceBuilder, metadataContext );
+	public SetAttributeImpl(PluralAttributeBuilder<X, Set<E>, E, ?> xceBuilder) {
+		super( xceBuilder );
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class SetAttributeImpl<X, E>
 
 	@Override
 	public SqmAttributeJoin<X, E> createSqmJoin(
-			SqmFrom<?,X> lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
+			SqmFrom<?,X> lhs, SqmJoinType joinType, @Nullable String alias, boolean fetched, SqmCreationState creationState) {
 		return new SqmSetJoin<>(
 				lhs,
 				this,

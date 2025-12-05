@@ -4,16 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteContainer;
@@ -85,8 +85,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
 	private final SqmQuery<?> parent;
 
-	private SqmBindableType<T> expressibleType;
-	private String alias;
+	private @Nullable SqmBindableType<T> expressibleType;
+	private @Nullable String alias;
 
 	public SqmSubQuery(
 			SqmQuery<?> parent,
@@ -95,7 +95,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			NodeBuilder builder) {
 		super( queryPart, resultType, builder );
 		this.parent = parent;
-		applyInferableType( resultType );
+		applyInferableType( resultType, builder );
 	}
 
 	public SqmSubQuery(
@@ -104,10 +104,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			Class<T> resultType,
 			Map<String, SqmCteStatement<?>> cteStatements,
 			NodeBuilder builder) {
-		super( builder, cteStatements, resultType );
+		super( queryPart, cteStatements, resultType, builder );
 		this.parent = parent;
-		setQueryPart( queryPart );
-		applyInferableType( resultType );
+		applyInferableType( resultType, builder );
 	}
 
 	public SqmSubQuery(
@@ -116,7 +115,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.parent = parent;
-		applyInferableType( resultType );
+		applyInferableType( resultType, builder );
 	}
 
 	public SqmSubQuery(
@@ -125,13 +124,14 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			NodeBuilder builder) {
 		super( resultType.getJavaType(), builder );
 		this.parent = parent;
-		applyInferableType( resultType.getJavaType() );
+		applyInferableType( resultType.getJavaType(), builder );
 	}
 
 	public SqmSubQuery(
 			SqmQuery<?> parent,
 			NodeBuilder builder) {
-		super( null, builder );
+		//noinspection unchecked
+		super( (Class<T>) Object.class, builder );
 		this.parent = parent;
 	}
 
@@ -140,8 +140,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			Map<String, SqmCteStatement<?>> cteStatements,
 			Class<T> resultType,
 			SqmQuery<?> parent,
-			SqmBindableType<T> expressibleType,
-			String alias) {
+			@Nullable SqmBindableType<T> expressibleType,
+			@Nullable String alias) {
 		super( builder, cteStatements, resultType );
 		this.parent = parent;
 		this.expressibleType = expressibleType;
@@ -170,23 +170,20 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public Integer getTupleLength() {
-		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
-		return selectClause != null ?
-				getTupleLength( selectClause.getSelectionItems() ) :
-				null;
-	}
-
-	private int getTupleLength(List<SqmSelectableNode<?>> selectionItems) {
+	public @Nullable Integer getTupleLength() {
 		int count = 0;
-		for ( SqmSelectableNode<?> selection : selectionItems ) {
-			count += selection.getTupleLength();
+		for ( SqmSelectableNode<?> selection : getQuerySpec().getSelectClause().getSelectionItems() ) {
+			final Integer tupleLength = selection.getTupleLength();
+			if ( tupleLength == null ) {
+				return null;
+			}
+			count += tupleLength;
 		}
 		return count;
 	}
 
 	@Override
-	public SqmCteStatement<?> getCteStatement(String cteLabel) {
+	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
 		final SqmCteStatement<?> cteCriteria = super.getCteStatement( cteLabel );
 		return cteCriteria == null && parent instanceof SqmCteContainer cteContainer
 				? cteContainer.getCteStatement( cteLabel )
@@ -194,7 +191,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
+	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
 		final JpaCteCriteria<X> cteCriteria = super.getCteCriteria( cteName );
 		return cteCriteria == null && parent instanceof JpaCteContainer cteContainer
 				? cteContainer.getCteCriteria( cteName )
@@ -248,7 +245,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public String getAlias() {
+	public @Nullable String getAlias() {
 		return alias;
 	}
 
@@ -260,12 +257,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSubQuery<T> select(Expression<T> expression) {
-		final SqmQuerySpec<T> querySpec = getQuerySpec();
-		if ( querySpec.getSelectClause() == null ) {
-			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
-		}
 		//noinspection unchecked
-		querySpec.setSelection( (JpaSelection<T>) expression );
+		getQuerySpec().setSelection( (JpaSelection<T>) expression );
 //		applyInferableType( (Class<T>) querySpec.getSelection().getJavaType() );
 		return this;
 	}
@@ -275,28 +268,20 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	public SqmSubQuery<T> multiselect(Selection<?>... selections) {
 		validateComplianceMultiselect();
 		final Selection<? extends T> resultSelection = getResultSelection( selections );
-		final SqmQuerySpec<T> querySpec = getQuerySpec();
-		if ( querySpec.getSelectClause() == null ) {
-			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
-		}
-		querySpec.setSelection( (JpaSelection<T>) resultSelection );
+		getQuerySpec().setSelection( (JpaSelection<T>) resultSelection );
 		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> multiselect(List<Selection<?>> selectionList) {
 		validateComplianceMultiselect();
-		final SqmQuerySpec<T> querySpec = getQuerySpec();
-		if ( querySpec.getSelectClause() == null ) {
-			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
-		}
-		querySpec.setSelection( getResultSelection( selectionList ) );
+		getQuerySpec().setSelection( getResultSelection( selectionList ) );
 		return this;
 	}
 
 	private JpaSelection<T> getResultSelection(List<Selection<?>> selections) {
 		final Class<T> resultType = getResultType();
-		if ( resultType == null || resultType == Object.class ) {
+		if ( resultType == Object.class ) {
 			final JpaSelection<?> selection = switch ( selections.size() ) {
 				case 0 -> throw new IllegalArgumentException(
 						"empty selections passed to criteria query typed as Object" );
@@ -319,27 +304,25 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmExpression<T> getSelection() {
-		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
-		return selectClause == null ? null : this;
+	public @Nullable SqmExpression<T> getSelection() {
+		return (SqmExpression<T>) super.getSelection();
 	}
 
 	@Override
 	public boolean isCompoundSelection() {
-		return getQuerySpec().getSelection().isCompoundSelection();
+		// A subquery is always a single/scalar expression, so it can't be a compound selection
+		return false;
 	}
 
 	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
-		if ( ! isCompoundSelection() ) {
-			throw new IllegalStateException( "JPA selection is not compound" );
-		}
-		return getQuerySpec().getSelection().getCompoundSelectionItems();
+		// A subquery is always a single/scalar expression, so it can't be a compound selection
+		throw new IllegalStateException( "JPA selection is not compound" );
 	}
 
 	@Override
@@ -349,13 +332,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSubQuery<T> where(Expression<Boolean> restriction) {
+	public SqmSubQuery<T> where(@Nullable Expression<Boolean> restriction) {
 		super.where( restriction );
 		return this;
 	}
 
 	@Override
-	public SqmSubQuery<T> where(Predicate... restrictions) {
+	public SqmSubQuery<T> where(Predicate @Nullable... restrictions) {
 		super.where( restrictions );
 		return this;
 	}
@@ -379,13 +362,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSubQuery<T> having(Expression<Boolean> booleanExpression) {
+	public SqmSubQuery<T> having(@Nullable Expression<Boolean> booleanExpression) {
 		super.having( booleanExpression );
 		return this;
 	}
 
 	@Override
-	public SqmSubQuery<T> having(Predicate... predicates) {
+	public SqmSubQuery<T> having(Predicate @Nullable... predicates) {
 		super.having( predicates );
 		return this;
 	}
@@ -397,33 +380,33 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public JpaExpression<Number> getOffset() {
+	public @Nullable JpaExpression<Number> getOffset() {
 		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getOffset();
 	}
 
 	@Override
-	public JpaSubQuery<T> offset(JpaExpression<? extends Number> offset) {
+	public JpaSubQuery<T> offset(@Nullable JpaExpression<? extends Number> offset) {
 		validateComplianceFetchOffset();
 		getQueryPart().setOffset( offset );
 		return this;
 	}
 
 	@Override
-	public JpaSubQuery<T> offset(Number offset) {
+	public JpaSubQuery<T> offset(@Nullable Number offset) {
 		validateComplianceFetchOffset();
 		getQueryPart().setOffset( nodeBuilder().value( offset ) );
 		return this;
 	}
 
 	@Override
-	public JpaExpression<Number> getFetch() {
+	public @Nullable JpaExpression<Number> getFetch() {
 		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getFetch();
 	}
 
 	@Override
-	public JpaSubQuery<T> fetch(JpaExpression<? extends Number> fetch) {
+	public JpaSubQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch) {
 		validateComplianceFetchOffset();
 		getQueryPart().setFetch( fetch );
 		return this;
@@ -437,7 +420,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public JpaSubQuery<T> fetch(Number fetch) {
+	public JpaSubQuery<T> fetch(@Nullable Number fetch) {
 		validateComplianceFetchOffset();
 		getQueryPart().setFetch( nodeBuilder().value( fetch ) );
 		return this;
@@ -580,7 +563,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
-		final Set<Join<?, ?>> correlatedJoins = new HashSet<>();
+		final Set<Join<?, ?>> correlatedJoins = Collections.newSetFromMap( new IdentityHashMap<>() );
 		final SqmFromClause fromClause = getQuerySpec().getFromClause();
 		if ( fromClause != null ) {
 			for ( SqmRoot<?> root : fromClause.getRoots() ) {
@@ -663,9 +646,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		expressibleType = (SqmBindableType<T>) type;
 	}
 
-	private void applyInferableType(Class<T> type) {
+	private void applyInferableType(@UnknownInitialization SqmSubQuery<T> this, Class<T> type, NodeBuilder nodeBuilder) {
 		if ( type != null ) {
-			final NodeBuilder nodeBuilder = nodeBuilder();
 			final EntityDomainType<T> entityDescriptor = nodeBuilder.getDomainModel().findEntityType( type );
 			expressibleType =
 					entityDescriptor != null
@@ -674,52 +656,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
-	private <B> SqmExpression<B> castToBasicType(Class<B> type) {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
-	}
-
-	@Override
-	public SqmExpression<Long> asLong() {
-		return castToBasicType( Long.class );
-	}
-
-	@Override
-	public SqmExpression<Integer> asInteger() {
-		return castToBasicType( Integer.class );
-	}
-
-	@Override
-	public SqmExpression<Float> asFloat() {
-		return castToBasicType( Float.class );
-	}
-
-	@Override
-	public SqmExpression<Double> asDouble() {
-		return castToBasicType( Double.class );
-	}
-
-	@Override
-	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castToBasicType( BigDecimal.class );
-	}
-
-	@Override
-	public SqmExpression<BigInteger> asBigInteger() {
-		return castToBasicType( BigInteger.class );
-	}
-
-	@Override
-	public SqmExpression<String> asString() {
-		return castToBasicType( String.class );
-	}
-
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
 		return nodeBuilder().cast( this, type );
 	}
 
 	@Override
-	public JavaType<T> getJavaTypeDescriptor() {
+	public @Nullable JavaType<T> getJavaTypeDescriptor() {
 		final SqmBindableType<T> nodeType = getNodeType();
 		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
@@ -777,7 +720,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmSubQuery<?> that
 			&& Objects.equals( this.alias, that.alias )
 			&& super.equals( object );
@@ -785,7 +728,23 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( super.hashCode(), alias );
+		int result = super.hashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmSubQuery<?> that
+			&& Objects.equals( this.alias, that.alias )
+			&& super.isCompatible( object );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + Objects.hashCode( alias );
+		return result;
 	}
 
 	@Override

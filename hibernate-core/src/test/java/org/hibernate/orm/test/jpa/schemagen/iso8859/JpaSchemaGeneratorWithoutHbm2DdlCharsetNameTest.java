@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.schemagen.iso8859;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.schemagen.JpaSchemaGeneratorTest;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
@@ -22,6 +22,6 @@ public class JpaSchemaGeneratorWithoutHbm2DdlCharsetNameTest
 	}
 
 	protected String encodedName() {
-		return "sch" + String.valueOf( '\uFFFD' ) +"magen-test";
+		return "sch" + '\uFFFD' +"magen-test";
 	}
 }

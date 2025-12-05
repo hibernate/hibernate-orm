@@ -15,45 +15,38 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BidirectionalSetTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
+@Jpa( annotatedClasses = {BidirectionalSetTest.Person.class, BidirectionalSetTest.Phone.class} )
+public class BidirectionalSetTest {
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person(1L);
 			entityManager.persist(person);
 			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
 			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			Set<Phone> phones = person.getPhones();
-			Assert.assertEquals(2, phones.size());
+			assertEquals(2, phones.size());
 			person.removePhone(phones.iterator().next());
-			Assert.assertEquals(1, phones.size());
+			assertEquals(1, phones.size());
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			Set<Phone> phones = person.getPhones();
-			Assert.assertEquals(1, phones.size());
+			assertEquals(1, phones.size());
 		});
 	}
 

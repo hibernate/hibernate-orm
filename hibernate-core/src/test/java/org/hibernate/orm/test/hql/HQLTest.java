@@ -4,37 +4,24 @@
  */
 package org.hibernate.orm.test.hql;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Query;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
-
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.testing.orm.domain.userguide.Account;
 import org.hibernate.testing.orm.domain.userguide.AddressType;
 import org.hibernate.testing.orm.domain.userguide.Call;
@@ -45,41 +32,59 @@ import org.hibernate.testing.orm.domain.userguide.PersonNames;
 import org.hibernate.testing.orm.domain.userguide.Phone;
 import org.hibernate.testing.orm.domain.userguide.PhoneType;
 import org.hibernate.testing.orm.domain.userguide.WireTransferPayment;
-
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-@SuppressWarnings("unused")
-public class HQLTest extends BaseEntityManagerFunctionalTestCase {
+@SuppressWarnings({"unused", "JUnitMalformedDeclaration", "removal", "deprecation"})
+@DomainModel(annotatedClasses = {
+		Person.class,
+		Phone.class,
+		Call.class,
+		Account.class,
+		CreditCardPayment.class,
+		WireTransferPayment.class
+})
+@SessionFactory
+public class HQLTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class,
-			Phone.class,
-			Call.class,
-			Account.class,
-			CreditCardPayment.class,
-			WireTransferPayment.class
-		};
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
-	@Before
-	public void init() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			Person person1 = new Person("John Doe");
 			person1.setNickName("JD");
 			person1.setAddress("Earth");
@@ -150,36 +155,36 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(creditCardPayment);
 			entityManager.persist(wireTransferPayment);
-		});
+		} );
 	}
 
 	@Test
-	public void test_hql_select_simplest_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
+	public void test_hql_select_simplest_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			List<Object> objects = session.createQuery(
-				"from java.lang.Object",
-				Object.class)
-			.getResultList();
+							"from java.lang.Object",
+							Object.class)
+					.getResultList();
 
 			//tag::hql-select-simplest-example[]
 			List<Person> persons = session.createQuery(
-				"from Person", Person.class)
-			.getResultList();
+							"from Person", Person.class)
+					.getResultList();
 			//end::hql-select-simplest-example[]
 
 			//tag::hql-select-simplest-example-alt[]
 			LocalDateTime datetime = session.createQuery(
-				"select local datetime",
-				LocalDateTime.class)
-			.getSingleResult();
+							"select local datetime",
+							LocalDateTime.class)
+					.getSingleResult();
 			//end::hql-select-simplest-example-alt[]
-		});
+
+		} );
 	}
 
 	@Test
-	public void test_hql_select_simplest_jpql_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_select_simplest_jpql_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			//tag::hql-select-simplest-jpql-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -199,11 +204,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_select_no_from() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
+	public void test_hql_select_no_from(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			//tag::hql-select-no-from[]
-
 			// result type Person, only the Person selected
 			List<Person> persons = session.createQuery(
 				"from Person join phones", Person.class)
@@ -226,8 +229,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void hql_update_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void hql_update_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-update-example[]
 			entityManager.createQuery(
 				"update Person set nickName = 'Nacho' " +
@@ -238,8 +241,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void hql_insert_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void hql_insert_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-insert-example[]
 			entityManager.createQuery(
 				"insert Person (id, name) " +
@@ -250,8 +253,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void hql_multi_insert_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void hql_multi_insert_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-insert-example[]
 			entityManager.createQuery(
 				"insert Person (id, name) " +
@@ -264,8 +267,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void hql_insert_with_sequence_example() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void hql_insert_with_sequence_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			entityManager.createQuery(
 				"insert Person (name) values ('Jane Doe2')" )
 			.executeUpdate();
@@ -273,8 +276,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void hql_select_simplest_jpql_fqn_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void hql_select_simplest_jpql_fqn_example(SessionFactoryScope  factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-select-simplest-jpql-fqn-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -286,8 +289,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_multiple_root_reference_jpql_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_multiple_root_reference_jpql_example(SessionFactoryScope  factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-multiple-root-reference-jpql-example[]
 			List<Object[]> persons = entityManager.createQuery(
 				"select distinct pr, ph " +
@@ -301,8 +304,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_cross_join_jpql_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_cross_join_jpql_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cross-join-jpql-example[]
 			List<Object[]> persons = entityManager.createQuery(
 				"select distinct pr, ph " +
@@ -316,8 +319,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_multiple_same_root_reference_jpql_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_multiple_same_root_reference_jpql_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-multiple-same-root-reference-jpql-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr1 " +
@@ -333,8 +336,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_root_join_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_root_join_example_1(SessionFactoryScope  factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-root-join-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
@@ -350,8 +353,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_inner_join_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_inner_join_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-inner-join-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
@@ -367,8 +370,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_inner_join_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_inner_join_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-inner-join-example[]
 
 			// same query, but specifying join type as 'inner' explicitly
@@ -386,8 +389,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_outer_join_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_outer_join_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-outer-join-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
@@ -404,8 +407,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_outer_join_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_outer_join_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-outer-join-example[]
 
 			// same query, but specifying join type as 'outer' explicitly
@@ -424,8 +427,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_fetch_join_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_fetch_join_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-fetch-join-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select distinct pr " +
@@ -439,8 +442,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_explicit_join_with_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_explicit_join_with_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-explicit-join-with-example[]
 			List<Object[]> personsAndPhones = session.createQuery(
@@ -456,8 +459,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_explicit_join_on_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_explicit_join_on_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-explicit-join-jpql-on-example[]
 			List<Object[]> personsAndPhones = entityManager.createQuery(
 				"select pr.name, ph.number " +
@@ -472,8 +475,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_implicit_join_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_implicit_join_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Earth";
 			//tag::hql-implicit-join-example[]
 			List<Phone> phones = entityManager.createQuery(
@@ -489,8 +492,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_implicit_join_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_implicit_join_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Earth";
 			//tag::hql-implicit-join-example[]
 
@@ -509,8 +512,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_implicit_join_alias_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_implicit_join_alias_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Earth";
 			LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
 			//tag::hql-implicit-join-alias-example[]
@@ -529,8 +532,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_implicit_join_alias_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_implicit_join_alias_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Earth";
 			LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.EPOCH, ZoneId.systemDefault());
 			//tag::hql-implicit-join-alias-example[]
@@ -552,8 +555,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_valued_associations_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_valued_associations_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Earth";
 			int duration = 20;
 			//tag::hql-collection-valued-associations[]
@@ -578,8 +581,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	// we do not need to document this syntax, which is a
 	// legacy of EJB entity beans, prior to JPA / EJB 3
-	public void test_hql_collection_valued_associations_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_valued_associations_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			String address = "Earth";
 			int duration = 20;
@@ -604,9 +607,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_qualification_associations_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_qualification_associations_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Long id = 1L;
 			//tag::hql-collection-qualification-example[]
 
@@ -628,8 +630,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_qualification_associations_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_qualification_associations_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Long id = 1L;
 			//tag::hql-collection-qualification-example[]
 
@@ -648,8 +650,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_qualification_associations_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_qualification_associations_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Long id = 1L;
 			//tag::hql-collection-qualification-example[]
 
@@ -669,8 +671,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_qualification_associations_4() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_qualification_associations_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 
 			Long id = 1L;
 			//tag::hql-collection-qualification-example[]
@@ -689,8 +691,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_qualification_associations_5() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_qualification_associations_5(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 
 			Long id = 1L;
 			Integer phoneIndex = 0;
@@ -715,8 +717,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_implicit_join_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_implicit_join_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Long id = 1L;
 			//tag::hql-collection-implicit-join-example[]
 
@@ -734,8 +736,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_implicit_join_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_implicit_join_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Long id = 1L;
 			//tag::hql-collection-implicit-join-example[]
 
@@ -753,8 +755,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_projection_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_projection_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-projection-example[]
 			List<Object[]> results = entityManager.createQuery(
 				"select p.name, p.nickName " +
@@ -780,8 +782,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_union_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_union_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-union-example[]
 			List<String> results = entityManager.createQuery(
 				"select p.name from Person p " +
@@ -794,8 +796,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	});
 }
 	@Test
-	public void test_jpql_api_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-example[]
 			Query query = entityManager.createQuery(
 				"select p " +
@@ -814,8 +816,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_named_query_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_named_query_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-named-query-example[]
 			Query query = entityManager.createNamedQuery("get_person_by_name");
 
@@ -825,8 +827,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_hibernate_named_query_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_hibernate_named_query_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-hibernate-named-query-example[]
 			Phone phone = entityManager
 				.createNamedQuery("get_phone_by_number", Phone.class)
@@ -838,9 +840,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_basic_usage_example() {
+	public void test_jpql_api_basic_usage_example(SessionFactoryScope  factoryScope) {
 		int page = 1;
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-basic-usage-example[]
 			Person person = entityManager.createQuery(
 					"select p " +
@@ -865,8 +867,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_hint_usage_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_hint_usage_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-hint-usage-example[]
 			Person query = entityManager.createQuery(
 					"select p " +
@@ -884,8 +886,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_parameter_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_parameter_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-parameter-example[]
 			Query query = entityManager.createQuery(
 				"select p " +
@@ -897,8 +899,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_parameter_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_parameter_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			LocalDateTime timestamp = LocalDateTime.now();
 			//tag::jpql-api-parameter-example[]
 
@@ -912,8 +914,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_positional_parameter_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_positional_parameter_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-ordinal-parameter-example[]
 			TypedQuery<Person> query = entityManager.createQuery(
 				"select p " +
@@ -926,8 +928,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_list_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_list_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-list-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -941,8 +943,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_jpql_api_stream_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_stream_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-stream-example[]
 			try(Stream<Person> personStream = entityManager.createQuery(
 				"select p " +
@@ -954,15 +956,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				List<Person> persons = personStream
 					.skip(5)
 					.limit(5)
-					.collect(Collectors.toList());
+					.toList();
 			}
 			//end::jpql-api-stream-example[]
 		});
 	}
 
 	@Test
-	public void test_jpql_api_single_result_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_jpql_api_single_result_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::jpql-api-single-result-example[]
 			Person person = (Person) entityManager.createQuery(
 				"select p " +
@@ -975,8 +977,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
@@ -989,8 +991,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_named_query_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_named_query_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-named-query-example[]
 			org.hibernate.query.Query<Person> query = session.createNamedQuery(
@@ -1001,8 +1003,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_basic_usage_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_basic_usage_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-basic-usage-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
@@ -1023,8 +1025,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_parameter_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_parameter_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
@@ -1038,8 +1040,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_parameter_inferred_type_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_parameter_inferred_type_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-inferred-type-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
@@ -1053,8 +1055,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_parameter_short_form_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_parameter_short_form_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			LocalDateTime timestamp = LocalDateTime.now();
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-short-form-example[]
@@ -1070,9 +1072,10 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void test_hql_api_positional_parameter_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@Test
+	@ExpectedException( IllegalArgumentException.class )
+	public void test_hql_api_positional_parameter_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Date timestamp = new Date();
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-ordinal-parameter-example[]
@@ -1087,8 +1090,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_list_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_list_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-list-example[]
 			List<Person> persons = session.createQuery(
@@ -1103,8 +1106,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_stream_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_stream_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-stream-example[]
 			try(Stream<Person> persons = session.createQuery(
@@ -1130,8 +1133,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_stream_projection_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_stream_projection_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-stream-projection-example[]
 			try (Stream<Object[]> persons = session.createQuery(
@@ -1149,8 +1152,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_scroll_projection_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_scroll_projection_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-scroll-example[]
 			try (ScrollableResults<Person> scrollableResults = session.createQuery(
@@ -1171,17 +1174,18 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_scroll_open_example() {
-		ScrollableResults<Person> scrollableResults = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_scroll_open_example(SessionFactoryScope factoryScope) {
+		//noinspection resource
+		ScrollableResults<Person> scrollableResults = factoryScope.fromTransaction( entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			return session.createQuery(
-				"select p " +
-				"from Person p " +
-				"where p.name like :name",
-				Person.class)
-			.setParameter("name", "J%")
-			.scroll();
-		});
+							"select p " +
+							"from Person p " +
+							"where p.name like :name",
+							Person.class)
+					.setParameter("name", "J%")
+					.scroll();
+		} );
 		try {
 			scrollableResults.next();
 			fail("Should throw exception because the ResultSet must be closed by now!");
@@ -1197,8 +1201,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_api_unique_result_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_api_unique_result_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-unique-result-example[]
 			Person person = session.createQuery(
@@ -1213,8 +1217,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-string-literals-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -1227,8 +1231,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-string-literals-example[]
 
 			// Escaping quotes
@@ -1243,8 +1247,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 			// simple integer literal
 			Person person = entityManager.createQuery(
@@ -1258,8 +1262,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_4() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 
 			// simple integer literal, typed as a long
@@ -1274,8 +1278,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_5() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_5(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 
 			// decimal notation
@@ -1290,8 +1294,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_6() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_6(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 
 			// decimal notation, typed as a float
@@ -1306,8 +1310,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_7() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_7(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 
 			// scientific notation
@@ -1322,8 +1326,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_string_literals_example_8() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_string_literals_example_8(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-literals-example[]
 
 			// scientific notation, typed as a float
@@ -1339,8 +1343,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_java_constant_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_java_constant_example(SessionFactoryScope  factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-java-constant-example[]
 			// select clause date/time arithmetic operations
 			Double pi = entityManager.createQuery(
@@ -1353,8 +1357,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_enum_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_enum_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-enum-example[]
 			// select clause date/time arithmetic operations
 			List<Phone> phones1 = entityManager.createQuery(
@@ -1368,8 +1372,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	public void test_hql_numeric_arithmetic_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_numeric_arithmetic_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]
 			// select clause date/time arithmetic operations
 			Long duration = entityManager.createQuery(
@@ -1382,13 +1386,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.setParameter("multiplier", 1000L)
 			.getSingleResult();
 			//end::hql-numeric-arithmetic-example[]
-			assertTrue(duration > 0);
+			assertTrue( duration > 0 );
 		});
 	}
 
 	@Test
-	public void test_hql_numeric_arithmetic_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_numeric_arithmetic_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]
 
 			// select clause date/time arithmetic operations
@@ -1399,13 +1403,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Integer.class)
 			.getSingleResult();
 			//end::hql-numeric-arithmetic-example[]
-			assertTrue(years > 0);
+			assertTrue( years > 0 );
 		});
 	}
 
 	@Test
-	public void test_hql_numeric_arithmetic_example_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_numeric_arithmetic_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]
 
 			// where clause arithmetic operations
@@ -1416,13 +1420,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Person.class)
 			.getResultList();
 			//end::hql-numeric-arithmetic-example[]
-			assertTrue(persons.size() > 0);
+			assertFalse( persons.isEmpty() );
 		});
 	}
 
 	@Test
-	public void test_hql_concatenation_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_concatenation_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-concatenation-example[]
 			String name = entityManager.createQuery(
 				"select 'Customer ' || p.name " +
@@ -1436,8 +1440,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_aggregate_functions_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-example[]
 			Object[] callStatistics = entityManager.createQuery(
 				"select " +
@@ -1455,8 +1459,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_aggregate_functions_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-example[]
 
 			Long phoneCount = entityManager.createQuery(
@@ -1470,8 +1474,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_aggregate_functions_example_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_example_3(SessionFactoryScope  factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-example[]
 
 			List<Object[]> callCount = entityManager.createQuery(
@@ -1487,8 +1491,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_aggregate_functions_simple_filter_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_simple_filter_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-simple-filter-example[]
 
 			List<Long> callCount = entityManager.createQuery(
@@ -1502,8 +1506,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_aggregate_functions_filter_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_filter_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-filter-example[]
 
 			List<Object[]> callCount = entityManager.createQuery(
@@ -1523,8 +1527,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "order by not supported in list")
 	@SkipForDialect(dialectClass = InformixDialect.class)
-	public void test_hql_aggregate_functions_within_group_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_aggregate_functions_within_group_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-aggregate-functions-within-group-example[]
 
 			List<String> callCount = entityManager.createQuery(
@@ -1540,8 +1544,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "See https://issues.apache.org/jira/browse/DERBY-2072")
-	public void test_hql_concat_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_concat_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-concat-function-example[]
 			List<String> callHistory = entityManager.createQuery(
 				"select concat(p.number, ' : ' , cast(c.duration as string)) " +
@@ -1555,8 +1559,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_substring_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_substring_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-substring-function-example[]
 
 			// JPQL-style
@@ -1581,8 +1585,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_upper_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_upper_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-upper-function-example[]
 			List<String> names = entityManager.createQuery(
 				"select upper(p.name) " +
@@ -1595,8 +1599,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_lower_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_lower_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-lower-function-example[]
 			List<String> names = entityManager.createQuery(
 				"select lower(p.name) " +
@@ -1609,8 +1613,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_trim_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_trim_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-trim-function-example[]
 
 			// trim whitespace from both ends
@@ -1633,8 +1637,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_length_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_length_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-length-function-example[]
 			List<Integer> lengths = entityManager.createQuery(
 				"select length(p.name) " +
@@ -1647,8 +1651,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_locate_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_locate_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-locate-function-example[]
 			List<Integer> sizes = entityManager.createQuery(
 				"select locate('John', p.name) " +
@@ -1661,8 +1665,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_position_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_position_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-position-function-example[]
 			List<Integer> sizes = entityManager.createQuery(
 				"select position('John' in p.name) " +
@@ -1675,8 +1679,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_abs_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_abs_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-abs-function-example[]
 			List<Integer> abs = entityManager.createQuery(
 				"select abs(c.duration) " +
@@ -1689,8 +1693,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_mod_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_mod_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-mod-function-example[]
 			List<Integer> mods = entityManager.createQuery(
 				"select mod(c.duration, 10) " +
@@ -1704,8 +1708,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/26710")
-	public void test_hql_sqrt_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_sqrt_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-sqrt-function-example[]
 			List<Double> sqrts = entityManager.createQuery(
 				"select sqrt(c.duration) " +
@@ -1720,8 +1724,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
-	public void test_hql_current_date_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_current_date_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-current-date-function-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -1735,8 +1739,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_current_date_function_example_sql_server() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_current_date_function_example_sql_server(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-extract-function-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -1752,8 +1756,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	public void test_hql_current_time_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_current_time_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-current-time-function-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -1767,8 +1771,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_current_timestamp_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_current_timestamp_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-current-timestamp-function-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -1782,9 +1786,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-//	@RequiresDialect({MySQLDialect.class, PostgreSQLDialect.class, H2Dialect.class, DerbyDialect.class, OracleDialect.class})
-	public void test_var_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_var_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-native-function-example[]
 			// careful: these functions are not supported on all databases!
 
@@ -1802,8 +1805,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(OracleDialect.class)
-	public void test_hql_bit_length_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_bit_length_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-native-function-example[]
 
 			List<Number> bits = entityManager.createQuery(
@@ -1817,8 +1820,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_cast_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_cast_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cast-function-example[]
 			List<String> durations = entityManager.createQuery(
 				"select cast(c.duration as String) " +
@@ -1831,8 +1834,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_extract_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_extract_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-extract-function-example[]
 			List<Integer> years = entityManager.createQuery(
 				"select extract(year from c.timestamp) " +
@@ -1845,8 +1848,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_year_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_year_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-year-function-example[]
 			List<Integer> years = entityManager.createQuery(
 				"select year(c.timestamp) " +
@@ -1860,8 +1863,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
-	public void test_hql_str_function_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_str_function_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-str-function-example[]
 			List<String> timestamps = entityManager.createQuery(
 				"select str(c.timestamp) " +
@@ -1875,8 +1878,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(SQLServerDialect.class)
-	public void test_hql_str_function_example_sql_server() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_str_function_example_sql_server(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-str-function-example[]
 			// Special SQL Server function "str" that converts floats
 			List<String> timestamps = entityManager.createQuery(
@@ -1890,8 +1893,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(1);
 			//tag::hql-collection-expressions-example[]
 			List<Phone> phones = entityManager.createQuery(
@@ -1907,8 +1910,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
 			//tag::hql-collection-expressions-example[]
 
@@ -1925,8 +1928,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-expressions-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -1941,8 +1944,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_5() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_5(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
 			Phone phone = call.getPhone();
 			//tag::hql-collection-expressions-some-example[]
@@ -1960,8 +1963,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_4() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
 			Phone phone = call.getPhone();
 			//tag::hql-collection-expressions-some-example[]
@@ -1980,8 +1983,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_6() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_6(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-expressions-exists-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -1997,8 +2000,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
-	public void test_hql_collection_expressions_example_8() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_8(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-expressions-all-example[]
 
 			List<Phone> phones = entityManager.createQuery(
@@ -2013,8 +2016,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_9() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_9(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-expressions-in-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2029,8 +2032,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_10() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_expressions_example_10(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-size-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2045,8 +2048,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_collection_index_operator_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_collection_index_operator_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-index-operator-example[]
 			// indexed lists
 			List<Person> persons = entityManager.createQuery(
@@ -2061,8 +2064,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_index_operator_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_collection_index_operator_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			String address = "Home address";
 			//tag::hql-collection-index-operator-example[]
 
@@ -2080,9 +2083,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsSubqueryInOnClause.class)
-	public void test_hql_collection_index_operator_example_3() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	public void test_hql_collection_index_operator_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-index-operator-example[]
 
 			//max index in list
@@ -2098,8 +2101,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_polymorphism_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_polymorphism_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-polymorphism-example[]
 			List<Payment> payments = entityManager.createQuery(
 				"select p " +
@@ -2112,8 +2115,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_treat_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_treat_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-treat-example[]
 			List<Payment> payments = entityManager.createQuery(
 				"select p " +
@@ -2127,8 +2130,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_join_many_treat_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_join_many_treat_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-join-treat-example[]
 			// a to-many association
 			List<Object[]> payments = entityManager.createQuery(
@@ -2144,8 +2147,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_join_one_treat_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_join_one_treat_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-join-treat-example[]
 
 			// a to-one association
@@ -2162,8 +2165,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_entity_type_exp_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_entity_type_exp_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-entity-type-exp-example[]
 			List<Payment> payments = entityManager.createQuery(
 				"select p " +
@@ -2177,8 +2180,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_entity_type_exp_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_entity_type_exp_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-entity-type-exp-example[]
 
 			// using a parameter instead of a literal entity type
@@ -2195,8 +2198,26 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_simple_case_expressions_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_entity_type_exp_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
+			//tag::hql-entity-type-exp-example[]
+
+			// using a parameter instead of a literal entity type
+			List<Payment> payments = entityManager.createQuery(
+							"select p " +
+							"from Payment p " +
+							"where type(p) = type(:instance)",
+							Payment.class)
+					.setParameter("instance", new WireTransferPayment())
+					.getResultList();
+			//end::hql-entity-type-exp-example[]
+			assertEquals(1, payments.size());
+		});
+	}
+
+	@Test
+	public void test_simple_case_expressions_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-simple-case-expressions-example[]
 			List<String> nickNames = entityManager.createQuery(
 				"select " +
@@ -2214,8 +2235,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_simple_case_expressions_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_simple_case_expressions_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-coalesce-example[]
 			List<String> nickNames = entityManager.createQuery(
 				"select coalesce(p.nickName, '<no nick name>') " +
@@ -2228,8 +2249,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_searched_case_expressions_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_searched_case_expressions_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-searched-case-expressions-example[]
 			List<String> nickNames = entityManager.createQuery(
 				"select " +
@@ -2252,8 +2273,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_searched_case_expressions_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_searched_case_expressions_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-coalesce-example[]
 
 			List<String> nickNames = entityManager.createQuery(
@@ -2267,8 +2288,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_case_arithmetic_expressions_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_case_arithmetic_expressions_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-case-arithmetic-expressions-example[]
 			List<Long> values = entityManager.createQuery(
 				"select " +
@@ -2290,8 +2311,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_null_if_example_1() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_null_if_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-nullif-example[]
 			List<String> nickNames = entityManager.createQuery(
 				"select nullif(p.nickName, p.name) " +
@@ -2304,8 +2325,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_null_if_example_2() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_null_if_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-nullif-example[]
 
 			// equivalent CASE expression
@@ -2325,8 +2346,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_select_clause_dynamic_instantiation_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_select_clause_dynamic_instantiation_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-select-clause-dynamic-instantiation-example[]
 			CallStatistics callStatistics = entityManager.createQuery(
 				"select new org.hibernate.orm.test.hql.CallStatistics(" +
@@ -2345,8 +2366,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_select_clause_dynamic_list_instantiation_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_select_clause_dynamic_list_instantiation_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-select-clause-dynamic-list-instantiation-example[]
 			List<List> phoneCallDurations = entityManager.createQuery(
 				"select new list(" +
@@ -2363,9 +2384,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_select_clause_dynamic_map_instantiation_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_select_clause_dynamic_map_instantiation_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-select-clause-dynamic-map-instantiation-example[]
 			List<Map> phoneCallTotalDurations = entityManager.createQuery(
 				"select new map(" +
@@ -2384,9 +2404,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 			// numeric comparison
 			List<Call> calls = entityManager.createQuery(
@@ -2401,9 +2420,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// string comparison
@@ -2422,9 +2440,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQLDialect.class)
-	public void test_hql_relational_comparisons_example_3() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// datetime comparison
@@ -2440,9 +2457,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_4() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// enum comparison
@@ -2458,9 +2474,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_5() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_5(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// boolean comparison
@@ -2476,9 +2491,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_6() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_6(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// boolean comparison
@@ -2494,9 +2508,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_relational_comparisons_example_7() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_relational_comparisons_example_7(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
 
 			// entity value comparison
@@ -2512,9 +2525,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_all_subquery_comparison_qualifier_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_all_subquery_comparison_qualifier_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-all-subquery-comparison-qualifier-example[]
 			// select all persons with all calls shorter than 50 seconds
 			List<Person> persons = entityManager.createQuery(
@@ -2533,9 +2545,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_null_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_null_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-null-predicate-example[]
 			// select all persons with a nickname
 			List<Person> persons = entityManager.createQuery(
@@ -2550,9 +2561,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_null_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_null_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-null-predicate-example[]
 
 			// select all persons without a nickname
@@ -2568,9 +2578,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_like_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_like_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-like-predicate-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -2584,9 +2593,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_like_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_like_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-like-predicate-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2601,9 +2609,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_like_predicate_escape_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_like_predicate_escape_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-like-predicate-escape-example[]
 			// find any person with a name starting with "Dr_"
 			List<Person> persons = entityManager.createQuery(
@@ -2618,9 +2625,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_between_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_between_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-between-predicate-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -2638,9 +2644,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQLDialect.class)
-	public void test_hql_between_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_between_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-between-predicate-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2655,9 +2660,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_between_predicate_example_3() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_between_predicate_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-between-predicate-example[]
 
 			List<Call> calls = entityManager.createQuery(
@@ -2672,9 +2676,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_between_predicate_example_4() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_between_predicate_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-between-predicate-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2689,9 +2692,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_in_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 			List<Payment> payments = entityManager.createQuery(
 				"select p " +
@@ -2705,9 +2707,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_in_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 
 			List<Phone> phones = entityManager.createQuery(
@@ -2722,9 +2723,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_in_predicate_example_3() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 
 			List<Phone> phones = entityManager.createQuery(
@@ -2740,9 +2740,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_in_predicate_example_4() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 
 			List<Phone> phones = entityManager.createQuery(
@@ -2761,9 +2760,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_in_predicate_example_5() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_5(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 
 			// Not JPQL compliant!
@@ -2784,9 +2782,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	public void test_hql_in_predicate_example_6() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_in_predicate_example_6(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-in-predicate-example[]
 
 			// Not JPQL compliant!
@@ -2805,9 +2802,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_empty_collection_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_empty_collection_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-empty-collection-predicate-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -2821,9 +2817,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_empty_collection_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_empty_collection_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-empty-collection-predicate-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2838,9 +2833,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_member_of_collection_predicate_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_member_of_collection_predicate_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-member-of-collection-predicate-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -2854,9 +2848,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_member_of_collection_predicate_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_member_of_collection_predicate_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-member-of-collection-predicate-example[]
 
 			List<Person> persons = entityManager.createQuery(
@@ -2871,9 +2864,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_group_by_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_group_by_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-group-by-example[]
 			Long totalDuration = entityManager.createQuery(
 				"select sum(c.duration) " +
@@ -2886,9 +2878,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_group_by_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_group_by_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-group-by-example[]
 
 			List<Object[]> personTotalCallDurations = entityManager.createQuery(
@@ -2905,9 +2896,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_group_by_example_3() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_group_by_example_3(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-group-by-example[]
 
 			//It's even possible to group by entities!
@@ -2925,9 +2915,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_group_by_example_4() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_group_by_example_4(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 
 			Call call11 = new Call();
 			call11.setDuration(10);
@@ -2950,9 +2939,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_group_by_having_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_group_by_having_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-group-by-having-example[]
 
 			List<Object[]> personTotalCallDurations = entityManager.createQuery(
@@ -2970,9 +2958,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_order_by_example_1() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_order_by_example_1(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-order-by-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -2986,9 +2973,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_order_by_example_2() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_order_by_example_2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-order-by-example[]
 
 			List<Object[]> personTotalCallDurations = entityManager.createQuery(
@@ -3006,9 +2992,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_limit_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_limit_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-limit-example[]
 			List<Call> calls1 = entityManager.createQuery(
 				"select c " +
@@ -3033,9 +3018,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_bad_limit_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_bad_limit_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-bad-limit-example[]
 			// don't do this! join fetch should not be used with limit
 			List<Phone> wrongCalls = entityManager.createQuery(
@@ -3051,9 +3035,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_bad_fetch_first_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_bad_fetch_first_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			List<Phone> wrongCalls = entityManager.createQuery(
 							"select p " +
 									"from Phone p " +
@@ -3066,9 +3049,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_read_only_entities_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_read_only_entities_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-read-only-entities-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -3086,9 +3068,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_read_only_entities_native_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_read_only_entities_native_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-read-only-entities-native-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
@@ -3105,9 +3086,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_derived_root_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_derived_root_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-derived-root-example[]
 			List<Tuple> calls = entityManager.createQuery(
 				"select d.owner, d.payed " +
@@ -3124,9 +3104,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_cte_materialized_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test_hql_cte_materialized_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cte-materialized-example[]
 			List<Tuple> calls = entityManager.createQuery(
 							"with data as materialized(" +
@@ -3145,9 +3124,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
-	public void test_hql_cte_recursive_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cte-recursive-example[]
 			List<Tuple> calls = entityManager.createQuery(
 							"with paymentConnectedPersons as(" +
@@ -3170,9 +3149,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
-	public void test_hql_cte_recursive_search_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_search_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cte-recursive-search-example[]
 			List<Tuple> calls = entityManager.createQuery(
 							"with paymentConnectedPersons as(" +
@@ -3195,9 +3174,9 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsRecursiveCtes.class )
-	public void test_hql_cte_recursive_cycle_example() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class )
+	public void test_hql_cte_recursive_cycle_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cte-recursive-cycle-example[]
 			List<Tuple> calls = entityManager.createQuery(
 							"with paymentConnectedPersons as(" +
@@ -3220,14 +3199,12 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature({
-			DialectChecks.SupportsSubqueryInOnClause.class,
-			DialectChecks.SupportsOrderByInCorrelatedSubquery.class
-	})
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "The lateral emulation for Oracle 11 would be very complex because nested correlation is unsupported")
-	public void test_hql_derived_join_example() {
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class )
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11,
+			reason = "The lateral emulation for Oracle 11 would be very complex because nested correlation is unsupported")
+	public void test_hql_derived_join_example(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-derived-join-example[]
 			List<Tuple> calls1 = entityManager.createQuery(
 					"from Phone p " +

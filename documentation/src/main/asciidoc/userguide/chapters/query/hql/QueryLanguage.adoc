@@ -1,6 +1,5 @@
 [[query-language]]
 == Hibernate Query Language
-:root-project-dir: ../../../../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
@@ -145,7 +144,7 @@ An alternative "simplest" query has _only_ a `select` list:
 
 [[hql-select-simplest-example-alt]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-example-alt]
 ----
@@ -327,12 +326,12 @@ For example:
 
 [[hql-insert-example]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-insert-example]
 ----
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
@@ -379,7 +378,7 @@ Possible conflict actions are to ignore the conflict or update conflicting objec
 
 [[hql-insert-conflict-example]]
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/../query/hql/InsertConflictTests.java[tags=hql-insert-conflict-example]
 ----
@@ -899,7 +898,7 @@ There are some very important functions for working with dates and times.
 The special function `extract()` obtains a single field of a date, time, or datetime.
 
 Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
-For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+For a full list of field types, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 ====
 [source, java, indent=0]
@@ -937,7 +936,7 @@ This function formats a date, time, or datetime according to a pattern.
 
 The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
-For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
 
 [[hql-function-trunc-datetime]]
 ===== `trunc()` or `truncate()`
@@ -2023,7 +2022,7 @@ include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arraya
 
 Creates a JSON object by aggregating values.
 
-[[hql-json-arrayagg-bnf]]
+[[hql-json-objectagg-bnf]]
 [source, antlrv4, indent=0]
 ----
 include::{extrasdir}/json_objectagg_bnf.txt[]
@@ -2443,7 +2442,7 @@ WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
 
 Aggregates XML elements by concatenation.
 
-[[hql-xmlexists-bnf]]
+[[hql-xmlagg-bnf]]
 [source, antlrv4, indent=0]
 ----
 include::{extrasdir}/xmlagg_bnf.txt[]
@@ -2541,7 +2540,7 @@ The pattern literal is unquoted and embedded in the generated SQL.
 Occurrences of `?` in the pattern are replaced with the remaining arguments of the function.
 
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 -- Cast to some native type
 select c from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
@@ -2938,7 +2937,7 @@ Of course, there may be multiple root entities.
 [[hql-multiple-root-reference-jpql-example]]
 //.Simple query using multiple root entity references
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-multiple-root-reference-jpql-example]
 ----
@@ -2954,7 +2953,7 @@ The previous queries may even be written using the syntax `cross join` in place 
 [[hql-cross-join-jpql-example]]
 //.Simple query using cross join
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-cross-join-jpql-example]
 ----
@@ -3125,7 +3124,7 @@ An explicit root join works just like an ANSI-style join in SQL.
 [[hql-explicit-root-join-example]]
 //.Explicit root join examples
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-root-join-example]
 ----
@@ -3155,7 +3154,7 @@ An explicit join may assign an identification variable to the joined entity.
 [[hql-explicit-inner-join-example]]
 //.Explicit inner join examples
 ====
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-explicit-inner-join-example]
 ----
@@ -3902,7 +3901,8 @@ Even the identification variable of an entity with a sortable identifier type ma
 [NOTE]
 ====
 The JPQL specification requires that every sorted item in the `order by` clause also occur in the `select` clause.
-HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
+HQL does not enforce this restriction, but if you desire cross-database portability, you should be aware that some databases _do_.
+And even databases which don't usually enforce this restriction do enforce it for `distinct` queries.
 
 Therefore, you might wish to avoid the use of complex expressions in the sort list.
 ====
@@ -3999,7 +3999,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-bad-limit-example]
 
 However, if you log the SQL executed by Hibernate, you'll notice something wrong:
 
-[source, SQL, indent=0]
+[source, sql, indent=0]
 ----
     select
         p1_0.id,

@@ -9,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -63,8 +64,12 @@ public interface ExtractionContext {
 	 */
 	@Incubating
 	interface DatabaseObjectAccess {
-		TableInformation locateTableInformation(QualifiedTableName tableName);
+		@Nullable TableInformation locateTableInformation(QualifiedTableName tableName);
 		SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);
+		@Nullable PrimaryKeyInformation locatePrimaryKeyInformation(QualifiedTableName tableName);
+		Iterable<ForeignKeyInformation> locateForeignKeyInformation(QualifiedTableName tableName);
+		Iterable<IndexInformation> locateIndexesInformation(QualifiedTableName tableName);
+		boolean isCaching();
 	}
 
 	DatabaseObjectAccess getDatabaseObjectAccess();

@@ -12,70 +12,66 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				OneToOneBidirectionalTest.Phone.class,
+				OneToOneBidirectionalTest.PhoneDetails.class,
+		}
+)
+public class OneToOneBidirectionalTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Phone.class,
-				PhoneDetails.class,
-		};
+	@Test
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Phone phone = new Phone( "123-456-7890" );
+			PhoneDetails details = new PhoneDetails( "T-Mobile", "GSM" );
+
+			phone.addDetails( details );
+			entityManager.persist( phone );
+		} );
 	}
 
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Phone phone = new Phone("123-456-7890");
-			PhoneDetails details = new PhoneDetails("T-Mobile", "GSM");
-
-			phone.addDetails(details);
-			entityManager.persist(phone);
-		});
-	}
-
-	@Test
-	public void testConstraint() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void testConstraint(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::associations-one-to-one-bidirectional-lifecycle-example[]
-			Phone phone = new Phone("123-456-7890");
-			PhoneDetails details = new PhoneDetails("T-Mobile", "GSM");
+			Phone phone = new Phone( "123-456-7890" );
+			PhoneDetails details = new PhoneDetails( "T-Mobile", "GSM" );
 
-			phone.addDetails(details);
-			entityManager.persist(phone);
+			phone.addDetails( details );
+			entityManager.persist( phone );
 			//end::associations-one-to-one-bidirectional-lifecycle-example[]
-		});
+		} );
 		try {
-			doInJPA(this::entityManagerFactory, entityManager -> {
+			scope.inTransaction( entityManager -> {
 
-				Phone phone = entityManager.find(Phone.class, 1L);
+				Phone phone = entityManager.find( Phone.class, 1L );
 
 				//tag::associations-one-to-one-bidirectional-constraint-example[]
-				PhoneDetails otherDetails = new PhoneDetails("T-Mobile", "CDMA");
-				otherDetails.setPhone(phone);
-				entityManager.persist(otherDetails);
+				PhoneDetails otherDetails = new PhoneDetails( "T-Mobile", "CDMA" );
+				otherDetails.setPhone( phone );
+				entityManager.persist( otherDetails );
 				entityManager.flush();
 				entityManager.clear();
 
 				//throws jakarta.persistence.PersistenceException: org.hibernate.HibernateException: More than one row with the given identifier was found: 1
-				phone = entityManager.find(Phone.class, phone.getId());
+				phone = entityManager.find( Phone.class, phone.getId() );
 				//end::associations-one-to-one-bidirectional-constraint-example[]
 				phone.getDetails().getProvider();
-			});
-			Assert.fail("Expected: HHH000327: Error performing load command : org.hibernate.HibernateException: More than one row with the given identifier was found: 1");
+			} );
+			fail( "Expected: HHH000327: Error performing load command : org.hibernate.HibernateException: More than one row with the given identifier was found: 1" );
 		}
 		catch (Exception expected) {
-			log.error("Expected", expected);
+			//expected
 		}
 	}
 
@@ -91,16 +87,16 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 		private String number;
 
 		@OneToOne(
-			mappedBy = "phone",
-			cascade = CascadeType.ALL,
-			orphanRemoval = true,
-			fetch = FetchType.LAZY
+				mappedBy = "phone",
+				cascade = CascadeType.ALL,
+				orphanRemoval = true,
+				fetch = FetchType.LAZY
 		)
 		private PhoneDetails details;
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-one-bidirectional-example[]
+		//end::associations-one-to-one-bidirectional-example[]
 
 		public Phone() {
 		}
@@ -121,15 +117,15 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 			return details;
 		}
 
-	//tag::associations-one-to-one-bidirectional-example[]
+		//tag::associations-one-to-one-bidirectional-example[]
 		public void addDetails(PhoneDetails details) {
-			details.setPhone(this);
+			details.setPhone( this );
 			this.details = details;
 		}
 
 		public void removeDetails() {
-			if (details != null) {
-				details.setPhone(null);
+			if ( details != null ) {
+				details.setPhone( null );
 				this.details = null;
 			}
 		}
@@ -152,7 +148,7 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 
 		//Getters and setters are omitted for brevity
 
-	//end::associations-one-to-one-bidirectional-example[]
+		//end::associations-one-to-one-bidirectional-example[]
 
 		public PhoneDetails() {
 		}
@@ -181,7 +177,7 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 		public void setPhone(Phone phone) {
 			this.phone = phone;
 		}
-	//tag::associations-one-to-one-bidirectional-example[]
+		//tag::associations-one-to-one-bidirectional-example[]
 	}
 	//end::associations-one-to-one-bidirectional-example[]
 }

@@ -51,10 +51,11 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 
 		final String builderClassName = builder.toString();
 		try {
-			return (BatchBuilder) registry.requireService( ClassLoaderService.class )
-					.classForName( builderClassName )
-					.getConstructor()
-					.newInstance();
+			return (BatchBuilder)
+					registry.requireService( ClassLoaderService.class )
+							.classForName( builderClassName )
+							.getConstructor()
+							.newInstance();
 		}
 		catch (Exception e) {
 			throw new ServiceException( "Could not build explicit BatchBuilder [" + builderClassName + "]", e );

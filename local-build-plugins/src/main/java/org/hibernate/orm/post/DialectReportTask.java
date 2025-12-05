@@ -4,6 +4,17 @@
  */
 package org.hibernate.orm.post;
 
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.TaskAction;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.Index;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -16,36 +27,26 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.TaskAction;
-
-import org.hibernate.build.HibernateVersion;
-import org.hibernate.build.OrmBuildDetails;
-
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
-
 /**
  * Generates a report on Dialect information
  *
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
+	private final ConfigurableFileCollection dialectReportSources;
+	private final Property<String> sourcePackage;
 	private final Property<RegularFile> reportFile;
-	private final Property<Boolean> generateHeading;
 
 	public DialectReportTask() {
 		setDescription( "Generates a report of the supported Dialects" );
+		dialectReportSources = getProject().getObjects().fileCollection();
+		sourcePackage = getProject().getObjects().property(String.class);
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
-		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
+	}
+
+	@Input
+	public Property<String> getSourcePackage() {
+		return sourcePackage;
 	}
 
 	@OutputFile
@@ -53,9 +54,9 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		return reportFile;
 	}
 
-	@Input
-	public Property<Boolean> getGenerateHeading() {
-		return generateHeading;
+	@InputFiles
+	public ConfigurableFileCollection getDialectReportSources() {
+		return dialectReportSources;
 	}
 
 	@Override
@@ -65,16 +66,13 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	@TaskAction
 	public void generateDialectReport() {
-		// the ones we want are all in the hibernate-core project
-		final Project coreProject = getProject().getRootProject().project( "hibernate-core" );
-		final SourceSetContainer sourceSets = coreProject.getExtensions().getByType( SourceSetContainer.class );
-		final SourceSet sourceSet = sourceSets.getByName( SourceSet.MAIN_SOURCE_SET_NAME );
-		final ClassLoader classLoader = Helper.asClassLoader( sourceSet, coreProject.getConfigurations().getByName( "testRuntimeClasspath" ) );
-
+		final ClassLoader classLoader = Helper.asClassLoader( dialectReportSources );
 		final DialectClassDelegate dialectClassDelegate = new DialectClassDelegate( classLoader );
 
 		final Index index = getIndexManager().getIndex();
 		final Collection<ClassInfo> allDialectClasses = index.getAllKnownSubclasses( DialectClassDelegate.DIALECT_CLASS_NAME );
+		String sourcePackagePrefix = this.sourcePackage.get() + ".";
+		allDialectClasses.removeIf( c -> !c.name().toString().startsWith( sourcePackagePrefix ) );
 		if ( allDialectClasses.isEmpty() ) {
 			throw new RuntimeException( "Unable to find Dialects" );
 		}
@@ -127,15 +125,6 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportHeader(OutputStreamWriter fileWriter) {
 		try {
-			if ( this.generateHeading.get() ) {
-				fileWriter.write( "= Supported Dialects\n\n" );
-				fileWriter.write(
-						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
-
-				HibernateVersion ormVersion = getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion();
-				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
-			}
-
 			fileWriter.write( "[cols=\"a,a\", options=\"header\"]\n" );
 			fileWriter.write( "|===\n" );
 			fileWriter.write( "|Dialect |Minimum Database Version\n" );
@@ -147,7 +136,10 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportEntry(DialectDelegate dialectDelegate, OutputStreamWriter fileWriter) {
 		try {
-			final String version = dialectDelegate.getMinimumVersion();
+			String version = dialectDelegate.getMinimumVersion();
+			if ( "0.0".equals( version ) ) {
+				version = "N/A";
+			}
 			fileWriter.write( '|' );
 			fileWriter.write( dialectDelegate.getDialectImplClass().getSimpleName() );
 			fileWriter.write( '|' );

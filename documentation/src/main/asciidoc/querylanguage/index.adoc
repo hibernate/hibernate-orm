@@ -1,0 +1,28 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/querylanguage/html_single/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
+:extrasdir: extras
+
+= A Guide to Hibernate Query Language
+:title-logo-image: image:{doc-main-style-dir}/asciidoctor/images/org/hibernate/logo.png[align=left,pdfwidth=33%]
+:toc2:
+:toclevels: 3
+:sectanchors:
+
+include::Preface.adoc[]
+
+:numbered:
+
+include::Concepts.adoc[]
+include::Expressions.adoc[]
+include::From.adoc[]
+include::Relational.adoc[]
+include::Credits.adoc[]
+

@@ -291,7 +291,7 @@ The first step is to develop the actual integration by implementing the `Connect
 [[services-overriding-custom-ConnectionProvider-example]]
 .Custom `ConnectionProvider` implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/LatestAndGreatestConnectionProviderImpl.java[]
 ----
@@ -305,7 +305,7 @@ As a first option, we might just require that the code bootstrapping the `Standa
 [[services-overriding-override-via-StandardServiceRegistryBuilder-example]]
 .Overriding service implementation via `StandardServiceRegistryBuilder`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/ex1-direct.java[]
 ----
@@ -316,7 +316,7 @@ A second option, if our `LatestAndGreatestConnectionProviderImpl` should always 
 [[services-LatestAndGreatestConnectionProviderImplContributor-example]]
 .`LatestAndGreatestConnectionProviderImplContributor`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/ex2-contributor.java[]
 ----
@@ -331,7 +331,7 @@ This file will have just a single line naming our impl.
 [[services-META-INF-example]]
 .`META-INF/services/org.hibernate.service.spi.ServiceContributor`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/ex2-meta-inf[]
 ----
@@ -342,7 +342,7 @@ A third option, if we simply want to make our `LatestAndGreatestConnectionProvid
 [[services-LatestAndGreatestConnectionProviderImplContributor-variation-example]]
 .`LatestAndGreatestConnectionProviderImplContributor` variation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/ex3-contributor.java[]
 ----
@@ -353,7 +353,7 @@ That all allows the application to pick our `LatestAndGreatestConnectionProvider
 [[services-custom-service-short-name-example]]
 .Custom service short name
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/override/ex3-app.java[]
 ----
@@ -369,7 +369,7 @@ So, we will expand the `ServiceRegistry` to host this completely new `Service` r
 [[services-EventPublishingService-service-role-example]]
 .The `EventPublishingService` service role
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/extend/EventPublishingService.java[]
 ----
@@ -378,7 +378,7 @@ include::{extrasdir}/extend/EventPublishingService.java[]
 [[services-EventPublishingService-implementation-example]]
 .The `EventPublishingService` implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/extend/EventPublishingServiceImpl.java[]
 ----
@@ -387,7 +387,7 @@ include::{extrasdir}/extend/EventPublishingServiceImpl.java[]
 [[services-alternate-EventPublishingService-implementation-example]]
 .An alternative `EventPublishingService` implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/extend/DisabledEventPublishingServiceImpl.java[]
 ----
@@ -398,7 +398,7 @@ Because we have alternative implementations, it is a good idea to develop an ini
 [[services-EventPublishingServiceInitiator-example]]
 .The `EventPublishingServiceInitiator`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/extend/EventPublishingServiceInitiator.java[]
 ----
@@ -409,7 +409,7 @@ We could have the application register the `EventPublishingServiceInitiator` wit
 [[services-EventPublishingServiceContributor-example]]
 .The `EventPublishingServiceContributor`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/extend/EventPublishingServiceContributor.java[]
 ----

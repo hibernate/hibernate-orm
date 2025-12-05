@@ -20,7 +20,7 @@ class PropertyAccessHelper {
 			Property bootAttributeDescriptor,
 			Class<?> mappedClass,
 			StrategySelector strategySelector) {
-		final PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass );
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass );
 		if ( strategy != null ) {
 			return strategy;
 		}

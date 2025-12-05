@@ -6,6 +6,7 @@ package org.hibernate.sql.model.ast;
 
 import java.util.ArrayList;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -38,12 +39,12 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 
 	@Override
 	public void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
-		final ColumnValueBinding columnValueBinding = createValueBinding(
-				jdbcValueMapping.getSelectionExpression(),
-				value == null ? null : jdbcValueMapping.getWriteExpression(),
-				jdbcValueMapping.getJdbcMapping()
-		);
-		add( columnValueBinding );
+		if ( value == null ) {
+			addNullRestriction( jdbcValueMapping );
+		}
+		else {
+			addRestriction( jdbcValueMapping );
+		}
 	}
 
 	@Internal @Incubating
@@ -51,22 +52,18 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		add( valueBinding );
 	}
 
+	public void addRestriction(SelectableMapping column) {
+		add( createValueBinding( column, column.getWriteExpression() ) );
+	}
+
 	public void addNullRestriction(SelectableMapping column) {
-		add( createValueBinding( column.getSelectionExpression(), null, column.getJdbcMapping() ) );
+		add( createValueBinding( column, null ) );
 	}
 
-	public void addRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		add( createValueBinding( columnName, columnWriteFragment, jdbcMapping ) );
-	}
-
-	protected ColumnValueBinding createValueBinding(
-			String columnName,
-			String customWriteExpression,
-			JdbcMapping jdbcMapping) {
+	protected ColumnValueBinding createValueBinding(SelectableMapping column, @Nullable String customWriteExpression) {
 		return ColumnValueBindingBuilder.createValueBinding(
-				columnName,
 				customWriteExpression,
-				jdbcMapping,
+				column,
 				mutatingTable,
 				parameterUsage,
 				parameters::apply

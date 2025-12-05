@@ -6,16 +6,11 @@ package org.hibernate.procedure.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 
 /**
  * Utilities used to implement procedure call support.
@@ -29,18 +24,18 @@ public class Util {
 
 	public static void resolveResultSetMappings(
 			String[] resultSetMappingNames,
-			Class[] resultSetMappingClasses,
+			Class<?>[] resultSetMappingClasses,
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		if ( ! ArrayHelper.isEmpty( resultSetMappingNames ) ) {
+		if ( !isEmpty( resultSetMappingNames ) ) {
 			// cannot specify both
-			if ( ! ArrayHelper.isEmpty( resultSetMappingClasses ) ) {
+			if ( !isEmpty( resultSetMappingClasses ) ) {
 				throw new IllegalArgumentException( "Cannot specify both result-set mapping names and classes" );
 			}
 			resolveResultSetMappingNames( resultSetMappingNames, resultSetMapping, querySpaceConsumer, context );
 		}
-		else if ( ! ArrayHelper.isEmpty( resultSetMappingClasses ) ) {
+		else if ( !isEmpty( resultSetMappingClasses ) ) {
 			resolveResultSetMappingClasses( resultSetMappingClasses, resultSetMapping, querySpaceConsumer, context );
 		}
 
@@ -52,31 +47,26 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final NamedObjectRepository namedObjectRepository = context.getNamedObjectRepository();
+		final var namedObjectRepository = context.getNamedObjectRepository();
 		for ( String resultSetMappingName : resultSetMappingNames ) {
-			final NamedResultSetMappingMemento memento =
+			final var memento =
 					namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
 			if ( memento == null ) {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}
-			memento.resolve(
-					resultSetMapping,
-					querySpaceConsumer,
-					context
-			);
+			memento.resolve( resultSetMapping, querySpaceConsumer, context );
 		}
 	}
 
 	public static void resolveResultSetMappingClasses(
-			Class[] resultSetMappingClasses,
+			Class<?>[] resultSetMappingClasses,
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final MappingMetamodel mappingMetamodel = context.getMappingMetamodel();
-		final JavaTypeRegistry javaTypeRegistry = mappingMetamodel.getTypeConfiguration().getJavaTypeRegistry();
-
-		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {
-			final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( resultSetMappingClass );
+		final var mappingMetamodel = context.getMappingMetamodel();
+		final var javaTypeRegistry = mappingMetamodel.getTypeConfiguration().getJavaTypeRegistry();
+		for ( var resultSetMappingClass : resultSetMappingClasses ) {
+			final var entityDescriptor = mappingMetamodel.findEntityDescriptor( resultSetMappingClass );
 			if ( entityDescriptor != null ) {
 				resultSetMapping.addResultBuilder( new EntityDomainResultBuilder( entityDescriptor ) );
 				for ( String querySpace : entityDescriptor.getSynchronizedQuerySpaces() ) {
@@ -84,7 +74,7 @@ public class Util {
 				}
 			}
 			else {
-				final JavaType<?> basicType = javaTypeRegistry.getDescriptor( resultSetMappingClass );
+				final var basicType = javaTypeRegistry.resolveDescriptor( resultSetMappingClass );
 				if ( basicType != null ) {
 					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
 				}

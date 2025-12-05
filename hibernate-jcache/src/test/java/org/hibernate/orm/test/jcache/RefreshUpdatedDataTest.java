@@ -92,10 +92,10 @@ public class RefreshUpdatedDataTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "does not support nested transactions")
-	@SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Derby does not support nested transactions")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, matchSubTypes = true)
-	@SkipForDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "does not support nested transactions")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support nested transactions")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = HSQLDialect.class)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 
@@ -130,19 +130,19 @@ public class RefreshUpdatedDataTest {
 				s1 -> {
 					final String AFTER = "after";
 
-					ReadWriteCacheableItem readWriteCacheableItem1 = s1.get( ReadWriteCacheableItem.class, 1L );
+					ReadWriteCacheableItem readWriteCacheableItem1 = s1.find( ReadWriteCacheableItem.class, 1L );
 					readWriteCacheableItem1.setName( AFTER );
 					readWriteCacheableItem1.getTags().remove("ORM");
 
-					ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem1 = s1.get( ReadWriteVersionedCacheableItem.class, 1L );
+					ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem1 = s1.find( ReadWriteVersionedCacheableItem.class, 1L );
 					readWriteVersionedCacheableItem1.setName( AFTER );
 					readWriteVersionedCacheableItem1.getTags().remove("ORM");
 
-					NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem1 = s1.get( NonStrictReadWriteCacheableItem.class, 1L );
+					NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem1 = s1.find( NonStrictReadWriteCacheableItem.class, 1L );
 					nonStrictReadWriteCacheableItem1.setName( AFTER );
 					nonStrictReadWriteCacheableItem1.getTags().remove("ORM");
 
-					NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem1 = s1.get( NonStrictReadWriteVersionedCacheableItem.class, 1L );
+					NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem1 = s1.find( NonStrictReadWriteVersionedCacheableItem.class, 1L );
 					nonStrictReadWriteVersionedCacheableItem1.setName( AFTER );
 					nonStrictReadWriteVersionedCacheableItem1.getTags().remove("ORM");
 
@@ -164,10 +164,10 @@ public class RefreshUpdatedDataTest {
 					inTransaction(
 							sessionFactory,
 							s2 -> {
-								ReadWriteCacheableItem readWriteCacheableItem2 = s2.get( ReadWriteCacheableItem.class, 1L );
-								ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem2 = s2.get( ReadWriteVersionedCacheableItem.class, 1L );
-								NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem2 = s2.get( NonStrictReadWriteCacheableItem.class, 1L );
-								NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem2 = s2.get( NonStrictReadWriteVersionedCacheableItem.class, 1L );
+								ReadWriteCacheableItem readWriteCacheableItem2 = s2.find( ReadWriteCacheableItem.class, 1L );
+								ReadWriteVersionedCacheableItem readWriteVersionedCacheableItem2 = s2.find( ReadWriteVersionedCacheableItem.class, 1L );
+								NonStrictReadWriteCacheableItem nonStrictReadWriteCacheableItem2 = s2.find( NonStrictReadWriteCacheableItem.class, 1L );
+								NonStrictReadWriteVersionedCacheableItem nonStrictReadWriteVersionedCacheableItem2 = s2.find( NonStrictReadWriteVersionedCacheableItem.class, 1L );
 
 								assertEquals( BEFORE, readWriteCacheableItem2.getName() );
 								assertEquals( 2, readWriteCacheableItem2.getTags().size() );

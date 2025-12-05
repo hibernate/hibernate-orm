@@ -4,65 +4,66 @@
  */
 package org.hibernate.orm.test.envers.integration.jta;
 
-import java.util.Map;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.RollbackException;
-
-import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.integration.reventity.ExceptionListenerRevEntity;
 
+import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Assert;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingConfiguration;
+import org.junit.jupiter.api.Test;
+
+import jakarta.transaction.RollbackException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Same as {@link org.hibernate.orm.test.envers.integration.reventity.ExceptionListener}, but in a JTA environment.
  *
  * @author Adam Warski (adam at warski dot org)
  */
-public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {StrTestEntity.class, ExceptionListenerRevEntity.class};
-	}
+@EnversTest
+@Jpa(annotatedClasses = { StrTestEntity.class, ExceptionListenerRevEntity.class },
+		settingConfigurations = @SettingConfiguration(configurer = TestingJtaBootstrap.class))
+public class JtaExceptionListener {
+	@Test
+	public void testTransactionRollback(EntityManagerFactoryScope scope) {
+		final var emf = scope.getEntityManagerFactory();
+		assertThrows(
+				RollbackException.class, () -> {
+					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		TestingJtaBootstrap.prepare( options );
-	}
-
-	@Test(expected = RollbackException.class)
-	@Priority(5) // must run before testDataNotPersisted()
-	public void testTransactionRollback() throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-
-		try {
-			EntityManager em = getEntityManager();
-
-			// Trying to persist an entity - however the listener should throw an exception, so the entity
-			// shouldn't be persisted
-			StrTestEntity te = new StrTestEntity( "x" );
-			em.persist( te );
-		}
-		finally {
-			TestingJtaPlatformImpl.tryCommit();
-		}
+					var entityManager = emf.createEntityManager();
+					try {
+						// Trying to persist an entity - however the listener should throw an exception, so the entity
+						// shouldn't be persisted
+						StrTestEntity te = new StrTestEntity( "x" );
+						entityManager.persist( te );
+					}
+					finally {
+						entityManager.close();
+						TestingJtaPlatformImpl.tryCommit();
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testDataNotPersisted() throws Exception {
+	public void testDataNotPersisted(EntityManagerFactoryScope scope) throws Exception {
+		final var emf = scope.getEntityManagerFactory();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-
+		// Checking if the entity became persisted
+		var entityManager = emf.createEntityManager();
 		try {
-			// Checking if the entity became persisted
-			EntityManager em = getEntityManager();
-			long count = em.createQuery( "from StrTestEntity s where s.str = 'x'" ).getResultList().size();
-			Assert.assertEquals( 0, count );
+			long count = entityManager.createQuery( "from StrTestEntity s where s.str = 'x'", StrTestEntity.class )
+					.getResultList().size();
+			assertEquals( 0, count );
 		}
 		finally {
+			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
 		}
 	}

@@ -36,8 +36,8 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
-import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.StaticFilterAliasGenerator;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.PersistentClass;
@@ -83,13 +83,12 @@ import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public 	class CustomPersister implements EntityPersister {
+public 	class CustomPersister extends EntityMetamodel implements EntityPersister {
 
 	private static final Hashtable<Object,Object> INSTANCES = new Hashtable<>();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
 
 	private final SessionFactoryImplementor factory;
-	private final EntityMetamodel entityMetamodel;
 
 	@SuppressWarnings("UnusedParameters")
 	public CustomPersister(
@@ -97,8 +96,8 @@ public 	class CustomPersister implements EntityPersister {
 			EntityDataAccess cacheAccessStrategy,
 			NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
+		super( model, creationContext );
 		this.factory = creationContext.getSessionFactory();
-		this.entityMetamodel = new EntityMetamodel( model, this, creationContext );
 	}
 
 	public boolean hasLazyProperties() {
@@ -146,6 +145,11 @@ public 	class CustomPersister implements EntityPersister {
 
 	@Override
 	public TableDetails getIdentifierTableDetails() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void forEachTableDetails(Consumer<TableDetails> consumer) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -424,9 +428,9 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#getVersionProperty()
+	 * @see EntityPersister#getVersionPropertyIndex()
 	 */
-	public int getVersionProperty() {
+	public int getVersionPropertyIndex() {
 		return 0;
 	}
 
@@ -511,7 +515,6 @@ public 	class CustomPersister implements EntityPersister {
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session
 	) throws HibernateException {
-
 		throw new UnsupportedOperationException();
 	}
 
@@ -525,7 +528,6 @@ public 	class CustomPersister implements EntityPersister {
 			LockMode lockMode,
 			SharedSessionContractImplementor session
 	) throws HibernateException {
-
 		throw new UnsupportedOperationException();
 	}
 
@@ -829,7 +831,7 @@ public 	class CustomPersister implements EntityPersister {
 
 	@Override
 	public EntityMetamodel getEntityMetamodel() {
-		return entityMetamodel;
+		return this;
 	}
 
 	@Override
@@ -1199,6 +1201,16 @@ public 	class CustomPersister implements EntityPersister {
 
 	@Override
 	public boolean managesColumns(String[] columnNames) {
+		return false;
+	}
+
+	@Override
+	public boolean hasPreInsertGeneratedProperties() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPreUpdateGeneratedProperties() {
 		return false;
 	}
 }

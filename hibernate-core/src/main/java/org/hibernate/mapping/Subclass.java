@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
@@ -105,6 +105,20 @@ public sealed class Subclass extends PersistentClass
 	public void addProperty(Property property) {
 		super.addProperty( property );
 		getSuperclass().addSubclassProperty( property );
+	}
+
+	@Internal
+	@Override
+	public void movePropertyToJoin(Property property, Join join) {
+		super.movePropertyToJoin( property, join );
+		getSuperclass().moveSubclassPropertyToJoin( property );
+	}
+
+	@Internal
+	@Override
+	protected void moveSubclassPropertyToJoin(Property property) {
+		super.moveSubclassPropertyToJoin( property );
+		getSuperclass().moveSubclassPropertyToJoin( property );
 	}
 
 	@Override
@@ -271,7 +285,7 @@ public sealed class Subclass extends PersistentClass
 
 	@Override
 	public java.util.List<FilterConfiguration> getFilters() {
-		final ArrayList<FilterConfiguration> filters = new ArrayList<>( super.getFilters() );
+		final var filters = new ArrayList<>( super.getFilters() );
 		filters.addAll( getSuperclass().getFilters() );
 		return filters;
 	}

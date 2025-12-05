@@ -4,21 +4,20 @@
  */
 package org.hibernate.orm.test.mapping.converter.hbm;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class MoneyConverterHbmTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(xmlMappings = {"org/hibernate/orm/test/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml"})
+public class MoneyConverterHbmTest {
 
 	@Test
-	public void testConverterMutability() {
+	public void testConverterMutability(EntityManagerFactoryScope scope) {
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Account account = new Account();
 			account.setId(1L);
 			account.setOwner("John Doe");
@@ -27,7 +26,7 @@ public class MoneyConverterHbmTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist(account);
 		});
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-hbm-convert-money-converter-mutability-plan-example[]
 			Account account = entityManager.find(Account.class, 1L);
 			account.getBalance().setCents(150 * 100L);
@@ -36,10 +35,4 @@ public class MoneyConverterHbmTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"org/hibernate/orm/test/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml"
-		};
-	}
 }

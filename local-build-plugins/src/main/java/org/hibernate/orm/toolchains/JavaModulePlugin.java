@@ -99,8 +99,9 @@ public class JavaModulePlugin implements Plugin<Project> {
 								@Override
 								public void execute(Task task) {
 									project.getLogger().lifecycle(
-											"Compiling with '{}'",
-											compileTask.getJavaCompiler().get().getMetadata().getInstallationPath()
+											"Compiling with '{}' to release '{}'",
+											compileTask.getJavaCompiler().get().getMetadata().getInstallationPath(),
+											compileTask.getOptions().getRelease().get()
 									);
 								}
 							}

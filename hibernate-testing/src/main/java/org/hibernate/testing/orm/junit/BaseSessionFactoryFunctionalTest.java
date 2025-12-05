@@ -22,7 +22,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -84,11 +83,6 @@ public abstract class BaseSessionFactoryFunctionalTest
 		applySettings( ssrBuilder );
 		ServiceRegistryUtil.applySettings( ssrBuilder );
 		return ssrBuilder.build();
-	}
-
-	@Override
-	public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
-
 	}
 
 	protected boolean exportSchema() {
@@ -335,6 +329,55 @@ public abstract class BaseSessionFactoryFunctionalTest
 					log.error( "Rollback failure", e );
 				}
 			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( session != null ) {
+				session.close();
+			}
+		}
+	}
+
+	/**
+	 * Execute function in a Hibernate transaction without return value
+	 *
+	 * @param sessionBuilderSupplier SessionFactory supplier
+	 * @param function function
+	 */
+	public static <T> T doInHibernateSessionBuilder(
+			Supplier<SessionBuilder> sessionBuilderSupplier,
+			TransactionUtil.HibernateTransactionFunction<T> function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = sessionBuilderSupplier.get().openSession();
+			function.beforeTransactionCompletion();
+			txn = session.beginTransaction();
+
+			T result = function.apply( session );
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
+			}
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			return result;
 		}
 		catch ( Throwable t ) {
 			if ( txn != null && txn.isActive() ) {

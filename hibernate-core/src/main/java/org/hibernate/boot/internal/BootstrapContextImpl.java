@@ -22,7 +22,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -36,7 +36,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,12 +44,14 @@ import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.cfg.PersistenceSettings.SCANNER;
+import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
 
 /**
  * @author Andrea Boriero
  */
 public class BootstrapContextImpl implements BootstrapContext {
-	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
 	private final MetadataBuildingOptions metadataBuildingOptions;
@@ -92,20 +93,20 @@ public class BootstrapContextImpl implements BootstrapContext {
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
+		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final var configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
 		scanOptions = new StandardScanOptions(
-				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
+				(String) configService.getSettings().get( PersistenceSettings.SCANNER_DISCOVERY ),
 				false
 		);
 
 		// ScanEnvironment must be set explicitly
-		scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
+		scannerSetting = configService.getSettings().get( SCANNER );
 		archiveDescriptorFactory = strategySelector.resolveStrategy(
 				ArchiveDescriptorFactory.class,
-				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
+				configService.getSettings().get( SCANNER_ARCHIVE_INTERPRETER )
 		);
 
 		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
@@ -296,53 +297,49 @@ public class BootstrapContextImpl implements BootstrapContext {
 			attributeConverterDescriptorMap = new HashMap<>();
 		}
 
-		final Object old = attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
+		final var attributeConverterClass = descriptor.getAttributeConverterClass();
+		final Object old = attributeConverterDescriptorMap.put( attributeConverterClass, descriptor );
 		if ( old != null ) {
 			throw new AssertionFailure(
 					String.format(
 							"AttributeConverter class [%s] registered multiple times",
-							descriptor.getAttributeConverterClass()
+							attributeConverterClass
 					)
 			);
 		}
 	}
 
 	void injectJpaTempClassLoader(ClassLoader classLoader) {
-		if ( log.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
-			log.tracef( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]",
-					classLoader, getJpaTempClassLoader() );
+		if ( BOOT_LOGGER.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
+			BOOT_LOGGER.injectingJpaTempClassLoader( classLoader, getJpaTempClassLoader() );
 		}
 		this.classLoaderAccess.injectTempClassLoader( classLoader );
 	}
 
 	void injectScanOptions(ScanOptions scanOptions) {
-		if ( log.isTraceEnabled() && scanOptions != this.scanOptions ) {
-			log.tracef( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]",
-					scanOptions, this.scanOptions );
+		if ( scanOptions != this.scanOptions ) {
+			BOOT_LOGGER.injectingScanOptions( scanOptions, this.scanOptions );
 		}
 		this.scanOptions = scanOptions;
 	}
 
 	void injectScanEnvironment(ScanEnvironment scanEnvironment) {
-		if ( log.isTraceEnabled() && scanEnvironment != this.scanEnvironment ) {
-			log.tracef( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]",
-					scanEnvironment, this.scanEnvironment );
+		if ( scanEnvironment != this.scanEnvironment ) {
+			BOOT_LOGGER.injectingScanEnvironment( scanEnvironment, this.scanEnvironment );
 		}
 		this.scanEnvironment = scanEnvironment;
 	}
 
 	void injectScanner(Scanner scanner) {
-		if ( log.isTraceEnabled() && scanner != this.scannerSetting ) {
-			log.tracef( "Injecting Scanner [%s] into BootstrapContext; was [%s]",
-					scanner, scannerSetting );
+		if ( scanner != this.scannerSetting ) {
+			BOOT_LOGGER.injectingScanner( scanner, this.scannerSetting );
 		}
 		this.scannerSetting = scanner;
 	}
 
 	void injectArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		if ( log.isTraceEnabled() && factory != archiveDescriptorFactory ) {
-			log.tracef( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]",
-					factory, archiveDescriptorFactory );
+		if ( factory != archiveDescriptorFactory ) {
+			BOOT_LOGGER.injectingArchiveDescriptorFactory( factory, archiveDescriptorFactory );
 		}
 		this.archiveDescriptorFactory = factory;
 	}
@@ -372,9 +369,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	public static ModelsContext createModelBuildingContext(
 			ClassLoaderService classLoaderService,
 			ConfigurationService configService) {
-		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
-
-		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
+		final var classLoading = new ClassLoaderServiceLoading( classLoaderService );
+		final var modelsConfiguration = new ModelsConfiguration();
 		modelsConfiguration.setClassLoading( classLoading );
 		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
 		configService.getSettings().forEach( (key, value) -> {

@@ -27,8 +27,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole

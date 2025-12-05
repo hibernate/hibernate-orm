@@ -417,29 +417,35 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Change the default for entities and proxies loaded into this session
-	 * from modifiable to read-only mode, or from modifiable to read-only mode.
+	 * from modifiable to read-only mode, or from read-only to modifiable mode.
 	 * <p>
-	 * Read-only entities are not dirty-checked and snapshots of persistent
-	 * state are not maintained. Read-only entities can be modified, but
-	 * changes are not persisted.
+	 * Read-only entities are not dirty-checked, and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but a
+	 * modification to a field of a read-only entity is not made persistent.
 	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized proxy has,
-	 * regardless of the session's current setting.
+	 * read-only/modifiable setting as the uninitialized proxy, regardless of
+	 * the {@linkplain #isDefaultReadOnly current default read-only mode}
+	 * of the session.
 	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that already belongs to this session use
+	 * or proxy that already belongs to this session, use
 	 * {@link #setReadOnly(Object, boolean)}.
 	 * <p>
-	 * To override this session's read-only/modifiable setting for all
-	 * entities and proxies loaded by a certain {@code Query} use
+	 * To override the default read-only mode of the current session for
+	 * all entities and proxies returned by a given {@code Query}, use
 	 * {@link Query#setReadOnly(boolean)}.
+	 * <p>
+	 * Every instance of an {@linkplain org.hibernate.annotations.Immutable
+	 * immutable} entity is loaded in read-only mode.
 	 *
 	 * @see #setReadOnly(Object,boolean)
 	 * @see Query#setReadOnly(boolean)
 	 *
 	 * @param readOnly {@code true}, the default for loaded entities/proxies is read-only;
 	 *				 {@code false}, the default for loaded entities/proxies is modifiable
+	 * @throws SessionException if the session was originally
+	 *         {@linkplain SessionBuilder#readOnly created in read-only mode}
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 
@@ -464,7 +470,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object an instance of a persistent class
 	 *
 	 * @return {@code true} if the given instance is associated with this {@code Session}
+	 *
+	 * @deprecated Use {@link #contains(Object)} instead.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	boolean contains(String entityName, Object object);
 
 	/**
@@ -528,6 +537,28 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<T> T find(Class<T> entityType, Object id);
 
 	/**
+	 * Return the persistent instance of the named entity type with the given identifier,
+	 * or null if there is no such persistent instance.
+	 * <p/>
+	 * Differs from {@linkplain #find(Class, Object)} in that this form accepts
+	 * the entity name of a {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic entity}.
+	 *
+	 * @see #find(Class, Object)
+	 */
+	Object find(String entityName, Object primaryKey);
+
+	/**
+	 * Return the persistent instance of the named entity type with the given identifier
+	 * using the specified options, or null if there is no such persistent instance.
+	 * <p/>
+	 * Differs from {@linkplain #find(Class, Object, FindOption...)} in that this form accepts
+	 * the entity name of a {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic entity}.
+	 *
+	 * @see #find(Class, Object, FindOption...)
+	 */
+	Object find(String entityName, Object primaryKey, FindOption... options);
+
+	/**
 	 * Return the persistent instances of the given entity class with the given identifiers
 	 * as a list. The position of an instance in the returned list matches the position of its
 	 * identifier in the given list of identifiers, and the returned list contains a null value
@@ -549,9 +580,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
 	 *     in long SQL statements with many JDBC parameters.
 	 * </ul>
-	 * <p>
-	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
-	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityType the entity type
 	 * @param ids the list of identifiers
@@ -560,7 +588,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an ordered list of persistent instances, with null elements representing missing
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
-	 * @see #byMultipleIds(Class)
+	 *
+	 * @see FindMultipleOption
+	 *
 	 * @since 7.0
 	 */
 	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
@@ -589,9 +619,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
 	 *     in long SQL statements with many JDBC parameters.
 	 * </ul>
-	 * <p>
-	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
-	 * {@link MultiIdentifierLoadAccess}.
 	 *
 	 * @param entityGraph the entity graph interpreted as a load graph
 	 * @param ids the list of identifiers
@@ -600,7 +627,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an ordered list of persistent instances, with null elements representing missing
 	 *         entities, whose positions in the list match the positions of their ids in the
 	 *         given list of identifiers
-	 * @see #byMultipleIds(Class)
+	 *
+	 * @see FindMultipleOption
+	 *
 	 * @since 7.0
 	 */
 	<E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options);
@@ -680,18 +709,21 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Copy the state of the given object onto the persistent object with the same
 	 * identifier. If there is no persistent instance currently associated with
-	 * the session, it will be loaded. Return the persistent instance. If the
-	 * given instance is unsaved, save a copy and return it as a newly persistent
-	 * instance. The given instance does not become associated with the session.
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@link jakarta.persistence.CascadeType#MERGE}.
+	 * the session, it is loaded using the given {@link EntityGraph}, which is
+	 * interpreted as a load graph. Return the persistent instance. If the given
+	 * instance is unsaved, save a copy and return it as a newly persistent instance.
+	 * The given instance does not become associated with the session. This operation
+	 * cascades to associated instances if the association is mapped with
+	 * {@link jakarta.persistence.CascadeType#MERGE}.
 	 *
 	 * @param object a detached instance with state to be copied
-	 * @param loadGraph entity graph interpreted as a load graph
+	 * @param loadGraph an entity graph interpreted as a load graph
 	 *
 	 * @return an updated persistent instance
+	 *
+	 * @since 7.0
 	 */
-	<T> T merge( T object, EntityGraph<?> loadGraph);
+	<T> T merge(T object, EntityGraph<? super T> loadGraph);
 
 	/**
 	 * Make a transient instance persistent and mark it for later insertion in the
@@ -1101,7 +1133,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #find(Class, Object, FindOption...)} instead.
+	 *             See {@link FindOption}.
 	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
@@ -1113,7 +1150,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #find(String, Object, FindOption...)} instead.
+	 *             See {@link FindOption}.
 	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**
@@ -1127,7 +1169,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
 	 * @see #findMultiple(Class, List, FindOption...)
+	 *
+	 * @deprecated Use {@link #findMultiple(Class, List, FindOption...)} instead.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 
 	/**
@@ -1139,7 +1184,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 *
+	 * @deprecated Use {@link #findMultiple(EntityGraph, List, FindOption...)} instead,
+	 * 		with {@linkplain SessionFactory#createGraphForDynamicEntity(String)}.
 	 */
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
 
 	/**
@@ -1255,7 +1304,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Set an unmodified persistent object to read-only mode, or a read-only
 	 * object to modifiable mode. In read-only mode, no snapshot is maintained,
-	 * the instance is never dirty checked, and changes are not persisted.
+	 * the instance is never dirty-checked, and mutations to the fields of the
+	 * entity are not made persistent.
 	 * <p>
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
@@ -1264,17 +1314,24 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * and proxies that are loaded into the session use
 	 * {@link #setDefaultReadOnly(boolean)}.
 	 * <p>
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a {@code Query} use
-	 * {@link Query#setReadOnly(boolean)}
+	 * To override the default read-only mode of the current session for
+	 * all entities and proxies returned by a given {@code Query}, use
+	 * {@link Query#setReadOnly(boolean)}.
+	 * <p>
+	 * Every instance of an {@linkplain org.hibernate.annotations.Immutable
+	 * immutable} entity is loaded in read-only mode. An immutable entity may
+	 * not be set to modifiable.
 	 *
 	 * @see #setDefaultReadOnly(boolean)
 	 * @see Query#setReadOnly(boolean)
 	 * @see IdentifierLoadAccess#withReadOnly(boolean)
+	 * @see org.hibernate.annotations.Immutable
 	 *
 	 * @param entityOrProxy an entity or proxy
 	 * @param readOnly {@code true} if the entity or proxy should be made read-only;
 	 *				   {@code false} if the entity or proxy should be made modifiable
+	 *
+	 * @throws IllegalStateException if an immutable entity is set to modifiable
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
@@ -1368,14 +1425,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Incubating
 	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
-
-	/**
-	 * Obtain a {@link Session} builder with the ability to copy certain
-	 * information from this session.
-	 *
-	 * @return the session builder
-	 */
-	SharedSessionBuilder sessionWithOptions();
 
 	/**
 	 * Add one or more listeners to the Session

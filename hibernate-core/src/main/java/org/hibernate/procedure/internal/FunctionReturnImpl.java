@@ -17,23 +17,20 @@ import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl.RegularJdbcCal
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
  */
-public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
+class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	private final ProcedureCallImplementor<T> procedureCall;
 	private final int sqlTypeCode;
 
 	private OutputableType<T> ormType;
 
-	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int sqlTypeCode) {
+	FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int sqlTypeCode) {
 		this.procedureCall = procedureCall;
 		this.sqlTypeCode = sqlTypeCode;
 	}
@@ -67,11 +64,11 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			return ormType;
 		}
 		else {
-			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
-			final JavaType<?> javaType =
+			final var typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
+			final var javaType =
 					typeConfiguration.getJdbcTypeRegistry().getDescriptor( getJdbcTypeCode() )
 							.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			final BasicType<?> basicType =
+			final var basicType =
 					typeConfiguration.standardBasicTypeForJavaType( javaType.getJavaTypeClass() );
 			//noinspection unchecked
 			return (OutputableType<T>) basicType;

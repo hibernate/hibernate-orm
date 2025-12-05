@@ -11,6 +11,8 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -56,6 +58,11 @@ public class DB2iDialect extends DB2Dialect {
 
 	public DB2iDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2i();
 	}
 
 	@Override
@@ -113,7 +120,7 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		if ( getVersion().isSameOrAfter(7,3) ) {
-			return "select distinct sequence_name from qsys2.syssequences " +
+			return "select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
 		}
@@ -134,11 +141,6 @@ public class DB2iDialect extends DB2Dialect {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
 				: DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override

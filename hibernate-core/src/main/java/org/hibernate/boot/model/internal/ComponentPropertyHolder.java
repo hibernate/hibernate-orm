@@ -9,6 +9,10 @@ import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
@@ -78,23 +82,81 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		super( path, parent, inferredData.getPropertyType().determineRawClass(), context );
-		final MemberDetails embeddedMemberDetails = inferredData.getAttributeMember();
+		final var embeddedMemberDetails = inferredData.getAttributeMember();
 		setCurrentProperty( embeddedMemberDetails );
 		this.component = component;
-		this.isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
-				|| embeddedMemberDetails != null && hasIdAnnotation( embeddedMemberDetails );
-		this.isWithinElementCollection = parent.isWithinElementCollection()
-				|| parent instanceof CollectionPropertyHolder;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 
+		applyExplicitTableName( component, inferredData, parent, context );
+
+		isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
+				|| embeddedMemberDetails != null && hasIdAnnotation( embeddedMemberDetails );
+		isWithinElementCollection = parent.isWithinElementCollection()
+				|| parent instanceof CollectionPropertyHolder;
+
 		if ( embeddedMemberDetails != null ) {
-			this.embeddedAttributeName = embeddedMemberDetails.getName();
-			this.attributeConversionInfoMap = processAttributeConversions( embeddedMemberDetails );
+			embeddedAttributeName = embeddedMemberDetails.getName();
+			attributeConversionInfoMap = processAttributeConversions( embeddedMemberDetails );
 		}
 		else {
-			this.embeddedAttributeName = "";
-			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
+			embeddedAttributeName = "";
+			attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
 		}
+	}
+
+	/**
+	 * Apply the explicit {@link EmbeddedTable} if there is one and if its
+	 * appropriate for the context (the type of {@code container}).
+	 *
+	 * @param component The (in-flight) component mapping details.
+	 * @param propertyData Details about the property defining this component.
+	 * @param container The container for this component.
+	 */
+	public static void applyExplicitTableName(
+			Component component,
+			PropertyData propertyData,
+			PropertyHolder container,
+			MetadataBuildingContext buildingContext) {
+		Table tableToUse = container.getTable();
+		boolean wasExplicit = false;
+		if ( container instanceof ComponentPropertyHolder componentPropertyHolder ) {
+			wasExplicit = componentPropertyHolder.getComponent().wasTableExplicitlyDefined();
+		}
+
+		if ( propertyData.getAttributeMember() != null ) {
+			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember()
+					.getDirectAnnotationUsage( EmbeddedTable.class );
+			// we only allow this when done for an embedded on an entity or mapped-superclass
+			if ( container instanceof ClassPropertyHolder ) {
+				if ( embeddedTableAnn != null ) {
+					final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
+					final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
+							.getMetadataCollector()
+							.getEntityTableXref( container.getEntityName() );
+					tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+					wasExplicit = true;
+				}
+			}
+			else {
+				if ( embeddedTableAnn != null ) {
+					// not allowed
+					throw new AnnotationPlacementException( "@EmbeddedTable only supported for use on entity or mapped-superclass" );
+				}
+			}
+		}
+		if ( propertyData.getAttributeMember() != null && container instanceof ClassPropertyHolder ) {
+			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember().getDirectAnnotationUsage( EmbeddedTable.class );
+			if ( embeddedTableAnn != null ) {
+				final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
+				final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
+						.getMetadataCollector()
+						.getEntityTableXref( container.getEntityName() );
+				tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+				wasExplicit = true;
+			}
+		}
+
+		component.setTable( tableToUse, wasExplicit );
 	}
 
 	/**
@@ -122,7 +184,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private Map<String,AttributeConversionInfo> processAttributeConversions(MemberDetails embeddedMemberDetails) {
 		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 
-		final TypeDetails embeddableTypeDetails = embeddedMemberDetails.getType();
+		final var embeddableTypeDetails = embeddedMemberDetails.getType();
 
 		// as a baseline, we want to apply conversions from the Embeddable and then overlay conversions
 		// from the Embedded
@@ -132,7 +194,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 		// then we can overlay any conversions from the Embedded attribute
 		embeddedMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddedMemberDetails );
+			final var info = new AttributeConversionInfo( usage, embeddedMemberDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 			}
@@ -143,9 +205,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void processAttributeConversions(TypeDetails embeddableTypeDetails, Map<String, AttributeConversionInfo> infoMap) {
-		final ClassDetails embeddableClassDetails = embeddableTypeDetails.determineRawClass();
+		final var embeddableClassDetails = embeddableTypeDetails.determineRawClass();
 		embeddableClassDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddableClassDetails );
+			final var info = new AttributeConversionInfo( usage, embeddableClassDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
 				throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
 			}
@@ -171,26 +233,24 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void startingProperty(MemberDetails propertyMemberDetails) {
-		if ( propertyMemberDetails == null ) {
-			return;
+		if ( propertyMemberDetails != null ) {
+			// again: the property coming in here *should* be the property on the embeddable (Address#city in the example),
+			// so we just ignore it if there is already an existing conversion info for that path since they would have
+			// precedence
+
+			// technically we should only do this for properties of "basic type"
+
+			final String attributeName = propertyMemberDetails.resolveAttributeName();
+			final String path = embeddedAttributeName + '.' + attributeName;
+			if ( attributeConversionInfoMap.containsKey( path ) ) {
+				return;
+			}
+
+			propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+				final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
+				attributeConversionInfoMap.put( attributeName, info );
+			} );
 		}
-
-		// again : the property coming in here *should* be the property on the embeddable (Address#city in the example),
-		// so we just ignore it if there is already an existing conversion info for that path since they would have
-		// precedence
-
-		// technically we should only do this for properties of "basic type"
-
-		final String attributeName = propertyMemberDetails.resolveAttributeName();
-		final String path = embeddedAttributeName + '.' + attributeName;
-		if ( attributeConversionInfoMap.containsKey( path ) ) {
-			return;
-		}
-
-		propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
-			attributeConversionInfoMap.put( attributeName, info );
-		} );
 	}
 
 	@Override
@@ -202,12 +262,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
 		final String embeddedPath = qualifyConditionally( embeddedAttributeName, path );
-		final AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
+		final var fromParent = parent.locateAttributeConversionInfo( embeddedPath );
 		if ( fromParent != null ) {
 			return fromParent;
 		}
 
-		final AttributeConversionInfo fromEmbedded = attributeConversionInfoMap.get( embeddedPath );
+		final var fromEmbedded = attributeConversionInfoMap.get( embeddedPath );
 		if ( fromEmbedded != null ) {
 			return fromEmbedded;
 		}
@@ -221,7 +281,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property property, MemberDetails attributeMemberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass) {
+	public void addProperty(
+			Property property,
+			MemberDetails attributeMemberDetails,
+			@Nullable AnnotatedColumns columns,
+			ClassDetails declaringClass) {
 		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
@@ -270,7 +334,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public AggregateColumn getAggregateColumn() {
-		final AggregateColumn aggregateColumn = component.getAggregateColumn();
+		final var aggregateColumn = component.getAggregateColumn();
 		return aggregateColumn != null ? aggregateColumn : component.getParentAggregateColumn();
 	}
 
@@ -283,12 +347,22 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	public void addProperty(Property prop, MemberDetails attributeMemberDetails, ClassDetails declaringClass) {
 		handleGenericComponentProperty( prop, attributeMemberDetails, getContext() );
 		if ( declaringClass != null ) {
-			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			final var inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState != null && inheritanceState.isEmbeddableSuperclass() ) {
 				addPropertyToMappedSuperclass( prop, attributeMemberDetails, declaringClass, getContext() );
 			}
 		}
 		component.addProperty( prop, declaringClass );
+	}
+
+	@Override
+	public void movePropertyToJoin(Property prop, Join join, MemberDetails memberDetails, ClassDetails declaringClass) {
+		// or maybe only throw if component.getTable() != join.getTable()
+		throw new AnnotationException(
+				"Embeddable class '" + component.getComponentClassName()
+				+ "' has an unowned @OneToOne property " + prop.getName()
+				+ "mapped to a join table which is unsupported"
+		);
 	}
 
 	@Override
@@ -346,9 +420,9 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {
-		String className = component.getOwner().getClassName();
+		final String className = component.getOwner().getClassName();
 		if ( className != null && propertyName.startsWith( className ) ) {
-			boolean specialCase = propertyName.length() > className.length() + 2 + redundantString.length()
+			final boolean specialCase = propertyName.length() > className.length() + 2 + redundantString.length()
 					&& propertyName.substring( className.length() + 1, className.length() + 1 + redundantString.length() ).equals( redundantString );
 			if ( specialCase ) {
 				//remove id we might be in a @IdClass case

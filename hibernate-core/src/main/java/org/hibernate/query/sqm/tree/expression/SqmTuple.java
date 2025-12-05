@@ -9,12 +9,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -46,7 +48,7 @@ public class SqmTuple<T>
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmBindableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, @Nullable SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new SemanticException( "Tuple constructor must have at least one element" );
@@ -96,7 +98,7 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmTuple<?> that
 			&& Objects.equals( this.groupedExpressions, that.groupedExpressions );
 	}
@@ -104,6 +106,17 @@ public class SqmTuple<T>
 	@Override
 	public int hashCode() {
 		return Objects.hashCode( groupedExpressions );
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmTuple<?> that
+			&& SqmCacheable.areCompatible( this.groupedExpressions, that.groupedExpressions );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return SqmCacheable.cacheHashCode( groupedExpressions );
 	}
 
 	@Override
@@ -122,7 +135,7 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public Integer getTupleLength() {
+	public @Nullable Integer getTupleLength() {
 		return groupedExpressions.size();
 	}
 }

@@ -18,24 +18,26 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * used driver hibernate.connection.driver_class com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -43,19 +45,23 @@ import static org.junit.Assert.assertTrue;
  * @author Guenther Demetz
  */
 @RequiresDialect(SQLServerDialect.class)
-public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
+@DomainModel(annotatedClasses = {Product2.class, Category.class, Folder.class, Contact.class, SQLServerDialectTest.KeyHolder.class})
+@SessionFactory
+@ServiceRegistry( settings = {@Setting(name = AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, value = "true")} )
+public class SQLServerDialectTest {
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) throws InterruptedException {
+		//SQL Server Driver does not deallocate connections right away
+		Thread.sleep( 100 );
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8916")
-	public void testPaginationWithCTEQueryNoOffset() {
+	public void testPaginationWithCTEQueryNoOffset(SessionFactoryScope scope) {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );
 			}
@@ -74,9 +80,9 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-8916")
-	public void testPaginationWithCTEQueryNoOffsetNewLine() {
+	public void testPaginationWithCTEQueryNoOffsetNewLine(SessionFactoryScope scope) {
 		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );
 			}
@@ -100,9 +106,9 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-8916")
-	public void testPaginationWithCTEQueryWithOffsetAndOrderBy() {
+	public void testPaginationWithCTEQueryWithOffsetAndOrderBy(SessionFactoryScope scope) {
 		// This used to throw a StringIndexOutOfBoundsException
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );
 			}
@@ -127,9 +133,9 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-8916")
-	public void testPaginationWithCTEQueryWithOffset() {
+	public void testPaginationWithCTEQueryWithOffset(SessionFactoryScope scope) {
 		// This used to throw a StringIndexOutOfBoundsException
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 20; ++i ) {
 				session.persist( new Product2( i, "Product" + i ) );
 			}
@@ -153,8 +159,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-7369")
-	public void testPaginationWithScalarQuery() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithScalarQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 10; i++ ) {
 				session.persist( new Product2( i, "Kit" + i ) );
 			}
@@ -175,16 +181,16 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-7368")
-	public void testPaginationWithTrailingSemicolon() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithTrailingSemicolon(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id;" )
 					.setFirstResult( 2 ).setMaxResults( 2 ).list();
 		} );
 	}
 
 	@Test
-	public void testPaginationWithHQLProjection() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithHQLProjection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 10; i < 20; i++ ) {
 				session.persist( new Product2( i, "Kit" + i ) );
 			}
@@ -205,8 +211,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testPaginationWithHQL() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithHQL(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 20; i < 30; i++ ) {
 				session.persist( new Product2( i, "Kit" + i ) );
 			}
@@ -220,8 +226,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-7370")
-	public void testPaginationWithMaxOnly() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithMaxOnly(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 30; i < 40; i++ ) {
 				session.persist( new Product2( i, "Kit" + i ) );
 			}
@@ -238,8 +244,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-6627")
-	public void testPaginationWithAggregation() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithAggregation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			// populating test data
 			Category category1 = new Category( 1, "Category1" );
 			Category category2 = new Category( 2, "Category2" );
@@ -256,16 +262,6 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 			session.persist( new Product2( 6, "Kit6", category3 ) );
 			session.flush();
 			session.clear();
-
-			// count number of products in each category
-//			List<Object[]> result = session.createCriteria( Category.class, "c" ).createAlias( "products", "p" )
-//					.setProjection(
-//							Projections.projectionList()
-//									.add( Projections.groupProperty( "c.id" ) )
-//									.add( Projections.countDistinct( "p.id" ) )
-//					)
-//					.addOrder( Order.asc( "c.id" ) )
-//					.setFirstResult( 1 ).setMaxResults( 3 ).list();
 
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Object[]> criteria = criteriaBuilder.createQuery( Object[].class );
@@ -286,8 +282,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-7752")
-	public void testPaginationWithFormulaSubquery() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithFormulaSubquery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			// populating test data
 			Folder folder1 = new Folder( 1L, "Folder1" );
 			Folder folder2 = new Folder( 2L, "Folder2" );
@@ -314,8 +310,8 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-7781")
-	public void testPaginationWithCastOperator() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testPaginationWithCastOperator(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 40; i < 50; i++ ) {
 				session.persist( new Product2( i, "Kit" + i ) );
 			}
@@ -332,92 +328,83 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-3961")
-	public void testLockNowaitSqlServer() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
+	public void testLockNowaitSqlServer(SessionFactoryScope scope) {
+		scope.inSession( s -> {
+			s.beginTransaction();
+			final Product2 kit = new Product2();
+			kit.id = 4000;
+			kit.description = "m";
+			s.persist( kit );
+			s.getTransaction().commit();
 
-		final Product2 kit = new Product2();
-		kit.id = 4000;
-		kit.description = "m";
-		s.persist( kit );
-		s.getTransaction().commit();
+			final Transaction tx = s.beginTransaction();
+			scope.inSession(  s2 -> {
+				s2.beginTransaction();
 
-		final Transaction tx = s.beginTransaction();
+				Product2 kit2 = s2.byId( Product2.class ).load( kit.id );
 
-		Session s2 = openSession();
+				kit.description = "change!";
 
-		s2.beginTransaction();
+				s.flush(); // creates write lock on kit until we end the transaction
 
-		Product2 kit2 = s2.byId( Product2.class ).load( kit.id );
+				Thread thread = new Thread(
+						() -> {
+							try {
+								Thread.sleep( TimeUnit.SECONDS.toMillis( 1 ) );
+							}
+							catch (InterruptedException e) {
+								throw new RuntimeException( e );
+							}
+							tx.commit();
+						}
+				);
 
-		kit.description = "change!";
-		s.flush(); // creates write lock on kit until we end the transaction
-
-		Thread thread = new Thread(
-				() -> {
-					sleep( TimeUnit.SECONDS.toMillis( 1 ) );
-					tx.commit();
+				LockOptions opt = new LockOptions( LockMode.UPGRADE_NOWAIT );
+				opt.setTimeOut( 0 ); // seems useless
+				long start = System.currentTimeMillis();
+				thread.start();
+				try {
+					s2.lock( kit2, opt );
 				}
-		);
+				catch ( PessimisticEntityLockException e ) {
+					assertTrue( e.getCause() instanceof LockTimeoutException );
+				}
+				long end = System.currentTimeMillis();
+				try {
+					thread.join();
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException( e );
+				}
+				long differenceInMillis = end - start;
+				assertTrue(
+						differenceInMillis < 2000,
+						"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely too much for Nowait"
+								);
 
-		LockOptions opt = new LockOptions( LockMode.UPGRADE_NOWAIT );
-		opt.setTimeOut( 0 ); // seems useless
-		long start = System.currentTimeMillis();
-		thread.start();
-		try {
-			s2.lock( kit2, opt );
-		}
-		catch ( PessimisticEntityLockException e ) {
-			assertTrue( e.getCause() instanceof LockTimeoutException );
-		}
-		long end = System.currentTimeMillis();
-		thread.join();
-		long differenceInMillis = end - start;
-		assertTrue(
-				"Lock NoWait blocked for " + differenceInMillis + " ms, this is definitely too much for Nowait",
-				differenceInMillis < 2000
-		);
+				s2.getTransaction().rollback();
+			} );
 
-		s2.getTransaction().rollback();
-		s.getTransaction().begin();
-		s.remove( kit );
-		s.getTransaction().commit();
+			s.getTransaction().begin();
+			s.remove( kit );
+			s.getTransaction().commit();
+		} );
 	}
 
 
 	@Test
 	@JiraKey(value = "HHH-10879")
-	public void testKeyReservedKeyword() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testKeyReservedKeyword(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final KeyHolder keyHolder = new KeyHolder();
 			keyHolder.key = 4000;
 			session.persist( keyHolder );
 		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Product2.class, Category.class, Folder.class, Contact.class, KeyHolder.class
-		};
-	}
-
 	@Entity(name = "KeyHolder")
 	public static class KeyHolder {
-
 		@Id
 		public Integer key;
-	}
-
-	@Override
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		//SQL Server Driver does not deallocate connections right away
-		sleep(100);
-		return true;
 	}
 }

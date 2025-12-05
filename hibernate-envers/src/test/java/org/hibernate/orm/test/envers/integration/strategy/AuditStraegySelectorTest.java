@@ -17,7 +17,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.JiraKey;

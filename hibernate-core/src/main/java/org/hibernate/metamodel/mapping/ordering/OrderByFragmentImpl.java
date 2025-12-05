@@ -28,8 +28,7 @@ public class OrderByFragmentImpl implements OrderByFragment {
 	@Override
 	public void apply(QuerySpec ast, TableGroup tableGroup, SqlAstCreationState creationState) {
 		for ( int i = 0; i < fragmentSpecs.size(); i++ ) {
-			final OrderingSpecification orderingSpec = fragmentSpecs.get( i );
-
+			final var orderingSpec = fragmentSpecs.get( i );
 			orderingSpec.getExpression().apply(
 					ast,
 					tableGroup,

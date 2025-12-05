@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.emops;
 
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -20,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Race.class,
 				Mail.class
 		},
-		loadByIdComplianceEnabled = true
+		integrationSettings = {@Setting(name = JpaComplianceSettings.JPA_LOAD_BY_ID_COMPLIANCE, value = "true")}
 )
 public class GetReferenceTest {
 	@Test

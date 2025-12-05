@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 
-import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		this( nodeBuilder.getBooleanType(), negated, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(@Nullable SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.negated = negated;
 	}
@@ -45,20 +45,5 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		// in certain cases JPA required that this always return
 		// a new instance.
 		return createNegatedNode();
-	}
-
-	@Override
-	// for safety only, overridden on all subtypes
-	public boolean equals(Object other) {
-		return other instanceof AbstractNegatableSqmPredicate that
-			&& this.negated == that.negated
-			&& this.getClass() == that.getClass()
-			&& Objects.equals( this.toHqlString(), that.toHqlString() );
-	}
-
-	@Override
-	// for safety only, overridden on all subtypes
-	public int hashCode() {
-		return Objects.hash( getClass(), negated );
 	}
 }

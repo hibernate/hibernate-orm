@@ -581,9 +581,9 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		var serializerSb = new StringBuilder();
 		var deserializerSb = new StringBuilder();
 		serializerSb.append( "create function " ).append( columnType ).append( "_serializer(v " ).append( columnType ).append( ") returns xml language sql " )
-				.append( "return xmlelement(name \"").append( XmlHelper.ROOT_TAG ).append( "\"" );
+				.append( "return case when v is null then null else xmlelement(name \"").append( XmlHelper.ROOT_TAG ).append( "\"" );
 		appendSerializer( aggregatedColumns, serializerSb, "v..", legacyXmlFormatEnabled );
-		serializerSb.append( ')' );
+		serializerSb.append( ") end" );
 
 		deserializerSb.append( "create function " ).append( columnType ).append( "_deserializer(v xml) returns " ).append( columnType ).append( " language sql " )
 				.append( "return select " ).append( columnType ).append( "()" );
@@ -633,6 +633,10 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		}
 		for ( Column udtColumn : aggregatedColumns ) {
 			serializerSb.append( sep );
+			if ( udtColumn.getSqlTypeCode() == STRUCT ) {
+				serializerSb.append( "case when ").append( prefix ).append( udtColumn.getName() )
+						.append( " is null then null else " );
+			}
 			serializerSb.append( "xmlelement(name \"" ).append( udtColumn.getName() ).append( "\"" );
 			if ( udtColumn.getSqlTypeCode() == STRUCT ) {
 				final AggregateColumn aggregateColumn = (AggregateColumn) udtColumn;
@@ -664,6 +668,9 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 				serializerSb.append( ',' ).append( prefix ).append( udtColumn.getName() );
 			}
 			serializerSb.append( ')' );
+			if ( udtColumn.getSqlTypeCode() == STRUCT ) {
+				serializerSb.append( " end" );
+			}
 			sep = ',';
 		}
 		if ( aggregatedColumns.size() > 1 ) {

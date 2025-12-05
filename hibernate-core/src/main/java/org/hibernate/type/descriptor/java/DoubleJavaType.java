@@ -151,11 +151,13 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		//this is the number of *binary* digits
-		//in a double-precision FP number
-		return dialect.getDoublePrecision();
+		return jdbcType.isFloat()
+				// this is usually the number of *binary* digits
+				// in a double-precision FP number
+				? dialect.getDoublePrecision()
+				// this is the number of decimal digits in a Java double
+				: 17;
 	}
-
 
 	@Override
 	public <X> Double coerce(X value, CoercionContext coercionContext) {

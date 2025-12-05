@@ -1,6 +1,5 @@
 [[tooling-modelgen]]
 === Static Metamodel Generator
-:root-project-dir: ../../../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
@@ -9,7 +8,7 @@
 :ann-proc: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049__GUID-3FA757C8-B67B-46BC-AEF9-7C3FFB126A93
 :ann-proc-path: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-214E175F-0F06-4CDC-B511-5BA469955F5A
 :ann-proc-options: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-6CC814A4-8A29-434A-B7E1-DF8234784E7C
-:intg-guide: https://docs.jboss.org/hibernate/orm/6.3/introduction/html_single/Hibernate_Introduction.html#generator
+:intg-guide: https://docs.hibernate.org/orm/{majorMinorVersion}/introduction/html_single/#generator
 
 Jakarta Persistence defines a typesafe Criteria API which allows <<criteria,`Criteria`>>
 queries to be constructed in a strongly-typed manner, utilizing so-called static metamodel

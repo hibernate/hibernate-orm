@@ -4,7 +4,6 @@
  */
 package org.hibernate.jpa.event.internal;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
@@ -17,11 +16,10 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.property.access.spi.Getter;
@@ -176,7 +174,7 @@ public final class CallbackDefinitionResolver {
 			final List<MethodDetails> methodsDetailsList = currentClass.getMethods();
 			for ( MethodDetails methodDetails : methodsDetailsList ) {
 				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-					final Method method = (Method) methodDetails.toJavaMember();
+					final Method method = methodDetails.toJavaMember();
 					final String methodName = method.getName();
 					final String callbackName = callbackType.getCallbackAnnotation().getName();
 					final String currentClassName = currentClass.getName();
@@ -222,7 +220,7 @@ public final class CallbackDefinitionResolver {
 	static {
 		//check whether reading annotations of annotations is useful or not
 		useAnnotationAnnotatedByListener = false;
-		Target target = EntityListeners.class.getAnnotation( Target.class );
+		final var target = EntityListeners.class.getAnnotation( Target.class );
 		if ( target != null ) {
 			for ( ElementType type : target.value() ) {
 				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) {
@@ -237,29 +235,25 @@ public final class CallbackDefinitionResolver {
 			ClassDetails currentClazz,
 			List<ClassDetails> listOfListeners,
 			ModelsContext sourceModelContext) {
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
+		final var classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
-		final EntityListeners entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
+		final var entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
-			final Class<?>[] listeners = entityListeners.value();
-			int size = listeners.length;
+			final var listenerClasses = entityListeners.value();
+			int size = listenerClasses.length;
 			for ( int index = size - 1; index >= 0; index-- ) {
-				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listeners[index].getName() ) );
+				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
 			}
 		}
 
 		if ( useAnnotationAnnotatedByListener ) {
-			final List<? extends Annotation> metaAnnotatedUsageList =
-					currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext );
-			for ( Annotation metaAnnotatedUsage : metaAnnotatedUsageList ) {
-				final AnnotationDescriptor<? extends Annotation> descriptor =
+			for ( var metaAnnotatedUsage : currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext ) ) {
+				final var descriptor =
 						sourceModelContext.getAnnotationDescriptorRegistry()
 								.getDescriptor( metaAnnotatedUsage.getClass() );
-				final EntityListeners metaAnnotatedListeners =
-						descriptor.getDirectAnnotationUsage( EntityListeners.class );
-				final Class<?>[] listeners = metaAnnotatedListeners.value();
-				for ( int index = listeners.length - 1; index >= 0; index-- ) {
-					listOfListeners.add( classDetailsRegistry.resolveClassDetails( listeners[index].getName() ) );
+				final var listenerClasses = descriptor.getDirectAnnotationUsage( EntityListeners.class ).value();
+				for ( int index = listenerClasses.length - 1; index >= 0; index-- ) {
+					listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
 				}
 			}
 		}
@@ -282,7 +276,9 @@ public final class CallbackDefinitionResolver {
 		//       code was added by HHH-12326
 		collector.addSecondPass( persistentClasses -> {
 			for ( Property property : persistentClass.getDeclaredProperties() ) {
-				if ( property.isComposite() ) {
+			if ( property.getValue() instanceof Component component
+					// embedded components don't have their own class, so no need to check callbacks (see HHH-19671)
+					&& !component.isEmbedded() ) {
 					try {
 						final Class<?> mappedClass = persistentClass.getMappedClass();
 						for ( CallbackType type : CallbackType.values() ) {

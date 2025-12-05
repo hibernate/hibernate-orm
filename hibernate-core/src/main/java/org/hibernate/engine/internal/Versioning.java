@@ -20,7 +20,6 @@ import static org.hibernate.generator.EventType.UPDATE;
  * @author Gavin King
  */
 public final class Versioning {
-	private static final VersionLogger LOG = VersionLogger.INSTANCE;
 
 	/**
 	 * Private constructor disallowing instantiation.
@@ -45,7 +44,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		LOG.seed( seed );
+		VersionLogger.INSTANCE.seed( seed );
 		return seed;
 	}
 
@@ -67,14 +66,14 @@ public final class Versioning {
 			Object[] fields,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		final int versionProperty = persister.getVersionProperty();
+		final int versionProperty = persister.getVersionPropertyIndex();
 		final Object initialVersion = fields[versionProperty];
 		if ( isNullInitialVersion( initialVersion ) ) {
 			fields[versionProperty] = persister.getVersionGenerator().generate( session, entity, initialVersion, INSERT );
 			return true;
 		}
 		else {
-			LOG.initial( initialVersion );
+			VersionLogger.INSTANCE.initial( initialVersion );
 			return false;
 		}
 	}
@@ -125,7 +124,9 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
 		@SuppressWarnings("unchecked")
-		final VersionJavaType<Object> versionType = (VersionJavaType<Object>) versionMapping.getJavaType();
+		final var versionType =
+				(VersionJavaType<Object>) // Unsafe cast
+						versionMapping.getJavaType();
 		final Object next = versionType.next(
 				version,
 				versionMapping.getLength(),
@@ -135,7 +136,7 @@ public final class Versioning {
 				versionMapping.getScale(),
 				session
 		);
-		LOG.incrementing( version, next );
+		VersionLogger.INSTANCE.incrementing( version, next );
 		return next;
 	}
 
@@ -148,7 +149,7 @@ public final class Versioning {
 	 */
 	public static void setVersion(Object[] fields, Object version, EntityPersister persister) {
 		if ( persister.isVersioned() ) {
-			fields[ persister.getVersionProperty() ] = version;
+			fields[ persister.getVersionPropertyIndex() ] = version;
 		}
 	}
 
@@ -160,7 +161,7 @@ public final class Versioning {
 	 * @return The extracted optimistic locking value
 	 */
 	public static Object getVersion(Object[] fields, EntityPersister persister) {
-		return persister.isVersioned() ? fields[persister.getVersionProperty()] : null;
+		return persister.isVersioned() ? fields[persister.getVersionPropertyIndex()] : null;
 	}
 
 	/**
@@ -178,15 +179,15 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-
-		if ( dirtyProperties != null ) {
-			for ( int dirtyProperty : dirtyProperties ) {
-				if ( propertyVersionability[dirtyProperty] ) {
-					return true;
+		else {
+			if ( dirtyProperties != null ) {
+				for ( int dirtyProperty : dirtyProperties ) {
+					if ( propertyVersionability[dirtyProperty] ) {
+						return true;
+					}
 				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 }

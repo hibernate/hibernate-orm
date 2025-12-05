@@ -1,6 +1,5 @@
 [[embeddables]]
 === Embeddable values
-:root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {root-project-dir}/hibernate-core/src/test/java
 :example-dir-emeddable: {core-test-base}/org/hibernate/orm/test/mapping/embeddable
@@ -303,7 +302,7 @@ Embeddable types that are used as collection entries, map keys or entity type id
 [[embeddable-Target]]
 ==== `@TargetEmbeddable` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc).
+The https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc).
 
 As an example, consider an `@Embedded` attribute (`City.coordinates`) whose declared type (`Coordinates`) is an interface.  However, Hibernate needs to know about the concrete type to use, which is `GPS` in this case.  The `@TargetEmbeddable` annotation is used to provide this information.
 

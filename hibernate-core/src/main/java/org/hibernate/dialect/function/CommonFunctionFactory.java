@@ -404,6 +404,20 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * For MariaDB
+	 */
+	public void median_medianOver() {
+		functionRegistry.patternDescriptorBuilder(
+						"median",
+						"median(?1) over ()"
+				)
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.register();
+	}
+
+	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 * <ul>
 	 * <li>On Postgres it means {@code stdev_samp()}
@@ -2649,6 +2663,49 @@ public class CommonFunctionFactory {
 				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
+	}
+
+	public void regexpLike() {
+		functionRegistry.namedDescriptorBuilder( "regexp_like"  )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes( STRING, STRING, STRING )
+				.setInvariantType( booleanType )
+				.register();
+	}
+
+	/**
+	 * For legacy PostgreSQL and CockroachDB
+	 */
+	public void regexpLike_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "regexp_like", new RegexpLikeOperatorFunction( typeConfiguration, supportsStandard ) );
+	}
+
+	/**
+	 * For MariaDB, legacy MySQL, SingleStore and SQLite
+	 */
+	public void regexpLike_regexp() {
+		functionRegistry.register( "regexp_like", new RegexpPredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For HSQLDB
+	 */
+	public void regexpLike_hsql() {
+		functionRegistry.register( "regexp_like", new HSQLRegexpLikeFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For Oracle and SQL Server
+	 */
+	public void regexpLike_predicateFunction() {
+		functionRegistry.register( "regexp_like", new RegexpLikePredicateFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * For SAP HANA
+	 */
+	public void regexpLike_like_regexp() {
+		functionRegistry.register( "regexp_like", new HANARegexpLikeFunction( typeConfiguration ) );
 	}
 
 	/**

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -12,7 +13,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -33,11 +33,12 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmBindableType<T>) nodeBuilder.getTypeConfiguration().resolveArithmeticType(
-						lhsOperand.getExpressible(),
-						rhsOperand.getExpressible(),
-						operator
-				),
+				(SqmBindableType<T>) // TODO: this cast is unsound
+						nodeBuilder.getTypeConfiguration().resolveArithmeticType(
+								lhsOperand.getExpressible(),
+								rhsOperand.getExpressible(),
+								operator
+						),
 				nodeBuilder
 		);
 
@@ -45,19 +46,22 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		this.operator = operator;
 		this.rhsOperand = rhsOperand;
 
-		if ( lhsOperand.getExpressible() == null && isDuration( rhsOperand.getExpressible() ) &&
-				( operator == ADD || operator == SUBTRACT ) ) {
+		final SqmBindableType<?> lhsExpressible = lhsOperand.getExpressible();
+		final SqmBindableType<?> rhsExpressible = rhsOperand.getExpressible();
+		if ( lhsExpressible == null
+				&& isDuration( rhsExpressible )
+				&& ( operator == ADD || operator == SUBTRACT ) ) {
 			return;
 		}
-		this.lhsOperand.applyInferableType( rhsOperand.getExpressible() );
-		this.rhsOperand.applyInferableType( lhsOperand.getExpressible() );
+		this.lhsOperand.applyInferableType( rhsExpressible );
+		this.rhsOperand.applyInferableType( lhsExpressible );
 	}
 
 	public SqmBinaryArithmetic(
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			SqmBindableType<T> expressibleType,
+			@Nullable SqmBindableType<T> expressibleType,
 			NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 
@@ -65,8 +69,6 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
-
-		applyInferableType( expressibleType );
 	}
 
 	@Override
@@ -122,7 +124,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmBindableType<?> type) {
+	protected void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 
@@ -144,15 +146,34 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmBinaryArithmetic<?> that
 			&& this.operator == that.operator
-			&& Objects.equals( this.lhsOperand, that.lhsOperand )
-			&& Objects.equals( this.rhsOperand, that.rhsOperand );
+			&& this.lhsOperand.equals( that.lhsOperand )
+			&& this.rhsOperand.equals( that.rhsOperand );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lhsOperand, rhsOperand, operator );
+		int result = lhsOperand.hashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& this.lhsOperand.isCompatible( that.lhsOperand )
+			&& this.rhsOperand.isCompatible( that.rhsOperand );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = lhsOperand.cacheHashCode();
+		result = 31 * result + operator.hashCode();
+		result = 31 * result + rhsOperand.cacheHashCode();
+		return result;
 	}
 }

@@ -53,7 +53,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -62,6 +62,7 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 
 /**
  * A {@link ConnectionProvider} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
@@ -75,7 +76,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		ServiceRegistryAwareService {
 	private static final String CONNECTION_KEY = "_database_connection";
 
-	private final DriverManagerConnectionProviderImpl delegate = new DriverManagerConnectionProviderImpl();
+	private final DriverManagerConnectionProvider delegate = SharedDriverManagerConnectionProvider.getInstance();
 
 	private final List<Connection> nonEnlistedConnections = new ArrayList<>();
 
@@ -101,7 +102,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 
 		connectionSettings.put( Environment.AUTOCOMMIT, "false" );
 		connectionSettings.put( Environment.POOL_SIZE, "5" );
-		connectionSettings.put( DriverManagerConnectionProviderImpl.INITIAL_SIZE, "0" );
+		connectionSettings.put( DriverManagerConnectionProvider.INITIAL_SIZE, "0" );
 
 		delegate.configure( connectionSettings );
 	}
@@ -218,7 +219,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 			System.err.println( "!!!Error trying to reset synchronization registry!!!" );
 		}
 		try {
-			delegate.closeConnection( connection );
+			delegate.closeConnection( ((ConnectionWrapper) connection).delegate );
 		}
 		catch (SQLException e) {
 			System.err.println( "!!!Error trying to close JDBC connection from delist callbacks!!!" );

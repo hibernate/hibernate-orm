@@ -14,6 +14,8 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.Environment;
 
+import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.*;
+
 /**
  * Simple {@link DataSource} implementation useful in various integration tests,
  * or possibly to be used as base class to extend.
@@ -24,8 +26,9 @@ public class BaseDataSource implements DataSource {
 	private final String url;
 
 	public BaseDataSource(Properties configuration) {
-		url = configuration.getProperty( Environment.URL );
+		url = resolveUrl( configuration.getProperty( Environment.URL ) );
 		connectionProperties = new Properties();
+		resolveFromSettings( configuration );
 		connectionProperties.put( "user", configuration.getProperty( Environment.USER ) );
 		connectionProperties.put( "password", configuration.getProperty( Environment.PASS ) );
 	}

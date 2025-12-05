@@ -4,57 +4,55 @@
  */
 package org.hibernate.orm.test.cache;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.metamodel.CollectionClassification;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Guenther Demetz
  * @author Gail Badner
  */
-public class LockModeTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { User.class, Company.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				User.class, Company.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = Environment.AUTO_EVICT_COLLECTION_CACHE, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+		}
+)
+@SessionFactory
+public class LockModeTest {
 
-	@Before
+	@BeforeEach
 	public void before() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = true;
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
 	}
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.AUTO_EVICT_COLLECTION_CACHE, true );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, true );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, true );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
-	}
-
-	@Override
-	protected void prepareTest() {
-		inTransaction(
-				s -> {
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 					Company company1 = new Company( 1 );
 					s.persist( company1 );
 
@@ -67,122 +65,108 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void cleanupTest() {
-		inTransaction(
-				s -> {
-					s.createQuery( "delete from org.hibernate.orm.test.cache.User" ).executeUpdate();
-					s.createQuery( "delete from org.hibernate.orm.test.cache.Company" ).executeUpdate();
-
-				}
-		);
+	@AfterEach
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.dropData();
+		scope.getSessionFactory().getCache().evictAll();
 	}
 
 	/**
+	 *
 	 */
 	@JiraKey(value = "HHH-9764")
 	@Test
-	public void testDefaultLockModeOnCollectionInitialization() {
-		Session s1 = openSession();
-		s1.beginTransaction();
+	public void testDefaultLockModeOnCollectionInitialization(SessionFactoryScope scope) {
+		scope.inTransaction( s1 -> {
 
-		Company company1 = s1.get( Company.class, 1 );
+			Company company1 = s1.find( Company.class, 1 );
 
-		User user1 = s1.get( User.class, 1 ); // into persistent context
+			s1.find( User.class, 1 ); // into persistent context
 
-		/******************************************
-		 *
-		 */
-		Session s2 = openSession();
-		s2.beginTransaction();
-		User user = s2.get( User.class, 1 );
-		user.setName("TestUser");
-		s2.getTransaction().commit();
-		s2.close();
+			/******************************************
+			 *
+			 */
+			scope.inTransaction( s2 -> {
+				User user = s2.find( User.class, 1 );
+				user.setName( "TestUser" );
+			} );
 
+			/******************************************
+			 *
+			 */
 
-		/******************************************
-		 *
-		 */
-
-		// init cache of collection
-		assertEquals( 1, company1.getUsers().size() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
-
-
-		s1.getTransaction().commit();
-		s1.close();
+			// init cache of collection
+			assertEquals( 1, company1.getUsers()
+					.size() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
+		} );
 	}
 
 	@JiraKey(value = "HHH-9764")
 	@Test
-	public void testDefaultLockModeOnEntityLoad() {
+	public void testDefaultLockModeOnEntityLoad(SessionFactoryScope scope) {
 
 		// first evict user
-		sessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
+		scope.getSessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
 
-		Session s1 = openSession();
-		s1.beginTransaction();
+		scope.inTransaction( s1 -> {
 
-		Company company1 = s1.get( Company.class, 1 );
+			s1.find( Company.class, 1 );
 
-		/******************************************
-		 *
-		 */
-		Session s2 = openSession();
-		s2.beginTransaction();
-		Company company = s2.get( Company.class, 1 );
-		company.setName( "TestCompany" );
-		s2.getTransaction().commit();
-		s2.close();
+			/******************************************
+			 *
+			 */
+			scope.inTransaction( s2 -> {
+				Company company = s2.find( Company.class, 1 );
+				company.setName( "TestCompany" );
+			} );
 
 
-		/******************************************
-		 *
-		 */
+			/******************************************
+			 *
+			 */
 
-		User user1 = s1.get( User.class, 1 ); // into persistent context
+			User user1 = s1.find( User.class, 1 ); // into persistent context
 
-		// init cache of collection
-		assertNull( user1.getCompany().getName() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
+			// init cache of collection
+			assertNull(
+					user1.getCompany()
+							.getName() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
 
-		s1.getTransaction().commit();
-		s1.close();
+		} );
 	}
 
 	@JiraKey(value = "HHH-9764")
 	@Test
-	public void testReadLockModeOnEntityLoad() {
+	public void testReadLockModeOnEntityLoad(SessionFactoryScope scope) {
 
 		// first evict user
-		sessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
+		scope.getSessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
 
-		Session s1 = openSession();
-		s1.beginTransaction();
+		scope.inTransaction( s1 -> {
 
-		Company company1 = s1.get( Company.class, 1 );
+			s1.find( Company.class, 1 );
 
-		/******************************************
-		 *
-		 */
-		Session s2 = openSession();
-		s2.beginTransaction();
-		Company company = s2.get( Company.class, 1 );
-		company.setName( "TestCompany" );
-		s2.getTransaction().commit();
-		s2.close();
+			/******************************************
+			 *
+			 */
+			scope.inTransaction( s2 -> {
+				Company company = s2.find( Company.class, 1 );
+				company.setName( "TestCompany" );
+			} );
 
 
-		/******************************************
-		 *
-		 */
+			/******************************************
+			 *
+			 */
 
-		User user1 = s1.get( User.class, 1, LockMode.READ ); // into persistent context
+			User user1 = s1.find( User.class, 1, LockMode.READ ); // into persistent context
 
-		// init cache of collection
-		assertNull( user1.getCompany().getName() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
+			// init cache of collection
+			assertNull(
+					user1.getCompany()
+							.getName() ); // raises org.hibernate.StaleObjectStateException if 2LCache is enabled
 
-		s1.getTransaction().commit();
-		s1.close();
+		} );
 	}
 
 }

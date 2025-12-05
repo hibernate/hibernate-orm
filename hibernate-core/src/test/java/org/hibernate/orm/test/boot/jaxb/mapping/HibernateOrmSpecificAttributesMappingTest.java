@@ -21,6 +21,7 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.UserTypeSupport;
@@ -168,6 +169,11 @@ public class HibernateOrmSpecificAttributesMappingTest {
 		@Override
 		public Property getProperty() {
 			return tenantId;
+		}
+
+		@Override
+		public Value getValue() {
+			return tenantId.getValue();
 		}
 	}
 }

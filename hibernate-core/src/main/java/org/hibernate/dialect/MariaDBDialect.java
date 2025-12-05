@@ -4,11 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Set;
-
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -17,6 +12,8 @@ import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.MariaDBLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
@@ -30,8 +27,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -48,20 +45,24 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Set;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MariaDB 10.6 and above.
@@ -83,16 +84,20 @@ public class MariaDBDialect extends MySQLDialect {
 			"GEOMETRY"
 	);
 
+	private final LockingSupport lockingSupport;
+
 	public MariaDBDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public MariaDBDialect(DatabaseVersion version) {
 		super(version);
+		lockingSupport = new MariaDBLockingSupport( version );
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
 		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		lockingSupport = new MariaDBLockingSupport( getVersion() );
 		registerKeywords( info );
 	}
 
@@ -115,15 +120,20 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 		final var commonFunctionFactory = new CommonFunctionFactory( functionContributions );
+		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		commonFunctionFactory.windowFunctions();
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		functionContributions.getFunctionRegistry().registerNamed(
+		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
+		commonFunctionFactory.median_medianOver();
+
+		commonFunctionFactory.regexpLike_regexp();
+
+		functionRegistry.registerNamed(
 				"json_valid",
-				functionContributions.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.BOOLEAN )
+				basicTypeRegistry.resolve( BOOLEAN )
 		);
 		commonFunctionFactory.jsonValue_mariadb();
 		commonFunctionFactory.jsonArray_mariadb();
@@ -133,13 +143,6 @@ public class MariaDBDialect extends MySQLDialect {
 		commonFunctionFactory.jsonArrayAppend_mariadb();
 		commonFunctionFactory.unnest_emulated();
 		commonFunctionFactory.jsonTable_mysql();
-
-		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
-				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.register();
 	}
 
 	@Override
@@ -240,6 +243,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsNamedColumnCheck() {
+		return false;
+	}
+
+	@Override
 	public boolean doesRoundTemporalOnOverflow() {
 		// See https://jira.mariadb.org/browse/MDEV-16991
 		return false;
@@ -275,28 +283,18 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		return true;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsForShare() {
+	protected boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
 	}
 
 	@Override
-	protected boolean supportsAliasLocks() {
+	protected boolean supportsForShare() {
 		//only supported on MySQL
 		return false;
 	}
@@ -334,11 +332,6 @@ public class MariaDBDialect extends MySQLDialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
 		return super.buildIdentifierHelper( builder, metadata );
-	}
-
-	@Override
-	public String getDual() {
-		return "dual";
 	}
 
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {

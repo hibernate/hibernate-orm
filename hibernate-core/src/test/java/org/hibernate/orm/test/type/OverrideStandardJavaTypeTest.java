@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -31,10 +32,15 @@ import jakarta.persistence.Table;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = { OverrideStandardJavaTypeTest.SampleEntity.class })
 @SessionFactory
 @JiraKey("HHH-16781")
 public class OverrideStandardJavaTypeTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {

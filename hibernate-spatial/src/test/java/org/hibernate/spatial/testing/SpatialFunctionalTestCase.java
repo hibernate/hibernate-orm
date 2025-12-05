@@ -4,14 +4,10 @@
  */
 package org.hibernate.spatial.testing;
 
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Query;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
+import org.geolatte.geom.GeometryEquality;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
@@ -19,15 +15,15 @@ import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.locationtech.jts.geom.Geometry;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -35,7 +31,7 @@ import static org.junit.Assert.fail;
  * TODO Remove me!
  */
 @Deprecated
-public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
+public abstract class SpatialFunctionalTestCase extends BaseSessionFactoryFunctionalTest {
 
 	protected final static String JTS = "jts";
 	protected final static String GEOLATTE = "geolatte";
@@ -43,6 +39,9 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	protected TestData testData;
 
 	protected AbstractExpectationsFactory expectationsFactory;
+	protected GeometryEquality geometryEquality;
+
+
 
 	/**
 	 * Inserts the test data via a direct route (JDBC).
@@ -53,32 +52,19 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	/**
 	 * Removes the test data.
 	 */
-	public void cleanupTest() {
-		cleanUpTest( "jts" );
-		cleanUpTest( "geolatte" );
+	public void cleanupTest(SessionFactoryScope scope) {
+		cleanUpTest( "jts", scope );
+		cleanUpTest( "geolatte", scope );
 	}
 
-	private void cleanUpTest(String pckg) {
-		Session session = null;
-		Transaction tx = null;
-		try {
-			session = openSession();
-			tx = session.beginTransaction();
-			String hql = String.format( "delete from %s", entityName( pckg ) );
-			Query q = session.createQuery( hql );
-			q.executeUpdate();
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			if ( session != null ) {
-				session.close();
-			}
-		}
+	private void cleanUpTest(String pckg, SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String hql = String.format( "delete from %s", entityName( pckg ) );
+					Query q = session.createQuery( hql );
+					q.executeUpdate();
+				}
+		);
 	}
 
 	/**
@@ -87,9 +73,12 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 *
 	 * @return
 	 */
-	protected void afterConfigurationBuilt(Configuration cfg) {
-		super.afterConfigurationBuilt( cfg );
-		initializeSpatialTestSupport( serviceRegistry() );
+//	protected void afterConfigurationBuilt(Configuration cfg) {
+//		initializeSpatialTestSupport( serviceRegistry() );
+//	}
+	@Override
+	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
+		initializeSpatialTestSupport( factory.getServiceRegistry() );
 	}
 
 	private void initializeSpatialTestSupport(ServiceRegistry serviceRegistry) {
@@ -123,7 +112,6 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * Returns true if the spatial dialect supports the specified function
 	 *
 	 * @param spatialFunction
-	 *
 	 * @return
 	 */
 	public boolean isSupportedByDialect(SpatialFunction spatialFunction) {
@@ -168,45 +156,48 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected void compare(Integer id, Object expected, Object received, String geometryType) {
-		assertTrue( expected != null || received == null );
+		assertThat( expected != null || received == null ).isTrue();
 		if ( expected instanceof byte[] ) {
-			assertArrayEquals( "Failure on testsuite-suite for case " + id, (byte[]) expected, (byte[]) received );
+			assertThat( (byte[]) received )
+					.describedAs( "Failure on testsuite-suite for case " + id )
+					.isEqualTo( (byte[]) expected );
 
 		}
 		else if ( expected instanceof Geometry ) {
 			if ( JTS.equals( geometryType ) ) {
-				if ( !( received instanceof Geometry ) ) {
+				if ( !(received instanceof Geometry) ) {
 					fail(
 							"Expected a JTS Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
 					);
 				}
-				assertEquals(
-						"Failure on testsuite-suite for case " + id,
-						expected, received
-				);
+				assertThat( received )
+						.describedAs( "Failure on testsuite-suite for case " + id )
+						.isEqualTo( expected );
 			}
 			else {
-				if ( !( received instanceof org.geolatte.geom.Geometry ) ) {
+				if ( !(received instanceof org.geolatte.geom.Geometry) ) {
 					fail(
 							"Expected a Geolatte Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
 					);
 				}
-				assertEquals(
-						"Failure on testsuite-suite for case " + id,
-								expected,
-								org.geolatte.geom.jts.JTS.to( (org.geolatte.geom.Geometry) received )
-				);
-			}
 
+				assertThat( geometryEquality.equals( org.geolatte.geom.jts.JTS.from( (Geometry) expected ),	(org.geolatte.geom.Geometry) received	) )
+						.describedAs( "Failure on testsuite-suite for case " + id )
+						.isTrue();
+			}
 		}
 		else {
 			if ( expected instanceof Long ) {
-				assertEquals( "Failure on testsuite-suite for case " + id, ( (Long) expected ).intValue(), received );
+				assertThat( received )
+						.describedAs( "Failure on testsuite-suite for case " + id )
+						.isEqualTo( ((Long) expected).intValue() );
 			}
 			else {
-				assertEquals( "Failure on testsuite-suite for case " + id, expected, received );
+				assertThat( received )
+						.describedAs( "Failure on testsuite-suite for case " + id )
+						.isEqualTo( expected );
 			}
 		}
 	}

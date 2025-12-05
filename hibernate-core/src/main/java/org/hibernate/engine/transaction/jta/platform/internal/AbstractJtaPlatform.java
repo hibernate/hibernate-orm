@@ -12,7 +12,6 @@ import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 import org.hibernate.service.ServiceRegistry;
@@ -22,6 +21,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static org.hibernate.cfg.TransactionSettings.JTA_CACHE_TM;
 import static org.hibernate.cfg.TransactionSettings.JTA_CACHE_UT;
+import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isActive;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -54,7 +54,7 @@ public abstract class AbstractJtaPlatform
 
 		@Override
 		public boolean canRegisterSynchronization() {
-			return JtaStatusHelper.isActive( getTransactionManager() );
+			return isActive( getTransactionManager() );
 		}
 	}
 

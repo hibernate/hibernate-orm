@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaTreatedFrom;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -20,16 +21,16 @@ public interface SqmTreatedFrom<L,R,R1 extends R> extends SqmFrom<L,R1>, SqmTrea
 	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(EntityDomainType<S> treatTarget);
 
 	@Override
-	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
+	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch);
 
 	@Override
-	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
+	<S extends R1> SqmTreatedFrom<L, R1, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
 
 	@Override
 	SqmTreatedFrom<L,R,R1> copy(SqmCopyContext context);

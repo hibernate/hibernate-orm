@@ -7,25 +7,21 @@ package org.hibernate.orm.test.events;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -33,68 +29,35 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@JiraKeyGroup( value = {
-		@JiraKey( value = "HHH-2884" ),
-		@JiraKey( value = "HHH-10674" ),
-		@JiraKey( value = "HHH-14541" )
-} )
-public class CallbackTest extends BaseCoreFunctionalTestCase {
-	private TestingObserver observer = new TestingObserver();
-	private TestingListener listener = new TestingListener();
-
-	@Override
-	public String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setSessionFactoryObserver( observer );
-	}
-
-	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
-		builder.applyIntegrator(
-				new Integrator() {
-					@Override
-					public void integrate(
-							Metadata metadata,
-							BootstrapContext bootstrapContext,
-							SessionFactoryImplementor sessionFactory) {
-						integrate( sessionFactory );
-					}
-
-					private void integrate(SessionFactoryImplementor sessionFactory) {
-						sessionFactory.getEventListenerRegistry().setListeners(
-								EventType.DELETE,
-								listener
-						);
-						listener.initialize();
-					}
-
-					@Override
-					public void disintegrate(
-							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-						listener.cleanup();
-					}
-				}
-		);
-	}
+@JiraKeyGroup(value = {
+		@JiraKey(value = "HHH-2884"),
+		@JiraKey(value = "HHH-10674"),
+		@JiraKey(value = "HHH-14541")
+})
+@org.hibernate.testing.orm.junit.SessionFactory(sessionFactoryConfigurer = CallbackTest.Configurer.class)
+public class CallbackTest {
+	private static TestingObserver observer = new TestingObserver();
+	private static TestingListener listener = new TestingListener();
 
 	@Test
-	public void testCallbacks() {
+	public void testCallbacks(SessionFactoryScope scope) {
+		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getEventListenerRegistry().setListeners(
+				EventType.DELETE,
+				listener
+		);
+		listener.initialize();
 		// test pre-assertions
 		assert observer.closingCount == 0;
 		assert observer.closedCount == 0;
-		assertEquals( "observer not notified of creation", 1, observer.creationCount );
-		assertEquals( "listener not notified of creation", 1, listener.initCount );
+		assertEquals( 1, observer.creationCount, "observer not notified of creation" );
+		assertEquals( 1, listener.initCount, "listener not notified of creation" );
 
-		sessionFactory().close();
+		sessionFactory.close();
 
-		assertEquals( "observer not notified of closing", 1, observer.closingCount );
-		assertEquals( "observer not notified of close", 1, observer.closedCount );
-		assertEquals( "listener not notified of close", 1, listener.destoryCount );
+		assertEquals( 1, observer.closingCount, "observer not notified of closing" );
+		assertEquals( 1, observer.closedCount, "observer not notified of close" );
+		assertEquals( 1, listener.destoryCount, "listener not notified of close" );
 	}
 
 	private static class TestingObserver implements SessionFactoryObserver {
@@ -119,6 +82,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		public void sessionFactoryClosed(SessionFactory factory) {
 			assertThat( factory.isClosed() ).isTrue();
 			closedCount++;
+			listener.cleanup();
 		}
 	}
 
@@ -138,6 +102,13 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException {
+		}
+	}
+
+	public static class Configurer implements Consumer<SessionFactoryBuilder> {
+		@Override
+		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+			sessionFactoryBuilder.addSessionFactoryObservers( observer );
 		}
 	}
 }

@@ -4,10 +4,6 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
-import java.sql.SQLException;
-
-import org.junit.Test;
-
 import org.geolatte.geom.ByteOrder;
 import org.geolatte.geom.C2D;
 import org.geolatte.geom.G2D;
@@ -16,12 +12,15 @@ import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.crs.CoordinateReferenceSystem;
 import org.geolatte.geom.crs.CoordinateReferenceSystems;
+import org.junit.jupiter.api.Test;
 import org.postgresql.util.PGobject;
 
+import java.sql.SQLException;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.geolatte.geom.builder.DSL.c;
 import static org.geolatte.geom.builder.DSL.g;
 import static org.geolatte.geom.builder.DSL.linestring;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the different ways Postgis seraialises Geometries
@@ -37,7 +36,6 @@ public class PostgisUnmarshalTest {
 			c( 6.123, 53.234 ),
 			c( 6.133, 53.244 )
 	);
-
 
 	@Test
 	public void testWktWithSrid() throws SQLException {
@@ -63,13 +61,12 @@ public class PostgisUnmarshalTest {
 		testCase( wkb, geom );
 	}
 
-
 	public void testCase(String pgValue, Geometry<?> expected) throws SQLException {
 		PGobject pgo = new PGobject();
 		pgo.setValue( pgValue );
 		Geometry<?> received = PGGeometryJdbcType.INSTANCE_WKB_2.toGeometry( pgo );
-		assertEquals( String.format( "Failure on %s", pgValue ), expected, received );
+		assertThat( received )
+				.describedAs( String.format( "Failure on %s", pgValue ) )
+				.isEqualTo( expected );
 	}
-
-
 }

@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterBinding;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -29,87 +30,89 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	private static final Logger LOG = Logger.getLogger( QueryParameterBindings.class );
 
-	private final ProcedureParameterMetadataImpl parameterMetadata;
+	private final ProcedureParameterMetadataImplementor parameterMetadata;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Map<ProcedureParameterImplementor<?>, ProcedureParameterBinding<?>> bindingMap = new HashMap<>();
 
 	public ProcedureParamBindings(
-			ProcedureParameterMetadataImpl parameterMetadata,
+			ProcedureParameterMetadataImplementor parameterMetadata,
 			SessionFactoryImplementor sessionFactory) {
 		this.parameterMetadata = parameterMetadata;
 		this.sessionFactory = sessionFactory;
 	}
 
-	public ProcedureParameterMetadataImpl getParameterMetadata() {
+	public ProcedureParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
 	@Override
 	public boolean isBound(QueryParameterImplementor<?> parameter) {
-		//noinspection SuspiciousMethodCalls
-		return bindingMap.containsKey( parameter );
+		return parameter instanceof ProcedureParameterImplementor<?>
+			&& bindingMap.containsKey( parameter );
 	}
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-		return getQueryParamerBinding( (ProcedureParameterImplementor<P>) parameter );
+		return getQueryParameterBinding( (ProcedureParameterImplementor<P>) parameter );
 	}
 
-	public <P> ProcedureParameterBinding<P> getQueryParamerBinding(ProcedureParameterImplementor<P> parameter) {
+	public <P> ProcedureParameterBinding<P> getQueryParameterBinding(ProcedureParameterImplementor<P> parameter) {
 		final var procParam = parameterMetadata.resolve( parameter );
-		var binding = bindingMap.get( procParam );
+		final var binding = bindingMap.get( procParam );
 		if ( binding == null ) {
 			if ( !parameterMetadata.containsReference( parameter ) ) {
 				throw new IllegalArgumentException( "Passed parameter is not registered with this query" );
 			}
-			binding = new ProcedureParameterBindingImpl<>( procParam, sessionFactory );
-			bindingMap.put( procParam, binding );
+			final var parameterBinding = new ProcedureParameterBindingImpl<>( procParam, sessionFactory );
+			bindingMap.put( procParam, parameterBinding );
+			return parameterBinding;
 		}
-		//noinspection unchecked
-		return (ProcedureParameterBinding<P>) binding;
+		else {
+			//noinspection unchecked
+			return (ProcedureParameterBinding<P>) binding;
+		}
 	}
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(String name) {
-		//noinspection unchecked
-		final var parameter =
-				(ProcedureParameterImplementor<P>)
-						parameterMetadata.getQueryParameter( name );
+		final var parameter = parameterMetadata.getQueryParameter( name );
 		if ( parameter == null ) {
-			throw new IllegalArgumentException( "Parameter does not exist: " + name );
+			throw new IllegalArgumentException( "Parameter with name '" + name + "' does not exist" );
 		}
-		return getQueryParamerBinding( parameter );
+		//noinspection unchecked
+		return getQueryParameterBinding( (ProcedureParameterImplementor<P>) parameter );
 	}
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(int position) {
-		//noinspection unchecked
-		final var parameter =
-				(ProcedureParameterImplementor<P>)
-						parameterMetadata.getQueryParameter( position );
+		final var parameter = parameterMetadata.getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );
 		}
-		return getQueryParamerBinding( parameter );
+		//noinspection unchecked
+		return getQueryParameterBinding( (ProcedureParameterImplementor<P>) parameter );
 	}
 
 	@Override
 	public void validate() {
-		parameterMetadata.visitRegistrations( parameter -> validate( (ProcedureParameterImplementor<?>) parameter ) );
+		if ( LOG.isDebugEnabled() ) {
+			parameterMetadata.visitRegistrations(
+					parameter -> validate( (ProcedureParameterImplementor<?>) parameter ) );
+		}
 	}
 
 	private <T> void validate(ProcedureParameterImplementor<T> procParam) {
-		final ParameterMode mode = procParam.getMode();
+		final var mode = procParam.getMode();
 		if ( mode == ParameterMode.IN || mode == ParameterMode.INOUT ) {
 			if ( !getBinding( procParam ).isBound() ) {
 				// depending on "pass nulls" this might be OK - for now, just log a warning
-				if ( procParam.getPosition() != null ) {
+				if ( procParam.isOrdinal() ) {
 					LOG.debugf( "Procedure parameter at position %s is not bound", procParam.getPosition() );
 
 				}
 				else {
-					LOG.debugf( "Procedure parameter %s is not bound", procParam.getName() );
+					LOG.debugf( "Procedure parameter '%s' is not bound", procParam.getName() );
 				}
 			}
 		}

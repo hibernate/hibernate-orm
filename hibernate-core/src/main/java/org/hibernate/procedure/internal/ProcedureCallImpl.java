@@ -31,11 +31,13 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
@@ -50,8 +52,6 @@ import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.internal.OutputsExecutionContext;
@@ -78,6 +78,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -89,6 +90,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION_RETURN_TYPE;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.procedure.internal.Util.resolveResultSetMappingClasses;
+import static org.hibernate.procedure.internal.Util.resolveResultSetMappingNames;
 import static org.hibernate.procedure.internal.Util.resolveResultSetMappings;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
@@ -105,7 +107,7 @@ public class ProcedureCallImpl<R>
 
 	private FunctionReturnImpl<R> functionReturn;
 
-	private final ProcedureParameterMetadataImpl parameterMetadata;
+	private final ProcedureParameterMetadataImplementor parameterMetadata;
 	private final ProcedureParamBindings parameterBindings;
 
 	private final ResultSetMapping resultSetMapping;
@@ -117,11 +119,33 @@ public class ProcedureCallImpl<R>
 	private ProcedureOutputsImpl outputs;
 
 	private static String mappingId(String procedureName, Class<?>[] resultClasses) {
+		assert resultClasses != null && resultClasses.length > 0;
 		return procedureName + ":" + join( ",", resultClasses );
 	}
 
 	private static String mappingId(String procedureName, String[] resultSetMappingNames) {
+		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
 		return procedureName + ":" + join( ",", resultSetMappingNames );
+	}
+
+	private void registerParameters(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
+		memento.getParameterMementos()
+				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
+	}
+
+	private ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			String procedureName,
+			String resultSetMappingName,
+			boolean resultSetMappingDynamic,
+			Set<String> synchronizedQuerySpaces) {
+		super( session );
+		this.procedureName = procedureName;
+		this.synchronizedQuerySpaces = synchronizedQuerySpaces;
+		final var factory = session.getSessionFactory();
+		resultSetMapping = resolveResultSetMapping( resultSetMappingName, resultSetMappingDynamic, factory );
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
 	}
 
 	/**
@@ -130,16 +154,10 @@ public class ProcedureCallImpl<R>
 	 * @param session The session
 	 * @param procedureName The name of the procedure to call
 	 */
-	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
-		super( session );
-		this.procedureName = procedureName;
-
-		parameterMetadata = new ProcedureParameterMetadataImpl();
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
-
-		resultSetMapping = resolveResultSetMapping( procedureName, true, session.getSessionFactory() );
-
-		synchronizedQuerySpaces = null;
+	public ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			String procedureName) {
+		this( session, procedureName, procedureName, true, null );
 	}
 
 	/**
@@ -149,22 +167,14 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 * @param resultClasses The classes making up the result
 	 */
-	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName, Class<?>... resultClasses) {
-		super( session );
-
-		assert resultClasses != null && resultClasses.length > 0;
-
-		this.procedureName = procedureName;
-
-		final var factory = session.getSessionFactory();
-
-		parameterMetadata = new ProcedureParameterMetadataImpl();
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-
-		synchronizedQuerySpaces = new HashSet<>();
-
-		resultSetMapping = resolveResultSetMapping( mappingId( procedureName, resultClasses ), factory );
-
+	public ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			String procedureName,
+			Class<?>... resultClasses) {
+		this( session, procedureName,
+				mappingId( procedureName, resultClasses ),
+				false,
+				new HashSet<>() );
 		resolveResultSetMappingClasses(
 				resultClasses,
 				resultSetMapping,
@@ -184,22 +194,11 @@ public class ProcedureCallImpl<R>
 			final SharedSessionContractImplementor session,
 			String procedureName,
 			String... resultSetMappingNames) {
-		super( session );
-
-		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
-
-		this.procedureName = procedureName;
-
-		final var factory = session.getSessionFactory();
-
-		parameterMetadata = new ProcedureParameterMetadataImpl();
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-
-		synchronizedQuerySpaces = new HashSet<>();
-
-		resultSetMapping = resolveResultSetMapping( mappingId( procedureName, resultSetMappingNames ), factory );
-
-		Util.resolveResultSetMappingNames(
+		this( session, procedureName,
+				mappingId( procedureName, resultSetMappingNames ),
+				false,
+				new HashSet<>() );
+		resolveResultSetMappingNames(
 				resultSetMappingNames,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
@@ -213,20 +212,13 @@ public class ProcedureCallImpl<R>
 	 * @param session The session
 	 * @param memento The named/stored memento
 	 */
-	ProcedureCallImpl(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
-		super( session );
-
-		procedureName = memento.getCallableName();
-
-		final var factory = session.getSessionFactory();
-
-		parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-
-		synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
-
-		resultSetMapping = resolveResultSetMapping( memento.getRegistrationName(), factory );
-
+	ProcedureCallImpl(
+			SharedSessionContractImplementor session,
+			NamedCallableQueryMemento memento) {
+		this( session, memento.getCallableName(),
+				memento.getRegistrationName(),
+				false,
+				makeCopy( memento.getQuerySpaces() ) );
 		resolveResultSetMappings(
 				memento.getResultSetMappingNames(),
 				memento.getResultSetMappingClasses(),
@@ -234,7 +226,7 @@ public class ProcedureCallImpl<R>
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
-
+		registerParameters( session, memento );
 		applyOptions( memento );
 	}
 
@@ -248,19 +240,10 @@ public class ProcedureCallImpl<R>
 			SharedSessionContractImplementor session,
 			NamedCallableQueryMemento memento,
 			Class<?>... resultTypes) {
-		super( session );
-
-		procedureName = memento.getCallableName();
-
-		final var factory = session.getSessionFactory();
-
-		parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-
-		synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
-
-		resultSetMapping = resolveResultSetMapping( mappingId( procedureName, resultTypes ), factory );
-
+		this( session, memento.getCallableName(),
+				mappingId( memento.getCallableName(), resultTypes ),
+				false,
+				makeCopy( memento.getQuerySpaces() ) );
 		resolveResultSetMappings(
 				null,
 				resultTypes,
@@ -268,7 +251,7 @@ public class ProcedureCallImpl<R>
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
-
+		registerParameters( session, memento );
 		applyOptions( memento );
 	}
 
@@ -276,19 +259,10 @@ public class ProcedureCallImpl<R>
 			SharedSessionContractImplementor session,
 			NamedCallableQueryMementoImpl memento,
 			String... resultSetMappingNames) {
-		super( session );
-
-		procedureName = memento.getCallableName();
-
-		final var factory = session.getSessionFactory();
-
-		parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-
-		synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
-
-		resultSetMapping = resolveResultSetMapping( mappingId( procedureName, resultSetMappingNames ), factory );
-
+		this( session, memento.getCallableName(),
+				mappingId( memento.getCallableName(), resultSetMappingNames ),
+				false,
+				makeCopy( memento.getQuerySpaces() ) );
 		resolveResultSetMappings(
 				resultSetMappingNames,
 				null,
@@ -296,7 +270,7 @@ public class ProcedureCallImpl<R>
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
-
+		registerParameters( session, memento );
 		applyOptions( memento );
 	}
 
@@ -332,7 +306,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureParameterMetadataImpl getParameterMetadata() {
+	public ProcedureParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
@@ -369,7 +343,7 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( resultType );
 		if ( basicType == null ) {
-			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + resultType.getName() );
+			throw new IllegalArgumentException( "Could not resolve a BasicType for the Java type: " + resultType.getName() );
 		}
 		markAsFunctionCall( basicType );
 		return this;
@@ -381,7 +355,7 @@ public class ProcedureCallImpl<R>
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
 		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
-			final SqmExpressible<?> expressible = resolveExpressible( typeReference );
+			final var expressible = resolveExpressible( typeReference );
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
 			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
@@ -510,12 +484,12 @@ public class ProcedureCallImpl<R>
 	}
 
 	private void registerParameter(ProcedureParameterImplementor<?> parameter) {
-		getParameterMetadata().registerParameter( parameter );
+		parameterMetadata.registerParameter( parameter );
 	}
 
 	@Override
 	public ProcedureParameterImplementor<?> getParameterRegistration(int position) {
-		return getParameterMetadata().getQueryParameter( position );
+		return parameterMetadata.getQueryParameter( position );
 	}
 
 	@Override
@@ -556,12 +530,12 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureParameterImplementor<?> getParameterRegistration(String name) {
-		return getParameterMetadata().getQueryParameter( name );
+		return parameterMetadata.getQueryParameter( name );
 	}
 
 	@Override
 	public List<ProcedureParameter<?>> getRegisteredParameters() {
-		return unmodifiableList( getParameterMetadata().getRegistrationsAsList() );
+		return unmodifiableList( parameterMetadata.getRegistrationsAsList() );
 	}
 
 	@Override
@@ -651,8 +625,9 @@ public class ProcedureCallImpl<R>
 
 	private Map<ProcedureParameter<?>, JdbcCallParameterRegistration> collectParameterRegistrations(JdbcOperationQueryCall call) {
 		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
-		if ( call.getFunctionReturn() != null ) {
-			parameterRegistrations.put( functionReturn, call.getFunctionReturn() );
+		final var funReturn = call.getFunctionReturn();
+		if ( funReturn != null ) {
+			parameterRegistrations.put( functionReturn, funReturn );
 		}
 		final var registrations = getParameterMetadata().getRegistrationsAsList();
 		final var jdbcParameters = call.getParameterRegistrations();
@@ -665,8 +640,9 @@ public class ProcedureCallImpl<R>
 
 	private List<JdbcCallRefCursorExtractor> collectRefCursorExtractors(JdbcOperationQueryCall call) {
 		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
-		if ( call.getFunctionReturn() != null ) {
-			final var refCursorExtractor = call.getFunctionReturn().getRefCursorExtractor();
+		final var funReturn = call.getFunctionReturn();
+		if ( funReturn != null ) {
+			final var refCursorExtractor = funReturn.getRefCursorExtractor();
 			if ( refCursorExtractor != null ) {
 				refCursorExtractors.add( refCursorExtractor );
 			}
@@ -674,8 +650,7 @@ public class ProcedureCallImpl<R>
 		final var registrations = getParameterMetadata().getRegistrationsAsList();
 		final var jdbcParameters = call.getParameterRegistrations();
 		for ( int i = 0; i < registrations.size(); i++ ) {
-			final var jdbcCallParameterRegistration = jdbcParameters.get( i );
-			final var refCursorExtractor = jdbcCallParameterRegistration.getRefCursorExtractor();
+			final var refCursorExtractor = jdbcParameters.get( i ).getRefCursorExtractor();
 			if ( refCursorExtractor != null ) {
 				refCursorExtractors.add( refCursorExtractor );
 			}
@@ -685,7 +660,7 @@ public class ProcedureCallImpl<R>
 
 	private JdbcParameterBindings parameterBindings(
 			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations) {
-		final JdbcParameterBindings jdbcParameterBindings =
+		final var jdbcParameterBindings =
 				new JdbcParameterBindingsImpl( parameterRegistrations.size() );
 		for ( var entry : parameterRegistrations.entrySet() ) {
 			final var registration = entry.getValue();
@@ -694,20 +669,18 @@ public class ProcedureCallImpl<R>
 				final var parameter = entry.getKey();
 				final var binding = getParameterBindings().getBinding( parameter );
 				if ( !binding.isBound() ) {
-					if ( parameter.getPosition() == null ) {
-						throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
+					if ( parameter.isNamed() ) {
+						throw new IllegalArgumentException( "The parameter named '" + parameter + "' was not set" );
 					}
 					else {
-						throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
+						throw new IllegalArgumentException( "The parameter at position " + parameter + " was not set" );
 					}
 				}
 				final var parameterType = (JdbcMapping) registration.getParameterType();
 				jdbcParameterBindings.addBinding(
 						(JdbcParameter) parameterBinder,
-						new JdbcParameterBindingImpl(
-								parameterType,
-								parameterType.convertToRelationalValue( binding.getBindValue() )
-						)
+						new JdbcParameterBindingImpl( parameterType,
+								parameterType.convertToRelationalValue( binding.getBindValue() ) )
 				);
 			}
 		}
@@ -785,14 +758,13 @@ public class ProcedureCallImpl<R>
 		);
 	}
 
-	private static List<NamedCallableQueryMemento.ParameterMemento> toParameterMementos(
-			ProcedureParameterMetadataImpl parameterMetadata) {
+	private static List<ParameterMemento> toParameterMementos(
+			ProcedureParameterMetadataImplementor parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
-			// none...
 			return emptyList();
 		}
 		else {
-			final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
+			final List<ParameterMemento> mementos = new ArrayList<>();
 			parameterMetadata.visitRegistrations(
 					queryParameter -> mementos.add(
 							fromRegistration( (ProcedureParameterImplementor<?>) queryParameter ) )
@@ -815,12 +787,10 @@ public class ProcedureCallImpl<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// outputs
 
-	private ProcedureOutputs procedureResult;
-
 	@Override
 	public boolean execute() {
 		try {
-			return outputs().getCurrent() instanceof ResultSetOutput;
+			return getOutputs().getCurrent() instanceof ResultSetOutput;
 		}
 		catch (NoMoreOutputsException e) {
 			return false;
@@ -834,30 +804,23 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	protected ProcedureOutputs outputs() {
-		if ( procedureResult == null ) {
-			procedureResult = getOutputs();
-		}
-		return procedureResult;
-	}
-
 	@Override
 	protected int doExecuteUpdate() {
-		// the expectation is that there is just one Output, of type UpdateCountOutput
+		// The expectation is that there is just one Output, of type UpdateCountOutput
 		try {
 			execute();
 			return getUpdateCount();
 		}
 		finally {
-			outputs().release();
+			getOutputs().release();
 		}
 	}
 
 	@Override
 	public Object getOutputParameterValue(int position) {
-		// NOTE : according to spec (specifically), an exception thrown from this method should not mark for rollback.
+		// According to spec, an exception thrown from this method should not mark for rollback.
 		try {
-			return outputs().getOutputParameterValue( position );
+			return getOutputs().getOutputParameterValue( position );
 		}
 		catch (ParameterStrategyException e) {
 			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
@@ -869,9 +832,9 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public Object getOutputParameterValue(String parameterName) {
-		// NOTE : according to spec (specifically), an exception thrown from this method should not mark for rollback.
+		// According to spec, an exception thrown from this method should not mark for rollback.
 		try {
-			return outputs().getOutputParameterValue( parameterName );
+			return getOutputs().getOutputParameterValue( parameterName );
 		}
 		catch (ParameterStrategyException e) {
 			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
@@ -883,17 +846,19 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public boolean hasMoreResults() {
-		return outputs().goToNext() && outputs().getCurrent() instanceof ResultSetOutput;
+		final var outputs = getOutputs();
+		return outputs.goToNext()
+			&& outputs.getCurrent() instanceof ResultSetOutput;
 	}
 
 	@Override
 	public int getUpdateCount() {
 		try {
-			final Output rtn = outputs().getCurrent();
-			if ( rtn == null ) {
+			final var output = getOutputs().getCurrent();
+			if ( output == null ) {
 				return -1;
 			}
-			else if ( rtn instanceof UpdateCountOutput updateCount ) {
+			else if ( output instanceof UpdateCountOutput updateCount ) {
 				return updateCount.getUpdateCount();
 			}
 			else {
@@ -919,7 +884,7 @@ public class ProcedureCallImpl<R>
 		}
 		else {
 			try {
-				if ( outputs().getCurrent() instanceof ResultSetOutput<?> resultSetOutput ) {
+				if ( getOutputs().getCurrent() instanceof ResultSetOutput<?> resultSetOutput ) {
 					return ((ResultSetOutput<R>) resultSetOutput).getResultList();
 				}
 				else {
@@ -928,9 +893,9 @@ public class ProcedureCallImpl<R>
 				}
 			}
 			catch (NoMoreOutputsException e) {
-				// todo : the spec is completely silent on these type of edge-case scenarios.
-				// Essentially here we'd have a case where there are no more results (ResultSets nor updateCount) but
-				// getResultList was called.
+				// TODO: the spec is completely silent on these type of edge-case scenarios.
+				// Essentially here we'd have a case where there are no more results
+				// (ResultSets nor updateCount) but getResultList() was called.
 				return null;
 			}
 			catch (HibernateException he) {
@@ -972,22 +937,13 @@ public class ProcedureCallImpl<R>
 	public R getSingleResult() {
 		final var resultList = getResultList();
 		if ( resultList == null || resultList.isEmpty() ) {
-			throw new NoResultException(
-					String.format(
-							"Call to stored procedure [%s] returned no results",
-							getProcedureName()
-					)
-			);
+			throw new NoResultException( "Call to stored procedure '" + getProcedureName()
+										+ "' returned no results" );
 		}
 		else if ( resultList.size() > 1 ) {
-			throw new NonUniqueResultException(
-					String.format(
-							"Call to stored procedure [%s] returned multiple results",
-							getProcedureName()
-					)
-			);
+			throw new NonUniqueResultException( "Call to stored procedure '" + getProcedureName()
+												+ "' returned multiple results" );
 		}
-
 		return resultList.get( 0 );
 	}
 
@@ -998,14 +954,9 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		else if ( resultList.size() > 1 ) {
-			throw new NonUniqueResultException(
-					String.format(
-							"Call to stored procedure [%s] returned multiple results",
-							getProcedureName()
-					)
-			);
+			throw new NonUniqueResultException( "Call to stored procedure '" + getProcedureName()
+												+ "' returned multiple results" );
 		}
-
 		return resultList.get( 0 );
 	}
 
@@ -1046,7 +997,7 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
-		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
+		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure call" );
 	}
 
 	@Override
@@ -1062,7 +1013,7 @@ public class ProcedureCallImpl<R>
 	public LockModeType getLockMode() {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
-		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
+		throw new IllegalStateException( "Illegal attempt to get lock mode for a procedure call" );
 	}
 
 	@Override @Deprecated
@@ -1070,39 +1021,33 @@ public class ProcedureCallImpl<R>
 		throw new UnsupportedOperationException( "setLockOptions does not apply to procedure calls" );
 	}
 
-	@Override
+	@Override @SuppressWarnings("resource")
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
 		switch ( hintName ) {
 			case HINT_CALLABLE_FUNCTION:
-				if ( value != null ) {
-					if ( value instanceof Boolean bool ) {
-						if ( bool ) {
-							applyCallableFunctionHint();
-						}
-					}
-					else if ( parseBoolean( value.toString() ) ) {
-						applyCallableFunctionHint();
-					}
+				if ( value instanceof Boolean bool && bool
+					|| value instanceof String string && parseBoolean( string ) ) {
+					applyCallableFunctionHint();
+				}
+				else {
+					throw new IllegalArgumentException( "Illegal value for hint '" + hintName + "'" );
 				}
 				break;
 			case HINT_CALLABLE_FUNCTION_RETURN_TYPE:
-				if ( value != null ) {
-					if ( value instanceof Integer code ) {
-						//noinspection resource
-						markAsFunctionCall( code );
-					}
-					else if ( value instanceof Type<?> type ) {
-						//noinspection resource
-						markAsFunctionCall( type );
-					}
-					else if ( value instanceof Class<?> type ) {
-						//noinspection resource
-						markAsFunctionCall( type );
-					}
-					else {
-						//noinspection resource
-						markAsFunctionCall( Integer.parseInt( value.toString() ) );
-					}
+				if ( value instanceof Integer code ) {
+					markAsFunctionCall( code );
+				}
+				else if ( value instanceof Type<?> type ) {
+					markAsFunctionCall( type );
+				}
+				else if ( value instanceof Class<?> type ) {
+					markAsFunctionCall( type );
+				}
+				else if ( value instanceof String string ) {
+					markAsFunctionCall( parseInt( string ) );
+				}
+				else {
+					throw new IllegalArgumentException( "Illegal value for hint '" + hintName + "'" );
 				}
 				break;
 			default:

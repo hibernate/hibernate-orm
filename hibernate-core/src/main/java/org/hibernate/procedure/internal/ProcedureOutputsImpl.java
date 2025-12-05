@@ -5,7 +5,6 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ import jakarta.persistence.ParameterMode;
  *
  * @author Steve Ebersole
  */
-public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
+class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
 	private final ProcedureCallImpl<?> procedureCall;
 	private final CallableStatement callableStatement;
 
@@ -53,7 +52,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		if ( parameter.getMode() == ParameterMode.IN ) {
 			throw new ParameterMisuseException( "IN parameter not valid for output extraction" );
 		}
-		final JdbcCallParameterRegistration registration = parameterRegistrations.get( parameter );
+		final var registration = parameterRegistrations.get( parameter );
 		if ( registration == null ) {
 			throw new IllegalArgumentException( "Parameter [" + parameter + "] is not registered with this procedure call" );
 		}
@@ -108,7 +107,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		@Override
 		public boolean indicatesMoreOutputs() {
 			return super.indicatesMoreOutputs()
-					|| ProcedureOutputsImpl.this.refCursorParamIndex < refCursorParameters.length;
+				|| ProcedureOutputsImpl.this.refCursorParamIndex < refCursorParameters.length;
 		}
 
 		@Override
@@ -118,8 +117,8 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		protected Output buildExtendedReturn() {
-			final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
-			final ResultSet resultSet = refCursorParam.extractResultSet(
+			final var refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
+			final var resultSet = refCursorParam.extractResultSet(
 					callableStatement,
 					procedureCall.getSession()
 			);
@@ -133,13 +132,14 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		protected Output buildFunctionReturn() {
-			final Object result = parameterRegistrations.get( procedureCall.getFunctionReturn() )
-					.getParameterExtractor()
-					.extractValue(
-							callableStatement,
-							false,
-							procedureCall.getSession()
-					);
+			final Object result =
+					parameterRegistrations.get( procedureCall.getFunctionReturn() )
+							.getParameterExtractor()
+							.extractValue(
+									callableStatement,
+									false,
+									procedureCall.getSession()
+							);
 			final List<Object> results = new ArrayList<>( 1 );
 			results.add( result );
 			return buildResultSetOutput( () -> results );

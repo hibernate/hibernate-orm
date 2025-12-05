@@ -11,6 +11,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static java.lang.System.identityHashCode;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -36,7 +37,7 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public int extractHashCode(T value) {
-		return System.identityHashCode( value );
+		return identityHashCode( value );
 	}
 
 	@Override
@@ -55,18 +56,6 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 		else {
 			return javaTypeClass.isAssignableFrom( value.getClass() );
 		}
-	}
-
-	@Override
-	public String toString(T value) {
-		return value.toString();
-	}
-
-	@Override
-	public T fromString(CharSequence string) {
-		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type: " + getTypeName()
-		);
 	}
 
 	@Override @SuppressWarnings("unchecked") // safe, we do check

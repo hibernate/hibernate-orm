@@ -178,7 +178,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private FindMultipleByKeyOperation<T> buildOperation() {
 		return new FindMultipleByKeyOperation<T>(
 				entityPersister,
-				KeyType.ID,
+				KeyType.IDENTIFIER,
 				batchSize,
 				sessionCheckMode,
 				removalsMode,

@@ -65,7 +65,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void testFindBySimple(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var result = session.find( User.class, "steve", KeyType.NATURAL_ID );
+			var result = session.find( User.class, "steve", KeyType.NATURAL );
 			assertEquals( 1, result.id );
 		} );
 	}
@@ -74,14 +74,14 @@ public class SimpleNaturalIdClassTests {
 	void testFindMultipleBySimple(SessionFactoryScope factoryScope) {
 		// baseline
 		factoryScope.inTransaction( (session) -> {
-			var results = session.findMultiple( User.class, List.of( 1, 2 ), KeyType.ID );
+			var results = session.findMultiple( User.class, List.of( 1, 2 ), KeyType.IDENTIFIER );
 			assertThat( results ).hasSize( 2 );
 			assertEquals( 1,  results.get( 0 ).id );
 			assertNull( results.get( 1 ) );
 		} );
 
 		factoryScope.inTransaction( (session) -> {
-			var results = session.findMultiple( User.class, List.of( "steve", "john" ), KeyType.NATURAL_ID );
+			var results = session.findMultiple( User.class, List.of( "steve", "john" ), KeyType.NATURAL );
 			assertThat( results ).hasSize( 2 );
 			assertEquals( 1,  results.get( 0 ).id );
 			assertNull( results.get( 1 ) );
@@ -91,7 +91,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void testFindByClass(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var result = session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL_ID );
+			var result = session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL );
 			assertEquals( 1, result.id );
 		} );
 	}
@@ -99,7 +99,7 @@ public class SimpleNaturalIdClassTests {
 	@Test
 	void testFindMultipleByClass(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var results = session.findMultiple( SystemUser.class, List.of( new SystemUserKey("steve", "ci") ), KeyType.NATURAL_ID );
+			var results = session.findMultiple( SystemUser.class, List.of( new SystemUserKey("steve", "ci") ), KeyType.NATURAL );
 			assertThat( results ).hasSize( 1 );
 			assertEquals( 1,  results.get( 0 ).id );
 		} );
@@ -111,7 +111,7 @@ public class SimpleNaturalIdClassTests {
 		stats.clear();
 
 		factoryScope.inTransaction( (session) -> {
-			session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL_ID );
+			session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL );
 			assertEquals( 1, stats.getNaturalIdStatistics( SystemUser.class.getName() ).getNormalizationCount() );
 		} );
 	}
@@ -122,7 +122,7 @@ public class SimpleNaturalIdClassTests {
 			// the current reality is that we need a reference to the associated entity
 			// rather than just its id
 			var customer = session.getReference( Customer.class, 1 );
-			session.find( Order.class, new OrderKey(customer, 1001), KeyType.NATURAL_ID );
+			session.find( Order.class, new OrderKey(customer, 1001), KeyType.NATURAL );
 		} );
 	}
 
@@ -150,6 +150,7 @@ public class SimpleNaturalIdClassTests {
 	}
 
 	@SuppressWarnings("FieldCanBeLocal")
+	//tag::naturalidclass-mapping-example[]
 	@Entity(name="SystemUser")
 	@Table(name="t_sys_users")
 	@NaturalIdClass(SystemUserKey.class)
@@ -161,6 +162,7 @@ public class SimpleNaturalIdClassTests {
 		private String system;
 		@NaturalId
 		private String username;
+	//end::naturalidclass-mapping-example[]
 		private String stuff;
 
 		public SystemUser() {
@@ -172,7 +174,9 @@ public class SimpleNaturalIdClassTests {
 			this.username = username;
 			this.stuff = stuff;
 		}
+	//tag::naturalidclass-mapping-example[]
 	}
+	//end::naturalidclass-mapping-example[]
 
 	@SuppressWarnings("FieldCanBeLocal")
 	@Entity(name="Customer")

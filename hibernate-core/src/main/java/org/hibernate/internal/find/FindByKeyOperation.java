@@ -47,7 +47,7 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-/// Support for loading a single entity by key (either [id][KeyType#ID] or [natural-id][KeyType#NATURAL_ID]).
+/// Support for loading a single entity by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
 ///
 /// @see org.hibernate.Session#find
 /// @see KeyType
@@ -56,7 +56,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	private final EntityPersister entityDescriptor;
 
-	private KeyType keyType = KeyType.ID;
+	private KeyType keyType = KeyType.IDENTIFIER;
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
@@ -164,7 +164,7 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	}
 
 	public T performFind(Object key, LoadAccessContext loadAccessContext) {
-		if ( keyType == KeyType.NATURAL_ID ) {
+		if ( keyType == KeyType.NATURAL ) {
 			return findByNaturalId( key, loadAccessContext );
 		}
 		else {
@@ -174,15 +174,15 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 	}
 
 	private T findByNaturalId(Object key, LoadAccessContext loadAccessContext) {
+		final NaturalIdMapping naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
 		final SessionImplementor session = loadAccessContext.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
-				naturalIdSynchronization == NaturalIdSynchronization.ENABLED,
+				naturalIdSynchronization != NaturalIdSynchronization.DISABLED,
 				entityDescriptor,
 				session
 		);
 
-		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		final var normalizedKey = naturalIdMapping.normalizeInput( key );
 
 		final Object cachedResolution = getCachedNaturalIdResolution( normalizedKey, loadAccessContext );

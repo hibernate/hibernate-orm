@@ -45,7 +45,7 @@ import static org.hibernate.Timeouts.WAIT_FOREVER;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
-/// Support for loading multiple entities (of a type) by key (either [id][KeyType#ID] or [natural-id][KeyType#NATURAL_ID]).
+/// Support for loading multiple entities (of a type) by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
 ///
 /// @see org.hibernate.Session#findMultiple
 /// @see KeyType
@@ -54,7 +54,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 
-	private KeyType keyType = KeyType.ID;
+	private KeyType keyType = KeyType.IDENTIFIER;
 
 	private BatchSize batchSize;
 	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
@@ -176,7 +176,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			LoadAccessContext loadAccessContext) {
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared
-		if ( keyType == KeyType.NATURAL_ID ) {
+		if ( keyType == KeyType.NATURAL ) {
 			return findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext );
 		}
 		else {
@@ -185,15 +185,14 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 	}
 
 	private List<T> findByNaturalIds(List<Object> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+		final NaturalIdMapping naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
 		final SessionImplementor session = loadAccessContext.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
-				naturalIdSynchronization == NaturalIdSynchronization.ENABLED,
+				naturalIdSynchronization != NaturalIdSynchronization.DISABLED,
 				entityDescriptor,
 				session
 		);
-
-		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 
 		return withOptions( loadAccessContext, graphSemantic, rootGraph, () -> {
 			// normalize the incoming natural-id values and get them in array form as needed

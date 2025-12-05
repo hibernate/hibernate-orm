@@ -141,7 +141,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private FindMultipleByKeyOperation<T> buildOperation() {
 		return new FindMultipleByKeyOperation<T>(
 				entityDescriptor,
-				KeyType.NATURAL_ID,
+				KeyType.NATURAL,
 				batchSize == null ? null : new BatchSize( batchSize ),
 				SessionCheckMode.ENABLED,
 				removalsMode,

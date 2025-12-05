@@ -32,7 +32,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 /// @see org.hibernate.annotations.NaturalId
 /// @see org.hibernate.annotations.NaturalIdCache
 /// @see org.hibernate.annotations.NaturalIdClass
-/// @see org.hibernate.KeyType#NATURAL_ID
+/// @see org.hibernate.KeyType#NATURAL
 ///
 /// @author Steve Ebersole
 @Incubating

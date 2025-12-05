@@ -140,11 +140,11 @@ public class CompoundNaturalIdTests {
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
 			// test load by array
-			var account = session.find( Account.class, VALUE_ARRAY, KeyType.NATURAL_ID );
+			var account = session.find( Account.class, VALUE_ARRAY, KeyType.NATURAL );
 			verifyEntity( account );
 
 			// and by Map
-			account = session.find( Account.class, VALUE_MAP, KeyType.NATURAL_ID );
+			account = session.find( Account.class, VALUE_MAP, KeyType.NATURAL );
 			verifyEntity( account );
 
 			// finally, using the deprecated load-access contract

@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.List;
 
-/// EntityMultiLoader implementation based on [identifier][org.hibernate.KeyType#ID].
+/// EntityMultiLoader implementation based on [identifier][org.hibernate.KeyType#IDENTIFIER].
 ///
 /// @see org.hibernate.Session#findMultiple
 ///

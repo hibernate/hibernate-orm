@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 
 /// Encapsulation of the options for loading multiple entities (of a type)
-/// by [id][org.hibernate.KeyType#ID].
+/// by [id][org.hibernate.KeyType#IDENTIFIER].
 ///
 /// @see org.hibernate.Session#findMultiple
 /// @see MultiIdEntityLoader

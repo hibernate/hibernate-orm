@@ -19,7 +19,7 @@ public enum KeyType implements FindOption {
 	/// @see jakarta.persistence.Id
 	/// @see jakarta.persistence.EmbeddedId
 	/// @see jakarta.persistence.IdClass
-	ID,
+	IDENTIFIER,
 
 	/// Indicates to find based on the entity's natural-id, if one.
 	///
@@ -28,5 +28,5 @@ public enum KeyType implements FindOption {
 	///
 	/// @implSpec Will trigger an [IllegalArgumentException] if the entity does
 	/// not define a natural-id.
-	NATURAL_ID
+	NATURAL
 }

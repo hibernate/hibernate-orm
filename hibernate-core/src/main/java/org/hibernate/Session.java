@@ -476,7 +476,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @implNote Note that Hibernate's implementation of this method can
 	/// also be used for loading an entity by its [natural-id][org.hibernate.annotations.NaturalId]
-	/// by passing [KeyType#NATURAL_ID] as a [FindOption] and the natural-id value as the `key` to load.
+	/// by passing [KeyType#NATURAL] as a [FindOption] and the natural-id value as the `key` to load.
 	@Override
 	<T> T find(Class<T> entityClass, Object key, FindOption... options);
 
@@ -1067,7 +1067,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given class does not resolve as a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated
 	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
@@ -1083,7 +1083,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given name does not resolve to a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated
 	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
 
@@ -1099,7 +1099,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given class does not resolve as a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
@@ -1115,7 +1115,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given name does not resolve to a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
 
@@ -1130,7 +1130,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given class does not resolve as a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #findMultiple} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
 	///
 	@Deprecated
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
@@ -1146,7 +1146,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @throws HibernateException If the given name does not resolve to a mapped entity,
 	///                            or if the entity does not declare a natural id
 	///
-	/// @deprecated (since 7.3) : Use {@linkplain #findMultiple} with [KeyType#NATURAL_ID] instead.
+	/// @deprecated (since 7.3) : Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
 	@Deprecated
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 

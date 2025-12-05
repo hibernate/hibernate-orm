@@ -71,6 +71,7 @@ public class Property implements Serializable, MetaAttributable {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean isGeneric;
+	private boolean isGenericSpecialization;
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
@@ -490,6 +491,14 @@ public class Property implements Serializable, MetaAttributable {
 		this.isGeneric = generic;
 	}
 
+	public boolean isGenericSpecialization() {
+		return isGenericSpecialization;
+	}
+
+	public void setGenericSpecialization(boolean genericSpecialization) {
+		isGenericSpecialization = genericSpecialization;
+	}
+
 	public boolean isLob() {
 		return lob;
 	}
@@ -554,6 +563,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setPersistentClass( getPersistentClass() );
 		property.setNaturalIdentifier( isNaturalIdentifier() );
 		property.setGeneric( isGeneric() );
+		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
 		property.addCallbackDefinitions( getCallbackDefinitions() );
 		property.setReturnedClassName( getReturnedClassName() );

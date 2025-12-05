@@ -427,6 +427,7 @@ public abstract class AbstractEntityPersister
 
 	private AttributeMappingsList attributeMappings;
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
+	protected AttributeMappingsMap declaredGenericAttributeMappings = AttributeMappingsMap.builder().build();
 	protected AttributeMappingsList staticFetchableList;
 	// We build a cache for getters and setters to avoid megamorphic calls
 	private Getter[] getterCache;
@@ -4694,28 +4695,68 @@ public abstract class AbstractEntityPersister
 
 	private void buildDeclaredAttributeMappings
 			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+		final var allPropertyClosure = bootEntityDescriptor.getAllPropertyClosure();
 		final var properties = getProperties();
 		final var mappingsBuilder = AttributeMappingsMap.builder();
+		final var genericMappingsBuilder = AttributeMappingsMap.builder();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 		int fetchableIndex = getFetchableIndexOffset();
-		for ( int i = 0; i < getPropertySpan(); i++ ) {
-			final var runtimeAttributeDefinition = properties[i];
-			final String attributeName = runtimeAttributeDefinition.getName();
-			final var bootProperty = bootEntityDescriptor.getProperty( attributeName );
-			if ( superMappingType == null
+		int i = 0;
+		for ( var property : allPropertyClosure ) {
+			if ( !property.isGeneric() ) {
+				final var runtimeAttributeDefinition = properties[i];
+				final String attributeName = runtimeAttributeDefinition.getName();
+				final var bootProperty = bootEntityDescriptor.getProperty( attributeName );
+				if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
-				mappingsBuilder.put(
-						attributeName,
+					mappingsBuilder.put(
+							attributeName,
+							generateNonIdAttributeMapping(
+									runtimeAttributeDefinition,
+									bootProperty,
+									stateArrayPosition++,
+									fetchableIndex++,
+									creationProcess
+							)
+					);
+				}
+				declaredAttributeMappings = mappingsBuilder.build();
+				i++;
+			}
+			else {
+				final int span = property.getColumnSpan();
+				final String[] colNames = new String[span];
+				final var selectables = property.getSelectables();
+				final Dialect dialect = getDialect();
+				final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
+				for ( int k = 0; k < selectables.size(); k++ ) {
+					final var selectable = selectables.get(k);
+					if ( selectable instanceof Formula formula ) {
+						formula.setFormula( substituteBrackets( formula.getFormula() ) );
+						colNames[k] = selectable.getTemplate( dialect, typeConfiguration );
+					}
+					else if ( selectable instanceof Column column ) {
+						colNames[k] = column.getQuotedName( dialect );
+					}
+				}
+				final String tableName = determineTableName( property.getValue().getTable() );
+				genericMappingsBuilder.put(
+						property.getName(),
 						generateNonIdAttributeMapping(
-								runtimeAttributeDefinition,
-								bootProperty,
-								stateArrayPosition++,
-								fetchableIndex++,
+								property.getName(),
+								property.getType(),
+								property.getCascadeStyle(),
+								-1,
+								tableName,
+								colNames,
+								property,
+								-1,
+								-1,
 								creationProcess
 						)
 				);
+				declaredGenericAttributeMappings = genericMappingsBuilder.build();
 			}
-			declaredAttributeMappings = mappingsBuilder.build();
 			// otherwise, it's defined on the supertype, skip it here
 		}
 	}
@@ -5240,15 +5281,37 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
-		final var creationContext = creationProcess.getCreationContext();
-
-		final String attrName = tupleAttrDefinition.getName();
-		final Type attrType = tupleAttrDefinition.getType();
-
+		final Type type = tupleAttrDefinition.getType();
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
+		final String[] attrColumnExpression = type instanceof BasicType<?> && bootProperty.getSelectables().get( 0 ).isFormula()
+				? propertyColumnFormulaTemplates[ propertyIndex ]
+				: getPropertyColumnNames( propertyIndex ) ;
+		return generateNonIdAttributeMapping(
+				tupleAttrDefinition.getName(),
+				type,
+				tupleAttrDefinition.getCascadeStyle(),
+				propertyIndex,
+				getTableName( getPropertyTableNumbers()[propertyIndex] ),
+				attrColumnExpression,
+				bootProperty,
+				stateArrayPosition,
+				fetchableIndex,
+				creationProcess
+		);
+	}
 
-		final String tableExpression = getTableName( getPropertyTableNumbers()[propertyIndex] );
-		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
+	protected AttributeMapping generateNonIdAttributeMapping(
+			String attrName,
+			Type attrType,
+			CascadeStyle cascadeStyle,
+			int propertyIndex,
+			String tableExpression,
+			String[] attrColumnNames,
+			Property bootProperty,
+			int stateArrayPosition,
+			int fetchableIndex,
+			MappingModelCreationProcess creationProcess) {
+		final var creationContext = creationProcess.getCreationContext();
 
 		final var propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
 
@@ -5280,7 +5343,7 @@ public abstract class AbstractEntityPersister
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
 					propertyAccess,
-					tupleAttrDefinition.getCascadeStyle(),
+					cascadeStyle,
 					creationProcess
 			);
 		}
@@ -5318,7 +5381,7 @@ public abstract class AbstractEntityPersister
 			else {
 				final var basicBootValue = (BasicValue) value;
 
-				if ( attrColumnNames[ 0 ] != null ) {
+				if ( !value.getSelectables().get( 0 ).isFormula() ) {
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = false;
 
@@ -5351,8 +5414,7 @@ public abstract class AbstractEntityPersister
 					resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
-					final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
-					attrColumnExpression = attrColumnFormulaTemplate[ 0 ];
+					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = true;
 					customReadExpr = null;
 					customWriteExpr = null;
@@ -5392,7 +5454,7 @@ public abstract class AbstractEntityPersister
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
 					propertyAccess,
-					tupleAttrDefinition.getCascadeStyle(),
+					cascadeStyle,
 					creationProcess
 			);
 		}
@@ -5437,7 +5499,7 @@ public abstract class AbstractEntityPersister
 					tableExpression,
 					null,
 					propertyAccess,
-					tupleAttrDefinition.getCascadeStyle(),
+					cascadeStyle,
 					creationProcess
 			);
 		}
@@ -5449,7 +5511,7 @@ public abstract class AbstractEntityPersister
 					bootProperty,
 					this,
 					propertyAccess,
-					tupleAttrDefinition.getCascadeStyle(),
+					cascadeStyle,
 					getFetchMode( stateArrayPosition ),
 					creationProcess
 			);
@@ -5465,7 +5527,7 @@ public abstract class AbstractEntityPersister
 					this,
 					entityType,
 					propertyAccess,
-					tupleAttrDefinition.getCascadeStyle(),
+					cascadeStyle,
 					creationProcess
 			);
 		}
@@ -5728,6 +5790,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	private ModelPart findSubPartInSubclassMappings(String name) {
+		final var declaredGenericAttribute = declaredGenericAttributeMappings.get( name );
+		if ( declaredGenericAttribute != null ) {
+			return declaredGenericAttribute;
+		}
+
 		ModelPart attribute = null;
 		if ( isNotEmpty( subclassMappingTypes ) ) {
 			for ( var subMappingType : subclassMappingTypes.values() ) {

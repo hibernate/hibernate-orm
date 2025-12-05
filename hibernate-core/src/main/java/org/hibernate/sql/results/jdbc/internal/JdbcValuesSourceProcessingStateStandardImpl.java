@@ -12,7 +12,6 @@ import java.util.Map;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.query.spi.QueryOptions;
@@ -46,7 +45,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		this.processingOptions = processingOptions;
 
 		if ( executionContext.getSession().isEventSource() ) {
-			final EventSource eventSource = executionContext.getSession().asEventSource();
+			final var eventSource = executionContext.getSession().asEventSource();
 			preLoadEvent = new PreLoadEvent( eventSource );
 			postLoadEvent = new PostLoadEvent( eventSource );
 		}
@@ -151,22 +150,9 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	public void finishUp(boolean registerSubselects) {
 		// now we can finalize loading collections
 		finishLoadingCollections();
-
 		getSession().getPersistenceContextInternal()
 				.postLoad( this,
 						registerSubselects ? executionContext::registerLoadingEntityHolder : null );
-	}
-
-	private boolean isReadOnly() {
-		if ( getQueryOptions().isReadOnly() != null ) {
-			return getQueryOptions().isReadOnly();
-		}
-		else if ( getSession() instanceof EventSource ) {
-			return getSession().isDefaultReadOnly();
-		}
-		else {
-			return false;
-		}
 	}
 
 	/**
@@ -174,10 +160,9 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	 */
 	public void finishLoadingCollections() {
 		if ( loadingCollectionMap != null ) {
-			for ( LoadingCollectionEntry loadingCollectionEntry : loadingCollectionMap.values() ) {
+			for ( var loadingCollectionEntry : loadingCollectionMap.values() ) {
 				loadingCollectionEntry.finishLoading( getExecutionContext() );
 			}
-
 			loadingCollectionMap = null;
 		}
 	}

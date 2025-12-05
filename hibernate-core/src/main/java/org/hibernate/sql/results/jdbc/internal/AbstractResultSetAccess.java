@@ -17,7 +17,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -108,18 +107,18 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public <J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaType, TypeConfiguration typeConfiguration) {
 		try {
-			final ResultSetMetaData metaData = getResultSetMetaData();
-			final JdbcTypeRegistry registry = typeConfiguration.getJdbcTypeRegistry();
+			final var metaData = getResultSetMetaData();
+			final var registry = typeConfiguration.getJdbcTypeRegistry();
 			final String columnTypeName = metaData.getColumnTypeName( position );
 			final int columnType = metaData.getColumnType( position );
 			final int scale = metaData.getScale( position );
 			final int precision = metaData.getPrecision( position );
 			final int displaySize = metaData.getColumnDisplaySize( position );
-			final Dialect dialect = getDialect();
+			final var dialect = getDialect();
 			final int length = dialect.resolveSqlTypeLength( columnTypeName, columnType, precision, scale, displaySize );
-			final JdbcType resolvedJdbcType =
+			final var resolvedJdbcType =
 					dialect.resolveSqlTypeDescriptor( columnTypeName, columnType, length, scale, registry );
-			final JdbcType jdbcType =
+			final var jdbcType =
 					explicitJavaType == null
 							? resolvedJdbcType
 							: jdbcType( explicitJavaType, resolvedJdbcType, length, precision, scale, typeConfiguration );

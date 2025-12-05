@@ -50,8 +50,8 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
 		List<SqlSelection> resolvedSelections = null;
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
-			final SqlSelection sqlSelection = sqlSelections.get( i );
-			final SqlSelection resolvedSelection = sqlSelection.resolve( jdbcResultsMetadata, sessionFactory );
+			final var sqlSelection = sqlSelections.get( i );
+			final var resolvedSelection = sqlSelection.resolve( jdbcResultsMetadata, sessionFactory );
 			if ( resolvedSelection != sqlSelection ) {
 				if ( resolvedSelections == null ) {
 					resolvedSelections = new ArrayList<>( sqlSelections );

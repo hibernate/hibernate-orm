@@ -121,6 +121,7 @@ import java.util.function.Supplier;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ * @author Yoobin Yoon
  */
 abstract public class DialectFeatureChecks {
 	public static class SupportsSequences implements DialectFeatureCheck {
@@ -1104,6 +1105,18 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsArrayTrim implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "array_trim" );
+		}
+	}
+
+	public static class SupportsArrayReverse implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_reverse" );
+		}
+	}
+
+	public static class SupportsArraySort implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_sort" );
 		}
 	}
 

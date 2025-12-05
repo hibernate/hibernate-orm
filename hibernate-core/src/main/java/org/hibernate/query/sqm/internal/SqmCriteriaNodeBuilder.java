@@ -178,6 +178,7 @@ import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapIns
  * using SQM nodes as the JPA Criteria nodes
  *
  * @author Steve Ebersole
+ * @author Yoobin Yoon
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
@@ -4705,6 +4706,67 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public <T> SqmExpression<T[]> arrayReverse(Expression<T[]> arrayExpression) {
+		return getFunctionDescriptor( "array_reverse" ).generateSqmExpression(
+				Collections.singletonList( (SqmExpression<?>) arrayExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				Collections.singletonList( (SqmExpression<?>) arrayExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) arrayExpression, value( descending ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) descendingExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) arrayExpression, value( descending ), value( nullsFirst ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySort(
+			Expression<T[]> arrayExpression,
+			Expression<Boolean> descendingExpression,
+			Expression<Boolean> nullsFirstExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList(
+						(SqmExpression<?>) arrayExpression,
+						(SqmExpression<?>) descendingExpression,
+						(SqmExpression<?>) nullsFirstExpression
+				),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
 	public <T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
 				asList( (SqmExpression<?>) arrayExpression, value( elementCount ) ),
@@ -5385,6 +5447,74 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Integer index) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionReverse(Expression<C> collectionExpression) {
+		return getFunctionDescriptor( "array_reverse" ).generateSqmExpression(
+				Collections.singletonList( (SqmExpression<?>) collectionExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionSort(Expression<C> collectionExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				Collections.singletonList( (SqmExpression<?>) collectionExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			boolean descending) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) collectionExpression, value( descending ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) descendingExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			boolean descending,
+			boolean nullsFirst) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList( (SqmExpression<?>) collectionExpression, value( descending ), value( nullsFirst ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionSort(
+			Expression<C> collectionExpression,
+			Expression<Boolean> descendingExpression,
+			Expression<Boolean> nullsFirstExpression) {
+		return getFunctionDescriptor( "array_sort" ).generateSqmExpression(
+				asList(
+						(SqmExpression<?>) collectionExpression,
+						(SqmExpression<?>) descendingExpression,
+						(SqmExpression<?>) nullsFirstExpression
+				),
 				null,
 				queryEngine
 		);

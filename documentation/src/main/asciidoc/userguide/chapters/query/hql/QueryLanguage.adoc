@@ -1220,6 +1220,8 @@ The following functions deal with SQL array types, which are not supported on ev
 | <<hql-array-slice-functions,`array_slice()`>> | Creates a sub-array of the based on lower and upper index
 | <<hql-array-replace-functions,`array_replace()`>> | Creates array copy replacing a given element with another
 | <<hql-array-trim-functions,`array_trim()`>> | Creates array copy trimming the last _N_ elements
+| <<hql-array-reverse-functions,`array_reverse()`>> | Returns a copy of the array with elements in reverse order
+| <<hql-array-sort-functions,`array_sort()`>> | Returns a sorted copy of the array
 | <<hql-array-fill-functions,`array_fill()`>> | Creates array filled with the same element _N_ times
 | <<hql-array-fill-functions,`array_fill_list()`>> | Like `array_fill`, but returns the result as `List<?>`
 | <<hql-array-to-string-functions,`array_to_string()`>> | String representation of array
@@ -1593,6 +1595,46 @@ It is an error if any array has a length smaller than the second argument.
 [source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
+----
+====
+
+[[hql-array-reverse-functions]]
+===== `array_reverse()`
+
+Returns a copy of the array with elements in reverse order. Returns `null` if the argument is `null`.
+
+[[hql-array-reverse-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArrayReverseTest.java[tags=hql-array-reverse-example]
+----
+====
+
+[[hql-array-sort-functions]]
+===== `array_sort()`
+
+Returns a sorted copy of the array. When called with no optional arguments, elements are sorted in ascending order with `null` elements placed last.
+The optional second argument allows specifying descending order, and the optional third argument controls the position of `null` elements.
+Returns `null` if the first argument is `null`.
+
+[[hql-array-sort-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArraySortTest.java[tags=hql-array-sort-example]
+----
+====
+
+The second argument controls sort direction: `false` for ascending (default), `true` for descending.
+The third argument controls `null` placement: `false` for nulls last, `true` for nulls first.
+When the third argument is omitted, it defaults to the value of the second argument.
+
+[[hql-array-sort-descending-nulls-last-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArraySortTest.java[tags=hql-array-sort-descending-nulls-last-example]
 ----
 ====
 

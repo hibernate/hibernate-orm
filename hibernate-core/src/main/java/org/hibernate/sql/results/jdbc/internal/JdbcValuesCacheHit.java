@@ -36,47 +36,44 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
-		// NOTE : explicitly skipping limit handling because the cached state ought
-		// 		already be the limited size since the cache key includes limits
-
+		// NOTE: explicitly skipping limit handling because the cached state ought
+		// 		 already be the limited size since the cache key includes limits
 		position++;
-
 		if ( position >= numberOfRows ) {
 			position = numberOfRows;
 			return false;
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
-		// NOTE : explicitly skipping limit handling because the cached state ought
-		// 		already be the limited size since the cache key includes limits
-
+		// NOTE: explicitly skipping limit handling because the cached state ought
+		// 		 already be the limited size since the cache key includes limits
 		position--;
-
 		if ( position >= numberOfRows ) {
 			position = numberOfRows;
 			return false;
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
-		// NOTE : explicitly skipping limit handling because the cached state should
-		// 		already be the limited size since the cache key includes limits
-
+		// NOTE: explicitly skipping limit handling because the cached state should
+		// 		 already be the limited size since the cache key includes limits
 		position += numberOfRows;
-
 		if ( position >= this.numberOfRows ) {
 			position = this.numberOfRows;
 			return false;
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	@Override
@@ -86,8 +83,8 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
-		// NOTE : explicitly skipping limit handling because the cached state should
-		// 		already be the limited size since the cache key includes limits
+		// NOTE: explicitly skipping limit handling because the cached state should
+		// 		 already be the limited size since the cache key includes limits
 
 		if ( position < 0 ) {
 			// we need to subtract it from `numberOfRows`
@@ -102,9 +99,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			this.position = numberOfRows;
 			return false;
 		}
-
-		this.position = position;
-		return true;
+		else {
+			this.position = position;
+			return true;
+		}
 	}
 
 	@Override
@@ -140,12 +138,9 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	public boolean isLast(RowProcessingState rowProcessingState) {
-		if ( numberOfRows == 0 ) {
-			return position == 0;
-		}
-		else {
-			return position == numberOfRows - 1;
-		}
+		return numberOfRows == 0
+				? position == 0
+				: position == numberOfRows - 1;
 	}
 
 	@Override
@@ -154,9 +149,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			position = 0;
 			return false;
 		}
-
-		position = numberOfRows - 1;
-		return true;
+		else {
+			position = numberOfRows - 1;
+			return true;
+		}
 	}
 
 	@Override

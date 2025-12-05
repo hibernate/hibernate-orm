@@ -6,6 +6,7 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
@@ -55,15 +56,15 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		this.domainResults = domainResults;
 
 		final int rowSize = sqlSelections.size();
-		final BitSet valueIndexesToCache = new BitSet( rowSize );
-		for ( DomainResult<?> domainResult : domainResults ) {
+		final var valueIndexesToCache = new BitSet( rowSize );
+		for ( var domainResult : domainResults ) {
 			domainResult.collectValueIndexesToCache( valueIndexesToCache );
 		}
 		final int[] valueIndexesToCacheIndexes = new int[rowSize];
 		int cacheIndex = 0;
 		boolean needsResolve = false;
 		for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
-			final SqlSelection sqlSelection = sqlSelections.get( i );
+			final var sqlSelection = sqlSelections.get( i );
 			needsResolve = needsResolve
 					|| sqlSelection instanceof SqlSelectionImpl selection && selection.needsResolve();
 			if ( valueIndexesToCache.get( i ) ) {
@@ -114,7 +115,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			return resolution;
 		}
 		else {
-			final AssemblerCreationStateImpl creationState =
+			final var creationState =
 					new AssemblerCreationStateImpl( this,
 							sessionFactory.getSqlTranslationEngine() );
 			final var domainResultAssemblers = resolveAssemblers( creationState );
@@ -132,7 +133,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		final int size = domainResults.size();
 		final List<DomainResultAssembler<?>> assemblers = arrayList( size );
 		for ( int i = 0; i < size; i++ ) {
-			final DomainResultAssembler<?> resultAssembler =
+			final var resultAssembler =
 					domainResults.get( i )
 							.createResultAssembler( null, creationState );
 			assemblers.add( resultAssembler );
@@ -166,9 +167,9 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		@Override
 		public boolean isDynamicInstantiation() {
 			if ( dynamicInstantiation == null ) {
-				dynamicInstantiation = jdbcValuesMapping.getDomainResults()
-						.stream()
-						.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
+				dynamicInstantiation =
+						jdbcValuesMapping.getDomainResults().stream()
+								.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
 			}
 			return dynamicInstantiation;
 		}
@@ -177,7 +178,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		public boolean containsMultipleCollectionFetches() {
 			if ( containsMultipleCollectionFetches == null ) {
 				int collectionFetchesCount = 0;
-				for ( DomainResult<?> domainResult : jdbcValuesMapping.getDomainResults() ) {
+				for ( var domainResult : jdbcValuesMapping.getDomainResults() ) {
 					if ( domainResult instanceof FetchParent fetchParent ) {
 						collectionFetchesCount += fetchParent.getCollectionFetchesCount();
 					}
@@ -226,16 +227,15 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 				T resultGraphNode,
 				InitializerParent<?> parent,
 				InitializerProducer<T> producer) {
-			final Initializer<?> existing = initializerMap.get( navigablePath );
-			if ( existing != null ) {
-				if ( fetchedModelPart.getNavigableRole().equals(
+			final var existing = initializerMap.get( navigablePath );
+			if ( existing != null
+					&& Objects.equals( fetchedModelPart.getNavigableRole(),
 						existing.getInitializedPart().getNavigableRole() ) ) {
-					RESULTS_MESSAGE_LOGGER.tracef( "Returning previously-registered initializer: %s", existing );
-					return existing;
-				}
+				RESULTS_MESSAGE_LOGGER.tracef( "Returning previously-registered initializer: %s", existing );
+				return existing;
 			}
 
-			final Initializer<?> initializer = producer.createInitializer( resultGraphNode, parent, this );
+			final var initializer = producer.createInitializer( resultGraphNode, parent, this );
 			RESULTS_MESSAGE_LOGGER.tracef( "Registering initializer: %s", initializer );
 
 			if ( initializer instanceof AbstractImmediateCollectionInitializer ) {

@@ -25,7 +25,9 @@ public class DirectResultSetAccess extends AbstractResultSetAccess {
 		this.resultSetSource = resultSetSource;
 		this.resultSet = resultSet;
 
-		persistenceContext.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+		persistenceContext.getJdbcCoordinator()
+				.getLogicalConnection()
+				.getResourceRegistry()
 				.register( resultSet, resultSetSource );
 	}
 

@@ -319,6 +319,10 @@ public class MetadataContext {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
+						if ( property.isGenericSpecialization() ) {
+							// Skip generic properties since they may only be declared on abstract classes
+							continue;
+						}
 						buildAttribute( property, jpaMapping );
 					}
 
@@ -654,6 +658,16 @@ public class MetadataContext {
 				}
 			}
 			mappedSuperclass = getMappedSuperclass( mappedSuperclass );
+		}
+		if ( persistentClass.isAbstract() == null || !persistentClass.isAbstract() ) {
+			for ( var property : persistentClass.getDeclaredProperties() ) {
+				if ( property.isGenericSpecialization() ) {
+					final var managedType = (ManagedDomainType<X>) entityType;
+					final var attributeContainer = (AttributeContainer<X>) managedType;
+					attributeContainer.getInFlightAccess()
+							.addConcreteGenericAttribute( buildAttribute( entityType, property ) );
+				}
+			}
 		}
 	}
 

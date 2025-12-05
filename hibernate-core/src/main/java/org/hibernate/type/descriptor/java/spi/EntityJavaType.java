@@ -21,14 +21,17 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 
 	public EntityJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
-		super( type, mutabilityPlan , IncomparableComparator.INSTANCE );
+		super( type, mutabilityPlan, IncomparableComparator.INSTANCE );
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for '" + getTypeName() + "'"
-		);
+		return context.getTypeConfiguration().getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor(getJavaTypeClass())
+				.getIdentifierDescriptor()
+				.getJavaType()
+				.getRecommendedJdbcType( context );
 	}
 
 	@Override
@@ -66,18 +69,31 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 		);
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked") // safe, we do check
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
-		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type: " + getTypeName()
-		);
+		final var id =
+				options.getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( getJavaTypeClass() )
+						.getIdentifier( value );
+		if ( !type.isInstance( id ) ) {
+			throw new IllegalArgumentException( "Id not an instance of type " + type.getName() );
+		}
+		return (X) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked") // safe, we do check
 	public <X> T wrap(X value, WrapperOptions options) {
-		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type: " + getTypeName()
-		);
+		final var persister =
+				options.getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( getJavaTypeClass() );
+		final var idType = persister.getIdentifierType().getReturnedClass();
+		if ( !idType.isInstance( value ) ) {
+			throw new IllegalArgumentException( "Not an instance of id type " + idType.getName() );
+		}
+		final var entity =
+				options.getSession()
+						.internalLoad( persister.getEntityName(), value, false, true );
+		return (T) entity;
 	}
 
 	@Override

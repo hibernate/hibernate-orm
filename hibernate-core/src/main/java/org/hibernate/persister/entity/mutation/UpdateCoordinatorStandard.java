@@ -609,7 +609,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private UpdateValuesAnalysisImpl analyzeUpdateValues(
+	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
 			Object entity,
 			Object[] values,
 			Object oldVersion,

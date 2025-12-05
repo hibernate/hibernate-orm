@@ -59,7 +59,7 @@ public class LongListTypeContributorTest {
 		} );
 
 		factoryScope.inTransaction( em -> {
-			SpecialItem item = (SpecialItem) em.createNativeQuery(
+			SpecialItem item = em.createNativeQuery(
 							"SELECT * FROM special_table WHERE long_list = :longList", SpecialItem.class )
 					.setParameter( "longList", longList )
 					.getSingleResult();

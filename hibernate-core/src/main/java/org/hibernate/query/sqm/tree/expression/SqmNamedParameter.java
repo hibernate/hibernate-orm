@@ -75,7 +75,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), this.getNodeType(), nodeBuilder() );
+		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), getNodeType(), nodeBuilder() );
 	}
 
 	@Override

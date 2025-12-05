@@ -129,30 +129,29 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					"Cannot create binding for parameter reference [" + parameter + "] - reference is not a parameter of this query"
 			);
 		}
+		//TODO: typecheck!
 		//noinspection unchecked
 		return (QueryParameterBinding<P>) binding;
 	}
 
 	@Override
-	public <P> QueryParameterBinding<P> getBinding(int position) {
+	public QueryParameterBinding<?> getBinding(int position) {
 		final var binding = parameterBindingMapByNameOrPosition.get( position );
 		if ( binding == null ) {
 			// Invoke this method to throw the exception
 			parameterMetadata.getQueryParameter( position );
 		}
-		//noinspection unchecked
-		return (QueryParameterBinding<P>) binding;
+		return binding;
 	}
 
 	@Override
-	public <P> QueryParameterBinding<P> getBinding(String name) {
+	public QueryParameterBinding<?> getBinding(String name) {
 		final var binding = parameterBindingMapByNameOrPosition.get( name );
 		if ( binding == null ) {
 			// Invoke this method to throw the exception
 			parameterMetadata.getQueryParameter( name );
 		}
-		//noinspection unchecked
-		return (QueryParameterBinding<P>) binding;
+		return binding;
 	}
 
 	@Override

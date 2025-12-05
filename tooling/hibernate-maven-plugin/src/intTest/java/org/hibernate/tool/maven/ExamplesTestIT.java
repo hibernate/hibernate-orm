@@ -23,7 +23,7 @@ public class ExamplesTestIT {
 
 	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
 	private static File baseFolder;
-//	private static File localRepo;
+//	private static Figle localRepo;
 
 	private File projectFolder;
 	private MavenCli mavenCli;

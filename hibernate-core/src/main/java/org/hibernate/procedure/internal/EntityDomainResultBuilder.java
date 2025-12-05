@@ -19,13 +19,13 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 /**
  * @author Christian Beikov
  */
-public class EntityDomainResultBuilder implements ResultBuilder {
+class EntityDomainResultBuilder implements ResultBuilder {
 
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
 
-	public EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
+	EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();

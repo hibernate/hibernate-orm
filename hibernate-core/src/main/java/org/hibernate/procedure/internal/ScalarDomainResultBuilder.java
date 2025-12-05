@@ -20,10 +20,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class ScalarDomainResultBuilder<T> implements ResultBuilder {
+class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	private final JavaType<T> typeDescriptor;
 
-	public ScalarDomainResultBuilder(JavaType<T> typeDescriptor) {
+	ScalarDomainResultBuilder(JavaType<T> typeDescriptor) {
 		this.typeDescriptor = typeDescriptor;
 	}
 

@@ -14,8 +14,6 @@ import java.util.function.Predicate;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
@@ -36,18 +34,19 @@ import static java.util.Collections.unmodifiableList;
  *
  * @author Steve Ebersole
  */
-public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
+class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ProcedureParameterImplementor<?>> parameters;
 
-	public ProcedureParameterMetadataImpl() {
+	ProcedureParameterMetadataImpl() {
 	}
 
-	public ProcedureParameterMetadataImpl(NamedCallableQueryMemento memento, SharedSessionContractImplementor session) {
-		memento.getParameterMementos()
-				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
-	}
+//	public ProcedureParameterMetadataImpl(NamedCallableQueryMemento memento, SharedSessionContractImplementor session) {
+//		memento.getParameterMementos()
+//				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
+//	}
 
+	@Override
 	public void registerParameter(ProcedureParameterImplementor<?> parameter) {
 		if ( parameter.isNamed() ) {
 			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
@@ -123,6 +122,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			&& parameters.contains( (ProcedureParameterImplementor<?>) parameter );
 	}
 
+	@Override
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}

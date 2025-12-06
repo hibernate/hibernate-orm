@@ -188,6 +188,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.internal.OptionalTableInsert;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
@@ -8508,6 +8509,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		if ( tableInsert instanceof OptionalTableInsert ) {
+			throw new IllegalQueryOperationException( "Optional table insert is not supported" );
+		}
 		getCurrentClauseStack().push( Clause.INSERT );
 		try {
 			renderInsertInto( tableInsert );
@@ -8521,7 +8525,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private void renderInsertInto(TableInsertStandard tableInsert) {
+	protected void renderInsertInto(TableInsertStandard tableInsert) {
 		applySqlComment( tableInsert.getMutationComment() );
 
 		if ( tableInsert.getNumberOfValueBindings() == 0 ) {

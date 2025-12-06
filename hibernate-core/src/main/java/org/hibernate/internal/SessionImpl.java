@@ -86,7 +86,6 @@ import java.util.Set;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
@@ -2584,13 +2583,14 @@ public class SessionImpl
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
 		if ( value instanceof Serializable ) {
-			if ( propertyName != null ) { // store property for future reference:
+			if ( propertyName != null ) {
+				// store property for future reference
 				if ( properties == null ) {
-					properties = computeCurrentProperties();
+					properties = getInitialProperties();
 				}
 				properties.put( propertyName, value );
-				// now actually update the setting
-				// if it's one that affects this Session
+				// now actually update the setting if
+				// it's one that affects this Session
 				interpretProperty( propertyName, value );
 			}
 			else {
@@ -2662,7 +2662,7 @@ public class SessionImpl
 		}
 	}
 
-	private Map<String, Object> computeCurrentProperties() {
+	private Map<String, Object> getInitialProperties() {
 		final var map = new HashMap<>( getDefaultProperties() );
 		//The FLUSH_MODE is always set at Session creation time,
 		//so it needs special treatment to not eagerly initialize this Map:
@@ -2672,10 +2672,15 @@ public class SessionImpl
 
 	@Override
 	public Map<String, Object> getProperties() {
-		if ( properties == null ) {
-			properties = computeCurrentProperties();
-		}
-		return unmodifiableMap( properties );
+		// EntityManager Javadoc implies that the
+		// returned map should be a mutable copy,
+		// not an unmodifiable map. There's no
+		// good reason to cache the initial
+		// properties, since we have to copy them
+		// each time this method is called.
+		return properties == null
+				? getInitialProperties()
+				: new HashMap<>( properties );
 	}
 
 	@Override

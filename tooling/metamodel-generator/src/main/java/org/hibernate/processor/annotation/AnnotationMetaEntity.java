@@ -936,13 +936,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	/**
 	 * For usage with CDI, but outside Quarkus, Jakarta Data
-	 * repositories use {@code @PersistenceUnit} to obtain an
-	 * {@code EntityManagerFactory} via field injection. So in
-	 * that case we will need a {@link DefaultConstructor default
-	 * constructor}. We don't do this in Quarkus, because there
-	 * we can just inject the {@code StatelessSession} directly,
-	 * and so in Quarkus we don't need the default constructor
-	 * at all.
+	 * repositories use {@code @PersistenceUnit} to obtain
+	 * an {@code EntityManagerFactory} via field injection.
+	 * So here we need a {@linkplain DefaultConstructor
+	 * default constructor}. We don't need one in Quarkus,
+	 * because in Quarkus we can inject a container-managed
+	 * {@code StatelessSession} directly.
 	 */
 	boolean needsDefaultConstructor() {
 		return jakartaDataRepository

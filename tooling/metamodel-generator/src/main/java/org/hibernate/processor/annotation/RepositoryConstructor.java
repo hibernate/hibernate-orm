@@ -14,7 +14,11 @@ import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.NONNULL;
 
 /**
- * A general purpose constructor which accepts the session.
+ * A general purpose constructor which accepts the session as an
+ * argument. This constructor is compatible with use via direct
+ * instantiation or CDI-style constructor injection. By contrast,
+ * {@link DefaultConstructor} is used to instantiate a repository
+ * which obtains its session using field injection.
  *
  * @author Gavin King
  */

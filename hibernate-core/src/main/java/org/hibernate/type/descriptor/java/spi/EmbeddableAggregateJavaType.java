@@ -70,8 +70,7 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( type.isAssignableFrom( getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type: " + getTypeName()
@@ -83,13 +82,15 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( getJavaTypeClass().isInstance( value ) ) {
-			//noinspection unchecked
-			return (T) value;
+		else {
+			final var javaTypeClass = getJavaTypeClass();
+			if ( javaTypeClass.isInstance( value ) ) {
+				return javaTypeClass.cast( value );
+			}
+			throw new UnsupportedOperationException(
+					"Wrap strategy not known for this Java type: " + getTypeName()
+			);
 		}
-		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type: " + getTypeName()
-		);
 	}
 
 	@Override

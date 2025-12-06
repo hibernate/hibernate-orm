@@ -49,6 +49,11 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 	}
 
 	@Override
+	public String cast(Object value) {
+		return (String) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
 		final var typeConfiguration = stdIndicators.getTypeConfiguration();
 		final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
@@ -65,37 +70,36 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		return super.getRecommendedJdbcType( stdIndicators );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(String value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) value.getBytes( UTF_8 );
+			return type.cast( value.getBytes( UTF_8 ) );
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
-			return (X) new StringReader( value );
+			return type.cast( new StringReader( value ) );
 		}
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			return (X) new CharacterStreamImpl( value );
+			return type.cast( new CharacterStreamImpl( value ) );
 		}
 		// Since NClob extends Clob, we need to check if type is an NClob
 		// before checking if type is a Clob. That will ensure that
 		// the correct type is returned.
 		if ( NClob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createNClob( value );
+			return type.cast( options.getLobCreator().createNClob( value ) );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createClob( value );
+			return type.cast( options.getLobCreator().createClob( value ) );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) (Integer) Integer.parseInt( value );
+			return type.cast( Integer.parseInt( value ) );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) (Long) Long.parseLong( value );
+			return type.cast( Long.parseLong( value ) );
 		}
 
 		throw unknownUnwrap( type );

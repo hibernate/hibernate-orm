@@ -41,6 +41,11 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	}
 
 	@Override
+	public char[] cast(Object value) {
+		return (char[]) value;
+	}
+
+	@Override
 	public boolean areEqual(char[] one, char[] another) {
 		return one == another
 			|| one != null && another != null && Arrays.equals( one, another );
@@ -55,28 +60,27 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		return hashCode;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(char[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( char[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) new String( value );
+			return type.cast( new String( value ) );
 		}
 		if ( NClob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createNClob( new String( value ) );
+			return type.cast( options.getLobCreator().createNClob( new String( value ) ) );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createClob( new String( value ) );
+			return type.cast( options.getLobCreator().createClob( new String( value ) ) );
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
-			return (X) new StringReader( new String( value ) );
+			return type.cast( new StringReader( new String( value ) ) );
 		}
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			return (X) new CharacterStreamImpl( new String( value ) );
+			return type.cast( new CharacterStreamImpl( new String( value ) ) );
 		}
 		throw unknownUnwrap( type );
 	}

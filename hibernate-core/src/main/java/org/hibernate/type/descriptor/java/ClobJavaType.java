@@ -53,6 +53,11 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	@Override
+	public Clob cast(Object value) {
+		return (Clob) value;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(Clob value) {
 		return value == null ? "null" : "{clob}";
 	}
@@ -81,7 +86,6 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				.mergeClob( original, target, session );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(final Clob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -89,36 +93,36 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 		try {
 			if ( Clob.class.isAssignableFrom( type ) ) {
-				return (X) options.getLobCreator().toJdbcClob( value );
+				return type.cast( options.getLobCreator().toJdbcClob( value ) );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just grab the string from its CharacterStream
-					return (X) clobImplementer.getUnderlyingStream().asString();
+					return type.cast( clobImplementer.getUnderlyingStream().asString() );
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
-					return (X) extractString( value.getCharacterStream() );
+					return type.cast( extractString( value.getCharacterStream() ) );
 				}
 			}
 			else if ( Reader.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its BinaryStream
-					return (X) clobImplementer.getUnderlyingStream().asReader();
+					return type.cast( clobImplementer.getUnderlyingStream().asReader() );
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return (X) value.getCharacterStream();
+					return type.cast( value.getCharacterStream() );
 				}
 			}
 			else if ( CharacterStream.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just pass along its CharacterStream
-					return (X) clobImplementer.getUnderlyingStream();
+					return type.cast( clobImplementer.getUnderlyingStream() );
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return (X) value.getCharacterStream();
+					return type.cast( value.getCharacterStream() );
 				}
 			}
 		}

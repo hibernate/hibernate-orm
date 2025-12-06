@@ -106,7 +106,7 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 		}
 
 		if ( type.isInstance( value ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( Object[].class.isAssignableFrom( type ) ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -114,16 +114,15 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			for ( int i = 0; i < value.length; i++ ) {
 				unwrapped[i] = getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options );
 			}
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 		else if ( type == byte[].class ) {
 			// byte[] can only be requested if the value should be serialized
-			return (X) SerializationHelper.serialize( value );
+			return type.cast( SerializationHelper.serialize( value ) );
 		}
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
-			//noinspection unchecked
-			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) );
+			return type.cast( new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -131,7 +130,7 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			for ( int i = 0; i < value.length; i++ ) {
 				Array.set( unwrapped, i, getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options ) );
 			}
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 
 		throw unknownUnwrap( type );

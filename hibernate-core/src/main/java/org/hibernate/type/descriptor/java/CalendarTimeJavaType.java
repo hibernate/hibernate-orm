@@ -90,25 +90,24 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		return hashCode;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Date( value.getTimeInMillis() );
+			return type.cast( new java.sql.Date( value.getTimeInMillis() ) );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
+			return type.cast( new java.sql.Time( value.getTimeInMillis() % 86_400_000 ) );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
+			return type.cast( new java.sql.Timestamp( value.getTimeInMillis() ) );
 		}
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) new  Date( value.getTimeInMillis() );
+			return type.cast( new  Date( value.getTimeInMillis() ) );
 		}
 		throw unknownUnwrap( type );
 	}

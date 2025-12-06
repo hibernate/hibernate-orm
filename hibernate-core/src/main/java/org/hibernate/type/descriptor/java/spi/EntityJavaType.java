@@ -58,7 +58,7 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked") // safe, we do check
+	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		final var id =
 				options.getSessionFactory().getMappingMetamodel()
@@ -67,14 +67,15 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 		if ( !type.isInstance( id ) ) {
 			throw new IllegalArgumentException( "Id not an instance of type " + type.getName() );
 		}
-		return (X) value;
+		return type.cast( value );
 	}
 
-	@Override @SuppressWarnings("unchecked") // safe, we do check
+	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
+		final var entityClass = getJavaTypeClass();
 		final var persister =
 				options.getSessionFactory().getMappingMetamodel()
-						.getEntityDescriptor( getJavaTypeClass() );
+						.getEntityDescriptor( entityClass );
 		final var idType = persister.getIdentifierType().getReturnedClass();
 		if ( !idType.isInstance( value ) ) {
 			throw new IllegalArgumentException( "Not an instance of id type " + idType.getName() );
@@ -82,7 +83,7 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 		final var entity =
 				options.getSession()
 						.internalLoad( persister.getEntityName(), value, false, true );
-		return (T) entity;
+		return entityClass.cast( entity );
 	}
 
 	@Override

@@ -105,6 +105,10 @@ public interface JavaType<T> extends Serializable {
 		return getJavaTypeClass().isInstance( value );
 	}
 
+	default T cast(Object value) {
+		return getJavaTypeClass().cast( value );
+	}
+
 	/**
 	 * Retrieve the {@linkplain MutabilityPlan mutability plan} for this Java type.
 	 */
@@ -113,12 +117,11 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	default T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( !getMutabilityPlan().isMutable() || target != null && areEqual( original, target ) ) {
-			return original;
-		}
-		else {
-			return getMutabilityPlan().deepCopy( original );
-		}
+		final var mutabilityPlan = getMutabilityPlan();
+		return !mutabilityPlan.isMutable()
+			|| target != null && areEqual( original, target )
+				? original
+				: mutabilityPlan.deepCopy( original );
 	}
 
 	/**
@@ -316,6 +319,25 @@ public interface JavaType<T> extends Serializable {
 		TypeConfiguration getTypeConfiguration();
 	}
 
+	/**
+	 * Coerce the given value to this type, if possible.
+	 * The default implementation defined her simply
+	 * performs an unchecked cast. Subclasses may override
+	 * to perform meaningful coercion.
+	 *
+	 * @apiNote This operation is currently unsound. It
+	 * should throw {@link CoercionException} when coercion
+	 * fails, or its return value should be changed to
+	 * {@link Object}. However, both of those changes had
+	 * too much impact for now.
+	 *
+	 * @param value The value to coerce
+	 * @param coercionContext The coercion context
+	 * @return The coerced value, or the given value
+	 *         if no coercion was possible
+	 * @param <X> The type of the value
+	 */
+	@Incubating
 	default <X> T coerce(X value, CoercionContext coercionContext) {
 		//noinspection unchecked
 		return (T) value;

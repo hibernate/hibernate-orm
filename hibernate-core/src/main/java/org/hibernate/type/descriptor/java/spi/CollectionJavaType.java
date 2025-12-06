@@ -6,7 +6,6 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Objects;
 
@@ -55,12 +54,13 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	public JavaType<C> createJavaType(
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
-		final Type[] typeArguments = parameterizedType.getActualTypeArguments();
+		final var typeArguments = parameterizedType.getActualTypeArguments();
 		final var registry = typeConfiguration.getJavaTypeRegistry();
 		return switch ( semantics.getCollectionClassification() ) {
 			case ARRAY -> {
 				final var arrayClass = (Class<?>) parameterizedType.getRawType();
-				yield (JavaType<C>) new ArrayJavaType<>( registry.resolveDescriptor( arrayClass.getComponentType() ) );
+				yield (JavaType<C>)
+						new ArrayJavaType<>( registry.resolveDescriptor( arrayClass.getComponentType() ) );
 			}
 			case BAG, ID_BAG, LIST, SET, SORTED_SET, ORDERED_SET ->
 					new BasicCollectionJavaType(

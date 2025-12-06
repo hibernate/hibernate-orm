@@ -62,6 +62,11 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 	}
 
 	@Override
+	public NClob cast(Object value) {
+		return (NClob) value;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(NClob value) {
 		return value == null ? "null" : "{nclob}";
 	}
@@ -90,7 +95,6 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 				.mergeNClob( original, target, session );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(final NClob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -98,36 +102,36 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 		try {
 			if ( NClob.class.isAssignableFrom( type ) ) {
-				return (X) options.getLobCreator().toJdbcNClob( value );
+				return type.cast( options.getLobCreator().toJdbcNClob( value ) );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just get the underlying String.
-					return (X) clobImplementer.getUnderlyingStream().asString();
+					return type.cast( clobImplementer.getUnderlyingStream().asString() );
 				}
 				else {
 					// otherwise we need to extract the String.
-					return (X) extractString( value.getCharacterStream() );
+					return type.cast( extractString( value.getCharacterStream() ) );
 				}
 			}
 			else if ( Reader.class.isAssignableFrom( type ) ) {
 				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its CharacterStream
-					return (X) clobImplementer.getUnderlyingStream().asReader();
+					return type.cast( clobImplementer.getUnderlyingStream().asReader() );
 				}
 				else {
 					// otherwise we need to build a Reader...
-					return (X) value.getCharacterStream();
+					return type.cast( value.getCharacterStream() );
 				}
 			}
 			else if ( CharacterStream.class.isAssignableFrom( type ) ) {
 				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its CharacterStream
-					return (X) clobImplementer.getUnderlyingStream();
+					return type.cast( clobImplementer.getUnderlyingStream() );
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return (X) value.getCharacterStream();
+					return type.cast( value.getCharacterStream() );
 				}
 			}
 		}

@@ -51,20 +51,19 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 		return indicators.getJdbcType( SqlTypes.INET );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(InetAddress value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( InetAddress.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) value.getAddress();
+			return type.cast( value.getAddress() );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.getHostAddress();
+			return type.cast( value.getHostAddress() );
 		}
 		throw unknownUnwrap( type );
 	}

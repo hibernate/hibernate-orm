@@ -30,6 +30,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 	}
 
 	@Override
+	public URL cast(Object value) {
+		return (URL) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( SqlTypes.VARCHAR );
 	}
@@ -52,16 +57,15 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(URL value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( URL.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) toString( value );
+			return type.cast( toString( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

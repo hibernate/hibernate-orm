@@ -102,15 +102,12 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 	@Override
 	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
 		assert value == null || userType.returnedClass().isInstance( value );
-
-		//noinspection unchecked
-		return (X) value;
+		return type.cast( value );
 	}
 
 	@Override
 	public <X> J wrap(X value, WrapperOptions options) {
 //		assert value == null || userType.returnedClass().isInstance( value );
-
 		//noinspection unchecked
 		return (J) value;
 	}

@@ -30,8 +30,7 @@ public class ConverterDescriptors {
 			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
 			Boolean autoApply, boolean overrideable, ClassmateContext classmateContext) {
 		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterType =
-				(Class<? extends AttributeConverter<X, Y>>) converterClass;
+		final var converterType = (Class<? extends AttributeConverter<X, Y>>) converterClass;
 		return new ClassBasedConverterDescriptor<>( converterType, autoApply, classmateContext, overrideable );
 	}
 
@@ -39,8 +38,7 @@ public class ConverterDescriptors {
 			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
 			ClassmateContext classmateContext) {
 		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterType =
-				(Class<? extends AttributeConverter<X, Y>>) converterClass;
+		final var converterType = (Class<? extends AttributeConverter<X, Y>>) converterClass;
 		return new ClassBasedConverterDescriptor<>( converterType, null, classmateContext, false );
 	}
 
@@ -48,8 +46,7 @@ public class ConverterDescriptors {
 			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
 			ResolvedType domainTypeToMatch, ResolvedType relationalType, boolean autoApply) {
 		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterClass =
-				(Class<? extends AttributeConverter<X, Y>>) converterType;
+		final var converterClass = (Class<? extends AttributeConverter<X, Y>>) converterType;
 		return new ConverterDescriptorImpl<>( converterClass, domainTypeToMatch, relationalType, autoApply );
 	}
 }

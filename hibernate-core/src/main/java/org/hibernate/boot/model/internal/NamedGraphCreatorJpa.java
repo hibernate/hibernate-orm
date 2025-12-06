@@ -6,7 +6,6 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedSubgraph;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -41,23 +40,23 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
 			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
 		//noinspection unchecked
-		final EntityDomainType<T> rootEntityType =
-				(EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
-		final RootGraphImplementor<T> entityGraph =
+		final var rootEntityType =
+				(EntityDomainType<T>)
+						entityDomainNameResolver.apply( jpaEntityName );
+		final var entityGraph =
 				createRootGraph( name, rootEntityType, annotation.includeAllAttributes() );
 
-		if ( annotation.subclassSubgraphs() != null ) {
-			for ( NamedSubgraph subclassSubgraph : annotation.subclassSubgraphs() ) {
-				final Class<?> subgraphType = subclassSubgraph.type();
-				final Class<T> graphJavaType = entityGraph.getGraphedType().getJavaType();
+		final var subclassSubgraphs = annotation.subclassSubgraphs();
+		if ( subclassSubgraphs != null ) {
+			for ( var subclassSubgraph : subclassSubgraphs ) {
+				final var subgraphType = subclassSubgraph.type();
+				final var graphJavaType = entityGraph.getGraphedType().getJavaType();
 				if ( !graphJavaType.isAssignableFrom( subgraphType ) ) {
 					throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-												+ "' is not a subtype of the graph type '" + graphJavaType.getName() + "'" );
+								+ "' is not a subtype of the graph type '" + graphJavaType.getName() + "'" );
 				}
-				@SuppressWarnings("unchecked") // Safe, because we just checked
-				final Class<? extends T> subtype = (Class<? extends T>) subgraphType;
-				final GraphImplementor<? extends T> subgraph = entityGraph.addTreatedSubgraph( subtype );
-				applyNamedAttributeNodes( subclassSubgraph.attributeNodes(), annotation, subgraph );
+				applyNamedAttributeNodes( subclassSubgraph.attributeNodes(), annotation,
+						entityGraph.addTreatedSubgraph( subgraphType.asSubclass( graphJavaType ) ) );
 			}
 		}
 
@@ -72,7 +71,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 			String name,
 			EntityDomainType<T> rootEntityType,
 			boolean includeAllAttributes) {
-		final RootGraphImpl<T> entityGraph = new RootGraphImpl<>( name, rootEntityType );
+		final var entityGraph = new RootGraphImpl<>( name, rootEntityType );
 		if ( includeAllAttributes ) {
 			for ( var attribute : rootEntityType.getAttributes() ) {
 				entityGraph.addAttributeNodes( attribute );
@@ -85,7 +84,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 			NamedAttributeNode[] namedAttributeNodes,
 			NamedEntityGraph namedEntityGraph,
 			GraphImplementor<?> graphNode) {
-		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
+		for ( var namedAttributeNode : namedAttributeNodes ) {
 			final var attributeNode =
 					(AttributeNodeImplementor<?,?,?>)
 							graphNode.addAttributeNode( namedAttributeNode.value() );
@@ -105,7 +104,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 			String subgraphName,
 			AttributeNodeImplementor<T,E,K> attributeNode,
 			boolean isKeySubGraph) {
-		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
+		for ( var namedSubgraph : namedEntityGraph.subgraphs() ) {
 			if ( subgraphName.equals( namedSubgraph.name() ) ) {
 				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph,
 						createSubgraph( attributeNode, isKeySubGraph, namedSubgraph.type() ) );
@@ -128,27 +127,27 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 
 	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeValueSubgraph(
 			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
-		final Class<?> attributeValueType =
-				attributeNode.getAttributeDescriptor().getValueGraphType().getJavaType();
+		final var attributeValueType =
+				attributeNode.getAttributeDescriptor()
+						.getValueGraphType().getJavaType();
 		if ( !attributeValueType.isAssignableFrom( subgraphType ) ) {
 			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-										+ "' is not a subtype of the value type '" + attributeValueType.getName() + "'" );
+						+ "' is not a subtype of the value type '" + attributeValueType.getName() + "'" );
 		}
-		@SuppressWarnings("unchecked") // Safe, because we just checked
-		final Class<? extends E> castType = (Class<? extends E>) subgraphType;
-		return attributeNode.addValueSubgraph().addTreatedSubgraph( castType );
+		return attributeNode.addValueSubgraph().addTreatedSubgraph(
+				subgraphType.asSubclass( attributeNode.getValueSubgraph().getClassType() ) );
 	}
 
 	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeKeySubgraph(
 			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
-		final Class<?> attributeKeyType =
-				attributeNode.getAttributeDescriptor().getKeyGraphType().getJavaType();
+		final var attributeKeyType =
+				attributeNode.getAttributeDescriptor()
+						.getKeyGraphType().getJavaType();
 		if ( !attributeKeyType.isAssignableFrom( subgraphType ) ) {
 			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-										+ "' is not a subtype of the key type '" + attributeKeyType.getName() + "'" );
+						+ "' is not a subtype of the key type '" + attributeKeyType.getName() + "'" );
 		}
-		@SuppressWarnings("unchecked") // Safe, because we just checked
-		final Class<? extends K> castType = (Class<? extends K>) subgraphType;
-		return attributeNode.addKeySubgraph().addTreatedSubgraph( castType );
+		return attributeNode.addKeySubgraph().addTreatedSubgraph(
+				subgraphType.asSubclass( attributeNode.getKeySubgraph().getClassType() ) );
 	}
 }

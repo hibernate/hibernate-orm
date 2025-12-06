@@ -40,8 +40,7 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 	 */
 	default <X> X treatAs(Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {
-			//noinspection unchecked
-			return (X) this;
+			return targetType.cast( this );
 		}
 
 		throw new IllegalArgumentException(

@@ -4,17 +4,17 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 /**
- * Second level cache providers now have the option to use custom key implementations.
+ * Second-level cache providers now have the option to use custom key implementations.
  * This was done as the default key implementation is very generic and is quite
  * a large object to allocate in large quantities at runtime.
  * In some extreme cases, for example when the hit ratio is very low, this was making the efficiency
@@ -45,20 +45,30 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 
 	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		final Type keyType = persister.getKeyType();
-		final Serializable disassembledKey = keyType.disassemble( id, factory );
+		final var coercedId = getCoercedId( id, factory, keyType );
+		final var disassembledKey = keyType.disassemble( coercedId, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
+		final String role = persister.getRole();
 		return tenantIdentifier == null && !idIsArray
-				? new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRole() )
-				: new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRole(), tenantIdentifier );
+				? new BasicCacheKeyImplementation( coercedId, disassembledKey, keyType, role )
+				: new CacheKeyImplementation( coercedId, disassembledKey, keyType, role, tenantIdentifier );
 	}
 
 	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		final Type keyType = persister.getIdentifierType();
-		final Serializable disassembledKey = keyType.disassemble( id, factory );
+		final var coercedId = getCoercedId( id, factory, keyType );
+		final var disassembledKey = keyType.disassemble( coercedId, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
+		final String rootEntityName = persister.getRootEntityName();
 		return tenantIdentifier == null && !idIsArray
-				? new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName() )
-				: new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName(), tenantIdentifier );
+				? new BasicCacheKeyImplementation( coercedId, disassembledKey, keyType, rootEntityName )
+				: new CacheKeyImplementation( coercedId, disassembledKey, keyType, rootEntityName, tenantIdentifier );
+	}
+
+	private static Object getCoercedId(Object id, SessionFactoryImplementor factory, Type keyType) {
+		return keyType instanceof BasicType<?> basicType
+				? basicType.getJavaTypeDescriptor().coerce( id, factory::getTypeConfiguration )
+				: id;
 	}
 
 	public static Object staticCreateNaturalIdKey(

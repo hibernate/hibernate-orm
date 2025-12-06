@@ -157,8 +157,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 
 	@Override
 	public <T> T as(Class<T> type) {
-		//noinspection unchecked
-		return (T) this;
+		return type.cast( this );
 	}
 
 	@Override

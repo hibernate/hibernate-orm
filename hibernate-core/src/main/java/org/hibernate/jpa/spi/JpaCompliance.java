@@ -123,7 +123,7 @@ public interface JpaCompliance {
 	 * {@link jakarta.persistence.EntityManager#find} should be exactly the
 	 * expected type, allowing no type coercion.
 	 * <p>
-	 * Historically, Hibernate behaved the same way. Since 6.0 however,
+	 * Historically, Hibernate behaved the same way. Since 6.0, however,
 	 * Hibernate has the ability to coerce the passed type to the expected
 	 * type. For example, an {@link Integer} may be widened to {@link Long}.
 	 * Coercion is performed by calling

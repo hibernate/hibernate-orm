@@ -52,12 +52,7 @@ public enum SqmJsonNullBehavior implements SqmTypedNode<Object> {
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( this == NULL ) {
-			hql.append( " null on null" );
-		}
-		else {
-			hql.append( " absent on null" );
-		}
+		hql.append( this == NULL ? " null on null" : " absent on null" );
 	}
 
 	@Override

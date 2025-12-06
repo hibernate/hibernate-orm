@@ -523,13 +523,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> type) {
 		if ( type.isAssignableFrom( EnabledCaching.class ) ) {
-			return (T) this;
+			return type.cast( this );
 		}
 		else if ( type.isAssignableFrom( RegionFactory.class ) ) {
-			return (T) regionFactory;
+			return type.cast( regionFactory );
 		}
 		else {
 			throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );

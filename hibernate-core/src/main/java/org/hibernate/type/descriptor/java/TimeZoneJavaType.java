@@ -35,6 +35,11 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 	}
 
 	@Override
+	public TimeZone cast(Object value) {
+		return (TimeZone) value;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}
@@ -47,16 +52,15 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 		return TimeZone.getTimeZone( string.toString() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(TimeZone value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( TimeZone.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) toString( value );
+			return type.cast( toString( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

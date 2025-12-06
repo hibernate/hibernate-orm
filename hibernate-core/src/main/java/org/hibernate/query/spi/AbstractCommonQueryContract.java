@@ -758,6 +758,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 
 		if ( binding.isMultiValued() ) {
+			// TODO: THIS IS UNSOUND
 			//noinspection unchecked
 			return (T) binding.getBindValues();
 		}

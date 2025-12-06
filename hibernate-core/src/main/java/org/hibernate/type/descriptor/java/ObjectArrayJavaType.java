@@ -30,6 +30,11 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 	}
 
 	@Override
+	public Object[] cast(Object value) {
+		return (Object[]) value;
+	}
+
+	@Override
 	public String toString(Object[] value) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( '(' );
@@ -77,14 +82,13 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		return hashCode;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Object[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Object[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		throw unknownUnwrap( type );
 	}

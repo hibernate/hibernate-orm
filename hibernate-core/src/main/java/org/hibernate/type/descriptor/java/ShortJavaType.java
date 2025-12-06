@@ -49,6 +49,11 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
+	public Short cast(Object value) {
+		return (Short) value;
+	}
+
+	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
 			case "byte", "java.lang.Byte" -> true;
@@ -56,32 +61,31 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Short value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Short.class.isAssignableFrom( type ) || type == Object.class ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
-			return (X) Byte.valueOf( value.byteValue() );
+			return type.cast( value.byteValue() );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.intValue() );
+			return type.cast( value.intValue() );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.longValue() );
+			return type.cast( value.longValue() );
 		}
 		if ( Double.class.isAssignableFrom( type ) ) {
-			return (X) Double.valueOf( value.doubleValue() );
+			return type.cast( value.doubleValue() );
 		}
 		if ( Float.class.isAssignableFrom( type ) ) {
-			return (X) Float.valueOf( value.floatValue() );
+			return type.cast( value.floatValue() );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return type.cast( value.toString() );
 		}
 		throw unknownUnwrap( type );
 	}

@@ -53,38 +53,42 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		return value instanceof Double;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public Double cast(Object value) {
+		return (Double) value;
+	}
+
 	@Override
 	public <X> X unwrap(Double value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Double.class.isAssignableFrom( type ) || type == Object.class ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( Float.class.isAssignableFrom( type ) ) {
-			return (X) Float.valueOf( value.floatValue() );
+			return type.cast( value.floatValue() );
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
-			return (X) Byte.valueOf( value.byteValue() );
+			return type.cast( value.byteValue() );
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {
-			return (X) Short.valueOf( value.shortValue() );
+			return type.cast( value.shortValue() );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.intValue() );
+			return type.cast( value.intValue() );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.longValue() );
+			return type.cast( value.longValue() );
 		}
 		if ( BigInteger.class.isAssignableFrom( type ) ) {
-			return (X) BigInteger.valueOf( value.longValue() );
+			return type.cast( BigInteger.valueOf( value.longValue() ) );
 		}
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) BigDecimal.valueOf( value );
+			return type.cast( BigDecimal.valueOf( value ) );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return type.cast( value.toString() );
 		}
 		throw unknownUnwrap( type );
 	}

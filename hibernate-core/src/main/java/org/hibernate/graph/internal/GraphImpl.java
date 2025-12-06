@@ -182,7 +182,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 			AttributeNodeImplementor<?,?,?> node, AttributeNodeImplementor<T,E,K> existingNode) {
 		if ( existingNode.getAttributeDescriptor() == node.getAttributeDescriptor() ) {
 			@SuppressWarnings("unchecked") // safe, we just checked
-			final AttributeNodeImplementor<T,E,K> castNode = (AttributeNodeImplementor<T,E,K>) node;
+			final var castNode = (AttributeNodeImplementor<T,E,K>) node;
 			existingNode.merge( castNode );
 		}
 		else {

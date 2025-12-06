@@ -196,7 +196,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		}
 		else {
 			try {
-				return entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
+				final var identifierMapping = entityPersister.getIdentifierMapping();
+				return identifierMapping.isVirtual()
+						? id // special case for a class with an @IdClass
+						: identifierMapping.getJavaType().coerce( id, this );
 			}
 			catch ( Exception e ) {
 				throw new IllegalArgumentException( "Argument '" + id

@@ -68,6 +68,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
+	public OffsetDateTime cast(Object value) {
+		return (OffsetDateTime) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -116,26 +121,25 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(OffsetDateTime offsetDateTime, Class<X> type, WrapperOptions options) {
 		if ( offsetDateTime == null ) {
 			return null;
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetDateTime;
+			return type.cast( offsetDateTime );
 		}
 
 		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetDateTime.toZonedDateTime();
+			return type.cast( offsetDateTime.toZonedDateTime() );
 		}
 
 		if ( Instant.class.isAssignableFrom( type ) ) {
-			return (X) offsetDateTime.toInstant();
+			return type.cast( offsetDateTime.toInstant() );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( offsetDateTime.toZonedDateTime() );
+			return type.cast( GregorianCalendar.from( offsetDateTime.toZonedDateTime() ) );
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
@@ -151,30 +155,30 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			// - around 1905, both methods are equally valid, so we don't really care which
 			//   one is used.
 			if ( offsetDateTime.getYear() < 1905 ) {
-				return (X) Timestamp.valueOf(
+				return type.cast( Timestamp.valueOf(
 						offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() )
 								.toLocalDateTime()
-				);
+				) );
 			}
 			else {
-				return (X) Timestamp.from( offsetDateTime.toInstant() );
+				return type.cast( Timestamp.from( offsetDateTime.toInstant() ) );
 			}
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.from( offsetDateTime.toInstant() );
+			return type.cast( java.sql.Date.from( offsetDateTime.toInstant() ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.from( offsetDateTime.toInstant() );
+			return type.cast( java.sql.Time.from( offsetDateTime.toInstant() ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) Date.from( offsetDateTime.toInstant() );
+			return type.cast( Date.from( offsetDateTime.toInstant() ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( offsetDateTime.toInstant().toEpochMilli() );
+			return type.cast( offsetDateTime.toInstant().toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );

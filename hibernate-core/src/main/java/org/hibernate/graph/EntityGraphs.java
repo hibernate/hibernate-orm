@@ -64,13 +64,13 @@ public final class EntityGraphs {
 	 * @since 7.0
 	 */
 	public static EntityGraph<Map<String,?>> createGraphForDynamicEntity(EntityType<?> rootType) {
-		final EntityDomainType<?> domainType = (EntityDomainType<?>) rootType;
+		final var domainType = (EntityDomainType<?>) rootType;
 		if ( domainType.getRepresentationMode() != RepresentationMode.MAP ) {
 			throw new IllegalArgumentException( "Entity '" + domainType.getHibernateEntityName()
 												+ "' is not a dynamic entity" );
 		}
 		@SuppressWarnings("unchecked") //Safe, because we just checked
-		final EntityDomainType<Map<String, ?>> dynamicEntity = (EntityDomainType<Map<String, ?>>) domainType;
+		final var dynamicEntity = (EntityDomainType<Map<String, ?>>) domainType;
 		return new RootGraphImpl<>( null, dynamicEntity );
 	}
 

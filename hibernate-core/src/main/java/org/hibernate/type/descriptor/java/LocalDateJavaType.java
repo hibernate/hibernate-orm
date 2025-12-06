@@ -44,6 +44,11 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 	}
 
 	@Override
+	public LocalDate cast(Object value) {
+		return (LocalDate) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}
@@ -77,18 +82,17 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(LocalDate value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalDate.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.valueOf( value );
+			return type.cast( java.sql.Date.valueOf( value ) );
 		}
 
 		final LocalDateTime localDateTime = value.atStartOfDay();
@@ -99,23 +103,23 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 			// but on top of being more complex than the line below, it won't always work.
 			// Timestamp.from() assumes the number of milliseconds since the epoch means the
 			// same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
-			return (X) Timestamp.valueOf( localDateTime );
+			return type.cast( Timestamp.valueOf( localDateTime ) );
 		}
 
 		final var zonedDateTime = localDateTime.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( zonedDateTime );
+			return type.cast( GregorianCalendar.from( zonedDateTime ) );
 		}
 
 		final var instant = zonedDateTime.toInstant();
 
 		if ( Date.class.equals( type ) ) {
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );

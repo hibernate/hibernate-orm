@@ -52,13 +52,12 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <X> X unwrap(Class<X> unwrapType) {
 		if ( unwrapType.isInstance( this ) ) {
-			return (T) this;
+			return unwrapType.cast( this );
 		}
 		else if ( unwrapType.isAssignableFrom( DataSource.class ) ) {
-			return (T) selectAnyDataSource();
+			return unwrapType.cast( selectAnyDataSource() );
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

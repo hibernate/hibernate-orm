@@ -13,7 +13,6 @@ import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
@@ -25,7 +24,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
 	private final DomainResultAssembler<?>[] resultAssemblers;
 	private final Initializer<InitializerData>[] resultInitializers;
@@ -36,7 +34,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final InitializerData[] sortedForResolveInstanceData;
 	private final boolean hasCollectionInitializers;
 	private final @Nullable RowTransformer<T> rowTransformer;
-	private final Class<T> domainResultJavaType;
+	private final @Nullable Class<T> domainResultJavaType;
 
 	private final ComponentType componentType;
 	private final Class<?> resultElementClass;
@@ -44,7 +42,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public StandardRowReader(
 			JdbcValuesMappingResolution jdbcValuesMappingResolution,
 			RowTransformer<T> rowTransformer,
-			Class<T> domainResultJavaType) {
+			@Nullable Class<T> domainResultJavaType) {
 		this(
 				jdbcValuesMappingResolution.getDomainResultAssemblers(),
 				jdbcValuesMappingResolution.getResultInitializers(),
@@ -63,7 +61,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 			Initializer<?>[] sortedForResolveInitializers,
 			boolean hasCollectionInitializers,
 			RowTransformer<T> rowTransformer,
-			Class<T> domainResultJavaType) {
+			@Nullable Class<T> domainResultJavaType) {
 		this.resultAssemblers = resultAssemblers;
 		this.resultInitializers = (Initializer<InitializerData>[]) resultInitializers;
 		this.resultInitializersData = new InitializerData[resultInitializers.length];
@@ -72,11 +70,12 @@ public class StandardRowReader<T> implements RowReader<T> {
 		this.sortedForResolveInstance = (Initializer<InitializerData>[]) sortedForResolveInitializers;
 		this.sortedForResolveInstanceData = new InitializerData[sortedForResolveInstance.length];
 		this.hasCollectionInitializers = hasCollectionInitializers;
-		this.rowTransformer = rowTransformer == RowTransformerArrayImpl.instance() && resultAssemblers.length != 1
+		this.rowTransformer =
+				rowTransformer == RowTransformerArrayImpl.instance() && resultAssemblers.length != 1
 				|| rowTransformer == RowTransformerStandardImpl.instance()
 				|| rowTransformer == RowTransformerSingularReturnImpl.instance() && resultAssemblers.length == 1
-				? null
-				: rowTransformer;
+					? null
+					: rowTransformer;
 		this.domainResultJavaType = domainResultJavaType;
 		if ( domainResultJavaType == null
 				|| domainResultJavaType == Object[].class
@@ -100,8 +99,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public List<@Nullable JavaType<?>> getResultJavaTypes() {
-		List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.length );
-		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
+		final List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.length );
+		for ( var resultAssembler : resultAssemblers ) {
 			javaTypes.add( resultAssembler.getAssembledJavaType() );
 		}
 		return javaTypes;
@@ -114,15 +113,18 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public @Nullable EntityKey resolveSingleResultEntityKey(RowProcessingState rowProcessingState) {
-		final EntityInitializer<?> entityInitializer = resultInitializers.length == 0
-				? null
-				: resultInitializers[0].asEntityInitializer();
+		final var entityInitializer =
+				resultInitializers.length == 0
+						? null
+						: resultInitializers[0].asEntityInitializer();
 		if ( entityInitializer == null ) {
 			return null;
 		}
-		final EntityKey entityKey = entityInitializer.resolveEntityKeyOnly( rowProcessingState );
-		finishUpRow();
-		return entityKey;
+		else {
+			final var entityKey = entityInitializer.resolveEntityKeyOnly( rowProcessingState );
+			finishUpRow();
+			return entityKey;
+		}
 	}
 
 	@Override
@@ -133,34 +135,32 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@Override
 	@AllowReflection
 	public T readRow(RowProcessingState rowProcessingState) {
-		coordinateInitializers( rowProcessingState );
-
-		final T result;
-		if ( componentType != ComponentType.OBJECT ) {
-			result = readPrimitiveRow( rowProcessingState );
-		}
-		else {
-			if ( resultAssemblers.length == 1 && rowTransformer == null ) {
-				//noinspection unchecked
-				result = (T) resultAssemblers[0].assemble( rowProcessingState );
-			}
-			else {
-				final Object[] resultRow = (Object[]) Array.newInstance( resultElementClass, resultAssemblers.length );
-				for ( int i = 0; i < resultAssemblers.length; i++ ) {
-					resultRow[i] = resultAssemblers[i].assemble( rowProcessingState );
-				}
-				//noinspection unchecked
-				result = rowTransformer == null
-						? (T) resultRow
-						: rowTransformer.transformRow( resultRow );
-			}
-		}
-
+		coordinateInitializers();
+		final T result = getResult( rowProcessingState );
 		finishUpRow();
 		return result;
 	}
 
-	private T readPrimitiveRow(RowProcessingState rowProcessingState) {
+	@SuppressWarnings("unchecked")
+	private T getResult(RowProcessingState rowProcessingState) {
+		if ( componentType != ComponentType.OBJECT ) {
+			return (T) readPrimitiveRow( rowProcessingState );
+		}
+		else if ( resultAssemblers.length == 1 && rowTransformer == null ) {
+			return (T) resultAssemblers[0].assemble( rowProcessingState );
+		}
+		else {
+			final var resultRow = (Object[]) Array.newInstance( resultElementClass, resultAssemblers.length );
+			for ( int i = 0; i < resultAssemblers.length; i++ ) {
+				resultRow[i] = resultAssemblers[i].assemble( rowProcessingState );
+			}
+			return rowTransformer == null
+					? (T) resultRow
+					: rowTransformer.transformRow( resultRow );
+		}
+	}
+
+	private Object readPrimitiveRow(RowProcessingState rowProcessingState) {
 		// The following is ugly, but unfortunately necessary to not hurt performance.
 		// This implementation was micro-benchmarked and discussed with Francesco Nigro,
 		// who hinted that using this style instead of the reflective Array.getLength(), Array.set()
@@ -171,61 +171,61 @@ public class StandardRowReader<T> implements RowReader<T> {
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultBooleanRow[i] = (boolean) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultBooleanRow;
+				return resultBooleanRow;
 			case BYTE:
 				final byte[] resultByteRow = new byte[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultByteRow[i] = (byte) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultByteRow;
+				return resultByteRow;
 			case CHAR:
 				final char[] resultCharRow = new char[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultCharRow[i] = (char) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultCharRow;
+				return resultCharRow;
 			case SHORT:
 				final short[] resultShortRow = new short[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultShortRow[i] = (short) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultShortRow;
+				return resultShortRow;
 			case INT:
 				final int[] resultIntRow = new int[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultIntRow[i] = (int) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultIntRow;
+				return resultIntRow;
 			case LONG:
 				final long[] resultLongRow = new long[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultLongRow[i] = (long) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultLongRow;
+				return resultLongRow;
 			case FLOAT:
 				final float[] resultFloatRow = new float[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultFloatRow[i] = (float) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultFloatRow;
+				return resultFloatRow;
 			case DOUBLE:
 				final double[] resultDoubleRow = new double[resultAssemblers.length];
 				for ( int i = 0; i < resultAssemblers.length; i++ ) {
 					resultDoubleRow[i] = (double) resultAssemblers[i].assemble( rowProcessingState );
 				}
-				return (T) resultDoubleRow;
+				return resultDoubleRow;
 			default:
 				throw new AssertionError( "Object should be handled specially" );
 		}
 	}
 
 	private void finishUpRow() {
-		for ( InitializerData data : initializersData ) {
+		for ( var data : initializersData ) {
 			data.setState( Initializer.State.UNINITIALIZED );
 		}
 	}
 
-	private void coordinateInitializers(RowProcessingState rowProcessingState) {
+	private void coordinateInitializers() {
 		for ( int i = 0; i < resultInitializers.length; i++ ) {
 			resultInitializers[i].resolveKey( resultInitializersData[i] );
 		}
@@ -244,7 +244,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@Override
 	public void startLoading(RowProcessingState processingState) {
 		for ( int i = 0; i < resultInitializers.length; i++ ) {
-			final Initializer<?> initializer = resultInitializers[i];
+			final var initializer = resultInitializers[i];
 			initializer.startLoading( processingState );
 			resultInitializersData[i] = initializer.getData( processingState );
 		}
@@ -305,7 +305,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 			else if ( resultType == double[].class) {
 				return DOUBLE;
 			}
-			return OBJECT;
+			else {
+				return OBJECT;
+			}
 		}
 
 		public Class<?> getComponentType() {

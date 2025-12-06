@@ -70,7 +70,6 @@ public class ObjectJdbcType implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		if ( Serializable.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 			return VarbinaryJdbcType.INSTANCE.getExtractor( javaType );
@@ -79,17 +78,17 @@ public class ObjectJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return (X) rs.getObject( paramIndex );
+				return javaType.cast( rs.getObject( paramIndex ) );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return (X) statement.getObject( index );
+				return javaType.cast( statement.getObject( index ) );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return (X) statement.getObject( name );
+				return javaType.cast( statement.getObject( name ) );
 			}
 		};
 	}

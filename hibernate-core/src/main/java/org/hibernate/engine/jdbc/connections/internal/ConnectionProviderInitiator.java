@@ -116,9 +116,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			throw new ConnectionProviderConfigurationException( "Class '" + providerClass.getName()
 																+ "' does not implement 'ConnectionProvider'" );
 		}
-		@SuppressWarnings("unchecked") // Safe, we just checked
-		final var connectionProviderClass = (Class<? extends ConnectionProvider>) providerClass;
-		return connectionProviderClass;
+		return providerClass.asSubclass( ConnectionProvider.class );
 	}
 
 	private ConnectionProvider instantiateNamedConnectionProvider(

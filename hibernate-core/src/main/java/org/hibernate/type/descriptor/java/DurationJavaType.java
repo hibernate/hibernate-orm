@@ -49,6 +49,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
+	public Duration cast(Object value) {
+		return (Duration) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getTypeConfiguration()
 				.getJdbcTypeRegistry()
@@ -88,28 +93,27 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Duration duration, Class<X> type, WrapperOptions options) {
 		if ( duration == null ) {
 			return null;
 		}
 
 		if ( Duration.class.isAssignableFrom( type ) ) {
-			return (X) duration;
+			return type.cast( duration );
 		}
 
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) new BigDecimal( duration.getSeconds() )
+			return type.cast( new BigDecimal( duration.getSeconds() )
 					.movePointRight( 9 )
-					.add( new BigDecimal( duration.getNano() ) );
+					.add( new BigDecimal( duration.getNano() ) ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) duration.toString();
+			return type.cast( duration.toString() );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( duration.toNanos() );
+			return type.cast( duration.toNanos() );
 		}
 
 		throw unknownUnwrap( type );

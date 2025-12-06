@@ -73,13 +73,12 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( DataSourceConnectionProvider.class ) ) {
-			return (T) this;
+			return unwrapType.cast( this );
 		}
 		else if ( unwrapType.isAssignableFrom( DataSource.class) ) {
-			return (T) getDataSource();
+			return unwrapType.cast( getDataSource() );
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

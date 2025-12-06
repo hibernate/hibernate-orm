@@ -256,24 +256,21 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 
 		if ( type.isInstance( value ) ) {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( type == byte[].class ) {
-			return (X) toBytes( value );
+			return type.cast( toBytes( value ) );
 		}
 		else if ( type == BinaryStream.class ) {
-			//noinspection unchecked
-			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
+			return type.cast( new ArrayBackedBinaryStream( toBytes( value ) ) );
 		}
 		else if ( type.isArray() ) {
 		final var preferredJavaTypeClass = type.getComponentType();
-			final Object[] unwrapped = (Object[]) newInstance( preferredJavaTypeClass, value.length );
+			final var unwrapped = (Object[]) newInstance( preferredJavaTypeClass, value.length );
 			for ( int i = 0; i < value.length; i++ ) {
 				unwrapped[i] = getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options );
 			}
-			//noinspection unchecked
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 
 		throw unknownUnwrap( type );

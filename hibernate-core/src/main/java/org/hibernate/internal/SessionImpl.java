@@ -2582,23 +2582,21 @@ public class SessionImpl
 	@Override
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
-		if ( value instanceof Serializable ) {
-			if ( propertyName != null ) {
-				// store property for future reference
-				if ( properties == null ) {
-					properties = getInitialProperties();
-				}
-				properties.put( propertyName, value );
-				// now actually update the setting if
-				// it's one that affects this Session
-				interpretProperty( propertyName, value );
-			}
-			else {
-				SESSION_LOGGER.nullPropertyKey();
-			}
+		if ( propertyName == null ) {
+			SESSION_LOGGER.nullPropertyKey();
+		}
+		else if ( !(value instanceof Serializable) ) {
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
 		}
 		else {
-			SESSION_LOGGER.nonSerializableProperty( propertyName );
+			// store property for future reference
+			if ( properties == null ) {
+				properties = getInitialProperties();
+			}
+			properties.put( propertyName, value );
+			// now actually update the setting if
+			// it's one that affects this Session
+			interpretProperty( propertyName, value );
 		}
 	}
 
@@ -2789,23 +2787,24 @@ public class SessionImpl
 	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
-				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.map( entry -> entityType.cast( entry.getValue().getManagedObject() ) )
 				.toList();
 	}
 
 	@Override
 	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
-		final String entityName = ( (EntityDomainType<E>) entityType ).getHibernateEntityName();
+		final var entityDomainType = (EntityDomainType<E>) entityType;
+		final String entityName = entityDomainType.getHibernateEntityName();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
-				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.map( entry -> entityType.getJavaType().cast( entry.getValue().getManagedObject() ) )
 				.toList();
 	}
 
 	/**
-	 * Used by JDK serialization...
+	 * Used by JDK serialization
 	 *
-	 * @param oos The output stream to which we are being written...
+	 * @param oos The output stream to which we are being written
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 */
@@ -2824,9 +2823,9 @@ public class SessionImpl
 	}
 
 	/**
-	 * Used by JDK serialization...
+	 * Used by JDK serialization
 	 *
-	 * @param ois The input stream from which we are being read...
+	 * @param ois The input stream from which we are being read
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
@@ -2846,7 +2845,7 @@ public class SessionImpl
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
-		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
+		// Instead, look up the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) )
 					.afterDeserialize( getFactory() );

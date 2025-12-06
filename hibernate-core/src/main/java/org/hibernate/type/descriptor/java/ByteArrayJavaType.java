@@ -19,6 +19,9 @@ import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static java.lang.Byte.toUnsignedInt;
+import static java.lang.Integer.toHexString;
+
 /**
  * Descriptor for {@code Byte[]} handling, which disallows {@code null} elements.
  * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and wants to map to {@link SqlTypes#VARBINARY}.
@@ -36,6 +39,11 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	@Override
 	public boolean isInstance(Object value) {
 		return value instanceof byte[];
+	}
+
+	@Override
+	public Byte[] cast(Object value) {
+		return (Byte[]) value;
 	}
 
 	@Override
@@ -57,22 +65,22 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
 		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
-		return descriptor instanceof AdjustableJdbcType
-				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+		return descriptor instanceof AdjustableJdbcType adjustableJdbcType
+				? adjustableJdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;
 	}
 
 	@Override
 	public String toString(Byte[] bytes) {
-		final StringBuilder buf = new StringBuilder();
+		final var string = new StringBuilder();
 		for ( Byte aByte : bytes ) {
-			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
+			final String hexStr = toHexString( toUnsignedInt( aByte ) );
 			if ( hexStr.length() == 1 ) {
-				buf.append( '0' );
+				string.append( '0' );
 			}
-			buf.append( hexStr );
+			string.append( hexStr );
 		}
-		return buf.toString();
+		return string.toString();
 	}
 	@Override
 	public Byte[] fromString(CharSequence string) {
@@ -90,26 +98,25 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		return bytes;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Byte[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) unwrapBytes( value );
+			return type.cast( unwrapBytes( value ) );
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
-			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
+			return type.cast( new ByteArrayInputStream( unwrapBytes( value ) ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new ArrayBackedBinaryStream( unwrapBytes( value ) );
+			return type.cast( new ArrayBackedBinaryStream( unwrapBytes( value ) ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );
+			return type.cast( options.getLobCreator().createBlob( unwrapBytes( value ) ) );
 		}
 
 		throw unknownUnwrap( type );

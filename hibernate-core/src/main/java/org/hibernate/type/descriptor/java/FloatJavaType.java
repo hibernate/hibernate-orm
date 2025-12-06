@@ -52,38 +52,42 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		return value instanceof Float;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public Float cast(Object value) {
+		return (Float) value;
+	}
+
 	@Override
 	public <X> X unwrap(Float value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Float.class.isAssignableFrom( type ) || type == Object.class ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( Double.class.isAssignableFrom( type ) ) {
-			return (X) Double.valueOf( value.doubleValue() );
+			return type.cast( value.doubleValue() );
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
-			return (X) Byte.valueOf( value.byteValue() );
+			return type.cast( value.byteValue() );
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {
-			return (X) Short.valueOf( value.shortValue() );
+			return type.cast( value.shortValue() );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.intValue() );
+			return type.cast( value.intValue() );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.longValue() );
+			return type.cast( value.longValue() );
 		}
 		if ( BigInteger.class.isAssignableFrom( type ) ) {
-			return (X) BigInteger.valueOf( value.longValue() );
+			return type.cast( BigInteger.valueOf( value.longValue() ) );
 		}
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) BigDecimal.valueOf( value );
+			return type.cast( BigDecimal.valueOf( value ) );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return type.cast( value.toString() );
 		}
 		throw unknownUnwrap( type );
 	}

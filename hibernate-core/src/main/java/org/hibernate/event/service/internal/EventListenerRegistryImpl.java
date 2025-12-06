@@ -135,10 +135,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	private <T> T resolveListenerInstance(Class<T> listenerClass) {
-		@SuppressWarnings("unchecked")
-		final T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
+		final T listenerInstance = listenerClass.cast( listenerClassToInstanceMap.get( listenerClass ) );
 		if ( listenerInstance == null ) {
-			T newListenerInstance = instantiateListener( listenerClass );
+			final T newListenerInstance = instantiateListener( listenerClass );
 			listenerClassToInstanceMap.put( listenerClass, newListenerInstance );
 			return newListenerInstance;
 		}

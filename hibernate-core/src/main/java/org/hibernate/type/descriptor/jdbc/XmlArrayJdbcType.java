@@ -64,8 +64,7 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
 							.createSQLXML();
 			sqlxml.setString( string );
-			//noinspection unchecked
-			return (X) sqlxml;
+			return javaType.cast( sqlxml );
 		}
 		return XmlHelper.arrayFromString( javaType, this, string, options );
 	}

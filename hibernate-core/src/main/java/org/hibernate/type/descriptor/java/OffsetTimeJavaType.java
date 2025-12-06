@@ -50,6 +50,11 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
+	public OffsetTime cast(Object value) {
+		return (OffsetTime) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -83,7 +88,6 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(OffsetTime offsetTime, Class<X> type, WrapperOptions options) {
 		if ( offsetTime == null ) {
 			return null;
@@ -93,15 +97,15 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		// (since PS.setObject() doesn't support passing a timezone)
 
 		if ( OffsetTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetTime;
+			return type.cast( offsetTime );
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetTime.withOffsetSameInstant( getCurrentSystemOffset() ).toLocalTime();
+			return type.cast( offsetTime.withOffsetSameInstant( getCurrentSystemOffset() ).toLocalTime() );
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetTime.atDate( LocalDate.EPOCH );
+			return type.cast( offsetTime.atDate( LocalDate.EPOCH ) );
 		}
 
 		// for legacy types, we assume that the JDBC timezone is passed to JDBC
@@ -113,9 +117,9 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			final var time = Time.valueOf( jdbcOffsetTime.toLocalTime() );
 			final int nanos = jdbcOffsetTime.getNano();
 			return nanos == 0
-					? (X) time
+					? type.cast( time )
 					// Preserve milliseconds, which java.sql.Time supports
-					: (X) new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 );
+					: type.cast( new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 ) );
 		}
 
 		final var jdbcOffsetDateTime = jdbcOffsetTime.atDate( LocalDate.EPOCH );
@@ -126,23 +130,23 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			// but this won't always work since Timestamp.from() assumes the number of
 			// milliseconds since the epoch means the same thing in Timestamp and Instant,
 			// but it doesn't, in particular before 1900.
-			return (X) Timestamp.valueOf( jdbcOffsetDateTime.toLocalDateTime() );
+			return type.cast( Timestamp.valueOf( jdbcOffsetDateTime.toLocalDateTime() ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( jdbcOffsetDateTime.toZonedDateTime() );
+			return type.cast( GregorianCalendar.from( jdbcOffsetDateTime.toZonedDateTime() ) );
 		}
 
 		// for instants, we assume that the JDBC timezone, if any, is ignored
 
-		final Instant instant = offsetTime.atDate( LocalDate.EPOCH ).toInstant();
+		final var instant = offsetTime.atDate( LocalDate.EPOCH ).toInstant();
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		throw unknownUnwrap( type );

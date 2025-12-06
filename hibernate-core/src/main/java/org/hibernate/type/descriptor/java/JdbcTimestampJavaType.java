@@ -76,6 +76,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
+	public Date cast(Object value) {
+		return (Date) value;
+	}
+
+	@Override
 	public boolean areEqual(Date one, Date another) {
 		if ( one == another ) {
 			return true;

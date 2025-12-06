@@ -38,6 +38,11 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	@Override
+	public byte[] cast(Object value) {
+		return (byte[]) value;
+	}
+
+	@Override
 	public boolean areEqual(byte[] one, byte[] another) {
 		return one == another
 			|| one != null && another != null && Arrays.equals( one, another );
@@ -99,29 +104,28 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		return bytes;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
-			return (X) new ByteArrayInputStream( value );
+			return type.cast( new ByteArrayInputStream( value ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new ArrayBackedBinaryStream( value );
+			return type.cast( new ArrayBackedBinaryStream( value ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createBlob( value );
+			return type.cast( options.getLobCreator().createBlob( value ) );
 		}
 		if ( type.isAssignableFrom( Byte[].class ) ) {
 			final Byte[] array = new Byte[value.length];
 			for ( int i = 0; i < value.length; i++ ) {
 				array[i] = value[i];
 			}
-			return (X) array;
+			return type.cast( array );
 		}
 
 		throw unknownUnwrap( type );

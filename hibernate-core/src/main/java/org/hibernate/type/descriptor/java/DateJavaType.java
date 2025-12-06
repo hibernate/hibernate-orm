@@ -49,6 +49,11 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
+	public Date cast(Object value) {
+		return (Date) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -114,7 +119,6 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return CalendarJavaType.INSTANCE.extractHashCode( calendar );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -124,30 +128,30 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			final java.sql.Date rtn = value instanceof java.sql.Date
 					? ( java.sql.Date ) value
 					: new java.sql.Date( value.getTime() );
-			return (X) rtn;
+			return type.cast( rtn );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
 					: new java.sql.Time( value.getTime() % 86_400_000 );
-			return (X) rtn;
+			return type.cast( rtn );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
 			final java.sql.Timestamp rtn = value instanceof Timestamp
 					? ( java.sql.Timestamp ) value
 					: new java.sql.Timestamp( value.getTime() );
-			return (X) rtn;
+			return type.cast( rtn );
 		}
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
-			return (X) cal;
+			return type.cast( cal );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getTime() );
+			return type.cast( value.getTime() );
 		}
 		throw unknownUnwrap( type );
 	}

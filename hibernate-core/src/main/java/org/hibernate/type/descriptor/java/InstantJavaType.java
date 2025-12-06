@@ -48,6 +48,11 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	}
 
 	@Override
+	public Instant cast(Object value) {
+		return (Instant) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -88,22 +93,21 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Instant instant, Class<X> type, WrapperOptions options) {
 		if ( instant == null ) {
 			return null;
 		}
 
 		if ( Instant.class.isAssignableFrom( type ) ) {
-			return (X) instant;
+			return type.cast( instant );
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
-			return (X) instant.atOffset( ZoneOffset.UTC );
+			return type.cast( instant.atOffset( ZoneOffset.UTC ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( instant.atZone( ZoneOffset.UTC ) );
+			return type.cast( GregorianCalendar.from( instant.atZone( ZoneOffset.UTC ) ) );
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
@@ -119,27 +123,27 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			 */
 			final ZonedDateTime zonedDateTime = instant.atZone( ZoneId.systemDefault() );
 			if ( zonedDateTime.getYear() < 1905 ) {
-				return (X) Timestamp.valueOf( zonedDateTime.toLocalDateTime() );
+				return type.cast( Timestamp.valueOf( zonedDateTime.toLocalDateTime() ) );
 			}
 			else {
-				return (X) Timestamp.from( instant );
+				return type.cast( Timestamp.from( instant ) );
 			}
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Date( instant.toEpochMilli() );
+			return type.cast( new java.sql.Date( instant.toEpochMilli() ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( instant.toEpochMilli() % 86_400_000 );
+			return type.cast( new java.sql.Time( instant.toEpochMilli() % 86_400_000 ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );

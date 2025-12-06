@@ -302,8 +302,7 @@ public class StructHelper {
 			Object relationalValue)
 			throws SQLException {
 		assert javaType.isInstance( relationalValue );
-		//noinspection unchecked
-		injectJdbcValue( jdbcValues, jdbcIndex, options, jdbcMapping, javaType, (T) relationalValue );
+		injectJdbcValue( jdbcValues, jdbcIndex, options, jdbcMapping, javaType, javaType.cast( relationalValue ) );
 	}
 
 	private static <T> void injectJdbcValue(

@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.cast;
+
 /**
  * @author Gavin King
  */
@@ -47,14 +49,14 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	public <X> Element<X> select(SingularAttribute<T, X> attribute) {
 		final int position = specifications.size();
 		specifications.add( (select, root) -> root.get( attribute ) );
-		return tuple -> (X) tuple[position];
+		return tuple -> cast( attribute.getJavaType(), tuple[position] );
 	}
 
 	@Override
 	public <X> Element<X> select(Path<T, X> path) {
 		final int position = specifications.size();
 		specifications.add( (select, root) -> (SqmPath<X>) path.path( root ) );
-		return tuple -> (X) tuple[position];
+		return tuple -> cast( path.getType(), tuple[position] );
 	}
 
 	@Override

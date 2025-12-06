@@ -55,18 +55,18 @@ public abstract class AbstractStandardBasicType<T>
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
-		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 		this.javaType = javaType;
+		sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
 
-		this.jdbcValueBinder = jdbcType.getBinder( javaType );
-		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
-		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
+		jdbcValueBinder = jdbcType.getBinder( javaType );
+		jdbcValueExtractor = jdbcType.getExtractor( javaType );
+		jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
 
 		//A very simple dispatch optimisation, make these a constant:
-		this.javaTypeClass = javaType.getJavaTypeClass();
-		this.mutabilityPlan = javaType.getMutabilityPlan();
-		this.javatypeComparator = javaType.getComparator();
-		this.typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
+		javaTypeClass = javaType.getJavaTypeClass();
+		mutabilityPlan = javaType.getMutabilityPlan();
+		javatypeComparator = javaType.getComparator();
+		typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
 	}
 
 	@Override
@@ -174,7 +174,6 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
 		if ( one == another ) {
 			return true;
@@ -186,19 +185,15 @@ public abstract class AbstractStandardBasicType<T>
 			return one.equals( another );
 		}
 		else {
-			return javaType.areEqual( (T) one, (T) another );
+			return javaType.areEqual( javaType.cast( one ), javaType.cast(  another ) );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public int getHashCode(Object x) {
-		if ( typeForEqualsHashCode == null ) {
-			return x.hashCode();
-		}
-		else {
-			return javaType.extractHashCode( (T) x );
-		}
+	public int getHashCode(Object object) {
+		return typeForEqualsHashCode == null
+				? object.hashCode()
+				: javaType.extractHashCode( javaType.cast( object ) );
 	}
 
 	@Override
@@ -212,9 +207,8 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final int compare(Object x, Object y) {
-		return this.javatypeComparator.compare( (T) x, (T) y );
+		return this.javatypeComparator.compare( javaType.cast( x ) , javaType.cast( y )  );
 	}
 
 	@Override
@@ -228,9 +222,11 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final boolean isDirty(Object old, Object current) {
-		// MutableMutabilityPlan.INSTANCE is a special plan for which we always have to assume the value is dirty,
-		// because we can't actually copy a value, but have no knowledge about the mutability of the java type
-		return getMutabilityPlan() == MutableMutabilityPlan.INSTANCE || !isSame( old, current );
+		// MutableMutabilityPlan.INSTANCE is a special plan for which we always
+		// have to assume the value is dirty, because we can't actually copy a
+		// value, but have no knowledge about the mutability of the java type
+		return getMutabilityPlan() == MutableMutabilityPlan.INSTANCE
+			|| !isSame( old, current );
 	}
 
 	@Override
@@ -247,22 +243,23 @@ public abstract class AbstractStandardBasicType<T>
 			PreparedStatement st,
 			Object value,
 			int index,
-			final SharedSessionContractImplementor session) throws SQLException {
-		//noinspection unchecked
-		nullSafeSet( st, (T) value, index, (WrapperOptions) session );
+			final SharedSessionContractImplementor session)
+				throws SQLException {
+		nullSafeSet( st, javaType.cast( value ) , index, (WrapperOptions) session );
 	}
 
-	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
+	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options)
+			throws SQLException {
 		getJdbcValueBinder().bind( st, value, index, options );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
-		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
-			return  "<uninitialized>";
-		}
-		return javaType.extractLoggableRepresentation( (T) value );
+		return value == LazyPropertyInitializer.UNFETCHED_PROPERTY
+			|| !Hibernate.isInitialized( value )
+				? "<uninitialized>"
+				: javaType.extractLoggableRepresentation(
+						javaType.coerce( value, factory::getTypeConfiguration ) );
 	}
 
 	@Override
@@ -271,9 +268,8 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
-		return deepCopy( (T) value );
+		return deepCopy( javaType.cast( value )  );
 	}
 
 	protected final T deepCopy(T value) {
@@ -281,9 +277,8 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return getMutabilityPlan().disassemble( (T) value, session );
+		return getMutabilityPlan().disassemble( javaType.cast( value ) , session );
 	}
 
 	@Override
@@ -296,16 +291,14 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original == null && target == null
 				? null
-				: javaType.getReplacement( (T) original, (T) target, session );
+				: javaType.getReplacement( javaType.cast( original ) , javaType.cast( target ) , session );
 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object replace(
 			Object original,
 			Object target,
@@ -314,6 +307,9 @@ public abstract class AbstractStandardBasicType<T>
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
+				// TODO: use cast() .. currently failing on embeddable discriminators where
+				//       the concrete class is passed in instead of its disciminator value
+//				? javaType.getReplacement( javaType.cast( original ) , javaType.cast( target ) , session )
 				? javaType.getReplacement( (T) original, (T) target, session )
 				: target;
 	}
@@ -325,20 +321,12 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SharedSessionContractImplementor session) throws SQLException {
-		return getJdbcValueExtractor().extract(
-				statement,
-				startIndex,
-				session
-		);
+		return getJdbcValueExtractor().extract( statement, startIndex, session );
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, final SharedSessionContractImplementor session) throws SQLException {
-		return getJdbcValueExtractor().extract(
-				statement,
-				paramName,
-				session
-		);
+		return getJdbcValueExtractor().extract( statement, paramName, session );
 	}
 
 	@Override
@@ -347,7 +335,8 @@ public abstract class AbstractStandardBasicType<T>
 			Object value,
 			int index,
 			boolean[] settable,
-			SharedSessionContractImplementor session) throws SQLException {
+			SharedSessionContractImplementor session)
+				throws SQLException {
 
 	}
 
@@ -356,9 +345,8 @@ public abstract class AbstractStandardBasicType<T>
 		nullSafeSet( st, value, name, (WrapperOptions) session );
 	}
 
-	@SuppressWarnings("unchecked")
 	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		getJdbcValueBinder().bind( st, (T) value, name, options );
+		getJdbcValueBinder().bind( st, javaType.cast( value ) , name, options );
 	}
 
 	@Override
@@ -379,7 +367,7 @@ public abstract class AbstractStandardBasicType<T>
 		// Due to that, we have to handle some conversions in wrap/unwrap of BooleanJavaType
 		// and the cast type determination here. Note that we interpret the converter in ConvertedBasicTypeImpl
 		// to properly determine the correct cast type
-		final JdbcType jdbcType = getJdbcType();
+		final var jdbcType = getJdbcType();
 		final int jdbcTypeCode = jdbcType.getDdlTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:

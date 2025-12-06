@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,11 +40,17 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	private final EntityMappingType entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 	protected final EntityIdentifierMapping identifierMapping;
+	private final boolean idCoercionEnabled;
 
 	public AbstractMultiIdEntityLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 		identifierMapping = getLoadable().getIdentifierMapping();
+		idCoercionEnabled =
+				!sessionFactory.getSessionFactoryOptions()
+						.getJpaCompliance().isLoadByIdComplianceEnabled()
+				// special handling for entity with @IdClass
+				&& !entityDescriptor.getIdentifierMapping().isVirtual();
 	}
 
 	protected EntityMappingType getEntityDescriptor() {
@@ -111,7 +118,6 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		final boolean idCoercionEnabled = isIdCoercionEnabled();
 		final var idType = getLoadable().getIdentifierMapping().getJavaType();
 
 		final int maxBatchSize = maxBatchSize( ids, loadOptions );
@@ -124,7 +130,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		final var lockOptions = lockOptions( loadOptions );
 
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = idCoercionEnabled ? idType.coerce( ids[i], session ) : ids[i];
+			final Object id = coerce( session, idType, ids[i] );
 			final var entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
 			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
@@ -154,10 +160,13 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return (List<T>) results;
 	}
 
+	private Object coerce(SharedSessionContractImplementor session, JavaType<?> idType, Object id) {
+		return idCoercionEnabled ? idType.coerce( id, session ) : id;
+	}
+
 	private static LockOptions lockOptions(MultiIdLoadOptions loadOptions) {
-		return loadOptions.getLockOptions() == null
-				? new LockOptions( LockMode.NONE )
-				: loadOptions.getLockOptions();
+		final var lockOptions = loadOptions.getLockOptions();
+		return lockOptions == null ? new LockOptions( LockMode.NONE ) : lockOptions;
 	}
 
 	protected abstract int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions);
@@ -169,8 +178,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			List<Object> results) {
 		final var persistenceContext = session.getPersistenceContext();
 		for ( Integer position : elementPositionsLoadedByBatch ) {
-			// the element value at this position in the results List should be
-			// the EntityKey for that entity - reuse it
+			// the element value at this position in the results List
+			// should be the EntityKey for that entity - reuse it
 			final var entityKey = (EntityKey) results.get( position );
 			session.getPersistenceContextInternal().getBatchFetchQueue().removeBatchLoadableEntityKey( entityKey );
 			final Object entity = persistenceContext.getEntity( entityKey );
@@ -330,11 +339,10 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		final boolean idCoercionEnabled = isIdCoercionEnabled();
 		final var idType = getLoadable().getIdentifierMapping().getJavaType();
 		List<Object> unresolvedIds = null;
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = idCoercionEnabled ? idType.coerce( ids[i], session ) : ids[i];
+			final Object id = coerce( session, idType, ids[i] );
 			unresolvedIds =
 					loadFromCaches(
 							loadOptions,
@@ -352,10 +360,6 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 	// Depending on the implementation, a specific subtype of Object[] (e.g. Integer[]) may be needed.
 	protected abstract Object[] toIdArray(List<Object> ids);
-
-	private boolean isIdCoercionEnabled() {
-		return !getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
-	}
 
 	public interface ResolutionConsumer<T> {
 		void consume(int position, EntityKey entityKey, T resolvedRef);

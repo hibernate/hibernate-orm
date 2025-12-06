@@ -90,7 +90,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
 		final Map<String, SqmCteStatement<?>> copies = new LinkedHashMap<>( cteStatements.size() );
-		for ( Map.Entry<String, SqmCteStatement<?>> entry : cteStatements.entrySet() ) {
+		for ( var entry : cteStatements.entrySet() ) {
 			copies.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
 		return copies;
@@ -181,7 +181,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
-		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
 				this,
@@ -198,7 +198,7 @@ public abstract class AbstractSqmSelectQuery<T>
 			AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) baseCriteria,
 				unionDistinct,
@@ -247,7 +247,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(int, Class)
 	 */
 	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
-		final List<SqmRoot<?>> rootList = getQuerySpec().getRootList();
+		final var rootList = getQuerySpec().getRootList();
 		if ( rootList.size() <= position ) {
 			throw new IllegalArgumentException( "Not enough root entities" );
 		}
@@ -258,7 +258,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
 	 */
 	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
-		for ( SqmRoot<?> root : getQuerySpec().getRootList() ) {
+		for ( var root : getQuerySpec().getRootList() ) {
 			final String rootAlias = root.getAlias();
 			if ( rootAlias != null && rootAlias.equals( alias ) ) {
 				return castRoot( root, type );
@@ -268,7 +268,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	private static <E> JpaRoot<? extends E> castRoot(JpaRoot<?> root, Class<E> type) {
-		final Class<?> rootEntityType = root.getJavaType();
+		final var rootEntityType = root.getJavaType();
 		if ( rootEntityType == null ) {
 			throw new AssertionFailure( "Java type of root entity was null" );
 		}
@@ -277,7 +277,7 @@ public abstract class AbstractSqmSelectQuery<T>
 												+ "' did not have the given type '" + type.getTypeName() + "'");
 		}
 		@SuppressWarnings("unchecked") // safe, we just checked
-		final JpaRoot<? extends E> result = (JpaRoot<? extends E>) root;
+		final var result = (JpaRoot<? extends E>) root;
 		return result;
 	}
 
@@ -296,20 +296,20 @@ public abstract class AbstractSqmSelectQuery<T>
 	@Override
 	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery) {
 		validateComplianceFromSubQuery();
-		final SqmDerivedRoot<X> root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null );
+		final var root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null );
 		addRoot( root );
 		return root;
 	}
 
 	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
-		final SqmCteRoot<X> root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
+		final var root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
 		addRoot( root );
 		return root;
 	}
 
 	@Override
 	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
-		final SqmFunctionRoot<X> root = new SqmFunctionRoot<>( (SqmSetReturningFunction<X>) function, null );
+		final var root = new SqmFunctionRoot<>( (SqmSetReturningFunction<X>) function, null );
 		addRoot( root );
 		return root;
 	}
@@ -355,8 +355,8 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public @Nullable JpaSelection<T> getSelection() {
-		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
-		final List<SqmSelection<?>> selections = selectClause.getSelections();
+		final var selectClause = getQuerySpec().getSelectClause();
+		final var selections = selectClause.getSelections();
 		return (JpaSelection<T>) switch ( selections.size() ) {
 			case 0 -> null;
 			case 1 -> selections.get( 0 ).getSelectableNode();
@@ -438,7 +438,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			hql.append( "with " );
-			for ( SqmCteStatement<?> value : cteStatements.values() ) {
+			for ( var value : cteStatements.values() ) {
 				value.appendHqlString( hql, context );
 				hql.append( ", " );
 			}
@@ -479,7 +479,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@SuppressWarnings("unchecked")
 	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
-		final Class<T> resultType = getResultType();
+		final var resultType = getResultType();
 		if ( resultType == Object.class ) {
 			return switch ( selections.length ) {
 				case 0 -> throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );

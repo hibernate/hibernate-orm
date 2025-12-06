@@ -15,7 +15,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -134,22 +133,20 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	private <X,R> X unwrap(J value, Class<X> type, BasicValueConverter<J, R> converter, WrapperOptions options) {
 		if ( value != null && !type.isInstance( value ) && converter != null ) {
 			final Object relationalValue = customType.convertToRelationalValue( value );
-			final JavaType<R> relationalJavaType = converter.getRelationalJavaType();
-			assert relationalJavaType.isInstance( relationalValue );
-			//noinspection unchecked
-			return relationalJavaType.unwrap( (R) relationalValue, type, options );
+			final var relationalJavaType = converter.getRelationalJavaType();
+			final var castValue = relationalJavaType.cast( relationalValue );
+			return relationalJavaType.unwrap( castValue, type, options );
 		}
 		else {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 	}
 
 	@Override
 	public <X> J wrap(X value, WrapperOptions options) {
-		final BasicValueConverter<J, ?> converter = customType.getValueConverter();
+		final var converter = customType.getValueConverter();
 		if ( value != null && !userType.returnedClass().isInstance( value ) && converter != null ) {
-			final JavaType<J> domainJavaType = converter.getDomainJavaType();
+			final var domainJavaType = converter.getDomainJavaType();
 			final Object domainValue = customType.convertToDomainValue( value );
 			assert domainJavaType.isInstance( value );
 			return domainJavaType.wrap( domainValue, options );

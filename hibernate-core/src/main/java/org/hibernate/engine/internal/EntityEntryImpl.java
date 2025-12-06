@@ -548,13 +548,13 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public <T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType) {
 		if ( next == null ) {
 			return null;
 		}
-		else if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
-			return (T) next;
+		else if ( extraStateType.isInstance( next ) ) {
+			return extraStateType.cast( next );
 		}
 		else {
 			return next.getExtraState( extraStateType );

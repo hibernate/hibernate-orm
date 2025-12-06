@@ -50,6 +50,11 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
+	public LocalTime cast(Object value) {
+		return (LocalTime) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -83,23 +88,22 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(LocalTime value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
 			final var time = Time.valueOf( value );
 			final int nanos = value.getNano();
 			return nanos == 0
-					? (X) time
+					? type.cast( time )
 					// Preserve milliseconds, which java.sql.Time supports
-					: (X) new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 );
+					: type.cast( new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 ) );
 		}
 
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from
@@ -111,21 +115,21 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 						.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( zonedDateTime );
+			return type.cast( GregorianCalendar.from( zonedDateTime ) );
 		}
 
 		final var instant = zonedDateTime.toInstant();
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( instant );
+			return type.cast( Timestamp.from( instant ) );
 		}
 
 		if ( Date.class.equals( type ) ) {
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );

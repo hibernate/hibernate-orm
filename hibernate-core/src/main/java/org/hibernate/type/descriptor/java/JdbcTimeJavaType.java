@@ -75,6 +75,11 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
+	public Date cast(Object value) {
+		return (Date) value;
+	}
+
+	@Override
 	public int extractHashCode(Date value) {
 		final var calendar = Calendar.getInstance();
 		calendar.setTime( value );

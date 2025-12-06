@@ -71,6 +71,11 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	@Override
+	public Blob cast(Object value) {
+		return (Blob) value;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(Blob value) {
 		return value == null ? "null" : "{blob}";
 	}
@@ -109,7 +114,6 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -117,17 +121,17 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 		try {
 			if ( Blob.class.isAssignableFrom( type ) ) {
-				return (X) options.getLobCreator().toJdbcBlob( value );
+				return type.cast( options.getLobCreator().toJdbcBlob( value ) );
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
 				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) blobImplementer.getUnderlyingStream().getBytes();
+					return type.cast( blobImplementer.getUnderlyingStream().getBytes() );
 				}
 				else {
 					try {
 						// otherwise extract the bytes from the stream manually
-						return (X) value.getBinaryStream().readAllBytes();
+						return type.cast( value.getBinaryStream().readAllBytes() );
 					}
 					catch ( IOException e ) {
 						throw new HibernateException( "IOException occurred reading a binary value", e );
@@ -136,20 +140,20 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 			}
 			else if ( BinaryStream.class.isAssignableFrom( type ) ) {
 				if (value instanceof BlobImplementer blobImplementer) {
-					return (X) blobImplementer.getUnderlyingStream();
+					return type.cast( blobImplementer.getUnderlyingStream() );
 				}
 				else {
-					return (X) new StreamBackedBinaryStream( value.getBinaryStream(), value.length() );
+					return type.cast( new StreamBackedBinaryStream( value.getBinaryStream(), value.length() ) );
 				}
 			}
 			else if ( InputStream.class.isAssignableFrom( type ) ) {
 				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just pass along its BinaryStream
-					return (X) blobImplementer.getUnderlyingStream().getInputStream();
+					return type.cast( blobImplementer.getUnderlyingStream().getInputStream() );
 				}
 				else {
 					// otherwise we need to build a BinaryStream...
-					return (X) value.getBinaryStream();
+					return type.cast( value.getBinaryStream() );
 				}
 			}
 		}

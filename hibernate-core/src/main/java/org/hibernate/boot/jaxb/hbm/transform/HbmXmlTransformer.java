@@ -713,7 +713,7 @@ public class HbmXmlTransformer {
 		if ( !hbmImports.isEmpty() ) {
 			final var ormRoot = mappingXmlBinding.getRoot();
 			for ( var hbmImport : hbmImports ) {
-				final JaxbHqlImportImpl ormImport = new JaxbHqlImportImpl();
+				final var ormImport = new JaxbHqlImportImpl();
 				ormRoot.getHqlImports().add( ormImport );
 				ormImport.setClazz( hbmImport.getClazz() );
 				ormImport.setRename( hbmImport.getRename() );
@@ -890,7 +890,8 @@ public class HbmXmlTransformer {
 				query.setQuery( qryString );
 			}
 			else {
-				@SuppressWarnings("unchecked") final var element = (JAXBElement<JaxbHbmQueryParamType>) content;
+				@SuppressWarnings("unchecked")
+				final var element = (JAXBElement<JaxbHbmQueryParamType>) content;
 				final var hbmQueryParam = element.getValue();
 				final var queryParam = new JaxbQueryParamTypeImpl();
 				query.getQueryParam().add( queryParam );

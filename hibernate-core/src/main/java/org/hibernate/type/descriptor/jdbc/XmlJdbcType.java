@@ -94,11 +94,11 @@ public class XmlJdbcType implements AggregateJdbcType {
 		}
 		if ( javaType.getJavaType() == SQLXML.class ) {
 			final SQLXML sqlxml =
-					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+					options.getSession().getJdbcCoordinator()
+							.getLogicalConnection().getPhysicalConnection()
 							.createSQLXML();
 			sqlxml.setString( string );
-			//noinspection unchecked
-			return (X) sqlxml;
+			return javaType.cast( sqlxml );
 		}
 		return options.getXmlFormatMapper().fromString( string, javaType, options );
 	}

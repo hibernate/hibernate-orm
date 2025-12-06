@@ -1515,8 +1515,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	@SuppressWarnings("unchecked")
 	private <T> T loadSettingInstance(String settingName, Object settingValue, Class<T> clazz) {
 		final Class<? extends T> instanceClass;
-		if ( clazz.isAssignableFrom( settingValue.getClass() ) ) {
-			return (T) settingValue;
+		if ( clazz.isInstance( settingValue ) ) {
+			return clazz.cast( settingValue );
 		}
 		else if ( settingValue instanceof Class ) {
 			instanceClass = (Class<? extends T>) settingValue;

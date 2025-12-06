@@ -38,6 +38,11 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 	}
 
 	@Override
+	public ZoneOffset cast(Object value) {
+		return (ZoneOffset) value;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}
@@ -56,19 +61,18 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(ZoneOffset value, Class<X> type, WrapperOptions wrapperOptions) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( ZoneOffset.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) toString( value );
+			return type.cast( toString( value ) );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.getTotalSeconds() );
+			return type.cast( value.getTotalSeconds() );
 		}
 		throw unknownUnwrap( type );
 	}

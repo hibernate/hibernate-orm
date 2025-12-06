@@ -46,6 +46,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 	}
 
 	@Override
+	public LocalDateTime cast(Object value) {
+		return (LocalDateTime) value;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -78,14 +83,13 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(LocalDateTime value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalDateTime.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
@@ -94,31 +98,31 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			// but on top of being more complex than the line below, it won't always work.
 			// Timestamp.from() assumes the number of milliseconds since the epoch means the
 			// same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
-			return (X) Timestamp.valueOf( value );
+			return type.cast( Timestamp.valueOf( value ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) java.sql.Date.from( instant );
+			return type.cast( java.sql.Date.from( instant ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) java.sql.Time.from( instant );
+			return type.cast( java.sql.Time.from( instant ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( value.atZone( ZoneId.systemDefault() ) );
+			return type.cast( GregorianCalendar.from( value.atZone( ZoneId.systemDefault() ) ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
 			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );

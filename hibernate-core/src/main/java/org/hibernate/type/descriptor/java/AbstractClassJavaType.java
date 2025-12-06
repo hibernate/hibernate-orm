@@ -81,7 +81,7 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	}
 
 	@Override
-	public Class<T> getJavaTypeClass() {
+	public final Class<T> getJavaTypeClass() {
 		return getJavaType();
 	}
 

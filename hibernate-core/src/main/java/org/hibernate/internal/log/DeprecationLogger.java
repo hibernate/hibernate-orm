@@ -248,4 +248,12 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "DEPRECATED: use [%s] instead with custom [%s] implementation"
 	)
 	void deprecatedUuidGenerator(String name, String name2);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000041,
+			value = "Deprecated syntax when using @NamedEntityGraph: 'Type: attr1, attr2' is deprecated. " +
+					"Specify the root entity using the 'root' attribute instead of prefixing the graph with the entity type."
+	)
+	void deprecatedNamedEntityGraphTextThatContainTypeIndicator();
 }

@@ -128,6 +128,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
+ * @author Yoobin Yoon
  */
 public class H2LegacyDialect extends Dialect {
 
@@ -409,6 +410,8 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arraySlice();
 				functionFactory.arrayReplace_h2( getMaximumArraySize() );
 				functionFactory.arrayTrim_trim_array();
+				functionFactory.arrayReverse_h2( getMaximumArraySize() );
+				functionFactory.arraySort_h2( getMaximumArraySize() );
 				functionFactory.arrayFill_h2();
 				functionFactory.arrayToString_h2( getMaximumArraySize() );
 

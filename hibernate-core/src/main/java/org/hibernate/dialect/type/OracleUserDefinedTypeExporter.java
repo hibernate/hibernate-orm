@@ -30,6 +30,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExporter {
 
@@ -220,6 +221,66 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"end loop; " +
 						"return res; " +
 						"end;",
+				"create or replace function " + arrayTypeName + "_reverse(arr in " + arrayTypeName +
+						") return " + arrayTypeName + " deterministic is " +
+						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+						"if arr is null then return null; end if; " +
+						"for i in reverse 1 .. arr.count loop " +
+						"res.extend; " +
+						"res(res.count) := arr(i); " +
+						"end loop; " +
+						"return res; " +
+						"end;",
+				"create or replace function " + arrayTypeName + "_sort(" +
+						"arr in " + arrayTypeName + "," +
+						"p_descending in number default 0," +
+						"p_nulls_first in number default -1" +
+						") return " + arrayTypeName + " deterministic is " +
+						"res " + arrayTypeName + ":=" + arrayTypeName + "(); " +
+						"v_count number; " +
+						"tmp " + elementType + "; " +
+						"v_nulls_first number; " +
+						"i_null number; " +
+						"j_null number; " +
+						"swap number; " +
+						"begin " +
+						"if arr is null then return null; end if; " +
+						"v_count := arr.count; " +
+						"if v_count <= 1 then return arr; end if; " +
+						"for i in 1 .. v_count loop " +
+						"res.extend; " +
+						"res(i) := arr(i); " +
+						"end loop; " +
+						"if p_nulls_first = -1 then " +
+						"v_nulls_first := p_descending; " +
+						"else " +
+						"v_nulls_first := p_nulls_first; " +
+						"end if; " +
+						"for i in 1 .. v_count - 1 loop " +
+						"for j in i + 1 .. v_count loop " +
+						"swap := 0; " +
+						"i_null := case when res(i) is null then 1 else 0 end; " +
+						"j_null := case when res(j) is null then 1 else 0 end; " +
+						"if i_null = 1 and j_null = 1 then " +
+						"swap := 0; " +
+						"elsif i_null = 1 then " +
+						"swap := case when v_nulls_first = 0 then 1 else 0 end; " +
+						"elsif j_null = 1 then " +
+						"swap := case when v_nulls_first = 1 then 1 else 0 end; " +
+						"elsif p_descending = 0 then " +
+						"swap := case when res(j) < res(i) then 1 else 0 end; " +
+						"else " +
+						"swap := case when res(j) > res(i) then 1 else 0 end; " +
+						"end if; " +
+						"if swap = 1 then " +
+						"tmp := res(i); " +
+						"res(i) := res(j); " +
+						"res(j) := tmp; " +
+						"end if; " +
+						"end loop; " +
+						"end loop; " +
+						"return res; " +
+						"end;",
 				"create or replace function " + arrayTypeName + "_fill(elem in " + getRawTypeName( elementType ) +
 						", elems number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
@@ -303,6 +364,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 				buildDropFunctionSqlString(arrayTypeName + "_slice"),
 				buildDropFunctionSqlString(arrayTypeName + "_replace"),
 				buildDropFunctionSqlString(arrayTypeName + "_trim"),
+				buildDropFunctionSqlString(arrayTypeName + "_reverse"),
+				buildDropFunctionSqlString(arrayTypeName + "_sort"),
 				buildDropFunctionSqlString(arrayTypeName + "_fill"),
 				buildDropFunctionSqlString(arrayTypeName + "_positions"),
 				buildDropFunctionSqlString(arrayTypeName + "_to_string"),

@@ -95,6 +95,7 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
  * @author Christoph Sturm
  * @author Phillip Baird
  * @author Fred Toussi
+ * @author Yoobin Yoon
  */
 public class HSQLLegacyDialect extends Dialect {
 
@@ -269,6 +270,8 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arraySlice_unnest();
 		functionFactory.arrayReplace_unnest();
 		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_hsql();
 		functionFactory.arrayFill_hsql();
 		functionFactory.arrayToString_hsql();
 

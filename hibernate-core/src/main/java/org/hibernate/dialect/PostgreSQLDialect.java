@@ -167,6 +167,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
  *
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class PostgreSQLDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
@@ -627,6 +628,14 @@ public class PostgreSQLDialect extends Dialect {
 		}
 		else {
 			functionFactory.arrayTrim_unnest();
+		}
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			functionFactory.arrayReverse();
+			functionFactory.arraySort();
+		}
+		else {
+			functionFactory.arrayReverse_unnest();
+			functionFactory.arraySort_unnest();
 		}
 		functionFactory.arrayFill_postgresql();
 		functionFactory.arrayToString_postgresql();

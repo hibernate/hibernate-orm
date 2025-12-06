@@ -1453,6 +1453,36 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setProperty(String propertyName, Object value);
 
 	/**
+	 * Set a property whose key is the type of the value.
+	 * The value may later be retrieved by calling
+	 * {@link #getProperty(Class)}. If there is already
+	 * a property value of the same type, overwrite it.
+	 *
+	 * @apiNote The application program or framework may
+	 * use this mechanism to register an application or
+	 * framework object whose scope is somehow tied to
+	 * the persistence context.
+	 *
+	 * @param value A non-null Java object
+	 *
+	 * @since 4.0
+	 */
+	@Incubating
+	void setProperty(Object value);
+
+	/**
+	 * Retrieve a property value set by a previous call to
+	 * {@link #setProperty(Object)}.
+	 * @param type The type of the property value
+	 * @return The property value, or null if no property
+	 *         value of the given type was set
+	 *
+	 * @since 4.0
+	 */
+	@Incubating
+	<T> T getProperty(Class<T> type);
+
+	/**
 	 * Create a new mutable instance of {@link EntityGraph}, with only
 	 * a root node, allowing programmatic definition of the graph from
 	 * scratch.

@@ -2580,6 +2580,34 @@ public class SessionImpl
 	}
 
 	@Override
+	public void setProperty(Object value) {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Property value may not be null" );
+		}
+		setProperty( value.getClass().getName(), value );
+	}
+
+	@Override
+	public <T> T getProperty(Class<T> type) {
+		if ( properties == null ) {
+			return null;
+		}
+		else {
+			final var value = properties.get( type.getName() );
+			if ( value == null ) {
+				return null;
+			}
+			else if ( type.isInstance( value ) ) {
+				// noinspection unchecked
+				return (T) value;
+			}
+			else {
+				throw new IllegalArgumentException( "Property value is not of expected type: " + type.getName() );
+			}
+		}
+	}
+
+	@Override
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
 		if ( value instanceof Serializable ) {

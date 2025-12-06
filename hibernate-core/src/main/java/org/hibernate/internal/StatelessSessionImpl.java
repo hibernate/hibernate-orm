@@ -152,8 +152,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
-		// a nonzero batch size forces use of write-behind
-		// therefore ignore the value of hibernate.jdbc.batch_size
+		// A nonzero batch size forces the use of write-behind
+		// Therefore, ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
 	}
 

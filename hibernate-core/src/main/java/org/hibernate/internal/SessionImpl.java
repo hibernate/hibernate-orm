@@ -158,8 +158,8 @@ public class SessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
 
-	// Defaults to null which means the properties are the default
-	// as defined in FastSessionServices#defaultSessionProperties
+	// Defaults to null, meaning the properties
+	// are the default properties of the factory.
 	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
@@ -191,8 +191,6 @@ public class SessionImpl
 			actionQueue = createActionQueue();
 			eventListenerGroups = factory.getEventListenerGroups();
 
-			flushMode = options.getInitialSessionFlushMode();
-
 			autoClear = options.shouldAutoClear();
 			autoClose = options.shouldAutoClose();
 
@@ -202,13 +200,10 @@ public class SessionImpl
 
 			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
 
-			// NOTE : pulse() already handles auto-join-ability correctly
+			// NOTE: pulse() already handles auto-join-ability correctly
 			getTransactionCoordinator().pulse();
 
-			// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
-			if ( getHibernateFlushMode() == null ) {
-				setHibernateFlushMode( getInitialFlushMode() );
-			}
+			flushMode = getInitialFlushMode( options );
 
 			setUpMultitenancy( factory, loadQueryInfluencers );
 
@@ -247,10 +242,16 @@ public class SessionImpl
 		}
 	}
 
-	private FlushMode getInitialFlushMode() {
-		return properties == null
-				? getSessionFactoryOptions().getInitialSessionFlushMode()
-				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
+	private FlushMode getInitialFlushMode(SessionCreationOptions options) {
+		final var initialSessionFlushMode = options.getInitialSessionFlushMode();
+		if ( initialSessionFlushMode != null ) {
+			return initialSessionFlushMode;
+		}
+		else {
+			return properties == null
+					? getSessionFactoryOptions().getInitialSessionFlushMode()
+					: ConfigurationHelper.getFlushMode( properties.get( HINT_FLUSH_MODE ), FlushMode.AUTO );
+		}
 	}
 
 	protected PersistenceContext createPersistenceContext(SessionCreationOptions options) {
@@ -351,7 +352,6 @@ public class SessionImpl
 	private void internalClear() {
 		persistenceContext.clear();
 		actionQueue.clear();
-
 		eventListenerGroups.eventListenerGroup_CLEAR
 				.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
 	}
@@ -392,7 +392,7 @@ public class SessionImpl
 				else {
 					// In the JPA bootstrap, if the session is closed
 					// before the transaction commits, we just mark the
-					// session as closed, and set waitingForAutoClose.
+					// session as closed and set waitingForAutoClose.
 					// This method will be called a second time from
 					// afterTransactionCompletion when the transaction
 					// commits, and the session will be closed for real.
@@ -405,10 +405,12 @@ public class SessionImpl
 			}
 		}
 		finally {
-			// E.g. when we are in the JTA context the session can get closed while the transaction is still active
-			// and JTA will call the AfterCompletion itself. Hence, we don't want to clear out the action queue callbacks at this point:
-			if ( !getTransactionCoordinator().isTransactionActive() && actionQueue.hasAfterTransactionActions() ) {
-				SESSION_LOGGER.warn( "Closing session with unprocessed clean up bulk operations, forcing their execution" );
+			// E.g. When we are in the JTA context, the session can get closed while the
+			// transaction is still active and JTA will call the AfterCompletion itself.
+			// Hence, we don't want to clear out the action queue callbacks at this point:
+			if ( !getTransactionCoordinator().isTransactionActive()
+					&& actionQueue.hasAfterTransactionActions() ) {
+				SESSION_LOGGER.closingSessionWithUnprocessedBulkOperations();
 				actionQueue.executePendingBulkOperationCleanUpActions();
 			}
 			final var statistics = getSessionFactory().getStatistics();
@@ -489,8 +491,8 @@ public class SessionImpl
 			return false;
 		}
 		else {
-			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
-			// but we do not assert that here:
+			// JPA requires PersistentUnitTransactionType.JTA,
+			// for this, but we do not assert that here:
 			return isAutoCloseSessionEnabled();
 			//  && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 		}
@@ -557,7 +559,9 @@ public class SessionImpl
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
 		final Object result = persistenceContext.getEntity( key );
 		if ( result == null ) {
-			final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
+			final Object newObject =
+					getInterceptor()
+							.getEntity( key.getEntityName(), key.getIdentifier() );
 			if ( newObject != null ) {
 				lock( newObject, LockMode.NONE );
 			}
@@ -870,8 +874,8 @@ public class SessionImpl
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
 			final var entityEntry = persistenceContext.getEntry( entity );
-			final String entityInfo = entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() );
-			SESSION_LOGGER.removeOrphanBeforeUpdates( timing, entityInfo );
+			SESSION_LOGGER.removeOrphanBeforeUpdates( timing,
+					entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() ) );
 		}
 	}
 
@@ -933,7 +937,7 @@ public class SessionImpl
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
 		int batchSize = -1;
-		for ( FindOption option : options ) {
+		for ( var option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
 			}
@@ -1553,7 +1557,8 @@ public class SessionImpl
 	@Override
 	public void forceFlush(EntityKey key) {
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
-			SESSION_LOGGER.flushingToForceDeletion( infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
+			SESSION_LOGGER.flushingToForceDeletion(
+					infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
@@ -2124,7 +2129,7 @@ public class SessionImpl
 			return true;
 		}
 		else {
-			final TransactionStatus status = currentTransaction.getStatus();
+			final var status = currentTransaction.getStatus();
 			return status == TransactionStatus.ACTIVE
 				|| status == TransactionStatus.COMMITTING;
 		}
@@ -2190,13 +2195,13 @@ public class SessionImpl
 					.load( primaryKey );
 		}
 		catch ( FetchNotFoundException e ) {
-			// This may happen if the entity has an associations mapped with
+			// This may happen if the entity has an association mapped with
 			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
 			// entity is not found
 			throw e;
 		}
 		catch ( EntityFilterException e ) {
-			// This may happen if the entity has an associations which is
+			// This may happen if the entity has an association which is
 			// filtered by a FilterDef and this associated entity is not found
 			throw e;
 		}
@@ -2256,7 +2261,7 @@ public class SessionImpl
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
-		for ( FindOption option : options ) {
+		for ( var option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
 			}
@@ -2295,15 +2300,15 @@ public class SessionImpl
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
 			}
 			else if ( option instanceof FindMultipleOption findMultipleOption ) {
-				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
+				throw new IllegalArgumentException( "Option '" + findMultipleOption
+							+ "' can only be used in 'findMultiple()'" );
 			}
 		}
-		if ( lockOptions.getLockMode().isPessimistic() ) {
-			if ( lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {
-				final Object factoryHint = getFactory().getProperties().get( HINT_SPEC_LOCK_TIMEOUT );
-				if ( factoryHint != null ) {
-					lockOptions.setTimeOut( Timeouts.fromHint( factoryHint ) );
-				}
+		if ( lockOptions.getLockMode().isPessimistic()
+				&& lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {
+			final Object factoryHint = getFactory().getProperties().get( HINT_SPEC_LOCK_TIMEOUT );
+			if ( factoryHint != null ) {
+				lockOptions.setTimeOut( Timeouts.fromHint( factoryHint ) );
 			}
 		}
 		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
@@ -2578,25 +2583,23 @@ public class SessionImpl
 	@Override
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
-
-		if ( !( value instanceof Serializable ) ) {
+		if ( value instanceof Serializable ) {
+			if ( propertyName != null ) { // store property for future reference:
+				if ( properties == null ) {
+					properties = computeCurrentProperties();
+				}
+				properties.put( propertyName, value );
+				// now actually update the setting
+				// if it's one that affects this Session
+				interpretProperty( propertyName, value );
+			}
+			else {
+				SESSION_LOGGER.nullPropertyKey();
+			}
+		}
+		else {
 			SESSION_LOGGER.nonSerializableProperty( propertyName );
-			return;
 		}
-
-		if ( propertyName == null ) {
-			SESSION_LOGGER.nullPropertyKey();
-			return;
-		}
-
-		// store property for future reference:
-		if ( properties == null ) {
-			properties = computeCurrentProperties();
-		}
-		properties.put( propertyName, value );
-
-		// now actually update the setting, if it's one which affects this Session
-		interpretProperty( propertyName, value );
 	}
 
 	private void interpretProperty(String propertyName, Object value) {

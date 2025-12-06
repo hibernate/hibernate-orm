@@ -42,4 +42,15 @@ public interface SelectableMappings {
 		return forEachSelectable( 0, consumer );
 	}
 
+	default boolean isReadOnly() {
+		final int jdbcTypeCount = getJdbcTypeCount();
+		for ( int i = 0; i < jdbcTypeCount; i++ ) {
+			final var selectableMapping = getSelectable( i );
+			if ( selectableMapping.isInsertable() || selectableMapping.isUpdateable() ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 }

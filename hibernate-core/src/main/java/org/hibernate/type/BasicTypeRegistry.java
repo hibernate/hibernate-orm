@@ -5,6 +5,8 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -49,6 +51,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
 	private final Map<String, BasicTypeReference<?>> typeReferencesByName = new ConcurrentHashMap<>();
+	private final Map<String, List<BasicTypeReference<?>>> typeReferencesByJavaTypeName = new ConcurrentHashMap<>();
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
 		this.typeConfiguration = typeConfiguration;
@@ -256,6 +259,16 @@ public class BasicTypeRegistry implements Serializable {
 			return castNonNull( registeredType );
 		}
 		else {
+			final var basicTypeReferences = typeReferencesByJavaTypeName.get( javaType.getTypeName() );
+			if ( basicTypeReferences != null && !basicTypeReferences.isEmpty() ) {
+				final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+				for ( var basicTypeReference : basicTypeReferences ) {
+					if ( jdbcTypeRegistry.getDescriptor( basicTypeReference.getSqlTypeCode() ) == jdbcType ) {
+						//noinspection unchecked
+						return (BasicType<J>) createBasicType( basicTypeReference.getName(), basicTypeReference );
+					}
+				}
+			}
 			final var createdType = creator.get();
 			register( javaType, jdbcType, createdType );
 			return createdType;
@@ -333,7 +346,7 @@ public class BasicTypeRegistry implements Serializable {
 			throw new IllegalArgumentException( "Couldn't find type reference with name: " + typeReferenceKey );
 		}
 		for ( String additionalTypeReferenceKey : additionalTypeReferenceKeys ) {
-			typeReferencesByName.put( additionalTypeReferenceKey, basicTypeReference );
+			addTypeReference( additionalTypeReferenceKey, basicTypeReference );
 		}
 	}
 
@@ -383,7 +396,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// Legacy name registration
 		if ( isNotEmpty( legacyTypeClassName ) ) {
-			typeReferencesByName.put( legacyTypeClassName, type );
+			addTypeReference( legacyTypeClassName, type );
 		}
 
 		// explicit registration keys
@@ -427,18 +440,30 @@ public class BasicTypeRegistry implements Serializable {
 				// Incidentally, this might also help with map lookup efficiency.
 				key = key.intern();
 
-				// Incredibly verbose logging disabled
-//				LOG.tracef( "Adding type registration %s -> %s", key, type );
-
-				final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
-//				if ( old != null && old != type ) {
-//					LOG.tracef(
-//							"Type registration key [%s] overrode previous entry : `%s`",
-//							key,
-//							old
-//					);
-//				}
+				addTypeReference( key, type );
 			}
+		}
+	}
+
+	private void addTypeReference(String name, BasicTypeReference<?> typeReference) {
+		// Incredibly verbose logging disabled
+//		LOG.tracef( "Adding type registration %s -> %s", key, type );
+
+		final BasicTypeReference<?> old = typeReferencesByName.put( name, typeReference );
+//		if ( old != null && old != type ) {
+//			LOG.tracef(
+//					"Type registration key [%s] overrode previous entry : `%s`",
+//					key,
+//					old
+//			);
+//		}
+
+		final var basicTypeReferences = typeReferencesByJavaTypeName.computeIfAbsent(
+				typeReference.getJavaType().getTypeName(),
+				s -> new ArrayList<>()
+		);
+		if ( !basicTypeReferences.contains( old ) ) {
+			basicTypeReferences.add( typeReference );
 		}
 	}
 }

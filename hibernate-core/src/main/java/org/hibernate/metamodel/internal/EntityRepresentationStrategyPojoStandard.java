@@ -157,7 +157,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private Map<String, PropertyAccess> buildPropertyAccessMap(PersistentClass bootDescriptor) {
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
-		for ( var property : bootDescriptor.getPropertyClosure() ) {
+		for ( var property : bootDescriptor.getAllPropertyClosure() ) {
 			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
 		}
 		return propertyAccessMap;

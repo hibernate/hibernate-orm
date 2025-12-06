@@ -116,7 +116,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
@@ -124,9 +124,10 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			final Time time = value instanceof java.sql.Time
-					? (java.sql.Time) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
+			final var time =
+					value instanceof java.sql.Time
+							? (java.sql.Time) value
+							: new java.sql.Time( value.getTime() % 86_400_000 );
 			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
@@ -209,14 +210,15 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownWrap( value.getClass() );
 	}
 
+	private static LocalTime fromDate(Date value) {
+		return value instanceof Time time
+				? time.toLocalTime()
+				: LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
+	}
+
 	@Override
 	public String toString(Date value) {
-		if ( value instanceof java.sql.Time time ) {
-			return LITERAL_FORMATTER.format( time.toLocalTime() );
-		}
-		else {
-			return LITERAL_FORMATTER.format( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
-		}
+		return LITERAL_FORMATTER.format( fromDate( value ) );
 	}
 
 	@Override
@@ -246,12 +248,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Time time ) {
-			LITERAL_FORMATTER.formatTo( time.toLocalTime(), sb );
-		}
-		else {
-			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
-		}
+		LITERAL_FORMATTER.formatTo( fromDate( value ), sb );
 	}
 
 	@Override

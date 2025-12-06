@@ -6,11 +6,11 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -114,7 +114,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
@@ -169,8 +169,9 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			final long dateEpoch = toDateEpoch( date.getTime() );
 			return dateEpoch == date.getTime() ? date : new java.sql.Date( dateEpoch );
 		}
-		return new java.sql.Date( unwrapDateEpoch( value ) );
-
+		else {
+			return new java.sql.Date( unwrapDateEpoch( value ) );
+		}
 	}
 
 	private static long unwrapDateEpoch(Date value) {
@@ -178,7 +179,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	private static long toDateEpoch(long value) {
-		Calendar calendar = Calendar.getInstance();
+		final var calendar = Calendar.getInstance();
 		calendar.setTimeInMillis( value );
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.clear(Calendar.MINUTE);
@@ -216,14 +217,15 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownWrap( value.getClass() );
 	}
 
+	private static TemporalAccessor fromDate(Date value) {
+		return value instanceof java.sql.Date date
+				? date.toLocalDate()
+				: LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
+	}
+
 	@Override
 	public String toString(Date value) {
-		if ( value instanceof java.sql.Date ) {
-			return LITERAL_FORMATTER.format( ( (java.sql.Date) value ).toLocalDate() );
-		}
-		else {
-			return LITERAL_FORMATTER.format( LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
-		}
+		return LITERAL_FORMATTER.format( fromDate( value ) );
 	}
 
 	@Override
@@ -250,12 +252,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Date ) {
-			LITERAL_FORMATTER.formatTo( ( (java.sql.Date) value ).toLocalDate(), sb );
-		}
-		else {
-			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
-		}
+		LITERAL_FORMATTER.formatTo( fromDate( value ), sb );
 	}
 
 	@Override
@@ -274,12 +271,9 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof java.sql.Date ) {
-				return value;
-			}
-			else {
-				return new java.sql.Date( value.getTime() );
-			}
+			return value instanceof java.sql.Date
+					? value
+					: new java.sql.Date( value.getTime() );
 		}
 	}
 }

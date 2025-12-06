@@ -15,7 +15,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -75,10 +74,9 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		if ( stdIndicators.isPreferJavaTimeJdbcTypesEnabled() ) {
-			return stdIndicators.getJdbcType( SqlTypes.OFFSET_DATE_TIME );
-		}
-		return stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
+		return stdIndicators.isPreferJavaTimeJdbcTypesEnabled()
+				? stdIndicators.getJdbcType( SqlTypes.OFFSET_DATE_TIME )
+				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -104,17 +102,16 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	@Override
 	public OffsetDateTime fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-				return OffsetDateTime.from( temporalAccessor );
-			}
-			else {
-				// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
-				return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
-			}
+			final var temporalAccessor = PARSE_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			return temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )
+					? OffsetDateTime.from( temporalAccessor )
+					// For databases that don't have timezone support,
+					// we encode timestamps at UTC, so allow parsing
+					: LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
+			throw new HibernateException( "could not parse timestamp string "
+						+ subSequence( charSequence, start, end ), pe );
 		}
 	}
 
@@ -142,19 +139,21 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
+			// This works around two bugs:
+			// - HHH-13266 (JDK-8061577): around and before 1900,
+			//   the number of milliseconds since the epoch does not mean the same thing
+			//   for java.util and java.time, so conversion must be done using the year,
+			//   month, day, hour, etc.
+			// - HHH-13379 (JDK-4312621): after 1908 (approximately),
+			//   Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc
+			//   representation once a year (on DST end), so conversion must be done using
+			//   the number of milliseconds since the epoch.
+			// - around 1905, both methods are equally valid, so we don't really care which
+			//   one is used.
 			if ( offsetDateTime.getYear() < 1905 ) {
 				return (X) Timestamp.valueOf(
-						offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime()
+						offsetDateTime.atZoneSameInstant( ZoneId.systemDefault() )
+								.toLocalDateTime()
 				);
 			}
 			else {
@@ -200,22 +199,20 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
-			}
-			else {
-				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
-			}
+			// This works around two bugs:
+			// - HHH-13266 (JDK-8061577): around and before 1900,
+			//   the number of milliseconds since the epoch does not mean the same thing
+			//   for java.util and java.time, so conversion must be done using the year,
+			//   month, day, hour, etc.
+			// - HHH-13379 (JDK-4312621): after 1908 (approximately),
+			//   Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc
+			//   representation once a year (on DST end), so conversion must be done using
+			//   the number of milliseconds since the epoch.
+			// - around 1905, both methods are equally valid, so we don't really care which
+			//   one is used.
+			return timestamp.getYear() < 5 // Timestamp year 0 is 1900
+					? timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime()
+					: OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
 		}
 
 		if (value instanceof Date date) {

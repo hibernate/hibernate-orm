@@ -6,7 +6,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -120,7 +119,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
@@ -138,7 +137,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		}
 
 		if ( LocalDateTime.class.isAssignableFrom( type ) ) {
-			final Instant instant = value.toInstant();
+			final var instant = value.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
@@ -230,15 +229,14 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
 			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			final Timestamp timestamp;
 			if ( temporalAccessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
-				timestamp = new Timestamp( temporalAccessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
+				final var timestamp = new Timestamp( temporalAccessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
 				timestamp.setNanos( temporalAccessor.get( ChronoField.NANO_OF_SECOND ) );
+				return timestamp;
 			}
 			else {
-				timestamp = Timestamp.valueOf( LocalDateTime.from( temporalAccessor ) );
+				return Timestamp.valueOf( LocalDateTime.from( temporalAccessor ) );
 			}
-			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );

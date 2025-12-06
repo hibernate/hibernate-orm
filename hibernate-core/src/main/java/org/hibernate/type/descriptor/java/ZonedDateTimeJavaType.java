@@ -54,10 +54,9 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		if ( stdIndicators.isPreferJavaTimeJdbcTypesEnabled() ) {
-			return stdIndicators.getJdbcType( SqlTypes.ZONED_DATE_TIME );
-		}
-		return stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
+		return stdIndicators.isPreferJavaTimeJdbcTypesEnabled()
+				? stdIndicators.getJdbcType( SqlTypes.ZONED_DATE_TIME )
+				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -104,19 +103,21 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
+			// This works around two bugs:
+			// - HHH-13266 (JDK-8061577): around and before 1900,
+			//   the number of milliseconds since the epoch does not mean the same thing
+			//   for java.util and java.time, so conversion must be done using the year,
+			//   month, day, hour, etc.
+			// - HHH-13379 (JDK-4312621): after 1908 (approximately),
+			//   Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc
+			//   representation once a year (on DST end), so conversion must be done using
+			//   the number of milliseconds since the epoch.
+			// - around 1905, both methods are equally valid, so we don't really care which
+			//   one is used.
 			if ( zonedDateTime.getYear() < 1905 ) {
 				return (X) Timestamp.valueOf(
-						zonedDateTime.withZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime()
+						zonedDateTime.withZoneSameInstant( ZoneId.systemDefault() )
+								.toLocalDateTime()
 				);
 			}
 			else {
@@ -162,22 +163,20 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * This works around two bugs:
-			 * - HHH-13266 (JDK-8061577): around and before 1900,
-			 * the number of milliseconds since the epoch does not mean the same thing
-			 * for java.util and java.time, so conversion must be done using the year, month, day, hour, etc.
-			 * - HHH-13379 (JDK-4312621): after 1908 (approximately),
-			 * Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc representation once a year
-			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
-			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
-			 */
-			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() );
-			}
-			else {
-				return timestamp.toInstant().atZone( ZoneId.systemDefault() );
-			}
+			// This works around two bugs:
+			// - HHH-13266 (JDK-8061577): around and before 1900,
+			//   the number of milliseconds since the epoch does not mean the same thing
+			//   for java.util and java.time, so conversion must be done using the year,
+			//   month, day, hour, etc.
+			// - HHH-13379 (JDK-4312621): after 1908 (approximately),
+			//   Daylight Saving Time introduces ambiguity in the year/month/day/hour/etc
+			//   representation once a year (on DST end), so conversion must be done using
+			//   the number of milliseconds since the epoch.
+			// - around 1905, both methods are equally valid, so we don't really care which
+			//   one is used.
+			return timestamp.getYear() < 5 // Timestamp year 0 is 1900
+					? timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() )
+					: timestamp.toInstant().atZone( ZoneId.systemDefault() );
 		}
 
 		if (value instanceof Date date) {

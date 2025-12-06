@@ -116,6 +116,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * And then use the {@code @TimePeriod} annotation to apply our {@code UserType}:
  * <pre>&#64;TimePeriod Period period;</pre>
  * <p>
+ * The {@code @TimePeriod} annotation might even have members:
+ * <pre>&#64;TimePeriod(precision=DAYS) Period period;</pre>
+ * <p>
+ * In this case, the implementation of {@code UserType} may declare a constructor
+ * which accepts the annotation type, and use the values assigned to the members
+ * to customize its behavior.
+ * <p>
  * Finally, we could ask for our custom type to be used by default:
  * <pre>&#64;TypeRegistration(basicClass = Period.class, userType = PeriodType.class)</pre>
  * <p>

@@ -2029,9 +2029,9 @@ public class ModelBinder {
 			);
 		}
 		else {
-			return metadataBuildingContext.getBootstrapContext()
-					.getTypeConfiguration().getBasicTypeRegistry()
-					.resolve( StandardBasicTypes.STRING );
+			return
+					metadataBuildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.STRING );
 		}
 	}
 

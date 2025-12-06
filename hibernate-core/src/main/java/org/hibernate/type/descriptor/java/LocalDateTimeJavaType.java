@@ -89,13 +89,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * Workaround for HHH-13266 (JDK-8061577).
-			 * We used to do Timestamp.from( value.atZone( ZoneId.systemDefault() ).toInstant() ),
-			 * but on top of being more complex than the line below, it won't always work.
-			 * Timestamp.from() assumes the number of milliseconds since the epoch
-			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
-			 */
+			// Workaround for HHH-13266 (JDK-8061577).
+			// We used to do Timestamp.from( value.atZone( ZoneId.systemDefault() ).toInstant() ),
+			// but on top of being more complex than the line below, it won't always work.
+			// Timestamp.from() assumes the number of milliseconds since the epoch means the
+			// same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
 			return (X) Timestamp.valueOf( value );
 		}
 
@@ -137,13 +135,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * Workaround for HHH-13266 (JDK-8061577).
-			 * We used to do LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ),
-			 * but on top of being more complex than the line below, it won't always work.
-			 * ts.toInstant() assumes the number of milliseconds since the epoch
-			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
-			 */
+			// Workaround for HHH-13266 (JDK-8061577).
+			// We used to do LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ),
+			// but on top of being more complex than the line below, it won't always work.
+			// ts.toInstant() assumes the number of milliseconds since the epoch means the
+			// same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
 			return timestamp.toLocalDateTime();
 		}
 

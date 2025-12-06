@@ -22,11 +22,12 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.descriptor.DateTimeUtils.roundToPrecision;
 
 /**
  * Java type descriptor for the {@link LocalTime} type.
@@ -94,19 +95,20 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 		if ( Time.class.isAssignableFrom( type ) ) {
 			final var time = Time.valueOf( value );
-			if ( value.getNano() == 0 ) {
-				return (X) time;
-			}
-			// Preserve milliseconds, which java.sql.Time supports
-			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( value.getNano(), 3 ) / 1000000 );
+			final int nanos = value.getNano();
+			return nanos == 0
+					? (X) time
+					// Preserve milliseconds, which java.sql.Time supports
+					: (X) new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 );
 		}
 
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from
-		// a LocalTime to a Calendar.  IMO the same should hold true for converting to all
-		// the legacy Date/Time types...
+		// a LocalTime to a Calendar. IMO the same should hold true for converting to all
+		// the legacy Date/Time types.
 
-
-		final var zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
+		final var zonedDateTime =
+				value.atDate( LocalDate.of( 1970, 1, 1 ) )
+						.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) GregorianCalendar.from( zonedDateTime );
@@ -140,7 +142,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if (value instanceof Time time) {
-			final LocalTime localTime = time.toLocalTime();
+			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;

@@ -114,6 +114,11 @@ public class CheckForExistingForeignKeyTest {
 		}
 
 		@Override
+		public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+			return null;
+		}
+
+		@Override
 		public Identifier applyGlobalQuoting(String text) {
 			return null;
 		}

@@ -43,7 +43,7 @@ public class NaturalIdHelper {
 		// first check if synchronization (this process) was disabled
 		if ( synchronizationEnabled
 				// only mutable natural-ids need this processing
-				&& entityMappingType.getNaturalIdMapping().isMutable()
+				&& entityMappingType.requireNaturalIdMapping().isMutable()
 				// skip synchronization when not in a transaction
 				&& session.isTransactionInProgress() ) {
 			final var persister = entityMappingType.getEntityPersister();

@@ -5,8 +5,13 @@
 package org.hibernate.orm.test.mapping.naturalid;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.KeyType;
+import org.hibernate.LockMode;
+import org.hibernate.ReadOnlyMode;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -98,6 +103,21 @@ public class LoadByNaturalIdTest {
 		);
 	}
 
+	@Test
+	void testFindOptions(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.find( Parent.class, "Luigi",
+					KeyType.NATURAL,
+					LockMode.PESSIMISTIC_WRITE,
+					Timeout.seconds( 1 ),
+					ReadOnlyMode.READ_ONLY );
+			session.findMultiple( Parent.class, List.of("Luigi"),
+					KeyType.NATURAL,
+					LockMode.PESSIMISTIC_WRITE,
+					Timeout.seconds( 1 ),
+					ReadOnlyMode.READ_ONLY );
+		} );
+	}
 
 	private static NaturalIdLoader<?> getNaturalIdLoader(Class clazz, SessionImplementor session) {
 		return session.getFactory()

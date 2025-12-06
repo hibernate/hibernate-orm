@@ -48,4 +48,11 @@ public interface NaturalIdStatistics extends CacheableDataStatistics, Serializab
 	 * the execution of this "natural id resolution" query
 	 */
 	long getExecutionMinTime();
+
+	/**
+	 * The number of times (since last Statistics clearing) that natural-id value
+	 * {@linkplain org.hibernate.metamodel.mapping.NaturalIdMapping#normalizeInput normalization}
+	 * has been performed.
+	 */
+	long getNormalizationCount();
 }

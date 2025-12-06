@@ -24,6 +24,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	private final AtomicLong executionMaxTime = new AtomicLong();
 	private final AtomicLong executionMinTime = new AtomicLong( Long.MAX_VALUE );
 	private final AtomicLong totalExecutionTime = new AtomicLong();
+	private final AtomicLong normalizationCount = new AtomicLong();
 
 	private final Lock readLock;
 	private final Lock writeLock;
@@ -81,6 +82,11 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 		return executionMinTime.get();
 	}
 
+	@Override
+	public long getNormalizationCount() {
+		return normalizationCount.get();
+	}
+
 	void queryExecuted(long time) {
 		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
 		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
@@ -103,6 +109,10 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 		finally {
 			readLock.unlock();
 		}
+	}
+
+	void valueNormalized() {
+		normalizationCount.getAndIncrement();
 	}
 
 	@Override

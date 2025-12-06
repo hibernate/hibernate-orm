@@ -7,11 +7,15 @@ package org.hibernate.internal;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.OrderingMode;
+import org.hibernate.ReadOnlyMode;
 import org.hibernate.RemovalsMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.UnknownProfileException;
@@ -19,19 +23,23 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.FindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 
-/**
- * @author Steve Ebersole
- */
+/// Implementation of MultiIdentifierLoadAccess.
+///
+/// @author Steve Ebersole
+///
+/// @deprecated Use [FindMultipleByKeyOperation] instead.
+@Deprecated
 class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiIdLoadOptions {
 	private final SharedSessionContractImplementor session;
 	private final EntityPersister entityPersister;
@@ -43,7 +51,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private RootGraphImplementor<T> rootGraph;
 	private GraphSemantic graphSemantic;
 
-	private Integer batchSize;
+	private BatchSize batchSize;
 	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
 	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
 	protected OrderingMode orderingMode = OrderingMode.ORDERED;
@@ -107,12 +115,12 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public Integer getBatchSize() {
-		return batchSize;
+		return batchSize.batchSize();
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
-		this.batchSize = batchSize < 1 ? null : batchSize;
+		this.batchSize = batchSize < 1 ? null : new BatchSize( batchSize );
 		return this;
 	}
 
@@ -164,45 +172,25 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(K... ids) {
-		return perform( () -> (List<T>) entityPersister.multiLoad( ids, session, this ) );
+		return buildOperation().performFind( List.of( ids ), graphSemantic, rootGraph, (LoadAccessContext) session );
 	}
 
-	public List<T> perform(Supplier<List<T>> executor) {
-		final var sessionCacheMode = session.getCacheMode();
-		boolean cacheModeChanged = false;
-		if ( cacheMode != null ) {
-			// naive check for now...
-			// todo : account for "conceptually equal"
-			if ( cacheMode != sessionCacheMode ) {
-				session.setCacheMode( cacheMode );
-				cacheModeChanged = true;
-			}
-		}
-
-		try {
-			final var influencers = session.getLoadQueryInfluencers();
-			final var fetchProfiles =
-					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-			final var effectiveEntityGraph =
-					rootGraph == null
-							? null
-							: influencers.applyEntityGraph( rootGraph, graphSemantic );
-			try {
-				return executor.get();
-			}
-			finally {
-				if ( effectiveEntityGraph != null ) {
-					effectiveEntityGraph.clear();
-				}
-				influencers.setEnabledFetchProfileNames( fetchProfiles );
-			}
-		}
-		finally {
-			if ( cacheModeChanged ) {
-				// change it back
-				session.setCacheMode( sessionCacheMode );
-			}
-		}
+	private FindMultipleByKeyOperation<T> buildOperation() {
+		return new FindMultipleByKeyOperation<T>(
+				entityPersister,
+				KeyType.IDENTIFIER,
+				batchSize,
+				sessionCheckMode,
+				removalsMode,
+				orderingMode,
+				cacheMode,
+				lockOptions,
+				readOnly == Boolean.TRUE ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE,
+				enabledFetchProfiles,
+				disabledFetchProfiles,
+				// irrelevant for load-by-id
+				NaturalIdSynchronization.DISABLED
+		);
 	}
 
 	@Override
@@ -210,7 +198,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	public <K> List<T> multiLoad(List<K> ids) {
 		return ids.isEmpty()
 				? emptyList()
-				: perform( () -> (List<T>) entityPersister.multiLoad( ids.toArray(), session, this ) );
+				: buildOperation().performFind( (List<Object>)ids, graphSemantic, rootGraph, (LoadAccessContext) session );
 	}
 
 	@Override

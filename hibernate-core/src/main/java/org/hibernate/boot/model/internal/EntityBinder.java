@@ -29,7 +29,40 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.HQLSelect;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.NaturalIdClass;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.annotations.SecondaryRows;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.Synchronize;
+import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.annotations.View;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
@@ -86,6 +119,7 @@ import java.util.Set;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static java.util.Collections.addAll;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERCLASS;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -112,7 +146,6 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -159,6 +192,7 @@ public class EntityBinder {
 	private String cacheRegion;
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
+	private ClassDetails naturalIdClass;
 	private CacheLayout queryCacheLayout;
 
 	private ModelsContext modelsContext() {
@@ -1264,6 +1298,7 @@ public class EntityBinder {
 		bindSqlRestriction();
 		bindCache();
 		bindNaturalIdCache();
+		bindNaturalIdClass();
 		bindFiltersInHierarchy();
 
 		persistentClass.setAbstract( annotatedClass.isAbstract() );
@@ -1338,6 +1373,7 @@ public class EntityBinder {
 			rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 		}
 		rootClass.setNaturalIdCacheRegionName( naturalIdCacheRegion );
+		rootClass.setNaturalIdClass( naturalIdClass );
 	}
 
 	private void bindCustomSql() {
@@ -1611,6 +1647,20 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 		return null;
+	}
+
+	private void bindNaturalIdClass() {
+		final var ann = annotatedClass.getAnnotationUsage( NaturalIdClass.class, modelsContext() );
+		if ( ann != null ) {
+			if ( ann.value() == void.class ) {
+				throw new IllegalStateException( "NaturalIdClass#value must not be void.class" );
+			}
+			naturalIdClass = context
+					.getBootstrapContext()
+					.getModelsContext()
+					.getClassDetailsRegistry()
+					.resolveClassDetails( ann.value().getName() );
+		}
 	}
 
 	private void bindNaturalIdCache() {

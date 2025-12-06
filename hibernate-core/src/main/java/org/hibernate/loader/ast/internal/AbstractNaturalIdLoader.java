@@ -5,7 +5,10 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -32,7 +35,6 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -40,6 +42,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -86,13 +89,28 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
-	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		final var factory = session.getFactory();
+	public T load(Object naturalIdToLoad, Options options, SharedSessionContractImplementor session) {
+		final var lockOptions = makeLockOptions( options );
+		return load( naturalIdToLoad, lockOptions, session );
+	}
 
-		final var lockOptions =
-				options.getLockOptions() == null
-						? new LockOptions()
-						: options.getLockOptions();
+	private LockOptions makeLockOptions(Options options) {
+		if ( options.getLockMode() == null || options.getLockMode() == LockMode.NONE ) {
+			return LockOptions.NONE;
+		}
+		if ( options.getLockMode() == LockMode.READ ) {
+			return LockOptions.READ;
+		}
+
+		final var lockOptions = new LockOptions( options.getLockMode() );
+		lockOptions.setScope( options.getLockScope() != null ? options.getLockScope() : Locking.Scope.ROOT_ONLY );
+		lockOptions.setTimeout( options.getLockTimeout() != null ? options.getLockTimeout() : Timeouts.WAIT_FOREVER );
+		lockOptions.setFollowOnStrategy( options.getLockFollowOn() != null ? options.getLockFollowOn() : Locking.FollowOn.ALLOW );
+		return lockOptions;
+	}
+
+	private T load(Object naturalIdValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		final var factory = session.getFactory();
 
 		final var sqlSelect = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -128,6 +146,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		);
 	}
 
+	@Override
+	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+		final var lockOptions = options.getLockOptions() == null
+				? new LockOptions()
+				: options.getLockOptions();
+		return load( naturalIdValue, lockOptions, session );
+	}
+
 	/**
 	 * Apply restriction necessary to match the given natural-id value.
 	 * Should also apply any predicates to the predicate consumer and
@@ -148,9 +174,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			TableGroup rootTableGroup,
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver) {
-		final var tableReference =
-				rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(),
-						selectableMapping.getContainingTableExpression() );
+		final var tableReference = rootTableGroup.getTableReference(
+				rootTableGroup.getNavigablePath(),
+				selectableMapping.getContainingTableExpression()
+		);
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
 					String.format(
@@ -179,17 +206,16 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final var entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
 		final var rootQuerySpec = new QuerySpec( true );
 
-		final var sqlAstCreationState =
-				new LoaderSqlAstCreationState(
-						rootQuerySpec,
-						new SqlAliasBaseManager(),
-						new SimpleFromClauseAccessImpl(),
-						LockOptions.NONE,
-						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
-						true,
-						new LoadQueryInfluencers( factory ),
-						factory.getSqlTranslationEngine()
-				);
+		final var sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				new SqlAliasBaseManager(),
+				new SimpleFromClauseAccessImpl(),
+				LockOptions.NONE,
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
+				true,
+				new LoadQueryInfluencers( factory ),
+				factory.getSqlTranslationEngine()
+		);
 
 		final var rootTableGroup = entityDescriptor.createRootTableGroup(
 				true,
@@ -231,12 +257,13 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			Consumer<Predicate> predicateConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
+		assert naturalIdMapping.isNormalized( naturalIdValue );
+
 		final var factory = session.getFactory();
 
-		final var bindings =
-				new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
+		final var bindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 		applyNaturalIdRestriction(
-				naturalIdMapping().normalizeInput( naturalIdValue ),
+				naturalIdValue,
 				rootTableGroup,
 				predicateConsumer,
 				bindings::addBinding,
@@ -282,7 +309,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		};
 	}
 
-	private static JdbcOperationQuerySelect createJdbcOperationQuerySelect(
+	private static JdbcSelect createJdbcOperationQuerySelect(
 			SelectStatement sqlSelect,
 			SessionFactoryImplementor factory,
 			JdbcParameterBindings bindings,

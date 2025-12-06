@@ -4,13 +4,15 @@
  */
 package org.hibernate.loader.ast.spi;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-/**
- * Loader subtype for loading multiple entities by multiple identifier values.
- */
+import java.util.List;
+
+/// EntityMultiLoader implementation based on [identifier][org.hibernate.KeyType#IDENTIFIER].
+///
+/// @see org.hibernate.Session#findMultiple
+///
+/// @author Steve Ebersole
 public interface MultiIdEntityLoader<T> extends EntityMultiLoader<T> {
 	/**
 	 * Load multiple entities by id.  The exact result depends on the passed options.

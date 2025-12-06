@@ -6,16 +6,15 @@ package org.hibernate.orm.test.mapping.identifier;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.Session;
+import org.hibernate.KeyType;
+import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.annotations.NaturalId;
-
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Vlad Mihalcea
@@ -35,32 +34,32 @@ public class MutableNaturalIdTest {
 		});
 		scope.inTransaction( entityManager -> {
 			//tag::naturalid-mutable-synchronized-example[]
-			//tag::naturalid-mutable-example[]
-			Author author = entityManager
-				.unwrap(Session.class)
-				.bySimpleNaturalId(Author.class)
-				.load("john@acme.com");
-			//end::naturalid-mutable-example[]
+			Author author = entityManager.find( Author.class,
+					"john@acme.com",
+					KeyType.NATURAL );
 
+			// change the natural id value
 			author.setEmail("john.doe@acme.com");
 
-			assertNull(
-				entityManager
-					.unwrap(Session.class)
-					.bySimpleNaturalId(Author.class)
-					.setSynchronizationEnabled(false)
-					.load("john.doe@acme.com")
-			);
+			// since there has been no flush,
+			// the internal resolution cache
+			// does not know about the change -
+			// without synchronization, we will
+			// get a miss.
 
-			assertSame(author,
-				entityManager
-					.unwrap(Session.class)
-					.bySimpleNaturalId(Author.class)
-					.setSynchronizationEnabled(true)
-					.load("john.doe@acme.com")
-			);
-			//end::naturalid-mutable-example[]
+			Author author2 = entityManager.find( Author.class,
+					"john.doe@acme.com",
+					KeyType.NATURAL,
+					NaturalIdSynchronization.DISABLED );
+			assertNull( author2 );
 
+			// with synchronization (the default),
+			// however, we will get correct results.
+
+			Author author3 = entityManager.find( Author.class,
+					"john.doe@acme.com",
+					KeyType.NATURAL );
+			assertEquals( author, author3 );
 			//end::naturalid-mutable-synchronized-example[]
 		});
 	}

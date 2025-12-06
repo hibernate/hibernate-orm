@@ -30,6 +30,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 	}
 
 	@Override
+	public ZoneId cast(Object value) {
+		return (ZoneId) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		return indicators.getJdbcType( Types.VARCHAR );
 	}
@@ -49,17 +54,16 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		return string == null ? null : ZoneId.of( string.toString() );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(ZoneId value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( ZoneId.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) toString( value );
+			return type.cast( toString( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

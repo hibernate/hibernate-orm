@@ -38,6 +38,11 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 	}
 
 	@Override
+	public BigDecimal cast(Object value) {
+		return (BigDecimal) value;
+	}
+
+	@Override
 	public boolean areEqual(BigDecimal one, BigDecimal another) {
 		return one == another
 			|| one != null && another != null && one.compareTo( another ) == 0;
@@ -48,37 +53,36 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		return value.intValue();
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(BigDecimal value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( BigInteger.class.isAssignableFrom( type ) ) {
-			return (X) value.toBigIntegerExact();
+			return type.cast( value.toBigIntegerExact() );
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
-			return (X) Byte.valueOf( value.byteValue() );
+			return type.cast( value.byteValue() );
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {
-			return (X) Short.valueOf( value.shortValue() );
+			return type.cast( value.shortValue() );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.intValue() );
+			return type.cast( value.intValue() );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.longValue() );
+			return type.cast( value.longValue() );
 		}
 		if ( Double.class.isAssignableFrom( type ) ) {
-			return (X) Double.valueOf( value.doubleValue() );
+			return type.cast( value.doubleValue() );
 		}
 		if ( Float.class.isAssignableFrom( type ) ) {
-			return (X) Float.valueOf( value.floatValue() );
+			return type.cast( value.floatValue() );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return type.cast( value.toString() );
 		}
 		throw unknownUnwrap( type );
 	}

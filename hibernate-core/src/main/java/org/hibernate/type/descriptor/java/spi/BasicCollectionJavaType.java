@@ -355,21 +355,18 @@ public class BasicCollectionJavaType<C extends Collection<E>, E>
 		}
 
 		if ( type.isInstance( value ) ) {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( type == byte[].class ) {
 			// byte[] can only be requested if the value should be serialized
-			return (X) SerializationHelper.serialize( asArrayList( value ) );
+			return type.cast( SerializationHelper.serialize( asArrayList( value ) ) );
 		}
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
-			//noinspection unchecked
-			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( asArrayList( value ) ) );
+			return type.cast( new ArrayBackedBinaryStream( SerializationHelper.serialize( asArrayList( value ) ) ) );
 		}
 		else if ( type == Object[].class ) {
-			//noinspection unchecked
-			return (X) value.toArray();
+			return type.cast( value.toArray() );
 		}
 		else if ( Object[].class.isAssignableFrom( type ) ) {
 			final var preferredJavaTypeClass = type.getComponentType();
@@ -379,13 +376,11 @@ public class BasicCollectionJavaType<C extends Collection<E>, E>
 				unwrapped[i] = componentJavaType.unwrap( element, preferredJavaTypeClass, options );
 				i++;
 			}
-			//noinspection unchecked
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 		else if ( type.isArray() ) {
 			final var preferredJavaTypeClass = type.getComponentType();
-			//noinspection unchecked
-			final X unwrapped = (X) newInstance( preferredJavaTypeClass, value.size() );
+			final X unwrapped = type.cast( newInstance( preferredJavaTypeClass, value.size() ) );
 			int i = 0;
 			for ( E element : value ) {
 				set( unwrapped, i, componentJavaType.unwrap( element, preferredJavaTypeClass, options ) );

@@ -38,6 +38,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 	}
 
 	@Override
+	public Locale cast(Object value) {
+		return (Locale) value;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}
@@ -181,16 +186,15 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Locale value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Locale.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) (options.useLanguageTagForLocale() ? value.toLanguageTag() : value.toString());
+			return type.cast( (options.useLanguageTagForLocale() ? value.toLanguageTag() : value.toString()) );
 		}
 		throw unknownUnwrap( type );
 	}

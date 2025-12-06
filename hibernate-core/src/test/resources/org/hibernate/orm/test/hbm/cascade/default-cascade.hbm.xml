@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   default-cascade="all-delete-orphan">
+
+    <class name="org.hibernate.orm.test.legacy.Holder">
+        <id name="id" column="id_" type="string" length="32" unsaved-value="null">
+            <generator class="uuid.hex"/>
+        </id>
+
+        <!-- Default cascade is "all-delete-orphan" -->
+        <list name="ones">
+            <key column="holder"/>
+            <index column="i"/>
+            <one-to-many class="org.hibernate.orm.test.legacy.One"/>
+        </list>
+
+        <array name="fooArray" cascade="persist">
+            <key column="holder1"/>
+            <index column="j1"/>
+            <one-to-many class="org.hibernate.orm.test.legacy.Foo"/>
+        </array>
+    </class>
+
+    <class name="org.hibernate.orm.test.legacy.One" table="one">
+        <id name="key" column="one_key">
+            <generator class="native" />
+        </id>
+    </class>
+
+    <class name="org.hibernate.orm.test.legacy.Foo" table="foo">
+        <id name="key" column="one_key">
+            <generator class="native" />
+        </id>
+    </class>
+</hibernate-mapping>

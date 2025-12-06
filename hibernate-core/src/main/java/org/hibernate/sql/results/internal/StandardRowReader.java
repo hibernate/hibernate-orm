@@ -133,7 +133,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	@AllowReflection
 	public T readRow(RowProcessingState rowProcessingState) {
 		coordinateInitializers();
 		final T result = getResult( rowProcessingState );
@@ -141,6 +140,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 		return result;
 	}
 
+	@AllowReflection
 	@SuppressWarnings("unchecked")
 	private T getResult(RowProcessingState rowProcessingState) {
 		if ( componentType != ComponentType.OBJECT ) {

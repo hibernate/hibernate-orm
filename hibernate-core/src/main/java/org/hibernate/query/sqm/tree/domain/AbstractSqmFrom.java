@@ -146,7 +146,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( treats != null ) {
 			final ArrayList<SqmTreatedFrom<?, ?, @Nullable ?>> newTreats =
 					new ArrayList<>( treats.size() );
-			for ( var treat : treats ) {
+			for ( SqmTreatedFrom<?,?,@Nullable ?> treat : treats ) {
 				newTreats.add( treat.copy( context ) );
 			}
 			target.treats = newTreats;

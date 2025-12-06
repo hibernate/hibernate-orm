@@ -135,9 +135,9 @@ public class SimpleSharedStatelessSessionBuildingTests {
 				session.insert( new Something( 2, "first" ) );
 				assertSame( session.getTransaction(), statelessSession.getTransaction() );
 				assertSame( ((StatelessSessionImplementor) session).getJdbcCoordinator(),
-						((StatelessSessionImplementor) statelessSession).getJdbcCoordinator() );
+						statelessSession.getJdbcCoordinator() );
 				assertSame( ((StatelessSessionImplementor) session).getTransactionCompletionCallbacksImplementor(),
-						((StatelessSessionImplementor) statelessSession).getTransactionCompletionCallbacksImplementor() );
+						statelessSession.getTransactionCompletionCallbacksImplementor() );
 			}
 		} );
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );

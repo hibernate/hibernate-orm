@@ -73,17 +73,6 @@ public class TransformHbmTestIT {
 		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
 	}
 
-	private static File determineBaseFolder() throws Exception {
-		Class<?> thisClass = TransformHbmTestIT.class;
-		URL classUrl = thisClass.getResource("/" + thisClass.getName().replace(".", "/") + ".class");
-		assert classUrl != null;
-		File result = new File(classUrl.toURI());
-		for (int i = 0; i < thisClass.getName().chars().filter(ch -> ch == '.').count() + 1; i++) {
-			result = result.getParentFile();
-		}
-		return result;
-	}
-
 	private static final String simplePomContents =
 			"""
 				<project>

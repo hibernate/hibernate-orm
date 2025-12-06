@@ -175,11 +175,10 @@ public class EnumType<T extends Enum<T>>
 			|| reader!=null && getAnnotation( reader.getAnnotationsMethod(), Nationalized.class ) != null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <A extends Annotation> A getAnnotation(Annotation[] annotations, Class<A> annotationType) {
 		for ( Annotation annotation : annotations ) {
 			if ( annotationType.isInstance( annotation ) ) {
-				return (A) annotation;
+				return annotationType.cast( annotation );
 			}
 		}
 		return null;

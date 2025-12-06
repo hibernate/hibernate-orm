@@ -448,8 +448,9 @@ public interface UserType<J> {
 	 * @see org.hibernate.Cache
 	 */
 	default J assemble(Serializable cached, Object owner) {
-		if ( returnedClass().isInstance( cached) ) {
-			return deepCopy( (J) cached );
+		final var returnedClass = returnedClass();
+		if ( returnedClass.isInstance( cached ) ) {
+			return deepCopy( returnedClass.cast( cached ) );
 		}
 		else {
 			throw new UnsupportedOperationException( "User-defined type '"

@@ -114,7 +114,17 @@ public class DefaultReplicateEventListener
 
 	private static <T> boolean shouldOverwrite(
 			ReplicationMode replicationMode, Object entityVersion, Object realOldVersion, BasicType<T> versionType) {
-		return replicationMode.shouldOverwriteCurrentVersion( (T) realOldVersion, (T) entityVersion, versionType );
+		return replicationMode.shouldOverwriteCurrentVersion(
+				castVersion( realOldVersion, versionType ),
+				castVersion( entityVersion, versionType ),
+				versionType
+		);
+	}
+
+	private static <T> T castVersion(Object realOldVersion, BasicType<T> versionType) {
+		return versionType == null
+				? null
+				: versionType.getJavaTypeDescriptor().cast( realOldVersion );
 	}
 
 	@Override

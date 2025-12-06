@@ -25,10 +25,9 @@ public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( UserSuppliedConnectionProviderImpl.class ) ) {
-			return (T) this;
+			return unwrapType.cast( this );
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

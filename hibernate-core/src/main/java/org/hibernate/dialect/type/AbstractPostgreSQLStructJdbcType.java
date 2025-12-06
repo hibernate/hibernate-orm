@@ -4,27 +4,9 @@
  */
 package org.hibernate.dialect.type;
 
-import java.lang.reflect.Array;
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.TimeZone;
-
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -43,13 +25,31 @@ import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
-import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.TimeZone;
+
+import static java.lang.reflect.Array.get;
+import static java.lang.reflect.Array.getLength;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
 /**
  * Implementation for serializing/deserializing an embeddable aggregate to/from the PostgreSQL component format.
@@ -189,15 +189,13 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		}
 		assert end == string.length();
 		if ( returnEmbeddable ) {
-			final StructAttributeValues attributeValues = getAttributeValues( embeddableMappingType, orderMapping, array, options );
-			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues );
+			final var attributeValues = getAttributeValues( embeddableMappingType, orderMapping, array, options );
+			return javaType.cast( instantiate( embeddableMappingType, attributeValues ) );
 		}
 		else if ( inverseOrderMapping != null ) {
 			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
 		}
-		//noinspection unchecked
-		return (X) array;
+		return javaType.cast( array );
 	}
 
 	private int deserializeStruct(
@@ -336,7 +334,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 							continue;
 						}
 						assert isDoubleQuote( string, i, 1 << quotes );
-						final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+						final var jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 						switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 							case SqlTypes.DATE:
 								values[column] = fromRawObject(
@@ -450,7 +448,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 						i += expectedQuotes - 1;
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
-							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+							final var jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 							if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
@@ -500,7 +498,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 						}
 						else if ( string.charAt( i + 1 ) == '{' ) {
 							// This could be a quoted array
-							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+							final var jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 							if ( jdbcMapping instanceof BasicPluralType<?, ?> pluralType ) {
 								final ArrayList<Object> arrayList = new ArrayList<>();
 								//noinspection unchecked
@@ -543,7 +541,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 							values[column] = null;
 						}
 						else {
-							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+							final var jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 							if ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
 								values[column] = fromRawObject(
 										jdbcMapping,
@@ -579,7 +577,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 								values[column] = null;
 							}
 							else {
-								final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+								final var jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
 								if ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
 									values[column] = fromRawObject(
 											jdbcMapping,
@@ -610,7 +608,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 					break;
 				case '{':
 					if ( !inQuote ) {
-						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) getJdbcValueSelectable( column ).getJdbcMapping();
+						final var pluralType = (BasicPluralType<?, ?>) getJdbcValueSelectable( column ).getJdbcMapping();
 						final ArrayList<Object> arrayList = new ArrayList<>();
 						//noinspection unchecked
 						i = deserializeArray(
@@ -645,14 +643,10 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private static boolean isBinary(JdbcMapping jdbcMapping) {
-		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
-			case SqlTypes.BINARY:
-			case SqlTypes.VARBINARY:
-			case SqlTypes.LONGVARBINARY:
-			case SqlTypes.LONG32VARBINARY:
-				return true;
-		}
-		return false;
+		return switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.BINARY, SqlTypes.VARBINARY, SqlTypes.LONGVARBINARY, SqlTypes.LONG32VARBINARY -> true;
+			default -> false;
+		};
 	}
 
 	private int deserializeArray(
@@ -803,7 +797,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 								);
 								break;
 							default:
-								if ( escapingSb == null || escapingSb.length() == 0 ) {
+								if ( escapingSb == null || escapingSb.isEmpty() ) {
 									values.add(
 											fromString(
 													elementType,
@@ -1027,19 +1021,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		return false;
 	}
 
-	private Object fromString(
-			int selectableIndex,
-			String string,
-			int start,
-			int end) {
-		return fromString(
-				getJdbcValueSelectable( selectableIndex ).getJdbcMapping(),
-				string,
-				start,
-				end
-		);
-	}
-
 	private static Object fromString(JdbcMapping jdbcMapping, CharSequence charSequence, int start, int end) {
 		return jdbcMapping.getJdbcJavaType().fromEncodedString(
 				charSequence,
@@ -1064,22 +1045,19 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private Object parseTimestamp(CharSequence subSequence, JavaType<?> jdbcJavaType) {
-		final TemporalAccessor temporalAccessor = LOCAL_DATE_TIME.parse( subSequence );
-		final LocalDateTime localDateTime = LocalDateTime.from( temporalAccessor );
-		final Timestamp timestamp = Timestamp.valueOf( localDateTime );
+		final var temporalAccessor = LOCAL_DATE_TIME.parse( subSequence );
+		final var localDateTime = LocalDateTime.from( temporalAccessor );
+		final var timestamp = Timestamp.valueOf( localDateTime );
 		timestamp.setNanos( temporalAccessor.get( ChronoField.NANO_OF_SECOND ) );
 		return timestamp;
 	}
 
 	private Object parseTimestampWithTimeZone(CharSequence subSequence, JavaType<?> jdbcJavaType) {
-		final TemporalAccessor temporalAccessor = LOCAL_DATE_TIME.parse( subSequence );
+		final var temporalAccessor = LOCAL_DATE_TIME.parse( subSequence );
 		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-			if ( jdbcJavaType.getJavaTypeClass() == Instant.class ) {
-				return Instant.from( temporalAccessor );
-			}
-			else {
-				return OffsetDateTime.from( temporalAccessor );
-			}
+			return jdbcJavaType.getJavaTypeClass() == Instant.class
+					? Instant.from( temporalAccessor )
+					: OffsetDateTime.from( temporalAccessor );
 		}
 		return LocalDateTime.from( temporalAccessor );
 	}
@@ -1129,7 +1107,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		if ( value == null ) {
 			return null;
 		}
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		serializeStructTo( new PostgreSQLAppender( sb ), value, options );
 		return sb.toString();
 	}
@@ -1164,10 +1142,10 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			if ( jdbcValue == null ) {
 				continue;
 			}
-			final SelectableMapping selectableMapping = orderMapping == null ?
+			final var selectableMapping = orderMapping == null ?
 					embeddableMappingType.getJdbcValueSelectable( i ) :
 					embeddableMappingType.getJdbcValueSelectable( orderMapping[i] );
-			final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping();
+			final var jdbcMapping = selectableMapping.getJdbcMapping();
 			if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 				appender.quoteStart();
 				structJdbcType.serializeJdbcValuesTo(
@@ -1267,7 +1245,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 				break;
 			case SqlTypes.ARRAY:
 				if ( subValue != null ) {
-					final int length = Array.getLength( subValue );
+					final int length = getLength( subValue );
 					if ( length == 0 ) {
 						appender.append( "{}" );
 					}
@@ -1276,7 +1254,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 						final BasicType<Object> elementType = ((BasicPluralType<?, Object>) jdbcMapping).getElementType();
 						appender.quoteStart();
 						appender.append( '{' );
-						Object arrayElement = Array.get( subValue, 0 );
+						Object arrayElement = get( subValue, 0 );
 						if ( arrayElement == null ) {
 							appender.appendNull();
 						}
@@ -1284,7 +1262,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 							serializeConvertedBasicTo( appender, options, elementType, arrayElement );
 						}
 						for ( int i = 1; i < length; i++ ) {
-							arrayElement = Array.get( subValue, i );
+							arrayElement = get( subValue, i );
 							appender.append( ',' );
 							if ( arrayElement == null ) {
 								appender.appendNull();
@@ -1301,7 +1279,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 				break;
 			case SqlTypes.STRUCT:
 				if ( subValue != null ) {
-					final AbstractPostgreSQLStructJdbcType structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
+					final var structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
 					appender.quoteStart();
 					structJdbcType.serializeJdbcValuesTo( appender, options, (Object[]) subValue, '(' );
 					appender.append( ')' );
@@ -1354,7 +1332,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			Object[] rawJdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
-		final MappingType mappedType = modelPart.getMappedType();
+		final var mappedType = modelPart.getMappedType();
 		final int jdbcValueCount;
 		final Object rawJdbcValue = rawJdbcValues[jdbcIndex];
 		if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
@@ -1378,7 +1356,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		else {
 			assert modelPart.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = modelPart.getSingleJdbcMapping();
+			final var jdbcMapping = modelPart.getSingleJdbcMapping();
 			final Object jdbcValue = jdbcMapping.getJdbcJavaType().wrap(
 					rawJdbcValue,
 					options

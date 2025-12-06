@@ -220,10 +220,9 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> type) {
 		if ( type.isAssignableFrom( DisabledCaching.class ) ) {
-			return (T) this;
+			return type.cast( this );
 		}
 		else {
 			throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );

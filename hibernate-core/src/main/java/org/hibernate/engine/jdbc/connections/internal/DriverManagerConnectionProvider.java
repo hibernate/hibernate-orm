@@ -322,10 +322,9 @@ public class DriverManagerConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class ) ) {
-			return (T) this;
+			return unwrapType.cast( this );
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

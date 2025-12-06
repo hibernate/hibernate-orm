@@ -90,9 +90,8 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	static <T> boolean equal(JdbcParameterBinding appliedBinding, JdbcParameterBinding binding, JavaType<T> type) {
 		return type.isInstance( appliedBinding.getBindValue() )
-			&& type.areEqual( (T) binding.getBindValue(), (T) appliedBinding.getBindValue() );
+			&& type.areEqual( type.cast( binding.getBindValue() ), type.cast( appliedBinding.getBindValue() ) );
 	}
 }

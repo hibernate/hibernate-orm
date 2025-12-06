@@ -21,6 +21,18 @@ public final class PrimitiveWrapperHelper {
 		Class<T> getWrapperClass();
 	}
 
+	public static <X> X cast(Class<X> type, Object value) {
+		return type.isPrimitive()
+				? getDescriptorByPrimitiveType( type ).getWrapperClass().cast( value )
+				: type.cast( value );
+	}
+
+	public static boolean isInstance(Class<?> type, Object value) {
+		return type.isPrimitive()
+				? getDescriptorByPrimitiveType( type ).getWrapperClass().isInstance( value )
+				: type.isInstance( value );
+	}
+
 	public static class BooleanDescriptor implements PrimitiveWrapperDescriptor<Boolean> {
 		public static final BooleanDescriptor INSTANCE = new BooleanDescriptor();
 

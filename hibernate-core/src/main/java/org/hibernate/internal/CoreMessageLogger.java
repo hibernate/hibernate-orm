@@ -235,6 +235,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToMarkForRollbackOnTransientObjectException(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
+	@Message(value = "Unable to mark for rollback on DetachedObjectException: ", id = 339)
+	void unableToMarkForRollbackOnDetachedObjectException(@Cause Exception e);
+
+	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);
 

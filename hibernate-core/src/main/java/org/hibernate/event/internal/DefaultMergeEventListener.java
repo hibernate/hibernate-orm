@@ -40,6 +40,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTra
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.event.internal.EventUtil.getLoggableName;
@@ -362,20 +363,17 @@ public class DefaultMergeEventListener
 		@Override
 		protected Object processCollection(Object collection, CollectionType collectionType) {
 			if ( collection instanceof PersistentCollection<?> persistentCollection ) {
+				final var session = getSession();
 				final var persister =
-						getSession().getFactory().getMappingMetamodel()
+						session.getFactory().getMappingMetamodel()
 								.getCollectionDescriptor( collectionType.getRole() );
 				final var collectionEntry =
-						getSession().getPersistenceContextInternal()
+						session.getPersistenceContextInternal()
 								.getCollectionEntry( persistentCollection );
 				if ( !persistentCollection.equalsSnapshot( persister ) ) {
 					collectionEntry.resetStoredSnapshot( persistentCollection, persistentCollection.getSnapshot( persister ) );
 				}
 			}
-			return null;
-		}
-		@Override
-		Object processEntity(Object value, EntityType entityType) {
 			return null;
 		}
 	}
@@ -518,7 +516,7 @@ public class DefaultMergeEventListener
 			EntityPersister persister,
 			EventSource source) {
 		if ( isHibernateProxy( managed ) ) {
-			return source.getPersistenceContextInternal().unproxy( managed );
+			return assertInitialized( managed );
 		}
 
 		if ( isPersistentAttributeInterceptable( incoming )

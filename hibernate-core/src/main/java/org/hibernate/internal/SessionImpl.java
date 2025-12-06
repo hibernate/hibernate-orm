@@ -2582,23 +2582,21 @@ public class SessionImpl
 	@Override
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
-		if ( value instanceof Serializable ) {
-			if ( propertyName != null ) {
-				// store property for future reference
-				if ( properties == null ) {
-					properties = getInitialProperties();
-				}
-				properties.put( propertyName, value );
-				// now actually update the setting if
-				// it's one that affects this Session
-				interpretProperty( propertyName, value );
-			}
-			else {
-				SESSION_LOGGER.nullPropertyKey();
-			}
+		if ( propertyName == null ) {
+			SESSION_LOGGER.nullPropertyKey();
+		}
+		else if ( !(value instanceof Serializable) ) {
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
 		}
 		else {
-			SESSION_LOGGER.nonSerializableProperty( propertyName );
+			// store property for future reference
+			if ( properties == null ) {
+				properties = getInitialProperties();
+			}
+			properties.put( propertyName, value );
+			// now actually update the setting if
+			// it's one that affects this Session
+			interpretProperty( propertyName, value );
 		}
 	}
 

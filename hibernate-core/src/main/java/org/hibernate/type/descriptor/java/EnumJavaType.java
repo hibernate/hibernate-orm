@@ -116,7 +116,6 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -140,7 +139,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 			return fromLong( number.longValue() );
 		}
 		else {
-		return (T) value;
+			return cast( value );
 		}
 	}
 

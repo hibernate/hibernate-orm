@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 
-import static java.lang.reflect.Array.newInstance;
+import static org.hibernate.internal.util.ReflectHelper.arrayClass;
 
 @AllowReflection
 public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<T>
@@ -98,8 +98,8 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators indicators,
 			BasicValueConverter<E, F> valueConverter) {
-		final var convertedElementClass = valueConverter.getRelationalJavaType().getJavaTypeClass();
-		final var convertedArrayClass = newInstance( convertedElementClass, 0 ).getClass();
+		final var convertedArrayClass =
+				arrayClass( valueConverter.getRelationalJavaType().getJavaTypeClass() );
 		final var relationalJavaType =
 				typeConfiguration.getJavaTypeRegistry()
 					.resolveDescriptor( convertedArrayClass );
@@ -107,7 +107,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 				elementType,
 				arrayJdbcType( typeConfiguration, elementType, columnTypeInformation, indicators ),
 				this,
-				new ArrayConverter<>( valueConverter, this, relationalJavaType )
+				new ArrayConverter<>( valueConverter, this, relationalJavaType, elementType )
 		);
 	}
 

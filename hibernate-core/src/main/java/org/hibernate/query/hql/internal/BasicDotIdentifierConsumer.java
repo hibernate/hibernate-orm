@@ -5,7 +5,6 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -16,6 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
@@ -92,16 +92,18 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 	@Override
 	public void consumeTreat(String importableName, boolean isTerminal) {
-		final SqmPath<?> sqmPath = (SqmPath<?>) currentPart;
-		currentPart = sqmPath.treatAs( treatTarget( importableName ) );
+		currentPart = treat( importableName, (SqmPath<?>) currentPart );
 	}
 
-	private <T> Class<T> treatTarget(String typeName) {
-		final ManagedDomainType<T> managedType =
+	private <T> SqmTreatedPath<?, ?> treat(String importableName, SqmPath<T> path) {
+		return path.treatAs( treatTarget( path, importableName ) );
+	}
+
+	private <T> Class<? extends T> treatTarget(SqmPath<T> path, String typeName) {
+		final var javaType =
 				creationState.getCreationContext().getJpaMetamodel()
-						// TODO: don't use this unsafe, deprecated method
-						.managedType( typeName );
-		return managedType.getJavaType();
+						.managedType( typeName ).getJavaType();
+		return javaType.asSubclass( path.getJavaType() );
 	}
 
 	protected void reset() {
@@ -214,7 +216,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				return null;
 			}
 			else {
-				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
+				final var managedType = jpaMetamodel.managedType( importableName );
 				if ( managedType instanceof SqmEntityDomainType<?> entityDomainType ) {
 					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
 				}

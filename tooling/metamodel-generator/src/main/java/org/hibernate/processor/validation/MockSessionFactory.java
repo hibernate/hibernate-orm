@@ -860,14 +860,14 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+		public @Nullable ManagedDomainType<?> findManagedType(@Nullable String typeName) {
 			// TODO: not every ManagedDomainType is an EntityDomainType!
 			return typeName == null ? null : new MockEntityDomainType<>(new MockJavaType<>(typeName));
 		}
 
 		@Override
 		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-			return findManagedType( cls.getName() );
+			return cls == null ? null : new MockEntityDomainType<>(new MockJavaType<>(cls.getName()));
 		}
 
 		@Override

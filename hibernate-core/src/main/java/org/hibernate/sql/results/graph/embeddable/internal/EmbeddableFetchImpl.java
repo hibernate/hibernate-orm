@@ -11,7 +11,6 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -198,9 +197,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	public boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
 		// We use managedType here since this fetch could correspond
 		// to an entity type if the embeddable is an @IdClass
-		final ManagedDomainType<?> managedType =
-				metamodel.managedType( getResultJavaType().getTypeName() );
-		return GraphHelper.appliesTo( graphImplementor, managedType );
+		return GraphHelper.appliesTo( graphImplementor,
+				metamodel.managedType( getResultJavaType().getTypeName() ) );
 	}
 
 	@Override

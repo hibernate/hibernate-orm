@@ -1767,7 +1767,7 @@ public class InFlightMetadataCollectorImpl
 
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
 		if ( secondPasses != null ) {
-			for ( SecondPass secondPass : secondPasses ) {
+			for ( var secondPass : secondPasses ) {
 				secondPass.doSecondPass( getEntityBindingMap() );
 			}
 			secondPasses.clear();

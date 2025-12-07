@@ -212,7 +212,7 @@ public class AttributeFactory {
 	public static DomainType<?> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		return switch ( typeContext.getValueClassification() ) {
 			case BASIC -> basicDomainType( typeContext, context );
-			case ENTITY -> entityDomainType (typeContext, context );
+			case ENTITY -> entityDomainType( typeContext, context );
 			case EMBEDDABLE -> embeddableDomainType( typeContext, context );
 			default -> throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
 		};

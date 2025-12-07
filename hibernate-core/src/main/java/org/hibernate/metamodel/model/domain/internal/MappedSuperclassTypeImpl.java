@@ -103,7 +103,7 @@ public class MappedSuperclassTypeImpl<J>
 
 	@Override
 	public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
-		return (SqmPathSource<?>) super.getIdentifierDescriptor();
+		return super.getIdentifierDescriptor();
 	}
 
 	@Override

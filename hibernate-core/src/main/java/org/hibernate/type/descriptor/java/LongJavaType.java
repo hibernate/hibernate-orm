@@ -118,7 +118,7 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	}
 
 	@Override
-	public <X> Long coerce(X value, CoercionContext coercionContext) {
+	public Long coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

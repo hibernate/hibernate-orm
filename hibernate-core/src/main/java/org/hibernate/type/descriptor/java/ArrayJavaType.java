@@ -128,8 +128,8 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 					// Horrible hack around the fact that java.sql.Timestamps
 					// can be represented as instances of java.util.Date
 					// (Why do we even allow this? We deprecated java.sql stuff!)
-					elementJavaType.coerce( one[i], null ),
-					elementJavaType.coerce( another[i], null ) )) {
+					elementJavaType.cast( elementJavaType.coerce( one[i] ) ),
+					elementJavaType.cast( elementJavaType.coerce( another[i] ) ) ) ) {
 				return false;
 			}
 		}
@@ -448,7 +448,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 							// Horrible hack around the fact that java.sql.Timestamps
 							// can be represented as instances of java.util.Date
 							// (Why do we even allow this? We deprecated java.sql stuff!)
-							baseDescriptor.coerce( value[i], null ) );
+							baseDescriptor.cast( baseDescriptor.coerce( value[i] ) ) );
 				}
 				return copy;
 			}

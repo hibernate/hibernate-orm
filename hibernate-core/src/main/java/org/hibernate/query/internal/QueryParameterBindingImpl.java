@@ -31,7 +31,7 @@ import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPreci
  *
  * @author Steve Ebersole
  */
-public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaType.CoercionContext {
+public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private final QueryParameter<T> queryParameter;
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -296,7 +296,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, clarifiedTemporalType, getCriteriaBuilder() );
 	}
 
-	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return sessionFactory.getTypeConfiguration();
 	}
@@ -337,7 +336,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 		else {
 			return getCriteriaBuilder().resolveExpressible( parameterType )
-					.getExpressibleJavaType().coerce( value, this );
+					.getExpressibleJavaType().coerce( value );
 		}
 	}
 

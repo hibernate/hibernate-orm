@@ -130,7 +130,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		final var lockOptions = lockOptions( loadOptions );
 
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = coerce( session, idType, ids[i] );
+			final Object id = coerce( idType, ids[i] );
 			final var entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
 			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
@@ -160,8 +160,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return (List<T>) results;
 	}
 
-	private Object coerce(SharedSessionContractImplementor session, JavaType<?> idType, Object id) {
-		return idCoercionEnabled ? idType.coerce( id, session ) : id;
+	private Object coerce(JavaType<?> idType, Object id) {
+		return idCoercionEnabled ? idType.coerce( id ) : id;
 	}
 
 	private static LockOptions lockOptions(MultiIdLoadOptions loadOptions) {
@@ -342,7 +342,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		final var idType = getLoadable().getIdentifierMapping().getJavaType();
 		List<Object> unresolvedIds = null;
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = coerce( session, idType, ids[i] );
+			final Object id = coerce( idType, ids[i] );
 			unresolvedIds =
 					loadFromCaches(
 							loadOptions,

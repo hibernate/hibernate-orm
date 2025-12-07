@@ -227,11 +227,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final var persister = getEntityDescriptor( entityName );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			final Object idValue =
-					persister.getIdentifierMapping().getJavaType()
-							.coerce( identifier, sessionFactory::getTypeConfiguration );
 			final Object key = cacheAccess.generateCacheKey(
-					idValue,
+					persister.getIdentifierMapping().getJavaType()
+							.coerce( identifier ),
 					persister.getRootEntityDescriptor().getEntityPersister(),
 					sessionFactory,
 					null

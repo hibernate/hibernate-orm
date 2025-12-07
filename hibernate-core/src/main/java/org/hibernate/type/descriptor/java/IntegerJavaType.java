@@ -152,7 +152,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
-	public Integer coerce(Object value, CoercionContext coercionContext) {
+	public Integer coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

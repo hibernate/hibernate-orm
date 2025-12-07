@@ -70,62 +70,62 @@ public class CoercionTests {
 	}
 
 	private void checkDoubleConversions(JavaType<Double> doubleType, SessionImplementor session) {
-		assertThat( doubleType.coerce( (double) 1, session ) ).isEqualTo( 1.0 );
-		assertThat( doubleType.coerce( 1F, session ) ).isEqualTo( 1.0 );
-		assertThat( doubleType.coerce( doubleValue, session ) ).isEqualTo( doubleValue );
-		assertThat( doubleType.coerce( floatValue, session ) ).isEqualTo( doubleValue );
+		assertThat( doubleType.coerce( (double) 1 ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( 1F ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( doubleValue ) ).isEqualTo( doubleValue );
+		assertThat( doubleType.coerce( floatValue ) ).isEqualTo( doubleValue );
 
-		assertThat( doubleType.coerce( largeFloatValue, session ) ).isEqualTo( largeFloatValue );
+		assertThat( doubleType.coerce( largeFloatValue ) ).isEqualTo( Double.valueOf( largeFloatValue ) );
 
-		assertThat( doubleType.coerce( shortValue, session ) ).isEqualTo( 1.0 );
-		assertThat( doubleType.coerce( byteValue, session ) ).isEqualTo( 1.0 );
-		assertThat( doubleType.coerce( longValue, session ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( shortValue ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( byteValue ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( longValue ) ).isEqualTo( 1.0 );
 
-		assertThat( doubleType.coerce( BigInteger.ONE, session ) ).isEqualTo( 1.0 );
-		assertThat( doubleType.coerce( BigDecimal.ONE, session ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( BigInteger.ONE ) ).isEqualTo( 1.0 );
+		assertThat( doubleType.coerce( BigDecimal.ONE ) ).isEqualTo( 1.0 );
 
 		// negative checks
 	}
 
 	private void checkIntegerConversions(JavaType<Integer> integerType, SessionImplementor session) {
-		assertThat( integerType.coerce( intValue, session ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( intValue ) ).isEqualTo( intValue );
 
-		assertThat( integerType.coerce( shortValue, session ) ).isEqualTo( intValue );
-		assertThat( integerType.coerce( byteValue, session ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( shortValue ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( byteValue ) ).isEqualTo( intValue );
 
-		assertThat( integerType.coerce( longValue, session ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( longValue ) ).isEqualTo( intValue );
 
-		assertThat( integerType.coerce( (double) 1, session ) ).isEqualTo( intValue );
-		assertThat( integerType.coerce( 1F, session ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( (double) 1 ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( 1F ) ).isEqualTo( intValue );
 
-		assertThat( integerType.coerce( BigInteger.ONE, session ) ).isEqualTo( intValue );
-		assertThat( integerType.coerce( BigDecimal.ONE, session ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( BigInteger.ONE ) ).isEqualTo( intValue );
+		assertThat( integerType.coerce( BigDecimal.ONE ) ).isEqualTo( intValue );
 
 		// negative checks
-		checkDisallowedConversion( () -> integerType.coerce( largeLongValue, session ) );
-		checkDisallowedConversion( () -> integerType.coerce( largeFloatValue, session ) );
-		checkDisallowedConversion( () -> integerType.coerce( doubleValue, session ) );
-		checkDisallowedConversion( () -> integerType.coerce( floatValue, session ) );
+		checkDisallowedConversion( () -> integerType.coerce( largeLongValue ) );
+		checkDisallowedConversion( () -> integerType.coerce( largeFloatValue ) );
+		checkDisallowedConversion( () -> integerType.coerce( doubleValue ) );
+		checkDisallowedConversion( () -> integerType.coerce( floatValue ) );
 	}
 
 	private void checkLongConversions(JavaType<Long> longType, SessionImplementor session) {
-		assertThat( longType.coerce( longValue, session ) ).isEqualTo( longValue );
-		assertThat( longType.coerce( largeLongValue, session ) ).isEqualTo( largeLongValue );
+		assertThat( longType.coerce( longValue ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( largeLongValue ) ).isEqualTo( largeLongValue );
 
-		assertThat( longType.coerce( intValue, session ) ).isEqualTo( longValue );
-		assertThat( longType.coerce( shortValue, session ) ).isEqualTo( longValue );
-		assertThat( longType.coerce( byteValue, session ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( intValue ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( shortValue ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( byteValue ) ).isEqualTo( longValue );
 
-		assertThat( longType.coerce( (double) 1, session ) ).isEqualTo( longValue );
-		assertThat( longType.coerce( 1F, session ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( (double) 1 ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( 1F ) ).isEqualTo( longValue );
 
-		assertThat( longType.coerce( BigInteger.ONE, session ) ).isEqualTo( longValue );
-		assertThat( longType.coerce( BigDecimal.ONE, session ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( BigInteger.ONE ) ).isEqualTo( longValue );
+		assertThat( longType.coerce( BigDecimal.ONE ) ).isEqualTo( longValue );
 
 		// negative checks
-		checkDisallowedConversion( () -> longType.coerce( largeFloatValue, session ) );
-		checkDisallowedConversion( () -> longType.coerce( doubleValue, session ) );
-		checkDisallowedConversion( () -> longType.coerce( floatValue, session ) );
+		checkDisallowedConversion( () -> longType.coerce( largeFloatValue ) );
+		checkDisallowedConversion( () -> longType.coerce( doubleValue ) );
+		checkDisallowedConversion( () -> longType.coerce( floatValue ) );
 	}
 
 	private void checkDisallowedConversion(CoercionHelper.Coercer<?> callback) {

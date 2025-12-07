@@ -29,9 +29,6 @@ public class CoercingResultAssembler<J> extends BasicResultAssembler<J> {
 	 */
 	@Override
 	public Object extractRawValue(RowProcessingState rowProcessingState) {
-		return assembledJavaType.coerce(
-				super.extractRawValue( rowProcessingState ),
-				rowProcessingState.getSession()
-		);
+		return assembledJavaType.coerce( super.extractRawValue( rowProcessingState ) );
 	}
 }

@@ -109,7 +109,7 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	}
 
 	@Override
-	public <X> char[] coerce(X value, CoercionContext coercionContext) {
+	public char[] coerce(Object value) {
 		return wrap( value, null );
 	}
 

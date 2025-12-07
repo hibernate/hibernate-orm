@@ -188,7 +188,7 @@ public class LoaderHelper {
 		}
 		else {
 			for ( int i = 0; i < keys.length; i++ ) {
-				typedArray[i] = keyJavaType.coerce( keys[i], session );
+				typedArray[i] = keyJavaType.cast( keyJavaType.coerce( keys[i] ) );
 			}
 		}
 		return typedArray;

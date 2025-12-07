@@ -45,7 +45,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 
 	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		final Type keyType = persister.getKeyType();
-		final var coercedId = getCoercedId( id, factory, keyType );
+		final var coercedId = getCoercedId( id, keyType );
 		final var disassembledKey = keyType.disassemble( coercedId, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
 		final String role = persister.getRole();
@@ -56,7 +56,7 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 
 	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		final Type keyType = persister.getIdentifierType();
-		final var coercedId = getCoercedId( id, factory, keyType );
+		final var coercedId = getCoercedId( id, keyType );
 		final var disassembledKey = keyType.disassemble( coercedId, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
 		final String rootEntityName = persister.getRootEntityName();
@@ -65,9 +65,9 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 				: new CacheKeyImplementation( coercedId, disassembledKey, keyType, rootEntityName, tenantIdentifier );
 	}
 
-	private static Object getCoercedId(Object id, SessionFactoryImplementor factory, Type keyType) {
+	private static Object getCoercedId(Object id, Type keyType) {
 		return keyType instanceof BasicType<?> basicType
-				? basicType.getJavaTypeDescriptor().coerce( id, factory::getTypeConfiguration )
+				? basicType.getJavaTypeDescriptor().coerce( id )
 				: id;
 	}
 

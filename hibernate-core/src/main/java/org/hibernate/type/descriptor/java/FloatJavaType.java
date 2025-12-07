@@ -162,7 +162,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
-	public <X> Float coerce(X value, CoercionContext coercionContext) {
+	public Float coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

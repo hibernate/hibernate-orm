@@ -115,45 +115,44 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date coerce(Object value, CoercionContext coercionContext) {
+	public Date coerce(Object value) {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public Object unwrap(Date value, Class type, WrapperOptions options) {
+	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalDate.class.isAssignableFrom( type ) ) {
-			return unwrapLocalDate( value );
+			return type.cast( unwrapLocalDate( value ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return unwrapSqlDate( value );
+			return type.cast( unwrapSqlDate( value ) );
 		}
 
 		if ( java.util.Date.class.isAssignableFrom( type ) ) {
-			return value;
+			return type.cast( value );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return unwrapDateEpoch( value );
+			return type.cast( unwrapDateEpoch( value ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return toString( value );
+			return type.cast( toString( value ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final var gregorianCalendar = new GregorianCalendar();
 			gregorianCalendar.setTimeInMillis( unwrapDateEpoch( value ) );
-			return gregorianCalendar;
+			return type.cast( gregorianCalendar );
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( unwrapDateEpoch( value ) );
+			return type.cast( new java.sql.Timestamp( unwrapDateEpoch( value ) ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {

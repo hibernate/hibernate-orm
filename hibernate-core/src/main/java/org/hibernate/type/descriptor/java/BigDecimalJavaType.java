@@ -130,7 +130,7 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 	}
 
 	@Override
-	public <X> BigDecimal coerce(X value, CoercionContext coercionContext) {
+	public BigDecimal coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

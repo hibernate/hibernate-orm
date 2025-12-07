@@ -73,11 +73,11 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public SqmRoot<E> copy(SqmCopyContext context) {
-		final SqmRoot<E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmRoot<E> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmRoot<>(
 						getNavigablePath(),

@@ -99,7 +99,7 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 	}
 
 	public SqmJsonValueExpression<T> copy(SqmCopyContext context) {
-		final SqmJsonValueExpression<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

@@ -78,7 +78,7 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 
 	@Override
 	public SqmFieldLiteral<T> copy(SqmCopyContext context) {
-		final SqmFieldLiteral<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

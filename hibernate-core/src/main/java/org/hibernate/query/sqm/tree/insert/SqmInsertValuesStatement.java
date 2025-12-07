@@ -74,7 +74,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Override
 	public SqmInsertValuesStatement<T> copy(SqmCopyContext context) {
-		final SqmInsertValuesStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

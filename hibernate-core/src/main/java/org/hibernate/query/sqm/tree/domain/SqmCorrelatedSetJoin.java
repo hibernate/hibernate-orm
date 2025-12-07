@@ -50,11 +50,11 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 
 	@Override
 	public SqmCorrelatedSetJoin<O, T> copy(SqmCopyContext context) {
-		final SqmCorrelatedSetJoin<O, T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedSetJoin<O, T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedSetJoin<>(
 						getLhs().copy( context ),

@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnknownPathException;
@@ -54,13 +53,13 @@ public class SqmBasicValuedSimplePath<T>
 
 	@Override
 	public SqmBasicValuedSimplePath<T> copy(SqmCopyContext context) {
-		final SqmBasicValuedSimplePath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmPath<?> lhsCopy = getLhs().copy( context );
-		final SqmBasicValuedSimplePath<T> path = context.registerCopy(
+		final var lhsCopy = getLhs().copy( context );
+		final var path = context.registerCopy(
 				this,
 				new SqmBasicValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
@@ -105,7 +104,7 @@ public class SqmBasicValuedSimplePath<T>
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathRegistry pathRegistry =
+		final var pathRegistry =
 				creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final NavigablePath navigablePath =

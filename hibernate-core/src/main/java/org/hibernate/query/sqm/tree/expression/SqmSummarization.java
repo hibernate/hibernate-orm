@@ -31,7 +31,7 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmSummarization<T> copy(SqmCopyContext context) {
-		final SqmSummarization<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

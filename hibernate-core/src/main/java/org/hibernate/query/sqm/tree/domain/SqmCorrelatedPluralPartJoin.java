@@ -33,11 +33,11 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 
 	@Override
 	public SqmCorrelatedPluralPartJoin<O, T> copy(SqmCopyContext context) {
-		final SqmCorrelatedPluralPartJoin<O, T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedPluralPartJoin<O, T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedPluralPartJoin<>( correlationParent.copy( context ) )
 		);

@@ -32,7 +32,7 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmNamedExpression<T> copy(SqmCopyContext context) {
-		final SqmNamedExpression<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

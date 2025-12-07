@@ -62,7 +62,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public SqmQueryPart<T> copy(SqmCopyContext context) {
-		final SqmQueryGroup<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

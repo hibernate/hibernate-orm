@@ -37,7 +37,7 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmEvery<T> copy(SqmCopyContext context) {
-		final SqmEvery<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

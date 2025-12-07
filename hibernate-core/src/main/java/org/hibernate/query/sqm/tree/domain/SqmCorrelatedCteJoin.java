@@ -51,11 +51,11 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 
 	@Override
 	public SqmCorrelatedCteJoin<T> copy(SqmCopyContext context) {
-		final SqmCorrelatedCteJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedCteJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedCteJoin<>(
 						getNavigablePath(),

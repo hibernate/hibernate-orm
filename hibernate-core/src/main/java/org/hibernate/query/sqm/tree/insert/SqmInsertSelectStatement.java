@@ -75,7 +75,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Override
 	public SqmInsertSelectStatement<T> copy(SqmCopyContext context) {
-		final SqmInsertSelectStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

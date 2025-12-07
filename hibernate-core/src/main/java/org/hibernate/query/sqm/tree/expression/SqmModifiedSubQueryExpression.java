@@ -53,7 +53,7 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmModifiedSubQueryExpression<T> copy(SqmCopyContext context) {
-		final SqmModifiedSubQueryExpression<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

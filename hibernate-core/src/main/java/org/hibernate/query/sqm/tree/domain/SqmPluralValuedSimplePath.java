@@ -14,7 +14,6 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -58,13 +57,13 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 
 	@Override
 	public SqmPluralValuedSimplePath<C> copy(SqmCopyContext context) {
-		final SqmPluralValuedSimplePath<C> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final SqmPath<?> lhsCopy = getLhs().copy( context );
-		final SqmPluralValuedSimplePath<C> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmPluralValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
@@ -104,7 +103,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 					+ "' refers to a collection and so element attribute '" + name
 					+ "' may not be referenced directly (use element() function)" );
 		}
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -114,7 +113,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
 		final NavigablePath navigablePath =
 				getParentNavigablePath()

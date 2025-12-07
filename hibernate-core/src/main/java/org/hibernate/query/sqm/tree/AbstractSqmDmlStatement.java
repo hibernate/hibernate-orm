@@ -25,6 +25,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
+import static java.lang.Character.isAlphabetic;
+
 /**
  * @author Steve Ebersole
  */
@@ -56,17 +58,19 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
-		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>( this.cteStatements.size() );
-		for ( Map.Entry<String, SqmCteStatement<?>> entry : this.cteStatements.entrySet() ) {
-			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
+		final Map<String, SqmCteStatement<?>> copy =
+				new LinkedHashMap<>( cteStatements.size() );
+		for ( var entry : cteStatements.entrySet() ) {
+			copy.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
-		return cteStatements;
+		return copy;
 	}
 
 	protected void putAllCtes(SqmCteContainer cteContainer) {
-		for ( SqmCteStatement<?> cteStatement : cteContainer.getCteStatements() ) {
-			if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getCteName(), cteStatement ) != null ) {
-				throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getCteName() + " already exists" );
+		for ( var cteStatement : cteContainer.getCteStatements() ) {
+			final String cteName = cteStatement.getCteTable().getCteName();
+			if ( cteStatements.putIfAbsent( cteName, cteStatement ) != null ) {
+				throw new IllegalArgumentException( "A CTE with the label " + cteName + " already exists" );
 			}
 		}
 	}
@@ -138,7 +142,7 @@ public abstract class AbstractSqmDmlStatement<E>
 		if ( name == null || name.isBlank() ) {
 			throw new IllegalArgumentException( "Illegal empty CTE name" );
 		}
-		if ( !Character.isAlphabetic( name.charAt( 0 ) ) ) {
+		if ( !isAlphabetic( name.charAt( 0 ) ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Illegal CTE name [%s]. Names must start with an alphabetic character!",
@@ -150,7 +154,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	private <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
-		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
 				this,
@@ -167,7 +171,7 @@ public abstract class AbstractSqmDmlStatement<E>
 			AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
+		final var cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) baseCriteria,
 				unionDistinct,
@@ -199,7 +203,7 @@ public abstract class AbstractSqmDmlStatement<E>
 	protected void appendHqlCteString(StringBuilder sb, SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
-			for ( SqmCteStatement<?> value : cteStatements.values() ) {
+			for ( var value : cteStatements.values() ) {
 				value.appendHqlString( sb, context );
 				sb.append( ", " );
 			}

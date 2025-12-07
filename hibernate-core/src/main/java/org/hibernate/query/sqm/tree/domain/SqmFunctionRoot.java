@@ -53,11 +53,11 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	@Override
 	public SqmFunctionRoot<E> copy(SqmCopyContext context) {
-		final SqmFunctionRoot<E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmFunctionRoot<E> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmFunctionRoot<>(
 						getNavigablePath(),

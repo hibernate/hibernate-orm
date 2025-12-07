@@ -29,7 +29,7 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 
 	@Override
 	public AnyDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
-		final AnyDiscriminatorSqmPath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

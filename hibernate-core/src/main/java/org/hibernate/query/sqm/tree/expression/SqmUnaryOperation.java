@@ -49,7 +49,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 
 	@Override
 	public SqmUnaryOperation<T> copy(SqmCopyContext context) {
-		final SqmUnaryOperation<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

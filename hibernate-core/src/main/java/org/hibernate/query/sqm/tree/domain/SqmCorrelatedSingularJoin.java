@@ -50,11 +50,11 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 
 	@Override
 	public SqmCorrelatedSingularJoin<O, T> copy(SqmCopyContext context) {
-		final SqmCorrelatedSingularJoin<O, T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedSingularJoin<O, T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedSingularJoin<>(
 						getLhs().copy( context ),

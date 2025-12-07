@@ -194,7 +194,7 @@ public class SqmDynamicInstantiation<T>
 
 	@Override
 	public SqmDynamicInstantiation<T> copy(SqmCopyContext context) {
-		final SqmDynamicInstantiation<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

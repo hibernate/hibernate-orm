@@ -78,11 +78,11 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 
 	@Override
 	public SqmTreatedBagJoin<L, R, S> copy(SqmCopyContext context) {
-		final SqmTreatedBagJoin<L, R, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedBagJoin<L, R, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedBagJoin<>(
 						getNavigablePath(),

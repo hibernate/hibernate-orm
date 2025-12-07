@@ -10,7 +10,6 @@ import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -124,7 +123,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 	private ConsumerDelegate resolveBase(String identifier, boolean isTerminal) {
 		final SqmCreationProcessingState processingState = creationState.getCurrentProcessingState();
-		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
+		final var pathRegistry = processingState.getPathRegistry();
 		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier, true );
 		if ( pathRootByAlias != null ) {
 			return resolveAlias( identifier, isTerminal, pathRootByAlias );

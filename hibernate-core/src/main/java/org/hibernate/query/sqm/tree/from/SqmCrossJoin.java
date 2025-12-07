@@ -9,7 +9,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -93,11 +92,11 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	@Override
 	public SqmCrossJoin<T> copy(SqmCopyContext context) {
-		final SqmCrossJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCrossJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCrossJoin<>(
 						getNavigablePath(),
@@ -145,7 +144,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
+		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),

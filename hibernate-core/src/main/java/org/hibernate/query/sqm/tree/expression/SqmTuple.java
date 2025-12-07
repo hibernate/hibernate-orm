@@ -61,7 +61,7 @@ public class SqmTuple<T>
 
 	@Override
 	public SqmTuple<T> copy(SqmCopyContext context) {
-		final SqmTuple<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

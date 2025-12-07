@@ -10,8 +10,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -21,13 +19,10 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
 
 import jakarta.persistence.metamodel.Bindable;
-import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
 
@@ -52,17 +47,18 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
-		final SqmBindableType<X> nodeType = (SqmBindableType<X>) function.getNodeType();
+		final var nodeType = (SqmBindableType<X>) function.getNodeType();
 		if ( nodeType == null ) {
 			throw new IllegalArgumentException( "Null return type for function: " + function.getFunctionName() );
 		}
-		final Class<X> bindableJavaType = nodeType.getJavaType();
-		final ManagedType<X> managedType = function.nodeBuilder()
-				.getJpaMetamodel()
-				.findManagedType( bindableJavaType );
+		final var bindableJavaType = nodeType.getJavaType();
+		final var managedType =
+				function.nodeBuilder().getJpaMetamodel()
+						.findManagedType( bindableJavaType );
 		if ( managedType == null ) {
-			final BasicType<X> basicType = function.nodeBuilder().getTypeConfiguration()
-					.getBasicTypeForJavaType( bindableJavaType );
+			final var basicType =
+					function.nodeBuilder().getTypeConfiguration()
+							.getBasicTypeForJavaType( bindableJavaType );
 			if ( basicType == null ) {
 				throw new IllegalArgumentException( "Couldn't determine basic type for java type: " + bindableJavaType.getName() );
 			}
@@ -95,14 +91,15 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	@Override
 	public SqmFunctionPath<T> copy(SqmCopyContext context) {
-		final SqmFunctionPath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmFunctionPath<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
-				new SqmFunctionPath<>( getNavigablePath(), (SqmFunction<?>) function.copy( context ) )
+				new SqmFunctionPath<T>( getNavigablePath(),
+						(SqmFunction<?>) function.copy( context ) )
 		);
 		copyTo( path, context );
 		return path;
@@ -113,7 +110,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -123,20 +120,18 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
-		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath = getNavigablePath().append(
-				CollectionPart.Nature.ELEMENT.getName(),
-				alias
-		);
-		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
+		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final var navigablePath =
+				getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName(),
+						selector.toHqlString() );
+		final var indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
 		if ( !( getReferencedPathSource().getPathType() instanceof BasicPluralType<?, ?> ) ) {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
 		}
-		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
+		final var queryEngine = creationState.getCreationContext().getQueryEngine();
 		final SelfRenderingSqmFunction<?> result = queryEngine.getSqmFunctionRegistry()
 				.getFunctionDescriptor( "array_get" )
 				.generateSqmExpression(
@@ -144,7 +139,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 						null,
 						queryEngine
 				);
-		final SqmFunctionPath<Object> path = new SqmFunctionPath<>( result );
+		final SqmFunctionPath<?> path = new SqmFunctionPath<>( result );
 		pathRegistry.register( path );
 		return path;
 	}

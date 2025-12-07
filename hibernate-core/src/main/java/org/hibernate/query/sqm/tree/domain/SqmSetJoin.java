@@ -53,12 +53,12 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public SqmSetJoin<O, E> copy(SqmCopyContext context) {
-		final SqmSetJoin<O, E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmSetJoin<O, E> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmSetJoin<>(
 						lhsCopy,

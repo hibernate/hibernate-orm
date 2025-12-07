@@ -5813,7 +5813,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
 				&& value instanceof Number ) {
 			return valueConverter.getRelationalJavaType()
-					.coerce( value, creationContext::getTypeConfiguration );
+					.coerce( value );
 		}
 		else {
 			throw new SemanticException(

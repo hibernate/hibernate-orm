@@ -55,11 +55,11 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	@Override
 	public SqmDerivedRoot<T> copy(SqmCopyContext context) {
-		final SqmDerivedRoot<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmDerivedRoot<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmDerivedRoot<>(
 						getNavigablePath(),

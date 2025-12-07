@@ -36,7 +36,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 
 	@Override
 	public SqmNamedParameter<T> copy(SqmCopyContext context) {
-		final SqmNamedParameter<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

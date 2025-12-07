@@ -52,7 +52,7 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 
 	@Override
 	public EmbeddedDiscriminatorSqmPath<T> copy(SqmCopyContext context) {
-		final EmbeddedDiscriminatorSqmPath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

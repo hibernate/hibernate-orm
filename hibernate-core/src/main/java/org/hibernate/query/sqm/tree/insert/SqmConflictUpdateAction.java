@@ -136,7 +136,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 
 	@Override
 	public SqmConflictUpdateAction<T> copy(SqmCopyContext context) {
-		final SqmConflictUpdateAction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

@@ -122,7 +122,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectStatement<T> copy(SqmCopyContext context) {
-		final SqmSelectStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		return existing != null ? existing : createCopy( context, getResultType() );
 	}
 

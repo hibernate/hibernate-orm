@@ -55,11 +55,11 @@ public class SqmCorrelatedDerivedJoin<T> extends SqmDerivedJoin<T> implements Sq
 
 	@Override
 	public SqmCorrelatedDerivedJoin<T> copy(SqmCopyContext context) {
-		final SqmCorrelatedDerivedJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedDerivedJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedDerivedJoin<>(
 						getNavigablePath(),

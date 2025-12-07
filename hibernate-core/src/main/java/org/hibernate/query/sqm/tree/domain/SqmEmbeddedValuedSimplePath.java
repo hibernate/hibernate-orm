@@ -49,13 +49,13 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public SqmEmbeddedValuedSimplePath<T> copy(SqmCopyContext context) {
-		final SqmEmbeddedValuedSimplePath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final SqmPath<?> lhsCopy = getLhs().copy( context );
-		final SqmEmbeddedValuedSimplePath<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmEmbeddedValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
@@ -86,7 +86,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

@@ -19,6 +19,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+
 import static java.lang.reflect.Array.newInstance;
 
 @AllowReflection
@@ -123,4 +124,15 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 						() -> new BasicArrayType<>( elementType, arrayJdbcType, arrayJavaType ) );
 	}
 
+	// Methods required to support Horrible hack around the fact
+	// that java.sql.Timestamps in an array can be represented as
+	// instances of java.util.Date (Why do we even allow this?)
+
+	public T deepCopy(Object value) {
+		return getMutabilityPlan().deepCopy( cast( value ) );
+	}
+
+	public boolean isEqual(Object one, Object another) {
+		return areEqual( cast( one ), cast( another) );
+	}
 }

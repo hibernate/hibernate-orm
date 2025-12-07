@@ -6,6 +6,8 @@ package org.hibernate.type;
 
 import java.util.Objects;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.java.AbstractArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -16,17 +18,19 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-public class BasicArrayType<T,E>
+public final class BasicArrayType<T,E>
 		extends AbstractSingleColumnStandardBasicType<T>
 		implements AdjustableBasicType<T>, BasicPluralType<T, E> {
 
 	private final BasicType<E> baseDescriptor;
 	private final String name;
+	private final AbstractArrayJavaType<T,?> arrayTypeDescriptor;
 
 	public BasicArrayType(BasicType<E> baseDescriptor, JdbcType arrayJdbcType, JavaType<T> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
 		this.name = determineArrayTypeName( baseDescriptor );
+		this.arrayTypeDescriptor = (AbstractArrayJavaType<T, ?>) arrayTypeDescriptor;
 	}
 
 	static String determineElementTypeName(BasicType<?> baseDescriptor) {
@@ -74,5 +78,27 @@ public class BasicArrayType<T,E>
 	@Override
 	public int hashCode() {
 		return baseDescriptor.hashCode();
+	}
+
+	// Methods required to support Horrible hack around the fact
+	// that java.sql.Timestamps in an array can be represented as
+	// instances of java.util.Date (Why do we even allow this?)
+
+	@Override
+	public boolean isEqual(Object one, Object another) {
+		if ( one == another ) {
+			return true;
+		}
+		else if ( one == null || another == null ) {
+			return false;
+		}
+		else {
+			return arrayTypeDescriptor.isEqual( one, another );
+		}
+	}
+
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return arrayTypeDescriptor.deepCopy( value );
 	}
 }

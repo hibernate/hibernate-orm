@@ -14,7 +14,6 @@ import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -268,21 +267,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
-		return deepCopy( javaType.cast( value )  );
-	}
-
-	protected final T deepCopy(T value) {
-		return getMutabilityPlan().deepCopy( value );
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return getMutabilityPlan().deepCopy( javaType.cast( value ) );
 	}
 
 	@Override
-	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return getMutabilityPlan().disassemble( javaType.cast( value ) , session );
+	public final Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
+		return getMutabilityPlan().disassemble( javaType.cast( value ), session );
 	}
 
 	@Override
-	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
 		return getMutabilityPlan().assemble( cached, session );
 	}
 

@@ -67,11 +67,11 @@ import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryR
  */
 public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
-	private static class ImportInfo<T> {
+	private static class ImportInfo {
 		private final String importedName;
-		private Class<T> loadedClass; // could be null for boot metamodel import; not final to allow for populating later
+		private Class<?> loadedClass; // could be null for boot metamodel import; not final to allow for populating later
 
-		private ImportInfo(String importedName, Class<T> loadedClass) {
+		private ImportInfo(String importedName, Class<?> loadedClass) {
 			this.importedName = importedName;
 			this.loadedClass = loadedClass;
 		}
@@ -94,7 +94,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private final Map<Class<?>, String> entityProxyInterfaceMap = new HashMap<>();
 
-	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
+	private final Map<String, ImportInfo> nameToImportMap = new ConcurrentHashMap<>();
 	private final Map<String, Object> knownInvalidnameToImportMap = new ConcurrentHashMap<>();
 
 
@@ -116,15 +116,14 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return serviceRegistry;
 	}
 
-	@Override @Deprecated
-	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
-		//noinspection unchecked
-		return typeName == null ? null : (ManagedDomainType<X>) managedTypeByName.get( typeName );
+	@Override
+	public @Nullable ManagedDomainType<?> findManagedType(@Nullable String typeName) {
+		return typeName == null ? null : managedTypeByName.get( typeName );
 	}
 
 	@Override
-	public <X> ManagedDomainType<X> managedType(String typeName) {
-		final ManagedDomainType<X> managedType = findManagedType( typeName );
+	public ManagedDomainType<?> managedType(String typeName) {
+		final var managedType = findManagedType( typeName );
 		if ( managedType == null ) {
 			throw new IllegalArgumentException( "Not a managed type: " + typeName );
 		}
@@ -193,11 +192,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return embeddableType;
 	}
 
-	@Override @Deprecated
-	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
-		Class<X> loadedClass = null;
-		//noinspection unchecked
-		final var importInfo = (ImportInfo<X>) resolveImport( entityName );
+	@Override
+	public EntityDomainType<?> getHqlEntityReference(String entityName) {
+		Class<?> loadedClass = null;
+		final var importInfo = resolveImport( entityName );
 		if ( importInfo != null ) {
 			loadedClass = importInfo.loadedClass;
 			entityName = importInfo.importedName;
@@ -205,13 +203,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		final var entityDescriptor = findEntityType( entityName );
 		if ( entityDescriptor != null ) {
-			//noinspection unchecked
-			return (EntityDomainType<X>) entityDescriptor;
+			return entityDescriptor;
 		}
 
 		if ( loadedClass == null ) {
-			//noinspection unchecked
-			loadedClass = (Class<X>) resolveRequestedClass( entityName );
+			loadedClass = resolveRequestedClass( entityName );
 			// populate the class cache for boot metamodel imports
 			if ( importInfo != null && loadedClass != null ) {
 				importInfo.loadedClass = loadedClass;
@@ -223,9 +219,9 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return null;
 	}
 
-	@Override @Deprecated
-	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
-		final EntityDomainType<X> hqlEntityReference = getHqlEntityReference( entityName );
+	@Override
+	public EntityDomainType<?> resolveHqlEntityReference(String entityName) {
+		final var hqlEntityReference = getHqlEntityReference( entityName );
 		if ( hqlEntityReference == null ) {
 			throw new EntityTypeException( "Could not resolve entity name '" + entityName + "'", entityName );
 		}
@@ -444,11 +440,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	public String qualifyImportableName(String queryName) {
-		final ImportInfo<?> importInfo = resolveImport( queryName );
+		final var importInfo = resolveImport( queryName );
 		return importInfo == null ? null : importInfo.importedName;
 	}
 
-	private ImportInfo<?> resolveImport(final String name) {
+	private ImportInfo resolveImport(final String name) {
 		final var importInfo = nameToImportMap.get( name );
 		//optimal path first
 		if ( importInfo != null ) {
@@ -461,7 +457,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 			else {
 				// see if the name is a fully qualified class name
-				final Class<?> loadedClass = resolveRequestedClass( name );
+				final var loadedClass = resolveRequestedClass( name );
 				if ( loadedClass == null ) {
 					// it is NOT a fully qualified class name - add a marker entry, so we do not keep trying later
 					// note that ConcurrentHashMap does not support null value so a marker entry is needed
@@ -481,7 +477,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				else {
 					// it is a fully qualified class name - add it to the cache
 					// so to not needing to load from the classloader again
-					final ImportInfo<?> info = new ImportInfo<>( name, loadedClass );
+					final var info = new ImportInfo( name, loadedClass );
 					nameToImportMap.put( name, info );
 					return info;
 				}
@@ -609,7 +605,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		bootMetamodel.getImports()
 				.forEach( (key, value) -> nameToImportMap.put( key,
-						new ImportInfo<>( value, null ) ) );
+						new ImportInfo( value, null ) ) );
 		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
 		final var context = new MetadataContext(

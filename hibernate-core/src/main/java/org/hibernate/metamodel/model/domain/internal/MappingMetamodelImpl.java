@@ -418,13 +418,13 @@ public class MappingMetamodelImpl
 		return jpaMetamodel.getEmbeddables();
 	}
 
-	@Override @Deprecated
-	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+	@Override
+	public @Nullable ManagedDomainType<?> findManagedType(@Nullable String typeName) {
 		return jpaMetamodel.findManagedType( typeName );
 	}
 
-	@Override @Deprecated
-	public <X> ManagedDomainType<X> managedType(String typeName) {
+	@Override
+	public ManagedDomainType<?> managedType(String typeName) {
 		return jpaMetamodel.managedType( typeName );
 	}
 
@@ -448,13 +448,13 @@ public class MappingMetamodelImpl
 		return jpaMetamodel.embeddable( embeddableName );
 	}
 
-	@Override @Deprecated
-	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
+	@Override
+	public EntityDomainType<?> getHqlEntityReference(String entityName) {
 		return jpaMetamodel.getHqlEntityReference( entityName );
 	}
 
-	@Override @Deprecated
-	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+	@Override
+	public EntityDomainType<?> resolveHqlEntityReference(String entityName) {
 		return jpaMetamodel.resolveHqlEntityReference( entityName );
 	}
 
@@ -650,13 +650,13 @@ public class MappingMetamodelImpl
 			return basicType;
 		}
 
-		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaType );
+		final var managedType = jpaMetamodel.findManagedType( javaType );
 		if ( managedType != null ) {
 			return (BindableType<T>) managedType;
 		}
 
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<T> javaTypeDescriptor = javaTypeRegistry.findDescriptor( javaType );
+		final var javaTypeDescriptor = javaTypeRegistry.findDescriptor( javaType );
 		if ( javaTypeDescriptor != null ) {
 			final JdbcType recommendedJdbcType =
 					javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );

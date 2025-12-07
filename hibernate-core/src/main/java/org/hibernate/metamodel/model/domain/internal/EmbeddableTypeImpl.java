@@ -5,9 +5,12 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -33,6 +36,7 @@ public class EmbeddableTypeImpl<J>
 		implements SqmEmbeddableDomainType<J>, Serializable {
 	private final boolean isDynamic;
 	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
+	private final List<SqmEmbeddableDomainType<? extends J>> subtypes = new ArrayList<>();
 
 	public EmbeddableTypeImpl(
 			JavaType<J> javaType,
@@ -61,15 +65,27 @@ public class EmbeddableTypeImpl<J>
 	public int getTupleLength() {
 		int count = 0;
 		for ( var attribute : getSingularAttributes() ) {
-			count += ( (SqmDomainType<?>) attribute.getType() ).getTupleLength();
+			if ( attribute.getType() instanceof SqmDomainType<?> domainType ) {
+				count += domainType.getTupleLength();
+			}
+			else {
+				throw new AssertionFailure( "Should have been a domain type" );
+			}
 		}
 		return count;
 	}
 
 	@Override
 	public Collection<? extends SqmEmbeddableDomainType<? extends J>> getSubTypes() {
-		//noinspection unchecked
-		return (Collection<? extends SqmEmbeddableDomainType<? extends J>>) super.getSubTypes();
+		return subtypes;
+	}
+
+	@Override
+	public void addSubType(ManagedDomainType<? extends J> subType) {
+		super.addSubType( subType );
+		if ( subType instanceof SqmEmbeddableDomainType<? extends J> entityDomainType ) {
+			subtypes.add( entityDomainType );
+		}
 	}
 
 	@Override

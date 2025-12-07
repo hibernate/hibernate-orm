@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -17,9 +15,9 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -27,6 +25,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
@@ -240,7 +239,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean allowReuse,
 			SqmCreationState creationState,
 			SqmJoinable<U,V> joinSource) {
-		final SqmJoin<U,V> join = joinSource.createSqmJoin(
+		final var join = joinSource.createSqmJoin(
 				lhs,
 				joinType,
 				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
@@ -296,24 +295,39 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeTreat(String typeName, boolean isTerminal) {
-			if ( isTerminal ) {
-				currentPath = fetch
-						? ( (SqmAttributeJoin<?, ?>) currentPath ).treatAs( treatTarget( typeName ), alias, true )
-						: currentPath.treatAs( treatTarget( typeName ), alias );
-			}
-			else {
-				currentPath = currentPath.treatAs( treatTarget( typeName ) );
-			}
+			currentPath = treat( typeName, isTerminal );
 			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
 		}
 
-		private <T> Class<T> treatTarget(String typeName) {
-			final ManagedDomainType<T> managedType =
-					creationState.getCreationContext()
-							.getJpaMetamodel()
-							// TODO: don't use this unsafe, deprecated method
-							.managedType( typeName );
-			return managedType.getJavaType();
+		private SqmTreatedFrom<?, ?, ?> treat(String typeName, boolean isTerminal) {
+			if ( isTerminal ) {
+				return fetch
+						? treatTerminalFetch( currentPath, typeName )
+						: treatTerminal( currentPath, typeName );
+			}
+			else {
+				return treatNonTerminal( currentPath, typeName );
+			}
+		}
+
+		private <L,R> SqmTreatedFrom<?, ?, ?> treatNonTerminal(SqmFrom<L,R> path, String typeName) {
+			return path.treatAs( treatTarget( path, typeName ) );
+		}
+
+		private <L,R> SqmTreatedAttributeJoin<?, ?, ?> treatTerminalFetch(SqmFrom<L,R> path, String typeName) {
+			final var attributeJoin = (SqmAttributeJoin<L,R>) path;
+			return attributeJoin.treatAs( treatTarget( path, typeName ), alias, true );
+		}
+
+		private <L,R> SqmTreatedFrom<?, ?, ?> treatTerminal(SqmFrom<L,R> path, String typeName) {
+			return path.treatAs( treatTarget( path, typeName ), alias );
+		}
+
+		private <T> Class<? extends T> treatTarget(SqmPath<T> path, String typeName) {
+			final var javaType =
+					creationState.getCreationContext().getJpaMetamodel()
+							.managedType( typeName ).getJavaType();
+			return javaType.asSubclass( path.getJavaType() );
 		}
 
 		@Override
@@ -359,11 +373,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			path.append( identifier );
 			if ( isTerminal ) {
 				final String fullPath = path.toString();
-				final EntityDomainType<?> joinedEntityType =
+				final var joinedEntityType =
 						creationState.getCreationContext().getJpaMetamodel()
 								.getHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
-					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );
+					final var cteStatement = creationState.findCteStatement( fullPath );
 					if ( cteStatement != null ) {
 						//noinspection rawtypes,unchecked
 						join = new SqmCteJoin( cteStatement, alias, joinType, sqmRoot );

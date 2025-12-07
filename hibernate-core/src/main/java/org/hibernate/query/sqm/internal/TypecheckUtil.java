@@ -402,7 +402,7 @@ public class TypecheckUtil {
 			EntityType<?> rhsType,
 			BindingContext bindingContext) {
 
-		for ( ManagedDomainType<?> candidate : lhsType.getSubTypes() ) {
+		for ( var candidate : lhsType.getSubTypes() ) {
 			if ( candidate instanceof EntityType<?> candidateEntityType
 					&& isEntityTypeAssignable( candidateEntityType, rhsType, bindingContext ) ) {
 				return true;

@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -28,9 +27,9 @@ public class DomainModelHelper {
 			return true;
 		}
 		else {
-			final ModelPart modelPart1 =
+			final var modelPart1 =
 					getEntityAttributeModelPart( attribute1, attribute1.getDeclaringType(), mappingMetamodel );
-			final ModelPart modelPart2 =
+			final var modelPart2 =
 					getEntityAttributeModelPart( attribute2, attribute2.getDeclaringType(), mappingMetamodel );
 			return modelPart1 != null
 				&& modelPart2 != null
@@ -43,13 +42,13 @@ public class DomainModelHelper {
 			ManagedDomainType<?> domainType,
 			MappingMetamodel mappingMetamodel) {
 		if ( domainType instanceof EntityDomainType<?> ) {
-			final EntityMappingType entity = mappingMetamodel.getEntityDescriptor( domainType.getTypeName() );
-			return entity.findSubPart( attribute.getName() );
+			return mappingMetamodel.getEntityDescriptor( domainType.getTypeName() )
+					.findSubPart( attribute.getName() );
 		}
 		else {
 			ModelPart candidate = null;
-			for ( ManagedDomainType<?> subType : domainType.getSubTypes() ) {
-				final ModelPart modelPart = getEntityAttributeModelPart( attribute, subType, mappingMetamodel );
+			for ( var subType : domainType.getSubTypes() ) {
+				final var modelPart = getEntityAttributeModelPart( attribute, subType, mappingMetamodel );
 				if ( modelPart != null ) {
 					if ( candidate != null && !isCompatibleModelPart( candidate, modelPart ) ) {
 						return null;

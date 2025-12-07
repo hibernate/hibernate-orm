@@ -99,6 +99,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	private <T> Class<T> treatTarget(String typeName) {
 		final ManagedDomainType<T> managedType =
 				creationState.getCreationContext().getJpaMetamodel()
+						// TODO: don't use this unsafe, deprecated method
 						.managedType( typeName );
 		return managedType.getJavaType();
 	}

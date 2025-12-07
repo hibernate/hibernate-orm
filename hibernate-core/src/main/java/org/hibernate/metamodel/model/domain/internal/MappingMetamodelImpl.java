@@ -418,12 +418,12 @@ public class MappingMetamodelImpl
 		return jpaMetamodel.getEmbeddables();
 	}
 
-	@Override
+	@Override @Deprecated
 	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
 		return jpaMetamodel.findManagedType( typeName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> ManagedDomainType<X> managedType(String typeName) {
 		return jpaMetamodel.managedType( typeName );
 	}
@@ -448,12 +448,12 @@ public class MappingMetamodelImpl
 		return jpaMetamodel.embeddable( embeddableName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
 		return jpaMetamodel.getHqlEntityReference( entityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
 		return jpaMetamodel.resolveHqlEntityReference( entityName );
 	}

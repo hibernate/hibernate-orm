@@ -2138,9 +2138,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	protected <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
 		final String name = getEntityName( parserJoin.entityName() );
 
-//		SqmTreeCreationLogger.LOGGER.tracef( "Handling root path - %s", name );
-
-		final var entityDescriptor = getJpaMetamodel().resolveHqlEntityReference( name );
+		final EntityDomainType<?> entityDescriptor =
+				getJpaMetamodel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'",
@@ -2579,8 +2578,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private <T> SqmExpression<T> createDiscriminatorValue(
-			AnyDiscriminatorSqmPath<T> anyDiscriminatorTypeSqmPath,
+	private SqmExpression<?> createDiscriminatorValue(
+			AnyDiscriminatorSqmPath<?> anyDiscriminatorTypeSqmPath,
 			HqlParser.ExpressionContext valueExpressionContext) {
 		final var expressible = anyDiscriminatorTypeSqmPath.getExpressible();
 		return new SqmAnyDiscriminatorValue<>(

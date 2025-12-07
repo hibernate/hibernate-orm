@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,7 +116,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return serviceRegistry;
 	}
 
-	@Override
+	@Override @Deprecated
 	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
 		//noinspection unchecked
 		return typeName == null ? null : (ManagedDomainType<X>) managedTypeByName.get( typeName );
@@ -192,9 +193,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return embeddableType;
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
 		Class<X> loadedClass = null;
+		//noinspection unchecked
 		final var importInfo = (ImportInfo<X>) resolveImport( entityName );
 		if ( importInfo != null ) {
 			loadedClass = importInfo.loadedClass;
@@ -208,6 +210,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 
 		if ( loadedClass == null ) {
+			//noinspection unchecked
 			loadedClass = (Class<X>) resolveRequestedClass( entityName );
 			// populate the class cache for boot metamodel imports
 			if ( importInfo != null && loadedClass != null ) {
@@ -220,7 +223,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return null;
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
 		final EntityDomainType<X> hqlEntityReference = getHqlEntityReference( entityName );
 		if ( hqlEntityReference == null ) {
@@ -229,11 +232,22 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return hqlEntityReference;
 	}
 
+	private static <X> ManagedDomainType<X> checkDomainType(Class<X> cls, ManagedDomainType<?> domainType) {
+		if ( domainType != null && !Objects.equals( domainType.getJavaType(), cls ) ) {
+			throw new IllegalStateException( "Managed type " + domainType
+						+ " has a different Java type than requested" );
+		}
+		else {
+			@SuppressWarnings("unchecked") // Safe, we checked it
+			final var type = (ManagedDomainType<X>) domainType;
+			return type;
+		}
+	}
+
 	@Override
 	@Nullable
 	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-		//noinspection unchecked
-		return (ManagedDomainType<X>) managedTypeByClass.get( cls );
+		return checkDomainType( cls, managedTypeByClass.get( cls ) );
 	}
 
 	@Override
@@ -249,10 +263,9 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	@Nullable
 	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
-		final var type = managedTypeByClass.get( cls );
-		//noinspection unchecked
-		return type instanceof EntityDomainType<?>
-				? (EntityDomainType<X>) type
+		return checkDomainType( cls, managedTypeByClass.get( cls ) )
+					instanceof EntityDomainType<X> entityDomainType
+				? entityDomainType
 				: null;
 	}
 
@@ -267,10 +280,9 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	public @Nullable <X> EmbeddableDomainType<X> findEmbeddableType(Class<X> cls) {
-		final var type = managedTypeByClass.get( cls );
-		//noinspection unchecked
-		return type instanceof EmbeddableDomainType<?>
-				? (EmbeddableDomainType<X>) type
+		return checkDomainType( cls, managedTypeByClass.get( cls ) )
+					instanceof EmbeddableDomainType<X> embeddableDomainType
+				? embeddableDomainType
 				: null;
 	}
 
@@ -740,17 +752,20 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		final var supertype =
 				(IdentifiableDomainType<? super J>)
 						supertypeForPersistentClass( persistentClass, context, typeConfiguration );
-		final JavaType<J> javaType;
+		return new EntityTypeImpl<>( entityJavaType( mappedClass, context ),
+				supertype, persistentClass, this );
+	}
+
+	private static <J> JavaType<J> entityJavaType(Class<J> mappedClass, MetadataContext context) {
 		if ( mappedClass == null || Map.class.isAssignableFrom( mappedClass ) ) {
 			// dynamic map
 			//noinspection unchecked
-			javaType = (JavaType<J>) new DynamicModelJavaType();
+			return (JavaType<J>) new DynamicModelJavaType();
 		}
 		else {
-			javaType = context.getTypeConfiguration().getJavaTypeRegistry()
+			return context.getTypeConfiguration().getJavaTypeRegistry()
 					.resolveEntityTypeDescriptor( mappedClass );
 		}
-		return new EntityTypeImpl<>( javaType, supertype, persistentClass, this );
 	}
 
 	private void handleUnusedMappedSuperclasses(MetadataContext context, TypeConfiguration typeConfiguration) {

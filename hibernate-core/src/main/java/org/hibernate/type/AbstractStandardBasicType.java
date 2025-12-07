@@ -93,7 +93,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
-		return this.mutabilityPlan;
+		return mutabilityPlan;
 	}
 
 	@Override

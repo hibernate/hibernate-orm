@@ -85,32 +85,26 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( one == another ) {
 			return true;
 		}
-		if ( one == null || another == null) {
+		else if ( one == null || another == null) {
 			return false;
-		}
-
-		long t1 = one.getTime();
-		long t2 = another.getTime();
-
-		boolean oneIsTimestamp = one instanceof Timestamp;
-		boolean anotherIsTimestamp = another instanceof Timestamp;
-
-		int n1 = oneIsTimestamp ? ( (Timestamp) one ).getNanos() : 0;
-		int n2 = anotherIsTimestamp ? ( (Timestamp) another ).getNanos() : 0;
-
-		if ( t1 != t2 ) {
-			return false;
-		}
-
-		if ( oneIsTimestamp && anotherIsTimestamp ) {
-			// both are Timestamps
-			int nn1 = n1 % 1000000;
-			int nn2 = n2 % 1000000;
-			return nn1 == nn2;
 		}
 		else {
-			// at least one is a plain old Date
-			return true;
+			final long t1 = one.getTime();
+			final long t2 = another.getTime();
+			if ( t1 != t2 ) {
+				return false;
+			}
+			else if ( one instanceof Timestamp ts1
+				&& another instanceof Timestamp ts2 ) {
+				// both are Timestamps
+				final int nn1 = ts1.getNanos() % 1000000;
+				final int nn2 = ts2.getNanos() % 1000000;
+				return nn1 == nn2;
+			}
+			else {
+				// at least one is a plain old Date
+				return true;
+			}
 		}
 	}
 
@@ -132,8 +126,8 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return value instanceof Timestamp
-					? (Timestamp) value
+			return value instanceof Timestamp timestamp
+					? timestamp
 					: new Timestamp( value.getTime() );
 		}
 

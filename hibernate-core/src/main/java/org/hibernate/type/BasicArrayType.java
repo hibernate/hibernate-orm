@@ -12,6 +12,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static java.lang.Character.toUpperCase;
+
 /**
  * A type that maps between {@link java.sql.Types#ARRAY ARRAY} and {@code T[]}
  *
@@ -37,7 +39,8 @@ public final class BasicArrayType<T,E>
 		final String elementName = baseDescriptor.getName();
 		return switch ( elementName ) {
 			case "boolean", "byte", "char", "short", "int", "long", "float", "double" ->
-					Character.toUpperCase( elementName.charAt( 0 ) ) + elementName.substring( 1 );
+					toUpperCase( elementName.charAt( 0 ) )
+							+ elementName.substring( 1 );
 			default -> elementName;
 		};
 	}
@@ -63,16 +66,18 @@ public final class BasicArrayType<T,E>
 
 	@Override
 	public <X> BasicType<X> resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<X> domainJtd) {
-		// TODO: maybe fallback to some encoding by default if the DB doesn't support arrays natively?
-		//  also, maybe move that logic into the ArrayJdbcType
+		// TODO: maybe fall back to some encoding by default if
+		//      the database doesn't support arrays natively?
+		//      also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
 	}
 
 	@Override
 	public boolean equals(Object object) {
-		return object == this || object.getClass() == BasicArrayType.class
-			&& Objects.equals( baseDescriptor, ( (BasicArrayType<?, ?>) object ).baseDescriptor );
+		return object == this
+			|| object instanceof BasicArrayType<?,?> arrayType // no subtypes
+			&& Objects.equals( baseDescriptor, arrayType.baseDescriptor );
 	}
 
 	@Override

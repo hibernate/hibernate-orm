@@ -2112,7 +2112,7 @@ public class EntityInitializerImpl
 		return assemblers;
 	}
 
-	protected @Nullable BasicResultAssembler<?> discriminatorAssembler() {
+	protected @Nullable BasicResultAssembler<?> getDiscriminatorAssembler() {
 		return discriminatorAssembler;
 	}
 

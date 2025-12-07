@@ -33,7 +33,10 @@ public interface JpaMetamodel extends Metamodel {
 
 	/**
 	 * Access to a managed type through its name
+	 *
+	 * @deprecated This method performs an unchecked type cast
 	 */
+	@Deprecated(since = "7.2")
 	<X> ManagedDomainType<X> managedType(String typeName);
 
 	/**
@@ -49,13 +52,19 @@ public interface JpaMetamodel extends Metamodel {
 	/**
 	 * Specialized handling for resolving entity-name references in
 	 * an HQL query
+	 *
+	 * @deprecated This method performs an unchecked type cast
 	 */
+	@Deprecated(since = "7.2")
 	<X> EntityDomainType<X> getHqlEntityReference(String entityName);
 
 	/**
 	 * Specialized handling for resolving entity-name references in
 	 * an HQL query
+	 *
+	 * @deprecated This method performs an unchecked type cast
 	 */
+	@Deprecated(since = "7.2")
 	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
 
 	/**
@@ -79,7 +88,10 @@ public interface JpaMetamodel extends Metamodel {
 	/**
 	 * Same as {@link #managedType(String)} except {@code null} is returned rather
 	 * than throwing an exception
+	 *
+	 * @deprecated This method performs an unchecked type cast
 	 */
+	@Deprecated(since = "7.2")
 	@Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName);
 
 	/**

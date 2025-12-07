@@ -308,9 +308,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 
 		private <T> Class<T> treatTarget(String typeName) {
-			final ManagedDomainType<T> managedType = creationState.getCreationContext()
-					.getJpaMetamodel()
-					.managedType( typeName );
+			final ManagedDomainType<T> managedType =
+					creationState.getCreationContext()
+							.getJpaMetamodel()
+							// TODO: don't use this unsafe, deprecated method
+							.managedType( typeName );
 			return managedType.getJavaType();
 		}
 

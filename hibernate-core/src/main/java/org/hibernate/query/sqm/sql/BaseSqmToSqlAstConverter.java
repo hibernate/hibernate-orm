@@ -105,7 +105,6 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
-import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -252,7 +251,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
@@ -1632,12 +1630,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
-		final CteContainer oldCteContainer = cteContainer;
-		final CteContainer cteContainer = this.visitCteContainer( statement );
-		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
+		final var oldCteContainer = cteContainer;
+		final var cteContainer = this.visitCteContainer( statement );
+		final var oldSqmStatement = this.currentSqmStatement;
 
 		this.currentSqmStatement = statement;
-		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
+		final var queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : emptyList();
 		try {
 			return new SelectStatement( cteContainer, queryPart, domainResults );
@@ -1651,18 +1649,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
-		final SqmDynamicInstantiationTarget<?> instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
-		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaType<?> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
+		final var instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
+		final var instantiationNature = instantiationTarget.getNature();
+		final var targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
 
-		final DynamicInstantiation<?> dynamicInstantiation =
-				new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
+		final var dynamicInstantiation = new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
 
-		for ( SqmDynamicInstantiationArgument<?> sqmArgument : sqmDynamicInstantiation.getArguments() ) {
+		for ( var sqmArgument : sqmDynamicInstantiation.getArguments() ) {
 			if ( sqmArgument.getSelectableNode() instanceof SqmPath<?> sqmPath ) {
 				prepareForSelection( sqmPath );
 			}
-			final DomainResultProducer<?> argumentResultProducer = (DomainResultProducer<?>) sqmArgument.accept( this );
+			final var argumentResultProducer = (DomainResultProducer<?>) sqmArgument.accept( this );
 
 			dynamicInstantiation.addArgument( sqmArgument.getAlias(), argumentResultProducer, this );
 		}
@@ -1672,9 +1669,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return dynamicInstantiation;
 	}
 
-	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<X> instantiationTarget) {
+	private JavaType<?> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
 		return getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
-				.getDescriptor( switch ( instantiationTarget.getNature() ) {
+				.resolveDescriptor( switch ( instantiationTarget.getNature() ) {
 					case LIST -> List.class;
 					case MAP -> Map.class;
 					default -> instantiationTarget.getJavaType();

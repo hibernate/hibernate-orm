@@ -7,9 +7,7 @@ package org.hibernate.dialect.function.array;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -17,24 +15,20 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class DdlTypeHelper {
 	@SuppressWarnings("unchecked")
-	@AllowReflection
+//	@AllowReflection
 	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
 		final var arrayJavaType =
 				(BasicPluralJavaType<Object>)
 						typeConfiguration.getJavaTypeRegistry()
 								.resolveArrayDescriptor( elementType.getJavaType() );
-		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
-				dialect,
+				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
 				(BasicType<Object>) elementType,
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
@@ -43,7 +37,6 @@ public class DdlTypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static BasicType<?> resolveListType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
 		final BasicPluralJavaType<Object> arrayJavaType =
 				(BasicPluralJavaType<Object>)
 						typeConfiguration.getJavaTypeRegistry()
@@ -52,10 +45,9 @@ public class DdlTypeHelper {
 										new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
 										typeConfiguration
 								);
-		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
-				dialect,
+				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
 				(BasicType<Object>) elementType,
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
@@ -79,11 +71,9 @@ public class DdlTypeHelper {
 			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
-			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
-					basicType.getJdbcType().getDdlTypeCode()
-			);
+			final var basicType = (BasicType<?>) type.getSingleJdbcMapping();
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final var ddlType = ddlTypeRegistry.getDescriptor( basicType.getJdbcType().getDdlTypeCode() );
 			return ddlType.getTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
@@ -97,11 +87,9 @@ public class DdlTypeHelper {
 			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
-			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
-					basicType.getJdbcType().getDdlTypeCode()
-			);
+			final var basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final var ddlType = ddlTypeRegistry.getDescriptor( basicType.getJdbcType().getDdlTypeCode() );
 			return ddlType.getTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
@@ -123,11 +111,9 @@ public class DdlTypeHelper {
 			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
-			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
-					basicType.getJdbcType().getDdlTypeCode()
-			);
+			final var basicType = (BasicType<?>) type.getSingleJdbcMapping();
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final var ddlType = ddlTypeRegistry.getDescriptor( basicType.getJdbcType().getDdlTypeCode() );
 			return ddlType.getCastTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
@@ -141,11 +127,9 @@ public class DdlTypeHelper {
 			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
-			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
-					basicType.getJdbcType().getDdlTypeCode()
-			);
+			final var basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final var ddlType = ddlTypeRegistry.getDescriptor( basicType.getJdbcType().getDdlTypeCode() );
 			return ddlType.getCastTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}

@@ -7,13 +7,12 @@ package org.hibernate.type.internal;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 import org.hibernate.models.spi.ParameterizedTypeDetails;
-import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.models.spi.TypeVariableScope;
+
+import static org.hibernate.models.spi.TypeDetails.Kind.PARAMETERIZED_TYPE;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
 
@@ -28,39 +27,33 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 	}
 
 	public static ParameterizedTypeImpl from(ParameterizedTypeDetails typeDetails) {
-		final java.lang.reflect.Type attributeType = typeDetails.determineRawClass().toJavaClass();
-
-		final List<TypeDetails> arguments = typeDetails.asParameterizedType().getArguments();
+		final var attributeType = typeDetails.determineRawClass().toJavaClass();
+		final var arguments = typeDetails.asParameterizedType().getArguments();
 		final int argumentsSize = arguments.size();
-		final java.lang.reflect.Type[] argumentTypes = new java.lang.reflect.Type[argumentsSize];
+		final var argumentTypes = new Type[argumentsSize];
 		for ( int i = 0; i < argumentsSize; i++ ) {
-			TypeDetails argument = arguments.get( i );
-			if ( argument.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
-				argumentTypes[i] = from( argument.asParameterizedType() );
-			}
-			else {
-				argumentTypes[i] = argument.determineRawClass().toJavaClass();
-			}
+			final var argument = arguments.get( i );
+			argumentTypes[i] =
+					argument.getTypeKind() == PARAMETERIZED_TYPE
+							? from( argument.asParameterizedType() )
+							: argument.determineRawClass().toJavaClass();
 		}
-		final TypeVariableScope owner = typeDetails.asParameterizedType().getOwner();
-		final java.lang.reflect.Type ownerType;
-		if ( owner != null ) {
-			ownerType = owner.determineRawClass().toJavaClass();
-		}
-		else {
-			ownerType = null;
-		}
+		final var owner = typeDetails.asParameterizedType().getOwner();
+		final var ownerType = owner == null ? null : owner.determineRawClass().toJavaClass();
 		return new ParameterizedTypeImpl( attributeType, argumentTypes, ownerType );
 	}
 
+	@Override
 	public Type[] getActualTypeArguments() {
 		return substTypeArgs;
 	}
 
+	@Override
 	public Type getRawType() {
 		return rawType;
 	}
 
+	@Override
 	public Type getOwnerType() {
 		return ownerType;
 	}
@@ -84,42 +77,37 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final var typeExpression = new StringBuilder();
 		if ( ownerType != null ) {
-			sb.append( ownerType.getTypeName() );
-
-			sb.append( "$" );
-
+			typeExpression.append( ownerType.getTypeName() ).append( "$" );
 			if ( ownerType instanceof ParameterizedType parameterizedType ) {
-				// Find simple name of nested type by removing the
-				// shared prefix with owner.
-				sb.append(
-						rawType.getTypeName().replace(
-								parameterizedType.getRawType().getTypeName() + "$",
-								""
-						)
-				);
+				// Find the simple name of the nested type by
+				// removing the shared prefix with the outer type.
+				final int prefixLength =
+						parameterizedType.getRawType().getTypeName().length()
+						+ 1; // account for the '$' separator
+				typeExpression.append( rawType.getTypeName().substring( prefixLength ) );
 			}
 			else if ( rawType instanceof Class<?> clazz ) {
-				sb.append( clazz.getSimpleName() );
+				typeExpression.append( clazz.getSimpleName() );
 			}
 			else {
-				sb.append( rawType.getTypeName() );
+				typeExpression.append( rawType.getTypeName() );
 			}
 		}
 		else {
-			sb.append( rawType.getTypeName() );
+			typeExpression.append( rawType.getTypeName() );
 		}
 
 		if ( substTypeArgs != null ) {
-			final StringJoiner sj = new StringJoiner( ", ", "<", ">" );
-			sj.setEmptyValue( "" );
-			for ( Type t : substTypeArgs ) {
-				sj.add( t.getTypeName() );
+			final var argList = new StringJoiner( ", ", "<", ">" );
+			argList.setEmptyValue( "" );
+			for ( var type : substTypeArgs ) {
+				argList.add( type.getTypeName() );
 			}
-			sb.append( sj );
+			typeExpression.append( argList );
 		}
 
-		return sb.toString();
+		return typeExpression.toString();
 	}
 }

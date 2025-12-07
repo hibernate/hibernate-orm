@@ -137,6 +137,7 @@ public class BasicTypeRegistry implements Serializable {
 		return resolve( getJavaTypeRegistry().resolveDescriptor( javaType ), sqlTypeCode );
 	}
 
+	@Deprecated(since = "7.2", forRemoval = true) // no longer used + calls deprecated method
 	public BasicType<?> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
 		return resolve( getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
 	}
@@ -406,7 +407,8 @@ public class BasicTypeRegistry implements Serializable {
 				// Incredibly verbose logging disabled
 //				LOG.tracef( "Adding type registration %s -> %s", key, type );
 
-				final Type old = typesByName.put( key, type );
+//				final Type old =
+				typesByName.put( key, type );
 //				if ( old != null && old != type ) {
 //					LOG.tracef(
 //							"Type registration key [%s] overrode previous entry : `%s`",
@@ -430,7 +432,8 @@ public class BasicTypeRegistry implements Serializable {
 				// Incredibly verbose logging disabled
 //				LOG.tracef( "Adding type registration %s -> %s", key, type );
 
-				final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
+//				final BasicTypeReference<?> old =
+				typeReferencesByName.put( key, type );
 //				if ( old != null && old != type ) {
 //					LOG.tracef(
 //							"Type registration key [%s] overrode previous entry : `%s`",

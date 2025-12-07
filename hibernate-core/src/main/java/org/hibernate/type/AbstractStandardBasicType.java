@@ -289,7 +289,7 @@ public abstract class AbstractStandardBasicType<T>
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original == null && target == null
 				? null
-				: javaType.getReplacement( javaType.cast( original ) , javaType.cast( target ) , session );
+				: javaType.getReplacement( javaType.cast( original ), javaType.cast( target ), session );
 
 	}
 
@@ -341,7 +341,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		getJdbcValueBinder().bind( st, javaType.cast( value ) , name, options );
+		getJdbcValueBinder().bind( st, javaType.cast( value ), name, options );
 	}
 
 	@Override
@@ -363,8 +363,7 @@ public abstract class AbstractStandardBasicType<T>
 		// and the cast type determination here. Note that we interpret the converter in ConvertedBasicTypeImpl
 		// to properly determine the correct cast type
 		final var jdbcType = getJdbcType();
-		final int jdbcTypeCode = jdbcType.getDdlTypeCode();
-		switch ( jdbcTypeCode ) {
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case Types.BIT:
 			case Types.SMALLINT:
 			case Types.TINYINT:

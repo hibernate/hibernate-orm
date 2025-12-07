@@ -7,9 +7,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -20,7 +18,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,12 +41,12 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 			TypeConfiguration typeConfiguration) {
 		if ( converter != null ) {
 			if ( converter.isInTypeInference() ) {
-				// Don't default to a Json array when in type inference mode.
+				// Don't default to a JSON array when in type inference mode.
 				// Comparing e.g. `array() = (select array_agg() ...)` will trigger this resolver
 				// while inferring the type for `array()`, which we want to avoid.
 				return null;
 			}
-			final MappingModelExpressible<?> inferredType = converter.resolveFunctionImpliedReturnType();
+			final var inferredType = converter.resolveFunctionImpliedReturnType();
 			if ( inferredType != null ) {
 				if ( inferredType instanceof ReturnableType<?> returnableType ) {
 					return returnableType;
@@ -62,8 +59,8 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 		if ( impliedType != null ) {
 			return impliedType;
 		}
-		for ( SqmTypedNode<?> argument : arguments ) {
-			final DomainType<?> sqmType = argument.getExpressible().getSqmType();
+		for ( var argument : arguments ) {
+			final var sqmType = argument.getExpressible().getSqmType();
 			if ( sqmType instanceof ReturnableType<?> ) {
 				return resolveJsonArrayType( sqmType, typeConfiguration );
 			}
@@ -78,14 +75,14 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 		return null;
 	}
 
-	@AllowReflection
+//	@AllowReflection
 	public static <T> BasicType<?> resolveJsonArrayType(DomainType<T> elementType, TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked")
 		final var arrayJavaType =
 				(BasicPluralJavaType<T>)
 						typeConfiguration.getJavaTypeRegistry()
 								.resolveArrayDescriptor( elementType.getJavaType() );
-		final JdbcTypeIndicators currentBaseSqlTypeIndicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
+		final var currentBaseSqlTypeIndicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
 				currentBaseSqlTypeIndicators.getDialect(),

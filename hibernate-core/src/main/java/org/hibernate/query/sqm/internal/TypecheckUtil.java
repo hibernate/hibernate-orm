@@ -36,6 +36,7 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.Objects;
 
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
 /**
@@ -381,20 +382,6 @@ public class TypecheckUtil {
 
 	private static boolean isConvertedType(SqmExpressible<?> type) {
 		return type.getSqmType() instanceof ConvertedBasicType<?>;
-	}
-
-	private static Class<?> canonicalize(Class<?> lhs) {
-		return switch (lhs.getCanonicalName()) {
-			case "boolean" -> Boolean.class;
-			case "byte" -> Byte.class;
-			case "short" -> Short.class;
-			case "int" -> Integer.class;
-			case "long" -> Long.class;
-			case "float" -> Float.class;
-			case "double" -> Double.class;
-			case "char" -> Character.class;
-			default -> lhs;
-		};
 	}
 
 	private static boolean isMappedSuperclassTypeAssignable(

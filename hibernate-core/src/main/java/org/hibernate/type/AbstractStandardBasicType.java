@@ -258,7 +258,7 @@ public abstract class AbstractStandardBasicType<T>
 			|| !Hibernate.isInitialized( value )
 				? "<uninitialized>"
 				: javaType.extractLoggableRepresentation(
-						javaType.coerce( value, factory::getTypeConfiguration ) );
+						javaType.cast( javaType.coerce( value ) ) );
 	}
 
 	@Override

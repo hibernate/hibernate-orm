@@ -132,7 +132,7 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	}
 
 	@Override
-	public <X> BigInteger coerce(X value, CoercionContext coercionContext) {
+	public BigInteger coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

@@ -315,32 +315,22 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	@FunctionalInterface
+	@Deprecated(forRemoval = true, since = "7.2")
 	interface CoercionContext {
 		TypeConfiguration getTypeConfiguration();
 	}
 
 	/**
 	 * Coerce the given value to this type, if possible.
-	 * The default implementation defined her simply
-	 * performs an unchecked cast. Subclasses may override
-	 * to perform meaningful coercion.
-	 *
-	 * @apiNote This operation is currently unsound. It
-	 * should throw {@link CoercionException} when coercion
-	 * fails, or its return value should be changed to
-	 * {@link Object}. However, both of those changes had
-	 * too much impact for now.
 	 *
 	 * @param value The value to coerce
-	 * @param coercionContext The coercion context
 	 * @return The coerced value, or the given value
 	 *         if no coercion was possible
-	 * @param <X> The type of the value
+	 * @throws CoercionException if coercion fails
 	 */
 	@Incubating
-	default <X> T coerce(X value, CoercionContext coercionContext) {
-		//noinspection unchecked
-		return (T) value;
+	default Object coerce(Object value) {
+		return value;
 	}
 
 	/**

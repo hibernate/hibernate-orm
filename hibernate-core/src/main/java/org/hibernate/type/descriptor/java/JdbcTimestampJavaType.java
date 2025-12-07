@@ -114,52 +114,51 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
-	public Date coerce(Object value, CoercionContext coercionContext) {
+	public Date coerce(Object value) {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public Object unwrap(Date value, Class type, WrapperOptions options) {
+	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return value instanceof Timestamp timestamp
+			return type.cast( value instanceof Timestamp timestamp
 					? timestamp
-					: new Timestamp( value.getTime() );
+					: new Timestamp( value.getTime() ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return value;
+			return type.cast( value );
 		}
 
 		if ( LocalDateTime.class.isAssignableFrom( type ) ) {
 			final var instant = value.toInstant();
-			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
+			return type.cast( LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final var gregorianCalendar = new GregorianCalendar();
 			gregorianCalendar.setTimeInMillis( value.getTime() );
-			return gregorianCalendar;
+			return type.cast( gregorianCalendar );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return value.getTime();
+			return type.cast( value.getTime() );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Date
-					? (java.sql.Date) value
-					: new java.sql.Date( value.getTime() );
+			return type.cast( value instanceof java.sql.Date date
+					? date
+					: new java.sql.Date( value.getTime() ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Time
-					? (java.sql.Time) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
+			return type.cast( value instanceof java.sql.Time time
+					? time
+					: new java.sql.Time( value.getTime() % 86_400_000 ) );
 		}
 
 		throw unknownUnwrap( type );

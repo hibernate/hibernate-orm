@@ -136,7 +136,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	}
 
 	@Override
-	public <X> Byte coerce(X value, CoercionContext coercionContext) {
+	public Byte coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

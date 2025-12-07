@@ -34,7 +34,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 
@@ -42,10 +41,9 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
  * Single-attribute NaturalIdMapping implementation
  */
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
-		implements JavaType.CoercionContext, BasicValuedMapping {
+		implements BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
 	private final SessionFactoryImplementor sessionFactory;
-	private final TypeConfiguration typeConfiguration;
 
 	public SimpleNaturalIdMapping(
 			SingularAttributeMapping attribute,
@@ -54,7 +52,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		super( declaringType, attribute.getAttributeMetadata().isUpdatable() );
 		this.attribute = attribute;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		this.typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 	}
 
 	public SingularAttributeMapping getAttribute() {
@@ -143,7 +140,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		final Object normalizedValue = normalizedValue( incoming );
 		return isLoadByIdComplianceEnabled()
 				? normalizedValue
-				: getJavaType().coerce( normalizedValue, this );
+				: getJavaType().coerce( normalizedValue );
 	}
 
 	private Object normalizedValue(Object incoming) {
@@ -293,11 +290,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	private Dialect getDialect() {
 		return sessionFactory.getJdbcServices().getDialect();
-	}
-
-	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
 	}
 
 	@Override

@@ -117,13 +117,12 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date coerce(Object value, CoercionContext coercionContext) {
+	public Date coerce(Object value) {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
-	public Object unwrap(Date value, Class type, WrapperOptions options) {
+	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -136,42 +135,42 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
-				return localTime;
+				return type.cast( localTime );
 			}
 			if ( millis < 0 ) {
 				// The milliseconds for a Time could be negative,
 				// which usually means the time is in a different time zone
 				millis += 1_000L;
 			}
-			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+			return type.cast( localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L ) );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return value instanceof Time
-					? value
-					: new Time( value.getTime() % 86_400_000 );
+			return type.cast( value instanceof Time time
+					? time
+					: new Time( value.getTime() % 86_400_000 ) );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return value;
+			return type.cast( value );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return value.getTime();
+			return type.cast( value.getTime() );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return toString( value );
+			return type.cast( toString( value ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final var gregorianCalendar = new GregorianCalendar();
 			gregorianCalendar.setTimeInMillis( value.getTime() );
-			return gregorianCalendar;
+			return type.cast( gregorianCalendar );
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( value.getTime() );
+			return type.cast( new java.sql.Timestamp( value.getTime() ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {

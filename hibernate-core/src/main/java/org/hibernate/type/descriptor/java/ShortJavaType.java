@@ -143,7 +143,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
-	public Short coerce(Object value, CoercionContext coercionContext) {
+	public Short coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

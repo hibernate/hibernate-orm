@@ -165,9 +165,14 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	@Override
+	public byte[] coerce(Object value) {
+		return wrap( value, null );
+	}
+
+	@Override
 	public byte[] seed(
 			Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
-		// Note : simply returns null for seed() and next() as the only known
+		// Note: simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the
 		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
 		// 		are completely db-generated values...

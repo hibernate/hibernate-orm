@@ -32,7 +32,7 @@ public abstract class BasicJdbcLiteralFormatter<T> extends AbstractJdbcLiteralFo
 				return javaType.unwrap( castValue, unwrapType, options );
 			}
 			else {
-				final T coerced = javaType.coerce( value, options::getTypeConfiguration );
+				final T coerced = javaType.cast( javaType.coerce( value ) );
 				return unwrapType.isInstance( coerced )
 						? unwrapType.cast( coerced )
 						: javaType.unwrap( coerced, unwrapType, options );

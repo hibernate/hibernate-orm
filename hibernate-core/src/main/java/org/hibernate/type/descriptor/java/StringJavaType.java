@@ -147,7 +147,7 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 	}
 
 	@Override
-	public <X> String coerce(X value, CoercionContext coercionContext) {
+	public String coerce(Object value) {
 		return wrap( value, null );
 	}
 }

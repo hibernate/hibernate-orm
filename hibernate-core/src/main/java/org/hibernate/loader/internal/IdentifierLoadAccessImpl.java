@@ -26,8 +26,6 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -37,7 +35,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 // Hibernate Reactive extends this class: see ReactiveIdentifierLoadAccessImpl
-public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaType.CoercionContext {
+public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	private final LoadAccessContext context;
 	private final EntityPersister entityPersister;
 
@@ -199,7 +197,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 				final var identifierMapping = entityPersister.getIdentifierMapping();
 				return identifierMapping.isVirtual()
 						? id // special case for a class with an @IdClass
-						: identifierMapping.getJavaType().coerce( id, this );
+						: identifierMapping.getJavaType().coerce( id );
 			}
 			catch ( Exception e ) {
 				throw new IllegalArgumentException( "Argument '" + id
@@ -231,11 +229,6 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 	private static boolean isLoadByIdComplianceEnabled(SessionFactoryImplementor factory) {
 		return factory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
-	}
-
-	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return context.getSession().getSessionFactory().getTypeConfiguration();
 	}
 
 	@Override

@@ -164,7 +164,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	}
 
 	@Override
-	public <X> Double coerce(X value, CoercionContext coercionContext) {
+	public Double coerce(Object value) {
 		if ( value == null ) {
 			return null;
 		}

@@ -32,7 +32,13 @@ public final class BasicArrayType<T,E>
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
 		this.name = determineArrayTypeName( baseDescriptor );
-		this.arrayTypeDescriptor = (AbstractArrayJavaType<T, ?>) arrayTypeDescriptor;
+		this.arrayTypeDescriptor =
+				arrayTypeDescriptor instanceof AbstractArrayJavaType<T, ?> arrayJavaType
+						? arrayJavaType
+						// this only happens with contributions from hibernate-vector
+						// because it passes in a PrimitiveByteArrayJavaType which is
+						// not an AbstractArrayJavaType (this might be a bug)
+						: null;
 	}
 
 	static String determineElementTypeName(BasicType<?> baseDescriptor) {
@@ -91,7 +97,11 @@ public final class BasicArrayType<T,E>
 
 	@Override
 	public boolean isEqual(Object one, Object another) {
-		if ( one == another ) {
+		if ( arrayTypeDescriptor == null ) {
+			// for hibernate-vector
+			return super.isEqual( one, another );
+		}
+		else if ( one == another ) {
 			return true;
 		}
 		else if ( one == null || another == null ) {
@@ -104,6 +114,8 @@ public final class BasicArrayType<T,E>
 
 	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
-		return arrayTypeDescriptor.deepCopy( value );
+		return arrayTypeDescriptor == null
+				? super.deepCopy( value, factory ) // for hibernate-vector
+				: arrayTypeDescriptor.deepCopy( value );
 	}
 }

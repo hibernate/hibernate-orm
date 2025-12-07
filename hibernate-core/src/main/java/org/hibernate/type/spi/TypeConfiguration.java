@@ -83,6 +83,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
@@ -760,14 +761,41 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
-	public <J> @Nullable BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
-		//noinspection unchecked
-		return (BasicType<J>) getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+	private static <J> BasicType<J> checkExisting(Class<J> javaClass, BasicType<?> existing) {
+		if ( !isCompatible( javaClass, existing.getJavaType() ) ) {
+			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
+		}
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var basicType = (BasicType<J>) existing;
+		return basicType;
 	}
 
-	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
+	private static <J> boolean isCompatible(Class<J> javaClass, Class<?> existing) {
+		return canonicalize( javaClass ).isAssignableFrom( existing );
+	}
+
+	@Deprecated(since = "7.2", forRemoval = true) // no longer used
+	public <J> @Nullable BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
 		//noinspection unchecked
-		return (BasicType<J>) getBasicTypeForJavaType( (Type) javaType );
+		return (BasicType<J>)
+				getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+	}
+
+	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<J> javaClass) {
+		final var existing = basicTypeByJavaType.get( javaClass );
+		if ( existing != null ) {
+			return checkExisting( javaClass, existing );
+		}
+		else {
+			final var registeredType = basicTypeRegistry.getRegisteredType( javaClass );
+			if ( registeredType != null ) {
+				basicTypeByJavaType.put( javaClass, registeredType );
+				return registeredType;
+			}
+			else {
+				return null;
+			}
+		}
 	}
 
 	public @Nullable BasicType<?> getBasicTypeForJavaType(Type javaType) {
@@ -787,65 +815,64 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
-		if ( javaType == null ) {
-			return null;
-		}
-		else {
-			return standardBasicTypeForJavaType( javaType,
-					javaTypeDescriptor -> new BasicTypeImpl<>( javaTypeDescriptor,
-							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) ) );
-		}
+	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaClass) {
+		return javaClass == null ? null
+				: standardBasicTypeForJavaType( javaClass,
+						descriptor -> new BasicTypeImpl<>( descriptor,
+								descriptor.getRecommendedJdbcType(
+										getCurrentBaseSqlTypeIndicators() ) ) );
 	}
 
 	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
-		if ( javaType == null ) {
-			return null;
-		}
-		else {
-			return standardBasicTypeForJavaType( javaType,
-					javaTypeDescriptor -> new BasicTypeImpl<>( javaTypeDescriptor,
-							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) ) );
-		}
+		return javaType == null ? null
+				: standardBasicTypeForJavaType( javaType,
+						descriptor -> new BasicTypeImpl<>( descriptor,
+								descriptor.getRecommendedJdbcType(
+										getCurrentBaseSqlTypeIndicators() ) ) );
 	}
 
 	@Deprecated(since = "7.2", forRemoval = true) // Can be private
 	public <J> BasicType<J> standardBasicTypeForJavaType(
-			Class<J> javaType,
+			Class<J> javaClass,
 			Function<JavaType<J>, BasicType<J>> creator) {
-		if ( javaType == null ) {
+		if ( javaClass == null ) {
 			return null;
 		}
-		//noinspection unchecked
-		return (BasicType<J>) basicTypeByJavaType.computeIfAbsent(
-				javaType,
-				jt -> {
-					// See if one exists in the BasicTypeRegistry and use that one if so
-					final var registeredType = basicTypeRegistry.getRegisteredType( javaType );
-					return registeredType != null
-							? registeredType
-							: creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
-				}
-		);
+		var existing = basicTypeByJavaType.get( javaClass );
+		if ( existing != null ) {
+			return checkExisting( javaClass, existing );
+		}
+		else {
+			// See if one exists in the BasicTypeRegistry and use that one if so
+			final var registeredType =
+					basicTypeRegistry.getRegisteredType( javaClass );
+			return registeredType == null
+					? creator.apply( javaTypeRegistry.getDescriptor( javaClass ) )
+					: registeredType;
+		}
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // Due to weird signature
+	@Deprecated(since = "7.2", forRemoval = true) // Due to weird signature and unchecked cast
 	public <J> BasicType<?> standardBasicTypeForJavaType(
 			Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;
 		}
-		return basicTypeByJavaType.computeIfAbsent(
-				javaType,
-				jt -> {
-					// See if one exists in the BasicTypeRegistry and use that one if so
-					final var registeredType = basicTypeRegistry.getRegisteredType( javaType );
-					return registeredType != null
-							? registeredType
-							: creator.apply( javaTypeRegistry.getDescriptor( javaType ) );
-				}
-		);
+		var existing = basicTypeByJavaType.get( javaType );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			// See if one exists in the BasicTypeRegistry and use that one if so
+			final var registeredType =
+					basicTypeRegistry.getRegisteredType( javaType );
+			//noinspection unchecked
+			return registeredType == null
+					? creator.apply( (JavaType<J>) // UNCHECKED CAST
+							javaTypeRegistry.getDescriptor( javaType ) )
+					: registeredType;
+		}
 	}
 
 	@SuppressWarnings("deprecation")

@@ -28,21 +28,21 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
-	// todo (6.0) : support explicit JTD?
-	// todo (6.0) : support explicit STD?
-
-	public static <E> VersionResolution<E> from(
+	public static VersionResolution<?> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			TimeZoneStorageType timeZoneStorageType,
 			MetadataBuildingContext context) {
-
-		// todo (6.0) : add support for Dialect-specific interpretation?
-
 		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final var implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
-		final JavaType<E> registered = typeConfiguration.getJavaTypeRegistry().getDescriptor( implicitJavaType );
-		final var basicJavaType = (BasicJavaType<E>) registered;
+		final var registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
+		return resolve( timeZoneStorageType, context, (BasicJavaType<?>) registered );
+	}
 
+	private static <E> VersionResolution<E> resolve(
+			TimeZoneStorageType timeZoneStorageType,
+			MetadataBuildingContext context,
+			BasicJavaType<E> basicJavaType) {
+		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
@@ -50,7 +50,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 						return typeConfiguration;
 					}
 
-					@Override
+					@Override @SuppressWarnings("deprecation")
 					public TemporalType getTemporalPrecision() {
 						// if it is a temporal version, it needs to be a TIMESTAMP
 						return TemporalType.TIMESTAMP;
@@ -106,7 +106,6 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final var basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
 		final var legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaTypeClass() );
-
 		assert legacyType.getJdbcType().getDefaultSqlTypeCode() == recommendedJdbcType.getDefaultSqlTypeCode();
 
 		return new VersionResolution<>( basicJavaType, recommendedJdbcType, basicType, legacyType );

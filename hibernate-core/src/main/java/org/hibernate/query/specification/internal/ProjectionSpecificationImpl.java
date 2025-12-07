@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.cast;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.cast;
 
 /**
  * @author Gavin King

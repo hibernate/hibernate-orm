@@ -127,7 +127,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
-import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.getDescriptorByPrimitiveType;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
@@ -384,11 +384,7 @@ public class NativeQueryImpl<R>
 	}
 
 	private static boolean constructorParameterMatches(ResultBuilder resultBuilder, Class<?> paramType) {
-		final var parameterClass =
-				paramType.isPrimitive()
-						? getDescriptorByPrimitiveType( paramType ).getWrapperClass()
-						: paramType;
-		return resultBuilder.getJavaType() == parameterClass;
+		return resultBuilder.getJavaType() == canonicalize( paramType );
 	}
 
 	protected <T> void setTupleTransformerForResultType(Class<T> resultClass) {

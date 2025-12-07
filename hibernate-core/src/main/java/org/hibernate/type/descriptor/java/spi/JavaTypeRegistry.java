@@ -4,6 +4,15 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.Internal;
+import org.hibernate.type.descriptor.java.ArrayJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
+import org.jboss.logging.Logger;
+
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -12,14 +21,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.type.descriptor.java.ArrayJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
-import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.TypeConfigurationAware;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
-import org.jboss.logging.Logger;
 
 /**
  * A registry mapping {@link Class Java classes} to implementations
@@ -75,7 +78,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
+		final var old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
 			LOG.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
@@ -87,7 +90,10 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		performInjections( descriptor );
 	}
 
-	@Deprecated(since = "7.2") // Due to unbound type parameter
+	// This method is terribly lacking in type safety but
+	// has wormed itself into so many clients that I can't
+	// easily do away with it right now
+	@Deprecated(since = "7.2") // Due to unbound type parameter and unchecked cast
 	public <T> JavaType<T> getDescriptor(Type javaType) {
 		//noinspection unchecked
 		return (JavaType<T>) resolveDescriptor( javaType );
@@ -97,14 +103,36 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return descriptorsByTypeName.get( javaType.getTypeName() );
 	}
 
-	public <J> JavaType<J> findDescriptor(Class<J> javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) findDescriptor( (Type) javaType );
+	public <J> JavaType<J> findDescriptor(Class<J> javaClass) {
+		final var cached = descriptorsByTypeName.get( javaClass.getTypeName() );
+		return cached == null ? null : checkCached( javaClass, cached );
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Class<? extends J> javaType, Supplier<JavaType<J>> creator) {
-		//noinspection unchecked
-		return (JavaType<J>) resolveDescriptor( javaType.getTypeName(), creator );
+		final String javaTypeName = javaType.getTypeName();
+		final var cached = descriptorsByTypeName.get( javaTypeName );
+		if ( cached != null ) {
+			return checkCached( javaType, cached );
+		}
+		else {
+			final var created = creator.get();
+			descriptorsByTypeName.put( javaTypeName, created );
+			return created;
+		}
+	}
+
+	private static <J> JavaType<J> checkCached(Class<? extends J> javaClass, JavaType<?> cached) {
+		final var cachedClass = cached.getJavaTypeClass();
+		if ( !isCompatible( javaClass, cachedClass ) ) {
+			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
+		}
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var resolvedType = (JavaType<J>) cached;
+		return resolvedType;
+	}
+
+	private static boolean isCompatible(Class<?> givenClass, Class<?> cachedClass) {
+		return cachedClass == canonicalize( givenClass );
 	}
 
 	@Deprecated(since = "7.2", forRemoval = true) // Can be private
@@ -125,25 +153,18 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Class<J> javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
+		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
 	}
 
 	public <J> JavaType<J> resolveDescriptor(JavaType<J> javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) resolveDescriptor( javaType.getJavaTypeClass().getTypeName(), () -> javaType );
+		return resolveDescriptor( javaType.getJavaTypeClass(), () -> javaType );
 	}
 
 	private static MutabilityPlan<?> createMutabilityPlan(Type elementJavaType, TypeConfiguration typeConfiguration) {
-		final MutabilityPlan<?> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-				elementJavaType,
-				typeConfiguration
-		);
-		if ( determinedPlan != null ) {
-			return determinedPlan;
-		}
+		final var determinedPlan =
+				RegistryHelper.INSTANCE.determineMutabilityPlan( elementJavaType, typeConfiguration );
+		return determinedPlan != null ? determinedPlan : MutableMutabilityPlan.instance();
 
-		return MutableMutabilityPlan.INSTANCE;
 	}
 
 	public <T> JavaType<T[]> resolveArrayDescriptor(Class<T> elementJavaType) {
@@ -153,7 +174,26 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // Can be private
+	// WAS:
+//	public <T> JavaType<T[]> resolveArrayDescriptor(Class<T> elementJavaType) {
+//		return resolveDescriptor( arrayClass( elementJavaType ),
+//				() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
+//	}
+
+	@Internal // Can be demoted to private
+	public <J> JavaType<J> resolveDescriptor(
+			Class<J> javaType,
+			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+		//noinspection unchecked
+		return resolveDescriptor(
+				javaType,
+				() -> javaType.isArray()
+						? (JavaType<J>) createArrayTypeDescriptor( javaType.getComponentType(), mutabilityPlanCreator )
+						: createTypeDescriptor( javaType, mutabilityPlanCreator )
+		);
+	}
+
+	@Internal // Can be demoted to private
 	public JavaType<?> resolveDescriptor(
 			Type javaType,
 			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
@@ -175,7 +215,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	private <J> JavaType<J[]> createArrayTypeDescriptor(Class<J> elementJavaType, BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
-		JavaType<J> elementTypeDescriptor = findDescriptor( elementJavaType );
+		var elementTypeDescriptor = findDescriptor( elementJavaType );
 		if ( elementTypeDescriptor == null ) {
 			elementTypeDescriptor = createTypeDescriptor( elementJavaType, mutabilityPlanCreator );
 		}
@@ -186,30 +226,55 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		//noinspection unchecked
 		return RegistryHelper.INSTANCE.createTypeDescriptor(
 				javaType,
-				() -> (MutabilityPlan<J>) mutabilityPlanCreator.apply( javaType, typeConfiguration ),
+				() -> (MutabilityPlan<J>)
+						mutabilityPlanCreator.apply( javaType, typeConfiguration ),
 				typeConfiguration
 		);
 	}
 
-	public JavaType<?> resolveManagedTypeDescriptor(Type javaType) {
-		return resolveManagedTypeDescriptor( javaType, false );
-	}
-
 	public <J> JavaType<J> resolveManagedTypeDescriptor(Class<J> javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) resolveManagedTypeDescriptor( javaType, false );
-	}
-
-	public JavaType<?> resolveEntityTypeDescriptor(Type javaType) {
-		return resolveManagedTypeDescriptor( javaType, true );
+		return resolveManagedTypeDescriptor( javaType, JavaTypeBasicAdaptor::new );
 	}
 
 	public <J> JavaType<J> resolveEntityTypeDescriptor(Class<J> javaType) {
-		//noinspection unchecked
-		return (JavaType<J>) resolveManagedTypeDescriptor( javaType, true );
+		return resolveManagedTypeDescriptor( javaType, EntityJavaType::new );
 	}
 
-	private <J> JavaType<?> resolveManagedTypeDescriptor(Type javaType, boolean entity) {
+	private <J> JavaType<J> resolveManagedTypeDescriptor(
+			Class<J> javaType,
+			BiFunction<Class<J>, MutabilityPlan<J>, JavaType<J>> instantiate) {
+		return resolveDescriptor(
+				javaType,
+				() -> {
+					final var determinedPlan =
+							RegistryHelper.INSTANCE.determineMutabilityPlan( javaType, typeConfiguration );
+					return instantiate.apply(
+							javaType,
+							determinedPlan != null
+									? determinedPlan
+									: MutableMutabilityPlan.instance()
+					);
+				}
+		);
+	}
+
+	// CAN BE REMOVED:
+
+	@Deprecated(since = "7.2", forRemoval = true) // no longer used
+	public JavaType<?> resolveManagedTypeDescriptor(Type javaType) {
+		return resolveManagedTypeDescriptor( javaType, JavaTypeBasicAdaptor::new );
+	}
+
+	@Deprecated(since = "7.2", forRemoval = true) // no longer used
+	public JavaType<?> resolveEntityTypeDescriptor(Type javaType) {
+		return resolveManagedTypeDescriptor( javaType, EntityJavaType::new );
+	}
+
+	@Deprecated(since = "7.2", forRemoval = true) // no longer used
+	@SuppressWarnings("unchecked")
+	private <J> JavaType<?> resolveManagedTypeDescriptor(
+			Type javaType,
+			BiFunction<Class<J>, MutabilityPlan<J>, JavaType<J>> instantiate) {
 		return resolveDescriptor(
 				javaType.getTypeName(),
 				() -> {
@@ -222,18 +287,13 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						javaTypeClass = (Class<J>) parameterizedType.getRawType();
 					}
 
-					final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-							javaType,
-							typeConfiguration
-					);
+					final var determinedPlan =
+							RegistryHelper.INSTANCE.determineMutabilityPlan( javaTypeClass, typeConfiguration );
 					final MutabilityPlan<J> mutabilityPlan =
 							determinedPlan != null
 									? determinedPlan
-									: (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
-
-					return entity
-							? new EntityJavaType<>( javaTypeClass, mutabilityPlan )
-							: new JavaTypeBasicAdaptor<>( javaTypeClass, mutabilityPlan );
+									: MutableMutabilityPlan.instance();
+					return instantiate.apply( javaTypeClass, mutabilityPlan );
 				}
 		);
 	}

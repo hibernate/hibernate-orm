@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.GenericsHelper;
-import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.models.spi.MemberDetails;
 
 import com.fasterxml.classmate.ResolvedType;
@@ -23,6 +22,8 @@ import com.fasterxml.classmate.members.ResolvedField;
 import com.fasterxml.classmate.members.ResolvedMember;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
 /**
  * Helpers related to handling converters
@@ -100,11 +101,8 @@ public class ConverterHelper {
 	 * @return {@code true} if they match, otherwise {@code false}.
 	 */
 	public static boolean typesMatch(ResolvedType converterDefinedType, ResolvedType checkType) {
-		Class<?> erasedCheckType = checkType.getErasedType();
-		if ( erasedCheckType.isPrimitive() ) {
-			erasedCheckType = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( erasedCheckType ).getWrapperClass();
-		}
-		else if ( erasedCheckType.isArray() ) {
+		final var erasedCheckType = canonicalize( checkType.getErasedType() );
+		if ( erasedCheckType.isArray() ) {
 			// converterDefinedType have type parameters if it extends super generic class
 			// but checkType doesn't have any type parameters
 			// comparing erased type is enough

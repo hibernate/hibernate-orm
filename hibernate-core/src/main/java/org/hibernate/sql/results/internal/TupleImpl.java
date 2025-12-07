@@ -10,8 +10,8 @@ import java.util.List;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
-import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.cast;
-import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.isInstance;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.cast;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.isInstance;
 
 /**
  * Implementation of the JPA Tuple contract

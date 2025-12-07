@@ -74,14 +74,16 @@ public final class AttributeConverterBean<O,R> implements JpaAttributeConverter<
 	private MutabilityPlan<O> getMutabilityPlan(
 			ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean,
 			JpaAttributeConverterCreationContext context) {
-		final MutabilityPlan<O> mutabilityPlan =
+		final var mutabilityPlan =
 				RegistryHelper.INSTANCE.determineMutabilityPlan(
-						attributeConverterBean.getBeanClass(),
+						(java.lang.reflect.Type)
+								attributeConverterBean.getBeanClass(),
 						context.getTypeConfiguration()
 				);
+		//noinspection unchecked
 		return mutabilityPlan == null
 				? new AttributeConverterMutabilityPlan<>( this, true )
-				: mutabilityPlan;
+				: (MutabilityPlan<O>) mutabilityPlan;
 	}
 
 	@Override

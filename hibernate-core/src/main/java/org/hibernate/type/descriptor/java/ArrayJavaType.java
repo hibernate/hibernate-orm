@@ -299,50 +299,69 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 
-		final var elementJavaType = getElementJavaType();
-		if ( value instanceof Object[] raw ) {
-			final var componentClass = elementJavaType.getJavaTypeClass();
-			//noinspection unchecked
-			final var wrapped = (T[]) newInstance( componentClass, raw.length );
-			if ( componentClass.isAssignableFrom( value.getClass().getComponentType() ) ) {
-				for (int i = 0; i < raw.length; i++) {
-					//noinspection unchecked
-					wrapped[i] = (T) raw[i];
-				}
-			}
-			else {
-				for ( int i = 0; i < raw.length; i++ ) {
-					wrapped[i] = elementJavaType.wrap( raw[i], options );
-				}
-			}
-			return wrapped;
+		if ( value instanceof Object[] array ) {
+			return wrapObjectArray( value, array, options );
 		}
 		else if ( value instanceof byte[] bytes ) {
 			return fromBytes( bytes );
 		}
 		else if ( value instanceof BinaryStream binaryStream ) {
-			// When the value is a BinaryStream, this is a deserialization request
+			// When the value is a BinaryStream,
+			// this is a deserialization request
 			return fromBytes( binaryStream.getBytes() );
 		}
-		else if ( elementJavaType.isInstance( value ) ) {
-			// Support binding a single element as parameter value
-			//noinspection unchecked
-			final var wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), 1 );
-			//noinspection unchecked
-			wrapped[0] = (T) value;
-			return wrapped;
-		}
 		else if ( value instanceof Collection<?> collection ) {
-			//noinspection unchecked
-			final var wrapped = (T[]) newInstance( elementJavaType.getJavaTypeClass(), collection.size() );
-			int i = 0;
-			for ( Object e : collection ) {
-				wrapped[i++] = elementJavaType.wrap( e, options );
-			}
-			return wrapped;
+			return wrapCollection( collection, options );
+		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as a parameter value
+			return wrapSingleElement( value, options );
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	private T[] wrapCollection(Collection<?> collection, WrapperOptions options) {
+		final var arrayClass = getJavaTypeClass();
+		final var elementJavaType = getElementJavaType();
+		final var wrapped = newArray( arrayClass, elementJavaType, collection.size() );
+		int i = 0;
+		for ( Object element : collection ) {
+			wrapped[i++] = elementJavaType.wrap( element, options );
+		}
+		return wrapped;
+	}
+
+	private < X> T[] wrapSingleElement(X value, WrapperOptions options) {
+		final var arrayClass = getJavaTypeClass();
+		final var elementJavaType = getElementJavaType();
+		final var wrapped = newArray( arrayClass, elementJavaType, 1 );
+		wrapped[0] = elementJavaType.wrap( value, options );
+		return wrapped;
+	}
+
+	private <X> T[] wrapObjectArray(X value, Object[] array, WrapperOptions options) {
+		final var arrayClass = getJavaTypeClass();
+		final var elementJavaType = getElementJavaType();
+		final var wrapped = newArray( arrayClass, elementJavaType, array.length );
+		// I suppose this code was there as an optimization,
+		// but it doesn't really look necessary to me
+//		if ( elementJavaType.getJavaTypeClass()
+//				.isAssignableFrom( value.getClass().getComponentType() ) ) {
+//			for ( int i = 0; i < array.length; i++) {
+//				wrapped[i] = elementJavaType.cast( array[i] );
+//			}
+//		}
+//		else {
+		for ( int i = 0; i < array.length; i++ ) {
+			wrapped[i] = elementJavaType.wrap( array[i], options );
+		}
+//		}
+		return wrapped;
+	}
+
+	private static <T> T[] newArray(Class<T[]> arrayClass, JavaType<T> elementJavaType, int length) {
+		return arrayClass.cast( newInstance( elementJavaType.getJavaTypeClass(), length ) );
 	}
 
 	private static <T> byte[] toBytes(T[] array) {
@@ -364,21 +383,19 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 
 	private T[] fromBytes(byte[] bytes) {
 		final var elementClass = getElementJavaType().getJavaTypeClass();
+		final var arrayClass = getJavaTypeClass();
 		if ( elementClass.isEnum() ) {
-			final T[] enumConstants = elementClass.getEnumConstants();
-			final var array = (Object[]) newInstance( elementClass, bytes.length );
+			final var enumConstants = elementClass.getEnumConstants();
+			final var array = newArray( arrayClass, getElementJavaType(), bytes.length );
 			for (int i = 0; i < bytes.length; i++ ) {
 				// null enum value was encoded as -1
 				array[i] = bytes[i] == -1 ? null : enumConstants[bytes[i]];
 			}
-			//noinspection unchecked
-			return (T[]) array;
-
+			return array;
 		}
 		else {
 			// When the value is a byte[], this is a deserialization request
-			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize(bytes);
+			return arrayClass.cast( SerializationHelper.deserialize( bytes ) );
 		}
 	}
 

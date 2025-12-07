@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Calendar;
@@ -108,10 +107,6 @@ class MySqlArrayOfTimestampsTest {
 			}
 		} );
 	}
-
-	private static final LocalDateTime SUMMER = LocalDate.of( 2024, 6, 20 ).atStartOfDay();
-	private static final LocalDateTime WINTER = LocalDate.of( 2023, 12, 22 ).atStartOfDay();
-	private static final LocalDate EPOCH = LocalDate.of( 1970, Month.JANUARY, 1 );
 
 	private static final TimeZone[] TEST_TIME_ZONES = Stream.of(
 			"Africa/Monrovia",

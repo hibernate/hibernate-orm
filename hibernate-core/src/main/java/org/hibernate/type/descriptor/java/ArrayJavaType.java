@@ -111,7 +111,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 	}
 
 	@Override
-	public boolean areEqual(T[] one, T[] another) {
+	public boolean areEqual(Object[] one, Object[] another) {
 		if ( one == null && another == null ) {
 			return true;
 		}
@@ -123,7 +123,13 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 		int l = one.length;
 		for ( int i = 0; i < l; i++ ) {
-			if ( !getElementJavaType().areEqual( one[i], another[i] )) {
+			final var elementJavaType = getElementJavaType();
+			if ( !elementJavaType.areEqual(
+					// Horrible hack around the fact that java.sql.Timestamps
+					// can be represented as instances of java.util.Date
+					// (Why do we even allow this? We deprecated java.sql stuff!)
+					elementJavaType.coerce( one[i], null ),
+					elementJavaType.coerce( another[i], null ) )) {
 				return false;
 			}
 		}
@@ -376,15 +382,36 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 	}
 
+	// Methods required to support Horrible hack around the fact
+	// that java.sql.Timestamps in an array can be represented as
+	// instances of java.util.Date (Why do we even allow this?)
+
+	@Override
+	public T[] deepCopy(Object value) {
+		final var mutabilityPlan =
+				(ArrayMutabilityPlan<T>)
+						super.getMutabilityPlan();
+		return mutabilityPlan.deepCopy( (Object[]) value );
+	}
+
+	@Override
+	public boolean isEqual(Object one, Object another) {
+		return areEqual( (Object[]) one, (Object[]) another );
+	}
+
 	@AllowReflection
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {
 
 		private final Class<T> componentClass;
 		private final MutabilityPlan<T> componentPlan;
+		private final Class<T[]> arrayClass;
+		private final JavaType<T> baseDescriptor;
 
 		public ArrayMutabilityPlan(JavaType<T> baseDescriptor) {
+			this.baseDescriptor = baseDescriptor;
 			this.componentClass = baseDescriptor.getJavaTypeClass();
 			this.componentPlan = baseDescriptor.getMutabilityPlan();
+			this.arrayClass = arrayClass( componentClass );
 		}
 
 		@Override
@@ -393,16 +420,21 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 
 		@Override
-		public T[] deepCopy(T[] value) {
+		public T[] deepCopy(Object[] value) {
 			if ( value == null ) {
 				return null;
 			}
-			//noinspection unchecked
-			final T[] copy = (T[]) newInstance( componentClass, value.length );
-			for ( int i = 0; i < value.length; i ++ ) {
-				copy[ i ] = componentPlan.deepCopy( value[ i ] );
+			else {
+				final var copy = arrayClass.cast( newInstance( componentClass, value.length ) );
+				for ( int i = 0; i < value.length; i++ ) {
+					copy[i] = componentPlan.deepCopy(
+							// Horrible hack around the fact that java.sql.Timestamps
+							// can be represented as instances of java.util.Date
+							// (Why do we even allow this? We deprecated java.sql stuff!)
+							baseDescriptor.coerce( value[i], null ) );
+				}
+				return copy;
 			}
-			return copy;
 		}
 
 		@Override

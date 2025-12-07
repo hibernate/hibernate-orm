@@ -63,7 +63,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 
 	@Override
 	public SelfRenderingSqmOrderedSetAggregateFunction<T> copy(SqmCopyContext context) {
-		final SelfRenderingSqmOrderedSetAggregateFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

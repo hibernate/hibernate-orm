@@ -53,7 +53,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 
 	@Override
 	public SelfRenderingSqmWindowFunction<T> copy(SqmCopyContext context) {
-		final SelfRenderingSqmWindowFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

@@ -77,11 +77,11 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 
 	@Override
 	public SqmTreatedMapJoin<L, K, V, S> copy(SqmCopyContext context) {
-		final SqmTreatedMapJoin<L, K, V, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedMapJoin<L, K, V, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedMapJoin<>(
 						getNavigablePath(),

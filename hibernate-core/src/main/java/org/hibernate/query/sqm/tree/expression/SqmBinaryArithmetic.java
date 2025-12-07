@@ -73,7 +73,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 
 	@Override
 	public SqmBinaryArithmetic<T> copy(SqmCopyContext context) {
-		final SqmBinaryArithmetic<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

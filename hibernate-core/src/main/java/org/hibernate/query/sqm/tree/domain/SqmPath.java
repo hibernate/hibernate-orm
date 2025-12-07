@@ -164,7 +164,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 *
 	 * @see SqmPathSource#findSubPathSource(String, boolean)
 	 */
-	default <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+	default SqmPath<?> get(String attributeName, boolean includeSubtypes) {
 		return get( attributeName );
 	}
 

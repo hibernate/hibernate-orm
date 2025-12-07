@@ -98,7 +98,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> copy(SqmCopyContext context) {
-		final SqmQuerySpec<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

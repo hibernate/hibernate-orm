@@ -138,7 +138,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 	@Override
 	public SqmJsonTableFunction<T> copy(SqmCopyContext context) {
-		final SqmJsonTableFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

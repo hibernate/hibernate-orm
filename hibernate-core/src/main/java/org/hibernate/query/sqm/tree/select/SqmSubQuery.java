@@ -150,7 +150,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSubQuery<T> copy(SqmCopyContext context) {
-		final SqmSubQuery<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

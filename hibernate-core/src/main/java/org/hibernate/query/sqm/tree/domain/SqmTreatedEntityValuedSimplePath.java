@@ -77,12 +77,12 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 
 	@Override
 	public SqmTreatedEntityValuedSimplePath<T, S> copy(SqmCopyContext context) {
-		final SqmTreatedEntityValuedSimplePath<T, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmTreatedEntityValuedSimplePath<T, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedEntityValuedSimplePath<>(
 						getNavigablePath(),

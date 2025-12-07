@@ -38,7 +38,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmAny<T> copy(SqmCopyContext context) {
-		final SqmAny<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

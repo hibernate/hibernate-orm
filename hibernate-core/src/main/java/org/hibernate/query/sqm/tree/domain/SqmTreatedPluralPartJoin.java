@@ -18,12 +18,12 @@ import org.hibernate.spi.NavigablePath;
  */
 @SuppressWarnings("rawtypes")
 public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTreatedJoin {
-	private final SqmPluralPartJoin wrappedPath;
-	private final SqmEntityDomainType treatTarget;
+	private final SqmPluralPartJoin<?,?> wrappedPath;
+	private final SqmEntityDomainType<?> treatTarget;
 
 	public SqmTreatedPluralPartJoin(
-			SqmPluralPartJoin wrappedPath,
-			SqmEntityDomainType treatTarget,
+			SqmPluralPartJoin<?,?> wrappedPath,
+			SqmEntityDomainType<?> treatTarget,
 			@Nullable String alias) {
 		//noinspection unchecked
 		super(
@@ -41,8 +41,8 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 
 	private SqmTreatedPluralPartJoin(
 			NavigablePath navigablePath,
-			SqmPluralPartJoin wrappedPath,
-			SqmEntityDomainType treatTarget,
+			SqmPluralPartJoin<?,?> wrappedPath,
+			SqmEntityDomainType<?> treatTarget,
 			@Nullable String alias) {
 		//noinspection unchecked
 		super(
@@ -59,11 +59,11 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 
 	@Override
 	public SqmTreatedPluralPartJoin copy(SqmCopyContext context) {
-		final SqmTreatedPluralPartJoin existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedPluralPartJoin path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedPluralPartJoin(
 						getNavigablePath(),
@@ -77,22 +77,22 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	}
 
 	@Override
-	public SqmPluralPartJoin getWrappedPath() {
+	public SqmPluralPartJoin<?,?> getWrappedPath() {
 		return wrappedPath;
 	}
 
 	@Override
-	public EntityDomainType getTreatTarget() {
+	public EntityDomainType<?> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public @NonNull SqmBindableType getNodeType() {
+	public @NonNull SqmBindableType<?> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource getReferencedPathSource() {
+	public SqmPathSource<?> getReferencedPathSource() {
 		return treatTarget;
 	}
 

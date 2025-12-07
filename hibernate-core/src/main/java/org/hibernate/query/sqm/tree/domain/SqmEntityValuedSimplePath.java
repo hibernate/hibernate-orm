@@ -28,13 +28,13 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public SqmEntityValuedSimplePath<T> copy(SqmCopyContext context) {
-		final SqmEntityValuedSimplePath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final SqmPath<?> lhsCopy = getLhs().copy( context );
-		final SqmEntityValuedSimplePath<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmEntityValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
@@ -52,7 +52,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

@@ -49,7 +49,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public SqmCaseSearched<R> copy(SqmCopyContext context) {
-		final SqmCaseSearched<R> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

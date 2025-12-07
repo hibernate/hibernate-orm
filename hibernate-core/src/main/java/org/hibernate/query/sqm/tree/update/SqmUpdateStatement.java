@@ -107,7 +107,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public SqmUpdateStatement<T> copy(SqmCopyContext context) {
-		final SqmUpdateStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -179,7 +179,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value) {
-		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		final var nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
 		return this;
@@ -193,7 +193,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, @Nullable X value) {
-		final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+		final var nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		final SqmPath<Y> sqmAttribute = (SqmPath<Y>) attribute;
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute ) );
 		return this;
@@ -213,7 +213,7 @@ public class SqmUpdateStatement<T>
 			expression = (SqmExpression) value;
 		}
 		else {
-			final SqmCriteriaNodeBuilder nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
+			final var nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 			expression = nodeBuilder.value( value, sqmPath );
 		}
 		applyAssignment( sqmPath, expression );

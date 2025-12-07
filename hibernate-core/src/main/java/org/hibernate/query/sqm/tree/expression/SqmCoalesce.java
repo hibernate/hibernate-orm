@@ -49,7 +49,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 
 	@Override
 	public SqmCoalesce<T> copy(SqmCopyContext context) {
-		final SqmCoalesce<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

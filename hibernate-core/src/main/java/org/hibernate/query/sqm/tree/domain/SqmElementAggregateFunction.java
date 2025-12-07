@@ -13,7 +13,6 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -38,32 +37,28 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 						.getElementPathSource()
 		);
 		this.functionName = functionName;
-		final SqmCriteriaNodeBuilder nodeBuilder = pluralDomainPath.nodeBuilder();
-		switch ( functionName ) {
-			case "sum":
-				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder.getSumReturnTypeResolver()
-						.resolveFunctionReturnType(
-								null,
-								(SqmToSqlAstConverter) null,
-								List.of( pluralDomainPath ),
-								nodeBuilder.getTypeConfiguration()
-						);
-				break;
-			case "avg":
-				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder.getAvgReturnTypeResolver()
-						.resolveFunctionReturnType(
-								null,
-								(SqmToSqlAstConverter) null,
-								List.of( pluralDomainPath ),
-								nodeBuilder.getTypeConfiguration()
-						);
-				break;
-			default:
-				this.returnableType = null;
-				break;
-		}
+		final var nodeBuilder = pluralDomainPath.nodeBuilder();
+		final var type = switch ( functionName ) {
+			case "sum" ->
+					nodeBuilder.getSumReturnTypeResolver()
+							.resolveFunctionReturnType(
+									null,
+									(SqmToSqlAstConverter) null,
+									List.of( pluralDomainPath ),
+									nodeBuilder.getTypeConfiguration()
+							);
+			case "avg" ->
+					nodeBuilder.getAvgReturnTypeResolver()
+							.resolveFunctionReturnType(
+									null,
+									(SqmToSqlAstConverter) null,
+									List.of( pluralDomainPath ),
+									nodeBuilder.getTypeConfiguration()
+							);
+			default -> null;
+		};
+		//noinspection unchecked
+		returnableType = (ReturnableType<T>) type;
 	}
 
 	@Override
@@ -87,14 +82,14 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 
 	@Override
 	public SqmElementAggregateFunction<T> copy(SqmCopyContext context) {
-		final SqmElementAggregateFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmElementAggregateFunction<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
-				new SqmElementAggregateFunction<>(
+				new SqmElementAggregateFunction<T>(
 						getPluralDomainPath().copy( context ),
 						functionName
 				)
@@ -112,7 +107,7 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

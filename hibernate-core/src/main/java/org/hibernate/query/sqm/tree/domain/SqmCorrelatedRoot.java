@@ -38,11 +38,11 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 
 	@Override
 	public SqmCorrelatedRoot<T> copy(SqmCopyContext context) {
-		final SqmCorrelatedRoot<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedRoot<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedRoot<>( correlationParent.copy( context ) )
 		);

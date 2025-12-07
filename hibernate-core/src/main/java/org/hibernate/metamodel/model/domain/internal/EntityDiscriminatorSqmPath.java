@@ -64,7 +64,7 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public EntityDiscriminatorSqmPath copy(SqmCopyContext context) {
-		final EntityDiscriminatorSqmPath existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

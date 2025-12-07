@@ -49,7 +49,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		}
 		else {
 			final Set<SqmParameter<?>> parameters = new LinkedHashSet<>( this.parameters.size() );
-			for ( SqmParameter<?> parameter : this.parameters ) {
+			for ( var parameter : this.parameters ) {
 				parameters.add( parameter.copy( context ) );
 			}
 			return parameters;

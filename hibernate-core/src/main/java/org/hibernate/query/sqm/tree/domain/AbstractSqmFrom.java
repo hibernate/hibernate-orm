@@ -85,7 +85,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			@Nullable String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
-
 		if ( lhs == null ) {
 			throw new IllegalArgumentException( "LHS cannot be null" );
 		}
@@ -135,22 +134,32 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		super.copyTo( target, context );
 		final var joins = this.joins;
 		if ( joins != null ) {
-			final ArrayList<SqmJoin<T, ?>> newJoins =
-					new ArrayList<>( joins.size() );
-			for ( var join : joins ) {
-				newJoins.add( join.copy( context ) );
-			}
-			target.joins = newJoins;
+			target.joins = copyJoins( context, joins );
 		}
 		final var treats = this.treats;
 		if ( treats != null ) {
-			final ArrayList<SqmTreatedFrom<?, ?, @Nullable ?>> newTreats =
-					new ArrayList<>( treats.size() );
-			for ( SqmTreatedFrom<?,?,@Nullable ?> treat : treats ) {
-				newTreats.add( treat.copy( context ) );
-			}
-			target.treats = newTreats;
+			target.treats = copyTreats( context, treats );
 		}
+	}
+
+	private static ArrayList<SqmTreatedFrom<?, ?, @Nullable ?>> copyTreats(
+			SqmCopyContext context, List<SqmTreatedFrom<?, ?, @Nullable ?>> treats) {
+		final ArrayList<SqmTreatedFrom<?, ?, @Nullable ?>> newTreats =
+				new ArrayList<>( treats.size() );
+		for ( SqmTreatedFrom<?,?,@Nullable ?> treat : treats ) {
+			newTreats.add( treat.copy( context ) );
+		}
+		return newTreats;
+	}
+
+	private static <T> ArrayList<SqmJoin<T, ?>> copyJoins(
+			SqmCopyContext context, List<SqmJoin<T, ?>> joins) {
+		final ArrayList<SqmJoin<T, ?>> newJoins =
+				new ArrayList<>( joins.size() );
+		for ( var join : joins ) {
+			newJoins.add( join.copy( context ) );
+		}
+		return newJoins;
 	}
 
 	@Override
@@ -203,7 +212,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( resolvedPath != null ) {
 			return resolvedPath;
 		}
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -234,21 +243,20 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Internal
 	public void removeLeftFetchJoins() {
-		final List<SqmJoin<T, ?>> joins = this.joins;
+		final var joins = this.joins;
 		if ( joins != null ) {
 			for ( var join : new ArrayList<>( joins ) ) {
-				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin ) {
-					if ( attributeJoin.isFetched() ) {
-						if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
-							joins.remove( join );
-							final var orderedJoins = findRoot().getOrderedJoins();
-							if ( orderedJoins != null ) {
-								orderedJoins.remove( join );
-							}
+				if ( join instanceof SqmAttributeJoin<T, ?> attributeJoin
+						&& attributeJoin.isFetched() ) {
+					if ( join.getSqmJoinType() == SqmJoinType.LEFT ) {
+						joins.remove( join );
+						final var orderedJoins = findRoot().getOrderedJoins();
+						if ( orderedJoins != null ) {
+							orderedJoins.remove( join );
 						}
-						else {
-							attributeJoin.clearFetched();
-						}
+					}
+					else {
+						attributeJoin.clearFetched();
 					}
 				}
 			}
@@ -267,7 +275,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return treats == null ? emptyList() : treats;
 	}
 
-	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> @Nullable X findTreat(ManagedDomainType<S> targetType, @Nullable String alias) {
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> @Nullable X findTreat(
+			ManagedDomainType<S> targetType, @Nullable String alias) {
 		if ( treats != null ) {
 			for ( var treat : treats ) {
 				if ( treat.getModel() == targetType ) {

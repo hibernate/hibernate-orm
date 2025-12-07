@@ -60,7 +60,7 @@ public class SqmJpaCompoundSelection<T>
 
 	@Override
 	public SqmJpaCompoundSelection<T> copy(SqmCopyContext context) {
-		final SqmJpaCompoundSelection<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

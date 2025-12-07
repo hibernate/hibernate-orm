@@ -57,7 +57,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 
 	@Override
 	public SqmInSubQueryPredicate<T> copy(SqmCopyContext context) {
-		final SqmInSubQueryPredicate<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

@@ -67,7 +67,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 
 	@Override
 	public SqmInListPredicate<T> copy(SqmCopyContext context) {
-		final SqmInListPredicate<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

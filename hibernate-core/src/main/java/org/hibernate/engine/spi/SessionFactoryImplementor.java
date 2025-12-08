@@ -23,6 +23,8 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.graph.GraphParser;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -322,4 +324,18 @@ public interface SessionFactoryImplementor extends SessionFactory {
 		return new JdbcSelectWithActions.Builder();
 	}
 
+	@Override
+	default <T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText) {
+		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	@Override @Incubating
+	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
+		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	@Override @Incubating
+	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
+		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
 }

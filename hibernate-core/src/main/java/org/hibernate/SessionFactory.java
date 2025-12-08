@@ -13,7 +13,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.RootGraph;
@@ -108,7 +107,7 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  *     SingularAttribute&lt;Book,String&gt;}.
  * </ul>
  * <p>
- * Use of these statically-typed metamodel references is the preferred way of
+ * Use of these statically typed metamodel references is the preferred way of
  * working with the {@linkplain jakarta.persistence.criteria.CriteriaBuilder
  * criteria query API}, and with {@linkplain EntityGraph}s.
  * <p>
@@ -266,7 +265,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 6.3
 	 */
 	default void inStatelessSession(Consumer<? super StatelessSession> action) {
-		try ( StatelessSession session = openStatelessSession() ) {
+		try ( var session = openStatelessSession() ) {
 			action.accept( session );
 		}
 	}
@@ -308,7 +307,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see #fromTransaction(Function)
 	 */
 	default <R> R fromSession(Function<? super Session,R> action) {
-		try ( Session session = openSession() ) {
+		try ( var session = openSession() ) {
 			return action.apply( session );
 		}
 	}
@@ -331,7 +330,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 6.3
 	 */
 	default <R> R fromStatelessSession(Function<? super StatelessSession,R> action) {
-		try ( StatelessSession session = openStatelessSession() ) {
+		try ( var session = openStatelessSession() ) {
 			return action.apply( session );
 		}
 	}
@@ -522,9 +521,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	default <T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText) {
-		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
-	}
+	<T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText);
 
 	/**
 	 * Creates a {@link RootGraph} for the given {@code rootEntityName} and parses the graph
@@ -544,9 +541,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 */
 	@Incubating
-	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
-		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
-	}
+	<T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText);
 
 	/**
 	 * Creates a {@link RootGraph} based on the passed string representation.  Here, the
@@ -562,9 +557,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 */
 	@Incubating
-	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
-		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
-	}
+	<T> RootGraph<T> parseEntityGraph(CharSequence graphText);
 
 	/**
 	 * Obtain the set of names of all {@linkplain org.hibernate.annotations.FilterDef

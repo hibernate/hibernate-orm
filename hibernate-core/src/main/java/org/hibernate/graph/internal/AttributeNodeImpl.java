@@ -258,13 +258,13 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 
 	@Override @Deprecated
 	public <S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype) {
-		final ManagedDomainType<E> managedType = asManagedType( valueGraphType );
+		final var managedType = asManagedType( valueGraphType );
 		if ( !managedType.getJavaType().isAssignableFrom( subtype ) ) {
 			throw new IllegalArgumentException( "Not a subtype: " + subtype.getName() );
 		}
 		@SuppressWarnings("unchecked")
-		final Class<? extends E> castSuptype = (Class<? extends E>) subtype;
-		final SubGraphImplementor<? extends E> result = makeSubGraph().addTreatedSubgraph( castSuptype );
+		final var castSuptype = (Class<? extends E>) subtype;
+		final var result = makeSubGraph().addTreatedSubgraph( castSuptype );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}
@@ -282,13 +282,13 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	@Override @Deprecated
 	public <S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype) {
 		checkMap();
-		final ManagedDomainType<K> type = asManagedType( keyGraphType );
+		final var type = asManagedType( keyGraphType );
 		if ( !type.getJavaType().isAssignableFrom( subtype ) ) {
 			throw new IllegalArgumentException( "Not a key subtype: " + subtype.getName() );
 		}
 		@SuppressWarnings("unchecked")
-		final Class<? extends K> castType = (Class<? extends K>) subtype;
-		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubgraph( castType );
+		final var castType = (Class<? extends K>) subtype;
+		final var result = makeKeySubGraph().addTreatedSubgraph( castType );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}
@@ -323,7 +323,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	public void merge(AttributeNodeImplementor<J, E, K> that) {
 		assert that.isMutable() == isMutable();
 		assert that.getAttributeDescriptor() == attribute;
-		final SubGraphImplementor<E> otherValueSubgraph = that.getValueSubgraph();
+		final var otherValueSubgraph = that.getValueSubgraph();
 		if ( otherValueSubgraph != null ) {
 			if ( valueSubgraph == null ) {
 				valueSubgraph = otherValueSubgraph.makeCopy( isMutable() );
@@ -333,7 +333,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 				valueSubgraph.mergeInternal( otherValueSubgraph );
 			}
 		}
-		final SubGraphImplementor<K> otherKeySubgraph = that.getKeySubgraph();
+		final var otherKeySubgraph = that.getKeySubgraph();
 		if ( otherKeySubgraph != null ) {
 			if ( keySubgraph == null ) {
 				keySubgraph = otherKeySubgraph.makeCopy( isMutable() );
@@ -351,7 +351,8 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 			return emptyMap();
 		}
 		else {
-			final HashMap<Class<?>, SubGraphImplementor<?>> map = new HashMap<>( valueSubgraph.getTreatedSubgraphs() );
+			final HashMap<Class<?>, SubGraphImplementor<?>> map =
+					new HashMap<>( valueSubgraph.getTreatedSubgraphs() );
 			map.put( attribute.getValueGraphType().getJavaType(), valueSubgraph );
 			return map;
 		}
@@ -363,7 +364,8 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 			return emptyMap();
 		}
 		else {
-			final HashMap<Class<?>, SubGraphImplementor<?>> map = new HashMap<>( keySubgraph.getTreatedSubgraphs() );
+			final HashMap<Class<?>, SubGraphImplementor<?>> map =
+					new HashMap<>( keySubgraph.getTreatedSubgraphs() );
 			map.put( attribute.getKeyGraphType().getJavaType(), keySubgraph );
 			return map;
 		}

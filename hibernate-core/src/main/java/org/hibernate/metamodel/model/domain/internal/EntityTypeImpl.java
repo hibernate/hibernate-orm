@@ -23,7 +23,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -153,7 +152,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
-		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
+		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}

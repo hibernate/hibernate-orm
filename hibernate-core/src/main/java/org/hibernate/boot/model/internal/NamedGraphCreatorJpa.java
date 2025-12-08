@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -36,16 +37,16 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	}
 
 	@Override
-	public <T> RootGraphImplementor<T> createEntityGraph(
-			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
+	public RootGraphImplementor<?> createEntityGraph(
+			Function<Class<?>, EntityDomainType<?>> entityDomainClassResolver,
 			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
-		//noinspection unchecked
-		final var rootEntityType =
-				(EntityDomainType<T>)
-						entityDomainNameResolver.apply( jpaEntityName );
+		return createGraph( (EntityDomainType<?>)
+				entityDomainNameResolver.apply( jpaEntityName ) );
+	}
+
+	private <T> @NonNull RootGraphImplementor<T> createGraph(EntityDomainType<T> rootEntityType) {
 		final var entityGraph =
 				createRootGraph( name, rootEntityType, annotation.includeAllAttributes() );
-
 		final var subclassSubgraphs = annotation.subclassSubgraphs();
 		if ( subclassSubgraphs != null ) {
 			for ( var subclassSubgraph : subclassSubgraphs ) {
@@ -59,11 +60,9 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 						entityGraph.addTreatedSubgraph( subgraphType.asSubclass( graphJavaType ) ) );
 			}
 		}
-
 		if ( annotation.attributeNodes() != null ) {
 			applyNamedAttributeNodes( annotation.attributeNodes(), annotation, entityGraph );
 		}
-
 		return entityGraph;
 	}
 

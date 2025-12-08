@@ -53,7 +53,7 @@ class NaturalIdBinder {
 
 	private static void addColumnsToUniqueKey(AnnotatedColumns columns, Identifier name) {
 		final var collector = columns.getBuildingContext().getMetadataCollector();
-		final Table table = columns.getTable();
+		final var table = columns.getTable();
 		final var uniqueKey = table.getOrCreateUniqueKey( name.render( collector.getDatabase().getDialect() ) );
 		final var property = columns.resolveProperty();
 		if ( property.isComposite() ) {

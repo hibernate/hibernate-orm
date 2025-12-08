@@ -11,8 +11,9 @@ import org.hibernate.spi.NavigablePath;
 
 public class PathHelper {
 	public static NavigablePath append(SqmPath<?> lhs, SqmPathSource<?> rhs, @Nullable SqmPathSource<?> intermediatePathSource) {
+		final var navigablePath = lhs.getNavigablePath();
 		return intermediatePathSource == null
-				? lhs.getNavigablePath().append( rhs.getPathName() )
-				: lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( rhs.getPathName() );
+				? navigablePath.append( rhs.getPathName() )
+				: navigablePath.append( intermediatePathSource.getPathName() ).append( rhs.getPathName() );
 	}
 }

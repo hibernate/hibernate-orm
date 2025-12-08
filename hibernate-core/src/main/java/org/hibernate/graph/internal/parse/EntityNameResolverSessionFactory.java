@@ -18,8 +18,7 @@ public class EntityNameResolverSessionFactory implements EntityNameResolver {
 	}
 
 	@Override
-	public <T> EntityDomainType<T> resolveEntityName(String entityName) {
-		//noinspection unchecked
-		return (EntityDomainType<T>) sessionFactory.getJpaMetamodel().findEntityType( entityName );
+	public EntityDomainType<?> resolveEntityName(String entityName) {
+		return sessionFactory.getJpaMetamodel().findEntityType( entityName );
 	}
 }

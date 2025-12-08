@@ -48,8 +48,8 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
-		String path = pathModel.getPathName();
-		String pathDesc = path == null || path.startsWith( "{" ) ? " " : " '" + pathModel.getPathName() + "' ";
+		final String path = pathModel.getPathName();
+		final String pathDesc = path == null || path.startsWith( "{" ) ? " " : " '" + pathModel.getPathName() + "' ";
 		throw new TerminalPathException( "Terminal path" + pathDesc + "has no attribute '" + name + "'" );
 	}
 
@@ -85,8 +85,8 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public String toString() {
-		return "BasicSqmPathSource(" +
-				getPathName() + " : " + getJavaType().getSimpleName() +
-				")";
+		return "BasicSqmPathSource("
+			+ getPathName() + " : " + getJavaType().getSimpleName()
+			+ ")";
 	}
 }

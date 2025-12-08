@@ -5,7 +5,6 @@
 package org.hibernate.graph.internal.parse;
 
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
@@ -24,11 +23,12 @@ public enum PathQualifierType {
 	);
 
 	private static <T> ManagedDomainType<T> managedType(String subtypeName, EntityNameResolver entityNameResolver) {
-		final EntityDomainType<T> entityDomainType = entityNameResolver.resolveEntityName( subtypeName );
+		final var entityDomainType = entityNameResolver.resolveEntityName( subtypeName );
 		if ( entityDomainType == null ) {
 			throw new IllegalArgumentException( "Unknown managed type: " + subtypeName );
 		}
-		return entityDomainType;
+		//noinspection unchecked
+		return (ManagedDomainType<T>) entityDomainType;
 	}
 
 	private final SubGraphGenerator subGraphCreator;

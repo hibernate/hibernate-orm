@@ -53,7 +53,7 @@ public class ArrayTupleType
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmExpressible<?>[] components) {
-		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
+		final var typeDescriptors = new JavaType<?>[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
 			typeDescriptors[i] = components[i].getExpressibleJavaType();
 		}

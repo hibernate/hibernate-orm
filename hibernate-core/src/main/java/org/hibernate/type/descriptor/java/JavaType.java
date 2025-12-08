@@ -332,8 +332,21 @@ public interface JavaType<T> extends Serializable {
 
 	@FunctionalInterface
 	@Deprecated(forRemoval = true, since = "7.2")
+	@Incubating
 	interface CoercionContext {
 		TypeConfiguration getTypeConfiguration();
+	}
+
+	/**
+	 * @deprecated Use {@link #coerce(Object)} instead.
+	 *             This operation depends on an unchecked cast.
+	 *             Since incubating, it will go away very soon.
+	 */
+	@Deprecated(forRemoval = true, since = "7.2")
+	@Incubating
+	default <X> T coerce(X value, CoercionContext context) {
+		//noinspection unchecked
+		return (T) coerce( value );
 	}
 
 	/**

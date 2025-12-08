@@ -29,11 +29,11 @@ public abstract class AbstractJavaTimeJdbcType<T extends Temporal> implements Ja
 	}
 
 	@Override
-	public <X> JavaType<X> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( javaTimeType );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaTimeType );
 	}
 
 	@Override

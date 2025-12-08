@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -20,7 +19,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -150,11 +148,11 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		rowReader.startLoading( rowProcessingState );
 
 		RuntimeException ex = null;
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
-			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
+			final var domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
 					rowReader.getResultJavaTypes(),
 					session.getTypeConfiguration()
@@ -162,7 +160,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
 			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
-			final Results<R> results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
+			final var results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
 			final int readRows = readRows( rowProcessingState, rowReader, isEntityResultType, results );
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
@@ -283,11 +281,12 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		return readRows;
 	}
 
+	@SuppressWarnings("unchecked") //TODO: fix the unchecked casts
 	private JavaType<R> resolveDomainResultJavaType(
 			Class<R> domainResultResultJavaType,
 			List<@Nullable JavaType<?>> resultJavaTypes,
 			TypeConfiguration typeConfiguration) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		if ( domainResultResultJavaType != null ) {
 			final var resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
@@ -295,7 +294,6 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			// so resolve the most concrete type since this type is used to determine equality of objects
 			if ( resultJavaTypes.size() == 1
 					&& isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
-				//noinspection unchecked
 				return (JavaType<R>) resultJavaTypes.get( 0 );
 			}
 			return resultJavaType;
@@ -303,16 +301,12 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 		if ( resultJavaTypes.size() == 1 ) {
 			final var firstJavaType = resultJavaTypes.get( 0 );
-			if ( firstJavaType == null ) {
-				return javaTypeRegistry.getDescriptor( Object.class );
-			}
-			else {
-				//noinspection unchecked
-				return (JavaType<R>) firstJavaType;
-			}
+			return firstJavaType == null
+					? (JavaType<R>) javaTypeRegistry.resolveDescriptor( Object.class )
+					: (JavaType<R>) firstJavaType;
 		}
 		else {
-			return javaTypeRegistry.getDescriptor( Object[].class );
+			return (JavaType<R>) javaTypeRegistry.resolveDescriptor( Object[].class );
 		}
 	}
 

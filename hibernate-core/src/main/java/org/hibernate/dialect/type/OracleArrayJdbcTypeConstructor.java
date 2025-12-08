@@ -54,7 +54,7 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 				precision = columnTypeInformation.getColumnSize();
 				scale = columnTypeInformation.getDecimalDigits();
 			}
-			typeName = OracleArrayJdbcType.getTypeName( elementType.getJdbcRecommendedJavaTypeMapping(
+			typeName = OracleArrayJdbcType.getTypeName( elementType.getRecommendedJavaType(
 					precision,
 					scale,
 					typeConfiguration

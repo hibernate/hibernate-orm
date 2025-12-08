@@ -67,7 +67,7 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			final var typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
 			final var javaType =
 					typeConfiguration.getJdbcTypeRegistry().getDescriptor( getJdbcTypeCode() )
-							.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+							.getRecommendedJavaType( null, null, typeConfiguration );
 			final var basicType =
 					typeConfiguration.standardBasicTypeForJavaType( javaType.getJavaTypeClass() );
 			//noinspection unchecked

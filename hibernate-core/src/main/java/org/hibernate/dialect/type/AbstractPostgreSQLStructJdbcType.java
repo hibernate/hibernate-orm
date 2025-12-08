@@ -125,17 +125,13 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		if ( embeddableMappingType == null ) {
-			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Object[].class );
-		}
-		else {
-			//noinspection unchecked
-			return (JavaType<T>) embeddableMappingType.getMappedJavaType();
-		}
+		return embeddableMappingType == null
+				? typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class )
+				: embeddableMappingType.getMappedJavaType();
 	}
 
 	@Override

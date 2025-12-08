@@ -44,17 +44,17 @@ public class FloatJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null ) {
 			int floatPrecision = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect().getFloatPrecision();
 			if ( length <= floatPrecision ) {
-				return typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
+				return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Float.class );
 			}
 		}
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Double.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Double.class );
 	}
 
 	@Override

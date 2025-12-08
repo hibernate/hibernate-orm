@@ -45,11 +45,11 @@ public class PGBinaryVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( byte[].class );
 	}
 
 //	@Override

@@ -47,14 +47,14 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null && length == 1 ) {
-			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
+			return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Character.class );
 		}
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( String.class );
 	}
 
 	@Override

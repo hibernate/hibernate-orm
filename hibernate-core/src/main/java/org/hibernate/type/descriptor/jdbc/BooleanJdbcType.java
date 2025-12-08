@@ -43,11 +43,11 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Boolean.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Boolean.class );
 	}
 
 	@Override

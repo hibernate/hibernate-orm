@@ -612,14 +612,14 @@ public class BasicValue extends SimpleValue
 		}
 	}
 
-	private <T> Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<T> javaType) {
-		final JavaType<T> basicJavaType;
+	private Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<?> javaType) {
+		final JavaType<?> basicJavaType;
 		final JdbcType jdbcType;
 		if ( explicitJdbcTypeAccess != null ) {
 			final var typeConfiguration = getTypeConfiguration();
 			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
 			basicJavaType = javaType == null && jdbcType != null
-					? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration )
+					? jdbcType.getRecommendedJavaType( null, null, typeConfiguration )
 					: javaType;
 		}
 		else {
@@ -630,7 +630,7 @@ public class BasicValue extends SimpleValue
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		if ( basicJavaType instanceof BasicJavaType<T> castType
+		if ( basicJavaType instanceof BasicJavaType<?> castType
 				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			final var context = getBuildingContext();
 			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );

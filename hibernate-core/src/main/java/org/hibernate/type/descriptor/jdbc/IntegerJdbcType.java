@@ -44,11 +44,11 @@ public class IntegerJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Integer.class );
 	}
 
 	@Override

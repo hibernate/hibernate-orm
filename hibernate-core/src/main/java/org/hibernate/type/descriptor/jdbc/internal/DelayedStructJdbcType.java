@@ -51,12 +51,11 @@ public class DelayedStructJdbcType implements StructuredJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (JavaType<T>) embeddableAggregateJavaType;
+		return embeddableAggregateJavaType;
 	}
 
 	@Override

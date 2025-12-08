@@ -57,11 +57,11 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Instant.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Instant.class );
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import org.hibernate.grammars.graph.GraphLanguageParserBaseVisitor;
 import org.hibernate.graph.GraphNode;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -24,13 +25,13 @@ import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
  * @author Steve Ebersole
  */
 public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
-	private final EntityNameResolver entityNameResolver;
+	private final GraphParserEntityNameResolver entityNameResolver;
 
 	private final Stack<GraphImplementor<?>> graphStack = new StandardStack<>();
 	private final Stack<AttributeNodeImplementor<?,?,?>> attributeNodeStack = new StandardStack<>();
 	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
-	public GraphParser(EntityNameResolver entityNameResolver) {
+	public GraphParser(GraphParserEntityNameResolver entityNameResolver) {
 		this.entityNameResolver = entityNameResolver;
 	}
 
@@ -38,7 +39,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	 * @apiNote It is important that this form only be used after the session-factory is fully
 	 * initialized, especially the {@linkplain SessionFactoryImplementor#getJpaMetamodel()} JPA metamodel}.
 	 *
-	 * @see GraphParser#GraphParser(EntityNameResolver)
+	 * @see GraphParser#GraphParser(GraphParserEntityNameResolver)
 	 */
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
 		this( sessionFactory.getJpaMetamodel()::findEntityType );

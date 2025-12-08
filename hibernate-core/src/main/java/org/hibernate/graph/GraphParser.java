@@ -291,8 +291,6 @@ public final class GraphParser {
 	 * Parses the textual graph representation as {@linkplain GraphParser described above}
 	 * into the specified graph.
 	 *
-	 * @param <T> The Java type for the ManagedType described by `graph`
-	 *
 	 * @param graph The target graph.  This is the graph that will be populated
 	 * by this process
 	 * @param graphText Textual representation of the graph

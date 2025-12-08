@@ -14,6 +14,7 @@ import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.grammars.graph.GraphLanguageParser.GraphContext;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -86,7 +87,7 @@ public class GraphParsing {
 	public static <T> RootGraphImplementor<T> parse(
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,
-			EntityNameResolver entityNameResolver) {
+			GraphParserEntityNameResolver entityNameResolver) {
 		return parse( null, rootType, attributeListContext, entityNameResolver );
 	}
 
@@ -100,7 +101,7 @@ public class GraphParsing {
 			@Nullable String name,
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,
-			EntityNameResolver entityNameResolver) {
+			GraphParserEntityNameResolver entityNameResolver) {
 		final RootGraphImpl<T> targetGraph = new RootGraphImpl<>( name, rootType );
 		visitGraph( targetGraph, entityNameResolver, attributeListContext );
 		return targetGraph;
@@ -126,7 +127,7 @@ public class GraphParsing {
 
 	private static void visitGraph(
 			GraphImplementor<?> targetGraph,
-			EntityNameResolver entityNameResolver,
+			GraphParserEntityNameResolver entityNameResolver,
 			GraphLanguageParser.AttributeListContext attributeList) {
 		// Build an instance of this class as a visitor
 		final var visitor = new GraphParser( entityNameResolver );

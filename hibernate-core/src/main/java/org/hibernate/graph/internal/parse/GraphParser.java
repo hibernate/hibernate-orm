@@ -41,7 +41,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	 * @see GraphParser#GraphParser(EntityNameResolver)
 	 */
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
-		this( new EntityNameResolverSessionFactory( sessionFactory ) );
+		this( sessionFactory.getJpaMetamodel()::findEntityType );
 	}
 
 	public Stack<GraphImplementor<?>> getGraphStack() {

@@ -80,6 +80,7 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return entityDescriptor.hasSubclasses()
 				? walker.visitDiscriminatorPath( this )
-				: walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
+				: walker.visitEntityTypeLiteralExpression(
+						new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
 	}
 }

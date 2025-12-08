@@ -126,8 +126,9 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action) {
 		visitDeclaredAttributes( action );
-		if ( getSuperType() != null ) {
-			getSuperType().visitAttributes( action );
+		final var superType = getSuperType();
+		if ( superType != null ) {
+			superType.visitAttributes( action );
 		}
 	}
 

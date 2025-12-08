@@ -9,7 +9,6 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -89,7 +88,7 @@ public class MappedSuperclassTypeImpl<J>
 
 	@Override
 	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
-		final PersistentAttribute<?,?> attribute = findAttribute( name );
+		final var attribute = findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}

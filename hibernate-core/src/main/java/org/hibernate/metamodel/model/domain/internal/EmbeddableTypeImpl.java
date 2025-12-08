@@ -34,6 +34,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements SqmEmbeddableDomainType<J>, Serializable {
+	@SuppressWarnings("FieldCanBeLocal")
 	private final boolean isDynamic;
 	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 	private final List<SqmEmbeddableDomainType<? extends J>> subtypes = new ArrayList<>();

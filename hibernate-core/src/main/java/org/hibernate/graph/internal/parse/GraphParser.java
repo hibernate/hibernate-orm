@@ -81,7 +81,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			subGraphCreator = pathQualifierType.getSubGraphCreator();
 		}
 
-		final AttributeNodeImplementor<?,?,?> attributeNode = resolveAttributeNode( attributeName );
+		final var attributeNode = resolveAttributeNode( attributeName );
 
 		if ( attributeNodeContext.subGraph() != null ) {
 			attributeNodeStack.push( attributeNode );
@@ -109,10 +109,10 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	}
 
 	private AttributeNodeImplementor<?,?,?> resolveAttributeNode(String attributeName) {
-		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
+		final var currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor<?,?,?> attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
+		final var attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;
@@ -132,7 +132,9 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 
 	@Override
 	public SubGraphImplementor<?> visitSubGraph(GraphLanguageParser.SubGraphContext subGraphContext) {
-		final String subTypeName = subGraphContext.typeIndicator() == null ? null : subGraphContext.typeIndicator().TYPE_NAME().getText();
+		final String subTypeName =
+				subGraphContext.typeIndicator() == null ? null
+						: subGraphContext.typeIndicator().TYPE_NAME().getText();
 
 		if ( PARSING_LOGGER.isTraceEnabled() ) {
 			PARSING_LOGGER.tracef(
@@ -142,8 +144,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			);
 		}
 
-		final AttributeNodeImplementor<?,?,?> attributeNode = attributeNodeStack.getCurrent();
-		final SubGraphGenerator subGraphCreator = graphSourceStack.getCurrent();
+		final var attributeNode = attributeNodeStack.getCurrent();
+		final var subGraphCreator = graphSourceStack.getCurrent();
 
 		final SubGraphImplementor<?> subGraph = subGraphCreator.createSubGraph(
 				attributeNode,

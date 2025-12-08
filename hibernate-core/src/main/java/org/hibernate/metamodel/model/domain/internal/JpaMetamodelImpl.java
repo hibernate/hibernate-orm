@@ -355,7 +355,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	public JavaType<?> getJavaConstantType(String className, String fieldName) {
 		try {
-			final Field referencedField = getJavaField( className, fieldName );
+			final var referencedField = getJavaField( className, fieldName );
 			if ( referencedField != null ) {
 				return getTypeConfiguration().getJavaTypeRegistry()
 						.resolveDescriptor( referencedField.getType() );
@@ -370,7 +370,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	public <T> T getJavaConstant(String className, String fieldName) {
 		try {
-			final Field referencedField = getJavaField( className, fieldName );
+			final var referencedField = getJavaField( className, fieldName );
 			//noinspection unchecked
 			return (T) referencedField.get( null );
 		}
@@ -490,7 +490,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			CORE_LOGGER.tracef( "Applying named entity graph [name=%s, source=%s]",
 					definition.name(), definition.source() );
 
-			final RootGraphImplementor<?> graph = definition.graphCreator().createEntityGraph(
+			final var graph = definition.graphCreator().createEntityGraph(
 					(entityClass) -> {
 						if ( managedTypeByClass.get( entityClass ) instanceof EntityDomainType<?> match ) {
 							return match;

@@ -11,5 +11,5 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
  */
 @FunctionalInterface
 public interface EntityNameResolver {
-	<T> EntityDomainType<T> resolveEntityName(String entityName);
+	EntityDomainType<?> resolveEntityName(String entityName);
 }

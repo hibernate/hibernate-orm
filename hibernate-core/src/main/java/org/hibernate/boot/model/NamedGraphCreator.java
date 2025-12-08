@@ -14,7 +14,7 @@ import java.util.function.Function;
  */
 @FunctionalInterface
 public interface NamedGraphCreator {
-	<T> RootGraphImplementor<T> createEntityGraph(
-			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
+	RootGraphImplementor<?> createEntityGraph(
+			Function<Class<?>, EntityDomainType<?>> entityDomainClassResolver,
 			Function<String, EntityDomainType<?>> entityDomainNameResolver);
 }

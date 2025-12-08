@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Subgraph;
 
+import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -89,6 +90,7 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	public static <T> RootGraph<T> parse(
 			final String rootEntityName,
 			final CharSequence graphText,
@@ -96,7 +98,8 @@ public final class GraphParser {
 		if ( graphText == null ) {
 			return null;
 		}
-		return GraphParsing.parse(
+		//noinspection unchecked
+		return (RootGraph<T>) GraphParsing.parse(
 				rootEntityName,
 				graphText.toString(),
 				sessionFactory.unwrap( SessionFactoryImplementor.class )
@@ -117,16 +120,18 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
-		public static <T> RootGraph<T> parse(
+	@Incubating
+	public static <T> RootGraph<T> parse(
 				final CharSequence graphText,
 				final SessionFactory sessionFactory) {
 			if ( graphText == null ) {
 				return null;
 			}
-			return GraphParsing.parse(
+			//noinspection unchecked
+			return (RootGraph<T>) GraphParsing.parse(
 					graphText.toString(),
 					sessionFactory.unwrap( SessionFactoryImplementor.class )
-		);
+			);
 	}
 
 	/**
@@ -153,7 +158,8 @@ public final class GraphParser {
 		return GraphParsing.parse(
 				rootType,
 				graphText.toString(),
-				entityManager.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+				entityManager.getEntityManagerFactory()
+						.unwrap( SessionFactoryImplementor.class )
 		);
 	}
 
@@ -190,13 +196,12 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	@SuppressWarnings("unchecked")
 	public static <T> void parseInto(
-			final EntityGraph<T> graph,
+			final EntityGraph<?> graph,
 			final CharSequence graphText,
 			final EntityManager entityManager) {
 		parseInto(
-				(GraphImplementor<T>) graph,
+				(GraphImplementor<?>) graph,
 				graphText,
 				( (SessionImplementor) entityManager ).getSessionFactory()
 		);
@@ -211,13 +216,12 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> void parseInto(
-			final Subgraph<T> graph,
+	public static void parseInto(
+			final Subgraph<?> graph,
 			final CharSequence graphText,
 			final EntityManager entityManager) {
 		parseInto(
-				(GraphImplementor<T>) graph,
+				(GraphImplementor<?>) graph,
 				graphText,
 				( (SessionImplementor) entityManager ).getSessionFactory()
 		);
@@ -232,12 +236,12 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	public static <T> void parseInto(
-			final Graph<T> graph,
+	public static void parseInto(
+			final Graph<?> graph,
 			final CharSequence graphText,
 			final EntityManagerFactory entityManagerFactory) {
 		parseInto(
-				(GraphImplementor<T>) graph,
+				(GraphImplementor<?>) graph,
 				graphText,
 				(SessionFactoryImplementor) entityManagerFactory
 		);
@@ -252,13 +256,12 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> void parseInto(
-			final EntityGraph<T> graph,
+	public static void parseInto(
+			final EntityGraph<?> graph,
 			final CharSequence graphText,
 			final EntityManagerFactory entityManagerFactory) {
 		parseInto(
-				(GraphImplementor<T>) graph,
+				(GraphImplementor<?>) graph,
 				graphText,
 				(SessionFactoryImplementor) entityManagerFactory
 		);
@@ -273,13 +276,12 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> void parseInto(
-			final Subgraph<T> graph,
+	public static void parseInto(
+			final Subgraph<?> graph,
 			final CharSequence graphText,
 			final EntityManagerFactory entityManagerFactory) {
 		parseInto(
-				(GraphImplementor<T>) graph,
+				(GraphImplementor<?>) graph,
 				graphText,
 				(SessionFactoryImplementor) entityManagerFactory
 		);
@@ -298,8 +300,8 @@ public final class GraphParser {
 	 *
 	 * @throws InvalidGraphException if the textual representation is invalid.
 	 */
-	private static <T> void parseInto(
-			GraphImplementor<T> graph,
+	private static void parseInto(
+			GraphImplementor<?> graph,
 			final CharSequence graphText,
 			SessionFactoryImplementor sessionFactory) {
 		if ( graphText != null ) {

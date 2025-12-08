@@ -11,12 +11,12 @@ import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphParserEntityClassResolver;
+import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-
-import java.util.function.Function;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -38,10 +38,10 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 
 	@Override
 	public RootGraphImplementor<?> createEntityGraph(
-			Function<Class<?>, EntityDomainType<?>> entityDomainClassResolver,
-			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
+			GraphParserEntityClassResolver entityDomainClassResolver,
+			GraphParserEntityNameResolver entityDomainNameResolver) {
 		return createGraph( (EntityDomainType<?>)
-				entityDomainNameResolver.apply( jpaEntityName ) );
+				entityDomainNameResolver.resolveEntityName( jpaEntityName ) );
 	}
 
 	private <T> @NonNull RootGraphImplementor<T> createGraph(EntityDomainType<T> rootEntityType) {

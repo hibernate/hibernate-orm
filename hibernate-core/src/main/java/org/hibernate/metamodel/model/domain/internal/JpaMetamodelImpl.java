@@ -451,7 +451,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			return importInfo;
 		}
 		else {
-			//then check the negative cache, to avoid bothering the classloader unnecessarily
+			//then check the negative cache to avoid bothering the classloader unnecessarily
 			if ( knownInvalidnameToImportMap.containsKey( name ) ) {
 				return null;
 			}
@@ -491,13 +491,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					definition.name(), definition.source() );
 
 			final var graph = definition.graphCreator().createEntityGraph(
-					(entityClass) -> {
+					entityClass -> {
 						if ( managedTypeByClass.get( entityClass ) instanceof EntityDomainType<?> match ) {
 							return match;
 						}
 						throw new IllegalArgumentException( "Cannot resolve entity class : " + entityClass.getName() );
 					},
-					(jpaEntityName) -> {
+					jpaEntityName -> {
 						for ( var entry : managedTypeByName.entrySet() ) {
 							if ( entry.getValue() instanceof EntityDomainType<?> possibility
 									&& jpaEntityName.equals( possibility.getName() ) ) {
@@ -554,14 +554,14 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				if ( managedType.getPersistenceType() == Type.PersistenceType.ENTITY
 						// see if we should add EntityDomainType as one of the matching descriptors.
 						&& javaType.isAssignableFrom( managedType.getJavaType() ) ) {
-					// the queried type is assignable from the type of the current entity-type
-					// we should add it to the collecting set of matching descriptors.  it should
+					// The queried type is assignable from the type of the current entity type.
+					// We should add it to the collecting set of matching descriptors. It should
 					// be added aside from a few cases...
 
-					// if the managed-type has a super type and the java type is assignable from the super type,
-					// do not add the managed type as the super itself will get added and the initializers for
-					// entity mappings already handle loading subtypes - adding it would be redundant and lead to
-					// incorrect results
+					// If the managed type has a supertype and the java type is assignable from the super type,
+					// do not add the managed type as the supertype itself will get added and the initializers
+					// for entity mappings already handle loading subtypes - adding it would be redundant and
+					// lead to incorrect results
 					final var superType = managedType.getSuperType();
 					if ( superType == null
 							|| superType.getPersistenceType() != Type.PersistenceType.ENTITY

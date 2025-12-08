@@ -4,10 +4,9 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.graph.spi.GraphParserEntityClassResolver;
+import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-
-import java.util.function.Function;
 
 /**
  * @author Steve Ebersole
@@ -15,6 +14,6 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface NamedGraphCreator {
 	RootGraphImplementor<?> createEntityGraph(
-			Function<Class<?>, EntityDomainType<?>> entityDomainClassResolver,
-			Function<String, EntityDomainType<?>> entityDomainNameResolver);
+			GraphParserEntityClassResolver entityDomainClassResolver,
+			GraphParserEntityNameResolver entityDomainNameResolver);
 }

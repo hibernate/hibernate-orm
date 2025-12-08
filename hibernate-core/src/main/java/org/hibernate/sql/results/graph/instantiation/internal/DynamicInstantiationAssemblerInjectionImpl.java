@@ -5,11 +5,7 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.beans.BeanInfo;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -35,7 +31,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
-		final Class<?> targetJavaType = target.getJavaTypeClass();
+		final var targetJavaType = target.getJavaTypeClass();
 		final List<BeanInjection> beanInjections = new ArrayList<>( argumentReaders.size() );
 		BeanInfoHelper.visitBeanInfo(
 				targetJavaType,
@@ -58,20 +54,20 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	}
 
 	private static BeanInjection injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<?> targetJavaType) {
-		final Class<?> argType = argument.getAssembledJavaType().getJavaTypeClass();
+		final var argType = argument.getAssembledJavaType().getJavaTypeClass();
 		final String alias = argument.getAlias();
 
 		// see if we can find a property with the given name...
-		for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+		for ( var propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
 			if ( propertyMatches( alias, argType, propertyDescriptor ) ) {
-				final Method setter = propertyDescriptor.getWriteMethod();
+				final var setter = propertyDescriptor.getWriteMethod();
 				setter.setAccessible(true);
 				return new BeanInjection( new BeanInjectorSetter<>( setter ), argument );
 			}
 		}
 
 		// see if we can find a Field with the given name...
-		final Field field = findField( targetJavaType, alias, argType );
+		final var field = findField( targetJavaType, alias, argType );
 		if ( field != null ) {
 			return new BeanInjection( new BeanInjectorField<>( field ), argument );
 		}
@@ -92,7 +88,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	public T assemble(RowProcessingState rowProcessingState) {
 		final T result;
 		try {
-			final Constructor<T> constructor = target.getJavaTypeClass().getDeclaredConstructor();
+			final var constructor = target.getJavaTypeClass().getDeclaredConstructor();
 			constructor.setAccessible( true );
 			result = constructor.newInstance();
 		}
@@ -101,7 +97,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 			throw new InstantiationException( "Error instantiating class '"
 					+ target.getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}
-		for ( BeanInjection beanInjection : beanInjections ) {
+		for ( var beanInjection : beanInjections ) {
 			final Object assembled = beanInjection.getValueAssembler().assemble( rowProcessingState );
 			beanInjection.getBeanInjector().inject( result, assembled );
 		}
@@ -110,14 +106,14 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		for ( BeanInjection beanInjection : beanInjections ) {
+		for ( var beanInjection : beanInjections ) {
 			beanInjection.getValueAssembler().resolveState( rowProcessingState );
 		}
 	}
 
 	@Override
 	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
-		for ( BeanInjection beanInjection : beanInjections ) {
+		for ( var beanInjection : beanInjections ) {
 			beanInjection.getValueAssembler().forEachResultAssembler( consumer, arg );
 		}
 	}

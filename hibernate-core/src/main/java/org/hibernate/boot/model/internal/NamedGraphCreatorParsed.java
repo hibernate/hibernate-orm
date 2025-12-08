@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.annotations.NamedEntityGraph;
@@ -13,7 +14,6 @@ import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.graph.InvalidGraphException;
-import org.hibernate.graph.internal.parse.EntityNameResolver;
 import org.hibernate.graph.internal.parse.GraphParsing;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -48,33 +48,39 @@ class NamedGraphCreatorParsed implements NamedGraphCreator {
 		final var parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
 		final var graphContext = parser.graph();
 
-		final var entityNameResolver = new EntityNameResolver() {
-			@Override
-			public EntityDomainType<?> resolveEntityName(String entityName) {
-				final var entityDomainType = (EntityDomainType<?>) entityDomainNameResolver.apply( entityName );
-				if ( entityDomainType != null ) {
-					return entityDomainType;
-				}
-				throw new UnknownEntityTypeException( entityName );
-			}
-		};
-
+		final var typeIndicator = graphContext.typeIndicator();
 		if ( entityType == null ) {
-			if ( graphContext.typeIndicator() == null ) {
+			if ( typeIndicator == null ) {
 				throw new InvalidGraphException( "Expecting graph text to include an entity name : " + annotation.graph() );
 			}
-			final String jpaEntityName = graphContext.typeIndicator().TYPE_NAME().toString();
+			final String jpaEntityName = typeIndicator.TYPE_NAME().toString();
 			final var entityDomainType = entityDomainNameResolver.apply( jpaEntityName );
 			final String name = this.name == null ? jpaEntityName : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
+			return parse( entityDomainNameResolver, name, entityDomainType, graphContext );
 		}
 		else {
-			if ( graphContext.typeIndicator() != null ) {
+			if ( typeIndicator != null ) {
 				throw new InvalidGraphException( "Expecting graph text to not include an entity name : " + annotation.graph() );
 			}
 			final var entityDomainType = entityDomainClassResolver.apply( entityType );
 			final String name = this.name == null ? entityDomainType.getName() : this.name;
-			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
+			return parse( entityDomainNameResolver, name, entityDomainType, graphContext );
 		}
+	}
+
+	private static @NonNull RootGraphImplementor<?> parse(
+			Function<String, EntityDomainType<?>> entityDomainNameResolver, String name, EntityDomainType<?> entityDomainType,
+			GraphLanguageParser.GraphContext graphContext) {
+		return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(),
+				entityName -> resolve( entityName, entityDomainNameResolver ) );
+	}
+
+	private static @NonNull EntityDomainType<?> resolve(
+			String entityName, Function<String, EntityDomainType<?>> entityDomainNameResolver) {
+		final var entityDomainType = (EntityDomainType<?>) entityDomainNameResolver.apply( entityName );
+		if ( entityDomainType != null ) {
+			return entityDomainType;
+		}
+		throw new UnknownEntityTypeException( entityName );
 	}
 }

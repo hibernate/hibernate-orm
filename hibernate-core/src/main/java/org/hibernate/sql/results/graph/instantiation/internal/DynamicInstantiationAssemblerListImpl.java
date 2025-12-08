@@ -41,7 +41,7 @@ public class DynamicInstantiationAssemblerListImpl implements DomainResultAssemb
 	public List<?> assemble(
 			RowProcessingState rowProcessingState) {
 		final ArrayList<Object> result = new ArrayList<>();
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			result.add( argumentReader.assemble( rowProcessingState ) );
 		}
 		return result;
@@ -49,14 +49,14 @@ public class DynamicInstantiationAssemblerListImpl implements DomainResultAssemb
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			argumentReader.resolveState( rowProcessingState );
 		}
 	}
 
 	@Override
 	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			argumentReader.forEachResultAssembler( consumer, arg );
 		}
 	}

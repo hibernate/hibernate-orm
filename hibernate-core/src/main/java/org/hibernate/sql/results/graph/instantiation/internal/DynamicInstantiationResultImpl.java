@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -19,7 +18,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -63,7 +61,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	public boolean containsAnyNonScalarResults() {
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < argumentResults.size(); i++ ) {
-			final ArgumentDomainResult<?> argumentResult = argumentResults.get( i );
+			final var argumentResult = argumentResults.get( i );
 			if ( argumentResult.containsAnyNonScalarResults() ) {
 				return true;
 			}
@@ -74,7 +72,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
-		for ( ArgumentDomainResult<?> argumentResult : argumentResults ) {
+		for ( var argumentResult : argumentResults ) {
 			argumentResult.collectValueIndexesToCache( valueIndexes );
 		}
 	}
@@ -88,7 +86,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		final List<ArgumentReader<?>> argumentReaders = new ArrayList<>();
 
 		if ( argumentResults != null ) {
-			for ( ArgumentDomainResult<?> argumentResult : argumentResults ) {
+			for ( var argumentResult : argumentResults ) {
 				final String argumentAlias = argumentResult.getResultVariable();
 				if ( argumentAlias == null ) {
 					areAllArgumentsAliased = false;
@@ -155,19 +153,15 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			List<String> duplicatedAliases,
 			List<ArgumentReader<?>> argumentReaders,
 			AssemblerCreationState creationState) {
-		final List<Class<?>> argumentTypes =
+		// find a constructor matching argument types
+		final var constructor = findMatchingConstructor(
+				javaType.getJavaTypeClass(),
 				argumentReaders.stream()
-						.map(reader -> reader.getAssembledJavaType().getJavaTypeClass())
-						.collect(toList());
-		final TypeConfiguration typeConfiguration =
+						.map( reader -> reader.getAssembledJavaType().getJavaTypeClass() )
+						.collect( toList() ),
 				creationState.getSqlAstCreationContext()
 						.getMappingMetamodel()
-						.getTypeConfiguration();
-		// find a constructor matching argument types
-		final Constructor<R> constructor = findMatchingConstructor(
-				javaType.getJavaTypeClass(),
-				argumentTypes,
-				typeConfiguration
+						.getTypeConfiguration()
 		);
 		if ( constructor != null ) {
 			constructor.setAccessible( true );

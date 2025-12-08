@@ -7,7 +7,6 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.sql.ConversionException;
@@ -18,17 +17,19 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Represents a dynamic-instantiation (from an SQM query) as a DomainResultProducer
  *
  * @author Steve Ebersole
  */
-public class DynamicInstantiation<T> implements DomainResultProducer {
+public class DynamicInstantiation<T> implements DomainResultProducer<T> {
 	private static final Logger LOG = Logger.getLogger( DynamicInstantiation.class );
 
 	private final DynamicInstantiationNature nature;
 	private final JavaType<T> targetJavaType;
-	private List<DynamicInstantiationArgument> arguments;
+	private List<DynamicInstantiationArgument<?>> arguments;
 
 	private boolean argumentAdditionsComplete = false;
 
@@ -47,7 +48,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 		return targetJavaType;
 	}
 
-	public void addArgument(String alias, DomainResultProducer<?> argumentResultProducer, DomainResultCreationState creationState) {
+	public void addArgument(String alias, DomainResultProducer<?> argumentResultProducer) {
 		if ( argumentAdditionsComplete ) {
 			throw new ConversionException( "Unexpected call to DynamicInstantiation#addAgument after previously complete" );
 		}
@@ -82,7 +83,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 		argumentAdditionsComplete = true;
 	}
 
-	public List<DynamicInstantiationArgument> getArguments() {
+	public List<DynamicInstantiationArgument<?>> getArguments() {
 		return arguments;
 	}
 
@@ -92,17 +93,16 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		//noinspection unchecked
-		return new DynamicInstantiationResultImpl(
+		return new DynamicInstantiationResultImpl<>(
 				resultVariable,
 				getNature(),
 				getTargetJavaType(),
 				getArguments().stream()
 						.map( argument -> argument.buildArgumentDomainResult( creationState ) )
-						.collect( Collectors.toList() )
+						.collect( toList() )
 		);
 	}
 

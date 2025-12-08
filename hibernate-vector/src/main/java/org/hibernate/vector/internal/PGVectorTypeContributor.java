@@ -66,7 +66,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							floatBasicType,
 							genericVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR.getName()
 			);
@@ -74,7 +74,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							floatVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT32.getName()
 			);
@@ -82,7 +82,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							float16VectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT16.getName()
 			);
@@ -90,7 +90,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),
 							bitVectorJdbcType,
-							javaTypeRegistry.getDescriptor( byte[].class )
+							javaTypeRegistry.resolveDescriptor( byte[].class )
 					),
 					StandardBasicTypes.VECTOR_BINARY.getName()
 			);

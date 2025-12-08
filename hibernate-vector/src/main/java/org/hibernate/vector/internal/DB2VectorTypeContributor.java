@@ -48,7 +48,7 @@ public class DB2VectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							floatBasicType,
 							genericVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR.getName()
 			);
@@ -56,7 +56,7 @@ public class DB2VectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							floatVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT32.getName()
 			);
@@ -64,7 +64,7 @@ public class DB2VectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),
 							byteVectorJdbcType,
-							javaTypeRegistry.getDescriptor( byte[].class )
+							javaTypeRegistry.resolveDescriptor( byte[].class )
 					),
 					StandardBasicTypes.VECTOR_INT8.getName()
 			);

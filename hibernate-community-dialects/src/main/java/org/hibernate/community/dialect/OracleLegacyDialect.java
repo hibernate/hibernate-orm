@@ -1029,7 +1029,7 @@ public class OracleLegacyDialect extends Dialect {
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 		typeContributions.contributeType(
@@ -1037,7 +1037,7 @@ public class OracleLegacyDialect extends Dialect {
 						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 						)
 		);
 	}

@@ -137,9 +137,9 @@ public class BasicTypeRegistry implements Serializable {
 		return resolve( getJavaTypeRegistry().resolveDescriptor( javaType ), sqlTypeCode );
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // no longer used + calls deprecated method
+	// no longer used
 	public BasicType<?> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
-		return resolve( getJavaTypeRegistry().getDescriptor( javaType ), sqlTypeCode );
+		return resolve( getJavaTypeRegistry().resolveDescriptor( javaType ), sqlTypeCode );
 	}
 
 	public <J> BasicType<J> resolve(JavaType<J> javaType, int sqlTypeCode) {

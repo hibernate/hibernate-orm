@@ -48,7 +48,7 @@ public class GeometryConverterTest {
 
 				final TypeConfiguration typeConfiguration = sessionFactory.getMappingMetamodel().getTypeConfiguration();
 
-				assertThat( typeConfiguration.getJavaTypeRegistry().getDescriptor( Geometry.class ) )
+				assertThat( typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Geometry.class ) )
 						.isSameAs( GeolatteGeometryJavaType.GEOMETRY_INSTANCE );
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?

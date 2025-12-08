@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.graph;
+package org.hibernate.orm.test.graph.entity;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;

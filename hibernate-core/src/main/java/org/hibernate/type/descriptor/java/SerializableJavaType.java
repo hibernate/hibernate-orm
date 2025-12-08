@@ -59,11 +59,6 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 	}
 
 	@Override
-	public boolean isInstance(Object value) {
-		return value instanceof Serializable;
-	}
-
-	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		final int typeCode = indicators.isLob() ? Types.BLOB : Types.VARBINARY;
 		return indicators.getJdbcType( typeCode );
@@ -137,7 +132,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 				throw new HibernateException( e );
 			}
 		}
-		else if ( getJavaTypeClass().isInstance( value ) ) {
+		else if ( isInstance( value ) ) {
 			return cast( value );
 		}
 		throw unknownWrap( value.getClass() );

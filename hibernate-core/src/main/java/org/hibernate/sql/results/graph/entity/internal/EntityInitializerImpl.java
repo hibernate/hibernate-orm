@@ -1154,6 +1154,8 @@ public class EntityInitializerImpl
 	public void resolveInstance(EntityInitializerData data) {
 		if ( data.getState() == State.KEY_RESOLVED ) {
 			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
 			data.setState( State.RESOLVED );
 			if ( data.entityKey == null ) {
 				assert identifierAssembler != null;
@@ -1165,7 +1167,7 @@ public class EntityInitializerImpl
 				resolveEntityKey( data, id );
 			}
 			data.entityHolder =
-					rowProcessingState.getSession().getPersistenceContextInternal()
+					persistenceContext
 							.claimEntityHolderIfPossible(
 									data.entityKey,
 									null,
@@ -1179,7 +1181,6 @@ public class EntityInitializerImpl
 			else {
 				resolveEntityInstance1( data );
 				if ( data.uniqueKeyAttributePath != null ) {
-					final var session = rowProcessingState.getSession();
 					final var concreteDescriptor = getConcreteDescriptor( data );
 					final var entityUniqueKey = new EntityUniqueKey(
 							concreteDescriptor.getEntityName(),
@@ -1188,8 +1189,7 @@ public class EntityInitializerImpl
 							data.uniqueKeyPropertyTypes[concreteDescriptor.getSubclassId()],
 							session.getFactory()
 					);
-					session.getPersistenceContextInternal()
-							.addEntity( entityUniqueKey, data.getInstance() );
+					persistenceContext.addEntity( entityUniqueKey, data.getInstance() );
 				}
 			}
 
@@ -1346,7 +1346,10 @@ public class EntityInitializerImpl
 	protected boolean isProxyInstance(Object proxy) {
 		return proxy != null
 			&& ( proxy instanceof MapProxy
-				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
+					// do NOT use JavaType.isInstance() here; we're testing if the
+					// proxy itself is an instance of the given entity type, not if
+					// the underlying entity implementation is an instance
+					|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {

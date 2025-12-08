@@ -1650,22 +1650,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final var instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
-		final var instantiationNature = instantiationTarget.getNature();
-		final var targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
-
-		final var dynamicInstantiation = new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
-
+		final var dynamicInstantiation =
+				new DynamicInstantiation<>( instantiationTarget.getNature(),
+						interpretInstantiationTarget( instantiationTarget ) );
 		for ( var sqmArgument : sqmDynamicInstantiation.getArguments() ) {
 			if ( sqmArgument.getSelectableNode() instanceof SqmPath<?> sqmPath ) {
 				prepareForSelection( sqmPath );
 			}
-			final var argumentResultProducer = (DomainResultProducer<?>) sqmArgument.accept( this );
-
-			dynamicInstantiation.addArgument( sqmArgument.getAlias(), argumentResultProducer, this );
+			dynamicInstantiation.addArgument( sqmArgument.getAlias(),
+					(DomainResultProducer<?>) sqmArgument.accept( this ) );
 		}
-
 		dynamicInstantiation.complete();
-
 		return dynamicInstantiation;
 	}
 

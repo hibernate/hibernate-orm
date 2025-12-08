@@ -115,7 +115,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 				}
 			}
 
-			if ( !getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+			if ( !getJavaType().isInstance( naturalIdValue ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								Locale.ROOT,

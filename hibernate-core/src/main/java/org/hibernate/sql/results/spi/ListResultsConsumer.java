@@ -290,10 +290,11 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		if ( domainResultResultJavaType != null ) {
-			final JavaType<R> resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			final var resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
 			// Could be that the user requested a more general type than the actual type,
 			// so resolve the most concrete type since this type is used to determine equality of objects
-			if ( resultJavaTypes.size() == 1 && isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
+			if ( resultJavaTypes.size() == 1
+					&& isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
 				//noinspection unchecked
 				return (JavaType<R>) resultJavaTypes.get( 0 );
 			}
@@ -301,7 +302,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		}
 
 		if ( resultJavaTypes.size() == 1 ) {
-			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
+			final var firstJavaType = resultJavaTypes.get( 0 );
 			if ( firstJavaType == null ) {
 				return javaTypeRegistry.getDescriptor( Object.class );
 			}

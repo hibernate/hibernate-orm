@@ -831,7 +831,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return originalResolution != null
 					? originalResolution
 					: typeConfiguration.getJavaTypeRegistry()
-							.getDescriptor( implicitJavaTypeAccess.apply( typeConfiguration ) )
+							.resolveDescriptor( implicitJavaTypeAccess.apply( typeConfiguration ) )
 							.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 		};
 	}

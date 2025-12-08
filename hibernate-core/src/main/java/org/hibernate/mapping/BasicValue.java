@@ -779,7 +779,7 @@ public class BasicValue extends SimpleValue
 					return xmlJavaType;
 			}
 		}
-		return javaTypeRegistry.getDescriptor( impliedJavaType );
+		return javaTypeRegistry.resolveDescriptor( impliedJavaType );
 	}
 
 	private MutabilityPlan<?> mutabilityPlan(

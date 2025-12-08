@@ -80,7 +80,7 @@ public class ArrayAggregateTest {
 						jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ),
 						"StringArray"
 				).addAuxiliaryDatabaseObjects(
-						new ArrayJavaType<>( javaTypeRegistry.getDescriptor( String.class ) ),
+						new ArrayJavaType<>( javaTypeRegistry.resolveDescriptor( String.class ) ),
 						null,
 						Size.nil(),
 						metadata.getDatabase(),

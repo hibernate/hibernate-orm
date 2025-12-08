@@ -37,12 +37,12 @@ public class DdlTypeHelper {
 
 	@SuppressWarnings("unchecked")
 	public static BasicType<?> resolveListType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		final BasicPluralJavaType<Object> arrayJavaType =
+		final var arrayJavaType =
 				(BasicPluralJavaType<Object>)
 						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( List.class )
+								.resolveDescriptor( List.class )
 								.createJavaType(
-										new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
+										new ParameterizedTypeImpl( List.class, new Type[] { elementType.getJavaType() }, null ),
 										typeConfiguration
 								);
 		return arrayJavaType.resolveType(

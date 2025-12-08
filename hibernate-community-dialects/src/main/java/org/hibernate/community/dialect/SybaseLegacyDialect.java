@@ -262,7 +262,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 		typeContributions.contributeType(
@@ -270,7 +270,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 	}

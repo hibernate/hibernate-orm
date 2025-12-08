@@ -83,7 +83,7 @@ public class InstantiationHelper {
 				final var type =
 						parameterType instanceof Class<?> classParameter
 								? classParameter
-								: typeConfiguration.getJavaTypeRegistry().getDescriptor( parameterType )
+								: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType )
 										.getJavaTypeClass();
 				if ( !areAssignmentCompatible( type, argumentType ) ) {
 					if ( LOG.isDebugEnabled() ) {

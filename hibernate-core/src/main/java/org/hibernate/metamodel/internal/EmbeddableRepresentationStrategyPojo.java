@@ -120,13 +120,13 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		}
 	}
 
-	private static <T> JavaType<T> resolveEmbeddableJavaType(
+	private static <T> JavaType<?> resolveEmbeddableJavaType(
 			Component bootDescriptor,
 			CompositeUserType<T> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
 		final var javaTypeRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 		return compositeUserType == null
-				? javaTypeRegistry.getDescriptor( bootDescriptor.getComponentClass() )
+				? javaTypeRegistry.resolveDescriptor( bootDescriptor.getComponentClass() )
 				: javaTypeRegistry.resolveDescriptor( compositeUserType.returnedClass(),
 						() -> new CompositeUserTypeJavaTypeWrapper<>( compositeUserType ) );
 	}

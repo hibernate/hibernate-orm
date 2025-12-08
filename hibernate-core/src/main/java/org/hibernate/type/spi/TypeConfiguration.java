@@ -847,7 +847,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			final var registeredType =
 					basicTypeRegistry.getRegisteredType( javaClass );
 			return registeredType == null
-					? creator.apply( javaTypeRegistry.getDescriptor( javaClass ) )
+					? creator.apply( javaTypeRegistry.resolveDescriptor( javaClass ) )
 					: registeredType;
 		}
 	}
@@ -870,7 +870,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			//noinspection unchecked
 			return registeredType == null
 					? creator.apply( (JavaType<J>) // UNCHECKED CAST
-							javaTypeRegistry.getDescriptor( javaType ) )
+							javaTypeRegistry.resolveDescriptor( javaType ) )
 					: registeredType;
 		}
 	}

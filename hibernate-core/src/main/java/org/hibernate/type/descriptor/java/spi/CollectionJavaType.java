@@ -65,7 +65,7 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			case BAG, ID_BAG, LIST, SET, SORTED_SET, ORDERED_SET ->
 					new BasicCollectionJavaType(
 							parameterizedType,
-							registry.getDescriptor( typeArguments[typeArguments.length-1] ),
+							registry.resolveDescriptor( typeArguments[typeArguments.length-1] ),
 							semantics
 					);
 			case MAP, ORDERED_MAP, SORTED_MAP ->
@@ -74,8 +74,8 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 							parameterizedType,
 							new MapMutabilityPlan(
 									(MapSemantics) semantics,
-									registry.getDescriptor( typeArguments[0] ),
-									registry.getDescriptor( typeArguments[typeArguments.length-1] )
+									registry.resolveDescriptor( typeArguments[0] ),
+									registry.resolveDescriptor( typeArguments[typeArguments.length-1] )
 							)
 					);
 		};

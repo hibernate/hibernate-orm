@@ -85,7 +85,7 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							genericVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR.getName()
 			);
@@ -93,7 +93,7 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							floatVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT32.getName()
 			);
@@ -101,7 +101,7 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ),
 							doubleVectorJdbcType,
-							javaTypeRegistry.getDescriptor( double[].class )
+							javaTypeRegistry.resolveDescriptor( double[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT64.getName()
 			);
@@ -109,7 +109,7 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),
 							byteVectorJdbcType,
-							javaTypeRegistry.getDescriptor( byte[].class )
+							javaTypeRegistry.resolveDescriptor( byte[].class )
 					),
 					StandardBasicTypes.VECTOR_INT8.getName()
 			);
@@ -117,7 +117,7 @@ public class OracleVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.BYTE ),
 							bitVectorJdbcType,
-							javaTypeRegistry.getDescriptor( byte[].class )
+							javaTypeRegistry.resolveDescriptor( byte[].class )
 					),
 					StandardBasicTypes.VECTOR_BINARY.getName()
 			);

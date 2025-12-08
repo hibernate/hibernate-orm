@@ -123,11 +123,12 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 							? resolvedJdbcType
 							: jdbcType( explicitJavaType, resolvedJdbcType, length, precision, scale, typeConfiguration );
 			// If there is an explicit JavaType, then prefer its recommended JDBC type
-			final JavaType<J> javaType =
+			final var javaType =
 					explicitJavaType == null
-							? jdbcType.getJdbcRecommendedJavaTypeMapping( length, scale, typeConfiguration )
+							? jdbcType.getRecommendedJavaType( length, scale, typeConfiguration )
 							: explicitJavaType;
-			return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
+			return typeConfiguration.getBasicTypeRegistry()
+					.resolve( (JavaType<J>) javaType, jdbcType );
 		}
 		catch (SQLException e) {
 			throw getSqlExceptionHelper()

@@ -194,7 +194,7 @@ public class InferredBasicValueResolver {
 		else {
 			if ( explicitJdbcType != null ) {
 				// we have an explicit STD, but no JTD - infer JTD
-				// NOTE : yes it's an odd case, but easy to implement here, so...
+				// NOTE: yes it's an odd case, but easy to implement here, so...
 				Integer length = null;
 				Integer scale = null;
 				if ( selectable instanceof Column column ) {
@@ -212,8 +212,10 @@ public class InferredBasicValueResolver {
 					}
 				}
 
-				final JavaType<T> recommendedJtd =
-						explicitJdbcType.getJdbcRecommendedJavaTypeMapping( length, scale, typeConfiguration );
+				final var recommendedJavaType =
+						explicitJdbcType.getRecommendedJavaType( length, scale, typeConfiguration );
+				// TODO: check this type cast
+				final var recommendedJtd = (JavaType<T>) recommendedJavaType;
 				jdbcMapping = resolveSqlTypeIndicators(
 						stdIndicators,
 						basicTypeRegistry.resolve( recommendedJtd, explicitJdbcType ),

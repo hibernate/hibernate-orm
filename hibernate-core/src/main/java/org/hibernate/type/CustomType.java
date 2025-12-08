@@ -93,7 +93,7 @@ public class CustomType<J>
 		else {
 			// create a JdbcType adapter that uses the UserType binder/extract handling
 			jdbcType = new UserTypeJdbcTypeAdapter<>( userType, mappedJavaType );
-			jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			jdbcJavaType = jdbcType.getRecommendedJavaType( null, null, typeConfiguration );
 			valueExtractor = jdbcType.getExtractor( mappedJavaType );
 			valueBinder = jdbcType.getBinder( mappedJavaType );
 			jdbcLiteralFormatter =

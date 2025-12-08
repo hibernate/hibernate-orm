@@ -90,8 +90,8 @@ public interface JdbcType extends Serializable {
 	}
 
 	/**
-	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
-	 * be used for schema generation.
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type
+	 * used for schema generation.
 	 * <p>
 	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size, Type)}
 	 * to obtain the SQL column type.
@@ -103,21 +103,40 @@ public interface JdbcType extends Serializable {
 		return getDefaultSqlTypeCode();
 	}
 
-	default <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
-			Integer precision,
-			Integer scale,
+	/**
+	 * The {@linkplain JavaType Java type} usually is used to represent values of
+	 * this JDBC type in the entity model of the data. Often, but not always, the
+	 * source of this recommendation is the JDBC specification.
+	 *
+	 * @since 7.2
+	 */
+	default JavaType<?> getRecommendedJavaType(
+			Integer precision, Integer scale,
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor(
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getDefaultSqlTypeCode() )
 		);
 	}
 
 	/**
-	 * Obtain a {@linkplain JdbcLiteralFormatter formatter} object capable of rendering
-	 * values of the given {@linkplain JavaType Java type} as SQL literals of the type
-	 * represented by this object.
+	 * @deprecated Due to the unchecked cast to a generic type.
+	 *             Use {@link #getRecommendedJavaType}.
 	 */
+	@Deprecated(forRemoval = true, since = "7.2")
+	@SuppressWarnings("unchecked")
+	default <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+			Integer precision,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
+		return (JavaType<T>) getRecommendedJavaType( precision, scale, typeConfiguration );
+	}
+
+		/**
+		 * Obtain a {@linkplain JdbcLiteralFormatter formatter} object capable of rendering
+		 * values of the given {@linkplain JavaType Java type} as SQL literals of the type
+		 * represented by this object.
+		 */
 	// todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return (appender, value, dialect, wrapperOptions) ->

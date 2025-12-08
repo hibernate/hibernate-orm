@@ -60,22 +60,20 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<?> elementJavaType =
-				elementJdbcType.getJdbcRecommendedJavaTypeMapping( precision, scale, typeConfiguration );
+		final var elementJavaType =
+				elementJdbcType.getRecommendedJavaType( precision, scale, typeConfiguration );
 		final var javaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.resolveDescriptor( newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass() );
 		if ( javaType instanceof BasicPluralType<?, ?> ) {
-			//noinspection unchecked
-			return (JavaType<T>) javaType;
+			return javaType;
 		}
 		else {
-			//noinspection unchecked
-			return (JavaType<T>) javaType.createJavaType(
+			return javaType.createJavaType(
 					new ParameterizedTypeImpl( javaType.getJavaTypeClass(), new Type[0], null ),
 					typeConfiguration
 			);
@@ -155,10 +153,10 @@ public class ArrayJdbcType implements JdbcType {
 			final var underlyingJdbcType =
 					typeConfiguration.getJdbcTypeRegistry()
 							.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
-			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
-			final Class<?> elementJdbcJavaTypeClass =
+			final var preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
+			final var elementJdbcJavaTypeClass =
 					preferredJavaTypeClass == null
-							? underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(null, null, typeConfiguration )
+							? underlyingJdbcType.getRecommendedJavaType(null, null, typeConfiguration )
 									.getJavaTypeClass()
 							: preferredJavaTypeClass;
 			final var arrayClass = (Class<? extends Object[]>)

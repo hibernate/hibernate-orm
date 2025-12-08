@@ -45,11 +45,11 @@ public class DecimalJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( BigDecimal.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( BigDecimal.class );
 	}
 
 	@Override

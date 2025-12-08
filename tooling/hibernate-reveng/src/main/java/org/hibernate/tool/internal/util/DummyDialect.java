@@ -18,5 +18,4 @@ public class DummyDialect extends Dialect {
         });
     }
 
-
 }

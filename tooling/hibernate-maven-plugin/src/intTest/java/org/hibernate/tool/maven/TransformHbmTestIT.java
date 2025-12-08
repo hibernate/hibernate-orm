@@ -46,7 +46,7 @@ public class TransformHbmTestIT {
     }
     
     private void copyHbmFile() throws Exception {
-    	URL originUrl = TransformHbmTestIT.class.getResource("simple.hbm.xml");
+    	URL originUrl = getClass().getResource("simple.hbm.xml");
     	assertNotNull(originUrl);
     	Path originPath = Paths.get(Objects.requireNonNull(originUrl).toURI());
     	File destinationDir = new File(projectPath.toFile(), "src/main/resources/");

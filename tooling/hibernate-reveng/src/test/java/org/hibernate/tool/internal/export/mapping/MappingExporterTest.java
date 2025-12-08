@@ -191,35 +191,43 @@ public class MappingExporterTest {
 
     @Test
     public void testTransformBindings() throws Exception {
-        File simpleHbmXmlFile = new File(this.tempDir, "simple.hbm.xml");
-        Files.writeString(simpleHbmXmlFile.toPath(), SIMPLE_HBM_XML);
-        MappingBinder mappingBinder = new MappingBinder(
-                MappingBinder.class.getClassLoader()::getResourceAsStream,
-                UnsupportedFeatureHandling.ERROR);
-        Binding<JaxbHbmHibernateMapping> hbmBinding = mappingBinder.bind(
-                new FileInputStream(simpleHbmXmlFile),
-                new HbmXmlOrigin(simpleHbmXmlFile));
-        List<Binding<JaxbHbmHibernateMapping>> bindings = new ArrayList<>();
-        bindings.add(hbmBinding);
-        Method transformBindingsMethod = MappingExporter.class.getDeclaredMethod(
-                "transformBindings",
-                List.class);
-        assertNotNull(transformBindingsMethod);
-        transformBindingsMethod.setAccessible(true);
-        List<?> transformedBindings = (List<?>)transformBindingsMethod.invoke(mappingExporter, bindings);
-        assertNotNull(transformedBindings);
-        assertEquals(1, transformedBindings.size());
-        Object object = transformedBindings.get(0);
-        assertInstanceOf(Binding.class, object);
-        Binding<?> entityBinding = (Binding<?>)object;
-        Origin origin = entityBinding.getOrigin();
-        assertInstanceOf(HbmXmlOrigin.class, origin);
-        assertSame(simpleHbmXmlFile, ((HbmXmlOrigin)origin).getHbmXmlFile());
-        Object root = entityBinding.getRoot();
-        assertInstanceOf(JaxbEntityMappingsImpl.class, root);
-        JaxbEntityMappingsImpl entityMappings = (JaxbEntityMappingsImpl)root;
-        assertEquals(1, entityMappings.getEntities().size());
-        assertEquals("Foo", entityMappings.getEntities().get(0).getClazz());
+        FileInputStream simpleHbmXmlInputStream = null;
+        try {
+            File simpleHbmXmlFile = new File( this.tempDir, "simple.hbm.xml" );
+            Files.writeString( simpleHbmXmlFile.toPath(), SIMPLE_HBM_XML );
+            MappingBinder mappingBinder = new MappingBinder(
+                    MappingBinder.class.getClassLoader()::getResourceAsStream,
+                    UnsupportedFeatureHandling.ERROR );
+            simpleHbmXmlInputStream = new FileInputStream( simpleHbmXmlFile );
+            Binding<JaxbHbmHibernateMapping> hbmBinding = mappingBinder.bind(
+                    simpleHbmXmlInputStream,
+                    new HbmXmlOrigin( simpleHbmXmlFile ) );
+            List<Binding<JaxbHbmHibernateMapping>> bindings = new ArrayList<>();
+            bindings.add( hbmBinding );
+            Method transformBindingsMethod = MappingExporter.class.getDeclaredMethod(
+                    "transformBindings",
+                    List.class );
+            assertNotNull( transformBindingsMethod );
+            transformBindingsMethod.setAccessible( true );
+            List<?> transformedBindings = (List<?>) transformBindingsMethod.invoke( mappingExporter, bindings );
+            assertNotNull( transformedBindings );
+            assertEquals( 1, transformedBindings.size() );
+            Object object = transformedBindings.get( 0 );
+            assertInstanceOf( Binding.class, object );
+            Binding<?> entityBinding = (Binding<?>) object;
+            Origin origin = entityBinding.getOrigin();
+            assertInstanceOf( HbmXmlOrigin.class, origin );
+            assertSame( simpleHbmXmlFile, ((HbmXmlOrigin) origin).getHbmXmlFile() );
+            Object root = entityBinding.getRoot();
+            assertInstanceOf( JaxbEntityMappingsImpl.class, root );
+            JaxbEntityMappingsImpl entityMappings = (JaxbEntityMappingsImpl) root;
+            assertEquals( 1, entityMappings.getEntities().size() );
+            assertEquals( "Foo", entityMappings.getEntities().get( 0 ).getClazz() );
+        } finally {
+            if ( simpleHbmXmlInputStream != null ) {
+                simpleHbmXmlInputStream.close();
+            }
+        }
     }
 
     @Test

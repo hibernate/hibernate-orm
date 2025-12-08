@@ -100,11 +100,27 @@ public interface JavaType<T> extends Serializable {
 	 * but some descriptors need specialized semantics, for example, the descriptors for
 	 * {@link JdbcDateJavaType java.sql.Date}, {@link JdbcTimeJavaType java.sql.Time}, and
 	 * {@link JdbcTimestampJavaType java.sql.Timestamp}.
+	 * <p>
+	 * For {@link org.hibernate.type.descriptor.java.spi.EntityJavaType}, this method
+	 * handles proxies in a semantically correct way, by checking the entity instance
+	 * underlying the proxy object.
 	 */
 	default boolean isInstance(Object value) {
 		return getJavaTypeClass().isInstance( value );
 	}
 
+	/**
+	 * Apply a simple type cast to the given value, without attempting any sort of
+	 * {@linkplain #coerce(Object) coercion} or {@linkplain #wrap wrapping}. This
+	 * method is provided as a convenient way to avoid an unchecked cast to a type
+	 * variable. Use {@code javaType.cast(value)} instead of {@code (T) value}
+	 * wherever possible.
+	 * <p>
+	 * Usually just {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#cast cast(value)},
+	 * but overridden in some cases as an "optimization". This optimization is
+	 * almost certainly unnecessary, and might even indeed be harmful, since
+	 * {@code Class.cast()} is an intrinsic.
+	 */
 	default T cast(Object value) {
 		return getJavaTypeClass().cast( value );
 	}
@@ -322,10 +338,28 @@ public interface JavaType<T> extends Serializable {
 
 	/**
 	 * Coerce the given value to this type, if possible.
+	 * <p>
+	 * This method differs from {@link #wrap wrap()} in that it allows
+	 * simple, basic, implicit type conversions, and does not require
+	 * {@link WrapperOptions}. The {@code wrap()} method may be thought
+	 * of as offering explicitly requested type conversions driven by a
+	 * choice of {@link JdbcType}.
+	 * <p>
+	 * An implementation of this method reports failure in one of two
+	 * ways, by:
+	 * <ul>
+	 * <li>throwing {@link CoercionException}, or
+	 * <li>simply returning the given uncoerced value.
+	 * </ul>
+	 * <p>
+	 * Therefore, this method is declared to return {@link Object}.
+	 * In case immediate coercion is required, the following idiom
+	 * may be used:
+	 * <pre>javaType.cast(javaType.coerce(value))</pre>
 	 *
 	 * @param value The value to coerce
-	 * @return The coerced value, or the given value
-	 *         if no coercion was possible
+	 * @return The coerced value, or the given value if no coercion was
+	 *         possible
 	 * @throws CoercionException if coercion fails
 	 */
 	@Incubating

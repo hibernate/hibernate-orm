@@ -60,7 +60,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 		if ( valueConverter != null ) {
 			if ( jdbcValue != null ) {
 				// the raw value type should be the converter's relational-JTD
-				if ( ! valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( jdbcValue ) ) {
+				if ( ! valueConverter.getRelationalJavaType().isInstance( jdbcValue ) ) {
 					throw new HibernateException(
 							String.format(
 									Locale.ROOT,

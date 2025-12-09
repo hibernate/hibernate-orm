@@ -543,6 +543,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
 		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
@@ -560,6 +561,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
 		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}

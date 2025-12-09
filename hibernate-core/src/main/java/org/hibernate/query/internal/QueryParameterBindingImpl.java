@@ -22,7 +22,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.spi.QueryParameterBindingValidator.validate;
+import static org.hibernate.query.internal.QueryParameterBindingValidator.validate;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
 

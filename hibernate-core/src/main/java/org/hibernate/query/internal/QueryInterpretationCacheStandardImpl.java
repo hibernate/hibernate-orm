@@ -18,7 +18,6 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.service.ServiceRegistry;

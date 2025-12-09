@@ -14,6 +14,7 @@ import jakarta.persistence.RefreshOption;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
@@ -1515,7 +1516,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
-	// The following overrides should not be necessary,
+	// The following overrides should not be necessary
 	// and are only needed to work around a bug in IntelliJ
 
 	@Override
@@ -1526,6 +1527,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
+
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	NativeQuery createNativeQuery(String queryString);
 
 	@Override
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);

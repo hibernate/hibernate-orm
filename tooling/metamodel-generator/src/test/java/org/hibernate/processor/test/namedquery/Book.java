@@ -6,11 +6,13 @@ package org.hibernate.processor.test.namedquery;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedQuery;
 
 @Entity
 @NamedEntityGraph(name = "entityGraph")
+@NamedEntityGraph(attributeNodes = @NamedAttributeNode("text"))
 @NamedQuery(name="booksByTitle",
 		query = "from Book where title = ?1")
 @NamedQuery(name="booksByTitleVerbose",

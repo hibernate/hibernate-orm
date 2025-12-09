@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Subgraph;
 
+import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -89,6 +90,7 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	public static <T> RootGraph<T> parse(
 			final String rootEntityName,
 			final CharSequence graphText,
@@ -117,7 +119,8 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
-		public static <T> RootGraph<T> parse(
+	@Incubating
+	public static <T> RootGraph<T> parse(
 				final CharSequence graphText,
 				final SessionFactory sessionFactory) {
 			if ( graphText == null ) {

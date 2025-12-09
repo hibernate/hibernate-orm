@@ -97,7 +97,7 @@ public class ObjectParameterTypeForEmbeddableTest {
 						)
 		);
 
-		assertThat( thrown.getMessage() ).contains( "did not match parameter type" );
+		assertThat( thrown.getMessage() ).contains( "incompatible type" );
 	}
 
 	@Entity(name = "TestEntity")

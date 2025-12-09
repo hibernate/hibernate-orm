@@ -21,10 +21,13 @@ public class QueryArguments {
 
 	private static boolean isInstance(Object value, JavaType<?> javaType) {
 		try {
-			// special handling for entity arguments due to
-			// the possibility of an uninitialized proxy
-			// (which we don't want or need to fetch)
-			if ( javaType instanceof EntityJavaType<?> ) {
+			if ( value == null ) {
+				return true;
+			}
+			else if ( javaType instanceof EntityJavaType<?> ) {
+				// special handling for entity arguments due to
+				// the possibility of an uninitialized proxy
+				// (which we don't want or need to fetch)
 				final var javaTypeClass = javaType.getJavaTypeClass();
 				final var initializer = extractLazyInitializer( value );
 				final var valueEntityClass =
@@ -93,5 +96,32 @@ public class QueryArguments {
 			}
 		}
 		return true;
+	}
+
+	public static <T> T cast(Object value, JavaType<T> javaType) {
+		if ( value == null ) {
+			return null;
+		}
+		else if ( javaType instanceof EntityJavaType<?> ) {
+			// special handling for entity arguments due to
+			// the possibility of an uninitialized proxy
+			// (which we don't want or need to fetch)
+			if ( isInstance( value, javaType ) ) {
+				// The proxy might not literally be an
+				// instance of the entity class represented
+				// by the unreified type T, but it is an
+				// instance in spirit
+				//noinspection unchecked
+				return (T) value;
+			}
+			else {
+				throw new ClassCastException( "Cannot cast to entity type '"
+							+ javaType.getJavaTypeClass().getTypeName() + "'" );
+			}
+		}
+		else {
+			// require that the argument be assignable to the parameter
+			return javaType.cast( javaType.coerce( value ) );
+		}
 	}
 }

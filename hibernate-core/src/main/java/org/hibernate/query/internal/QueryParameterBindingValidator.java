@@ -27,10 +27,10 @@ class QueryParameterBindingValidator {
 			if ( parameterJavaType != null ) {
 				if ( argument instanceof Collection<?> collection
 						&& !Collection.class.isAssignableFrom( parameterJavaType ) ) {
-					// we have a collection passed in where we are expecting a non-collection.
-					// 		NOTE: this can happen in Hibernate's notion of "parameter list" binding
-					// 		NOTE2: the case of a collection value and an expected collection (if that can even happen)
-					//			   will fall through to the main check.
+					// We have a collection passed in where we were expecting a non-collection.
+					// NOTE: This can happen in Hibernate's notion of "parameter list" binding.
+					// NOTE2: The case of a collection value and an expected collection
+					// 	      (if that can even happen) will fall through to the main check.
 					validateCollectionValuedParameterBinding( parameterType, parameterJavaType, collection, factory );
 				}
 				else if ( argument.getClass().isArray() ) {

@@ -40,18 +40,18 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	@Nullable BindableType<? super T> getBindType();
+	@Nullable BindableType<T> getBindType();
 
 	/**
 	 * If the parameter represents a temporal type, return the explicitly
 	 * specified precision - if one.
 	 */
-	@Nullable TemporalType getExplicitTemporalPrecision();
+	@Nullable @SuppressWarnings("deprecation") TemporalType getExplicitTemporalPrecision();
 
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
 	 */
-	default void setBindValue(T value) {
+	default void setBindValue(Object value) {
 		setBindValue( value, false );
 	}
 
@@ -59,21 +59,21 @@ public interface QueryParameterBinding<T> {
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed.
 	 * The flag controls whether the parameter type should be resolved if necessary.
 	 */
-	void setBindValue(T value, boolean resolveJdbcTypeIfNecessary);
+	void setBindValue(Object value, boolean resolveJdbcTypeIfNecessary);
 
 	/**
 	 * Sets the parameter binding value using the explicit Type.
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(T value, @Nullable BindableType<T> clarifiedType);
+	void setBindValue(Object value, @Nullable BindableType<T> clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
 	 * @param value The bind value
 	 * @param temporalTypePrecision The temporal type to use
 	 */
-	void setBindValue(T value, TemporalType temporalTypePrecision);
+	void setBindValue(Object value, @SuppressWarnings("deprecation") TemporalType temporalTypePrecision);
 
 	/**
 	 * Get the value current bound.
@@ -88,21 +88,25 @@ public interface QueryParameterBinding<T> {
 	 *  @param values The bind values
 	 *
 	 */
-	void setBindValues(Collection<? extends T> values);
+	void setBindValues(Collection<?> values);
 
 	/**
 	 * Sets the parameter binding values using the explicit Type in regards to the individual values.
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType);
+	void setBindValues(Collection<?> values, BindableType<T> clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *
 	 *  @param values The bind values
 	 * @param temporalTypePrecision The temporal type to use
 	 */
-	void setBindValues(Collection<? extends T> values, TemporalType temporalTypePrecision, TypeConfiguration typeConfiguration);
+	void setBindValues(
+			Collection<?> values,
+			@SuppressWarnings("deprecation")
+			TemporalType temporalTypePrecision,
+			TypeConfiguration typeConfiguration);
 
 	/**
 	 * Get the values currently bound.

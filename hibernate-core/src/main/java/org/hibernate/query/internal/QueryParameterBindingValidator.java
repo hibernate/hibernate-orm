@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.spi;
+package org.hibernate.query.internal;
 
 import java.util.Collection;
 
-import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryArgumentException;
 import org.hibernate.type.BindableType;
@@ -17,8 +16,7 @@ import static org.hibernate.query.internal.QueryArguments.isInstance;
 /**
  * @author Andrea Boriero
  */
-@Internal
-public class QueryParameterBindingValidator {
+class QueryParameterBindingValidator {
 
 	private QueryParameterBindingValidator() {
 	}

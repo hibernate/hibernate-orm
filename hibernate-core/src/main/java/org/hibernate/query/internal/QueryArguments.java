@@ -15,8 +15,6 @@ import java.util.Collection;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
- * @since 7.3
- *
  * @author Gavin King
  */
 public class QueryArguments {

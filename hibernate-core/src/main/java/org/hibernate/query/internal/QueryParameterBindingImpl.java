@@ -304,7 +304,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	private void validate(Object value) {
-		QueryParameterBindingValidator.validate( getBindType(), value, sessionFactory );
+		QueryParameterBindingValidator.validate( queryParameter, bindType, value, sessionFactory );
 	}
 
 	private Object coerce(Object value) {

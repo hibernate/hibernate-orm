@@ -6,8 +6,10 @@ package org.hibernate.query.internal;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryArgumentException;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.type.BindableType;
 
 import static org.hibernate.query.internal.QueryArguments.areInstances;
@@ -21,30 +23,41 @@ class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public static void validate(BindableType<?> parameterType, Object argument, SessionFactoryImplementor factory) {
+	public static void validate(
+			QueryParameter<?> parameter,
+			BindableType<?> parameterType,
+			Object argument,
+			SessionFactoryImplementor factory) {
 		if ( argument != null && parameterType != null ) {
 			final var parameterJavaType = getParameterJavaType( parameterType, factory );
 			if ( parameterJavaType != null ) {
+				final var criteriaBuilder = factory.getQueryEngine().getCriteriaBuilder();
 				if ( argument instanceof Collection<?> collection
 						&& !Collection.class.isAssignableFrom( parameterJavaType ) ) {
 					// We have a collection passed in where we were expecting a non-collection.
 					// NOTE: This can happen in Hibernate's notion of "parameter list" binding.
 					// NOTE2: The case of a collection value and an expected collection
 					// 	      (if that can even happen) will fall through to the main check.
-					validateCollectionValuedParameterBinding( parameterType, parameterJavaType, collection, factory );
+					if ( !areInstances( parameterType, collection, criteriaBuilder ) ) {
+						throw queryArgumentException( parameterJavaType, collection, parameter );
+					}
 				}
-				else if ( argument.getClass().isArray() ) {
-					validateArrayValuedParameterBinding( parameterJavaType, argument );
+				else if ( !argument.getClass().isArray() ) {
+					// assume single-valued argument
+					if ( !isInstance( parameterType, argument, criteriaBuilder ) ) {
+						throw queryArgumentException( parameterJavaType, argument, parameter );
+					}
 				}
 				else {
-					validateSingleValuedParameterBinding( parameterType, parameterJavaType, argument, factory );
+					validateArrayValuedParameterBinding( parameterJavaType, argument, parameter );
 				}
 			}
 			// else nothing we can check
 		}
 	}
 
-	private static Class<?> getParameterJavaType(BindableType<?> parameterType, SessionFactoryImplementor factory) {
+	private static Class<?> getParameterJavaType(
+			BindableType<?> parameterType, SessionFactoryImplementor factory) {
 		final var javaType = parameterType.getJavaType();
 		return javaType != null
 				? javaType
@@ -53,30 +66,37 @@ class QueryParameterBindingValidator {
 						.getJavaType();
 	}
 
-	private static void validateSingleValuedParameterBinding(
-			BindableType<?> parameterType, Class<?> parameterJavaType,
-			Object value,
-			SessionFactoryImplementor factory) {
-		if ( !isInstance( parameterType, value,
-				factory.getQueryEngine().getCriteriaBuilder() ) ) {
-			throw new QueryArgumentException( "Argument did not match parameter type",
+	private static @NonNull QueryArgumentException queryArgumentException(
+			Class<?> parameterJavaType, Object value, QueryParameter<?> parameter) {
+		if ( parameter.isNamed() ) {
+			return new QueryArgumentException( "Argument to parameter named '"
+						+ parameter.getName() + "' has an element with an incompatible type",
+					parameterJavaType, value );
+		}
+		else {
+			return new QueryArgumentException( "Argument to parameter at position "
+						+ parameter.isOrdinal() + " has an element with an incompatible type",
 					parameterJavaType, value );
 		}
 	}
 
-	private static void validateCollectionValuedParameterBinding(
-			BindableType<?> parameterType, Class<?> parameterJavaType,
-			Collection<?> values,
-			SessionFactoryImplementor factory) {
-		if ( !areInstances( parameterType, values,
-				factory.getQueryEngine().getCriteriaBuilder() ) ) {
-			throw new QueryArgumentException( "Collection-valued argument did not match parameter type",
+	private static @NonNull QueryArgumentException queryArgumentException(
+			Class<?> parameterJavaType, Collection<?> values, QueryParameter<?> parameter) {
+		if ( parameter.isNamed() ) {
+			return new QueryArgumentException( "Collection-values argument to parameter named '"
+						+ parameter.getName() + "' has an incompatible type",
 					parameterJavaType, values );
-
+		}
+		else {
+			return new QueryArgumentException( "Collection-values argument to parameter at position "
+						+ parameter.isOrdinal() + " has has an incompatible type",
+					parameterJavaType, values );
 		}
 	}
 
-	private static void validateArrayValuedParameterBinding(Class<?> parameterType, Object value) {
+	private static void validateArrayValuedParameterBinding(
+			Class<?> parameterType, Object value, QueryParameter<?> parameter) {
+		// TODO: improve the error messages using the given parameter info
 		if ( !parameterType.isArray() ) {
 			throw new QueryArgumentException( "Unexpected array-valued parameter binding",
 					parameterType, value );

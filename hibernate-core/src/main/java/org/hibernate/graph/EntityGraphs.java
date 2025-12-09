@@ -7,7 +7,6 @@ package org.hibernate.graph;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import jakarta.persistence.AttributeNode;
@@ -310,31 +309,10 @@ public final class EntityGraphs {
 		if ( a == b ) {
 			return true;
 		}
-		if ( ( a == null ) || ( b == null ) ) {
-			return false;
+		else {
+			return a != null && b != null
+				&& haveSameNodes( a, b );
 		}
-
-		final List<AttributeNode<?>> aNodes = a.getAttributeNodes();
-		final List<AttributeNode<?>> bNodes = b.getAttributeNodes();
-
-		if ( aNodes.size() != bNodes.size() ) {
-			return false;
-		}
-		for ( AttributeNode<?> aNode : aNodes ) {
-			final String attributeName = aNode.getAttributeName();
-			AttributeNode<?> bNode = null;
-			for ( AttributeNode<?> bCandidate : bNodes ) {
-				if ( attributeName.equals( bCandidate.getAttributeName() ) ) {
-					bNode = bCandidate;
-					break;
-				}
-			}
-			if ( !areEqual( aNode, bNode ) ) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	/**
@@ -345,10 +323,10 @@ public final class EntityGraphs {
 		if ( a == b ) {
 			return true;
 		}
-		if ( ( a == null ) || ( b == null ) ) {
+		else if ( a == null || b == null ) {
 			return false;
 		}
-		if ( a.getAttributeName().equals( b.getAttributeName() ) ) {
+		else if ( a.getAttributeName().equals( b.getAttributeName() ) ) {
 			return areEqual( a.getSubgraphs(), b.getSubgraphs() )
 				&& areEqual( a.getKeySubgraphs(), b.getKeySubgraphs() );
 		}
@@ -367,28 +345,23 @@ public final class EntityGraphs {
 		if ( a == b ) {
 			return true;
 		}
-		if ( ( a == null ) || ( b == null ) ) {
+		else if ( a == null || b == null ) {
 			return false;
-		}
-
-		@SuppressWarnings("rawtypes")
-		final Set<Class> aKeys = a.keySet();
-		@SuppressWarnings("rawtypes")
-		final Set<Class> bKeys = b.keySet();
-
-		if ( aKeys.equals( bKeys ) ) {
-			for ( Class<?> clazz : aKeys ) {
-				if ( !bKeys.contains( clazz ) ) {
-					return false;
-				}
-				if ( !areEqual( a.get( clazz ), b.get( clazz ) ) ) {
-					return false;
-				}
-			}
-			return true;
 		}
 		else {
-			return false;
+			final var aKeys = a.keySet();
+			final var bKeys = b.keySet();
+			if ( aKeys.equals( bKeys ) ) {
+				for ( var key : aKeys ) {
+					if ( !areEqual( a.get( key ), b.get( key ) ) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 	}
 
@@ -396,42 +369,38 @@ public final class EntityGraphs {
 	 * Compares two entity subgraphs and returns {@code true} if they are equal,
 	 * ignoring attribute order.
 	 */
-	public static boolean areEqual(
-			@SuppressWarnings("rawtypes") Subgraph a,
-			@SuppressWarnings("rawtypes") Subgraph b) {
+	public static boolean areEqual(Subgraph<?> a, Subgraph<?> b) {
 		if ( a == b ) {
 			return true;
 		}
-		if ( ( a == null ) || ( b == null ) ) {
-			return false;
+		else {
+			return a != null && b != null
+				&& a.getClassType() == b.getClassType()
+				&& haveSameNodes( a, b );
 		}
-		if ( a.getClassType() != b.getClassType() ) {
-			return false;
-		}
+	}
 
-		@SuppressWarnings("unchecked")
-		final List<AttributeNode<?>> aNodes = a.getAttributeNodes();
-		@SuppressWarnings("unchecked")
-		final List<AttributeNode<?>> bNodes = b.getAttributeNodes();
-
+	private static boolean haveSameNodes(Graph<?> a, Graph<?> b) {
+		final var aNodes = a.getAttributeNodes();
+		final var bNodes = b.getAttributeNodes();
 		if ( aNodes.size() != bNodes.size() ) {
 			return false;
 		}
-
-		for ( AttributeNode<?> aNode : aNodes ) {
-			final String attributeName = aNode.getAttributeName();
-			AttributeNode<?> bNode = null;
-			for ( AttributeNode<?> bCandidate : bNodes ) {
-				if ( attributeName.equals( bCandidate.getAttributeName() ) ) {
-					bNode = bCandidate;
-					break;
+		else {
+			for ( var aNode : aNodes ) {
+				final String attributeName = aNode.getAttributeName();
+				AttributeNode<?> bNode = null;
+				for ( var bCandidate : bNodes ) {
+					if ( attributeName.equals( bCandidate.getAttributeName() ) ) {
+						bNode = bCandidate;
+						break;
+					}
+				}
+				if ( !areEqual( aNode, bNode ) ) {
+					return false;
 				}
 			}
-			if ( !areEqual( aNode, bNode ) ) {
-				return false;
-			}
+			return true;
 		}
-
-		return true;
 	}
 }

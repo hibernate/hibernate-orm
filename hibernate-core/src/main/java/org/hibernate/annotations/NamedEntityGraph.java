@@ -45,7 +45,7 @@ public @interface NamedEntityGraph {
 	 * Entity graph names must be unique within the persistence unit.
 	 * <p/>
 	 * When applied to a root entity class, the name is optional and
-	 * defaults to the entity-name of that entity.
+	 * defaults to the JPA entity name of that entity.
 	 */
 	String name() default "";
 

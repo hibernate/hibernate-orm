@@ -28,7 +28,8 @@ import org.hibernate.graph.spi.GraphImplementor;
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p>
- * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a subgraph
+ * The {@link #parseInto} methods parse the graph string into a passed graph, which may
+ * be a subgraph.
  * <p>
  * Multiple graphs for the same entity type can be
  * {@linkplain EntityGraphs#merge(EntityManager, Class, jakarta.persistence.Graph...)
@@ -36,7 +37,6 @@ import org.hibernate.graph.spi.GraphImplementor;
  *
  * @author asusnjar
  */
-@SuppressWarnings("unused")
 public final class GraphParser {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,8 +135,8 @@ public final class GraphParser {
 	}
 
 	/**
-	 * Creates a root graph based on the passed `rootType` and parses `graphText` into
-	 * the generated root graph
+	 * Creates a root graph based on the passed {@code rootType} and parses {@code graphText}
+	 * into the generated root graph.
 	 *
 	 * @apiNote The passed EntityManager is expected to be a Hibernate implementation.
 	 * Attempting to pass another provider's EntityManager implementation will fail.

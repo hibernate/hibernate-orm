@@ -41,7 +41,7 @@ public class GraphParsing {
 			throw new InvalidGraphException( "Expecting graph text to not include an entity name: " + graphText );
 		}
 
-		return parse( entityDomainType, graphContext.attributeList(), sessionFactory );
+		return visit( entityDomainType, graphContext.attributeList(), sessionFactory );
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
@@ -74,30 +74,30 @@ public class GraphParsing {
 
 		final String entityName = graphContext.typeIndicator().TYPE_NAME().getText();
 		final var entityType = sessionFactory.getJpaMetamodel().entity( entityName );
-		return parse( entityType, graphContext.attributeList(), sessionFactory );
+		return visit( entityType, graphContext.attributeList(), sessionFactory );
 	}
 
-	public static <T> RootGraphImplementor<T> parse(
+	public static <T> RootGraphImplementor<T> visit(
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,
 			SessionFactoryImplementor sessionFactory) {
-		return parse( rootType, attributeListContext, sessionFactory.getJpaMetamodel()::findEntityType );
+		return visit( rootType, attributeListContext, sessionFactory.getJpaMetamodel()::findEntityType );
 	}
 
-	public static <T> RootGraphImplementor<T> parse(
+	public static <T> RootGraphImplementor<T> visit(
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,
 			GraphParserEntityNameResolver entityNameResolver) {
-		return parse( null, rootType, attributeListContext, entityNameResolver );
+		return visit( null, rootType, attributeListContext, entityNameResolver );
 	}
 
-	private static @NonNull GraphContext parseText(String graphText) {
+	public static @NonNull GraphContext parseText(String graphText) {
 		final var lexer = new GraphLanguageLexer( CharStreams.fromString( graphText ) );
 		final var parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
 		return parser.graph();
 	}
 
-	public static <T> RootGraphImplementor<T> parse(
+	public static <T> RootGraphImplementor<T> visit(
 			@Nullable String name,
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,

@@ -156,7 +156,7 @@ public abstract class AnnotationMeta implements Metamodel {
 				final List<? extends AnnotationValue> annotationValues =
 						(List<? extends AnnotationValue>) value.getValue();
 				for ( AnnotationValue annotationValue : annotationValues ) {
-					addAuxiliaryMembersForMirror( (AnnotationMirror) annotationValue.getValue(), prefix );
+					addAuxiliaryMembersForMirror( (AnnotationMirror) annotationValue.getValue(), prefix, annotationName );
 				}
 			}
 		}
@@ -165,21 +165,32 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void addAuxiliaryMembersForAnnotation(String annotationName, String prefix) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			addAuxiliaryMembersForMirror( mirror, prefix );
+			addAuxiliaryMembersForMirror( mirror, prefix, annotationName );
 		}
 	}
 
-	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix) {
+	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix, String annotationName) {
 		if ( !isJakartaDataStyle() ) {
-			mirror.getElementValues().forEach((key, value) -> {
-				if ( key.getSimpleName().contentEquals("name") ) {
-					final String name = value.getValue().toString();
-					if ( !name.isEmpty() ) {
-						putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
-					}
-				}
-			});
+			final String name = defaultImplicitName( annotationName, explicitName( mirror ) );
+			putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
 		}
+	}
+
+	private static String explicitName(AnnotationMirror mirror) {
+		for ( var entry : mirror.getElementValues().entrySet() ) {
+			if ( entry.getKey().getSimpleName().contentEquals( "name" ) ) {
+				return entry.getValue().getValue().toString();
+			}
+		}
+		return "";
+	}
+
+	private String defaultImplicitName(String annotationName, String explicitName) {
+		return explicitName.isEmpty()
+			&& ( Constants.NAMED_ENTITY_GRAPH.equals( annotationName )
+					|| Constants.NAMED_ENTITY_GRAPHS.equals( annotationName ) )
+				? getSimpleName()
+				: explicitName;
 	}
 
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {

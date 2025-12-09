@@ -87,7 +87,7 @@ public class EmbeddedIdInParameterBindingTest {
 				session -> {
 					List<Delivery> deliveries = session.createQuery( "from Delivery d where d.locationId in ?1",
 									Delivery.class )
-							.setParameter( 1, List.of( verbania, schnitzel ) )
+							.setParameter( 1, List.of( verbania, hallein ) )
 							.getResultList();
 					assertThat( deliveries.size() ).isEqualTo( 2 );
 					assertThat( deliveries ).contains( pizza );

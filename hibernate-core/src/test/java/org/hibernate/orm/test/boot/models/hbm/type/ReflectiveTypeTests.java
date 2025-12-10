@@ -14,12 +14,10 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.ClobJavaType;
+import org.hibernate.type.descriptor.java.DateJavaType;
 import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.hibernate.type.descriptor.java.InstantJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
-import org.hibernate.type.descriptor.java.JdbcDateJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.ShortJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -72,9 +70,9 @@ public class ReflectiveTypeTests {
 		verify( rootClass, "theUrl", UrlJavaType.class, SqlTypes.VARCHAR );
 		verify( rootClass, "theClob", ClobJavaType.class, SqlTypes.CLOB );
 		verify( rootClass, "theInstant", InstantJavaType.class, SqlTypes.INSTANT );
-		verify( rootClass, "theDate", JdbcDateJavaType.class, SqlTypes.DATE );
-		verify( rootClass, "theTime", JdbcTimeJavaType.class, SqlTypes.TIME );
-		verify( rootClass, "theTimestamp", JdbcTimestampJavaType.class, SqlTypes.TIMESTAMP );
+		verify( rootClass, "theDate", DateJavaType.class, SqlTypes.DATE );
+		verify( rootClass, "theTime", DateJavaType.class, SqlTypes.TIME );
+		verify( rootClass, "theTimestamp", DateJavaType.class, SqlTypes.TIMESTAMP );
 	}
 
 	private static void verify(RootClass rootClass, String attributeName, Class<? extends BasicJavaType<?>> expectedJavaType, int expectedJdbcTypeCode) {

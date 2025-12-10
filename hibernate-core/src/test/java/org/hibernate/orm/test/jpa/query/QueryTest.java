@@ -889,7 +889,7 @@ public class QueryTest {
 
 			TypedQuery<Wallet> query = entityManager.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me", Wallet.class );
 			Parameter<Date> parameter = query.getParameter( "me", Date.class );
-			assertEquals( java.sql.Timestamp.class, parameter.getParameterType() );
+			assertEquals( java.util.Date.class, parameter.getParameterType() );
 
 			query.setParameter( "me", new Date() );
 			query.setParameter( "me", new Date(), TemporalType.DATE );

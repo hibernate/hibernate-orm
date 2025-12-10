@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
@@ -298,14 +299,14 @@ public class TypeTest {
 	@Test
 	public void testDates() {
 		final long now = System.currentTimeMillis();
-		final java.util.Date original = new java.util.Date( now );
-		final java.util.Date copy = new java.util.Date( now );
-		final java.util.Date different = new java.util.Date( now + 9999 );
-		final java.util.Date different2 = new java.util.Date( now + ( 1000L * 60L * 60L * 24L * 365L ) );
+		final var original = new java.util.Date( now );
+		final var copy = new java.util.Date( now );
+		final var different = new java.util.Date( now + 9999 );
+		final var different2 = new java.util.Date( now + ( 1000L * 60L * 60L * 24L * 365L ) );
 
-		runBasicTests( StandardBasicTypes.TIME, original, copy, different );
-		runBasicTests( StandardBasicTypes.TIMESTAMP, original, copy, different );
-		runBasicTests( StandardBasicTypes.DATE, original, copy, different2 );
+		runBasicTestsWithCoercion( StandardBasicTypes.TIME, original, copy, different );
+		runBasicTestsWithCoercion( StandardBasicTypes.TIMESTAMP, original, copy, different );
+		runBasicTestsWithCoercion( StandardBasicTypes.DATE, original, copy, different2 );
 	}
 
 	@Test
@@ -315,6 +316,23 @@ public class TypeTest {
 		final TimeZone different = new SimpleTimeZone( -2, "xyz" );
 
 		runBasicTests( StandardBasicTypes.TIMEZONE, original, copy, different );
+	}
+
+	protected <T> void runBasicTestsWithCoercion(
+			BasicTypeReference<T> basicTypeReference,
+			T original,
+			T copy,
+			T different) {
+		BasicType<?> type =
+				new TypeConfiguration()
+						.getBasicTypeRegistry()
+						.getRegisteredType( basicTypeReference.getName() );
+		runBasicTests(
+				type,
+				type.getJavaTypeDescriptor().coerce(original),
+				type.getJavaTypeDescriptor().coerce(copy),
+				type.getJavaTypeDescriptor().coerce(different)
+		);
 	}
 
 	protected <T> void runBasicTests(

@@ -84,7 +84,7 @@ public class Node {
 
 	private Date generateCurrentDate() {
 		// Note : done as java.sql.Date mainly to work around issue with
-		// MySQL and its lack of milli-second precision on its DATETIME
+		// MySQL and its lack of millisecond precision on its DATETIME
 		// and TIMESTAMP datatypes.
 		return new Date( new java.util.Date().getTime() );
 	}

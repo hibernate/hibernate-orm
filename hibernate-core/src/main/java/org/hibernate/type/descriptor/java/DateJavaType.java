@@ -28,13 +28,16 @@ import static org.hibernate.type.descriptor.java.JdbcDateJavaType.toDateEpoch;
  */
 public class DateJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final DateJavaType INSTANCE = new DateJavaType();
-	private final TemporalType precision;
+	private final @SuppressWarnings("deprecation") TemporalType precision;
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
-		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan( TemporalType.TIMESTAMP );
-		private final TemporalType precision;
+		@SuppressWarnings("deprecation")
+		public static final DateMutabilityPlan INSTANCE =
+				new DateMutabilityPlan( TemporalType.TIMESTAMP );
 
-		public DateMutabilityPlan(TemporalType precision) {
+		private final @SuppressWarnings("deprecation") TemporalType precision;
+
+		public DateMutabilityPlan(@SuppressWarnings("deprecation") TemporalType precision) {
 			this.precision = precision;
 		}
 
@@ -59,12 +62,13 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public DateJavaType() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 		this.precision = TemporalType.TIMESTAMP;
 	}
 
-	private DateJavaType(TemporalType precision) {
+	private DateJavaType(@SuppressWarnings("deprecation") TemporalType precision) {
 		super( Date.class, new DateMutabilityPlan(precision) );
 		this.precision = precision;
 	}
@@ -80,13 +84,15 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
-	public TemporalType getPrecision() {
+	public @SuppressWarnings("deprecation") TemporalType getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public <X> TemporalJavaType<X> resolveTypeForPrecision(TemporalType precision, TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) new DateJavaType( precision );
+	public TemporalJavaType<Date> resolveTypeForPrecision(
+			@SuppressWarnings("deprecation") TemporalType precision,
+			TypeConfiguration typeConfiguration) {
+		return precision == null ? this : new DateJavaType( precision );
 	}
 
 	@Override
@@ -105,21 +111,6 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			case DATE -> Types.DATE;
 			case TIME -> Types.TIME;
 		} );
-	}
-
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
-	}
-
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) JdbcTimestampJavaType.INSTANCE;
-	}
-
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) JdbcTimeJavaType.INSTANCE;
 	}
 
 	@Override
@@ -167,7 +158,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public int extractHashCode(Date value) {
 		var calendar = Calendar.getInstance();
 		calendar.setTime( value );

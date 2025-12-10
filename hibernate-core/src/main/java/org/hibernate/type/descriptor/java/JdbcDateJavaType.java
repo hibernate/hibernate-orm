@@ -55,7 +55,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}
@@ -264,9 +264,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<Date> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {

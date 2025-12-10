@@ -52,24 +52,24 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 		return (Instant) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<Instant> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<Instant> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<Instant> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

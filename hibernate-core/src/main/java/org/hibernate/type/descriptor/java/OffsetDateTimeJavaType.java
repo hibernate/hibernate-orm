@@ -72,7 +72,7 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 		return (OffsetDateTime) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -84,9 +84,9 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<OffsetDateTime> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private <T> BasicType<T> createBasicType(String name, BasicTypeReference<T> typeReference) {
 		var javaType = getJavaTypeRegistry().resolveDescriptor( typeReference.getJavaType() );
-		if ( javaType instanceof TemporalJavaType<?> temporalJavaType ) {
+		if ( javaType instanceof TemporalJavaType<T> temporalJavaType ) {
 			javaType = temporalJavaType.resolveTypeForPrecision( typeReference.getPrecision(), typeConfiguration  );
 		}
 		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );

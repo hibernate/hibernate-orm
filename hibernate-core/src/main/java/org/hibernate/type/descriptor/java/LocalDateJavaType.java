@@ -48,7 +48,7 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 		return (LocalDate) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}
@@ -61,9 +61,8 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<LocalDate> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

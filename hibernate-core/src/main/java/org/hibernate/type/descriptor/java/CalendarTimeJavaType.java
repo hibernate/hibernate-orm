@@ -31,7 +31,7 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		super( Calendar.class, CalendarJavaType.CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -41,19 +41,19 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		return context.getJdbcType( Types.TIME );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<Calendar> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) CalendarJavaType.INSTANCE;
+	@Override
+	protected TemporalJavaType<Calendar> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return CalendarJavaType.INSTANCE;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) CalendarDateJavaType.INSTANCE;
+	@Override
+	protected TemporalJavaType<Calendar> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return CalendarDateJavaType.INSTANCE;
 	}
 
 	public String toString(Calendar value) {

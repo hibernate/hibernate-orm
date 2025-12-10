@@ -20,7 +20,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -46,6 +46,6 @@ public class RevisionEndTimestampTypeTest {
 
 		final Property property = clazz.getProperty("REVEND_TSTMP");
 		assertInstanceOf(BasicType.class, property.getType());
-		assertEquals(Timestamp.class, ((BasicType) property.getType()).getJavaType());
+		assertEquals(Date.class, ((BasicType<?>) property.getType()).getJavaType());
 	}
 }

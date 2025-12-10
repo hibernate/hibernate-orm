@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,11 +22,15 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
+import org.hibernate.type.descriptor.java.DateJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
@@ -157,7 +160,7 @@ public class SqmDynamicInstantiation<T>
 				if ( isConstructorCompatible( javaType, argTypes, typeConfiguration ) ) {
 					return true;
 				}
-				final List<SqmDynamicInstantiationArgument<?>> arguments = getArguments();
+				final var arguments = getArguments();
 				final List<String> aliases = new ArrayList<>( arguments.size() );
 				for ( var argument : arguments ) {
 					final String alias = argument.getAlias();
@@ -182,9 +185,18 @@ public class SqmDynamicInstantiation<T>
 		return getArguments().stream()
 				.map( arg -> {
 					final var expressible = arg.getExpressible();
-					return expressible != null && expressible.getExpressibleJavaType() != null ?
-							expressible.getExpressibleJavaType().getJavaTypeClass() :
-							Void.class;
+					if ( expressible != null ) {
+						final var expressibleJavaType = expressible.getExpressibleJavaType();
+						if ( expressibleJavaType != null ) {
+							return expressibleJavaType instanceof DateJavaType temporalJavaType
+									// Hack to accommodate a constructor with java.sql parameter
+									// types when the entity has java.util.Date as its field types.
+									// (This was requested in HHH-4179 and we fixed it by accident.)
+									? TemporalJavaType.resolveJavaTypeClass( temporalJavaType.getPrecision() )
+									: expressibleJavaType.getJavaTypeClass();
+						}
+					}
+					return Void.class;
 				} ).collect( toList() );
 	}
 
@@ -227,7 +239,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public List<SqmDynamicInstantiationArgument<?>> getArguments() {
-		return arguments == null ? Collections.emptyList() : Collections.unmodifiableList( arguments );
+		return arguments == null ? emptyList() : unmodifiableList( arguments );
 	}
 
 	@Override

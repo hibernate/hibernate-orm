@@ -537,7 +537,7 @@ public class InferredBasicValueResolver {
 							? reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration )
 							// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
 							: reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
-			final BasicType<T> jdbcMapping = basicTypeRegistry.resolve( temporalJavaType, explicitJdbcType );
+			final var jdbcMapping = basicTypeRegistry.resolve( temporalJavaType, explicitJdbcType );
 			return new InferredBasicValueResolution<>(
 					jdbcMapping,
 					temporalJavaType,
@@ -564,7 +564,6 @@ public class InferredBasicValueResolver {
 		}
 		else {
 			basicType = basicTypeRegistry.resolve(
-					// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
 					reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration ),
 					reflectedJtd.getRecommendedJdbcType( stdIndicators )
 			);

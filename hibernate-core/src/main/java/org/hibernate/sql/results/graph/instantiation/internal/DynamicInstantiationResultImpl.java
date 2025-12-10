@@ -17,8 +17,10 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
+import org.hibernate.type.descriptor.java.DateJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.jboss.logging.Logger;
 
 import static java.util.stream.Collectors.toList;
@@ -157,7 +159,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		final var constructor = findMatchingConstructor(
 				javaType.getJavaTypeClass(),
 				argumentReaders.stream()
-						.map( reader -> reader.getAssembledJavaType().getJavaTypeClass() )
+						.map( reader -> argumentClass( reader ) )
 						.collect( toList() ),
 				creationState.getSqlAstCreationContext()
 						.getMappingMetamodel()
@@ -192,6 +194,16 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		}
 
 		return new DynamicInstantiationAssemblerInjectionImpl<>( javaType, argumentReaders );
+	}
+
+	private static Class<?> argumentClass(ArgumentReader<?> reader) {
+		final var assembledJavaType = reader.getAssembledJavaType();
+		return assembledJavaType instanceof DateJavaType temporalJavaType
+				// Hack to accommodate a constructor with java.sql parameter
+				// types when the entity has java.util.Date as its field types.
+				// (This was requested in HHH-4179 and we fixed it by accident.)
+				? TemporalJavaType.resolveJavaTypeClass( temporalJavaType.getPrecision() )
+				: assembledJavaType.getJavaTypeClass();
 	}
 
 	private List<String> signature() {

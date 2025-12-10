@@ -314,8 +314,8 @@ public interface JdbcTypeIndicators {
 	 * @see SqlTypes#TIMESTAMP_UTC
 	 */
 	default int getDefaultZonedTimestampSqlType() {
-		final TemporalType temporalPrecision = getTemporalPrecision();
-		return switch (temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision) {
+		final var temporalPrecision = getTemporalPrecision();
+		return switch ( temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision ) {
 			case TIME -> getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
 			case DATE -> Types.DATE;
 			case TIMESTAMP ->

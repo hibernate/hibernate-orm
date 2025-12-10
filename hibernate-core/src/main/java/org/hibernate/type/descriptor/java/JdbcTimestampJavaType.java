@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
@@ -28,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
+import static org.hibernate.type.descriptor.java.DateJavaType.wrapSqlDate;
+import static org.hibernate.type.descriptor.java.DateJavaType.wrapSqlTime;
 
 /**
  * Descriptor for {@link Timestamp} handling.
@@ -37,7 +40,8 @@ import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
  * to {@link Timestamp} values.  This capability is shared with
  * {@link JdbcDateJavaType} and {@link JdbcTimeJavaType}.
  */
-public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
+public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
+		implements VersionJavaType<Timestamp> {
 	public static final JdbcTimestampJavaType INSTANCE = new JdbcTimestampJavaType();
 
 	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSSSSSSSS";
@@ -54,14 +58,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
 	public JdbcTimestampJavaType() {
-		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
 	}
 
 	@Override
-	public Class<Date> getJavaType() {
-		// wrong, but needed for backward compatibility
-		//noinspection unchecked, rawtypes
-		return (Class) java.sql.Timestamp.class;
+	public Class<Timestamp> getJavaType() {
+		return java.sql.Timestamp.class;
 	}
 
 	@Override
@@ -71,66 +73,62 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public boolean isInstance(Object value) {
-		// this check holds true for java.sql.Timestamp as well
-		return value instanceof Date;
+		return value instanceof Timestamp;
 	}
 
 	@Override
-	public Date cast(Object value) {
-		return (Date) value;
+	public Timestamp cast(Object value) {
+		return (Timestamp) value;
 	}
 
 	@Override
-	public boolean areEqual(Date one, Date another) {
+	public boolean areEqual(Timestamp one, Timestamp another) {
 		if ( one == another ) {
 			return true;
 		}
 		else if ( one == null || another == null) {
 			return false;
 		}
+		else if ( one.getTime() != another.getTime() ) {
+			return false;
+		}
 		else {
-			final long t1 = one.getTime();
-			final long t2 = another.getTime();
-			if ( t1 != t2 ) {
-				return false;
-			}
-			else if ( one instanceof Timestamp ts1
-				&& another instanceof Timestamp ts2 ) {
-				// both are Timestamps
-				final int nn1 = ts1.getNanos() % 1000000;
-				final int nn2 = ts2.getNanos() % 1000000;
-				return nn1 == nn2;
-			}
-			else {
-				// at least one is a plain old Date
-				return true;
-			}
+			// both are Timestamps
+			final int nn1 = one.getNanos() % 1000000;
+			final int nn2 = another.getNanos() % 1000000;
+			return nn1 == nn2;
 		}
 	}
 
 	@Override
-	public int extractHashCode(Date value) {
+	public int extractHashCode(Timestamp value) {
 		return Long.hashCode( value.getTime() / 1000 );
 	}
 
 	@Override
-	public Date coerce(Object value) {
+	public Timestamp coerce(Object value) {
 		return wrap( value, null );
 	}
 
 	@Override
-	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(Timestamp value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return type.cast( value instanceof Timestamp timestamp
-					? timestamp
-					: new Timestamp( value.getTime() ) );
+			return type.cast( value );
 		}
 
-		if ( Date.class.isAssignableFrom( type ) ) {
+		if ( Time.class.isAssignableFrom( type ) ) {
+			return type.cast( wrapSqlTime( value ) );
+		}
+
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			return type.cast( wrapSqlDate( value ) );
+		}
+
+		if ( type.isInstance( value ) ) {
 			return type.cast( value );
 		}
 
@@ -149,23 +147,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return type.cast( value.getTime() );
 		}
 
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return type.cast( value instanceof java.sql.Date date
-					? date
-					: new java.sql.Date( value.getTime() ) );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return type.cast( value instanceof java.sql.Time time
-					? time
-					: new java.sql.Time( value.getTime() % 86_400_000 ) );
-		}
-
 		throw unknownUnwrap( type );
 	}
 
 	@Override
-	public <X> Date wrap(X value, WrapperOptions options) {
+	public <X> Timestamp wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -174,7 +160,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		}
 
 		if ( value instanceof Date date ) {
-			return new Timestamp( date.getTime() );
+			return wrapSqlTimestamp( date );
 		}
 
 		if ( value instanceof LocalDateTime localDateTime ) {
@@ -192,6 +178,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		throw unknownWrap( value.getClass() );
 	}
 
+	static Timestamp wrapSqlTimestamp(Date date) {
+		return new Timestamp( date.getTime() );
+	}
+
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
@@ -201,12 +191,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
-	public String toString(Date value) {
+	public String toString(Timestamp value) {
 		return LITERAL_FORMATTER.format( value.toInstant() );
 	}
 
 	@Override
-	public Date fromString(CharSequence string) {
+	public Timestamp fromString(CharSequence string) {
 		try {
 			final var temporalAccessor = LITERAL_FORMATTER.parse( string );
 			final var timestamp = new Timestamp( temporalAccessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
@@ -219,12 +209,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
-	public void appendEncodedString(SqlAppender sb, Date value) {
+	public void appendEncodedString(SqlAppender sb, Timestamp value) {
 		ENCODED_FORMATTER.formatTo( value.toInstant(), sb );
 	}
 
 	@Override
-	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
+	public Timestamp fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
 			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			if ( temporalAccessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
@@ -262,8 +252,8 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
-	public Date next(
-			Date current,
+	public Timestamp next(
+			Timestamp current,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -272,7 +262,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
-	public Date seed(
+	public Timestamp seed(
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -281,19 +271,14 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 
-	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
+	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Timestamp> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
 		@Override
-		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof Timestamp timestamp ) {
-				// make sure to get the nanos
-				final var copy = new Timestamp( timestamp.getTime() );
-				copy.setNanos( timestamp.getNanos() );
-				return copy;
-			}
-			else {
-				return new Timestamp( value.getTime() );
-			}
+		public Timestamp deepCopyNotNull(Timestamp value) {
+			// make sure to get the nanos
+			final var copy = new Timestamp( value.getTime() );
+			copy.setNanos( value.getNanos() );
+			return copy;
 		}
 	}
 }

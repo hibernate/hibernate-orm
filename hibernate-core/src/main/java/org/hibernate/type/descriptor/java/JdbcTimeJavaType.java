@@ -189,7 +189,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 		}
 
 		if ( value instanceof Date date ) {
-			return wrapSqlTime( date );
+			return toTime( date );
 		}
 
 		if ( value instanceof LocalTime localTime ) {
@@ -212,7 +212,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	static Time wrapSqlTime(Date date) {
+	static Time toTime(Date date) {
 		return new Time( date.getTime() % 86_400_000 );
 	}
 

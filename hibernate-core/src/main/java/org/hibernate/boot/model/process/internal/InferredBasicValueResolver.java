@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -45,6 +46,7 @@ import jakarta.persistence.EnumeratedValue;
 
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
+import static org.hibernate.type.descriptor.java.TemporalJavaType.resolveJdbcTypeCode;
 
 /**
  * BasicValue.Resolution resolver for cases where no explicit
@@ -156,23 +158,8 @@ public class InferredBasicValueResolver {
 					// there was not a "legacy" BasicType registration,
 					// so use `JavaType#getRecommendedJdbcType`, if one,
 					// to create a mapping
-					final JdbcType recommendedJdbcType;
-					try {
-						recommendedJdbcType = reflectedJtd.getRecommendedJdbcType( stdIndicators );
-					}
-					catch (JdbcTypeRecommendationException jtre) {
-						if ( buildingContext.getMetadataCollector()
-								.getEntityBindingMap().values().stream()
-								.anyMatch( pc -> pc.getMappedClass().equals(resolvedJavaType) ) ) {
-							throw new MappingException( "Incorrect use of entity type '"
-									+ resolvedJavaType.getTypeName()
-									+  "' (possibly due to missing association mapping annotation)",
-									jtre );
-						}
-						else {
-							throw jtre;
-						}
-					}
+					final JdbcType recommendedJdbcType =
+							recommendedJdbcType( resolvedJavaType, stdIndicators, buildingContext, reflectedJtd );
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
 								stdIndicators,
@@ -252,6 +239,27 @@ public class InferredBasicValueResolver {
 				jdbcMapping,
 				determineMutabilityPlan( explicitMutabilityPlanAccess, javaTypeDescriptor, typeConfiguration )
 		);
+	}
+
+	private static <T> JdbcType recommendedJdbcType(
+			Type resolvedJavaType,
+			JdbcTypeIndicators stdIndicators,
+			MetadataBuildingContext buildingContext,
+			JavaType<T> reflectedJtd) {
+		try {
+			return reflectedJtd.getRecommendedJdbcType( stdIndicators );
+		}
+		catch (JdbcTypeRecommendationException jtre) {
+			if ( buildingContext.getMetadataCollector()
+					.getEntityBindingMap().values().stream()
+					.anyMatch( pc -> pc.getMappedClass().equals( resolvedJavaType ) ) ) {
+				throw new MappingException( "Incorrect use of entity type '" + resolvedJavaType.getTypeName()
+							+ "' (possibly due to missing association mapping annotation)", jtre );
+			}
+			else {
+				throw jtre;
+			}
+		}
 	}
 
 	private static <T> BasicType<T> registeredType(
@@ -489,43 +497,16 @@ public class InferredBasicValueResolver {
 			JdbcType explicitJdbcType,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators) {
-		final var typeConfiguration = stdIndicators.getTypeConfiguration();
-		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final var requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Case #1 - explicit JavaType
 
 		if ( explicitJavaType != null ) {
-			if ( !isTemporal( explicitJavaType ) ) {
-				throw new MappingException(
-						"Explicit JavaType [" + explicitJavaType +
-								"] defined for temporal value must implement TemporalJavaType"
-				);
-			}
-
-			@SuppressWarnings("unchecked")
-			final var explicitTemporalJtd = (TemporalJavaType<T>) explicitJavaType;
-			if ( requestedTemporalPrecision != null && explicitTemporalJtd.getPrecision() != requestedTemporalPrecision ) {
-				throw new MappingException(
-						"Temporal precision (`jakarta.persistence.TemporalType`) mismatch... requested precision = " + requestedTemporalPrecision +
-								"; explicit JavaType (`" + explicitTemporalJtd + "`) precision = " + explicitTemporalJtd.getPrecision()
-
-				);
-			}
-
-			final var jdbcType =
-					explicitJdbcType != null
-							? explicitJdbcType
-							: explicitTemporalJtd.getRecommendedJdbcType( stdIndicators );
-			final var jdbcMapping = basicTypeRegistry.resolve( explicitTemporalJtd, jdbcType );
-			return new InferredBasicValueResolution<>(
-					jdbcMapping,
-					explicitTemporalJtd,
-					explicitTemporalJtd,
-					jdbcType,
-					jdbcMapping,
-					determineMutabilityPlan( explicitMutabilityPlanAccess, explicitTemporalJtd, typeConfiguration )
+			return fromTemporalExplicitJavaType(
+					explicitJavaType,
+					explicitJdbcType,
+					explicitMutabilityPlanAccess,
+					stdIndicators
 			);
 		}
 
@@ -536,19 +517,10 @@ public class InferredBasicValueResolver {
 		// 		due to the new annotations being used
 
 		if ( explicitJdbcType != null ) {
-			final TemporalJavaType<T> temporalJavaType =
-					requestedTemporalPrecision != null
-							? reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration )
-							// Avoid using the DateJavaType and prefer the JdbcTimestampJavaType
-							: reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
-			final var jdbcMapping = basicTypeRegistry.resolve( temporalJavaType, explicitJdbcType );
-			return new InferredBasicValueResolution<>(
-					jdbcMapping,
-					temporalJavaType,
-					temporalJavaType,
+			return fromTemporalExplicitJdbcType(
+					reflectedJtd,
 					explicitJdbcType,
-					jdbcMapping,
-					temporalJavaType.getMutabilityPlan()
+					stdIndicators
 			);
 		}
 
@@ -558,12 +530,27 @@ public class InferredBasicValueResolver {
 		// 		- for the moment continue to use the legacy resolution to registered
 		// 		BasicType
 
+		return fromTemporalImplicit(
+				reflectedJtd,
+				explicitMutabilityPlanAccess,
+				stdIndicators
+		);
+	}
+
+	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalImplicit(
+			TemporalJavaType<T> reflectedJtd,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			JdbcTypeIndicators stdIndicators) {
+		final var typeConfiguration = stdIndicators.getTypeConfiguration();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
+
 		final BasicType<T> basicType;
 		if ( requestedTemporalPrecision != null
 				&& requestedTemporalPrecision != reflectedJtd.getPrecision() ) {
 			basicType = basicTypeRegistry.resolve(
 					reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration ),
-					TemporalJavaType.resolveJdbcTypeCode( requestedTemporalPrecision )
+					resolveJdbcTypeCode( requestedTemporalPrecision )
 			);
 		}
 		else {
@@ -580,6 +567,69 @@ public class InferredBasicValueResolver {
 				basicType.getJdbcType(),
 				basicType,
 				determineMutabilityPlan( explicitMutabilityPlanAccess, reflectedJtd, typeConfiguration )
+		);
+	}
+
+	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalExplicitJdbcType(
+			TemporalJavaType<T> reflectedJtd,
+			JdbcType explicitJdbcType,
+			JdbcTypeIndicators stdIndicators) {
+		final var typeConfiguration = stdIndicators.getTypeConfiguration();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
+
+		final var temporalJavaType =
+				requestedTemporalPrecision != null
+						? reflectedJtd.resolveTypeForPrecision( requestedTemporalPrecision, typeConfiguration )
+						: reflectedJtd.resolveTypeForPrecision( reflectedJtd.getPrecision(), typeConfiguration );
+		final var jdbcMapping = basicTypeRegistry.resolve( temporalJavaType, explicitJdbcType );
+		return new InferredBasicValueResolution<>(
+				jdbcMapping,
+				temporalJavaType,
+				temporalJavaType,
+				explicitJdbcType,
+				jdbcMapping,
+				temporalJavaType.getMutabilityPlan()
+		);
+	}
+
+	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalExplicitJavaType(
+			BasicJavaType<?> explicitJavaType,
+			JdbcType explicitJdbcType,
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			JdbcTypeIndicators stdIndicators) {
+		final var typeConfiguration = stdIndicators.getTypeConfiguration();
+		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
+
+		if ( !isTemporal( explicitJavaType ) ) {
+			throw new MappingException( "Explicit JavaType [" + explicitJavaType +
+					"] defined for temporal value must implement TemporalJavaType" );
+		}
+
+		@SuppressWarnings("unchecked")
+		final var explicitTemporalJtd = (TemporalJavaType<T>) explicitJavaType;
+		if ( requestedTemporalPrecision != null
+				&& explicitTemporalJtd.getPrecision() != requestedTemporalPrecision ) {
+			throw new MappingException(
+					"Temporal precision (TemporalType) mismatch; requested precision = %s; explicit JavaType (%s) precision = %s"
+							.formatted( requestedTemporalPrecision, explicitTemporalJtd, explicitTemporalJtd.getPrecision() )
+
+			);
+		}
+
+		final var jdbcType =
+				explicitJdbcType != null
+						? explicitJdbcType
+						: explicitTemporalJtd.getRecommendedJdbcType( stdIndicators );
+		final var jdbcMapping = basicTypeRegistry.resolve( explicitTemporalJtd, jdbcType );
+		return new InferredBasicValueResolution<>(
+				jdbcMapping,
+				explicitTemporalJtd,
+				explicitTemporalJtd,
+				jdbcType,
+				jdbcMapping,
+				determineMutabilityPlan( explicitMutabilityPlanAccess, explicitTemporalJtd, typeConfiguration )
 		);
 	}
 

@@ -185,7 +185,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( value instanceof java.util.Date date ) {
-			return wrapSqlDate( date );
+			return toDate( date );
 		}
 
 		if ( value instanceof LocalDate localDate ) {
@@ -195,7 +195,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	static java.sql.Date wrapSqlDate(java.util.Date value) {
+	static java.sql.Date toDate(java.util.Date value) {
 		if ( value instanceof java.sql.Date date ) {
 			final long millis = date.getTime();
 			final long dateEpoch = toDateEpoch( millis );

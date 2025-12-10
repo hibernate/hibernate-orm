@@ -29,8 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
-import static org.hibernate.type.descriptor.java.DateJavaType.wrapSqlDate;
-import static org.hibernate.type.descriptor.java.DateJavaType.wrapSqlTime;
+import static org.hibernate.type.descriptor.java.JdbcDateJavaType.toDate;
+import static org.hibernate.type.descriptor.java.JdbcTimeJavaType.toTime;
 
 /**
  * Descriptor for {@link Timestamp} handling.
@@ -121,11 +121,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return type.cast( wrapSqlTime( value ) );
+			return type.cast( toTime( value ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return type.cast( wrapSqlDate( value ) );
+			return type.cast( toDate( value ) );
 		}
 
 		if ( type.isInstance( value ) ) {

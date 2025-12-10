@@ -19,8 +19,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.java.JdbcDateJavaType.toDateEpoch;
-
 /**
  * Descriptor for {@link Date} handling.
  *
@@ -54,9 +52,9 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			}
 			else {
 				return switch ( precision ) {
-					case TIMESTAMP -> wrapSqlTimestamp( value );
-					case DATE -> wrapSqlDate( value );
-					case TIME -> wrapSqlTime( value );
+					case TIMESTAMP -> toTimestamp( value );
+					case DATE -> toDate( value );
+					case TIME -> toTime( value );
 				};
 			}
 		}
@@ -68,8 +66,13 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		this.precision = TemporalType.TIMESTAMP;
 	}
 
+	/**
+	 * A {@link Date} may be used to represent a date, time, or timestamp,
+	 * each of which have different semantics at the Java level. Therefore,
+	 * we distinguish these usages based on the given {@code TemporalType}.
+	 */
 	private DateJavaType(@SuppressWarnings("deprecation") TemporalType precision) {
-		super( Date.class, new DateMutabilityPlan(precision) );
+		super( Date.class, new DateMutabilityPlan( precision ) );
 		this.precision = precision;
 	}
 
@@ -117,9 +120,9 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	public String toString(Date value) {
 //		return JdbcTimestampJavaType.LITERAL_FORMATTER.format( value.toInstant() );
 		return switch ( precision ) {
-			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.toString( wrapSqlTimestamp( value ) );
-			case DATE -> JdbcDateJavaType.INSTANCE.toString( wrapSqlDate( value ) );
-			case TIME -> JdbcTimeJavaType.INSTANCE.toString( wrapSqlTime( value ) );
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.toString( toTimestamp( value ) );
+			case DATE -> JdbcDateJavaType.INSTANCE.toString( toDate( value ) );
+			case TIME -> JdbcTimeJavaType.INSTANCE.toString( toTime( value ) );
 		};
 	}
 
@@ -130,16 +133,6 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			case DATE -> JdbcDateJavaType.INSTANCE.fromString( string );
 			case TIME -> JdbcTimeJavaType.INSTANCE.fromString( string );
 		};
-//		try {
-//			final var accessor = JdbcTimestampJavaType.LITERAL_FORMATTER.parse( string );
-//			return new Date(
-//					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
-//							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
-//			);
-//		}
-//		catch ( DateTimeParseException pe) {
-//			throw new HibernateException( "could not parse timestamp string" + string, pe );
-//		}
 	}
 
 	@Override
@@ -149,9 +142,10 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		}
 		return one != null && another != null
 			&& switch ( precision ) {
-				case DATE -> JdbcDateJavaType.INSTANCE.areEqual( wrapSqlDate( one ), wrapSqlDate( another ) );
-				case TIME -> JdbcTimeJavaType.INSTANCE.areEqual( wrapSqlTime( one ), wrapSqlTime( another ) );
+				case DATE -> JdbcDateJavaType.INSTANCE.areEqual( toDate( one ), toDate( another ) );
+				case TIME -> JdbcTimeJavaType.INSTANCE.areEqual( toTime( one ), toTime( another ) );
 				case TIMESTAMP ->
+						// emulate legacy behavior (good or not)
 						one instanceof Timestamp timestamp && another instanceof Timestamp anotherTimestamp
 							? JdbcTimestampJavaType.INSTANCE.areEqual( timestamp, anotherTimestamp )
 							: one.getTime() == another.getTime();
@@ -182,9 +176,9 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		return switch ( precision ) {
-			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.unwrap( wrapSqlTimestamp( value ), type, options );
-			case DATE -> JdbcDateJavaType.INSTANCE.unwrap( wrapSqlDate( value ), type, options );
-			case TIME -> JdbcTimeJavaType.INSTANCE.unwrap( wrapSqlTime( value ), type, options );
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.unwrap( toTimestamp( value ), type, options );
+			case DATE -> JdbcDateJavaType.INSTANCE.unwrap( toDate( value ), type, options );
+			case TIME -> JdbcTimeJavaType.INSTANCE.unwrap( toTime( value ), type, options );
 		};
 	}
 
@@ -228,23 +222,20 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return Timestamp.from( ClockHelper.forPrecision( precision, session ).instant() );
 	}
 
-	static Timestamp wrapSqlTimestamp(Date date) {
-		return date instanceof Timestamp timestamp ? timestamp : new Timestamp( date.getTime() );
+	private static Timestamp toTimestamp(Date date) {
+		return date instanceof Timestamp timestamp
+				? timestamp
+				: JdbcTimestampJavaType.wrapSqlTimestamp( date );
 	}
 
-	static Time wrapSqlTime(Date date) {
-		return date instanceof Time time ? time : new Time( date.getTime() % 86_400_000 );
+	private static Time toTime(Date date) {
+		return date instanceof Time time
+				? time
+				: JdbcTimeJavaType.toTime( date );
 	}
 
-	static java.sql.Date wrapSqlDate(java.util.Date value) {
-		if ( value instanceof java.sql.Date date ) {
-			final long millis = date.getTime();
-			final long dateEpoch = toDateEpoch( millis );
-			return dateEpoch == millis ? date : new java.sql.Date( dateEpoch );
-		}
-		else {
-			return new java.sql.Date( toDateEpoch( value ) );
-		}
+	private static java.sql.Date toDate(java.util.Date value) {
+		return JdbcDateJavaType.toDate( value );
 	}
 
 }

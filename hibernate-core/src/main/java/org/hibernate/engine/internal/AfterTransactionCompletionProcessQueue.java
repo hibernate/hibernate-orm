@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.AfterCompletionCallback;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -62,13 +63,15 @@ class AfterTransactionCompletionProcessQueue
 	}
 
 	void executePendingBulkOperationCleanUpActions() {
-		AfterCompletionCallback process;
 		boolean hasPendingBulkOperationCleanUpActions = false;
-		while ( ( process = processes.poll() ) != null ) {
+		Iterator<AfterCompletionCallback> iterator = processes.iterator();
+		while ( iterator.hasNext() ) {
+			AfterCompletionCallback process = iterator.next();
 			if ( process instanceof BulkOperationCleanupAction.BulkOperationCleanUpAfterTransactionCompletionProcess ) {
 				try {
 					hasPendingBulkOperationCleanUpActions = true;
 					process.doAfterTransactionCompletion( true, session );
+					iterator.remove();
 				}
 				catch (CacheException ce) {
 					CORE_LOGGER.unableToReleaseCacheLock( ce );

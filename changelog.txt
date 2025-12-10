@@ -1,6 +1,28 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.0.CR4 (December 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36476
+
+
+** Bug
+    * HHH-19980 In JTA after-completion callbacks may get ignored
+    * HHH-19979 processor should handle @NamedEntityGraph with defaulted name
+    * HHH-19975 Calling entityManager.find(clazz, id) with null id throws NullPointerException
+    * HHH-19972 OptionalTableUpdateOperation can fail on PostgreSQL < 15 and CockroachDB
+    * HHH-19963 Wrong references in entity fields with circular associations
+    * HHH-19958 `<generated>` tag in orm.xml is not implemented
+    * HHH-19955 Thread-safety issue in EntityEntryContext resulting in NullPointerException for Session.contains() calls.
+    * HHH-19843 Bean Validation may fail on operations with stateless session
+    * HHH-18871 Nested NativeQuery mappings causing 'Could not locate TableGroup' exception after migration
+    * HHH-18217 StatelessSession.upsert() for entity with all-null non-id fields, or no non-id field
+
+** Improvement
+    * HHH-19943 Comparison of generic nested EmbeddedId's fails for JPQL and Criteria API
+    * HHH-19215 Extends Dialect#addQueryHints to support straight_join syntax
+
 Changes in 7.2.0.CR3 (November 25, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

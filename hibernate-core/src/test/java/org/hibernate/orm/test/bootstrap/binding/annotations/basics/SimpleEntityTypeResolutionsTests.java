@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.basics;
 
-import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Iterator;
 
 import jakarta.persistence.TemporalType;
@@ -59,7 +59,7 @@ public class SimpleEntityTypeResolutionsTests {
 				case "someDate": {
 					assertThat(
 							propertyResolution.getDomainJavaType().getJavaTypeClass(),
-							sameInstance( Timestamp.class )
+							sameInstance( Date.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), is( TemporalType.TIMESTAMP ) );
 					break;

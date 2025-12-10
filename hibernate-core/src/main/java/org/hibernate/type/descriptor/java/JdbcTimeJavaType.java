@@ -55,7 +55,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 		super( Time.class, TimeMutabilityPlan.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -271,9 +271,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<Time> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Time> {

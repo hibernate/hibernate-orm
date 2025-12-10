@@ -50,7 +50,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		return (LocalDateTime) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -62,9 +62,9 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 				: context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<LocalDateTime> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

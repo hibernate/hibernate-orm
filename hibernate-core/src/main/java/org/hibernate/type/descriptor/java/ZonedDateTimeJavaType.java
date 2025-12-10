@@ -52,7 +52,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 		return (ZonedDateTime) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -64,9 +64,9 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<ZonedDateTime> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

@@ -66,7 +66,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 		return java.sql.Timestamp.class;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -236,14 +236,9 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
-	}
-
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
+	@Override
+	protected TemporalJavaType<Timestamp> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

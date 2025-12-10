@@ -54,7 +54,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		return (LocalTime) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -67,9 +67,8 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<LocalTime> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

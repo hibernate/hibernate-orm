@@ -33,7 +33,7 @@ public abstract class AbstractTemporalJavaType<T>
 	}
 
 	@Override
-	public <X> TemporalJavaType<X> resolveTypeForPrecision(
+	public TemporalJavaType<T> resolveTypeForPrecision(
 			TemporalType precision,
 			TypeConfiguration typeConfiguration) {
 		if ( precision == null ) {
@@ -48,26 +48,25 @@ public abstract class AbstractTemporalJavaType<T>
 		}
 	}
 
-	private <X> TemporalJavaType<X> forMissingPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked,rawtypes
-		return (TemporalJavaType) this;
+	private TemporalJavaType<T> forMissingPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+	protected TemporalJavaType<T> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				this + " as `jakarta.persistence.TemporalType.TIMESTAMP` not supported"
+				getTypeName() + " as TemporalType.TIMESTAMP not supported"
 		);
 	}
 
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+	protected TemporalJavaType<T> forDatePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				this + " as `jakarta.persistence.TemporalType.DATE` not supported"
+				getTypeName() + " as TemporalType.DATE not supported"
 		);
 	}
 
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+	protected TemporalJavaType<T> forTimePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				this + " as `jakarta.persistence.TemporalType.TIME` not supported"
+				getTypeName() + " as TemporalType.TIME not supported"
 		);
 	}
 

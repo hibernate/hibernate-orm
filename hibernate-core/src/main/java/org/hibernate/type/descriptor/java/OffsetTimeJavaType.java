@@ -54,7 +54,7 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		return (OffsetTime) value;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -67,9 +67,8 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<OffsetTime> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override

@@ -4,24 +4,22 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.descriptor.java.JdbcDateJavaType.toDateEpoch;
 
 /**
  * Descriptor for {@link Date} handling.
@@ -30,17 +28,45 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final DateJavaType INSTANCE = new DateJavaType();
+	private final TemporalType precision;
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
-		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
+		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan( TemporalType.TIMESTAMP );
+		private final TemporalType precision;
+
+		public DateMutabilityPlan(TemporalType precision) {
+			this.precision = precision;
+		}
+
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			return new Date( value.getTime() );
+			if ( value instanceof java.sql.Timestamp timestamp ) {
+				return JdbcTimestampJavaType.TimestampMutabilityPlan.INSTANCE.deepCopyNotNull( timestamp );
+			}
+			else if ( value instanceof java.sql.Date date ) {
+				return JdbcDateJavaType.DateMutabilityPlan.INSTANCE.deepCopyNotNull( date );
+			}
+			else if ( value instanceof java.sql.Time time ) {
+				return JdbcTimeJavaType.TimeMutabilityPlan.INSTANCE.deepCopyNotNull( time );
+			}
+			else {
+				return switch ( precision ) {
+					case TIMESTAMP -> wrapSqlTimestamp( value );
+					case DATE -> wrapSqlDate( value );
+					case TIME -> wrapSqlTime( value );
+				};
+			}
 		}
 	}
 
 	public DateJavaType() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
+		this.precision = TemporalType.TIMESTAMP;
+	}
+
+	private DateJavaType(TemporalType precision) {
+		super( Date.class, new DateMutabilityPlan(precision) );
+		this.precision = precision;
 	}
 
 	@Override
@@ -55,18 +81,30 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public TemporalType getPrecision() {
-		return TemporalType.TIMESTAMP;
+		return precision;
+	}
+
+	@Override
+	public <X> TemporalJavaType<X> resolveTypeForPrecision(TemporalType precision, TypeConfiguration typeConfiguration) {
+		return (TemporalJavaType<X>) new DateJavaType( precision );
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		// this "Date" is really a timestamp
-		return dialect.getDefaultTimestampPrecision();
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.getDefaultSqlPrecision( dialect, jdbcType );
+			case DATE -> JdbcDateJavaType.INSTANCE.getDefaultSqlPrecision( dialect, jdbcType );
+			case TIME -> JdbcTimeJavaType.INSTANCE.getDefaultSqlPrecision( dialect, jdbcType );
+		};
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getJdbcType( Types.TIMESTAMP );
+		return context.getJdbcType( switch ( precision ) {
+			case TIMESTAMP -> Types.TIMESTAMP;
+			case DATE -> Types.DATE;
+			case TIME -> Types.TIME;
+		} );
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -86,21 +124,31 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public String toString(Date value) {
-		return JdbcTimestampJavaType.LITERAL_FORMATTER.format( value.toInstant() );
+//		return JdbcTimestampJavaType.LITERAL_FORMATTER.format( value.toInstant() );
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.toString( wrapSqlTimestamp( value ) );
+			case DATE -> JdbcDateJavaType.INSTANCE.toString( wrapSqlDate( value ) );
+			case TIME -> JdbcTimeJavaType.INSTANCE.toString( wrapSqlTime( value ) );
+		};
 	}
 
 	@Override
 	public Date fromString(CharSequence string) {
-		try {
-			final TemporalAccessor accessor = JdbcTimestampJavaType.LITERAL_FORMATTER.parse( string );
-			return new Date(
-					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
-							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
-			);
-		}
-		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string" + string, pe );
-		}
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.fromString( string );
+			case DATE -> JdbcDateJavaType.INSTANCE.fromString( string );
+			case TIME -> JdbcTimeJavaType.INSTANCE.fromString( string );
+		};
+//		try {
+//			final var accessor = JdbcTimestampJavaType.LITERAL_FORMATTER.parse( string );
+//			return new Date(
+//					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
+//							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
+//			);
+//		}
+//		catch ( DateTimeParseException pe) {
+//			throw new HibernateException( "could not parse timestamp string" + string, pe );
+//		}
 	}
 
 	@Override
@@ -108,78 +156,67 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( one == another) {
 			return true;
 		}
-		return !( one == null || another == null ) && one.getTime() == another.getTime();
-
+		return one != null && another != null
+			&& switch ( precision ) {
+				case DATE -> JdbcDateJavaType.INSTANCE.areEqual( wrapSqlDate( one ), wrapSqlDate( another ) );
+				case TIME -> JdbcTimeJavaType.INSTANCE.areEqual( wrapSqlTime( one ), wrapSqlTime( another ) );
+				case TIMESTAMP ->
+						one instanceof Timestamp timestamp && another instanceof Timestamp anotherTimestamp
+							? JdbcTimestampJavaType.INSTANCE.areEqual( timestamp, anotherTimestamp )
+							: one.getTime() == another.getTime();
+			};
 	}
 
 	@Override
 	public int extractHashCode(Date value) {
-		Calendar calendar = Calendar.getInstance();
+		var calendar = Calendar.getInstance();
 		calendar.setTime( value );
-		return CalendarJavaType.INSTANCE.extractHashCode( calendar );
+		int hashCode = 1;
+		if ( precision == TemporalType.TIMESTAMP ) {
+			hashCode = 31 * hashCode + calendar.get(Calendar.MILLISECOND);
+		}
+		if ( precision != TemporalType.DATE ) {
+			hashCode = 31 * hashCode + calendar.get(Calendar.SECOND);
+			hashCode = 31 * hashCode + calendar.get(Calendar.MINUTE);
+			hashCode = 31 * hashCode + calendar.get(Calendar.HOUR_OF_DAY);
+		}
+		if ( precision != TemporalType.TIME ) {
+			hashCode = 31 * hashCode + calendar.get(Calendar.DAY_OF_MONTH);
+			hashCode = 31 * hashCode + calendar.get(Calendar.MONTH);
+			hashCode = 31 * hashCode + calendar.get(Calendar.YEAR);
+		}
+		return hashCode;
 	}
 
 	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-			return type.cast( rtn );
-		}
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = value instanceof java.sql.Time
-					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
-			return type.cast( rtn );
-		}
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = value instanceof Timestamp
-					? ( java.sql.Timestamp ) value
-					: new java.sql.Timestamp( value.getTime() );
-			return type.cast( rtn );
-		}
-		if ( Date.class.isAssignableFrom( type ) ) {
-			return type.cast( value );
-		}
-		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( value.getTime() );
-			return type.cast( cal );
-		}
-		if ( Long.class.isAssignableFrom( type ) ) {
-			return type.cast( value.getTime() );
-		}
-		throw unknownUnwrap( type );
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.unwrap( wrapSqlTimestamp( value ), type, options );
+			case DATE -> JdbcDateJavaType.INSTANCE.unwrap( wrapSqlDate( value ), type, options );
+			case TIME -> JdbcTimeJavaType.INSTANCE.unwrap( wrapSqlTime( value ), type, options );
+		};
 	}
+
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if (value instanceof Date date) {
-			return date;
-		}
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.wrap( value, options );
+			case DATE -> JdbcDateJavaType.INSTANCE.wrap( value, options );
+			case TIME -> JdbcTimeJavaType.INSTANCE.wrap( value, options );
+		};
+	}
 
-		if (value instanceof Long longValue) {
-			return new Date( longValue );
-		}
-
-		if (value instanceof Calendar calendar) {
-			return new Date( calendar.getTimeInMillis() );
-		}
-
-		throw unknownWrap( value.getClass() );
+	@Override
+	public Object coerce(Object value) {
+		return wrap( value, null );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		return switch ( javaType.getTypeName() ) {
-			case "java.sql.Date", "java.sql.Timestamp", "java.util.Calendar" -> true;
-			default -> false;
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.isWider( javaType );
+			case DATE -> JdbcDateJavaType.INSTANCE.isWider( javaType );
+			case TIME -> JdbcTimeJavaType.INSTANCE.isWider( javaType );
 		};
 	}
 
@@ -199,4 +236,24 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 			Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return Timestamp.from( ClockHelper.forPrecision( precision, session ).instant() );
 	}
+
+	static Timestamp wrapSqlTimestamp(Date date) {
+		return date instanceof Timestamp timestamp ? timestamp : new Timestamp( date.getTime() );
+	}
+
+	static Time wrapSqlTime(Date date) {
+		return date instanceof Time time ? time : new Time( date.getTime() % 86_400_000 );
+	}
+
+	static java.sql.Date wrapSqlDate(java.util.Date value) {
+		if ( value instanceof java.sql.Date date ) {
+			final long millis = date.getTime();
+			final long dateEpoch = toDateEpoch( millis );
+			return dateEpoch == millis ? date : new java.sql.Date( dateEpoch );
+		}
+		else {
+			return new java.sql.Date( toDateEpoch( value ) );
+		}
+	}
+
 }

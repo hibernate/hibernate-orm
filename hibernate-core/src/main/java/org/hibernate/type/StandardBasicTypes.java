@@ -11,8 +11,6 @@ import java.net.URL;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -493,7 +491,7 @@ public final class StandardBasicTypes {
 	 */
 	public static final BasicTypeReference<Date> TIME = new BasicTypeReference<>(
 			"time",
-			Time.class,
+			java.util.Date.class,
 			SqlTypes.TIME
 	);
 
@@ -503,7 +501,7 @@ public final class StandardBasicTypes {
 	 */
 	public static final BasicTypeReference<Date> DATE = new BasicTypeReference<>(
 			"date",
-			java.sql.Date.class,
+			java.util.Date.class,
 			SqlTypes.DATE
 	);
 
@@ -513,7 +511,37 @@ public final class StandardBasicTypes {
 	 */
 	public static final BasicTypeReference<Date> TIMESTAMP = new BasicTypeReference<>(
 			"timestamp",
-			Timestamp.class,
+			java.util.Date.class,
+			SqlTypes.TIMESTAMP
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.sql.Time} to JDBC
+	 * {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
+	 */
+	public static final BasicTypeReference<java.sql.Time> SQL_TIME = new BasicTypeReference<>(
+			"sql_time",
+			java.sql.Time.class,
+			SqlTypes.TIME
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.sql.Date} to JDBC
+	 * {@link org.hibernate.type.SqlTypes#DATE DATE}.
+	 */
+	public static final BasicTypeReference<java.sql.Date> SQL_DATE = new BasicTypeReference<>(
+			"sql_date",
+			java.sql.Date.class,
+			SqlTypes.DATE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.sql.Timestamp} to JDBC
+	 * {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
+	 */
+	public static final BasicTypeReference<java.sql.Timestamp> SQL_TIMESTAMP = new BasicTypeReference<>(
+			"sql_timestamp",
+			java.sql.Timestamp.class,
 			SqlTypes.TIMESTAMP
 	);
 
@@ -1173,21 +1201,42 @@ public final class StandardBasicTypes {
 				DATE,
 				"org.hibernate.type.DateType",
 				basicTypeRegistry,
-				"date", java.sql.Date.class.getName()
+				"date"
 		);
 
 		handle(
 				TIME,
 				"org.hibernate.type.TimeType",
 				basicTypeRegistry,
-				"time", java.sql.Time.class.getName()
+				"time"
 		);
 
 		handle(
 				TIMESTAMP,
 				"org.hibernate.type.TimestampType",
 				basicTypeRegistry,
-				"timestamp", java.sql.Timestamp.class.getName(), Date.class.getName()
+				"timestamp", Date.class.getName()
+		);
+
+		handle(
+				SQL_DATE,
+				null,
+				basicTypeRegistry,
+				"sql_date", java.sql.Date.class.getName()
+		);
+
+		handle(
+				SQL_TIME,
+				null,
+				basicTypeRegistry,
+				"sql_time", java.sql.Time.class.getName()
+		);
+
+		handle(
+				SQL_TIMESTAMP,
+				null,
+				basicTypeRegistry,
+				"sql_timestamp", java.sql.Timestamp.class.getName()
 		);
 
 		handle(

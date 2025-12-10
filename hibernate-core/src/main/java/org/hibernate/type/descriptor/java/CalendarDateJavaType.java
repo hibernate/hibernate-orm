@@ -56,7 +56,8 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	public String toString(Calendar value) {
-		return JdbcDateJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcDateJavaType.INSTANCE.toString(
+				new java.sql.Date( value.getTime().getTime() ) );
 	}
 
 	public Calendar fromString(CharSequence string) {

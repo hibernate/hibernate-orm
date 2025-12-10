@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
@@ -56,7 +57,8 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	public String toString(Calendar value) {
-		return JdbcTimeJavaType.INSTANCE.toString( value.getTime() );
+		return JdbcTimeJavaType.INSTANCE.toString(
+				new Time( value.getTime().getTime() ) );
 	}
 
 	public Calendar fromString(CharSequence string) {

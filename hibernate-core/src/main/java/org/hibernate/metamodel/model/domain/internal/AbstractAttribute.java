@@ -63,8 +63,11 @@ public abstract class AbstractAttribute<D,J,B>
 
 	@Override
 	public Class<J> getJavaType() {
-		return valueType instanceof BasicTypeImpl basicType
-				? basicType.getJavaType()
+		// TODO: create a new method to abstract this logic
+		return valueType instanceof BasicTypeImpl<?> basicType
+				// handles primitives in basic types
+				? (Class<J>) basicType.getJavaType()
+				// good for everything else
 				: attributeJtd.getJavaTypeClass();
 	}
 

@@ -33,7 +33,7 @@ public abstract class AbstractTemporalJavaType<T>
 	}
 
 	@Override
-	public final <X> TemporalJavaType<X> resolveTypeForPrecision(
+	public <X> TemporalJavaType<X> resolveTypeForPrecision(
 			TemporalType precision,
 			TypeConfiguration typeConfiguration) {
 		if ( precision == null ) {

@@ -266,7 +266,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 */
 	@Internal
 	public Class<?> entityClassForEntityName(String entityName) {
-		return scope.entityClassForEntityName(entityName);
+		return scope.entityClassForEntityName( entityName );
 	}
 
 	@Override
@@ -632,7 +632,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 				}
 			}
-
 			return this;
 		}
 
@@ -649,8 +648,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
 	public SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final var components = new SqmBindableType<?>[typedNodes.size()];
-		for ( int i = 0; i < typedNodes.size(); i++ ) {
+		final int size = typedNodes.size();
+		final var components = new SqmBindableType<?>[size];
+		for ( int i = 0; i < size; i++ ) {
 			final var tupleElement = typedNodes.get(i);
 			final var sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
@@ -658,9 +658,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				components[i] = QueryParameterJavaObjectType.INSTANCE;
 			}
 			else {
-				components[i] = sqmExpressible != null
-						? sqmExpressible
-						: castNonNull( getBasicTypeForJavaType( Object.class ) );
+				components[i] =
+						sqmExpressible == null
+								? castNonNull( getBasicTypeForJavaType( Object.class ) )
+								: sqmExpressible;
 			}
 		}
 		return arrayTuples.computeIfAbsent( new ArrayCacheKey( components ),
@@ -755,23 +756,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getRelationalJavaType().getJavaTypeClass() );
+		return type != null
+			&& javaType.isAssignableFrom( type.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 
 	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
 	private static <J> BasicType<J> checkExisting(Class<J> javaClass, BasicType<?> existing) {
-		if ( !isCompatible( javaClass, existing.getJavaType() ) ) {
+		if ( existing.getJavaType() != canonicalize( javaClass ) ) {
 			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
 		}
 		@SuppressWarnings("unchecked") // safe, we just checked
 		final var basicType = (BasicType<J>) existing;
 		return basicType;
-	}
-
-	private static <J> boolean isCompatible(Class<J> javaClass, Class<?> existing) {
-		return existing.isAssignableFrom( canonicalize( javaClass ) );
 	}
 
 	@Deprecated(since = "7.2", forRemoval = true) // no longer used

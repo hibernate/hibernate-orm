@@ -18,6 +18,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
@@ -89,7 +90,10 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	private <T> BasicType<T> createBasicType(String name, BasicTypeReference<T> typeReference) {
-		final var javaType = getJavaTypeRegistry().resolveDescriptor( typeReference.getJavaType() );
+		var javaType = getJavaTypeRegistry().resolveDescriptor( typeReference.getJavaType() );
+		if ( javaType instanceof TemporalJavaType<?> temporalJavaType ) {
+			javaType = temporalJavaType.resolveTypeForPrecision( typeReference.getPrecision(), typeConfiguration  );
+		}
 		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
 		final var createdType = createBasicType( typeReference, javaType, jdbcType );
 		typesByName.put( typeReference.getName(), createdType );
@@ -100,13 +104,13 @@ public class BasicTypeRegistry implements Serializable {
 	private static <T> BasicType<T> createBasicType(
 			BasicTypeReference<T> typeReference, JavaType<T> javaType, JdbcType jdbcType) {
 		final String name = typeReference.getName();
-		if ( typeReference.getConverter() == null ) {
+		final var converter = typeReference.getConverter();
+		if ( converter == null ) {
 			return typeReference.isForceImmutable()
 					? new ImmutableNamedBasicTypeImpl<>( javaType, jdbcType, name )
 					: new NamedBasicTypeImpl<>( javaType, jdbcType, name );
 		}
 		else {
-			final var converter = typeReference.getConverter();
 			assert javaType == converter.getDomainJavaType();
 			return typeReference.isForceImmutable()
 					? new CustomMutabilityConvertedBasicTypeImpl<>( name, jdbcType, converter,

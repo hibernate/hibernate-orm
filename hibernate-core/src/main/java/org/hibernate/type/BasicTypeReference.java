@@ -6,6 +6,7 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
+import jakarta.persistence.TemporalType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
@@ -24,9 +25,10 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	private final int sqlTypeCode;
 	private final BasicValueConverter<T, ?> converter;
 	private final boolean forceImmutable;
+	private final TemporalType precision;
 
 	public BasicTypeReference(String name, Class<? extends T> javaType, int sqlTypeCode) {
-		this(name, javaType, sqlTypeCode, null);
+		this( name, javaType, sqlTypeCode, null, null, false );
 	}
 
 	public BasicTypeReference(
@@ -34,13 +36,22 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 			Class<? extends T> javaType,
 			int sqlTypeCode,
 			BasicValueConverter<T, ?> converter) {
-		this( name, javaType, sqlTypeCode, converter, false );
+		this( name, javaType, sqlTypeCode, null, converter, false );
+	}
+
+	public BasicTypeReference(
+			String name,
+			Class<? extends T> javaType,
+			int sqlTypeCode,
+			TemporalType precision) {
+		this( name, javaType, sqlTypeCode, precision, null, false );
 	}
 
 	private BasicTypeReference(
 			String name,
 			Class<? extends T> javaType,
 			int sqlTypeCode,
+			TemporalType precision,
 			BasicValueConverter<T, ?> converter,
 			boolean forceImmutable) {
 		this.name = name;
@@ -48,6 +59,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 		this.javaType = (Class<T>) javaType;
 		this.sqlTypeCode = sqlTypeCode;
 		this.converter = converter;
+		this.precision = precision;
 		this.forceImmutable = forceImmutable;
 	}
 
@@ -73,6 +85,10 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 		return converter;
 	}
 
+	public TemporalType getPrecision() {
+		return precision;
+	}
+
 	public boolean isForceImmutable() {
 		return forceImmutable;
 	}
@@ -82,6 +98,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 				"imm_" + name,
 				javaType,
 				sqlTypeCode,
+				precision,
 				converter,
 				true
 		);

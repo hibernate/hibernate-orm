@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import jakarta.persistence.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -493,7 +494,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Date> TIME = new BasicTypeReference<>(
 			"time",
 			java.util.Date.class,
-			SqlTypes.TIME
+			SqlTypes.TIME,
+			TemporalType.TIME
 	);
 
 	/**
@@ -503,7 +505,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Date> DATE = new BasicTypeReference<>(
 			"date",
 			java.util.Date.class,
-			SqlTypes.DATE
+			SqlTypes.DATE,
+			TemporalType.DATE
 	);
 
 	/**
@@ -513,7 +516,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Date> TIMESTAMP = new BasicTypeReference<>(
 			"timestamp",
 			java.util.Date.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.TIMESTAMP,
+			TemporalType.TIMESTAMP
 	);
 
 	/**
@@ -523,7 +527,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<java.sql.Time> SQL_TIME = new BasicTypeReference<>(
 			"sql_time",
 			java.sql.Time.class,
-			SqlTypes.TIME
+			SqlTypes.TIME,
+			TemporalType.TIME
 	);
 
 	/**
@@ -533,7 +538,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<java.sql.Date> SQL_DATE = new BasicTypeReference<>(
 			"sql_date",
 			java.sql.Date.class,
-			SqlTypes.DATE
+			SqlTypes.DATE,
+			TemporalType.DATE
 	);
 
 	/**
@@ -543,7 +549,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<java.sql.Timestamp> SQL_TIMESTAMP = new BasicTypeReference<>(
 			"sql_timestamp",
 			java.sql.Timestamp.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.TIMESTAMP,
+			TemporalType.TIMESTAMP
 	);
 
 	/**
@@ -553,7 +560,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Calendar> CALENDAR = new BasicTypeReference<>(
 			"calendar",
 			Calendar.class,
-			SqlTypes.TIMESTAMP
+			SqlTypes.TIMESTAMP,
+			TemporalType.TIMESTAMP
 	);
 
 	/**
@@ -563,7 +571,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Calendar> CALENDAR_DATE = new BasicTypeReference<>(
 			"calendar_date",
 			Calendar.class,
-			SqlTypes.DATE
+			SqlTypes.DATE,
+			TemporalType.DATE
 	);
 
 	/**
@@ -573,7 +582,8 @@ public final class StandardBasicTypes {
 	public static final BasicTypeReference<Calendar> CALENDAR_TIME = new BasicTypeReference<>(
 			"calendar_time",
 			Calendar.class,
-			SqlTypes.TIME
+			SqlTypes.TIME,
+			TemporalType.TIME
 	);
 
 

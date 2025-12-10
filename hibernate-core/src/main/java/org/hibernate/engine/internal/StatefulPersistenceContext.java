@@ -89,20 +89,15 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final int INIT_COLL_SIZE = 8;
 
-	/*
-		Eagerly Initialized Fields
-		the following fields are used in all circumstances, and are not worth (or not suited) to being converted into lazy
-	 */
+	// Eagerly initialized fields. The following fields are used in every circumstance
+	// and are not worth (or not suited) to being converted to lazy initialization.
+
 	private final SharedSessionContractImplementor session;
 	private EntityEntryContext entityEntryContext;
 
-	/*
-		Everything else below should be carefully initialized only on first need;
-		this optimisation is very effective as null checks are free, while allocation costs
-		are very often the dominating cost of an application using ORM.
-		This is not general advice, but it's worth the added maintenance burden in this case
-		as this is a very central component of our library.
-	 */
+	// Everything else below should be carefully initialized only on first need.
+	// This optimization is very effective as null checks are free, while allocation
+	// costs are very often the dominating cost of an application using ORM.
 
 	// Loaded entity instances, by EntityKey
 	private HashMap<EntityKey, EntityHolderImpl> entitiesByKey;
@@ -113,8 +108,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	// Loaded entity instances, by EntityUniqueKey
 	private HashMap<EntityUniqueKey, Object> entitiesByUniqueKey;
 
-
-	// Snapshots of current database state for entities
+	// Snapshots of the current database state for entities
 	// that have *not* been loaded
 	private HashMap<EntityKey, Object> entitySnapshotsByKey;
 
@@ -136,7 +130,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	// Set of EntityKeys of deleted unloaded proxies
 	private HashSet<EntityKey> deletedUnloadedEntityKeys;
 
-	// properties that we have tried to load, and not found in the database
+	// properties that we have tried to load and not found in the database
 	private HashSet<AssociationKey> nullAssociations;
 
 	// A list of collection wrappers that were instantiating during result set
@@ -209,14 +203,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		return loadContexts != null;
 	}
 
-//	@Override
-//	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
-//		if ( unownedCollections == null ) {
-//			unownedCollections = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
-//		}
-//		unownedCollections.put( key, collection );
-//	}
-//
 	@Override
 	public PersistentCollection<?> useUnownedCollection(CollectionKey key) {
 		return unownedCollections == null ? null : unownedCollections.remove( key );
@@ -935,7 +921,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 				}
 				else {
 					//		b) try by EntityKey, which means we need to resolve owner-key -> collection-key
-					//			IMPL NOTE : yes if we get here this impl is very non-performant, but PersistenceContext
+					//			IMPL NOTE: yes if we get here this impl is very non-performant, but PersistenceContext
 					//					was never designed to handle this case; adding that capability for real means splitting
 					//					the notions of:
 					//						1) collection key
@@ -1227,14 +1213,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 		return removeProxyByKey( key );
 	}
-
-//	@Override
-//	public HashSet getNullifiableEntityKeys() {
-//		if ( nullifiableEntityKeys == null ) {
-//			nullifiableEntityKeys = new HashSet<>();
-//		}
-//		return nullifiableEntityKeys;
-//	}
 
 	/**
 	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals

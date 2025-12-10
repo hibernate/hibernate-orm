@@ -5,17 +5,16 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.action.internal.BulkOperationCleanupAction.BulkOperationCleanUpAfterTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.AfterCompletionCallback;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * Encapsulates behavior needed for after transaction processing
@@ -54,20 +53,20 @@ class AfterTransactionCompletionProcessQueue
 			}
 		}
 
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var factory = session.getFactory();
 		if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
 			factory.getCache().getTimestampsCache()
-					.invalidate( querySpacesToInvalidate.toArray( new String[0] ), session );
+					.invalidate( querySpacesToInvalidate.toArray( EMPTY_STRING_ARRAY ), session );
 		}
 		querySpacesToInvalidate.clear();
 	}
 
 	void executePendingBulkOperationCleanUpActions() {
 		boolean hasPendingBulkOperationCleanUpActions = false;
-		Iterator<AfterCompletionCallback> iterator = processes.iterator();
+		var iterator = processes.iterator();
 		while ( iterator.hasNext() ) {
-			AfterCompletionCallback process = iterator.next();
-			if ( process instanceof BulkOperationCleanupAction.BulkOperationCleanUpAfterTransactionCompletionProcess ) {
+			var process = iterator.next();
+			if ( process instanceof BulkOperationCleanUpAfterTransactionCompletionProcess ) {
 				try {
 					hasPendingBulkOperationCleanUpActions = true;
 					process.doAfterTransactionCompletion( true, session );
@@ -87,11 +86,10 @@ class AfterTransactionCompletionProcessQueue
 		}
 
 		if ( hasPendingBulkOperationCleanUpActions ) {
-			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				session.getFactory().getCache().getTimestampsCache().invalidate(
-						querySpacesToInvalidate.toArray( new String[0] ),
-						session
-				);
+			final var factory = session.getFactory();
+			if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+				factory.getCache().getTimestampsCache().
+						invalidate( querySpacesToInvalidate.toArray( EMPTY_STRING_ARRAY ), session );
 			}
 			querySpacesToInvalidate.clear();
 		}

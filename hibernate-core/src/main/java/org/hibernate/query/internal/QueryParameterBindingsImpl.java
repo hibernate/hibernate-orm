@@ -131,7 +131,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 		if ( !binding.getQueryParameter().equals( parameter ) ) {
-			throw new IllegalStateException("Parameter binding corrupted for: " + parameter.getName() );
+			throw new IllegalStateException( "Parameter binding corrupted for: " + parameter.getName() );
 		}
 		@SuppressWarnings("unchecked") // safe because we checked the parameter
 		final var castBinding = (QueryParameterBinding<P>) binding;

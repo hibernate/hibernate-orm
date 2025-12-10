@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -130,10 +131,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValue(Object value, @Nullable BindableType<T> clarifiedType) {
+	public void setBindValue(Object value, @Nullable BindableType<?> clarifiedType) {
 		if ( !handleAsMultiValue( value, clarifiedType ) ) {
 			if ( clarifiedType != null ) {
-				bindType = clarifiedType;
+				// UNSOUND!!!
+				// We should be creating a whole new object
+				bindType = (BindableType<T>) clarifiedType;
 			}
 
 			final Object coerced = coerce( value );
@@ -178,7 +181,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		}
 	}
 
-	private boolean handleAsMultiValue(Object value, @Nullable BindableType<T> bindableType) {
+	private boolean handleAsMultiValue(Object value, @Nullable BindableType<?> bindableType) {
 		if ( queryParameter.allowsMultiValuedBinding()
 			&& value instanceof Collection
 			&& !( bindableType == null
@@ -242,9 +245,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection<?> values, BindableType<T> clarifiedType) {
+	public void setBindValues(Collection<?> values, BindableType<?> clarifiedType) {
 		if ( clarifiedType != null ) {
-			bindType = clarifiedType;
+			// UNSOUND
+			bindType = (BindableType<T>) clarifiedType;
 		}
 		setBindValues( values );
 	}
@@ -265,7 +269,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		}
 	}
 
-	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
+	private JavaType<T> determineJavaType(BindableType<T> bindType) {
 		return getCriteriaBuilder().resolveExpressible( bindType ).getExpressibleJavaType();
 	}
 
@@ -320,14 +324,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			}
 		}
 		catch (HibernateException ex) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Parameter value [%s] did not match expected type [%s]",
-							value,
-							bindType
-					),
-					ex
-			);
+			throw new QueryArgumentException( "Argument to query parameter has an incompatible type: " + ex.getMessage(),
+					queryParameter.getParameterType(), value );
 		}
 	}
 

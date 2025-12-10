@@ -5,8 +5,6 @@
 package org.hibernate.orm.test.ops;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -82,7 +80,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	public void testMergeBidiPrimayKeyOneToOne(SessionFactoryScope scope) {
+	public void testMergeBidiPrimaryKeyOneToOne(SessionFactoryScope scope) {
 //		scope.getSessionFactory().close();
 		Person p = new Person( "steve" );
 		scope.inTransaction(
@@ -98,7 +96,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		Person person = scope.fromTransaction(
 				session ->
-						(Person) session.merge( p )
+						session.merge( p )
 		);
 
 		assertInsertCount( 0, scope );
@@ -128,7 +126,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		p.getAddress().setStreetAddress( "321 Main" );
 		Person person = scope.fromTransaction(
 				session ->
-						(Person) session.merge( p )
+						session.merge( p )
 		);
 
 		assertInsertCount( 0, scope );
@@ -199,7 +197,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		// into this new session; this should cause no updates...
 		Node p = scope.fromTransaction(
 				session ->
-						(Node) session.merge( parent )
+						session.merge( parent )
 		);
 
 		assertUpdateCount( 0, scope );
@@ -235,7 +233,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		// into this new session; this should cause no updates...
 		VersionedEntity mergedEntity = scope.fromTransaction(
 				session ->
-						(VersionedEntity) session.merge( entity )
+						session.merge( entity )
 		);
 
 		assertUpdateCount( 0, scope );
@@ -280,7 +278,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 				scope.fromTransaction(
 						session ->
-								(VersionedEntity) session.merge( parent )
+								session.merge( parent )
 				);
 
 		assertUpdateCount( 0, scope );
@@ -356,7 +354,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					);
 					persistentParent.setName( "new name" );
 					persistentParent.getChildren().add( new VersionedEntity( "child2", "new child" ) );
-					persistentParent = (VersionedEntity) session.merge( persistentParent );
+					persistentParent = session.merge( persistentParent );
 
 				}
 		);
@@ -482,7 +480,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					NumberedNode grandchild = new NumberedNode( "grandchild" );
 					r.addChild( child );
 					child.addChild( grandchild );
-					return (NumberedNode) session.merge( r );
+					return session.merge( r );
 				}
 		);
 
@@ -498,7 +496,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		NumberedNode node = scope.fromTransaction(
 				session ->
-						(NumberedNode) session.merge( root )
+						session.merge( root )
 		);
 
 		assertInsertCount( 1, scope );
@@ -630,7 +628,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 					session.beginTransaction();
 					assertThat(
-							getNumneredNodeRowCount( session ),
+							getNumberedNodeRowCount( session ),
 							is( 2L )
 					);
 				}
@@ -639,7 +637,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup( scope );
 	}
 
-	private Long getNumneredNodeRowCount(Session s) {
+	private Long getNumberedNodeRowCount(Session s) {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
 		Root<NumberedNode> root = criteria.from( NumberedNode.class );
@@ -662,10 +660,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		NumberedNode newRoot = new NumberedNode( "root" );
 		newRoot.setId( root.getId() );
 
-		scope.inTransaction(
+		scope.inSession(
 				session -> {
+					session.getTransaction().begin();
 					NumberedNode r = session.get( NumberedNode.class, root.getId() );
-					Set managedChildren = r.getChildren();
+					var managedChildren = r.getChildren();
 					assertFalse( Hibernate.isInitialized( managedChildren ) );
 					newRoot.setChildren( managedChildren );
 					assertSame( r, session.merge( newRoot ) );
@@ -677,11 +676,12 @@ public class MergeTest extends AbstractOperationTestCase {
 					assertUpdateCount( 0, scope );
 					assertDeleteCount( 0, scope );
 
-					session.beginTransaction();
+					session.getTransaction().begin();
 					assertThat(
-							getNumneredNodeRowCount( session ),
+							getNumberedNodeRowCount( session ),
 							is( 2L )
 					);
+					session.getTransaction().commit();
 				}
 		);
 
@@ -703,10 +703,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		NumberedNode newRoot = new NumberedNode( "root" );
 		newRoot.setId( r.getId() );
 
-		scope.inTransaction(
+		scope.inSession(
 				session -> {
+					session.getTransaction().begin();
 					NumberedNode root = session.get( NumberedNode.class, r.getId() );
-					Set managedChildren = root.getChildren();
+					var managedChildren = root.getChildren();
 					Hibernate.initialize( managedChildren );
 					assertTrue( Hibernate.isInitialized( managedChildren ) );
 					newRoot.setChildren( managedChildren );
@@ -721,9 +722,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 					session.beginTransaction();
 					assertThat(
-							getNumneredNodeRowCount( session ),
+							getNumberedNodeRowCount( session ),
 							is( 2L )
 					);
+					session.getTransaction().commit();
 				}
 		);
 
@@ -738,7 +740,7 @@ public class MergeTest extends AbstractOperationTestCase {
 				session -> {
 					Employer jboss = new Employer();
 					Employee gavin = new Employee();
-					jboss.setEmployees( new ArrayList() );
+					jboss.setEmployees( new ArrayList<>() );
 					jboss.getEmployees().add( gavin );
 					session.merge( jboss );
 					session.flush();
@@ -799,7 +801,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		//   1) create a new List reference to represent the competitors
 		Competition competition2 = scope.fromTransaction(
 				session -> {
-					List newComp = new ArrayList();
+					var newComp = new ArrayList<>();
 					Competitor originalCompetitor = (Competitor) competition.getCompetitors().get( 0 );
 					originalCompetitor.setName( "Name2" );
 					newComp.add( originalCompetitor );
@@ -807,7 +809,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					//   2) set that new List reference unto the Competition reference
 					competition.setCompetitors( newComp );
 					//   3) attempt the merge
-					return (Competition) session.merge( competition );
+					return session.merge( competition );
 				}
 		);
 

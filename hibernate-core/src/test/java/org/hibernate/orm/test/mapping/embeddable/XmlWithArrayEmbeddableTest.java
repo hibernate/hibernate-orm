@@ -29,8 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -171,8 +169,8 @@ public class XmlWithArrayEmbeddableTest {
 					struct.setTheClob( tuple.get( 8, String[].class ) );
 					struct.setTheBinary( tuple.get( 9, byte[][].class ) );
 					struct.setTheDate( tuple.get( 10, Date[].class ) );
-					struct.setTheTime( tuple.get( 11, Time[].class ) );
-					struct.setTheTimestamp( tuple.get( 12, Timestamp[].class ) );
+					struct.setTheTime( tuple.get( 11, Date[].class ) );
+					struct.setTheTimestamp( tuple.get( 12, Date[].class ) );
 					struct.setTheInstant( tuple.get( 13, Instant[].class ) );
 					struct.setTheUuid( tuple.get( 14, UUID[].class ) );
 					struct.setGender( tuple.get( 15, EntityOfBasics.Gender[].class ) );

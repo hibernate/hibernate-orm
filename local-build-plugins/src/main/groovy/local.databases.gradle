@@ -406,5 +406,15 @@ ext {
                     'jdbc.url'   : 'jdbc:Altibase://' + dbHost + ':20300/mydb?force_clob_bind=true',
                     'jdbc.datasource' : 'Altibase.jdbc.driver.AltibaseDriver'
             ],
+            spanner : [
+                    'db.dialect'      : 'org.hibernate.dialect.SpannerDialect',
+                    'jdbc.driver'     : 'com.google.cloud.spanner.jdbc.JdbcDriver',
+                    'jdbc.user'       : '',        // Not used by Spanner
+                    'jdbc.pass'       : '',        // Not used by Spanner
+                    'connection.init_sql' : '',
+                    // autoConfigEmulator=true creates the necessary instances and DBs if they don't exist already
+                    'jdbc.url'        : 'jdbc:cloudspanner:/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db?autoConfigEmulator=true;lenient=true',
+                    'jdbc.datasource' : 'com.google.cloud.spanner.jdbc.JdbcDriver'
+            ],
     ]
 }

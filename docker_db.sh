@@ -1370,6 +1370,38 @@ informix_12_10() {
     fi
 }
 
+spanner() {
+  spanner_emulator
+}
+
+spanner_emulator() {
+
+  $CONTAINER_CLI rm -f spanner || true
+  # Run emulator (gRPC on 9010, REST on 9020)
+  $CONTAINER_CLI run --name spanner -d \
+    -p 9010:9010 \
+    -p 9020:9020 \
+    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.45}
+
+  # Wait for emulator to be ready (check logs for known messages)
+  n=0
+  until [ "$n" -ge 20 ]; do
+    OUTPUT="$($CONTAINER_CLI logs spanner 2>&1 || true)"
+    if [[ "$OUTPUT" == *"gRPC server listening"* ]] || [[ "$OUTPUT" == *"Cloud Spanner emulator running"* ]]; then
+      echo "Cloud Spanner emulator started."
+      break
+    fi
+    echo "Waiting for Cloud Spanner emulator to start..."
+    n=$((n+1))
+    sleep 3
+  done
+
+  if [ "$n" -ge 20 ]; then
+    echo "Cloud Spanner emulator failed to start after 1 minute"
+    exit 1
+  fi
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -1417,6 +1449,8 @@ if [ -z ${1} ]; then
     echo -e "\informix"
     echo -e "\informix_14_10"
     echo -e "\informix_12_10"
+    echo -e "\tspanner"
+    echo -e "\tspanner_emulator"
 else
     ${1}
 fi

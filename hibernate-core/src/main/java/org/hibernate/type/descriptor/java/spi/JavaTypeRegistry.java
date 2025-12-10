@@ -122,17 +122,12 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	private static <J> JavaType<J> checkCached(Class<? extends J> javaClass, JavaType<?> cached) {
-		final var cachedClass = cached.getJavaTypeClass();
-		if ( !isCompatible( javaClass, cachedClass ) ) {
+		if ( cached.getJavaTypeClass() != canonicalize( javaClass ) ) {
 			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
 		}
 		@SuppressWarnings("unchecked") // safe, we just checked
 		final var resolvedType = (JavaType<J>) cached;
 		return resolvedType;
-	}
-
-	private static boolean isCompatible(Class<?> givenClass, Class<?> cachedClass) {
-		return cachedClass == canonicalize( givenClass );
 	}
 
 	@Deprecated(since = "7.2", forRemoval = true) // Can be private
@@ -180,10 +175,15 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 //				() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
 //	}
 
+	@Internal @FunctionalInterface
+	public interface MutabilityPlanCreator {
+		MutabilityPlan<?> create(Type elementJavaType, TypeConfiguration typeConfiguration);
+	}
+
 	@Internal // Can be demoted to private
 	public <J> JavaType<J> resolveDescriptor(
 			Class<J> javaType,
-			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+			MutabilityPlanCreator mutabilityPlanCreator) {
 		//noinspection unchecked
 		return resolveDescriptor(
 				javaType,
@@ -196,7 +196,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	@Internal // Can be demoted to private
 	public JavaType<?> resolveDescriptor(
 			Type javaType,
-			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+			MutabilityPlanCreator mutabilityPlanCreator) {
 		return resolveDescriptor(
 				javaType.getTypeName(),
 				() -> {
@@ -214,7 +214,9 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		);
 	}
 
-	private <J> JavaType<J[]> createArrayTypeDescriptor(Class<J> elementJavaType, BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+	private <J> JavaType<J[]> createArrayTypeDescriptor(
+			Class<J> elementJavaType,
+			MutabilityPlanCreator mutabilityPlanCreator) {
 		var elementTypeDescriptor = findDescriptor( elementJavaType );
 		if ( elementTypeDescriptor == null ) {
 			elementTypeDescriptor = createTypeDescriptor( elementJavaType, mutabilityPlanCreator );
@@ -222,12 +224,14 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return new ArrayJavaType<>( elementTypeDescriptor );
 	}
 
-	private <J> JavaType<J> createTypeDescriptor(Type javaType, BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+	private <J> JavaType<J> createTypeDescriptor(
+			Type javaType,
+			MutabilityPlanCreator mutabilityPlanCreator) {
 		//noinspection unchecked
 		return RegistryHelper.INSTANCE.createTypeDescriptor(
 				javaType,
 				() -> (MutabilityPlan<J>)
-						mutabilityPlanCreator.apply( javaType, typeConfiguration ),
+						mutabilityPlanCreator.create( javaType, typeConfiguration ),
 				typeConfiguration
 		);
 	}
@@ -289,11 +293,12 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 					final var determinedPlan =
 							RegistryHelper.INSTANCE.determineMutabilityPlan( javaTypeClass, typeConfiguration );
-					final MutabilityPlan<J> mutabilityPlan =
+					return instantiate.apply(
+							javaTypeClass,
 							determinedPlan != null
 									? determinedPlan
-									: MutableMutabilityPlan.instance();
-					return instantiate.apply( javaTypeClass, mutabilityPlan );
+									: MutableMutabilityPlan.instance()
+					);
 				}
 		);
 	}

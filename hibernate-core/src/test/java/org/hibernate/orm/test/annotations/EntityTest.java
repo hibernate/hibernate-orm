@@ -8,9 +8,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.TimeZone;
 
 import jakarta.persistence.OptimisticLockException;
@@ -22,7 +22,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,8 +36,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 @SessionFactory
 public class EntityTest {
-	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
+	private final DateFormat dateFormat = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 
 	@Test
 	public void testLoad(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) throws Exception {
@@ -69,9 +69,9 @@ public class EntityTest {
 		sessionFactoryScope.inTransaction(
 				session -> {
 					Flight firstOne = new Flight();
-					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setId( 1L );
 					firstOne.setName( "AF3202" );
-					firstOne.setDuration( new Long( 1000000 ) );
+					firstOne.setDuration( 1000000L );
 					firstOne.setDurationInSec( 2000 );
 					session.persist( firstOne );
 					session.flush();
@@ -81,12 +81,12 @@ public class EntityTest {
 		//read it
 		sessionFactoryScope.inTransaction(
 				session -> {
-					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					Flight firstOne = session.get( Flight.class, 1L );
 					assertNotNull( firstOne );
-					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( 1L, firstOne.getId() );
 					assertEquals( "AF3202", firstOne.getName() );
-					assertEquals( Long.valueOf( 1000000 ), firstOne.getDuration() );
-					assertFalse( 2000l == firstOne.getDurationInSec(), "Transient is not working" );
+					assertEquals( 1000000L, firstOne.getDuration() );
+					assertNotEquals( 2000L, firstOne.getDurationInSec(), "Transient is not working" );
 				}
 		);
 	}
@@ -97,9 +97,9 @@ public class EntityTest {
 		scope.inTransaction(
 				session -> {
 					Flight firstOne = new Flight();
-					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setId( 1L );
 					firstOne.setName( "AF3202" );
-					firstOne.setDuration( Long.valueOf( 1000000 ) );
+					firstOne.setDuration( 1000000L );
 					firstOne.setDurationInSec( 2000 );
 					session.persist( firstOne );
 					session.flush();
@@ -110,7 +110,7 @@ public class EntityTest {
 				session -> {
 					Transaction tx = session.beginTransaction();
 					Flight firstOne = new Flight();
-					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setId( 1L );
 					firstOne.setName( null );
 
 					try {
@@ -127,8 +127,9 @@ public class EntityTest {
 		//insert an object and check that name is not updatable
 		scope.inTransaction(
 				session -> {
+					@SuppressWarnings("WriteOnlyObject")
 					Flight firstOne = new Flight();
-					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setId( 1L );
 					firstOne.setName( "AF3202" );
 					firstOne.setTriggeredData( "should not be insertable" );
 				}
@@ -136,11 +137,11 @@ public class EntityTest {
 
 		scope.inTransaction(
 				session -> {
-					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					Flight firstOne = session.get( Flight.class, 1L );
 					assertNotNull( firstOne );
-					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( 1L, firstOne.getId() );
 					assertEquals( "AF3202", firstOne.getName() );
-					assertFalse( "should not be insertable".equals( firstOne.getTriggeredData() ) );
+					assertNotEquals( "should not be insertable", firstOne.getTriggeredData() );
 					firstOne.setName( "BA1234" );
 					firstOne.setTriggeredData( "should not be updatable" );
 				}
@@ -148,11 +149,11 @@ public class EntityTest {
 
 		scope.inTransaction(
 				session -> {
-					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					Flight firstOne = session.get( Flight.class, 1L );
 					assertNotNull( firstOne );
-					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( 1L, firstOne.getId() );
 					assertEquals( "AF3202", firstOne.getName() );
-					assertFalse( "should not be updatable".equals( firstOne.getTriggeredData() ) );
+					assertNotEquals( "should not be updatable", firstOne.getTriggeredData() );
 				}
 		);
 	}
@@ -163,13 +164,13 @@ public class EntityTest {
 				session -> {
 					Transaction tx = session.beginTransaction();
 					Sky sky = new Sky();
-					sky.id = Long.valueOf( 2 );
+					sky.id = 2L;
 					sky.color = "blue";
 					sky.day = "monday";
 					sky.month = "January";
 
 					Sky sameSky = new Sky();
-					sameSky.id = Long.valueOf( 3 );
+					sameSky.id = 3L;
 					sameSky.color = "blue";
 					sky.day = "tuesday";
 					sky.month = "January";
@@ -197,19 +198,19 @@ public class EntityTest {
 	public void testUniqueConstraint(SessionFactoryScope scope) {
 		int id = 5;
 		Sky sky = new Sky();
-		sky.id = Long.valueOf( id++ );
+		sky.id = (long) id++;
 		sky.color = "green";
 		sky.day = "monday";
 		sky.month = "March";
 
 		Sky otherSky = new Sky();
-		otherSky.id = Long.valueOf( id++ );
+		otherSky.id = (long) id++;
 		otherSky.color = "red";
 		otherSky.day = "friday";
 		otherSky.month = "March";
 
 		Sky sameSky = new Sky();
-		sameSky.id = Long.valueOf( id++ );
+		sameSky.id = (long) id++;
 		sameSky.color = "green";
 		sameSky.day = "monday";
 		sameSky.month = "March";
@@ -248,9 +249,9 @@ public class EntityTest {
 		scope.inTransaction(
 				session -> {
 					Flight firstOne = new Flight();
-					firstOne.setId( Long.valueOf( 2 ) );
+					firstOne.setId( 2L );
 					firstOne.setName( "AF3202" );
-					firstOne.setDuration( Long.valueOf( 500 ) );
+					firstOne.setDuration( 500L );
 					session.persist( firstOne );
 					session.flush();
 				}
@@ -258,20 +259,20 @@ public class EntityTest {
 
 		//read it
 		Flight firstOne = scope.fromTransaction(
-				session -> session.get( Flight.class, Long.valueOf( 2 ) )
+				session -> session.get( Flight.class, 2L )
 		);
 
 		//read it again
 		Flight concurrentOne = scope.fromTransaction(
 				session -> {
-					Flight _concurrentOne = session.get( Flight.class, Long.valueOf( 2 ) );
-					_concurrentOne.setDuration( Long.valueOf( 1000 ) );
+					Flight _concurrentOne = session.get( Flight.class, 2L );
+					_concurrentOne.setDuration( 1000L );
 					return session.merge( _concurrentOne );
 				}
 		);
 
-		assertFalse( firstOne == concurrentOne );
-		assertFalse( firstOne.getVersion().equals( concurrentOne.getVersion() ) );
+		assertNotSame( firstOne, concurrentOne );
+		assertNotEquals( firstOne.getVersion(), concurrentOne.getVersion() );
 
 		//reattach the first one
 		scope.inSession(
@@ -284,10 +285,7 @@ public class EntityTest {
 						fail( "Optimistic locking should work" );
 					}
 					catch (OptimisticLockException expected) {
-						if ( expected.getCause() instanceof StaleStateException ) {
-							//expected
-						}
-						else {
+						if ( !(expected.getCause() instanceof StaleStateException) ) {
 							fail( "StaleStateException expected but is " + expected.getCause() );
 						}
 					}
@@ -303,7 +301,7 @@ public class EntityTest {
 	@Test
 	public void testFieldAccess(SessionFactoryScope scope) {
 		final Sky sky = new Sky();
-		sky.id = Long.valueOf( 1 );
+		sky.id = 1L;
 		sky.color = "black";
 		sky.area = "Paris";
 		sky.day = "23";
@@ -320,7 +318,7 @@ public class EntityTest {
 					Sky _sky = session.get( Sky.class, sky.id );
 					assertNotNull( _sky );
 					assertEquals( "black", _sky.color );
-					assertFalse( "Paris".equals( _sky.area ) );
+					assertNotEquals( "Paris", _sky.area );
 				}
 		);
 	}
@@ -339,7 +337,7 @@ public class EntityTest {
 
 		sessionFactoryScope.inTransaction(
 				session -> {
-					List result = session.createQuery( "from Corporation" ).list();
+					var result = session.createQuery( "from Corporation" ).list();
 					assertNotNull( result );
 					assertEquals( 1, result.size() );
 				}
@@ -350,9 +348,9 @@ public class EntityTest {
 	@Test
 	public void testNonGetter(SessionFactoryScope scope) {
 		Flight airFrance = new Flight();
-		airFrance.setId( Long.valueOf( 747 ) );
+		airFrance.setId( 747L );
 		airFrance.setName( "Paris-Amsterdam" );
-		airFrance.setDuration( Long.valueOf( 10 ) );
+		airFrance.setDuration( 10L );
 		airFrance.setFactor( 25 );
 
 		scope.inTransaction(
@@ -363,8 +361,8 @@ public class EntityTest {
 				session -> {
 					Flight _airFrance = session.get( Flight.class, airFrance.getId() );
 					assertNotNull( _airFrance );
-					assertEquals( Long.valueOf( 10 ), _airFrance.getDuration() );
-					assertFalse( 25 == _airFrance.getFactor( false ) );
+					assertEquals( 10L, _airFrance.getDuration() );
+					assertNotEquals( 25, _airFrance.getFactor( false ) );
 					session.remove( _airFrance );
 				}
 		);
@@ -377,11 +375,11 @@ public class EntityTest {
 				: ZoneId.systemDefault();
 
 		Flight airFrance = new Flight();
-		airFrance.setId( Long.valueOf( 747 ) );
+		airFrance.setId( 747L );
 		airFrance.setName( "Paris-Amsterdam" );
-		airFrance.setDuration( Long.valueOf( 10 ) );
-		airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()) );
-		airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
+		airFrance.setDuration( 10L );
+		airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 6, 21 ).atStartOfDay(zoneId).toInstant()) );
+		airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, Calendar.MARCH, 3, 10, 0 ) );
 		airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
 		airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
 		airFrance.setFactor( 25 );
@@ -392,15 +390,15 @@ public class EntityTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
+					var q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
 					q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
 					Flight copyAirFrance = (Flight) q.uniqueResult();
 					assertNotNull( copyAirFrance );
 					assertEquals(
-							Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()),
+							Date.from(LocalDate.of( 2005, 6, 21 ).atStartOfDay(zoneId).toInstant()),
 							copyAirFrance.getDepartureDate()
 					);
-					assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
+					assertEquals( dateFormat.format( airFrance.getBuyDate() ), dateFormat.format( copyAirFrance.getBuyDate() ) );
 
 					session.remove( copyAirFrance );
 				}
@@ -413,7 +411,7 @@ public class EntityTest {
 				session -> {
 					Transaction tx = session.beginTransaction();
 					Flight airFrance = new Flight();
-					airFrance.setId( Long.valueOf( 747 ) );
+					airFrance.setId( 747L );
 					airFrance.setName( "Paris-Amsterdam" );
 					airFrance.setDuration( null );
 					try {

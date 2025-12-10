@@ -30,7 +30,8 @@ public class RevisionTimestampData extends PropertyData {
 	public boolean isTimestampDate() {
 		return "date".equals( typeName )
 				|| "time".equals( typeName )
-				|| "timestamp".equals( typeName );
+				|| "timestamp".equals( typeName )
+				|| typeName.contains( "java.util.Date" );
 	}
 
 	public boolean isTimestampLocalDateTime() {

@@ -452,7 +452,7 @@ public class StoredProcedureParameterTypeTest {
 						procedureCall.setParameter( 1, TypedParameterValue.of( StandardBasicTypes.INTEGER, 1 ) );
 					}
 					catch (IllegalArgumentException e) {
-						assertTrue( e.getMessage().contains( "was not of specified type" ) );
+						assertTrue( e.getMessage().contains( "incompatible type" ) );
 					}
 				}
 		);

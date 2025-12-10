@@ -771,9 +771,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	private static <J> boolean isCompatible(Class<J> javaClass, Class<?> existing) {
-		final var canonicalized = canonicalize( javaClass );
-		return existing.isAssignableFrom( canonicalized )
-			|| canonicalized.isAssignableFrom( existing );
+		return existing.isAssignableFrom( canonicalize( javaClass ) );
 	}
 
 	@Deprecated(since = "7.2", forRemoval = true) // no longer used

@@ -139,6 +139,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 				);
 			}
 			validateColumnType( table, column, existingColumn, metadata, dialect );
+			validateColumnNullability( table, column, existingColumn );
 		}
 	}
 
@@ -161,6 +162,22 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeCode( metadata ) )
 					)
 			);
+		}
+	}
+
+	private void validateColumnNullability(Table table, Column column, ColumnInformation existingColumn) {
+		if ( existingColumn.getNullable() == Boolean.FALSE ) {
+			// the existing schema column is defined as not-nullable
+			if ( column.isNullable() ) {
+				// but it is mapped in the model as nullable
+				throw new SchemaManagementException(
+						String.format(
+								"Schema validation: column defined as not-null in the database, but nullable in model - [%s] in table [%s]",
+								column.getName(),
+								table.getQualifiedTableName()
+						)
+				);
+			}
 		}
 	}
 

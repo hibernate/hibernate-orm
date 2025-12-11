@@ -120,6 +120,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final var entry = event.getEntityEntry();
 		final var session = event.getSession();
 
+		// short-circuit for immutable entities....
+		if ( !entry.getPersister().isMutable() && !entry.getPersister().hasCollections() ) {
+			// nothing to do
+			return;
+		}
+
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
 		final Object[] values = getValues( entity, entry, mightBeDirty, session );

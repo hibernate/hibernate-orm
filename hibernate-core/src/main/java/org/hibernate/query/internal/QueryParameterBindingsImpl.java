@@ -65,8 +65,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			ParameterMetadataImplementor parameterMetadata) {
 		this.parameterMetadata = parameterMetadata;
 		final var queryParameters = parameterMetadata.getRegistrations();
-		this.parameterBindingMap = linkedMapOfSize( queryParameters.size() );
-		this.parameterBindingMapByNameOrPosition = mapOfSize( queryParameters.size() );
+		parameterBindingMap = linkedMapOfSize( queryParameters.size() );
+		parameterBindingMapByNameOrPosition = mapOfSize( queryParameters.size() );
 		for ( var queryParameter : queryParameters ) {
 			parameterBindingMap.put( queryParameter,
 					createBinding( sessionFactory, parameterMetadata, queryParameter ) );
@@ -84,28 +84,30 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	private static <T> QueryParameterBindingImpl<T> createBinding(
-			SessionFactoryImplementor factory, ParameterMetadataImplementor parameterMetadata, QueryParameter<T> parameter) {
+			SessionFactoryImplementor factory,
+			ParameterMetadataImplementor parameterMetadata,
+			QueryParameter<T> parameter) {
 		return new QueryParameterBindingImpl<>( parameter, factory,
 				parameterMetadata.getInferredParameterType( parameter ) );
 	}
 
-	private QueryParameterBindingsImpl(QueryParameterBindingsImpl original, SessionFactoryImplementor sessionFactory) {
+	private QueryParameterBindingsImpl(
+			QueryParameterBindingsImpl original,
+			SessionFactoryImplementor sessionFactory) {
 		this.parameterMetadata = original.parameterMetadata;
 		this.parameterBindingMap = linkedMapOfSize( original.parameterBindingMap.size() );
-		this.parameterBindingMapByNameOrPosition = mapOfSize( original.parameterBindingMapByNameOrPosition.size() );
-		for ( var entry : original.parameterBindingMap.entrySet() ) {
-			parameterBindingMap.put( entry.getKey(), createBinding( sessionFactory, entry.getValue() ) );
-		}
-		for ( var entry : parameterBindingMap.entrySet() ) {
-			final var queryParameter = entry.getKey();
-			final var parameterBinding = entry.getValue();
+		this.parameterBindingMapByNameOrPosition =
+				mapOfSize( original.parameterBindingMapByNameOrPosition.size() );
+		original.parameterBindingMap.forEach( (key, value) ->
+				parameterBindingMap.put( key, createBinding( sessionFactory, value ) ) );
+		parameterBindingMap.forEach( (queryParameter, parameterBinding) -> {
 			if ( queryParameter.isNamed() ) {
 				parameterBindingMapByNameOrPosition.put( queryParameter.getName(), parameterBinding );
 			}
-			else if ( queryParameter.getPosition() != null ) {
+			else if ( queryParameter.isOrdinal() ) {
 				parameterBindingMapByNameOrPosition.put( queryParameter.getPosition(), parameterBinding );
 			}
-		}
+		} );
 	}
 
 	private static <T> QueryParameterBindingImpl<T> createBinding(
@@ -164,10 +166,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			if ( !entry.getValue().isBound() ) {
 				final var queryParameter = entry.getKey();
 				if ( queryParameter.isNamed() ) {
-					throw new QueryParameterException( "No argument for named parameter ':" + queryParameter.getName() + "'" );
+					throw new QueryParameterException(
+							"No argument for named parameter ':"
+								+ queryParameter.getName() + "'" );
 				}
 				else {
-					throw new QueryParameterException( "No argument for ordinal parameter '?" + queryParameter.getPosition() + "'" );
+					throw new QueryParameterException(
+							"No argument for ordinal parameter '?"
+								+ queryParameter.getPosition() + "'" );
 				}
 			}
 		}
@@ -231,7 +237,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	private void handleQueryParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
 		final var typeConfiguration = session.getFactory().getTypeConfiguration();
-		// We know that parameters are consumed in processing order, this ensures consistency of generated cache keys
+		// We know that parameters are consumed in processing order;
+		// this ensures the consistency of generated cache keys
 		for ( var entry : parameterBindingMap.entrySet() ) {
 			final var queryParameter = entry.getKey();
 			final var binding = entry.getValue();
@@ -301,12 +308,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		if ( bindType == null ) {
 			if ( queryParameter.isNamed() ) {
-				throw new QueryParameterException( "Could not determine mapping type for named parameter ':"
-													+ queryParameter.getName() + "'" );
+				throw new QueryParameterException(
+						"Could not determine mapping type for named parameter ':"
+							+ queryParameter.getName() + "'" );
 			}
 			else {
-				throw new QueryParameterException( "Could not determine mapping type for ordinal parameter '?"
-													+ queryParameter.getPosition() + "'" );
+				throw new QueryParameterException(
+						"Could not determine mapping type for ordinal parameter '?"
+							+ queryParameter.getPosition() + "'" );
 			}
 		}
 

@@ -178,8 +178,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			return type;
 		}
 		else if ( binding != null ) {
-			//noinspection unchecked
-			return (BindableType<T>) binding.getBindType();
+			return binding.getBindType();
 		}
 		else {
 			return null;

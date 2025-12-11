@@ -111,13 +111,13 @@ public class SqmQueryImpl<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	private final String hql;
-	private Object queryStringCacheKey;
-	private SqmStatement<R> sqm;
+	private final Object queryStringCacheKey;
+	private final SqmStatement<R> sqm;
 
-	private ParameterMetadataImplementor parameterMetadata;
-	private DomainParameterXref domainParameterXref;
+	private final ParameterMetadataImplementor parameterMetadata;
+	private final DomainParameterXref domainParameterXref;
 
-	private QueryParameterBindings parameterBindings;
+	private final QueryParameterBindings parameterBindings;
 
 	private final Class<R> resultType;
 	private final TupleMetadata tupleMetadata;
@@ -260,20 +260,20 @@ public class SqmQueryImpl<R>
 		return sqm;
 	}
 
-	@Override
-	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
-		this.sqm = sqm;
-		this.queryStringCacheKey = sqm;
-
-		final var oldParameterBindings = parameterBindings;
-		domainParameterXref = DomainParameterXref.from( sqm );
-		parameterMetadata =
-				domainParameterXref.hasParameters()
-						? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
-						: ParameterMetadataImpl.EMPTY;
-		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
-		copyParameterBindings( oldParameterBindings );
-	}
+//	@Override
+//	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
+//		this.sqm = sqm;
+//		this.queryStringCacheKey = sqm;
+//
+//		final var oldParameterBindings = parameterBindings;
+//		domainParameterXref = DomainParameterXref.from( sqm );
+//		parameterMetadata =
+//				domainParameterXref.hasParameters()
+//						? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
+//						: ParameterMetadataImpl.EMPTY;
+//		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
+//		copyParameterBindings( oldParameterBindings );
+//	}
 
 	@Override
 	public DomainParameterXref getDomainParameterXref() {
@@ -516,28 +516,27 @@ public class SqmQueryImpl<R>
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
 		// resolve (or make) the QueryPlan.
 
-		NonSelectQueryPlan queryPlan = null;
-
 		final var cacheKey = generateNonSelectKey( this );
 		final var interpretationCache = getInterpretationCache();
 		if ( cacheKey != null ) {
-			queryPlan = interpretationCache.getNonSelectQueryPlan( cacheKey );
-		}
-
-		if ( queryPlan == null ) {
-			queryPlan = buildNonSelectQueryPlan();
-			if ( cacheKey != null ) {
-				interpretationCache.cacheNonSelectQueryPlan( cacheKey, queryPlan );
+			final var queryPlan = interpretationCache.getNonSelectQueryPlan( cacheKey );
+			if ( queryPlan != null ) {
+				return queryPlan;
 			}
 		}
 
+
+		final var queryPlan = buildNonSelectQueryPlan();
+		if ( cacheKey != null ) {
+			interpretationCache.cacheNonSelectQueryPlan( cacheKey, queryPlan );
+		}
 		return queryPlan;
 	}
 
 	private NonSelectQueryPlan buildNonSelectQueryPlan() {
 		// to get here the SQM statement has already been validated to be
 		// a non-select variety...
-		final SqmStatement<R> sqmStatement = getSqmStatement();
+		final var sqmStatement = getSqmStatement();
 		if ( sqmStatement instanceof SqmDeleteStatement<?> ) {
 			return buildDeleteQueryPlan();
 		}
@@ -562,11 +561,11 @@ public class SqmQueryImpl<R>
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<?> deleteStatement) {
 		final var entityDomainType = deleteStatement.getTarget().getModel();
-		String entityDomainType1 = entityDomainType.getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityDomainType1 );
+		final String entityName = entityDomainType.getHibernateEntityName();
+		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
 		final var multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy != null
-				// NOTE : MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
+				// NOTE: MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
 				? new MultiTableDeleteQueryPlan( deleteStatement, domainParameterXref, multiTableStrategy )
 				: new SimpleDeleteQueryPlan( persister, deleteStatement, domainParameterXref );
 	}
@@ -581,8 +580,8 @@ public class SqmQueryImpl<R>
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
 		final var sqmUpdate = (SqmUpdateStatement<R>) getSqmStatement();
-		String entityDomainType = sqmUpdate.getTarget().getModel().getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityDomainType );
+		final String entityName = sqmUpdate.getTarget().getModel().getHibernateEntityName();
+		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
 		final var multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy == null
 				? new SimpleNonSelectQueryPlan( sqmUpdate, domainParameterXref )
@@ -591,8 +590,8 @@ public class SqmQueryImpl<R>
 
 	private NonSelectQueryPlan buildInsertQueryPlan() {
 		final var sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
-		String entityDomainType = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityDomainType );
+		final String entityName = sqmInsert.getTarget().getModel().getHibernateEntityName();
+		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
 		if ( useMultiTableInsert( persister, sqmInsert ) ) {
 			return new MultiTableInsertQueryPlan(
 					sqmInsert,

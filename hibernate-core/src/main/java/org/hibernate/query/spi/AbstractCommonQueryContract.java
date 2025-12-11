@@ -11,6 +11,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.Type;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -144,14 +145,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( expression == null ) {
 			return defaultValue;
 		}
-		else if ( expression instanceof SqmLiteral<?> ) {
-			return ( (SqmLiteral<Number>) expression ).getLiteralValue().intValue();
+		else if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
+			return numericLiteral.getLiteralValue().intValue();
 		}
-		else if ( expression instanceof Parameter<?> ) {
-			final Number parameterValue = getParameterValue( (Parameter<Number>) expression );
-			return parameterValue == null ? defaultValue : parameterValue.intValue();
+		else if ( expression instanceof SqmParameter<Number> parameterExpression ) {
+			final Number number = getParameterValue( parameterExpression );
+			return number == null ? defaultValue : number.intValue();
 		}
-		throw new IllegalArgumentException( "Can't get integer literal value from: " + expression );
+		else {
+			throw new IllegalArgumentException( "Not an integer literal: " + expression );
+		}
 	}
 
 	protected int getMaxRows(SqmSelectStatement<?> selectStatement, int size) {
@@ -171,11 +174,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private Number fetchValue(JpaExpression<Number> expression) {
-		if ( expression instanceof SqmLiteral<?> ) {
-			return ((SqmLiteral<Number>) expression).getLiteralValue();
+		if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
+			return numericLiteral.getLiteralValue();
 		}
-		else if ( expression instanceof SqmParameter<?> ) {
-			return getParameterValue( (Parameter<Number>) expression );
+		else if ( expression instanceof SqmParameter<Number> numericParameter ) {
+			return getParameterValue( numericParameter );
 		}
 		else {
 			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
@@ -704,29 +707,35 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected QueryParameterBinding<?> locateBinding(Parameter<?> parameter) {
-		final var bindings = getQueryParameterBindings();
 		if ( parameter instanceof QueryParameterImplementor<?> parameterImplementor ) {
 			getCheckOpen();
-			return bindings.getBinding( getQueryParameter( parameterImplementor ) );
+			return getQueryParameterBindings().getBinding( getQueryParameter( parameterImplementor ) );
 		}
 		else {
-			final String name = parameter.getName();
-			final Integer position = parameter.getPosition();
-			final QueryParameterBinding<?> binding;
-			if ( name != null ) {
-				binding = bindings.getBinding( name );
-			}
-			else if ( position != null ) {
-				binding = bindings.getBinding( position );
-			}
-			else {
-				throw new IllegalArgumentException( "Parameter must have either a name or a position" );
-			}
+			return locateBinding( parameter.getName(), parameter.getPosition() );
+		}
+	}
+
+	private @NonNull QueryParameterBinding<?> locateBinding(String name, Integer position) {
+		final var bindings = getQueryParameterBindings();
+		if ( name != null ) {
+			final var binding = bindings.getBinding( name );
 			if ( binding == null ) {
 				// should never occur
-				throw new IllegalArgumentException( "No binding for given parameter reference [" + parameter + "]" );
+				throw new IllegalArgumentException( "No binding for given parameter named '" + name + "'" );
 			}
 			return binding;
+		}
+		else if ( position != null ) {
+			final var binding = bindings.getBinding( position );
+			if ( binding == null ) {
+				// should never occur
+				throw new IllegalArgumentException( "No binding for given parameter at position " + position );
+			}
+			return binding;
+		}
+		else {
+			throw new IllegalArgumentException( "Parameter must have either a name or a position" );
 		}
 	}
 
@@ -1052,8 +1061,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public <P> CommonQueryContract setParameterList(String name, P[] values, Type<P> type) {
-		final var list = List.of( values );
-		locateBinding( name ).setBindValues( list, (BindableType<P>) type );
+		locateBinding( name ).setBindValues( List.of( values ), (BindableType<P>) type );
 		return this;
 	}
 
@@ -1153,8 +1161,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values) {
-		final var list = List.of( values );
-		locateBinding( parameter ).setBindValues( list );
+		locateBinding( parameter ).setBindValues( List.of( values ) );
 		return this;
 	}
 
@@ -1172,8 +1179,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
-		final var list = List.of( values );
-		locateBinding( parameter ).setBindValues( list, (BindableType<P>) type );
+		locateBinding( parameter ).setBindValues( List.of( values ), (BindableType<P>) type );
 		return this;
 	}
 

@@ -94,7 +94,6 @@ public interface QueryParameterBindings {
 	 *             Currently unused and can be safely removed.
 	 */
 	@Deprecated(forRemoval = true, since = "6.6")
-//	@SuppressWarnings({"rawtypes", "unchecked"})
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor<?> parameter) {

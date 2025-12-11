@@ -6,6 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -131,27 +132,27 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValue(Object value, @Nullable BindableType<?> clarifiedType) {
+	public <A> void setBindValue(A value, @Nullable BindableType<A> clarifiedType) {
 		if ( !handleAsMultiValue( value, clarifiedType ) ) {
-			if ( clarifiedType != null ) {
-				// UNSOUND!!!
-				// We should be creating a whole new object
-				bindType = (BindableType<T>) clarifiedType;
-			}
-
 			final Object coerced = coerce( value );
 			validate( coerced );
-			bindValue( coerced );
+			bindValue = cast( value );
+			isBound = true;
+			isMultiValued = false;
+			bindValues = null;
+
+			if ( clarifiedType != null ) {
+				checkClarifiedType( clarifiedType, value );
+				@SuppressWarnings("unchecked") // safe
+				final var newType = (BindableType<T>) clarifiedType;
+				bindType = newType;
+			}
 		}
 	}
 
 	@Override
 	public void setBindValue(Object value, @SuppressWarnings("deprecation") TemporalType temporalTypePrecision) {
 		if ( !handleAsMultiValue( value, null ) ) {
-			if ( bindType == null ) {
-				bindType = queryParameter.getHibernateType();
-			}
-
 			final Object coerced = coerce( value );
 			validate( coerced );
 			bindValue( coerced );
@@ -167,6 +168,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		}
 		bindValue = cast( value );
 		isBound = true;
+		isMultiValued = false;
+		bindValues = null;
 	}
 
 	private void bindNull(boolean resolveJdbcTypeIfNecessary) {
@@ -219,11 +222,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		}
 
 		final var coerced = values.stream().map( this::coerce ).toList();
-		values.forEach( this::validate );
-
+		coerced.forEach( this::validate );
 		isBound = true;
 		isMultiValued = true;
-
 		bindValue = null;
 		bindValues = coerced.stream().map( this::cast ).toList();
 
@@ -245,12 +246,26 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	@Override
-	public void setBindValues(Collection<?> values, BindableType<?> clarifiedType) {
-		if ( clarifiedType != null ) {
-			// UNSOUND
-			bindType = (BindableType<T>) clarifiedType;
+	public <V> void setBindValues(Collection<? extends V> values, BindableType<V> clarifiedType) {
+		if ( !queryParameter.allowsMultiValuedBinding() ) {
+			throw new IllegalArgumentException(
+					"Illegal attempt to bind a collection value to a single-valued parameter"
+			);
 		}
-		setBindValues( values );
+
+		final var coerced = values.stream().map( this::coerce ).toList();
+		coerced.forEach( this::validate );
+		isBound = true;
+		isMultiValued = true;
+		bindValue = null;
+		bindValues = coerced.stream().map( this::cast ).toList();
+
+		if ( clarifiedType != null ) {
+			checkClarifiedType( clarifiedType, values );
+			@SuppressWarnings("unchecked") // safe
+			final var newType = (BindableType<T>) clarifiedType;
+			bindType = newType;
+		}
 	}
 
 	@Override
@@ -298,6 +313,22 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			}
 		}
 		return false;
+	}
+
+	private <A> void checkClarifiedType(@NonNull BindableType<A> clarifiedType, Object value) {
+		final var parameterType = queryParameter.getParameterType();
+		if ( parameterType != null ) {
+			final var clarifiedJavaType = clarifiedType.getJavaType();
+			if ( !parameterType.isAssignableFrom( clarifiedJavaType ) ) {
+				throw new QueryArgumentException(
+						"Given type is incompatible with parameter type",
+						parameterType, clarifiedJavaType, value
+				);
+			}
+		}
+		else {
+			assert queryParameter.getHibernateType() == null;
+		}
 	}
 
 	private T cast(Object value) {

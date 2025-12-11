@@ -9,6 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
@@ -142,18 +143,22 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings bindings) {
 		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
-			final var sqmParameter = entry.getValue().get( 0 );
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
-				final var criteriaParameter =
-						(JpaCriteriaParameter<?>)
-								wrapper.getJpaCriteriaParameter();
-				if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<?> ) {
-					// Use the anticipated type for binding the value if possible
-					final var parameter = (QueryParameterImplementor<?>) entry.getKey();
-					bindings.getBinding( parameter )
-							.setBindValue( criteriaParameter.getValue(),
-									criteriaParameter.getAnticipatedType() );
-				}
+			bindValueToCriteriaParameter( bindings, entry.getKey(),
+					entry.getValue().get( 0 ) );
+		}
+	}
+
+	private static <T> void bindValueToCriteriaParameter(
+			QueryParameterBindings bindings,
+			QueryParameterImplementor<?> queryParameterImplementor,
+			SqmParameter<T> sqmParameter) {
+		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper ) {
+			final var criteriaParameter = wrapper.getJpaCriteriaParameter();
+			if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<T> ) {
+				// Use the anticipated type for binding the value if possible
+				bindings.getBinding( queryParameterImplementor )
+						.setBindValue( criteriaParameter.getValue(),
+								criteriaParameter.getAnticipatedType() );
 			}
 		}
 	}

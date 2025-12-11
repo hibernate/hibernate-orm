@@ -65,7 +65,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				new SelectableMappingImpl(
 						"",
 						selectionExpression,
-						new SelectablePath( partName ),
+						null,
 						null,
 						null,
 						null,

@@ -261,8 +261,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 		if ( explicitTemporalPrecision != null ) {
 			if ( binding.isMultiValued() ) {
-				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision,
-						getTypeConfiguration() );
+				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision );
 			}
 			else {
 				parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );

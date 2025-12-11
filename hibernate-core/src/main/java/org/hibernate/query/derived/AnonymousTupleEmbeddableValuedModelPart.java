@@ -129,7 +129,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 					sqmExpressible,
 					attributeType,
 					sqlSelections,
-					selectionIndex,
+					selectionIndex + index,
 					selectionExpression + "_" + attribute.getName(),
 					attribute.getName(),
 					modelPartContainer.findSubPart( attribute.getName(), null ),

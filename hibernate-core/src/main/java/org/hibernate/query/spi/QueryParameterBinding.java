@@ -66,7 +66,7 @@ public interface QueryParameterBinding<T> {
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(Object value, @Nullable BindableType<?> clarifiedType);
+	<A> void setBindValue(A value, @Nullable BindableType<A> clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
@@ -95,7 +95,7 @@ public interface QueryParameterBinding<T> {
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<?> values, BindableType<?> clarifiedType);
+	<A> void setBindValues(Collection<? extends A> values, BindableType<A> clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *

@@ -20,9 +20,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Table;
 
+import java.util.Map;
+
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(
 		annotatedClasses = {
@@ -37,7 +40,7 @@ public class SingleTableAndGenericsTest {
 
 	@Test
 	public void testIt(SessionFactoryScope scope) {
-		String payload = "{\"book\": \"1\"}";
+		Map<?,?> payload = Map.of("book", "1");
 		String aId = "1";
 
 		scope.inTransaction(
@@ -53,9 +56,9 @@ public class SingleTableAndGenericsTest {
 				session -> {
 					A a = session.find( A.class, aId );
 					assertThat( a ).isNotNull();
-					String payload1 = a.getPayload();
+					Map<?,?> payload1 = a.getPayload();
 					assertThat( payload1 ).isNotNull();
-					assertThat( payload1 ).contains( "book" );
+					assertTrue(payload1.containsKey("book") );
 				}
 		);
 	}
@@ -93,6 +96,9 @@ public class SingleTableAndGenericsTest {
 
 	@Entity(name = "C")
 	@DiscriminatorValue("child")
-	public static class A extends B<String> {
+	// Changed from <String> to <Map> since the fix for HHH-19969; the restriction '|| type == Object.class' inside
+	// AbstractFormatMapper.fromString() was removed, so now no cast to String happens, but instead the json is serialized
+	// to either Map or List (depending on the json format)
+	public static class A extends B<Map<?,?>> {
 	}
 }

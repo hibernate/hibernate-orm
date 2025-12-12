@@ -26,6 +26,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Base support for CollectionInitializer implementations that represent
  * an immediate initialization of some sort (join, select, batch, sub-select)
@@ -141,7 +143,39 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	public void resolveFromPreviousRow(Data data) {
 		super.resolveFromPreviousRow( data );
 		if ( data.getState() == State.RESOLVED ) {
-			resolveKeySubInitializers( data );
+			// The state is resolved, so we know a collection instance exists
+			final PersistentCollection<?> collection = castNonNull( data.getCollectionInstance() );
+			if ( collection.wasInitialized() ) {
+				// The collection was an already initialized instance, so we can set this to initialized
+				// and just resolve sub-initializers
+				resolveFromPreviouslyInitializedInstance( data );
+			}
+			else {
+				resolveKeySubInitializers( data );
+			}
+		}
+	}
+
+	protected void resolveFromPreviouslyInitializedInstance(Data data) {
+		data.setState( State.INITIALIZED );
+		if ( data.shallowCached ) {
+			initializeShallowCached( data );
+		}
+		else {
+			resolveInstanceSubInitializers( data );
+		}
+		final var rowProcessingState = data.getRowProcessingState();
+		if ( rowProcessingState.needsResolveState() ) {
+			// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
+			if ( collectionKeyResultAssembler != null ) {
+				collectionKeyResultAssembler.resolveState( rowProcessingState );
+			}
+			if ( !getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
+				if ( collectionValueKeyResultAssembler != null ) {
+					collectionValueKeyResultAssembler.resolveState( rowProcessingState );
+				}
+				resolveCollectionContentState( rowProcessingState );
+			}
 		}
 	}
 
@@ -337,25 +371,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			}
 			data.collectionValueKey = null;
 			if ( collection.wasInitialized() ) {
-				data.setState( State.INITIALIZED );
-				if ( data.shallowCached ) {
-					initializeShallowCached( data );
-				}
-				else {
-					resolveInstanceSubInitializers( data );
-				}
-				if ( rowProcessingState.needsResolveState() ) {
-					// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
-					if ( collectionKeyResultAssembler != null ) {
-						collectionKeyResultAssembler.resolveState( rowProcessingState );
-					}
-					if ( !getInitializingCollectionDescriptor().useShallowQueryCacheLayout() ) {
-						if ( collectionValueKeyResultAssembler != null ) {
-							collectionValueKeyResultAssembler.resolveState( rowProcessingState );
-						}
-						resolveCollectionContentState( rowProcessingState );
-					}
-				}
+				resolveFromPreviouslyInitializedInstance( data );
 			}
 			else {
 				if ( data.shallowCached ) {

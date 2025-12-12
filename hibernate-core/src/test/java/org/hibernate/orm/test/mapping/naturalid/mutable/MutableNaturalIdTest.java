@@ -29,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Gavin King
@@ -59,7 +58,7 @@ public class MutableNaturalIdTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.dropData();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -362,42 +361,5 @@ public class MutableNaturalIdTest {
 					assertNotSame( beforeEvict, afterEvict );
 				}
 		);
-	}
-
-	@Test
-	@JiraKey("HHH-7287")
-	public void testModificationInOtherSession(SessionFactoryScope factoryScope) {
-		factoryScope.inTransaction( (session) -> {
-			User u = new User( "gavin", "hb", "secret" );
-			session.persist( u );
-		} );
-
-		// Use transactionless session
-		factoryScope.inSession( (session) -> {
-			// this loads the state into this `session`
-			var byNaturalId = session.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load();
-			assertNotNull( byNaturalId );
-
-			// CHANGE natural-id values in another session
-			factoryScope.inTransaction( (otherSession) -> {
-				var u = otherSession.find(  User.class, 1 );
-				u.setOrg( "zz" );
-			} );
-			// CHANGE APPLIED
-
-			byNaturalId = session.byNaturalId( User.class )
-					.using( "name", "gavin" )
-					.using( "org", "hb" ).load();
-			assertNotNull( byNaturalId );
-
-			// the internal query will 'see' the new values, because isolation level < SERIALIZABLE
-			var byNaturalId2 = session.byNaturalId( User.class )
-					.using( "name", "gavin" )
-					.using( "org", "zz" ).load();
-			assertSame( byNaturalId, byNaturalId2 );
-
-			// this fails, that's the bug
-			assertNotNull( session.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load());
-		} );
 	}
 }

@@ -18,6 +18,7 @@ public class RelationDescription {
 	private final String toEntityName;
 	private final String mappedByPropertyName;
 	private final boolean ignoreNotFound;
+	private final boolean targetNotAudited;
 	private final IdMapper idMapper;
 	private final PropertyMapper fakeBidirectionalRelationMapper;
 	private final PropertyMapper fakeBidirectionalRelationIndexMapper;
@@ -37,10 +38,11 @@ public class RelationDescription {
 			PropertyMapper fakeBidirectionalRelationMapper,
 			PropertyMapper fakeBidirectionalRelationIndexMapper,
 			boolean insertable,
-			boolean ignoreNotFound) {
+			boolean ignoreNotFound,
+			boolean targetNotAudited) {
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper,
-				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, null, null, null, insertable, ignoreNotFound, false
+				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, null, null, null, insertable, ignoreNotFound, targetNotAudited, false
 		);
 	}
 
@@ -60,10 +62,10 @@ public class RelationDescription {
 		// Envers populates collections by executing dedicated queries. Special handling of
 		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions
 		// (e.g. EntityNotFoundException, ObjectNotFoundException) are never thrown.
-		// Therefore assigning false to ignoreNotFound.
+		// Therefore assigning false to ignoreNotFound and targetNotAudited.
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper, referencingIdData, referencedIdData, auditMiddleEntityName, insertable, false, indexed
+				fakeBidirectionalRelationIndexMapper, referencingIdData, referencedIdData, auditMiddleEntityName, insertable, false, false, indexed
 		);
 	}
 
@@ -80,12 +82,14 @@ public class RelationDescription {
 			String auditMiddleEntityName,
 			boolean insertable,
 			boolean ignoreNotFound,
+			boolean targetNotAudited,
 			boolean indexed) {
 		this.fromPropertyName = fromPropertyName;
 		this.relationType = relationType;
 		this.toEntityName = toEntityName;
 		this.mappedByPropertyName = mappedByPropertyName;
 		this.ignoreNotFound = ignoreNotFound;
+		this.targetNotAudited = targetNotAudited;
 		this.idMapper = idMapper;
 		this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
 		this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
@@ -115,6 +119,10 @@ public class RelationDescription {
 
 	public boolean isIgnoreNotFound() {
 		return ignoreNotFound;
+	}
+
+	public boolean isTargetNotAudited() {
+		return targetNotAudited;
 	}
 
 	public IdMapper getIdMapper() {

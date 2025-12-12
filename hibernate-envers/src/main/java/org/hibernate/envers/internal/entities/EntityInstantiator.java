@@ -124,7 +124,8 @@ public class EntityInstantiator {
 											enversService.getConfig().getRevisionTypePropertyName()
 									)
 							),
-							enversService
+							enversService,
+							false
 					);
 					originalId.put(
 							key,

@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
@@ -62,7 +63,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value ),
+				propertyAuditingData.getRelationTargetAuditMode() == RelationTargetAuditMode.NOT_AUDITED
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -127,7 +129,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				owningReferencePropertyName,
 				referencedEntityName,
 				ownedIdMapper,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				propertyAuditingData.getRelationTargetAuditMode() == RelationTargetAuditMode.NOT_AUDITED
 		);
 
 		// Adding mapper for the id
@@ -170,7 +173,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				propertyAuditingData.getRelationTargetAuditMode() == RelationTargetAuditMode.NOT_AUDITED
 		);
 
 		// Adding mapper for the id

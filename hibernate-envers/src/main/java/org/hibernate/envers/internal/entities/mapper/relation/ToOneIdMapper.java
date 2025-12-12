@@ -150,6 +150,15 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
+
+				// Check if the relation is marked as NOT_AUDITED
+				final String referencingEntityName = enversService.getEntitiesConfigurations()
+						.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+				final boolean isTargetNotAudited = referencingEntityName != null &&
+						enversService.getEntitiesConfigurations()
+								.getRelationDescription( referencingEntityName, getPropertyData().getName() )
+								.isTargetNotAudited();
+
 				if ( isIgnoreNotFound( enversService, referencedEntity, data, primaryKey ) ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.
@@ -160,7 +169,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							entityId,
 							revision,
 							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
-							enversService
+							enversService,
+							isTargetNotAudited
 					);
 				}
 				else {
@@ -171,7 +181,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							entityId,
 							revision,
 							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
-							enversService
+							enversService,
+							isTargetNotAudited
 					);
 				}
 			}

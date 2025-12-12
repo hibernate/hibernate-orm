@@ -31,6 +31,8 @@ jobs:
 
   # Main job for h2/docker DBs.
   build:
+    needs:
+      format_checks
     permissions:
       contents: read
     name: OpenJDK 25 - ${{matrix.rdbms}}
@@ -145,6 +147,8 @@ jobs:
   # Job for builds on Oracle TP infrastructure.
   # This is untrusted, even for pushes, see below.
   otp:
+    needs:
+      format_checks
     permissions:
       contents: read
     name: GraalVM 25 - ${{matrix.rdbms}}

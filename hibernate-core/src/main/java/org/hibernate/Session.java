@@ -25,7 +25,6 @@ import org.hibernate.stat.SessionStatistics;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 /// The main runtime interface between a Java application and Hibernate. Represents the
 /// notion of a _persistence context_, a set of managed entity instances associated
@@ -150,7 +149,7 @@ import java.util.function.Consumer;
 ///     instance from the [SessionFactory].
 ///
 /// An easy way to be sure that session and transaction management is being done correctly
-/// is to [let the factory do it][SessionFactory#inTransaction(Consumer)]:
+/// is to [let the factory do it][SessionFactory#inTransaction(java.util.function.Consumer)]:
 ///
 /// ```java
 /// sessionFactory.inTransaction(session -> {
@@ -480,8 +479,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @implNote Note that Hibernate's implementation of this method can
 	/// also be used for loading an entity by its [natural-id][org.hibernate.annotations.NaturalId]
 	/// by passing [KeyType#NATURAL] as a [FindOption] and the natural-id value as the `key` to load.
+	///
+	/// @param entityType the entity type
+	/// @param id an identifier
+	/// @param options options controlling the behavior of the operation
 	@Override
-	<T> T find(Class<T> entityClass, Object key, FindOption... options);
+	<T> T find(Class<T> entityType, Object id, FindOption... options);
 
 	/// Return the persistent instance of the named entity type with the given identifier,
 	/// or null if there is no such persistent instance.
@@ -752,9 +755,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	void refresh(Object object);
 
+	/// {@inheritDoc}
+	///
+	/// @param object a persistent instance associated with this session
+	/// @param options options controlling the behavior of the operation
+	@Override
+	void refresh(Object object, RefreshOption... options);
+
 	/// Mark a persistence instance associated with this session for removal from
-	/// the underlying database. Ths operation cascades to associated instances if
-	/// the association is mapped [jakarta.persistence.CascadeType#REMOVE].
+	/// the underlying database. This operation cascades to associated instances
+	/// if the association is mapped [jakarta.persistence.CascadeType#REMOVE].
 	///
 	/// Except when operating in fully JPA-compliant mode, this operation does,
 	/// contrary to the JPA specification, accept a detached entity instance.

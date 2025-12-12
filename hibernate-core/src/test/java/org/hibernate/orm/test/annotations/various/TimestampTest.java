@@ -8,12 +8,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,26 +46,28 @@ public class TimestampTest {
 	}
 
 	@Test
-	public void testTimestampSourceIsVM() throws Exception {
-		assertTimestampSource( VMTimestamped.class, StandardBasicTypes.TIMESTAMP );
+	public void testTimestampSourceIsVM() {
+		assertTimestampSource( VMTimestamped.class );
 	}
 
 	@Test
-	public void testTimestampSourceIsDB() throws Exception {
-		assertTimestampSource( DBTimestamped.class, StandardBasicTypes.TIMESTAMP );
+	public void testTimestampSourceIsDB() {
+		assertTimestampSource( DBTimestamped.class );
 	}
 
-	private void assertTimestampSource(Class<?> clazz, BasicTypeReference<?> typeReference) throws Exception {
-		assertTimestampSource( clazz, metadata.getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference ) );
+	private void assertTimestampSource(Class<?> clazz ) {
+		assertTimestampSource( clazz,
+				metadata.getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.TIMESTAMP ) );
 	}
 
-	private void assertTimestampSource(Class<?> clazz, BasicType<?> basicType) throws Exception {
-		PersistentClass persistentClass = metadata.getEntityBinding( clazz.getName() );
+	private void assertTimestampSource(Class<?> clazz, BasicType<?> basicType) {
+		var persistentClass = metadata.getEntityBinding( clazz.getName() );
 		assertThat( persistentClass ).isNotNull();
-		Property versionProperty = persistentClass.getVersion();
+		var versionProperty = persistentClass.getVersion();
 		assertThat( versionProperty ).isNotNull();
-		assertThat( versionProperty.getType() )
+		assertThat( versionProperty.getType().getName() )
 				.describedAs( "Wrong timestamp type" )
-				.isEqualTo( basicType );
+				.isEqualTo( basicType.getName() );
 	}
 }

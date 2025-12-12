@@ -239,6 +239,7 @@ dependencyResolutionManagement {
             def teradataVersion = version "teradata",  "20.00.00.51"
             def tidbVersion = version "tidb", mysqlVersion
             def altibaseVersion = version "altibase", "7.3.0.1.1"
+            def spannerVersion = version "spanner", "2.34.0"
 
             library( "h2", "com.h2database", "h2" ).versionRef( h2Version )
             library( "h2gis", "org.orbisgis", "h2gis" ).versionRef( h2gisVersion )
@@ -264,6 +265,7 @@ dependencyResolutionManagement {
             library( "informix", "com.ibm.informix", "jdbc" ).versionRef( informixVersion )
             library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).versionRef( firebirdVersion )
             library( "altibase", "com.altibase", "altibase-jdbc" ).versionRef( altibaseVersion )
+            library( "spanner", "com.google.cloud", "google-cloud-spanner-jdbc" ).versionRef( spannerVersion )
         }
         mavenLibs {
             def mavenCoreVersion = version "mavenCore", "3.9.9"

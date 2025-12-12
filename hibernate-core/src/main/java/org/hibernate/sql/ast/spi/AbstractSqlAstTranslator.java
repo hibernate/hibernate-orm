@@ -7705,38 +7705,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( !supportsRowValueConstructorSyntaxInInList() ) {
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
 				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsValuesList() ) {
-					final int tupleSize = lhsTuple.getExpressionType().getJdbcTypeCount();
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
 					}
-					appendSql( " in (select" );
-					char separator = ' ';
-					for ( int i = 0; i < tupleSize; i++ ) {
-						appendSql( separator );
-						appendSql( "v_.c" );
-						appendSql( i );
-						separator = ',';
-					}
-					appendSql( " from (values" );
-					separator = ' ';
-					for ( Expression expression : listExpressions ) {
-						appendSql( separator );
-						appendSql( OPEN_PARENTHESIS );
-						renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
-						appendSql( CLOSE_PARENTHESIS );
-						separator = ',';
-					}
-					appendSql( CLOSE_PARENTHESIS );
-					appendSql( " v_" );
-					separator = '(';
-					for ( int i = 0; i < tupleSize; i++ ) {
-						appendSql( separator );
-						appendSql( "c" );
-						appendSql( i );
-						separator = ',';
-					}
-					appendSql( CLOSE_PARENTHESIS );
+					appendSql( " in (" );
+					renderExpressionsAsValuesSubquery( lhsTuple.getExpressionType().getJdbcTypeCount(), listExpressions );
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
@@ -7833,6 +7807,36 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void renderExpressionsAsValuesSubquery(int tupleSize, List<Expression> listExpressions) {
+		appendSql( "select" );
+		char separator = ' ';
+		for ( int i = 0; i < tupleSize; i++ ) {
+			appendSql( separator );
+			appendSql( "v_.c" );
+			appendSql( i );
+			separator = ',';
+		}
+		appendSql( " from (values" );
+		separator = ' ';
+		for ( Expression expression : listExpressions ) {
+			appendSql( separator );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
+			appendSql( CLOSE_PARENTHESIS );
+			separator = ',';
+		}
+		appendSql( CLOSE_PARENTHESIS );
+		appendSql( " v_" );
+		separator = '(';
+		for ( int i = 0; i < tupleSize; i++ ) {
+			appendSql( separator );
+			appendSql( "c" );
+			appendSql( i );
+			separator = ',';
+		}
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {

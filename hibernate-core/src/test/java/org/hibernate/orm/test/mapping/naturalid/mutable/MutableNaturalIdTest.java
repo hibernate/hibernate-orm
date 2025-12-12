@@ -367,10 +367,9 @@ public class MutableNaturalIdTest {
 	@Test
 	@JiraKey("HHH-7287")
 	public void testModificationInOtherSession(SessionFactoryScope factoryScope) {
-		var id = factoryScope.fromTransaction( (session) -> {
+		factoryScope.inTransaction( (session) -> {
 			User u = new User( "gavin", "hb", "secret" );
 			session.persist( u );
-			return u.getId();
 		} );
 
 		// Use transactionless session
@@ -381,7 +380,7 @@ public class MutableNaturalIdTest {
 
 			// CHANGE natural-id values in another session
 			factoryScope.inTransaction( (otherSession) -> {
-				var u = otherSession.find( User.class, id );
+				var u = otherSession.find(  User.class, 1 );
 				u.setOrg( "zz" );
 			} );
 			// CHANGE APPLIED

@@ -25,16 +25,16 @@ public interface AdjustableBasicType<J> extends BasicType<J> {
 					indicators,
 					domainJtd
 			);
-			if ( getJavaTypeDescriptor() != domainJtd || resolvedJdbcType != jdbcType ) {
+			if ( resolvedJdbcType != jdbcType ) {
 				return indicators.getTypeConfiguration().getBasicTypeRegistry()
-						.resolve( domainJtd, resolvedJdbcType );
+						.resolve( domainJtd, resolvedJdbcType, getName() );
 			}
 		}
 		else {
 			final int resolvedJdbcTypeCode = indicators.resolveJdbcTypeCode( jdbcType.getDefaultSqlTypeCode() );
-			if ( getJavaTypeDescriptor() != domainJtd || resolvedJdbcTypeCode != jdbcType.getDefaultSqlTypeCode() ) {
+			if ( resolvedJdbcTypeCode != jdbcType.getDefaultSqlTypeCode() ) {
 				return indicators.getTypeConfiguration().getBasicTypeRegistry()
-						.resolve( domainJtd, indicators.getJdbcType( resolvedJdbcTypeCode ) );
+						.resolve( domainJtd, indicators.getJdbcType( resolvedJdbcTypeCode ), getName() );
 			}
 		}
 		return (BasicType<X>) this;

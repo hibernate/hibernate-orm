@@ -105,7 +105,9 @@ public class ArrayToStringTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionToString( root.get( "theCollection" ), cb.literal( "," ) ),
-					cb.collectionToString( root.get( "theCollection" ), "," )
+					cb.collectionToString( root.get( "theCollection" ), "," ),
+					cb.collectionToString( root.get( "theLabels" ), cb.literal( "," ) ),
+					cb.collectionToString( root.get( "theLabels" ), "," )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

@@ -97,10 +97,11 @@ public class BindingTypeHelper {
 			final var javaType = value.getClass();
 			final var temporalJavaType = (TemporalJavaType<?>) baseType.getJdbcJavaType();
 			final var bindableType = (BindableType<?>) baseType;
-			return (JdbcMapping) switch ( temporalJavaType.getPrecision() ) {
-				case TIMESTAMP -> resolveTimestampTemporalTypeVariant( javaType, bindableType, typeConfiguration );
-				case DATE -> resolveDateTemporalTypeVariant( javaType, bindableType, typeConfiguration );
-				case TIME -> resolveTimeTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+			// Cast individual arms of the switch to avoid a JDK 17 javac bug
+			return switch ( temporalJavaType.getPrecision() ) {
+				case TIMESTAMP -> (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+				case DATE -> (JdbcMapping) resolveDateTemporalTypeVariant( javaType, bindableType, typeConfiguration );
+				case TIME -> (JdbcMapping) resolveTimeTemporalTypeVariant( javaType, bindableType, typeConfiguration );
 			};
 		}
 	}

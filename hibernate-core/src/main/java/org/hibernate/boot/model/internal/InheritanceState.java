@@ -223,7 +223,7 @@ public class InheritanceState {
 	 * guessing from @Id or @EmbeddedId presence if not specified.
 	 * Change EntityBinder by side effect
 	 */
-	private ElementsToProcess getElementsToProcess() {
+	ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
 			final var inheritanceState = inheritanceStatePerClass.get( classDetails );
 			assert !inheritanceState.isEmbeddableSuperclass();

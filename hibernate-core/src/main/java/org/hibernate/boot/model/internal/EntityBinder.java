@@ -48,6 +48,7 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
@@ -59,6 +60,7 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -71,6 +73,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.spi.NavigablePath;
@@ -97,6 +100,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyCon
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.setType;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -122,6 +126,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.jpa.event.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
+import static org.hibernate.models.spi.TypeDetailsHelper.resolveRelativeType;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 
@@ -1088,6 +1093,7 @@ public class EntityBinder {
 				missingIdProperties.remove( propertyName );
 			}
 		}
+		addGenericProperties( persistentClass, inheritanceState, inheritanceStates );
 
 		if ( !missingIdProperties.isEmpty() ) {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
@@ -1099,6 +1105,77 @@ public class EntityBinder {
 					+ "' has '@Id' annotated properties " + getMissingPropertiesString( missingEntityProperties )
 					+ " which do not match properties of the specified '@IdClass'" );
 		}
+	}
+
+	private void addGenericProperties(
+			PersistentClass persistentClass,
+			InheritanceState inheritanceState,
+			Map<ClassDetails, InheritanceState> inheritanceStates) {
+		if ( persistentClass.isAbstract() == null || !persistentClass.isAbstract() ) {
+			var superclass = persistentClass.getSuperPersistentClass();
+			while ( superclass != null ) {
+				for ( Property declaredProperty : superclass.getDeclaredProperties() ) {
+					if ( declaredProperty.isGeneric() ) {
+						final var memberDetails = getMemberDetails( inheritanceState, inheritanceStates, declaredProperty, superclass );
+						final var typeDetails = resolveRelativeType( memberDetails.getType(), inheritanceState.getClassDetails() );
+						final var returnedClassName = typeDetails.getName();
+						final var actualProperty = declaredProperty.copy();
+						actualProperty.setGeneric( false );
+						actualProperty.setGenericSpecialization( true );
+						actualProperty.setReturnedClassName( returnedClassName );
+						final var value = actualProperty.getValue().copy();
+						setType( value, typeDetails );
+						actualProperty.setValue( value );
+						persistentClass.addProperty( actualProperty );
+						if ( value instanceof BasicValue basicValue ) {
+							final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+							final BasicValue originalBasicValue = (BasicValue) declaredProperty.getValue();
+							metadataCollector.addSecondPass( new SecondPass() {
+								@Override
+								public void doSecondPass(Map<String, PersistentClass> persistentClasses)
+										throws MappingException {
+									basicValue.setExplicitTypeParams( originalBasicValue.getExplicitTypeParams() );
+									basicValue.setTypeParameters( originalBasicValue.getTypeParameters() );
+									basicValue.setJpaAttributeConverterDescriptor( originalBasicValue.getJpaAttributeConverterDescriptor() );
+									// Don't copy over the implicit java type access, since we figure that out in ClassPropertyHolder#setType
+//									basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
+									basicValue.setExplicitJavaTypeAccess( originalBasicValue.getExplicitJavaTypeAccess() );
+									basicValue.setExplicitJdbcTypeAccess( originalBasicValue.getExplicitJdbcTypeAccess() );
+									basicValue.setExplicitMutabilityPlanAccess( originalBasicValue.getExplicitMutabilityPlanAccess() );
+									basicValue.setEnumerationStyle( originalBasicValue.getEnumeratedType() );
+									basicValue.setTimeZoneStorageType( originalBasicValue.getTimeZoneStorageType() );
+									basicValue.setTemporalPrecision( originalBasicValue.getTemporalPrecision() );
+									if ( originalBasicValue.isLob() ) {
+										basicValue.makeLob();
+									}
+									if ( originalBasicValue.isNationalized() ) {
+										basicValue.makeNationalized();
+									}
+								}
+							} );
+							metadataCollector.registerValueMappingResolver( basicValue::resolve );
+						}
+					}
+				}
+
+				superclass = superclass.getSuperPersistentClass();
+			}
+		}
+	}
+
+	private static MemberDetails getMemberDetails(InheritanceState inheritanceState, Map<ClassDetails, InheritanceState> inheritanceStates, Property declaredProperty, PersistentClass superclass) {
+		var superclassDetails = inheritanceState.getClassDetails().getSuperClass();
+		while ( !superclass.getClassName().equals( superclassDetails.getClassName()) ) {
+			superclassDetails = superclassDetails.getSuperClass();
+		}
+		final var superclassInheritanceState = inheritanceStates.get( superclassDetails );
+		final var elementsToProcess = superclassInheritanceState.getElementsToProcess();
+		for ( PropertyData element : elementsToProcess.getElements() ) {
+			if ( declaredProperty.getName().equals( element.getPropertyName() ) ) {
+				return element.getAttributeMember();
+			}
+		}
+		throw new IllegalArgumentException("Couldn't find PropertyData for [" + declaredProperty.getName() + "] in class: " + declaredProperty.getPersistentClass().getClassName() );
 	}
 
 	private static String getMissingPropertiesString(Set<String> propertyNames) {

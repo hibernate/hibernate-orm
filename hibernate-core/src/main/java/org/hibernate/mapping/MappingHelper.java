@@ -106,7 +106,7 @@ public final class MappingHelper {
 			List<Property> properties,
 			String owner) throws MappingException {
 		for ( var property : properties ) {
-			if ( property.isUpdatable() || property.isInsertable() ) {
+			if ( ( property.isUpdatable() || property.isInsertable() ) && !property.isGenericSpecialization() ) {
 				property.getValue().checkColumnDuplication( distinctColumns, owner );
 			}
 		}

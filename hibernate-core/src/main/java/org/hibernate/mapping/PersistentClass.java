@@ -362,6 +362,8 @@ public abstract sealed class PersistentClass
 
 	public abstract List<Property> getPropertyClosure();
 
+	public abstract List<Property> getAllPropertyClosure();
+
 	public abstract List<Table> getTableClosure();
 
 	public abstract List<KeyValue> getKeyClosure();
@@ -722,6 +724,23 @@ public abstract sealed class PersistentClass
 	}
 
 	public int getPropertyClosureSpan() {
+		int span = 0;
+		for ( Property property : properties ) {
+			if ( !property.isGeneric() ) {
+				span += 1;
+			}
+		}
+		for ( var join : joins ) {
+			for ( Property property : join.getProperties() ) {
+				if ( !property.isGeneric() ) {
+					span += 1;
+				}
+			}
+		}
+		return span;
+	}
+
+	public int getAllPropertyClosureSpan() {
 		int span = properties.size();
 		for ( var join : joins ) {
 			span += join.getPropertySpan();
@@ -754,6 +773,23 @@ public abstract sealed class PersistentClass
 	 * @return A list over the "normal" properties.
 	 */
 	public List<Property> getProperties() {
+		final ArrayList<Property> list = new ArrayList<>();
+		for ( Property property : properties ) {
+			if ( !property.isGeneric() ) {
+				list.add( property );
+			}
+		}
+		for ( var join : joins ) {
+			for ( Property property : join.getProperties() ) {
+				if ( !property.isGeneric() ) {
+					list.add( property );
+				}
+			}
+		}
+		return list;
+	}
+
+	public List<Property> getAllProperties() {
 		final ArrayList<List<Property>> list = new ArrayList<>();
 		list.add( properties );
 		for ( var join : joins ) {

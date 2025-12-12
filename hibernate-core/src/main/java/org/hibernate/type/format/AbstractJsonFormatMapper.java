@@ -18,7 +18,7 @@ public abstract class AbstractJsonFormatMapper implements FormatMapper {
 	@Override
 	public final <T> T fromString(CharSequence charSequence, JavaType<T> javaType, WrapperOptions wrapperOptions) {
 		final Type type = javaType.getJavaType();
-		if ( type == String.class || type == Object.class ) {
+		if ( type == String.class ) {
 			return (T) charSequence.toString();
 		}
 		return fromString( charSequence, type );
@@ -27,7 +27,7 @@ public abstract class AbstractJsonFormatMapper implements FormatMapper {
 	@Override
 	public final <T> String toString(T value, JavaType<T> javaType, WrapperOptions wrapperOptions) {
 		final Type type = javaType.getJavaType();
-		if ( type == String.class || type == Object.class ) {
+		if ( value instanceof String ) {
 			return (String) value;
 		}
 		return toString( value, type );

@@ -145,6 +145,7 @@ public class BasicValue extends SimpleValue
 		this.isSoftDelete = original.isSoftDelete;
 		this.softDeleteStrategy = original.softDeleteStrategy;
 		this.aggregateColumn = original.aggregateColumn;
+		this.jdbcTypeCode = original.jdbcTypeCode;
 	}
 
 	@Override
@@ -213,6 +214,22 @@ public class BasicValue extends SimpleValue
 
 	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess) {
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
+	}
+
+	public Function<TypeConfiguration, BasicJavaType<?>> getExplicitJavaTypeAccess() {
+		return explicitJavaTypeAccess;
+	}
+
+	public Function<TypeConfiguration, JdbcType> getExplicitJdbcTypeAccess() {
+		return explicitJdbcTypeAccess;
+	}
+
+	public Function<TypeConfiguration, MutabilityPlan<?>> getExplicitMutabilityPlanAccess() {
+		return explicitMutabilityPlanAccess;
+	}
+
+	public Function<TypeConfiguration, java.lang.reflect.Type> getImplicitJavaTypeAccess() {
+		return implicitJavaTypeAccess;
 	}
 
 	public Selectable getColumn() {
@@ -1028,6 +1045,10 @@ public class BasicValue extends SimpleValue
 
 	public void setExplicitTypeParams(Map<String,String> explicitLocalTypeParams) {
 		this.explicitLocalTypeParams = explicitLocalTypeParams;
+	}
+
+	public Map<String, String> getExplicitTypeParams() {
+		return explicitLocalTypeParams;
 	}
 
 	public void setExplicitTypeName(String typeName) {

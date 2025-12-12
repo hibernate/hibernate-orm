@@ -12,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
@@ -28,6 +29,8 @@ import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.JoinTable;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -411,6 +414,34 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 		else if ( value instanceof SimpleValue simpleValue ) {
 			simpleValue.setTypeName( typeName );
+		}
+	}
+
+	static void setType(Value value, TypeDetails type) {
+		final var typeName = type.getName();
+		if ( value instanceof ToOne toOne ) {
+			toOne.setReferencedEntityName( typeName );
+			toOne.setTypeName( typeName );
+		}
+		else if ( value instanceof Component component ) {
+			// Avoid setting type name for generic components
+			if ( !component.isGeneric() ) {
+				component.setComponentClassName( typeName );
+			}
+			if ( component.getTypeName() != null ) {
+				component.setTypeName( typeName );
+			}
+		}
+		else if ( value instanceof SimpleValue simpleValue ) {
+			if ( value instanceof BasicValue basicValue ) {
+				basicValue.setImplicitJavaTypeAccess( typeConfiguration ->
+						type.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE
+						? ParameterizedTypeImpl.from( type.asParameterizedType() )
+						: type.determineRawClass().toJavaClass() );
+			}
+			else {
+				simpleValue.setTypeName( typeName );
+			}
 		}
 	}
 

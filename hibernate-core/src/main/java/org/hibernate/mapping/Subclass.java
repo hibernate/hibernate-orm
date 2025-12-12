@@ -139,6 +139,11 @@ public sealed class Subclass extends PersistentClass
 	}
 
 	@Override
+	public List<Property> getAllPropertyClosure() {
+		return new JoinedList<>( getSuperclass().getAllPropertyClosure(), getAllProperties() );
+	}
+
+	@Override
 	public List<Table> getTableClosure() {
 		return new JoinedList<>(
 				getSuperclass().getTableClosure(),
@@ -236,6 +241,11 @@ public sealed class Subclass extends PersistentClass
 	@Override
 	public int getPropertyClosureSpan() {
 		return getSuperclass().getPropertyClosureSpan() + super.getPropertyClosureSpan();
+	}
+
+	@Override
+	public int getAllPropertyClosureSpan() {
+		return getSuperclass().getAllPropertyClosureSpan() + super.getAllPropertyClosureSpan();
 	}
 
 	@Override

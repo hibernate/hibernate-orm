@@ -121,7 +121,13 @@ public abstract class SimpleValue implements KeyValue {
 	protected SimpleValue(SimpleValue original) {
 		this.buildingContext = original.buildingContext;
 		this.metadata = original.metadata;
-		this.columns.addAll( original.columns );
+		for ( Selectable selectable : original.columns ) {
+			if ( selectable instanceof Column column ) {
+				final Column newColumn = column.clone();
+				newColumn.setValue( this );
+				this.columns.add( newColumn );
+			}
+		}
 		this.insertability.addAll( original.insertability );
 		this.updatability.addAll( original.updatability );
 		this.partitionKey = original.partitionKey;

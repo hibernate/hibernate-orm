@@ -12,6 +12,7 @@
       <option name="ADDITIONAL_TAGS" value="todo,settingDefault,remove" />
     </inspection_tool>
     <inspection_tool class="MarkedForRemoval" enabled="true" level="WEAK WARNING" enabled_by_default="true" editorAttributes="INFO_ATTRIBUTES" />
+    <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="StringBufferReplaceableByString" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>

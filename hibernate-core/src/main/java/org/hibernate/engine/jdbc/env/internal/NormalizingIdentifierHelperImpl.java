@@ -90,6 +90,11 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
+	public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+		return normalizeQuoting( Identifier.toIdentifier( text, quoted, true, isExplicit ) );
+	}
+
+	@Override
 	public Identifier applyGlobalQuoting(String text) {
 		return Identifier.toIdentifier( text, globallyQuoteIdentifiers && !globallyQuoteIdentifiersSkipColumnDefinitions, false );
 	}

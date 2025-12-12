@@ -40,58 +40,54 @@ class AfterTransactionCompletionProcessQueue
 	void afterTransactionCompletion(boolean success) {
 		AfterCompletionCallback process;
 		while ( (process = processes.poll()) != null ) {
-			try {
-				process.doAfterTransactionCompletion( success, session );
-			}
-			catch (CacheException ce) {
-				CORE_LOGGER.unableToReleaseCacheLock( ce );
-				// continue loop
-			}
-			catch (Exception e) {
-				throw new HibernateException(
-						"Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
-			}
+			callAfterCompletion( success, process );
 		}
-
-		final var factory = session.getFactory();
-		if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
-			factory.getCache().getTimestampsCache()
-					.invalidate( querySpacesToInvalidate.toArray( EMPTY_STRING_ARRAY ), session );
-		}
-		querySpacesToInvalidate.clear();
+		invalidateCaches();
 	}
 
 	void executePendingBulkOperationCleanUpActions() {
+		if ( performBulkOperationCallbacks() ) {
+			invalidateCaches();
+		}
+	}
+
+	private boolean performBulkOperationCallbacks() {
 		boolean hasPendingBulkOperationCleanUpActions = false;
 		var iterator = processes.iterator();
 		while ( iterator.hasNext() ) {
 			var process = iterator.next();
 			if ( process instanceof BulkOperationCleanUpAfterTransactionCompletionProcess ) {
-				try {
-					hasPendingBulkOperationCleanUpActions = true;
-					process.doAfterTransactionCompletion( true, session );
+				hasPendingBulkOperationCleanUpActions = true;
+				if ( callAfterCompletion( true, process ) ) {
 					iterator.remove();
 				}
-				catch (CacheException ce) {
-					CORE_LOGGER.unableToReleaseCacheLock( ce );
-					// continue loop
-				}
-				catch (Exception e) {
-					throw new HibernateException(
-							"Unable to perform afterTransactionCompletion callback: " + e.getMessage(),
-							e
-					);
-				}
 			}
 		}
+		return hasPendingBulkOperationCleanUpActions;
+	}
 
-		if ( hasPendingBulkOperationCleanUpActions ) {
-			final var factory = session.getFactory();
-			if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
-				factory.getCache().getTimestampsCache().
-						invalidate( querySpacesToInvalidate.toArray( EMPTY_STRING_ARRAY ), session );
-			}
-			querySpacesToInvalidate.clear();
+	private boolean callAfterCompletion(boolean success, AfterCompletionCallback process) {
+		try {
+			process.doAfterTransactionCompletion( success, session );
+			return true;
 		}
+		catch (CacheException ce) {
+			CORE_LOGGER.unableToReleaseCacheLock( ce );
+			// continue loop
+			return false;
+		}
+		catch (Exception e) {
+			throw new HibernateException(
+					"Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
+		}
+	}
+
+	private void invalidateCaches() {
+		final var factory = session.getFactory();
+		if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() ) {
+			factory.getCache().getTimestampsCache().
+					invalidate( querySpacesToInvalidate.toArray( EMPTY_STRING_ARRAY ), session );
+		}
+		querySpacesToInvalidate.clear();
 	}
 }

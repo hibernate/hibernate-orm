@@ -45,6 +45,8 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.jackson.Jackson3JsonFormatMapper;
+import org.hibernate.type.format.jackson.Jackson3XmlFormatMapper;
 import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
@@ -308,6 +310,11 @@ public class StrategySelectorBuilder {
 				JacksonJsonFormatMapper.SHORT_NAME,
 				JacksonJsonFormatMapper.class
 		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				Jackson3JsonFormatMapper.SHORT_NAME,
+				Jackson3JsonFormatMapper.class
+		);
 		if ( JacksonIntegration.isJacksonOsonExtensionAvailable() ) {
 			strategySelector.registerStrategyImplementor(
 					FormatMapper.class,
@@ -322,6 +329,11 @@ public class StrategySelectorBuilder {
 				FormatMapper.class,
 				JacksonXmlFormatMapper.SHORT_NAME,
 				JacksonXmlFormatMapper.class
+		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				Jackson3XmlFormatMapper.SHORT_NAME,
+				Jackson3XmlFormatMapper.class
 		);
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,

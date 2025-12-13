@@ -116,8 +116,8 @@ and `org.ehcache:ehcache`
 and `com.github.ben-manes.caffeine:jcache`
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
-| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] |
-`com.fasterxml.jackson.core:jackson-databind` +
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson 2], {jackson3}[Jackson 3] or {yasson}[Yasson] |
+`com.fasterxml.jackson.core:jackson-databind`, `tools.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`

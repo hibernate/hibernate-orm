@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.basic.bitset;
 
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -21,6 +22,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static java.lang.Integer.parseInt;
@@ -30,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.sql.Types.VARCHAR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(annotatedClasses = MetaUserTypeTest.Thing.class)
+@Jpa(annotatedClasses = {MetaUserTypeTest.Thing.class, MetaUserTypeTest.Things.class})
 public class MetaUserTypeTest {
 
 	@Test void test(EntityManagerFactoryScope scope) {
@@ -47,6 +50,20 @@ public class MetaUserTypeTest {
 		} );
 	}
 
+	@Test void testCollection(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Things things = new Things();
+			things.periods.add( Period.of( 1, 2, 3 ) );
+			things.days.add( Period.ofDays( 42 ) );
+			em.persist( things );
+		} );
+		scope.inTransaction( em -> {
+			Things things = em.find( Things.class, 1 );
+			assertEquals( Period.of( 1, 2, 3 ), things.periods.get( 0 ) );
+			assertEquals( Period.ofDays( 42 ), things.days.get( 0 ) );
+		} );
+	}
+
 	@Entity static class Thing {
 		@Id @GeneratedValue
 		long id;
@@ -56,7 +73,16 @@ public class MetaUserTypeTest {
 		Period days;
 	}
 
-	@Type(PeriodType. class)
+	@Entity static class Things {
+		@Id @GeneratedValue
+		long id;
+		@TimePeriod @ElementCollection
+		List<Period> periods = new ArrayList<>();
+		@TimePeriod(days = true) @ElementCollection
+		List<Period> days = new ArrayList<>();
+	}
+
+	@Type(PeriodType.class)
 	@Target({METHOD, FIELD})
 	@Retention(RUNTIME)
 	public @interface TimePeriod {

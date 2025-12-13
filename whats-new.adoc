@@ -15,7 +15,7 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 [[embedded-table]]
 == @EmbeddedTable
 
-The Jakarta Persistence compliant way to specify the table to which an embedded value maps is tedious, at best, requiring us of multiple `@AttributeOverride` and/or `@AssociationOverride` annotations -
+The Jakarta Persistence compliant way to specify the table to which an embedded value maps is tedious at best, requiring use of multiple `@AttributeOverride` and/or `@AssociationOverride` annotations -
 
 ====
 [source,java]
@@ -58,7 +58,7 @@ class Person {
 ----
 ====
 
-The annotation is only legal on top-level embedded.  Placement on nested embedded values will be ignored.
+The annotation is only legal on a top-level embedded.  Placement on nested embedded values will be ignored.
 
 [[read-only-replicas]]
 == Read-only replicas
@@ -141,7 +141,7 @@ Also, support for vectors in the following databases was added:
 
 Two new methods were added to `SchemaManager`:
 
-- `resynchronizeGenerators()` force all sequences to catch up with data imported to their corresponding tables
+- `resynchronizeGenerators()` forces all sequences to catch up with data imported to their corresponding tables
 - `truncateTable()` truncates a single table and resets its corresponding primary key sequence
 
 In addition, `truncate()` now automatically resets all primary key sequences and tables backing table generators.

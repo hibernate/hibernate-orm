@@ -54,6 +54,13 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 			return lastTimestamp.toEpochMilli();
 		}
 
+		/**
+		 * Sub-miliseconds part of timestamp (micro- and nanoseconds) mapped to 12 bit integral value.
+		 * Calculated as nanos / 1000000 * 4096
+		 *
+		 * @param timestamp
+		 * @return
+		 */
 		private static long nanos(Instant timestamp) {
 			return (long) ((timestamp.getNano() % 1_000_000L) * 0.004096);
 		}
@@ -64,9 +71,9 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				return new State( now, randomSequence() );
 			}
 			else {
-				final long nextSequence = lastSequence + Holder.numberGenerator.nextLong( 0xFFFF_FFFFL );
-				return nextSequence > MAX_RANDOM_SEQUENCE
-						? new State( lastTimestamp.plusNanos( 250 ), randomSequence() )
+				final long nextSequence = randomSequence();
+				return lastSequence >= nextSequence
+						? new State( lastTimestamp.plusNanos( 250 ), nextSequence )
 						: new State( lastTimestamp, nextSequence );
 			}
 		}
@@ -77,7 +84,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 		}
 
 		private static long randomSequence() {
-			return Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE );
+			return Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE + 1 );
 		}
 	}
 
@@ -118,7 +125,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				| state.nanos() & 0xFFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
-				// LSB bits 2-15 - pseudorandom counter
+				// LSB bits 2-63 - pseudorandom counter
 				| state.lastSequence
 		);
 	}

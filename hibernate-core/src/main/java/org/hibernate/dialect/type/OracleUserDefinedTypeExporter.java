@@ -30,6 +30,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExporter {
 
@@ -220,6 +221,53 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"end loop; " +
 						"return res; " +
 						"end;",
+				"create or replace function " + arrayTypeName + "_reverse(arr in " + arrayTypeName +
+						") return " + arrayTypeName + " deterministic is " +
+						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+						"if arr is null then return null; end if; " +
+						"for i in reverse 1 .. arr.count loop " +
+						"res.extend; " +
+						"res(res.count) := arr(i); " +
+						"end loop; " +
+						"return res; " +
+						"end;",
+				"create or replace function " + arrayTypeName + "_sort(" +
+						"arr in " + arrayTypeName + "," +
+						"p_descending in number default 0," +
+						"p_nulls_first in number default null" +
+						") return " + arrayTypeName + " deterministic is " +
+						"v_result " + arrayTypeName + "; " +
+						"v_nulls_first number; " +
+						"begin " +
+						"if arr is null then return null; end if; " +
+						"if p_nulls_first is null then " +
+						"v_nulls_first := p_descending; " +
+						"else " +
+						"v_nulls_first := p_nulls_first; " +
+						"end if; " +
+						"if p_descending = 0 then " +
+						"if v_nulls_first = 0 then " +
+						"select cast(multiset(select column_value from table(arr) " +
+						"order by column_value asc nulls last) as " + arrayTypeName + ") " +
+						"into v_result from dual; " +
+						"else " +
+						"select cast(multiset(select column_value from table(arr) " +
+						"order by column_value asc nulls first) as " + arrayTypeName + ") " +
+						"into v_result from dual; " +
+						"end if; " +
+						"else " +
+						"if v_nulls_first = 0 then " +
+						"select cast(multiset(select column_value from table(arr) " +
+						"order by column_value desc nulls last) as " + arrayTypeName + ") " +
+						"into v_result from dual; " +
+						"else " +
+						"select cast(multiset(select column_value from table(arr) " +
+						"order by column_value desc nulls first) as " + arrayTypeName + ") " +
+						"into v_result from dual; " +
+						"end if; " +
+						"end if; " +
+						"return v_result; " +
+						"end;",
 				"create or replace function " + arrayTypeName + "_fill(elem in " + getRawTypeName( elementType ) +
 						", elems number) return " + arrayTypeName + " deterministic is " +
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
@@ -303,6 +351,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 				buildDropFunctionSqlString(arrayTypeName + "_slice"),
 				buildDropFunctionSqlString(arrayTypeName + "_replace"),
 				buildDropFunctionSqlString(arrayTypeName + "_trim"),
+				buildDropFunctionSqlString(arrayTypeName + "_reverse"),
+				buildDropFunctionSqlString(arrayTypeName + "_sort"),
 				buildDropFunctionSqlString(arrayTypeName + "_fill"),
 				buildDropFunctionSqlString(arrayTypeName + "_positions"),
 				buildDropFunctionSqlString(arrayTypeName + "_to_string"),

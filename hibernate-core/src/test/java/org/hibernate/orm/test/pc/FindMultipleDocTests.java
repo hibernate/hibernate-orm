@@ -11,6 +11,7 @@ import org.hibernate.RemovalsMode;
 import org.hibernate.OrderingMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -77,6 +78,22 @@ public class FindMultipleDocTests {
 		} );
 	}
 
+	@Test @FailureExpected(reason = "REPLACE has no effect with DISABLED at least for now")
+	void testReplaceRemovalsNoSessionCheck(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 5 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					RemovalsMode.REPLACE,
+					OrderingMode.UNORDERED
+			);
+			assertThat( persons ).hasSize( 5 );
+			assertThat( persons ).containsNull();
+		} );
+	}
+
 	@Test
 	void testIncludeRemovals(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
@@ -90,6 +107,92 @@ public class FindMultipleDocTests {
 					OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+	}
+
+	@Test
+	void testExcludeRemovalsUnordered(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 5 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					SessionCheckMode.ENABLED,
+					RemovalsMode.EXCLUDE,
+					OrderingMode.UNORDERED
+			);
+			assertThat( persons ).hasSize( 4 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 2 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					SessionCheckMode.ENABLED,
+					RemovalsMode.EXCLUDE,
+					OrderingMode.UNORDERED
+			);
+			assertThat( persons ).hasSize( 3 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+	}
+
+	@Test @FailureExpected(reason = "EXCLUDE has no effect with DISABLED at least for now")
+	void testExcludeRemovalsUnorderedNoSessionCheck(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 5 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					RemovalsMode.EXCLUDE,
+					OrderingMode.UNORDERED
+			);
+			assertThat( persons ).hasSize( 4 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 2 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					RemovalsMode.EXCLUDE,
+					OrderingMode.UNORDERED
+			);
+			assertThat( persons ).hasSize( 3 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+	}
+
+	@Test @FailureExpected(reason = "EXCLUDE incompatible with ORDERED at least for now")
+	void testExcludeRemovalsOrdered(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 5 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					SessionCheckMode.ENABLED,
+					RemovalsMode.EXCLUDE
+			);
+			assertThat( persons ).hasSize( 4 );
+			assertThat( persons ).doesNotContainNull();
+		} );
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Person.class, 2 ) );
+
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3,4,5),
+					SessionCheckMode.ENABLED,
+					RemovalsMode.EXCLUDE
+			);
+			assertThat( persons ).hasSize( 3 );
 			assertThat( persons ).doesNotContainNull();
 		} );
 	}

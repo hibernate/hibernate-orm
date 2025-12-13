@@ -33,7 +33,6 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.internal.LoadAccessContext;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
@@ -170,23 +169,20 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 	}
 
 	public List<T> performFind(
-			List<Object> keys,
+			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph,
 			LoadAccessContext loadAccessContext) {
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared
-		if ( keyType == KeyType.NATURAL ) {
-			return findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext );
-		}
-		else {
-			return findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
-		}
+		return keyType == KeyType.NATURAL
+				? findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext )
+				: findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
 	}
 
-	private List<T> findByNaturalIds(List<Object> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
-		final NaturalIdMapping naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
-		final SessionImplementor session = loadAccessContext.getSession();
+	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+		final var naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
+		final var session = loadAccessContext.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
 				naturalIdSynchronization != NaturalIdSynchronization.DISABLED,
@@ -197,15 +193,15 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		return withOptions( loadAccessContext, graphSemantic, rootGraph, () -> {
 			// normalize the incoming natural-id values and get them in array form as needed
 			// by MultiNaturalIdLoader
-			final Object[] naturalIds = new Object[keys.size()];
-			for ( int i = 0; i < keys.size(); i++ ) {
-				final Object key = keys.get( i );
-				naturalIds[i] = naturalIdMapping.normalizeInput( key );
+			final int size = keys.size();
+			final var naturalIds = new Object[size];
+			for ( int i = 0; i < size; i++ ) {
+				naturalIds[i] = naturalIdMapping.normalizeInput( keys.get( i ) );
 			}
-
 			//noinspection unchecked
-			return (List<T>)entityDescriptor.getMultiNaturalIdLoader()
-					.multiLoad( naturalIds, this, session );
+			return (List<T>)
+					entityDescriptor.getMultiNaturalIdLoader()
+							.multiLoad( naturalIds, this, session );
 		} );
 	}
 
@@ -216,10 +212,12 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			Supplier<List<T>> action) {
 		final var session = loadAccessContext.getSession();
 		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles = influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-		final var effectiveEntityGraph = rootGraph == null
-				? null
-				: influencers.applyEntityGraph( rootGraph, graphSemantic );
+		final var fetchProfiles =
+				influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+		final var effectiveEntityGraph =
+				rootGraph == null
+						? null
+						: influencers.applyEntityGraph( rootGraph, graphSemantic );
 
 		final var readOnly = session.isDefaultReadOnly();
 		session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
@@ -241,21 +239,21 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		}
 	}
 
-	private Object getCachedNaturalIdResolution(
-			Object normalizedNaturalIdValue,
-			LoadAccessContext loadAccessContext) {
-		loadAccessContext.checkOpenOrWaitingForAutoClose();
-		loadAccessContext.pulseTransactionCoordinator();
+//	private Object getCachedNaturalIdResolution(
+//			Object normalizedNaturalIdValue,
+//			LoadAccessContext loadAccessContext) {
+//		loadAccessContext.checkOpenOrWaitingForAutoClose();
+//		loadAccessContext.pulseTransactionCoordinator();
+//
+//		return loadAccessContext
+//				.getSession()
+//				.getPersistenceContextInternal()
+//				.getNaturalIdResolutions()
+//				.findCachedIdByNaturalId( normalizedNaturalIdValue, entityDescriptor );
+//	}
 
-		return loadAccessContext
-				.getSession()
-				.getPersistenceContextInternal()
-				.getNaturalIdResolutions()
-				.findCachedIdByNaturalId( normalizedNaturalIdValue, entityDescriptor );
-	}
-
-	private List<T> findByIds(List<Object> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
-		final Object[] ids = keys.toArray( new Object[0] );
+	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+		final var ids = keys.toArray( new Object[0] );
 		//noinspection unchecked
 		return withOptions( loadAccessContext, graphSemantic, rootGraph,
 				() -> (List<T>) entityDescriptor.multiLoad( ids, loadAccessContext.getSession(), this ) );

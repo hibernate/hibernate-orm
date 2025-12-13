@@ -126,7 +126,6 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
-	@SuppressWarnings( "unchecked" )
 	public List<T> multiLoad(Object... ids) {
 		return buildOperation()
 				.performFind( List.of( ids ), graphSemantic, rootGraph, (LoadAccessContext) session );
@@ -135,7 +134,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	@Override
 	public List<T> multiLoad(List<?> ids) {
 		return buildOperation()
-				.performFind( (List<Object>) ids, graphSemantic, rootGraph, (LoadAccessContext) session );
+				.performFind( ids, graphSemantic, rootGraph, (LoadAccessContext) session );
 	}
 
 	private FindMultipleByKeyOperation<T> buildOperation() {

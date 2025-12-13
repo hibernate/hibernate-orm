@@ -418,17 +418,16 @@ class TypeSafeActivator {
 
 	private static void markNotNull(Property property) {
 		// single table inheritance should not be forced to null due to shared state
-		if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
-			// composite should not add not-null on all columns
-			if ( !property.isComposite() ) {
-				property.setOptional( false );
-				for ( var selectable : property.getSelectables() ) {
-					if ( selectable instanceof Column column ) {
-						column.setNullable( false );
-					}
-					else {
-						BEAN_VALIDATION_LOGGER.notNullOnFormulaPortion( property.getName() );
-					}
+		if ( !( property.getPersistentClass() instanceof SingleTableSubclass )
+				// composite should not add not-null on all columns
+				&& !property.isComposite() ) {
+			property.setOptional( false );
+			for ( var selectable : property.getSelectables() ) {
+				if ( selectable instanceof Column column ) {
+					column.setNullable( false );
+				}
+				else {
+					BEAN_VALIDATION_LOGGER.notNullOnFormulaPortion( property.getName() );
 				}
 			}
 		}

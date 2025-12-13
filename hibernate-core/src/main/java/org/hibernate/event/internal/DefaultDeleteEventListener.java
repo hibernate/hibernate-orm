@@ -499,7 +499,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			// cascade-delete to collections BEFORE the collection owner is deleted
+			// cascade delete to collections BEFORE the collection owner is deleted
 			Cascade.cascade(
 					CascadingActions.REMOVE,
 					CascadePoint.AFTER_INSERT_BEFORE_DELETE,

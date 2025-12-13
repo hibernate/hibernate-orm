@@ -292,8 +292,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 				delayIdentityInserts
 		);
 
-		// postpone initializing id in case the insert has non-nullable transient dependencies
-		// that are not resolved until cascadeAfterSave() is executed
+		// postpone initializing id in case the insert has non-nullable transient
+		// dependencies that are not resolved until cascadeAfterSave() is executed
 		cascadeAfterSave( source, persister, entity, context );
 
 		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
@@ -423,7 +423,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	 * @param persister The entity persister
 	 * @param source The originating session
 	 *
-	 * @return True if the snapshot state changed such that
+	 * @return true if the snapshot state changed such that
 	 *         reinjection of the values into the entity is required.
 	 */
 	protected boolean substituteValuesIfNecessary(
@@ -460,7 +460,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EntityPersister persister,
 			Object entity,
 			C context) {
-		// cascade-save to many-to-one BEFORE the parent is saved
+		// cascade save to many-to-one BEFORE the parent is saved
 		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
@@ -491,7 +491,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EntityPersister persister,
 			Object entity,
 			C context) {
-		// cascade-save to collections AFTER the collection owner was saved
+		// cascade save to collections AFTER the collection owner was saved
 		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {

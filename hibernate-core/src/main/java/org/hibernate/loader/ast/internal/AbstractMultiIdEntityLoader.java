@@ -212,7 +212,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		return (loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
+		return ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
 				|| loadOptions.isSecondLevelCacheCheckingEnabled() )
 			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
@@ -223,15 +223,19 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			LockOptions lockOptions,
 			List<Object> results, int i,
 			SharedSessionContractImplementor session) {
-
 		if ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED ) {
+			final var removalsMode = loadOptions.getRemovalsMode();
+			if ( removalsMode == RemovalsMode.EXCLUDE ) {
+				// note, this method is only called from orderedMultiLoad()
+				throw new IllegalArgumentException( "RemovalsMode.EXCLUDE is incompatible with OrderingMode.ORDERED" );
+			}
 			// look for it in the Session first
 			final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
 			final Object entity = entry.entity();
 			if ( entity != null ) {
 				// put a null in the results
 				final Object result;
-				if ( loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
+				if ( removalsMode == RemovalsMode.INCLUDE
 					|| entry.isManaged() ) {
 					result = entity;
 				}
@@ -377,13 +381,16 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		// look for it in the Session first
 		final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
 		final Object sessionEntity;
-		if ( loadOptions.getSessionCheckMode() ==  SessionCheckMode.ENABLED ) {
+		if ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED ) {
 			sessionEntity = entry.entity();
-			if ( sessionEntity != null
-					&& loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
-					&& !entry.isManaged() ) {
-				resolutionConsumer.consume( i, entityKey, null );
-				return unresolvedIds;
+			if ( sessionEntity != null && !entry.isManaged() ) {
+				switch ( loadOptions.getRemovalsMode() ) {
+					case REPLACE :
+						resolutionConsumer.consume( i, entityKey, null );
+						return unresolvedIds;
+					case EXCLUDE:
+						return unresolvedIds;
+				}
 			}
 		}
 		else {

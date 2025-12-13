@@ -11,7 +11,10 @@ import java.util.Set;
 import jakarta.persistence.Timeout;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
+import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
+import org.hibernate.RemovalsMode;
+import org.hibernate.SessionCheckMode;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -20,7 +23,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -31,6 +34,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(
 		annotatedClasses = {
@@ -47,8 +53,9 @@ public class LoadByNaturalIdTest {
 	private static final Long CHILD_ID = 1l;
 	private static final String CHILD_NAME = "Filippo";
 
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction(
 				session -> {
 					Parent parent = new Parent( PARENT_ID, PARENT_NAME );
@@ -116,6 +123,62 @@ public class LoadByNaturalIdTest {
 					LockMode.PESSIMISTIC_WRITE,
 					Timeout.seconds( 1 ),
 					ReadOnlyMode.READ_ONLY );
+		} );
+	}
+
+	@Test
+	void testFindMultipleOptions(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var multiple = session.findMultiple(
+					Parent.class,
+					List.of( "Luigi", "Filippo" ),
+					KeyType.NATURAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.UNORDERED,
+					RemovalsMode.EXCLUDE
+			);
+			assertEquals( 1, multiple.size() );
+		} );
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Parent.class, "Luigi", KeyType.NATURAL ) );
+			var multiple = session.findMultiple(
+					Parent.class,
+					List.of( "Luigi", "Filippo" ),
+					KeyType.NATURAL,
+					SessionCheckMode.ENABLED,
+					OrderingMode.UNORDERED,
+					RemovalsMode.EXCLUDE
+			);
+			assertEquals( 0, multiple.size() );
+		} );
+	}
+
+	@Test
+	void testFindMultipleOptions2(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var multiple = session.findMultiple(
+					Parent.class,
+					List.of( "Luigi", "Filippo" ),
+					KeyType.NATURAL,
+					SessionCheckMode.ENABLED,
+					RemovalsMode.REPLACE
+			);
+			assertEquals( 2, multiple.size() );
+			assertNotNull( multiple.get(0) );
+			assertNull( multiple.get(1) );
+		} );
+		factoryScope.inTransaction( (session) -> {
+			session.remove( session.find( Parent.class, "Luigi", KeyType.NATURAL ) );
+			var multiple = session.findMultiple(
+					Parent.class,
+					List.of( "Luigi", "Filippo" ),
+					KeyType.NATURAL,
+					SessionCheckMode.ENABLED,
+					RemovalsMode.REPLACE
+			);
+			assertEquals( 2, multiple.size() );
+			assertNull( multiple.get(0) );
+			assertNull( multiple.get(1) );
 		} );
 	}
 

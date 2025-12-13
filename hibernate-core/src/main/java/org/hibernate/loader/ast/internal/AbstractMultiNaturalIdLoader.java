@@ -129,7 +129,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		return results;
 	}
 
-	private <K> Object entityForNaturalId(PersistenceContext context, K naturalId) {
+	private Object entityForNaturalId(PersistenceContext context, Object naturalId) {
 		final var descriptor = getEntityDescriptor();
 		final Object id = context.getNaturalIdResolutions().findCachedIdByNaturalId( naturalId, descriptor );
 		// id can be null if a non-existent natural id is requested, or a mutable natural id was changed and then deleted
@@ -142,6 +142,11 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			SharedSessionContractImplementor session,
 			LockOptions lockOptions,
 			Consumer<E> results ) {
+		final var removalsMode = loadOptions.getRemovalsMode();
+		if ( removalsMode == RemovalsMode.EXCLUDE
+				&& loadOptions.getOrderingMode() == OrderingMode.ORDERED ) {
+			throw new IllegalArgumentException( "RemovalsMode.EXCLUDE is incompatible with OrderingMode.ORDERED" );
+		}
 		final List<K> unresolvedIds = arrayList( naturalIds.length );
 		final var context = session.getPersistenceContextInternal();
 		for ( K naturalId : naturalIds ) {
@@ -149,12 +154,14 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			if ( entity != null ) {
 				// Entity is already in the persistence context
 				final var entry = context.getEntry( entity );
-				if ( loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
+				if ( removalsMode == RemovalsMode.INCLUDE
 						|| !entry.getStatus().isDeletedOrGone() ) {
 					// either a managed entry, or a deleted one with returnDeleted enabled
 					upgradeLock( entity, entry, lockOptions, session );
-					final Object result = context.proxyFor( entity );
-					results.accept( (E) result );
+					if ( removalsMode != RemovalsMode.EXCLUDE ) {
+						final Object result = context.proxyFor( entity );
+						results.accept( (E) result );
+					}
 				}
 			}
 			else {

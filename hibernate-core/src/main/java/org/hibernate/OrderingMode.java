@@ -28,7 +28,7 @@ import java.util.List;
  * The default is {@link #ORDERED}.
  *
  * @see org.hibernate.Session#findMultiple(Class, List, FindOption...)
- * @see org.hibernate.Session#findMultiple(EntityGraph, List , FindOption...)
+ * @see org.hibernate.Session#findMultiple(EntityGraph, List, FindOption...)
  *
  * @since 7.2
  */

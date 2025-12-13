@@ -13,16 +13,16 @@ import java.util.List;
 /**
  * Indicates whether the persistence context should be checked for entities
  * matching the identifiers to be loaded - <ul>
- *     <li>Entities which are in a managed state are not re-loaded from the database.
- *     		those identifiers are removed from the SQL restriction sent to the database.
+ *     <li>Entities which are in a managed state are not reloaded from the database.
+ *     		Those identifiers are removed from the SQL restriction sent to the database.
  *     <li>Entities which are in a removed state are {@linkplain RemovalsMode#REPLACE excluded}
  *     		from the result by default, but can be {@linkplain RemovalsMode#INCLUDE included} if desired.
  * </ul>
  * <p/>
- * The default is {@link #DISABLED}
+ * The default is {@link #DISABLED}.
  *
- * @see org.hibernate.Session#findMultiple(Class, List , FindOption...)
- * @see org.hibernate.Session#findMultiple(EntityGraph, List , FindOption...)
+ * @see org.hibernate.Session#findMultiple(Class, List, FindOption...)
+ * @see org.hibernate.Session#findMultiple(EntityGraph, List, FindOption...)
  *
  * @since 7.2
  */

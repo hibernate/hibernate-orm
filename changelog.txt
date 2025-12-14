@@ -1,6 +1,19 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.39.Final (December 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36641
+
+
+** Bug
+    * HHH-19963 Wrong references in entity fields with circular associations
+    * HHH-19746 JPA parameters might be incorrectly handled resulting in exceptions or queries returning incorrect results
+
+** Improvement
+    * HHH-19943 Comparison of generic nested EmbeddedId's fails for JPQL and Criteria API
+
 Changes in 6.6.38.Final (November 30, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

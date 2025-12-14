@@ -1,6 +1,21 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.12.Final (December 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36674
+
+
+** Bug
+    * HHH-19972 OptionalTableUpdateOperation can fail on PostgreSQL < 15 and CockroachDB
+    * HHH-19963 Wrong references in entity fields with circular associations
+    * HHH-19746 JPA parameters might be incorrectly handled resulting in exceptions or queries returning incorrect results
+    * HHH-18217 StatelessSession.upsert() for entity with all-null non-id fields, or no non-id field
+
+** Improvement
+    * HHH-19943 Comparison of generic nested EmbeddedId's fails for JPQL and Criteria API
+
 Changes in 7.1.11.Final (December 01, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

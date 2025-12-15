@@ -8,6 +8,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.ScrollMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -25,6 +26,8 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -50,6 +53,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 
@@ -502,6 +507,16 @@ public class SpannerDialect extends Dialect {
 		return this.spannerTableExporter;
 	}
 
+	@Override
+	public String getCreateTableString() {
+		return "create table if not exists";
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return true;
+	}
+
 	/* SELECT-related functions */
 
 	@Override
@@ -893,6 +908,32 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(
+			IdentifierHelperBuilder builder,
+			DatabaseMetaData metadata) throws SQLException {
+		builder.applyReservedWords( metadata );
+		builder.setAutoQuoteKeywords( true );
+		builder.setAutoQuoteDollar( true );
+		return super.buildIdentifierHelper( builder, metadata );
+	}
+
+	@Override
+	public ScrollMode defaultScrollMode() {
+		return ScrollMode.FORWARD_ONLY;
+	}
+
+	@Override
+	public String getTruncateTableStatement(String tableName) {
+		// spanner doesn't have truncate command, so we delete
+		return "delete from " + tableName + " where true";
 	}
 
 	/* Type conversion and casting */

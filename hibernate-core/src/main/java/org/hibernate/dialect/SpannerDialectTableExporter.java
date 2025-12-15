@@ -13,12 +13,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static java.util.Collections.addAll;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
@@ -67,7 +69,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 	private String[] getTableString(Table table, Metadata metadata, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
 		String primaryKeyColNames = StreamSupport.stream( keyColumns.spliterator(), false )
-				.map( Column::getName )
+				.map( col -> col.getQuotedName( spannerDialect )  )
 				.collect( Collectors.joining( "," ) );
 
 		StringJoiner colsAndTypes = new StringJoiner( "," );
@@ -76,7 +78,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 		for ( Column column : table.getColumns() ) {
 			final String sqlType = column.getSqlType( metadata );
 			final String columnDeclaration =
-					column.getName()
+					column.getQuotedName(spannerDialect)
 							+ " " + sqlType
 							+ ( column.isNullable() ? this.spannerDialect.getNullColumnString( sqlType ) : " not null" );
 			colsAndTypes.add( columnDeclaration );
@@ -92,6 +94,10 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 				)
 		);
 
+		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
+			addAll( statements, initCommand.initCommands() );
+		}
+
 		return statements.toArray(EMPTY_STRING_ARRAY);
 	}
 
@@ -106,7 +112,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 		ArrayList<String> dropStrings = new ArrayList<>();
 
 		for ( Index index : table.getIndexes().values() ) {
-			dropStrings.add( "drop index " + index.getName() );
+			dropStrings.add( "drop index if exists " + index.getName() );
 		}
 
 		dropStrings.add( this.spannerDialect.getDropTableString( context.format( table.getQualifiedTableName() ) ) );

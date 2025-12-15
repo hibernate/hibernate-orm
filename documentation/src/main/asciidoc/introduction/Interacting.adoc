@@ -385,7 +385,7 @@ For single-attribute natural ids, whether defined by a basic or embedded type, t
 For multi-attribute natural ids, Hibernate will accept a number of forms:
 
 * If a link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] is defined, an instance of the natural id class may be used.
-* A `List` of the individual attribute values, ordered alphabetically by name, may be used.
+* An array of the individual attribute values, ordered alphabetically by name, may be used.
 * A `Map` of the individual attribute values, keyed by the attribute name, may be used.
 
 Each of the operations we've seen so far affects a single entity instance passed as an argument.

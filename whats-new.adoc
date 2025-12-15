@@ -22,9 +22,9 @@ The new `KeyType` enum is a `FindOption` that allows `find()` and `findMultiple(
 @Entity
 class Person {
 	@Id
-    Integer id;
+	Integer id;
 	@NaturalId
-    String name;
+	String name;
 	...
 }
 
@@ -77,5 +77,5 @@ Given this model, we can load Person by natural id via:
 ----
 session.find( Order.class,
         new PersonNameKey( "Bilbo", "Baggins" ),
-        KeyType.NATURAL )
+        KeyType.NATURAL );
 ----

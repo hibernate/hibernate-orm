@@ -74,21 +74,6 @@ include::{example-dir-naturalid}/MutableNaturalIdTest.java[tags=naturalid-mutabl
 ====
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 [[natural-id-caching]]
 ==== Natural id resolution caching
 
@@ -138,7 +123,7 @@ When loading by natural id, the type of value accepted depends on the definition
 * For multi-attribute natural ids, Hibernate will accept a number of forms:
 
 ** If a link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] is defined, an instance of the natural id class may be used.
-** A `List` of the individual attribute values, ordered alphabetically by name, may be used.
+** An array of the individual attribute values, ordered alphabetically by name, may be used.
 ** A `Map` of the individual attribute values, keyed by the attribute name, may be used.
 
 There are a few differences to be aware of when loading by natural id compared to loading by primary key.  Most importantly, if the natural id is mutable and its values have changed, it is possible for the resolution caching to become out of date until a flush occurs resulting in incorrect results.

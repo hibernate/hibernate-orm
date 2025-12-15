@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -111,7 +112,7 @@ public class SimpleNaturalIdClassTests {
 		stats.clear();
 
 		factoryScope.inTransaction( (session) -> {
-			session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL );
+			session.find( SystemUser.class, new SystemUserKey("ci", "steve"), KeyType.NATURAL );
 			assertEquals( 1, stats.getNaturalIdStatistics( SystemUser.class.getName() ).getNormalizationCount() );
 		} );
 	}
@@ -123,6 +124,23 @@ public class SimpleNaturalIdClassTests {
 			// rather than just its id
 			var customer = session.getReference( Customer.class, 1 );
 			session.find( Order.class, new OrderKey(customer, 1001), KeyType.NATURAL );
+		} );
+	}
+
+	@Test
+	void testFindByCompositeNaturalIdForms(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			// by idclass is tested in other methods...
+
+			var customer = session.getReference( Customer.class, 1 );
+
+			// by map
+			session.find( SystemUser.class, Map.of( "system", "ci", "username", "steve" ), KeyType.NATURAL );
+			session.find( Order.class, Map.of( "customer", customer, "invoiceNumber", 1001), KeyType.NATURAL );
+
+			// by array
+			session.find( SystemUser.class, new Object[] {"ci","steve"}, KeyType.NATURAL );
+			session.find( Order.class, new Object[] {customer,1001}, KeyType.NATURAL );
 		} );
 	}
 

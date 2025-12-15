@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.mapping.naturalid.mutable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
@@ -399,6 +401,40 @@ public class MutableNaturalIdTest {
 
 			// this fails, that's the bug
 			assertNotNull( session.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load());
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-7287")
+	public void testModificationInOtherSession2(SessionFactoryScope factoryScope) {
+		var id = factoryScope.fromTransaction( (session) -> {
+			User u = new User( "gavin", "hb", "secret" );
+			session.persist( u );
+			return u.getId();
+		} );
+
+		// Use transactionless session
+		factoryScope.inSession( (session) -> {
+			// this loads the state into this `session`
+			var byNaturalId = session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL );
+			assertNotNull( byNaturalId );
+
+			// CHANGE natural-id values in another session
+			factoryScope.inTransaction( (otherSession) -> {
+				var u = otherSession.find( User.class, id );
+				u.setOrg( "zz" );
+			} );
+			// CHANGE APPLIED
+
+			byNaturalId = session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL );
+			assertNotNull( byNaturalId );
+
+			// the internal query will 'see' the new values, because isolation level < SERIALIZABLE
+			var byNaturalId2 = session.find( User.class, Map.of("name", "gavin", "org", "zz"), KeyType.NATURAL );
+			assertSame( byNaturalId, byNaturalId2 );
+
+			// this fails, that's the bug
+			assertNotNull( session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL ) );
 		} );
 	}
 }

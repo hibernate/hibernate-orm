@@ -1,4 +1,4 @@
-= What's New in 7.2
+= What's New in 7.3
 :toc2:
 :sectanchors:
 :toclevels: 4

@@ -269,12 +269,20 @@ public class BasicTypeRegistry implements Serializable {
 			if ( basicTypeReferences != null && !basicTypeReferences.isEmpty() ) {
 				final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 				for ( var typeReference : basicTypeReferences ) {
-					if ( jdbcTypeRegistry.getDescriptor( typeReference.getSqlTypeCode() ) == jdbcType ) {
-						final var basicType = typesByName.get( typeReference.getName() );
-						//noinspection unchecked
-						return registeredTypeMatches( javaType, jdbcType, basicType )
-								? (BasicType<J>) basicType
-								: (BasicType<J>) createBasicType( typeReference.getName(), typeReference );
+					if ( typeReference.getJavaType() == javaType.getJavaTypeClass() ) {
+						@SuppressWarnings("unchecked") // safe, we just checked
+						final var castTypeReference = (BasicTypeReference<J>) typeReference;
+						if ( jdbcTypeRegistry.getDescriptor( typeReference.getSqlTypeCode() ) == jdbcType ) {
+							final var basicType = typesByName.get( typeReference.getName() );
+							if ( registeredTypeMatches( javaType, jdbcType, basicType ) ) {
+								@SuppressWarnings("unchecked") // safe, we checked in registeredTypeMatches()
+								final var castType = (BasicType<J>) basicType;
+								return castType;
+							}
+							else {
+								return createBasicType( castTypeReference.getName(), castTypeReference );
+							}
+						}
 					}
 				}
 			}

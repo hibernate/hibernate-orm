@@ -1193,6 +1193,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	public void fillSimpleValue() {
+
+		basicValue.setMemberDetails( memberDetails );
+
 		basicValue.setExplicitTypeParams( explicitLocalCustomTypeParams );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

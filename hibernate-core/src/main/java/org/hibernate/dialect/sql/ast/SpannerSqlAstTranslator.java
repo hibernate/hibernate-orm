@@ -122,7 +122,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			renderDeleteClause( statement );
 			appendSql( " where true" );
 			visitReturningColumns( statement.getReturningColumns() );
-		} else {
+		}
+		else {
 			super.visitDeleteStatementOnly( statement );
 		}
 	}
@@ -135,7 +136,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			renderSetClause( statement.getAssignments() );
 			appendSql( " where true" );
 			visitReturningColumns( statement.getReturningColumns() );
-		} else {
+		}
+		else {
 			super.visitUpdateStatementOnly( statement );
 		}
 	}

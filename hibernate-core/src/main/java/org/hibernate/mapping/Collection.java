@@ -425,6 +425,11 @@ public abstract sealed class Collection
 	}
 
 	@Override
+	public boolean hasColumns() {
+		return false;
+	}
+
+	@Override
 	public Type getType() throws MappingException {
 		return getCollectionType();
 	}

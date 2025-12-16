@@ -176,7 +176,7 @@ public abstract sealed class ToOne
 							? entityBinding.getIdentifier()
 							: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
 			if ( value instanceof Component component ) {
-				final int[] originalPropertyOrder = component.sortProperties();
+				final var originalPropertyOrder = component.sortProperties();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
 						sortColumns( originalPropertyOrder );

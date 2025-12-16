@@ -22,25 +22,19 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
@@ -84,7 +78,7 @@ public class ComponentType extends AbstractType
 		this.isKey = component.isKey();
 		this.propertySpan = component.getPropertySpan();
 		this.originalPropertyOrder = originalPropertyOrder;
-		final Value discriminator = component.getDiscriminator();
+		final var discriminator = component.getDiscriminator();
 		final int length = propertySpan + (component.isPolymorphic() ? 1 : 0);
 		this.propertyNames = new String[length];
 		this.propertyTypes = new Type[length];
@@ -99,7 +93,7 @@ public class ComponentType extends AbstractType
 						.supportsCascadeDelete();
 
 		int i = 0;
-		for ( Property property : component.getProperties() ) {
+		for ( var property : component.getProperties() ) {
 			this.propertyNames[i] = property.getName();
 			this.propertyTypes[i] = property.getValue().getType();
 			this.propertyNullability[i] = property.isOptional();
@@ -148,7 +142,7 @@ public class ComponentType extends AbstractType
 	@Override
 	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		//Not called at runtime so doesn't matter if it's slow :)
-		final int[] sqlTypes = new int[getColumnSpan( mappingContext )];
+		final var sqlTypes = new int[getColumnSpan( mappingContext )];
 		int n = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			int[] subtypes = propertyTypes[i].getSqlTypeCodes( mappingContext );
@@ -180,8 +174,8 @@ public class ComponentType extends AbstractType
 			return true;
 		}
 		// null value and empty component are considered equivalent
-		final Object[] xvalues = getPropertyValues( x );
-		final Object[] yvalues = getPropertyValues( y );
+		final var xvalues = getPropertyValues( x );
+		final var yvalues = getPropertyValues( y );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isSame( xvalues[i], yvalues[i] ) ) {
 				return false;
@@ -225,7 +219,8 @@ public class ComponentType extends AbstractType
 			return 0;
 		}
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int propertyCompare = propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ) );
+			final int propertyCompare =
+					propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ) );
 			if ( propertyCompare != 0 ) {
 				return propertyCompare;
 			}
@@ -239,7 +234,8 @@ public class ComponentType extends AbstractType
 			return 0;
 		}
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int propertyCompare = propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ), sessionFactory );
+			final int propertyCompare =
+					propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ), sessionFactory );
 			if ( propertyCompare != 0 ) {
 				return propertyCompare;
 			}
@@ -298,9 +294,10 @@ public class ComponentType extends AbstractType
 			return false;
 		}
 		// null value and empty component are considered equivalent
+		final var context = session.getFactory().getRuntimeMetamodels();
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
+			final int len = propertyTypes[i].getColumnSpan( context );
 			if ( len <= 1 ) {
 				final boolean dirty = ( len == 0 || checkable[loc] ) &&
 						propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session );
@@ -309,7 +306,7 @@ public class ComponentType extends AbstractType
 				}
 			}
 			else {
-				final boolean[] subcheckable = new boolean[len];
+				final var subcheckable = new boolean[len];
 				System.arraycopy( checkable, loc, subcheckable, 0, len );
 				final boolean dirty = propertyTypes[i].isDirty(
 						getPropertyValue( x, i ),
@@ -336,10 +333,11 @@ public class ComponentType extends AbstractType
 			return false;
 		}
 		// null value and empty components are considered equivalent
+		final var context = session.getFactory().getRuntimeMetamodels();
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			final int len = propertyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
-			final boolean[] subcheckable = new boolean[len];
+			final int len = propertyTypes[i].getColumnSpan( context );
+			final var subcheckable = new boolean[len];
 			System.arraycopy( checkable, loc, subcheckable, 0, len );
 			if ( propertyTypes[i].isModified( getPropertyValue( old, i ),
 					getPropertyValue( current, i ), subcheckable, session ) ) {
@@ -354,10 +352,11 @@ public class ComponentType extends AbstractType
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int begin, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		final Object[] subvalues = nullSafeGetValues( value );
+		final var context = session.getFactory().getRuntimeMetamodels();
+		final var subvalues = nullSafeGetValues( value );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			propertyTypes[i].nullSafeSet( st, subvalues[i], begin, session );
-			begin += propertyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
+			begin += propertyTypes[i].getColumnSpan( context );
 		}
 	}
 
@@ -369,10 +368,11 @@ public class ComponentType extends AbstractType
 			boolean[] settable,
 			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		final Object[] subvalues = nullSafeGetValues( value );
+		final var context = session.getFactory().getRuntimeMetamodels();
+		final var subvalues = nullSafeGetValues( value );
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
+			int len = propertyTypes[i].getColumnSpan( context );
 			//noinspection StatementWithEmptyBody
 			if ( len == 0 ) {
 				//noop
@@ -394,12 +394,9 @@ public class ComponentType extends AbstractType
 	}
 
 	private Object[] nullSafeGetValues(Object value) {
-		if ( value == null ) {
-			return new Object[propertySpan];
-		}
-		else {
-			return getPropertyValues( value );
-		}
+		return value == null
+				? new Object[ propertySpan ]
+				: getPropertyValues( value );
 	}
 
 	@Override
@@ -420,9 +417,9 @@ public class ComponentType extends AbstractType
 			return array[i];
 		}
 		else {
-			final EmbeddableMappingType embeddableMappingType = embeddableTypeDescriptor();
+			final var embeddableMappingType = embeddableTypeDescriptor();
 			if ( embeddableMappingType.isPolymorphic() ) {
-				final EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType =
+				final var concreteEmbeddableType =
 						embeddableMappingType.findSubtypeBySubclass( component.getClass().getName() );
 				return concreteEmbeddableType.declaresAttribute( i )
 						? embeddableMappingType.getValue( component, i )
@@ -479,7 +476,7 @@ public class ComponentType extends AbstractType
 		}
 		else {
 			final Map<String, String> result = new HashMap<>();
-			final Object[] values = getPropertyValues( value );
+			final var values = getPropertyValues( value );
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					result.put( propertyNames[i], "<uninitialized>" );
@@ -503,7 +500,7 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
-			final Object[] values = getPropertyValues( component );
+			final var values = getPropertyValues( component );
 			for ( int i = 0; i < propertySpan; i++ ) {
 				values[i] = propertyTypes[i].deepCopy( values[i], factory );
 			}
@@ -512,7 +509,7 @@ public class ComponentType extends AbstractType
 
 			//not absolutely necessary, but helps for some
 			//equals()/hashCode() implementations
-			final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
+			final var parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
 			if ( parentAccess != null ) {
 				parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ) );
 			}
@@ -609,17 +606,18 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
-			final EmbeddableMappingType mappingType = embeddableTypeDescriptor();
+			final var mappingType = embeddableTypeDescriptor();
 			final boolean polymorphic = mappingType.isPolymorphic();
-			final Object[] values = new Object[propertySpan + (polymorphic ? 1 : 0)];
-			final Object[] propertyValues = getPropertyValues( value );
+			final var values = new Object[propertySpan + (polymorphic ? 1 : 0)];
+			final var propertyValues = getPropertyValues( value );
 			int i = 0;
 			for ( ; i < propertySpan; i++ ) {
 				values[i] = propertyTypes[i].disassemble( propertyValues[i], session, owner );
 			}
 			if ( polymorphic ) {
-				final EmbeddableDiscriminatorMapping discriminatorMapping = mappingType.getDiscriminatorMapping();
-				final Object discriminatorValue = discriminatorMapping.getDiscriminatorValue( value.getClass().getName() );
+				final var discriminatorMapping = mappingType.getDiscriminatorMapping();
+				final Object discriminatorValue =
+						discriminatorMapping.getDiscriminatorValue( value.getClass().getName() );
 				values[i] = discriminatorMapping.disassemble( discriminatorValue, session );
 			}
 			return values;
@@ -633,17 +631,18 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
-			final EmbeddableMappingType mappingType = embeddableTypeDescriptor();
+			final var mappingType = embeddableTypeDescriptor();
 			final boolean polymorphic = mappingType.isPolymorphic();
-			final Object[] values = new Object[propertySpan + (polymorphic ? 1 : 0)];
-			final Object[] propertyValues = getPropertyValues( value );
+			final var values = new Object[propertySpan + (polymorphic ? 1 : 0)];
+			final var propertyValues = getPropertyValues( value );
 			int i = 0;
 			for ( ; i < propertyTypes.length; i++ ) {
 				values[i] = propertyTypes[i].disassemble( propertyValues[i], sessionFactory );
 			}
 			if ( polymorphic ) {
-				final EmbeddableDiscriminatorMapping discriminatorMapping = mappingType.getDiscriminatorMapping();
-				final Object discriminatorValue = discriminatorMapping.getDiscriminatorValue( value.getClass().getName() );
+				final var discriminatorMapping = mappingType.getDiscriminatorMapping();
+				final Object discriminatorValue =
+						discriminatorMapping.getDiscriminatorValue( value.getClass().getName() );
 				values[i] = discriminatorMapping.disassemble( discriminatorValue, null );
 			}
 			return values;
@@ -657,22 +656,22 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
-			final EmbeddableMappingType mappingType = embeddableTypeDescriptor();
-			final Object[] values = (Object[]) object;
+			final var mappingType = embeddableTypeDescriptor();
+			final var values = (Object[]) object;
 			final boolean polymorphic = mappingType.isPolymorphic();
-			final Object[] assembled = new Object[values.length - ( polymorphic ? 1 : 0 )];
+			final var assembled = new Object[values.length - ( polymorphic ? 1 : 0 )];
 			int i = 0;
 			for ( ; i < assembled.length; i++ ) {
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			final EmbeddableRepresentationStrategy representation = mappingType.getRepresentationStrategy();
-			final EmbeddableInstantiator instantiator = polymorphic
+			final var representation = mappingType.getRepresentationStrategy();
+			final var instantiator = polymorphic
 					? representation.getInstantiatorForDiscriminator( values[i] )
 					: representation.getInstantiator();
 			final Object instance = instantiator.instantiate( () -> assembled );
 
-			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
+			final var parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
 			if ( parentInjectionAccess != null ) {
 				parentInjectionAccess.getSetter().set( instance, owner );
 			}
@@ -693,12 +692,12 @@ public class ComponentType extends AbstractType
 
 	@Override
 	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
-		final boolean[] result = new boolean[getColumnSpan( mapping )];
+		final var result = new boolean[getColumnSpan( mapping )];
 		if ( value != null ) {
-			final Object[] values = getPropertyValues( value ); //TODO!!!!!!!
+			final var values = getPropertyValues( value ); //TODO!!!!!!!
 			int loc = 0;
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
-				final boolean[] propertyNullness = propertyTypes[i].toColumnNullness( values[i], mapping );
+				final var propertyNullness = propertyTypes[i].toColumnNullness( values[i], mapping );
 				System.arraycopy( propertyNullness, 0, result, loc, propertyNullness.length );
 				loc += propertyNullness.length;
 			}
@@ -713,7 +712,7 @@ public class ComponentType extends AbstractType
 
 	@Override
 	public int getPropertyIndex(String name) {
-		final String[] names = getPropertyNames();
+		final var names = getPropertyNames();
 		for ( int i = 0, max = names.length; i < max; i++ ) {
 			if ( names[i].equals( name ) ) {
 				return i;
@@ -721,7 +720,7 @@ public class ComponentType extends AbstractType
 		}
 		throw new PropertyNotFoundException(
 				"Could not resolve attribute '" + name + "' of '" + getReturnedClassName() + "'"
-					+ " (must be one of '" + StringHelper.join("', '", names) + "')"
+					+ " (must be one of '" + join("', '", names) + "')"
 		);
 	}
 
@@ -741,13 +740,13 @@ public class ComponentType extends AbstractType
 
 	@Override
 	public JdbcType getJdbcType() {
-		final SelectableMapping aggregateMapping = embeddableTypeDescriptor().getAggregateMapping();
+		final var aggregateMapping = embeddableTypeDescriptor().getAggregateMapping();
 		return aggregateMapping == null ? null : aggregateMapping.getJdbcMapping().getJdbcType();
 	}
 
 	private boolean determineIfProcedureParamExtractionCanBePerformed() {
-		for ( Type propertyType : propertyTypes ) {
-			if ( !(propertyType instanceof ProcedureParameterExtractionAware<?> parameterExtractionAware)
+		for ( var propertyType : propertyTypes ) {
+			if ( !( propertyType instanceof ProcedureParameterExtractionAware<?> parameterExtractionAware )
 					|| !parameterExtractionAware.canDoExtraction() ) {
 				return false;
 			}
@@ -769,7 +768,7 @@ public class ComponentType extends AbstractType
 			boolean notNull = false;
 			for ( int i = 0; i < propertySpan; i++ ) {
 				// we know this cast is safe from canDoExtraction
-				final Type propertyType = propertyTypes[i];
+				final var propertyType = propertyTypes[i];
 				final var extractionAware = (ProcedureParameterExtractionAware<?>) propertyType;
 				final Object value = extractionAware.extract( statement, currentIndex, session );
 				if ( value == null ) {
@@ -808,11 +807,12 @@ public class ComponentType extends AbstractType
 	}
 
 	private Object resolve(Object[] value) {
-		final EmbeddableMappingType mappingType = embeddableTypeDescriptor();
-		final EmbeddableRepresentationStrategy representation = mappingType.getRepresentationStrategy();
-		final EmbeddableInstantiator instantiator =
+		final var mappingType = embeddableTypeDescriptor();
+		final var representation = mappingType.getRepresentationStrategy();
+		final var instantiator =
 				mappingType.isPolymorphic()
-						// the discriminator here is the composite class because it gets converted to the domain type when extracted
+						// the discriminator here is the composite class because
+						// it gets converted to the domain type when extracted
 						? representation.getInstantiatorForClass( ((Class<?>) value[value.length - 1]).getName() )
 						: representation.getInstantiator();
 		return instantiator.instantiate( () -> value );
@@ -827,8 +827,8 @@ public class ComponentType extends AbstractType
 	}
 
 	protected final EmbeddableInstantiator instantiator(Object compositeInstance) {
-		final EmbeddableMappingType mappingType = embeddableTypeDescriptor();
-		final EmbeddableRepresentationStrategy representationStrategy = mappingType.getRepresentationStrategy();
+		final var mappingType = embeddableTypeDescriptor();
+		final var representationStrategy = mappingType.getRepresentationStrategy();
 		if ( mappingType.isPolymorphic() ) {
 			final String compositeClassName =
 					compositeInstance != null
@@ -881,9 +881,8 @@ public class ComponentType extends AbstractType
 	@Override
 	public Object replacePropertyValues(Object component, Object[] values, SharedSessionContractImplementor session)
 			throws HibernateException {
-		if ( !isMutable() ) {
-			return instantiator( component ).instantiate( () -> values );
-		}
-		return CompositeTypeImplementor.super.replacePropertyValues( component, values, session );
+		return isMutable()
+				? CompositeTypeImplementor.super.replacePropertyValues( component, values, session )
+				: instantiator( component ).instantiate( () -> values );
 	}
 }

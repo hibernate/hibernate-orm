@@ -94,6 +94,11 @@ public class OneToMany implements Value {
 	}
 
 	@Override
+	public boolean hasColumns() {
+		return associatedClass.getKey().hasColumns();
+	}
+
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.JOIN;
 	}

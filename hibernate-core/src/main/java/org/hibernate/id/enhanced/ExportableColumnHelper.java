@@ -48,6 +48,11 @@ class ExportableColumnHelper {
 			}
 
 			@Override
+			public boolean hasColumns() {
+				return true;
+			}
+
+			@Override
 			public Type getType() {
 				return type;
 			}

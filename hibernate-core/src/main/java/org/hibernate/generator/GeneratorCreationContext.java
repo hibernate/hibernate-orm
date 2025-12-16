@@ -81,7 +81,7 @@ public interface GeneratorCreationContext {
 	 * The {@link SqlStringGenerationContext} to use when generating SQL.
 	 */
 	default SqlStringGenerationContext getSqlStringGenerationContext() {
-		final Database database = getDatabase();
+		final var database = getDatabase();
 		return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
 	}
 }

@@ -52,6 +52,12 @@ public interface Value extends Serializable {
 	List<Column> getColumns();
 
 	/**
+	 * Does the mapping involve at least one column?
+	 * @since 7.3
+	 */
+	boolean hasColumns();
+
+	/**
 	 * Same as {@link #getSelectables()} except it returns the PK for the
 	 * non-owning side of a one-to-one association.
 	 */

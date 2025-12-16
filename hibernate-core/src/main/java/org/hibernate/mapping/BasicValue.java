@@ -235,7 +235,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	public Selectable getColumn() {
-		return getColumnSpan() == 0 ? null : getColumn( 0 );
+		return hasColumns() ? getColumn( 0 ) : null;
 	}
 
 	public java.lang.reflect.Type getResolvedJavaType() {

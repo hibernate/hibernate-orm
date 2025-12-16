@@ -122,9 +122,9 @@ public abstract class SimpleValue implements KeyValue {
 	protected SimpleValue(SimpleValue original) {
 		this.buildingContext = original.buildingContext;
 		this.metadata = original.metadata;
-		for ( Selectable selectable : original.columns ) {
+		for ( var selectable : original.columns ) {
 			if ( selectable instanceof Column column ) {
-				final Column newColumn = column.clone();
+				final var newColumn = column.clone();
 				newColumn.setValue( this );
 				this.columns.add( newColumn );
 			}
@@ -235,8 +235,8 @@ public abstract class SimpleValue implements KeyValue {
 	public void sortColumns(int[] originalOrder) {
 		if ( columns.size() > 1 ) {
 			final var originalColumns = columns.toArray( new Selectable[0] );
-			final boolean[] originalInsertability = toBooleanArray( insertability );
-			final boolean[] originalUpdatability = toBooleanArray( updatability );
+			final var originalInsertability = toBooleanArray( insertability );
+			final var originalUpdatability = toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
 				final var selectable = originalColumns[i];
@@ -263,6 +263,11 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public int getColumnSpan() {
 		return columns.size();
+	}
+
+	@Override
+	public boolean hasColumns() {
+		return !columns.isEmpty();
 	}
 
 	protected Selectable getColumn(int position){
@@ -900,7 +905,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {
-		final boolean[] array = new boolean[ list.size() ];
+		final var array = new boolean[ list.size() ];
 		int i = 0;
 		for ( Boolean value : list ) {
 			array[ i++ ] = value;
@@ -929,11 +934,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	protected ParameterType createParameterType() {
 		try {
-			final String[] columnNames = new String[ columns.size() ];
-			final Long[] columnLengths = new Long[ columns.size() ];
-			for ( int i = 0; i < columns.size(); i++ ) {
-				final var selectable = columns.get(i);
-				if ( selectable instanceof Column column ) {
+			final int size = columns.size();
+			final var columnNames = new String[size];
+			final var columnLengths = new Long[size];
+			for ( int i = 0; i < size; i++ ) {
+				if ( columns.get(i) instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}

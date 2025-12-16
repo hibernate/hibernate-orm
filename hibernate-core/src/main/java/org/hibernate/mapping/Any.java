@@ -157,7 +157,7 @@ public class Any extends SimpleValue {
 	private void applySelectableLocally(Selectable selectable) {
 		// note: adding column to meta or key mapping ultimately calls back into `#applySelectableToSuper`
 		//		to add the column to the ANY super.
-		if ( discriminatorDescriptor == null && getColumnSpan() == 0 ) {
+		if ( discriminatorDescriptor == null && !hasColumns() ) {
 			if ( selectable instanceof Column column ) {
 				metaMapping.addColumn( column );
 			}
@@ -247,7 +247,7 @@ public class Any extends SimpleValue {
 	}
 
 	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
-		final JdbcServices jdbcServices =
+		final var jdbcServices =
 				buildingContext.getBootstrapContext().getServiceRegistry()
 						.requireService( JdbcServices.class );
 		return column.getQuotedName( jdbcServices.getDialect() );

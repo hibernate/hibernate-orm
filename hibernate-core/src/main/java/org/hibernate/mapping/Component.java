@@ -246,6 +246,17 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return getSelectables().size();
 	}
 
+	@Override
+	public boolean hasColumns() {
+		for ( var property : properties ) {
+			if ( property.hasColumns() ) {
+				return true;
+			}
+		}
+		return discriminator != null
+			&& discriminator.hasColumns();
+	}
+
 	public List<Column> getAggregatedColumns() {
 		final List<Column> aggregatedColumns = new ArrayList<>( getPropertySpan() );
 		collectAggregatedColumns( aggregatedColumns, this );
@@ -490,7 +501,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean[] getColumnInsertability() {
-		final boolean[] result = new boolean[getColumnSpan()];
+		final var result = new boolean[getColumnSpan()];
 		int i = 0;
 		for ( var property : getProperties() ) {
 			i += copyFlags( property.getValue().getColumnInsertability(), result, i, property.isInsertable() );
@@ -522,7 +533,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean[] getColumnUpdateability() {
-		final boolean[] result = new boolean[getColumnSpan()];
+		final var result = new boolean[getColumnSpan()];
 		int i = 0;
 		for ( var property : getProperties() ) {
 			i += copyFlags( property.getValue().getColumnUpdateability(), result, i, property.isUpdatable() );
@@ -582,8 +593,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public boolean hasProperty(String propertyName) {
-		for ( Property prop : properties ) {
-			if ( prop.getName().equals(propertyName) ) {
+		for ( var property : properties ) {
+			if ( property.getName().equals(propertyName) ) {
 				return true;
 			}
 		}
@@ -680,7 +691,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final var property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
-				final SimpleValue value = (SimpleValue) property.getValue();
+				final var value = (SimpleValue) property.getValue();
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
 					// skip any 'assigned' generators, they would have been
 					// handled by the StandardGenerationContextLocator
@@ -850,9 +861,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			}
 			if ( assignedPropertyNames.size() != properties.size() ) {
 				final ArrayList<String> missingProperties = new ArrayList<>();
-				for ( Property property : properties ) {
-					if ( !assignedPropertyNames.contains( property.getName() ) ) {
-						missingProperties.add( property.getName() );
+				for ( var property : properties ) {
+					final String propertyName = property.getName();
+					if ( !assignedPropertyNames.contains( propertyName ) ) {
+						missingProperties.add( propertyName );
 					}
 				}
 				throw new MappingException( "component type [" + componentClassName + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
@@ -886,7 +898,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		// because XML mappings might refer to this through the defined order
 		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded()
 				|| getBuildingContext() instanceof MappingDocument ) {
-			final Property[] originalProperties = properties.toArray( new Property[0] );
+			final var originalProperties = properties.toArray( new Property[0] );
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];
 			for ( int j = 0; j < originalPropertyOrder.length; j++ ) {

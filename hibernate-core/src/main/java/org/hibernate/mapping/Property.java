@@ -99,6 +99,10 @@ public class Property implements Serializable, MetaAttributable {
 		return value.getColumnSpan();
 	}
 
+	boolean hasColumns() {
+		return value.hasColumns();
+	}
+
 	/**
 	 * Delegates to {@link Value#getSelectables()}.
 	 */

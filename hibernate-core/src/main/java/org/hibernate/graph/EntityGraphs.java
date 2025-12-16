@@ -171,7 +171,7 @@ public final class EntityGraphs {
 	}
 
 	/**
-	 * Allows a treated subgraph to ve created for a {@link Subgraph}, since the
+	 * Allows a treated subgraph to be created for a {@link Subgraph}, since the
 	 * JPA-standard operation {@link EntityGraph#addTreatedSubgraph(Class)} is
 	 * declared by {@link EntityGraph}.
 	 *

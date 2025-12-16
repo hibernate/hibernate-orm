@@ -31,7 +31,7 @@ import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
 
-class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
+public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
 	private final StatefulPersistenceContext persistenceContext;
 	private final ConcurrentHashMap<EntityMappingType, EntityResolutions> resolutionsByEntity = new ConcurrentHashMap<>();
@@ -52,6 +52,14 @@ class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 	 */
 	private SharedSessionContractImplementor session() {
 		return persistenceContext.getSession();
+	}
+
+	public EntityResolutions getEntityResolutions(EntityMappingType entityMappingType) {
+		return resolutionsByEntity.get( entityMappingType );
+	}
+
+	public EntityResolutions getEntityResolutions(Class<?> entityType) {
+		return getEntityResolutions( session().getFactory().getMappingMetamodel().getEntityDescriptor( entityType ) );
 	}
 
 	@Override
@@ -709,7 +717,7 @@ class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 	/**
 	 * Represents the entity-specific cross-reference cache.
 	 */
-	private static class EntityResolutions implements Serializable {
+	public static class EntityResolutions implements Serializable {
 		private final PersistenceContext persistenceContext;
 
 		private final EntityMappingType entityDescriptor;
@@ -730,6 +738,25 @@ class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
 		public EntityPersister getPersister() {
 			return getEntityDescriptor().getEntityPersister();
+		}
+
+		/**
+		 * Used for testing.
+		 */
+		public Resolution getResolutionByPk(Object pk) {
+			return pkToNaturalIdMap.get( pk );
+		}
+
+		/**
+		 * Used for testing.
+		 */
+		public Object getIdResolutionByNaturalId(Object naturalId) {
+			for ( var entry : pkToNaturalIdMap.entrySet() ) {
+				if ( entry.getValue().getNaturalIdValue().equals( naturalId ) ) {
+					return entry.getKey();
+				}
+			}
+			return null;
 		}
 
 		public boolean sameAsCached(Object pk, Object naturalIdValues) {

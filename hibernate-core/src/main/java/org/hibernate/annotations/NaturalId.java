@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// the primary key of an entity class is a surrogate key, that is,
 /// a {@linkplain jakarta.persistence.GeneratedValue system-generated}
 /// synthetic identifier, with no domain-model semantics. There should
-/// always be some other field or combination of fields which uniquely
+/// always be some other field or combination of fields that uniquely
 /// identifies an instance of the entity from the point of view of the
 /// user of the system. This is the _natural id_ of the entity.
 ///
@@ -76,21 +76,41 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// The [org.hibernate.Session] interface offers several methods
 /// that allow retrieval of one or more entity references by natural-id
 /// allow an entity instance to be retrieved by its natural-id:
-/// * [org.hibernate.Session#findByNaturalId] allows loading a single
-/// 	entity instance by natural-id.
-/// * [org.hibernate.Session#findMultipleByNaturalId] allows loading multiple
-/// 	entity instances by natural-id.
+/// * [org.hibernate.Session#find(Class, Object, jakarta.persistence.FindOption...)]
+///     allows loading a single entity instance by natural-id.
+/// * [org.hibernate.Session#findMultiple(Class, java.util.List, jakarta.persistence.FindOption...)]
+///     allows loading multiple entity instances by natural-id.
+///
+/// ```
+/// Person person = session.find(Person.class, ssn, KeyType.NATURAL);
+/// ```
+/// ```
+/// Vehicle vehicle =
+///         session.find(Vehicle.class,
+///                 Map.of(Vehicle_.REGION, region,
+///                        Vehicle_.REGISTRATION, registration),
+///                 KeyType.NATURAL);
+/// ```
+/// ```
+/// List<Person> people = session.findMultiple(Person.class, ssns, KeyType.NATURAL);
+/// ```
 ///
 /// If the entity is also marked for [natural id caching][NaturalIdCache],
 /// then these methods may be able to avoid a database round trip.
 ///
-/// @see org.hibernate.Session#findByNaturalId
-/// @see org.hibernate.Session#findMultipleByNaturalId
+/// @see org.hibernate.Session#find(Class, Object, jakarta.persistence.FindOption...)
+/// @see org.hibernate.Session#findMultiple(Class, java.util.List, jakarta.persistence.FindOption...)
 /// @see NaturalIdClass
 /// @see NaturalIdCache
 ///
 /// @apiNote For non-aggregated composite natural-id cases, it is recommended to
 /// leverage [@NaturalIdClass][NaturalIdClass] for loading.
+/// ```
+/// Vehicle vehicle =
+///         session.find(Vehicle.class,
+///                 VehicleKey(region, registration),
+///                 KeyType.NATURAL);
+/// ```
 ///
 /// @author Nicolás Lichtmaier
 @Target({METHOD, FIELD})

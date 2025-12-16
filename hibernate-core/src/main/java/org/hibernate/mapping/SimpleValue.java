@@ -89,6 +89,7 @@ public abstract class SimpleValue implements KeyValue {
 	private String typeName;
 	private Properties typeParameters;
 	private Annotation typeAnnotation;
+	private MemberDetails memberDetails;
 	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
@@ -135,6 +136,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
 		this.typeAnnotation = original.typeAnnotation;
+		this.memberDetails = original.memberDetails;
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
 		this.isLob = original.isLob;
@@ -809,12 +811,20 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeAnnotation = typeAnnotation;
 	}
 
+	public void setMemberDetails(MemberDetails memberDetails) {
+		this.memberDetails = memberDetails;
+	}
+
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
 	public Annotation getTypeAnnotation() {
 		return typeAnnotation;
+	}
+
+	public MemberDetails getMemberDetails() {
+		return memberDetails;
 	}
 
 	public void copyTypeFrom(SimpleValue sourceValue ) {
@@ -840,6 +850,7 @@ public abstract class SimpleValue implements KeyValue {
 			&& Objects.equals( typeName, other.typeName )
 			&& Objects.equals( typeParameters, other.typeParameters )
 			&& Objects.equals( typeAnnotation, other.typeAnnotation )
+			&& Objects.equals( memberDetails, other.memberDetails )
 			&& Objects.equals( table, other.table )
 			&& Objects.equals( foreignKeyName, other.foreignKeyName )
 			&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );

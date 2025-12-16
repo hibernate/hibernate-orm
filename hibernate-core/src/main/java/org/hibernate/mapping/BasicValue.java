@@ -6,15 +6,20 @@ package org.hibernate.mapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -65,6 +70,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
+import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -72,6 +78,7 @@ import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
+import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
@@ -85,6 +92,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 public class BasicValue extends SimpleValue
 		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
@@ -1080,9 +1088,10 @@ public class BasicValue extends SimpleValue
 			else {
 				final var typeProperties = getCustomTypeProperties();
 				final var typeAnnotation = getTypeAnnotation();
+				final var memberDetails = getMemberDetails();
 				resolution = new UserTypeResolution<>(
 						new CustomType<>(
-								getConfiguredUserTypeBean( explicitCustomType, typeProperties, typeAnnotation ),
+								getConfiguredUserTypeBean( explicitCustomType, typeProperties, typeAnnotation, memberDetails ),
 								getTypeConfiguration()
 						),
 						null,
@@ -1104,8 +1113,37 @@ public class BasicValue extends SimpleValue
 	}
 
 	private UserType<?> getConfiguredUserTypeBean(
-			Class<? extends UserType<?>> explicitCustomType, Properties properties, Annotation typeAnnotation) {
-		final var typeInstance = instantiateUserType( explicitCustomType, properties, typeAnnotation );
+			Class<? extends UserType<?>> explicitCustomType, Properties properties, Annotation typeAnnotation, MemberDetails memberDetails) {
+		final var creationContext = new UserTypeCreationContext() {
+			@Override
+			public MetadataBuildingContext getBuildingContext() {
+				return BasicValue.this.getBuildingContext();
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return BasicValue.this.getServiceRegistry();
+			}
+
+			@Override
+			public MemberDetails getMemberDetails() {
+				return memberDetails;
+			}
+
+			@Override
+			public Properties getParameters() {
+				return properties;
+			}
+		};
+		final var typeInstance = instantiateUserType( explicitCustomType, creationContext, typeAnnotation );
+
+		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
+			if ( typeAnnotation == null ) {
+				throw new AnnotationException( String.format( "Custom type '%s' implements 'AnnotationBasedUserType' but no custom type annotation is present",
+						typeInstance.getClass().getName() ) );
+			}
+			initializeAnnotationBasedUserType( properties, typeAnnotation, memberDetails, annotationBased );
+		}
 
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
@@ -1126,25 +1164,97 @@ public class BasicValue extends SimpleValue
 		return typeInstance;
 	}
 
-	private <T extends UserType<?>> T instantiateUserType(
-			Class<T> customType, Properties properties, Annotation typeAnnotation) {
-		if ( typeAnnotation != null ) {
-			// attempt to instantiate it with the annotation as a constructor argument
-			try {
-				final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType() );
-				constructor.setAccessible( true );
-				return constructor.newInstance( typeAnnotation );
+	private <A extends Annotation> void initializeAnnotationBasedUserType(Properties properties,
+													Annotation typeAnnotation,
+													MemberDetails memberDetails,
+													AnnotationBasedUserType<A, ?> annotationBased) {
+		annotationBased.initialize( castAnnotationType( typeAnnotation, annotationBased ),
+				new UserTypeCreationContext() {
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return BasicValue.this.getBuildingContext();
+					}
+
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return BasicValue.this.getServiceRegistry();
+					}
+
+					@Override
+					public MemberDetails getMemberDetails() {
+						return memberDetails;
+					}
+
+					@Override
+					public Properties getParameters() {
+						return properties;
+					}
+				} );
+	}
+
+	private <A extends Annotation> A castAnnotationType(
+			Annotation typeAnnotation, AnnotationBasedUserType<A, ?> annotationBased ) {
+		final var annotationType = annotationBased.getClass();
+		for ( var iface: annotationType.getGenericInterfaces() ) {
+			if ( iface instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() == AnnotationBasedUserType.class ) {
+				final var typeArguments = parameterizedType.getActualTypeArguments();
+				if ( typeArguments.length > 0
+					&& typeArguments[0] instanceof Class<?> annotationClass ) {
+					if ( !annotationClass.isInstance( typeAnnotation ) ) {
+						throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
+								annotationType.getName(), iface.getTypeName() ) );
+					}
+					@SuppressWarnings("unchecked") // safe, we just checked it
+					final var castAnnotation = (A) typeAnnotation;
+					return castAnnotation;
+				}
 			}
-			catch ( NoSuchMethodException ignored ) {
+		}
+		throw new AssertionFailure( "Could not find implementing interface" );
+	}
+
+	private <T extends UserType<?>> T instantiateUserType(
+			Class<T> customType, UserTypeCreationContext creationContext, Annotation typeAnnotation) {
+		try {
+			if ( typeAnnotation != null ) {
+				// attempt to instantiate it with the annotation and context object as constructor arguments
+				try {
+					final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType(),
+							UserTypeCreationContext.class );
+					constructor.setAccessible( true );
+					return constructor.newInstance( typeAnnotation, creationContext );
+				}
+				catch (NoSuchMethodException ignored) {
+					// attempt to instantiate it with the annotation as a constructor argument
+					try {
+						final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType() );
+						constructor.setAccessible( true );
+						return constructor.newInstance( typeAnnotation );
+					}
+					catch (NoSuchMethodException ignored_) {
+						// no such constructor
+					}
+				}
+			}
+
+			// attempt to instantiate it with the context object as a constructor argument
+			try {
+				final var constructor = customType.getDeclaredConstructor( UserTypeCreationContext.class );
+				constructor.setAccessible( true );
+				return constructor.newInstance( creationContext );
+			}
+			catch (NoSuchMethodException ignored) {
 				// no such constructor, instantiate it the old way
 			}
-			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-				throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
-			}
+
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+			throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
 		}
 
 		return getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-				? getUserTypeBean( customType, properties ).getBeanInstance()
+				? getUserTypeBean( customType, creationContext.getParameters() ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customType );
 	}
 

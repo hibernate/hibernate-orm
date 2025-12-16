@@ -214,8 +214,23 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * }
  * </pre>
  * <p>
- * Every implementor of {@code UserType} must be immutable and must
- * declare a public default constructor.
+ * Every implementor of {@code UserType} must be immutable.
+ * <p>
+ * A custom type may receive parameters from its type annotation.
+ * The custom type may either:
+ * <ul>
+ * <li>implement {@link AnnotationBasedUserType}, and receive the
+ *     annotation as an argument to
+ *     {@link AnnotationBasedUserType#initialize},
+ * <li>declare a constructor with the same signature as
+ *     {@link AnnotationBasedUserType#initialize},
+ * <li>declare a constructor which accepts just the annotation instance,
+ *     or
+ * <li>declare a constructor which accepts just the {@link UserTypeCreationContext},
+ *     or
+ * <li>declare only a default constructor, in which case it does not
+ *     receive parameters.
+ * </ul>
  * <p>
  * A custom type implemented as a {@code UserType} is treated as a
  * non-composite value, and does not have persistent attributes which
@@ -242,6 +257,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.CustomType
+ * @see org.hibernate.usertype.AnnotationBasedUserType
  *
  * @see org.hibernate.annotations.Type
  * @see org.hibernate.annotations.TypeRegistration

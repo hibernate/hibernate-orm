@@ -611,7 +611,7 @@ public class GeneratorBinder {
 		}
 	}
 
-	public static <A extends Annotation> void callInitialize(
+	private static <A extends Annotation> void callInitialize(
 			A annotation,
 			MemberDetails memberDetails,
 			GeneratorCreationContext creationContext,
@@ -646,7 +646,7 @@ public class GeneratorBinder {
 	 * call its {@link Configurable#configure(GeneratorCreationContext, Properties)
 	 * configure()} method.
 	 */
-	public static void callConfigure(
+	private static void callConfigure(
 			GeneratorCreationContext creationContext,
 			Generator generator,
 			Map<String, Object> configuration,

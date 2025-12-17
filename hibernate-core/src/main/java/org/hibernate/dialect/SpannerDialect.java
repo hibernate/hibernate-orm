@@ -24,6 +24,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
+import org.hibernate.dialect.temptable.SpannerTemporaryTableExporter;
+import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -96,6 +98,9 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 public class SpannerDialect extends Dialect {
 
 	private final Exporter<Table> spannerTableExporter = new SpannerDialectTableExporter( this );
+
+	private final SpannerTemporaryTableExporter spannerTemporaryTableExporter = new SpannerTemporaryTableExporter(
+			this );
 
 	private static final LockingStrategy LOCKING_STRATEGY = new DoNothingLockingStrategy();
 
@@ -717,6 +722,11 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public String getAddPrimaryKeyConstraintString(String constraintName) {
 		throw new UnsupportedOperationException( "Cannot add primary key constraint in Cloud Spanner." );
+	}
+
+	@Override
+	public TemporaryTableExporter getTemporaryTableExporter() {
+		return spannerTemporaryTableExporter;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

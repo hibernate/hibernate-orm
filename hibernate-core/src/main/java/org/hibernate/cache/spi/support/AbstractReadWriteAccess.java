@@ -37,7 +37,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		super( domainDataRegion, storageAccess );
 	}
 
-	protected abstract Comparator<?> getVersionComparator();
+	protected abstract Comparator<Object> getVersionComparator();
 
 	protected UUID uuid() {
 		return uuid;
@@ -262,7 +262,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		 * Returns <code>true</code> if the enclosed value can be replaced with one of the given version by a
 		 * transaction started at the given time.
 		 */
-		boolean isWriteable(long txTimestamp, Object version, Comparator versionComparator);
+		boolean isWriteable(long txTimestamp, Object version, Comparator<Object> versionComparator);
 
 		/**
 		 * Returns the enclosed value.
@@ -315,7 +315,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
+		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.tracef(
 						"Checking writeability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s', newVersion='%s'",
@@ -326,7 +326,6 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				);
 			}
 
-			//noinspection unchecked
 			return version != null && versionComparator.compare( version, newVersion ) < 0;
 		}
 
@@ -389,7 +388,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
+		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.tracef(
 						"Checking writeability of read-write cache lock [timeout='%s', lockId='%s', version='%s', sourceUuid=%s, multiplicity='%s', unlockTimestamp='%s'] : txTimestamp='%s', newVersion='%s'",
@@ -413,7 +412,6 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				return false;
 			}
 
-			//noinspection unchecked
 			return version == null
 					? txTimestamp > unlockTimestamp
 					: versionComparator.compare( version, newVersion ) < 0;

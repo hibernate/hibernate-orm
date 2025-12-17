@@ -677,7 +677,6 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							.translate( null, executionContext.getQueryOptions() );
 					temporaryTableRowNumberSelectSql = ExecuteWithTemporaryTableHelper.createInsertedRowNumbersSelectSql(
 							entityTable,
-							sessionUidAccess,
 							executionContext
 					);
 				}

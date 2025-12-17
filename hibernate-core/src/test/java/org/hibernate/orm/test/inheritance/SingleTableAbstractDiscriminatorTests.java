@@ -40,7 +40,7 @@ public class SingleTableAbstractDiscriminatorTests {
 		//
 		// 		> The DiscriminatorValue annotation can only be specified on a concrete entity class.
 		//
- 		// we do not validate this though
+		// we do not validate this though
 		var model = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( Root.class, Trunk.class, Branch.class )
 				.buildMetadata();

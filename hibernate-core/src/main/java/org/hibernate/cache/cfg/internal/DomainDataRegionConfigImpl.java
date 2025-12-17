@@ -5,10 +5,13 @@
 package org.hibernate.cache.cfg.internal;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -23,6 +26,7 @@ import org.hibernate.type.BasicType;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.cache.cfg.internal.ComparatorUtil.versionComparator;
 
 /**
  * DomainDataRegionConfig implementation
@@ -96,12 +100,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 					rootEntityName,
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
-							bootEntityDescriptor.isVersioned()
-									? () -> {
-										final var type = (BasicType<?>) bootEntityDescriptor.getVersion().getType();
-										return type.getJavaTypeDescriptor().getComparator();
-									}
-									: null,
+							versionComparatorAccess( bootEntityDescriptor ),
 							bootEntityDescriptor.isMutable(),
 							accessType
 					)
@@ -116,6 +115,15 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 			return this;
 		}
 
+		private @Nullable Supplier<Comparator<Object>> versionComparatorAccess(PersistentClass bootEntityDescriptor) {
+			return bootEntityDescriptor.isVersioned()
+					? () -> {
+						final var type = (BasicType<?>)
+								bootEntityDescriptor.getVersion().getType();
+						return versionComparator( type );
+					}
+					: null;
+		}
 
 		// todo (6.0) : `EntityPersister` and `CollectionPersister` references here should be replaced with `EntityHierarchy` and `PersistentCollectionDescriptor`
 		//

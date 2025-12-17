@@ -601,6 +601,7 @@ Hibernate slightly extends this list with the following types:
 | Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, and even `ZonedDateTime`
 | JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
 | Java class object | `java.lang` | `Class`
+| Internet addresses | `java.net` | `InetAddress`
 | Miscellaneous types | `java.util` | `Currency`, `Locale`, `URL`, `TimeZone`
 |====
 

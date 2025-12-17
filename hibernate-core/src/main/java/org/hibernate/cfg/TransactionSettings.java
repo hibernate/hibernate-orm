@@ -46,6 +46,8 @@ public interface TransactionSettings {
 	 *     <li>the name of a class that implements {@code JtaPlatform}.
 	 *     <li>short name of a class (sans package name) that implements {@code JtaPlatform}.
 	 * </ul>
+	 * <p>If not specified, the {@linkplain #JTA_PLATFORM_RESOLVER JTA platform resolver}
+	 * is used to obtain an instance of {@code JtaPlatform}.
 	 *
 	 * @see #JTA_PLATFORM_RESOLVER
 	 *
@@ -57,6 +59,8 @@ public interface TransactionSettings {
 	 * Specifies a {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver}
 	 * implementation that should be used to obtain an instance of
 	 * {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}.
+	 *
+	 * @settingDefault {@link org.hibernate.engine.transaction.jta.platform.internal.StandardJtaPlatformResolver}
 	 *
 	 * @since 4.3
 	 */

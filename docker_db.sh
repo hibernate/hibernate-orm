@@ -1282,7 +1282,68 @@ EOF
 }
 
 tidb() {
-  tidb_5_4
+  tidb_8_5
+}
+
+tidb_8_5() {
+    $CONTAINER_CLI rm -f tidb || true
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.4}
+
+    # Wait for TiDB to start
+    OUTPUT=
+    n=0
+    until [ "$n" -gt 15 ]; do
+        OUTPUT=$($CONTAINER_CLI logs tidb 2>&1)
+        if [[ $OUTPUT == *"server is running"* ]]; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for TiDB to start..."
+        sleep 5
+    done
+
+    if [ "$n" -gt 15 ]; then
+        echo "TiDB failed to start after 75 seconds"
+        exit 1
+    else
+        echo "TiDB successfully started"
+    fi
+
+    # Wait for TiDB to accept connections
+    n=0
+    until [ "$n" -gt 10 ]; do
+        if $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
+            mysqladmin -h 127.0.0.1 -P 4000 -uroot ping >/dev/null 2>&1; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for TiDB to be ready..."
+        sleep 3
+    done
+
+    if [ "$n" -gt 10 ]; then
+        echo "TiDB failed to become ready after 30 seconds"
+        exit 1
+    else
+        echo "TiDB is ready"
+    fi
+
+    # Create databases
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    create_cmd+="CREATE DATABASE IF NOT EXISTS hibernate_orm_test;"
+    create_cmd+="CREATE USER IF NOT EXISTS 'hibernate_orm_test'@'%' IDENTIFIED BY 'hibernate_orm_test';"
+    create_cmd+="GRANT ALL ON hibernate_orm_test.* TO 'hibernate_orm_test'@'%';"
+    for i in "${!databases[@]}";do
+      create_cmd+="CREATE DATABASE IF NOT EXISTS ${databases[i]}; GRANT ALL ON ${databases[i]}.* TO 'hibernate_orm_test'@'%';"
+    done
+    $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
+        mysql -h 127.0.0.1 -P 4000 -uroot -e "${create_cmd}" 2>/dev/null
+    echo "TiDB databases were successfully setup"
 }
 
 tidb_5_4() {
@@ -1445,6 +1506,7 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_13"
     echo -e "\tsybase"
     echo -e "\ttidb"
+    echo -e "\ttidb_8_5"
     echo -e "\ttidb_5_4"
     echo -e "\informix"
     echo -e "\informix_14_10"

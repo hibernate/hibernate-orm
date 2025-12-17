@@ -14,6 +14,7 @@ import jakarta.transaction.TransactionManager;
 import jakarta.transaction.TransactionSynchronizationRegistry;
 import jakarta.transaction.UserTransaction;
 import org.hibernate.Incubating;
+import org.jboss.logging.Logger;
 
 import javax.transaction.xa.XAResource;
 
@@ -33,6 +34,8 @@ public class JakartaStandardJtaPlatform extends AbstractJtaPlatform
 	public static final String USER_TRANSACTION = "java:comp/UserTransaction";
 	public static final String TRANSACTION_SYNCHRONIZATION_REGISTRY =
 			"java:comp/TransactionSynchronizationRegistry";
+
+	private static final Logger LOG = Logger.getLogger( JakartaStandardJtaPlatform.class );
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
@@ -104,12 +107,15 @@ public class JakartaStandardJtaPlatform extends AbstractJtaPlatform
 
 	@Override
 	public Transaction suspend() throws SystemException {
-		throw new UnsupportedOperationException( "JakartaStandardJtaPlatform does not have access to the TransactionManager" );
+		LOG.debug( "Cannot really suspend (JakartaStandardJtaPlatform does not have access to the TransactionManager)" );
+		return this;
+//		throw new UnsupportedOperationException( "JakartaStandardJtaPlatform does not have access to the TransactionManager" );
 	}
 
 	@Override
 	public void resume(Transaction tobj) {
-		throw new UnsupportedOperationException( "JakartaStandardJtaPlatform does not have access to the TransactionManager" );
+		LOG.debug( "Cannot really resume (JakartaStandardJtaPlatform does not have access to the TransactionManager)" );
+//		throw new UnsupportedOperationException( "JakartaStandardJtaPlatform does not have access to the TransactionManager" );
 	}
 
 }

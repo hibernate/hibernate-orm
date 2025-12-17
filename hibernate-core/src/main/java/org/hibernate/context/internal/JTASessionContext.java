@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.Transaction;
 
+import jakarta.transaction.TransactionManager;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -62,46 +64,13 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 			throw new HibernateException( "No TransactionManagerLookup specified" );
 		}
 
-		Transaction txn;
-		try {
-			txn = transactionManager.getTransaction();
-			if ( txn == null ) {
-				throw new HibernateException( "Unable to locate current JTA transaction" );
-			}
-			if ( !isActive( txn.getStatus() ) ) {
-				// We could register the session against the transaction even though it is
-				// not started, but we'd have no guarantee of ever getting the map
-				// entries cleaned up (aside from spawning threads).
-				throw new HibernateException( "Current transaction is not in progress" );
-			}
-		}
-		catch ( HibernateException e ) {
-			throw e;
-		}
-		catch ( Throwable t ) {
-			throw new HibernateException( "Problem locating/validating JTA transaction", t );
-		}
-
+		final var txn = getTransaction( transactionManager );
 		final Object txnIdentifier = jtaPlatform.getTransactionIdentifier( txn );
 
 		Session currentSession = currentSessionMap.get( txnIdentifier );
-
 		if ( currentSession == null ) {
 			currentSession = buildOrObtainSession();
-
-			try {
-				txn.registerSynchronization( buildCleanupSynch( txnIdentifier ) );
-			}
-			catch ( Throwable t ) {
-				try {
-					currentSession.close();
-				}
-				catch ( Throwable e ) {
-					CURRENT_SESSION_LOGGER.unableToReleaseGeneratedCurrentSessionOnFailedSynchronizationRegistration(e);
-				}
-				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
-			}
-
+			registerSynchronization( txn, txnIdentifier, currentSession );
 			currentSessionMap.put( txnIdentifier, currentSession );
 		}
 		else {
@@ -109,6 +78,43 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 		}
 
 		return currentSession;
+	}
+
+	private void registerSynchronization(Transaction txn, Object txnIdentifier, Session currentSession) {
+		try {
+			txn.registerSynchronization( buildCleanupSynch( txnIdentifier ) );
+		}
+		catch ( Throwable t ) {
+			try {
+				currentSession.close();
+			}
+			catch ( Throwable e ) {
+				CURRENT_SESSION_LOGGER.unableToReleaseGeneratedCurrentSessionOnFailedSynchronizationRegistration(e);
+			}
+			throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
+		}
+	}
+
+	private static @NonNull Transaction getTransaction(TransactionManager transactionManager) {
+		try {
+			final var transaction = transactionManager.getTransaction();
+			if ( transaction == null ) {
+				throw new HibernateException( "Unable to locate current JTA transaction" );
+			}
+			if ( !isActive( transaction.getStatus() ) ) {
+				// We could register the session against the transaction even though it is
+				// not started, but we'd have no guarantee of ever getting the map
+				// entries cleaned up (aside from spawning threads).
+				throw new HibernateException( "Current transaction is not in progress" );
+			}
+			return transaction;
+		}
+		catch ( HibernateException e ) {
+			throw e;
+		}
+		catch ( Throwable t ) {
+			throw new HibernateException( "Problem locating/validating JTA transaction", t );
+		}
 	}
 
 	/**

@@ -73,7 +73,9 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.dropData();
+		scope.inTransaction( session ->
+				session.createNativeQuery( "drop table TEST_ENTITY " ).executeUpdate()
+		);
 	}
 
 	@Test

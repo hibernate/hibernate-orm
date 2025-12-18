@@ -209,7 +209,6 @@ public class ManagedTypeProcessor {
 
 		XmlAnnotationHelper.applyTable( jaxbEntity.getTable(), classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applySecondaryTables( jaxbEntity.getSecondaryTables(), classDetails, xmlDocumentContext );
-
 		final JaxbAttributesContainerImpl attributes = jaxbEntity.getAttributes();
 		if ( attributes != null ) {
 			processIdMappings(
@@ -234,6 +233,9 @@ public class ManagedTypeProcessor {
 					xmlDocumentContext
 			);
 		}
+
+		XmlAnnotationHelper.applyConverts( jaxbEntity.getConverts(), classDetails, xmlDocumentContext );
+
 		AttributeProcessor.processAttributeOverrides(
 				jaxbEntity.getAttributeOverrides(),
 				classDetails,

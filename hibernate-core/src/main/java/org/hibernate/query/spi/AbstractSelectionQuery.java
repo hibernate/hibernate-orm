@@ -304,19 +304,11 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
 		final int size = list.size();
-		if ( size == 0 ) {
-			return null;
-		}
-		else {
-			final T first = list.get( 0 );
-			// todo (6.0) : add a setting here to control whether to perform this validation or not
-			for ( int i = 1; i < size; i++ ) {
-				if ( list.get( i ) != first ) {
-					throw new NonUniqueResultException( list.size() );
-				}
-			}
-			return first;
-		}
+		return switch ( size ) {
+			case 0 -> null;
+			case 1 -> list.get( 0 );
+			default -> throw new NonUniqueResultException( size );
+		};
 	}
 
 	@Override

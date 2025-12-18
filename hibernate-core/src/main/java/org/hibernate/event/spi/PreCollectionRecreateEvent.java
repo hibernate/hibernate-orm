@@ -29,10 +29,11 @@ public class PreCollectionRecreateEvent extends AbstractCollectionEvent {
 
 
 	public PreCollectionRecreateEvent(
+			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
 			Object id,
 			String entityName,
 			Object loadedOwner) {
-		super( collection, entityName, loadedOwner, id );
+		super( collectionPersister, collection, entityName, loadedOwner, id );
 	}
 }

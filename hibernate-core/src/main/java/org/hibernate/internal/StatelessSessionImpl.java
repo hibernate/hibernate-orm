@@ -294,7 +294,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreRecreate( collection, id, entityName, entity );
+						firePreRecreate( descriptor, collection, id, entityName, entity );
 						final var event = eventMonitor.beginCollectionRecreateEvent();
 						boolean success = false;
 						try {
@@ -307,7 +307,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.recreateCollection( role );
 						}
-						firePostRecreate( collection, id, entityName, entity );
+						firePostRecreate( descriptor, collection, id, entityName, entity );
 					} );
 		}
 	}
@@ -371,7 +371,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreRemove( collection, id, entityName, entity );
+						firePreRemove( descriptor, collection, id, entityName, entity );
 						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
@@ -381,7 +381,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						finally {
 							eventMonitor.completeCollectionRemoveEvent( event, id, role, success, this );
 						}
-						firePostRemove( collection, id, entityName, entity );
+						firePostRemove( descriptor, collection, id, entityName, entity );
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.removeCollection( role );
 						}
@@ -459,7 +459,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreUpdate( collection, id, entityName, entity );
+						firePreUpdate( descriptor, collection, id, entityName, entity );
 						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
@@ -471,7 +471,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						finally {
 							eventMonitor.completeCollectionRemoveEvent( event, id, role, success, this );
 						}
-						firePostUpdate( collection, id, entityName, entity );
+						firePostUpdate( descriptor, collection, id, entityName, entity );
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.updateCollection( role );
 						}
@@ -668,44 +668,74 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreRecreate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreRecreate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRecreateEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionRecreateEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreUpdate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreUpdate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionUpdateEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionUpdateEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreRemove(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreRemove(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRemoveEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionRemoveEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostRecreate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostRecreate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRecreateEvent( collection, id, entityName, owner ),
+				() -> new PostCollectionRecreateEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostUpdate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostUpdate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionUpdateEvent( collection, id, entityName, owner ),
+				() -> new PostCollectionUpdateEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostRemove(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostRemove(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRemoveEvent(  collection, id, entityName, owner ),
+				() -> new PostCollectionRemoveEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 

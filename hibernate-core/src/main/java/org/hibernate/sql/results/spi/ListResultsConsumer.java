@@ -207,13 +207,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			boolean isEntityResultType,
 			JavaType<R> domainResultJavaType,
 			int initialCollectionSize) {
-		if ( isEntityResultType
-			&& ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) ) {
-			return new EntityResult<>( domainResultJavaType, initialCollectionSize );
-		}
-		else {
-			return new Results<>( domainResultJavaType, initialCollectionSize );
-		}
+		return isEntityResultType && isAllowOrFilter()
+				? new EntityResult<>( domainResultJavaType, initialCollectionSize )
+				: new Results<>( domainResultJavaType, initialCollectionSize );
+	}
+
+	private boolean isAllowOrFilter() {
+		return uniqueSemantic == UniqueSemantic.ALLOW
+			|| uniqueSemantic == UniqueSemantic.FILTER;
 	}
 
 	private int readRows(
@@ -221,17 +222,18 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			RowReader<R> rowReader,
 			boolean isEntityResultType,
 			Results<R> results) {
-		if ( uniqueSemantic == UniqueSemantic.FILTER
-				|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
-				|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
-			return readUnique( rowProcessingState, rowReader, results );
-		}
-		else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-			return readUniqueAssert( rowProcessingState, rowReader, results );
-		}
-		else {
-			return read( rowProcessingState, rowReader, results );
-		}
+		return switch ( uniqueSemantic ) {
+			case FILTER ->
+					readUnique( rowProcessingState, rowReader, results );
+			case ASSERT -> rowReader.hasCollectionInitializers()
+					? readUnique( rowProcessingState, rowReader, results )
+					: readUniqueAssert( rowProcessingState, rowReader, results );
+			case ALLOW -> isEntityResultType
+					? readUnique( rowProcessingState, rowReader, results )
+					: read( rowProcessingState, rowReader, results );
+			case NONE, NEVER ->
+					read( rowProcessingState, rowReader, results );
+		};
 	}
 
 	private static <R> int read(

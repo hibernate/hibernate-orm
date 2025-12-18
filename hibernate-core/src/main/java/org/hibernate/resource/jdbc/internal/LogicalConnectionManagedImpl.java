@@ -84,6 +84,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
+			if ( closed ) {
+				throw new ResourceClosedException( "Logical connection is closed" );
+			}
 			physicalConnection = acquire();
 			afterAcquire();
 		}
@@ -255,15 +258,25 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	@Override
 	public Connection close() {
 		if ( !closed ) {
-			getResourceRegistry().releaseResources();
-			CONNECTION_LOGGER.closingLogicalConnection( hashCode() );
 			try {
-				releaseConnectionIfNeeded();
+				try {
+					getResourceRegistry().releaseResources();
+				}
+				catch (RuntimeException e) {
+					CONNECTION_LOGGER.couldNotReleaseResourcesOnClose( hashCode(), e );
+					throw e;
+				}
 			}
 			finally {
-				// no matter what
-				closed = true;
-				CONNECTION_LOGGER.logicalConnectionClosed( hashCode() );
+				CONNECTION_LOGGER.closingLogicalConnection( hashCode() );
+				try {
+					releaseConnectionIfNeeded();
+				}
+				finally {
+					// no matter what
+					closed = true;
+					CONNECTION_LOGGER.logicalConnectionClosed( hashCode() );
+				}
 			}
 		}
 		return null;

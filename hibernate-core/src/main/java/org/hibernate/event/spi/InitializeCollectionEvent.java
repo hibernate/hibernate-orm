@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 
 /**
@@ -14,6 +15,7 @@ import org.hibernate.collection.spi.PersistentCollection;
  */
 public class InitializeCollectionEvent extends AbstractCollectionEvent {
 
+	@Internal
 	public InitializeCollectionEvent(PersistentCollection<?> collection, EventSource source ) {
 		super(
 				getLoadedCollectionPersister( collection, source ),

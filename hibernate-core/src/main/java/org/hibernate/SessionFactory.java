@@ -45,7 +45,8 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * Typically, a program has a single {@link SessionFactory} instance, and must
  * obtain a new {@link Session} instance from the factory each time it services
  * a client request. It is then also responsible for {@linkplain Session#close()
- * destroying} the session at the end of the client request.
+ * destroying} the session at the end of the client request. An instance of
+ * {@code Session} must never be shared between multiple threads.
  * <p>
  * The {@link #inSession} and {@link #inTransaction} methods provide a convenient
  * way to obtain a session, with or without starting a transaction, and have it

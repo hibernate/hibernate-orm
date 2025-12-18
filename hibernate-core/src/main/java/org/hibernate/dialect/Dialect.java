@@ -101,6 +101,7 @@ import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
@@ -3511,6 +3512,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsUnionInSubquery() {
 		return supportsUnionAll();
+	}
+
+	/**
+	 * Get the SQL string representation for a specific set operator (UNION, INTERSECT, EXCEPT).
+	 * <p>
+	 * The default implementation delegates to {@link SetOperator#sqlString()}.
+	 * Dialects like Cloud Spanner that require explicit 'DISTINCT' keywords can override this.
+	 *
+	 * @param operator The set operator
+	 * @return The SQL fragment (e.g., "union", "union all", "union distinct")
+	 */
+	public String getSetOperatorSqlString(SetOperator operator) {
+		return operator.sqlString();
 	}
 
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

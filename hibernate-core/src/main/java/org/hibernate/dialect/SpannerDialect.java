@@ -40,6 +40,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
@@ -932,6 +933,16 @@ public class SpannerDialect extends Dialect {
 	public String getTruncateTableStatement(String tableName) {
 		// spanner doesn't have truncate command, so we delete
 		return "delete from " + tableName + " where true";
+	}
+
+	@Override
+	public String getSetOperatorSqlString(SetOperator operator) {
+		return switch ( operator ) {
+			case UNION -> "union distinct";
+			case INTERSECT -> "intersect distinct";
+			case EXCEPT -> "except distinct";
+			default -> super.getSetOperatorSqlString( operator );
+		};
 	}
 
 	/* Type conversion and casting */

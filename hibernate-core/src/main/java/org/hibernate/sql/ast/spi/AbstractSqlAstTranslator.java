@@ -3585,7 +3585,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void renderQueryParts(QueryGroup queryGroup) {
 		final var queryParts = queryGroup.getQueryParts();
-		final String setOperatorString = ' ' + queryGroup.getSetOperator().sqlString() + ' ';
+		final String setOperatorString = ' ' + dialect.getSetOperatorSqlString( queryGroup.getSetOperator() ) + ' ';
 		String separator = "";
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			appendSql( separator );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -13,6 +14,8 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Gail Badner
  */
 public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
+
+	@Internal
 	public PostCollectionUpdateEvent(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
@@ -26,12 +29,13 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 		);
 	}
 
-
+	@Internal
 	public PostCollectionUpdateEvent(
+			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
 			Object id,
 			String entityName,
 			Object loadedOwner) {
-		super( collection, entityName, loadedOwner, id );
+		super( collectionPersister, collection, entityName, loadedOwner, id );
 	}
 }

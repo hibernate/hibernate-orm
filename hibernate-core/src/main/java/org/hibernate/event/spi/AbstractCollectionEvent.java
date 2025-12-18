@@ -4,66 +4,124 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.Internal;import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Defines a base class for events involving collections.
  *
  * @author Gail Badner
+ * @author Steve Ebersole
+ *
+ * @apiNote AbstractCollectionEvent and its implementations are defined
+ * as SPI for consumption; their constructors are defined as
+ * {@linkplain Internal internal}
  */
 public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
-
 	private final PersistentCollection<?> collection;
-	private final Object affectedOwner;
-	private final Object affectedOwnerId;
-	private final String affectedOwnerEntityName;
+	private final CollectionPersister collectionPersister;
+	private final Object owner;
+	private final Object ownerId;
+	private final String ownerEntityName;
 
 	/**
 	 * Constructs an instance for a stateful session.
-	 * @param collection - the collection
-	 * @param source - the Session source
-	 * @param affectedOwner - the owner that is affected by this event;
-	 * can be null if unavailable
-	 * @param affectedOwnerId - the ID for the owner that is affected
-	 * by this event; can be null if unavailable
+	 *
+	 * @param collectionPersister The descriptor for the collection mapping.
+	 * @param collection - The (wrapped) collection instance.
+	 * @param source - The {@linkplain org.hibernate.Session session}
+	 * @param owner - The entity instance that "owns" the {@code collection}
+	 * 		affected by this event; can be {@code null} if unavailable.
+	 * @param ownerId - The identifier value for the {@code owner}; can be
+	 * 		{@code null} if unavailable.
 	 */
+	@Internal
 	public AbstractCollectionEvent(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
 			EventSource source,
-			Object affectedOwner,
-			Object affectedOwnerId) {
+			Object owner,
+			Object ownerId) {
 		super( source );
 		this.collection = collection;
-		this.affectedOwner = affectedOwner;
-		this.affectedOwnerId = affectedOwnerId;
-		this.affectedOwnerEntityName =
-				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
+		this.collectionPersister = collectionPersister;
+		this.owner = owner;
+		this.ownerId = ownerId;
+		this.ownerEntityName = getAffectedOwnerEntityName( collectionPersister, owner, source );
 	}
 
 	/**
 	 * Constructs an instance for a stateless session.
-	 * @param collection - the collection
-	 * @param entityName - the name of the owning entity
-	 * @param affectedOwner - the owner that is affected by this event;
-	 * can be null if unavailable
-	 * @param affectedOwnerId - the ID for the owner that is affected
-	 * by this event; can be null if unavailable
+	 *
+	 * @param collectionPersister The descriptor for the collection mapping.
+	 * @param collection - The (wrapped) collection instance.
+	 * @param ownerEntityName - The entity-name of the {@code owner}.
+	 * @param owner - The entity instance that "owns" the {@code collection}
+	 * 		affected by this event; can be {@code null} if unavailable.
+	 * @param ownerId - The identifier value for the {@code owner}; can be
+	 * 		{@code null} if unavailable.
 	 */
+	@Internal
 	public AbstractCollectionEvent(
+			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
-			String entityName,
-			Object affectedOwner,
-			Object affectedOwnerId) {
+			String ownerEntityName,
+			Object owner,
+			Object ownerId) {
 		super( null );
 		this.collection = collection;
-		this.affectedOwner = affectedOwner;
-		this.affectedOwnerId = affectedOwnerId;
-		this.affectedOwnerEntityName = entityName;
+		this.owner = owner;
+		this.ownerId = ownerId;
+		this.ownerEntityName = ownerEntityName;
+		this.collectionPersister = collectionPersister;
 	}
 
-	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
+	/**
+	 * The descriptor for the {@linkplain #getCollection() collection} mapping.
+	 */
+	public CollectionPersister getCollectionPersister() {
+		return collectionPersister;
+	}
+
+	/**
+	 * The (wrapped) collection instance affected by this event.
+	 */
+	public PersistentCollection<?> getCollection() {
+		return collection;
+	}
+
+	/**
+	 * Get the collection owner entity that is affected by this event.
+	 *
+	 * @return the affected owner; returns null if the entity is not in the persistence context
+	 * (e.g., because the collection from a detached entity was moved to a new owner)
+	 */
+	public Object getAffectedOwnerOrNull() {
+		return owner;
+	}
+
+	/**
+	 * Get the ID for the collection owner entity that is affected by this event.
+	 *
+	 * @return the affected owner ID; returns null if the ID cannot be obtained
+	 * from the collection's loaded key (e.g., a property-ref is used for the
+	 * collection and does not include the entity's ID)
+	 */
+	public Object getAffectedOwnerIdOrNull() {
+		return ownerId;
+	}
+
+	/**
+	 * Get the entity name for the collection owner entity that is affected by this event.
+	 *
+	 * @return the entity name; if the owner is not in the PersistenceContext, the
+	 * returned value may be a superclass name, instead of the actual class name
+	 */
+	public String getAffectedOwnerEntityName() {
+		return ownerEntityName;
+	}
+
+	protected static CollectionPersister getLoadedCollectionPersister(PersistentCollection<?> collection, EventSource source) {
 		final var entry = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return entry == null ? null : entry.getLoadedPersister();
 	}
@@ -100,41 +158,6 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 				// but we don't want to throw an exception
 				// if it is null
 				: null;
-	}
-
-	public PersistentCollection<?> getCollection() {
-		return collection;
-	}
-
-	/**
-	 * Get the collection owner entity that is affected by this event.
-	 *
-	 * @return the affected owner; returns null if the entity is not in the persistence context
-	 * (e.g., because the collection from a detached entity was moved to a new owner)
-	 */
-	public Object getAffectedOwnerOrNull() {
-		return affectedOwner;
-	}
-
-	/**
-	 * Get the ID for the collection owner entity that is affected by this event.
-	 *
-	 * @return the affected owner ID; returns null if the ID cannot be obtained
-	 * from the collection's loaded key (e.g., a property-ref is used for the
-	 * collection and does not include the entity's ID)
-	 */
-	public Object getAffectedOwnerIdOrNull() {
-		return affectedOwnerId;
-	}
-
-	/**
-	 * Get the entity name for the collection owner entity that is affected by this event.
-	 *
-	 * @return the entity name; if the owner is not in the PersistenceContext, the
-	 * returned value may be a superclass name, instead of the actual class name
-	 */
-	public String getAffectedOwnerEntityName() {
-		return affectedOwnerEntityName;
 	}
 
 }

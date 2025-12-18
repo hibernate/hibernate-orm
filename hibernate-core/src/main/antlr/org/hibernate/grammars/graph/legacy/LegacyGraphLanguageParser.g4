@@ -1,7 +1,7 @@
-parser grammar GraphLanguageParser;
+parser grammar LegacyGraphLanguageParser;
 
 options {
-	tokenVocab=GraphLanguageLexer;
+	tokenVocab=LegacyGraphLanguageLexer;
 }
 
 @header {
@@ -9,7 +9,7 @@ options {
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.grammars.graph;
+package org.hibernate.grammars.graph.legacy;
 }
 
 @members {
@@ -17,34 +17,16 @@ package org.hibernate.grammars.graph;
  * Antlr grammar describing the Hibernate EntityGraph Language - for parsing a structured
  * textual representation of an entity graph
  *
- * `GraphLanguageParser.g4`
+ * `LegacyGraphLanguageParser.g4`
  */
 }
 
 graph
-    : graphElementList
-    ;
-
-graphElementList
-    : graphElement (COMMA graphElement)*
-    ;
-
-
-graphElement
-    : subGraph
-    | attributeNode
-    ;
-
-subGraph
-    : subTypeIndicator? LPAREN attributeList RPAREN
-    ;
+    : typeIndicator? attributeList
+ 	;
 
 typeIndicator
     : TYPE_NAME COLON
-    ;
-
-subTypeIndicator
-    : COLON TYPE_NAME
     ;
 
 attributeList
@@ -61,4 +43,8 @@ attributePath
 
 attributeQualifier
 	: DOT ATTR_NAME
+	;
+
+subGraph
+	: LPAREN typeIndicator? attributeList RPAREN
 	;

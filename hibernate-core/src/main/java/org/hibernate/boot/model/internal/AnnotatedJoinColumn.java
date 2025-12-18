@@ -73,7 +73,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
 		final String path = qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
-		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
+		final var overrides = propertyHolder.getOverriddenJoinColumn( path );
 		if ( overrides != null ) {
 			//TODO: relax this restriction
 			throw new AnnotationException( "Property '" + path
@@ -334,7 +334,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		setLogicalColumnName( columnName );
 		setImplicit( true );
 		setReferencedColumn( logicalReferencedColumn );
-		final Column mappingColumn = getMappingColumn();
+		final var mappingColumn = getMappingColumn();
 		initMappingColumn(
 				columnName,
 				null,
@@ -363,7 +363,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			// the name of the @MapsId annotation, but
 			// it's better than just having two different
 			// column names which disagree
-			final Column column = parent.resolveMapsId().getValue().getColumns().get( columnIndex );
+			final var column = parent.resolveMapsId().getValue().getColumns().get( columnIndex );
 //			return column.getQuotedName();
 			if ( column.isExplicit() ) {
 				throw new AnnotationException( "Association '" + parent.getPropertyName()
@@ -429,7 +429,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 * @param column the referenced column.
 	 */
 	public void overrideFromReferencedColumnIfNecessary(Column column) {
-		final Column mappingColumn = getMappingColumn();
+		final var mappingColumn = getMappingColumn();
 		if ( mappingColumn != null ) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not

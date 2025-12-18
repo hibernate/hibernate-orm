@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
@@ -111,11 +112,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	protected IllegalStateException buildExceptionFromInstantiationError(AttributeConversionInfo info, Exception e) {
-		if ( void.class.equals( info.getConverterClass() ) ) {
+		if ( AttributeConverter.class.equals( info.getConverterClass() ) ) {
 			// the user forgot to set @Convert.converter
 			// we already know it's not a @Convert.disableConversion
 			return new IllegalStateException(
-					"Unable to instantiate AttributeConverter: you left @Convert.converter to its default value void.",
+					"Unable to instantiate AttributeConverter because the 'converter' member of '@Convert' was not specified",
 					e
 			);
 
@@ -283,7 +284,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 */
 	@Override
 	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
-		final JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
+		final var result = getExactOverriddenJoinColumn( propertyName );
 		if ( result == null && propertyName.contains( ".{element}." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
@@ -316,13 +317,15 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public ForeignKey getOverriddenForeignKey(String propertyName) {
-		final ForeignKey result = getExactOverriddenForeignKey( propertyName );
+		final var result = getExactOverriddenForeignKey( propertyName );
 		if ( result == null && propertyName.contains( ".{element}." ) ) {
 			//support for non map collections where no prefix is needed
 			//TODO cache the underlying regexp
 			return getExactOverriddenForeignKey( propertyName.replace( ".{element}.", "." ) );
 		}
-		return result;
+		else {
+			return result;
+		}
 	}
 
 	private ForeignKey getExactOverriddenForeignKey(String propertyName) {
@@ -585,7 +588,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, JoinColumn[]> buildJoinColumnOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinColumn[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			for ( var override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, context ) ) {
 				columnOverride.put( qualify( path, override.name() ), override.joinColumns() );
 			}
 		}
@@ -595,21 +598,21 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, ForeignKey> buildForeignKeyOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
-			for ( var override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, context ) ) {
 				foreignKeyOverride.put( qualify( path, override.name() ), override.foreignKey() );
 			}
 		}
 		return foreignKeyOverride;
 	}
 
-	private static AssociationOverride[] buildAssociationOverrides(AnnotationTarget element, String path, MetadataBuildingContext context) {
+	private static AssociationOverride[] buildAssociationOverrides(AnnotationTarget element, MetadataBuildingContext context) {
 		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getBootstrapContext().getModelsContext() );
 	}
 
 	private static Map<String, JoinTable> buildJoinTableOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinTable> result = new HashMap<>();
 		if ( element != null ) {
-			for ( var override : buildAssociationOverrides( element, path, context ) ) {
+			for ( var override : buildAssociationOverrides( element, context ) ) {
 				if ( isEmpty( override.joinColumns() ) ) {
 					result.put( qualify( path, override.name() ), override.joinTable() );
 				}

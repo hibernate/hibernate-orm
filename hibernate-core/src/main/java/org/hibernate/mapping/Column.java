@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -30,9 +30,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -195,35 +192,43 @@ public sealed class Column
 
 	@Override
 	public String getAlias(Dialect dialect) {
-		final int lastLetter = lastIndexOfLetter( name );
 		final String suffix = AliasConstantsHelper.get( uniqueInteger );
+		return qualifyAlias( dialect, suffix, aliasRoot() );
+	}
 
+	private @NonNull String aliasRoot() {
+		final int lastLetter = lastIndexOfLetter( name );
 		final String alias;
 		if ( lastLetter == -1 ) {
-			alias = "column";
+			return "column";
 		}
 		else {
 			final String lowerCaseName = name.toLowerCase( Locale.ROOT );
-			alias = lowerCaseName.length() > lastLetter + 1
+			return lowerCaseName.length() > lastLetter + 1
 					? lowerCaseName.substring( 0, lastLetter + 1 )
 					: lowerCaseName;
 		}
+	}
 
+	private @NonNull String qualifyAlias(Dialect dialect, String suffix, String alias) {
+		final int suffixLength = suffix.length();
+		final int maxAliasLength = dialect.getMaxAliasLength();
+		final int freeLength = maxAliasLength - suffixLength;
 		final boolean useRawName =
-				name.length() + suffix.length() <= dialect.getMaxAliasLength()
+				name.length() <= freeLength
 				&& !quoted
 				&& !name.equalsIgnoreCase( dialect.rowId(null) );
 		if ( !useRawName ) {
-			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
+			if ( suffixLength >= maxAliasLength ) {
 				throw new MappingException(
 						String.format(
 								"Unique suffix [%s] length must be less than maximum [%d]",
-								suffix, dialect.getMaxAliasLength()
+								suffix, maxAliasLength
 						)
 				);
 			}
-			if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
-				return alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() ) + suffix;
+			if ( alias.length() > freeLength ) {
+				return alias.substring( 0, freeLength ) + suffix;
 			}
 		}
 		return alias + suffix;
@@ -283,50 +288,51 @@ public sealed class Column
 
 	public int getSqlTypeCode(MappingContext mapping) throws MappingException {
 		if ( sqlTypeCode == null ) {
-			final Type type = getValue().getType();
-			final int[] sqlTypeCodes;
-			try {
-				sqlTypeCodes = type.getSqlTypeCodes( mapping );
-			}
-			catch ( Exception cause ) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"Unable to resolve JDBC type code for column '%s' of table '%s'",
-								getName(),
-								getValue().getTable().getName()
-						),
-						cause
-				);
-			}
-			final int index = getTypeIndex();
-			if ( index >= sqlTypeCodes.length ) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"Unable to resolve JDBC type code for column '%s' of table '%s'",
-								getName(),
-								getValue().getTable().getName()
-						)
-				);
-			}
-			sqlTypeCode = sqlTypeCodes[index];
+			sqlTypeCode = getSqlTypeCode( mapping, getValue().getType() );
 		}
 		return sqlTypeCode;
 	}
 
+	private int getSqlTypeCode(MappingContext mapping, Type type) {
+		final int[] sqlTypeCodes;
+		try {
+			sqlTypeCodes = type.getSqlTypeCodes( mapping );
+		}
+		catch ( Exception cause ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve JDBC type code for column '%s' of table '%s'",
+							getName(),
+							getValue().getTable().getName()
+					),
+					cause
+			);
+		}
+		final int index = getTypeIndex();
+		if ( index >= sqlTypeCodes.length ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve JDBC type code for column '%s' of table '%s'",
+							getName(),
+							getValue().getTable().getName()
+					)
+			);
+		}
+		return sqlTypeCodes[index];
+	}
+
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 			final int sqlTypeCode = getSqlTypeCode( mapping );
-			final JdbcType jdbcType =
+			final var jdbcType =
 					jdbcTypeRegistry.getConstructor( sqlTypeCode ) == null
 							? jdbcTypeRegistry.findDescriptor( sqlTypeCode )
 							: ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
-			final DdlType descriptor = jdbcType == null
-					? null
-					: ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
+			final var descriptor = jdbcType == null ? null : ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
 			if ( descriptor == null ) {
 				throw new MappingException(
 						String.format(
@@ -340,7 +346,7 @@ public sealed class Column
 				);
 			}
 			try {
-				final Size size = getColumnSize( dialect, mapping );
+				final var size = getColumnSize( dialect, mapping );
 				sqlTypeName = descriptor.getTypeName(
 						size,
 						getUnderlyingType( mapping, getValue().getType(), typeIndex ),
@@ -367,7 +373,7 @@ public sealed class Column
 	private static Type getUnderlyingType(MappingContext mappingContext, Type type, int typeIndex) {
 		if ( type instanceof ComponentType componentType ) {
 			int cols = 0;
-			for ( Type subtype : componentType.getSubtypes() ) {
+			for ( var subtype : componentType.getSubtypes() ) {
 				final int columnSpan = subtype.getColumnSpan( mappingContext );
 				if ( cols+columnSpan > typeIndex ) {
 					return getUnderlyingType( mappingContext, subtype, typeIndex-cols );
@@ -377,7 +383,7 @@ public sealed class Column
 			throw new IndexOutOfBoundsException();
 		}
 		else if ( type instanceof EntityType entityType ) {
-			final Type idType = entityType.getIdentifierOrUniqueKeyType( mappingContext );
+			final var idType = entityType.getIdentifierOrUniqueKeyType( mappingContext );
 			return getUnderlyingType( mappingContext, idType, typeIndex );
 		}
 		else {
@@ -406,7 +412,7 @@ public sealed class Column
 	}
 
 	public String getSqlType(Metadata mapping) {
-		final Database database = mapping.getDatabase();
+		final var database = mapping.getDatabase();
 		return getSqlTypeName( database.getTypeConfiguration(), database.getDialect(), mapping );
 	}
 
@@ -448,22 +454,21 @@ public sealed class Column
 	}
 
 	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext) {
-		Type type = getValue().getType();
-		Long lengthToUse = getLength();
-		Integer precisionToUse = getPrecision();
-		Integer scaleToUse = getScale();
+		var lengthToUse = getLength();
+		var precisionToUse = getPrecision();
+		var scaleToUse = getScale();
+		var type = getValue().getType();
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mappingContext, type, getTypeIndex() );
 		}
-		if ( type instanceof ComponentType ) {
-			type = getTypeForComponentValue( mappingContext, type, getTypeIndex() );
+		if ( type instanceof ComponentType componentType ) {
+			type = getTypeForComponentValue( mappingContext, componentType, getTypeIndex() );
 		}
-		if ( type instanceof BasicType<?> basicType ) {
-			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
-				precisionToUse = getTemporalPrecision();
-				lengthToUse = null;
-				scaleToUse = null;
-			}
+		if ( type instanceof BasicType<?> basicType
+				&& isTemporal( basicType.getExpressibleJavaType() ) ) {
+			precisionToUse = getTemporalPrecision();
+			lengthToUse = null;
+			scaleToUse = null;
 		}
 		if ( type == null ) {
 			throw new AssertionFailure( "no typing information available to determine column size" );
@@ -480,23 +485,25 @@ public sealed class Column
 		return size;
 	}
 
-	private Type getTypeForComponentValue(MappingContext mappingContext, Type type, int typeIndex) {
-		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
+	private Type getTypeForComponentValue(MappingContext mappingContext, ComponentType type, int typeIndex) {
+		final var subtypes = type.getSubtypes();
 		int typeStartIndex = 0;
-		for ( Type subtype : subtypes ) {
+		for ( var subtype : subtypes ) {
 			final int columnSpan = subtype.getColumnSpan( mappingContext );
 			if ( typeStartIndex + columnSpan > typeIndex ) {
 				final int subtypeIndex = typeIndex - typeStartIndex;
 				if ( subtype instanceof EntityType ) {
 					return getTypeForEntityValue( mappingContext, subtype, subtypeIndex );
 				}
-				if ( subtype instanceof ComponentType ) {
-					return getTypeForComponentValue( mappingContext, subtype, subtypeIndex );
+				else if ( subtype instanceof ComponentType componentType ) {
+					return getTypeForComponentValue( mappingContext, componentType, subtypeIndex );
 				}
-				if ( subtypeIndex == 0 ) {
+				else if ( subtypeIndex == 0 ) {
 					return subtype;
 				}
-				break;
+				else {
+					break;
+				}
 			}
 			typeStartIndex += columnSpan;
 		}
@@ -514,11 +521,20 @@ public sealed class Column
 	private Type getTypeForEntityValue(MappingContext mappingContext, Type type, int typeIndex) {
 		int index = 0;
 		if ( type instanceof EntityType entityType ) {
-			return getTypeForEntityValue( mappingContext, entityType.getIdentifierOrUniqueKeyType( mappingContext ), typeIndex );
+			return getTypeForEntityValue(
+					mappingContext,
+					entityType.getIdentifierOrUniqueKeyType( mappingContext ),
+					typeIndex
+			);
 		}
 		else if ( type instanceof ComponentType componentType ) {
-			for ( Type subtype : componentType.getSubtypes() ) {
-				final Type result = getTypeForEntityValue( mappingContext, subtype, typeIndex - index );
+			for ( var subtype : componentType.getSubtypes() ) {
+				final var result =
+						getTypeForEntityValue(
+								mappingContext,
+								subtype,
+								typeIndex - index
+						);
 				if ( result != null ) {
 					return result;
 				}
@@ -557,13 +573,10 @@ public sealed class Column
 			try {
 				final int typeCode = getSqlTypeCode( mapping );
 				final var ddlType = ddlTypeRegistry.getDescriptor( typeCode );
-				if ( ddlType == null ) {
-					sqlTypeLob = JdbcType.isLob( typeCode );
-				}
-				else {
-					final Size size = getColumnSize( dialect, mapping );
-					sqlTypeLob = ddlType.isLob( size );
-				}
+				sqlTypeLob =
+						ddlType == null
+								? JdbcType.isLob( typeCode )
+								: ddlType.isLob( getColumnSize( dialect, mapping ) );
 			}
 			catch ( MappingException cause ) {
 				throw cause;

@@ -40,6 +40,7 @@ import jakarta.persistence.JoinColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildExplicitJoinTableJoinColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildImplicitJoinTableJoinColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildJoinColumn;
+import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildJoinFormula;
 import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.ForeignKeyType.EXPLICIT_PRIMARY_KEY_REFERENCE;
@@ -99,7 +100,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			final var column = columnOrFormula.column();
 			final String annotationString = formula.value();
 			if ( isNotBlank( annotationString ) ) {
-				AnnotatedJoinColumn.buildJoinFormula( formula, parent );
+				buildJoinFormula( formula, parent );
 			}
 			else {
 				buildJoinColumn( column, mappedBy, parent, propertyHolder, inferredData );
@@ -134,7 +135,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
 		joinColumns.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
-		AnnotatedJoinColumn.buildJoinFormula( joinFormula, joinColumns );
+		buildJoinFormula( joinFormula, joinColumns );
 		handlePropertyRef( inferredData.getAttributeMember(), joinColumns );
 		return joinColumns;
 	}
@@ -168,15 +169,15 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		assert mappedBy == null || !mappedBy.isBlank();
 		final String propertyName = inferredData.getPropertyName();
 		final String path = qualify( propertyHolder.getPath(), propertyName );
-		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
-		final JoinColumn[] actualColumns = overrides == null ? joinColumns : overrides;
+		final var overriddenJoinColumns = propertyHolder.getOverriddenJoinColumn( path );
+		final var actualJoinColumns = overriddenJoinColumns == null ? joinColumns : overriddenJoinColumns;
 		final var parent = new AnnotatedJoinColumns();
 		parent.setBuildingContext( context );
 		parent.setJoins( joins );
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		parent.setMappedBy( mappedBy );
-		if ( isEmpty( actualColumns ) ) {
+		if ( isEmpty( actualJoinColumns ) ) {
 			buildJoinColumn(
 					null,
 					mappedBy,
@@ -188,7 +189,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		}
 		else {
 			parent.setMappedBy( mappedBy );
-			for ( var actualColumn : actualColumns ) {
+			for ( var actualColumn : actualJoinColumns ) {
 				buildJoinColumn(
 						actualColumn,
 						mappedBy,

@@ -12,7 +12,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
@@ -118,45 +117,46 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			PropertyHolder container,
 			MetadataBuildingContext buildingContext) {
 		Table tableToUse = container.getTable();
-		boolean wasExplicit = false;
-		if ( container instanceof ComponentPropertyHolder componentPropertyHolder ) {
-			wasExplicit = componentPropertyHolder.getComponent().wasTableExplicitlyDefined();
-		}
+		boolean wasExplicit =
+				container instanceof ComponentPropertyHolder componentPropertyHolder
+						&& componentPropertyHolder.getComponent().wasTableExplicitlyDefined();
 
-		if ( propertyData.getAttributeMember() != null ) {
-			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember()
-					.getDirectAnnotationUsage( EmbeddedTable.class );
+		final var attributeMember = propertyData.getAttributeMember();
+		if ( attributeMember != null ) {
+			final var embeddedTableAnn = attributeMember.getDirectAnnotationUsage( EmbeddedTable.class );
 			// we only allow this when done for an embedded on an entity or mapped-superclass
 			if ( container instanceof ClassPropertyHolder ) {
 				if ( embeddedTableAnn != null ) {
-					final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
-					final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
-							.getMetadataCollector()
-							.getEntityTableXref( container.getEntityName() );
-					tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+					tableToUse = resolveEmbeddedTable( container, buildingContext, embeddedTableAnn );
 					wasExplicit = true;
 				}
 			}
-			else {
-				if ( embeddedTableAnn != null ) {
-					// not allowed
-					throw new AnnotationPlacementException( "@EmbeddedTable only supported for use on entity or mapped-superclass" );
-				}
+			else if ( embeddedTableAnn != null ) {
+				// not allowed
+				throw new AnnotationPlacementException(
+						"@EmbeddedTable only supported for use on entity or mapped-superclass" );
 			}
 		}
-		if ( propertyData.getAttributeMember() != null && container instanceof ClassPropertyHolder ) {
-			final EmbeddedTable embeddedTableAnn = propertyData.getAttributeMember().getDirectAnnotationUsage( EmbeddedTable.class );
+		if ( attributeMember != null && container instanceof ClassPropertyHolder ) {
+			final var embeddedTableAnn = attributeMember.getDirectAnnotationUsage( EmbeddedTable.class );
 			if ( embeddedTableAnn != null ) {
-				final Identifier tableNameIdentifier = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting( embeddedTableAnn.value() );
-				final InFlightMetadataCollector.EntityTableXref entityTableXref = buildingContext
-						.getMetadataCollector()
-						.getEntityTableXref( container.getEntityName() );
-				tableToUse =  entityTableXref.resolveTable( tableNameIdentifier );
+				tableToUse = resolveEmbeddedTable( container, buildingContext, embeddedTableAnn );
 				wasExplicit = true;
 			}
 		}
 
 		component.setTable( tableToUse, wasExplicit );
+	}
+
+	private static Table resolveEmbeddedTable(
+			PropertyHolder container, MetadataBuildingContext buildingContext, EmbeddedTable embeddedTableAnn) {
+		final Identifier tableNameIdentifier =
+				buildingContext.getObjectNameNormalizer()
+						.normalizeIdentifierQuoting( embeddedTableAnn.value() );
+		final var entityTableXref =
+				buildingContext.getMetadataCollector()
+						.getEntityTableXref( container.getEntityName() );
+		return entityTableXref.resolveTable( tableNameIdentifier );
 	}
 
 	/**
@@ -235,21 +235,19 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	public void startingProperty(MemberDetails propertyMemberDetails) {
 		if ( propertyMemberDetails != null ) {
 			// again: the property coming in here *should* be the property on the embeddable (Address#city in the example),
-			// so we just ignore it if there is already an existing conversion info for that path since they would have
+			// so we just ignore it if there is already an existing ConversionInfo for that path since they would have
 			// precedence
 
 			// technically we should only do this for properties of "basic type"
 
 			final String attributeName = propertyMemberDetails.resolveAttributeName();
 			final String path = embeddedAttributeName + '.' + attributeName;
-			if ( attributeConversionInfoMap.containsKey( path ) ) {
-				return;
+			if ( !attributeConversionInfoMap.containsKey( path ) ) {
+				propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+					final var info = new AttributeConversionInfo( usage, propertyMemberDetails );
+					attributeConversionInfoMap.put( attributeName, info );
+				} );
 			}
-
-			propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-				final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
-				attributeConversionInfoMap.put( attributeName, info );
-			} );
 		}
 	}
 
@@ -403,7 +401,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	public Column[] getOverriddenColumn(String propertyName) {
 		//FIXME this is yukky
-		Column[] result = super.getOverriddenColumn( propertyName );
+		var result = super.getOverriddenColumn( propertyName );
 		if ( result == null ) {
 			final String userPropertyName = extractUserPropertyName( "id", propertyName );
 			if ( userPropertyName != null ) {
@@ -434,6 +432,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ")";
+		return getClass().getSimpleName()
+			+ "(" + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ")";
 	}
 }

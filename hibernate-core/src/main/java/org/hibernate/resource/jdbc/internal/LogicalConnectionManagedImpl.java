@@ -255,15 +255,19 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	@Override
 	public Connection close() {
 		if ( !closed ) {
-			getResourceRegistry().releaseResources();
-			CONNECTION_LOGGER.closingLogicalConnection( hashCode() );
 			try {
-				releaseConnectionIfNeeded();
+				getResourceRegistry().releaseResources();
 			}
 			finally {
-				// no matter what
-				closed = true;
-				CONNECTION_LOGGER.logicalConnectionClosed( hashCode() );
+				CONNECTION_LOGGER.closingLogicalConnection( hashCode() );
+				try {
+					releaseConnectionIfNeeded();
+				}
+				finally {
+					// no matter what
+					closed = true;
+					CONNECTION_LOGGER.logicalConnectionClosed( hashCode() );
+				}
 			}
 		}
 		return null;

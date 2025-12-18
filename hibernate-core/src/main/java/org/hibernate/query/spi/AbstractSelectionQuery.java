@@ -147,7 +147,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public List<R> list() {
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -174,10 +174,8 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
-
 		final var session = getSession();
 		final var options = getQueryOptions();
-
 		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
 		prepareForExecution();
 		prepareSessionFlushMode( session );

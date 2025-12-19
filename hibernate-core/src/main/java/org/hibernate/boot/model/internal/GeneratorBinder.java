@@ -59,6 +59,7 @@ import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.initializeGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
@@ -616,13 +617,8 @@ public class GeneratorBinder {
 			MemberDetails memberDetails,
 			GeneratorCreationContext creationContext,
 			Generator generator) {
-		if ( generator instanceof AnnotationBasedGenerator ) {
-			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
-			// a programming error of the generation type developer and thus should show up during testing, we don't
-			// check this explicitly; If required, this could be done e.g. using ClassMate
-			@SuppressWarnings("unchecked")
-			final var generation = (AnnotationBasedGenerator<A>) generator;
-			generation.initialize( annotation, memberDetails.toJavaMember(), creationContext );
+		if ( generator instanceof AnnotationBasedGenerator<?> annotationBasedGenerator ) {
+			initializeGenerator( annotationBasedGenerator, annotation, memberDetails, creationContext );
 		}
 	}
 

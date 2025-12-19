@@ -7747,17 +7747,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							this
 					)
 			);
+			subQuerySpec.applyPredicate(
+					new ComparisonPredicate(
+							toSingleExpression( subQuerySpec.getSelectClause().getSqlSelections(), lhs ),
+							ComparisonOperator.EQUAL,
+							lhs
+					)
+			);
+			subQuerySpec.getSelectClause().getSqlSelections().clear();
+			subQuerySpec.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl( new QueryLiteral<>( 1, basicType( Integer.class ) ) )
+			);
 		}
 		finally {
 			popProcessingStateStack();
 		}
 
-		return new InSubQueryPredicate(
-				lhs,
+		return new ExistsPredicate(
 				new SelectStatement( subQuerySpec ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
+	}
+
+	private Expression toSingleExpression(List<SqlSelection> sqlSelections, Expression inferenceSource) {
+		assert !sqlSelections.isEmpty();
+
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpression();
+		}
+		else {
+			final var expressions = new ArrayList<Expression>( sqlSelections.size() );
+			for ( SqlSelection sqlSelection : sqlSelections ) {
+				expressions.add( sqlSelection.getExpression() );
+			}
+			return new SqlTuple( expressions, (MappingModelExpressible<?>) inferenceSource.getExpressionType() );
+		}
 	}
 
 	@Override

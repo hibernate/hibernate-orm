@@ -284,7 +284,7 @@ public class CriteriaWindowFunctionTest {
 		);
 	}
 
-	@Test
+	@Test // TODO: currently fails on Informix but I don't know why
 	public void testSumWithFilterAndWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -1,6 +1,18 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.13.Final (December 21, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36906
+
+
+** Bug
+    * HHH-20008 Bad performance of MEMBER OF translation
+    * HHH-19985 Subquery embedded value selection uses wrong nested attribute type for extraction
+    * HHH-19962 Wrong Values used with Subquery and same name Attributes
+    * HHH-19935 UuidVersion7Strategy can generate cosecutive UUIDs that are equal
+
 Changes in 7.1.12.Final (December 14, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

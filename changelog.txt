@@ -1,6 +1,18 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.40.Final (December 21, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36905
+
+
+** Bug
+    * HHH-20008 Bad performance of MEMBER OF translation
+
+** Task
+    * HHH-19548 Upgrade to ByteBuddy 1.17.5
+
 Changes in 6.6.39.Final (December 14, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

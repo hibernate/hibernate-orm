@@ -20,6 +20,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import jakarta.persistence.Table;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
@@ -58,7 +59,12 @@ import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_UTC_MINUS_8;
 @SkipForDialect(dialectClass = HANADialect.class,
 		reason = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
 @SkipForDialect(dialectClass = MySQLDialect.class,
-		reason = "HHH-13582: MySQL ConnectorJ 8.x returns the wrong date"
+		reason = "HHH-13582: MySQL Connector/J 8.x returns the wrong date"
+				+ " when the JVM default timezone is different from the server timezone:"
+				+ " https://bugs.mysql.com/bug.php?id=91112"
+)
+@SkipForDialect(dialectClass = TiDBDialect.class,
+		reason = "HHH-13582: MySQL Connector/J 8.x returns the wrong date"
 				+ " when the JVM default timezone is different from the server timezone:"
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )

@@ -9,6 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -59,7 +60,7 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTim
 				.add( 0, 19, 31, 0, Timezones.ZONE_AMSTERDAM )
 				.skippedForDialects(
 						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
-						Arrays.asList( MySQLDialect.class, MariaDBDialect.class ),
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, TiDBDialect.class ),
 						b -> b
 								.add( 0, 0, 0, 0, Timezones.ZONE_GMT )
 								.add( 0, 0, 0, 0, Timezones.ZONE_OSLO )
@@ -161,6 +162,12 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTim
 	@SkipForDialect(dialectClass = HANADialect.class,
 			reason = "HANA seems to return a java.sql.Timestamp instead of a java.sql.Time")
 	@SkipForDialect(dialectClass = MySQLDialect.class,
+			reason = "HHH-13580 MySQL seems to store the whole timestamp, not just the time,"
+					+ " which for some timezones results in a date other than 1970-01-01 being returned"
+					+ " (typically 1969-12-31), even though the time is always right."
+					+ " Since java.sql.Time holds the whole timestamp, not just the time,"
+					+ " its equals() method ends up returning false in this test.")
+	@SkipForDialect(dialectClass = TiDBDialect.class,
 			reason = "HHH-13580 MySQL seems to store the whole timestamp, not just the time,"
 					+ " which for some timezones results in a date other than 1970-01-01 being returned"
 					+ " (typically 1969-12-31), even though the time is always right."

@@ -1341,6 +1341,7 @@ tidb_8_5() {
       databases+=("hibernate_orm_test_${n}")
     done
     create_cmd=
+    create_cmd+="SET GLOBAL tidb_enable_check_constraint=ON;"
     create_cmd+="CREATE DATABASE IF NOT EXISTS hibernate_orm_test;"
     create_cmd+="CREATE USER IF NOT EXISTS 'hibernate_orm_test'@'%' IDENTIFIED BY 'hibernate_orm_test';"
     create_cmd+="GRANT ALL ON hibernate_orm_test.* TO 'hibernate_orm_test'@'%';"

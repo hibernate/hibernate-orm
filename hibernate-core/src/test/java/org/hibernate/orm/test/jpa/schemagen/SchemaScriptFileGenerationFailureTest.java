@@ -13,6 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -115,15 +116,15 @@ public class SchemaScriptFileGenerationFailureTest {
 		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 
-	private Map getConfig() {
-		final Map<Object, Object> config = Environment.getProperties();
+	private Map<String, Object> getConfig() {
+		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 		ServiceRegistryUtil.applySettings( config );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
-		ArrayList<Class> classes = new ArrayList<>();
+		ArrayList<Class<?>> classes = new ArrayList<>();
 
-		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
+		classes.addAll( Arrays.asList( new Class<?>[] { TestEntity.class } ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}

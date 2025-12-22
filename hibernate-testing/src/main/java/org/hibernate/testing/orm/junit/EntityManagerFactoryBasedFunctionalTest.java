@@ -19,6 +19,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -102,8 +103,8 @@ public class EntityManagerFactoryBasedFunctionalTest
 		return NO_CLASSES;
 	}
 
-	protected Map<Object, Object> buildSettings() {
-		Map<Object, Object> settings = getConfig();
+	protected Map<String, Object> buildSettings() {
+		Map<String, Object> settings = getConfig();
 		applySettings( settings );
 
 		if ( exportSchema() ) {
@@ -126,19 +127,19 @@ public class EntityManagerFactoryBasedFunctionalTest
 	}
 
 
-	protected Map<Object, Object> getConfig() {
-		Map<Object, Object> config = Environment.getProperties();
+	protected Map<String, Object> getConfig() {
+		Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 		ArrayList<Class<?>> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
-		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
+		for ( Map.Entry<Class<?>, String> entry : getCachedClasses().entrySet() ) {
 			config.put(
 					AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
 					entry.getValue()
 			);
 		}
-		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
+		for ( var entry : getCachedCollections().entrySet() ) {
 			config.put(
 					AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
 					entry.getValue()
@@ -158,14 +159,14 @@ public class EntityManagerFactoryBasedFunctionalTest
 		return config;
 	}
 
-	protected void applySettings(Map<Object, Object> settings) {
+	protected void applySettings(Map<String, Object> settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
 			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
 	}
 
-	public Map<Class, String> getCachedClasses() {
+	public Map<Class<?>, String> getCachedClasses() {
 		return new HashMap<>();
 	}
 

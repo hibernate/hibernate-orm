@@ -13,7 +13,6 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
@@ -37,7 +36,7 @@ public class MergedSettings {
 	}
 
 	void processPersistenceUnitDescriptorProperties(PersistenceUnitDescriptor persistenceUnit) {
-		final Properties properties = persistenceUnit.getProperties();
+		final var properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
 			getConfigurationValues().putAll( PropertiesHelper.map( properties ) );
 		}
@@ -45,7 +44,7 @@ public class MergedSettings {
 	}
 
 	void processHibernateConfigXmlResources(LoadedConfig loadedConfig) {
-		if ( !getConfigurationValues().containsKey(  SESSION_FACTORY_NAME) ) {
+		if ( !getConfigurationValues().containsKey( SESSION_FACTORY_NAME) ) {
 			// there is not already a SF-name in the merged settings
 			final String sessionFactoryName = loadedConfig.getSessionFactoryName();
 			if ( sessionFactoryName != null ) {

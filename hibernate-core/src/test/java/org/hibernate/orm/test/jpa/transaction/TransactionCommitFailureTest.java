@@ -53,7 +53,7 @@ public class TransactionCommitFailureTest {
 		transactionFailureTrigger = new AtomicBoolean();
 		connectionIsOpen = new AtomicBoolean();
 
-		final Map settings = basicSettings();
+		final Map<String, Object> settings = basicSettings();
 		emf = Bootstrap.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings ).build();
 	}
 
@@ -112,7 +112,7 @@ public class TransactionCommitFailureTest {
 		assertFalse( connectionIsOpen.get(), "The connection was not released" );
 	}
 
-	private Map basicSettings() {
+	private Map<String, Object> basicSettings() {
 		return SettingsGenerator.generateSettings(
 				Environment.HBM2DDL_AUTO, "create-drop",
 				Environment.DIALECT, DialectContext.getDialect().getClass().getName(),

@@ -1141,7 +1141,83 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_24_3
+  cockroachdb_25_4
+}
+
+cockroachdb_25_4() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_25_4:-cockroachdb/cockroach:v25.4.2} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+
+quit
+EOF
+"
+  cockroachdb_setup
+  echo "Cockroachdb successfully started"
+}
+
+cockroachdb_24_1() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_3:-cockroachdb/cockroach:v24.3.3} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+
+quit
+EOF
+"
+  cockroachdb_setup
+  echo "Cockroachdb successfully started"
 }
 
 cockroachdb_24_3() {
@@ -1221,7 +1297,7 @@ EOF
 }
 
 
-cockroachdb_23_1() {
+cockroachdb_23_2() {
   $CONTAINER_CLI rm -f cockroach || true
   LOG_CONFIG="
 sinks:
@@ -1231,7 +1307,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_1:-docker.io/cockroachdb/cockroach:v23.1.28} start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_2:-docker.io/cockroachdb/cockroach:v23.2.28} start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -1467,8 +1543,10 @@ if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_25_4"
+    echo -e "\tcockroachdb_24_3"
     echo -e "\tcockroachdb_24_1"
-    echo -e "\tcockroachdb_23_1"
+    echo -e "\tcockroachdb_23_2"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_spatial"

@@ -137,7 +137,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for CockroachDB 23.1 and above.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB 23.2 and above.
  *
  * @author Gavin King
  * @author Yoobin Yoon
@@ -150,7 +150,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 2 );
 
 	protected final PostgreSQLDriverKind driverKind;
 

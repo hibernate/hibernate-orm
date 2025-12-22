@@ -181,17 +181,28 @@ public abstract class AbstractSelectionQuery<R>
 
 		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
 		prepareForExecution();
+		prepareSessionFlushMode( session );
+		prepareSessionCacheMode( session );
+	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionFlushMode(SharedSessionContractImplementor session) {
 		assert sessionFlushMode == null;
-		assert sessionCacheMode == null;
-
-		final FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
+		final var effectiveFlushMode = getQueryOptions().getFlushMode();
 		if ( effectiveFlushMode != null && session instanceof SessionImplementor statefulSession ) {
 			sessionFlushMode = statefulSession.getHibernateFlushMode();
 			statefulSession.setHibernateFlushMode( effectiveFlushMode );
 		}
+	}
 
-		final CacheMode effectiveCacheMode = getCacheMode();
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionCacheMode(SharedSessionContractImplementor session) {
+		assert sessionCacheMode == null;
+		final var effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = session.getCacheMode();
 			session.setCacheMode( effectiveCacheMode );

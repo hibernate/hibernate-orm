@@ -55,7 +55,7 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 						entityManager.getReference( Workload.class, _workloadId )
 		);
 
-		Map settings = buildSettings();
+		Map<String,Object> settings = buildSettings();
 		settings.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.TRUE.toString() );
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 

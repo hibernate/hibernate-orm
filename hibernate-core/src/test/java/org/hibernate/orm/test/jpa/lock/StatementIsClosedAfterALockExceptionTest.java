@@ -46,8 +46,8 @@ public class StatementIsClosedAfterALockExceptionTest extends EntityManagerFacto
 	private Integer lockId;
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
+	protected Map<String, Object> getConfig() {
+		Map<String, Object> config = super.getConfig();
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 		config.put(
 			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,

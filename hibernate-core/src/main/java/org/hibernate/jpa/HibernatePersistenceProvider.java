@@ -5,6 +5,7 @@
 package org.hibernate.jpa;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
@@ -43,12 +44,13 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @implSpec Per the specification, the values passed as {@code properties} override values found in {@code persistence.xml}
+	 * @implSpec The values passed in the {@code map} override values found
+	 *           in {@code persistence.xml} according to the JPA specification.
 	 */
 	@Override
-	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map<?,?> map) {
 		JPA_LOGGER.startingCreateEntityManagerFactory( persistenceUnitName );
-		final var builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
+		final var builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
 			JPA_LOGGER.couldNotObtainEmfBuilder("null");
 			return null;
@@ -58,21 +60,40 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties) {
-		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, null );
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName, Map<?,?> properties) {
+		return getEntityManagerFactoryBuilderOrNull(
+				persistenceUnitName,
+				properties,
+				null,
+				null
+		);
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader) {
-		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, providedClassLoader, null );
+		return getEntityManagerFactoryBuilderOrNull(
+				persistenceUnitName,
+				properties,
+				providedClassLoader,
+				null
+		);
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName, Map<?,?> properties,
 			ClassLoaderService providedClassLoaderService) {
-		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, providedClassLoaderService );
+		return getEntityManagerFactoryBuilderOrNull(
+				persistenceUnitName,
+				properties,
+				null,
+				providedClassLoaderService
+		);
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
 		JPA_LOGGER.attemptingToObtainEmfBuilder( persistenceUnitName );
 		final var integration = wrap( properties );
@@ -92,21 +113,24 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				);
 			}
 
-			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
-			if ( !matches ) {
+			final boolean matches =
+					persistenceUnitName == null
+					|| persistenceUnit.getName().equals( persistenceUnitName );
+			if ( matches ) {
+				// See if we (Hibernate) are the persistence provider
+				if ( isProvider( persistenceUnit, properties ) ) {
+					return providedClassLoaderService == null
+							? getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader )
+							: getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
+				}
+				else {
+					JPA_LOGGER.excludingDueToProviderMismatch();
+				}
+
+			}
+			else {
 				JPA_LOGGER.excludingDueToNameMismatch();
-				continue;
 			}
-
-			// See if we (Hibernate) are the persistence provider
-			if ( !isProvider( persistenceUnit, properties ) ) {
-				JPA_LOGGER.excludingDueToProviderMismatch();
-				continue;
-			}
-
-			return providedClassLoaderService == null
-					? getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader )
-					: getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
 		}
 
 		JPA_LOGGER.foundNoMatchingPersistenceUnits();
@@ -118,11 +142,16 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	// Check before changing: may be overridden in Quarkus
-	protected Collection<PersistenceUnitDescriptor> locatePersistenceUnits(Map<?, ?> integration, ClassLoader providedClassLoader,
+	protected Collection<PersistenceUnitDescriptor> locatePersistenceUnits(
+			Map<?, ?> integration,
+			ClassLoader providedClassLoader,
 			ClassLoaderService providedClassLoaderService) {
 		try {
-			var parser = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
-			final var xmlUrls = parser.getClassLoaderService().locateResources( "META-INF/persistence.xml" );
+			final var parser =
+					PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
+			final var xmlUrls =
+					parser.getClassLoaderService()
+							.locateResources( "META-INF/persistence.xml" );
 			if ( xmlUrls.isEmpty() ) {
 				JPA_LOGGER.unableToFindPersistenceXmlInClasspath();
 				return List.of();
@@ -139,23 +168,38 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	/**
 	 * {@inheritDoc}
-	 * <p>
-	 * Note: per-spec, the values passed as {@code properties} override values found in {@link PersistenceUnitInfo}
+	 *
+	 * @implSpec The values passed in the {@code map} override values found
+	 *           in {@link PersistenceUnitInfo#getProperties()} according to
+	 *           the JPA specification.
 	 */
 	@Override
-	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
+	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingCreateContainerEntityManagerFactory( info.getPersistenceUnitName() );
-		return getEntityManagerFactoryBuilder( info, properties ).build();
+		return getEntityManagerFactoryBuilder( info, map ).build();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @implSpec The values passed in the {@code map} override values found
+	 *           in {@link PersistenceUnitInfo#getProperties()} according to
+	 *           the JPA specification.
+	 */
 	@Override
-	public void generateSchema(PersistenceUnitInfo info, Map map) {
+	public void generateSchema(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchemaForPuiName( info.getPersistenceUnitName() );
 		getEntityManagerFactoryBuilder( info, map ).generateSchema();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @implSpec The values passed in the {@code map} override values found
+	 *           in {@code persistence.xml} according to the JPA specification.
+	 */
 	@Override
-	public boolean generateSchema(String persistenceUnitName, Map map) {
+	public boolean generateSchema(String persistenceUnitName, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchema( persistenceUnitName );
 		final var builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
 		if ( builder == null ) {
@@ -168,18 +212,36 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map<?,?> integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, integration );
+	private static Map<String, Object> settingsMap(Map<?, ?> integration) {
+		final Map<String, Object> result = new HashMap<>();
+		integration.forEach( (key, value) -> {
+			// ignore non-string keys
+			if (key instanceof String string) {
+				result.put( string, value );
+			}
+		} );
+		return result;
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration, ClassLoader providedClassLoader) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo info, Map<?,?> integration) {
+		return Bootstrap.getEntityManagerFactoryBuilder( info, settingsMap( integration ) );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration, ClassLoaderService providedClassLoaderService) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map<?,?> integration,
+			ClassLoader providedClassLoader) {
+		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
+				settingsMap( integration ), providedClassLoader );
+	}
+
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map<?,?> integration,
+			ClassLoaderService providedClassLoaderService) {
+		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
+				settingsMap( integration ), providedClassLoaderService );
 	}
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {

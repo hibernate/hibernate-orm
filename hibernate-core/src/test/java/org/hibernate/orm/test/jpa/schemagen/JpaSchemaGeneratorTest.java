@@ -38,14 +38,14 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Override
-	public Class[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Item.class };
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceClasspath() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getLoadSqlScript() );
 		doTest( settings );
@@ -55,7 +55,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceUrl() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getResourceUrlString( getLoadSqlScript() ) );
 		doTest( settings );
@@ -64,7 +64,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceClasspath() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String,Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
@@ -74,7 +74,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceUrl() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String,Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
@@ -85,7 +85,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String,Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
@@ -95,7 +95,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Test
 	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() {
-		Map<Object, Object> settings = buildSettings();
+		Map<String,Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
@@ -143,7 +143,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		return getResourceUrlString( Thread.currentThread().getContextClassLoader(), relativePath, URL::getFile );
 	}
 
-	private void doTest(Map<Object, Object> settings) {
+	private void doTest(Map<String, Object> settings) {
 		// We want a fresh db after emf close
 		// Unfortunately we have to use this dirty hack because the db seems not to be closed otherwise
 		settings.put( "hibernate.connection.url", "jdbc:h2:mem:db-schemagen" + schemagenNumber++
@@ -152,19 +152,13 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 				buildPersistenceUnitDescriptor(),
 				settings
 		);
-		EntityManagerFactory emf = emfb.build();
-		try {
-			EntityManager em = emf.createEntityManager();
-			try {
+		try ( EntityManagerFactory emf = emfb.build() ) {
+			try ( EntityManager em = emf.createEntityManager() ) {
 				Assertions.assertNotNull( em.find( Item.class, encodedName() ) );
 				Assertions.assertNotNull( em.find( Item.class, "multi-file-test" ) );
 			}
-			finally {
-				em.close();
-			}
 		}
 		finally {
-			emf.close();
 			emfb.cancel();
 		}
 	}

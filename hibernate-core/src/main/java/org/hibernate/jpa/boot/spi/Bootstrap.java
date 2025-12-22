@@ -30,7 +30,7 @@ public final class Bootstrap {
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration) {
+			Map<String,Object> integration) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration );
 	}
 
@@ -46,7 +46,7 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			URL persistenceXmlUrl,
 			String persistenceUnitName,
-			Map integration) {
+			Map<String,Object> integration) {
 		return getEntityManagerFactoryBuilder( persistenceXmlUrl, persistenceUnitName, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
 	}
 
@@ -63,7 +63,7 @@ public final class Bootstrap {
 			URL persistenceXmlUrl,
 			String persistenceUnitName,
 			PersistenceUnitTransactionType transactionType,
-			Map integration) {
+			Map<String,Object> integration) {
 		return new EntityManagerFactoryBuilderImpl(
 				PersistenceXmlParser.create( integration ).parse( List.of( persistenceXmlUrl ), transactionType ).get( persistenceUnitName ),
 				integration
@@ -72,14 +72,14 @@ public final class Bootstrap {
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration,
+			Map<String,Object> integration,
 			ClassLoader providedClassLoader) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration,
+			Map<String,Object> integration,
 			ClassLoaderService providedClassLoaderService) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
@@ -90,27 +90,27 @@ public final class Bootstrap {
 	@Internal
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration,
+			Map<String,Object> integration,
 			Consumer<MergedSettings> mergedSettingsBaseline) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, mergedSettingsBaseline );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
-			Map integration) {
+			Map<String,Object> integration) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
-			Map integration,
+			Map<String,Object> integration,
 			ClassLoader providedClassLoader) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoader );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
-			Map integration,
+			Map<String,Object> integration,
 			ClassLoaderService providedClassLoaderService) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoaderService );
 	}
@@ -121,7 +121,7 @@ public final class Bootstrap {
 	@Internal
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
-			Map integration,
+			Map<String,Object> integration,
 			Consumer<MergedSettings> mergedSettingsBaseline) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, mergedSettingsBaseline );
 	}

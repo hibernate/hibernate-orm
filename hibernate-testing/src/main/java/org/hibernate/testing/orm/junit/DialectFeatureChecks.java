@@ -966,7 +966,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsUnnest implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return definesSetReturningFunction( dialect, "unnest" );
+			return definesSetReturningFunction( dialect, "unnest" ) && !(dialect instanceof TiDBDialect);
 		}
 	}
 
@@ -978,7 +978,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJsonTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return definesSetReturningFunction( dialect, "json_table" );
+			return definesSetReturningFunction( dialect, "json_table" ) && !(dialect instanceof TiDBDialect);
 		}
 	}
 

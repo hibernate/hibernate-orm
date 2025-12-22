@@ -25,6 +25,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
+import org.hibernate.internal.util.LazyValue;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
@@ -41,7 +42,8 @@ public class ByteBuddyProxyHelper implements Serializable {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyHelper.class );
 	private static final String PROXY_NAMING_SUFFIX = "HibernateProxy";
-	private static final TypeDescription OBJECT = TypeDescription.ForLoadedType.of(Object.class);
+	// Lazy is necessary to not break GraalVM Native Image
+	private static final LazyValue<TypeDescription> OBJECT = new LazyValue<>(() -> TypeDescription.ForLoadedType.of(Object.class));
 
 	private final ByteBuddyState byteBuddyState;
 
@@ -96,7 +98,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 		return (byteBuddy, namingStrategy) -> helpers.appendIgnoreAlsoAtEnd( byteBuddy
 				.ignore( helpers.getGroovyGetMetaClassFilter() )
 				.with( namingStrategy )
-				.subclass( interfaces.size() == 1 ? persistentClass : OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
+				.subclass( interfaces.size() == 1 ? persistentClass : OBJECT.getValue(), ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
 				.implement( interfaces )
 				.method( helpers.getVirtualNotFinalizerFilter() )
 						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )

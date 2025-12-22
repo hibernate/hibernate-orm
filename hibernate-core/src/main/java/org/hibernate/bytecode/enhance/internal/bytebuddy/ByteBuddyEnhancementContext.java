@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.internal.util.LazyValue;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.metamodel.Type;
@@ -30,7 +31,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
 class ByteBuddyEnhancementContext {
 
-	private static final ElementMatcher.Junction<MethodDescription> IS_GETTER = isGetter();
+	// Lazy is necessary to not break GraalVM Native Image
+	private static final LazyValue<ElementMatcher.Junction<MethodDescription>> IS_GETTER = new LazyValue<>(() -> isGetter());
 
 	private final EnhancementContext enhancementContext;
 
@@ -170,7 +172,7 @@ class ByteBuddyEnhancementContext {
 					getters = MethodGraph.Compiler.DEFAULT.compile( erasure )
 							.listNodes()
 							.asMethodList()
-							.filter( IS_GETTER )
+							.filter( IS_GETTER.getValue() )
 							.stream()
 							.collect( Collectors.toMap( MethodDescription::getActualName, Function.identity() ) );
 					getterByTypeMap.put( erasure, getters );

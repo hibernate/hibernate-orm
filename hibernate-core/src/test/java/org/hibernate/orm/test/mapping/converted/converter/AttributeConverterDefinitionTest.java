@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.hibernate.internal.util.GenericTypeHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey(value = "HHH-8854")

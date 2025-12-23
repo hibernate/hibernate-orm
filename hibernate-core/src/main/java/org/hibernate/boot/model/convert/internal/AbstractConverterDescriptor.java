@@ -16,8 +16,8 @@ import jakarta.persistence.Converter;
 
 import java.lang.reflect.Type;
 
-import static org.hibernate.internal.util.GenericTypeHelper.erasedType;
-import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /**
  * @author Steve Ebersole

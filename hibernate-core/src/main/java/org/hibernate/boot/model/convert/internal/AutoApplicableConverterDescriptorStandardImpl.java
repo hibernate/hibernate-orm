@@ -14,9 +14,9 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
 
-import static org.hibernate.internal.util.GenericTypeHelper.erasedType;
-import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
-import static org.hibernate.internal.util.GenericTypeHelper.resolveMemberType;
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
+import static org.hibernate.internal.util.GenericsHelper.actualMemberType;
 import static org.hibernate.internal.util.GenericAssignability.isAssignableFrom;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
@@ -42,7 +42,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		// TODO: arrays, etc
-		final var attributeType = resolveMemberType( memberDetails );
+		final var attributeType = actualMemberType( memberDetails );
 		return isAssignableFrom( linkedConverterDescriptor.getDomainValueResolvedType(),
 						canonicalizePrimitive( attributeType ) )
 				? linkedConverterDescriptor
@@ -59,7 +59,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForCollectionElement(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
-		final var collectionMemberType = resolveMemberType( memberDetails );
+		final var collectionMemberType = actualMemberType( memberDetails );
 		final var erasedType = erasedType( collectionMemberType );
 		final Type elementType;
 		if ( Map.class.isAssignableFrom( erasedType ) ) {
@@ -96,7 +96,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 
-		final var collectionMemberType = resolveMemberType( memberDetails );
+		final var collectionMemberType = actualMemberType( memberDetails );
 		final Type keyType;
 		if ( Map.class.isAssignableFrom( erasedType( collectionMemberType ) ) ) {
 			final var typeArguments =

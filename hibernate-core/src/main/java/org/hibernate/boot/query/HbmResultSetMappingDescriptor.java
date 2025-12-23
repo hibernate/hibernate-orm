@@ -49,7 +49,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
-import org.hibernate.type.BasicType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -956,7 +955,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			if ( hibernateTypeName != null ) {
-				final BasicType<?> namedType =
+				final var namedType =
 						resolutionContext.getTypeConfiguration().getBasicTypeRegistry()
 								.getRegisteredType( hibernateTypeName );
 
@@ -964,12 +963,12 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					throw new IllegalArgumentException( "Could not resolve named type : " + hibernateTypeName );
 				}
 
-				return new ResultMementoBasicStandard( columnName, namedType, resolutionContext );
+				return new ResultMementoBasicStandard( columnName, namedType );
 			}
 
 			// todo (6.0) : column name may be optional in HBM - double check
 
-			return new ResultMementoBasicStandard( columnName, null, resolutionContext );
+			return new ResultMementoBasicStandard( columnName, null );
 		}
 	}
 }

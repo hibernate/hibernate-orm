@@ -22,7 +22,6 @@ dependencies {
 
 	testImplementation jakartaLibs.validation
 	testImplementation libs.jandex
-	testImplementation libs.classmate
 	testImplementation testLibs.validator
 	testImplementation 'org.dom4j:dom4j:2.1.3@jar'
 

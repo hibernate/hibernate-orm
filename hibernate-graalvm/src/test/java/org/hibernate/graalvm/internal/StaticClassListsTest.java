@@ -7,9 +7,6 @@ package org.hibernate.graalvm.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.graalvm.internal.JandexTestUtils.findConcreteNamedImplementors;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,7 +32,7 @@ public class StaticClassListsTest {
 	private static Index hibernateIndex;
 
 	@BeforeAll
-	public static void index() throws IOException {
+	public static void index() {
 		hibernateIndex = JandexTestUtils.indexJar( Session.class );
 	}
 
@@ -178,15 +175,16 @@ public class StaticClassListsTest {
 		EVENT_LISTENER_INTERFACES {
 			@Override
 			Stream<Class<?>> classes() {
-				return EventType.values().stream().map( EventType::baseListenerInterface )
-						.map( c -> Array.newInstance( c, 0 ).getClass() );
+				return EventType.values().stream()
+						.map( EventType::baseListenerInterface )
+						.map( Class::arrayType );
 			}
 		},
 		MISC {
 			@Override
 			Stream<Class<?>> classes() {
 				// NOTE: Please avoid putting anything here, it's really a last resort.
-				// Ideally you'd rather add new categories with their own way of listing classes,
+				// Ideally, you'd rather add new categories with their own way of listing classes,
 				// like in EVENT_LISTENER_INTERFACES.
 				// Putting anything here is running the risk of forgetting
 				// why it was necessary in the first place...
@@ -204,9 +202,9 @@ public class StaticClassListsTest {
 
 		@Test
 		void checkNonDefaultConstructorsCanBeLoaded() {
-			Class[] classes = StaticClassLists.typesNeedingAllConstructorsAccessible();
-			for ( Class c : classes ) {
-				Constructor[] declaredConstructors = c.getDeclaredConstructors();
+			var classes = StaticClassLists.typesNeedingAllConstructorsAccessible();
+			for ( var c : classes ) {
+				var declaredConstructors = c.getDeclaredConstructors();
 				Assert.assertTrue( declaredConstructors.length > 0 );
 				if ( declaredConstructors.length == 1 ) {
 					//If there's only one, let's check that this class wasn't placed in the wrong cathegory:
@@ -217,19 +215,19 @@ public class StaticClassListsTest {
 
 		@Test
 		void checkDefaultConstructorsAreAvailable() {
-			Class[] classes = StaticClassLists.typesNeedingDefaultConstructorAccessible();
-			for ( Class c : classes ) {
-				Constructor constructor = ReflectHelper.getDefaultConstructor( c );
+			var classes = StaticClassLists.typesNeedingDefaultConstructorAccessible();
+			for ( var c : classes ) {
+				var constructor = ReflectHelper.getDefaultConstructor( c );
 				Assert.assertNotNull( "Failed for class: " + c.getName(), constructor );
 			}
 		}
 
 		@Test
 		public void checkArraysAreArrays() {
-			Class[] classes = StaticClassLists.typesNeedingArrayCopy();
-			for ( Class c : classes ) {
+			var classes = StaticClassLists.typesNeedingArrayCopy();
+			for ( var c : classes ) {
 				Assert.assertTrue( "Wrong category for type: " + c.getName(), c.isArray() );
-				Constructor[] constructors = c.getConstructors();
+				var constructors = c.getConstructors();
 				Assert.assertEquals( 0, constructors.length );
 			}
 		}

@@ -79,7 +79,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.FormatMapperCreationContext;
-import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
 
@@ -107,6 +106,8 @@ import static org.hibernate.type.format.jackson.JacksonIntegration.getOsonJackso
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJackson3FormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
+import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbLegacyXmlFormatMapperOrNull;
+import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbXmlFormatMapperOrNull;
 
 /**
  * In-flight state of {@link SessionFactoryOptions} during {@link org.hibernate.boot.SessionFactoryBuilder}
@@ -853,19 +854,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				selector,
 				() -> {
 					// Prefer the OSON Jackson FormatMapper by default if available
-					final FormatMapper jacksonOsonFormatMapper = osonExtensionEnabled
+					final var jacksonOsonFormatMapper = osonExtensionEnabled
 							? getOsonJacksonFormatMapperOrNull( creationContext )
 							: null;
 					if ( jacksonOsonFormatMapper != null ) {
 						return jacksonOsonFormatMapper;
 					}
 
-					final FormatMapper jacksonFormatMapper = getJsonJacksonFormatMapperOrNull( creationContext );
+					final var jacksonFormatMapper = getJsonJacksonFormatMapperOrNull( creationContext );
 					if ( jacksonFormatMapper != null ) {
 						return jacksonFormatMapper;
 					}
 
-					final FormatMapper jackson3FormatMapper = getJsonJackson3FormatMapperOrNull( creationContext );
+					final var jackson3FormatMapper = getJsonJackson3FormatMapperOrNull( creationContext );
 					if ( jackson3FormatMapper != null ) {
 						return jackson3FormatMapper;
 					}
@@ -881,17 +882,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				setting,
 				selector,
 				() -> {
-					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( creationContext );
-					if (jacksonFormatMapper != null) {
+					final var jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( creationContext );
+					if ( jacksonFormatMapper != null ) {
 						return jacksonFormatMapper;
 					}
 
-					final FormatMapper jackson3FormatMapper = getXMLJackson3FormatMapperOrNull( creationContext );
-					if (jackson3FormatMapper != null) {
+					final var jackson3FormatMapper = getXMLJackson3FormatMapperOrNull( creationContext );
+					if ( jackson3FormatMapper != null ) {
 						return jackson3FormatMapper;
 					}
 
-					return new JaxbXmlFormatMapper( legacyFormat );
+					return legacyFormat
+							? getJaxbLegacyXmlFormatMapperOrNull()
+							: getJaxbXmlFormatMapperOrNull();
 				},
 				creationContext
 		);
@@ -900,9 +903,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver, FormatMapperCreationContext creationContext) {
 		return selector.resolveStrategy( FormatMapper.class, setting, defaultResolver, strategyClass -> {
 			try {
-				final Constructor<? extends FormatMapper> creationContextConstructor =
-						strategyClass.getDeclaredConstructor( FormatMapperCreationContext.class );
-				return creationContextConstructor.newInstance( creationContext );
+				return strategyClass.getDeclaredConstructor( FormatMapperCreationContext.class )
+						.newInstance( creationContext );
 			}
 			catch (NoSuchMethodException e) {
 				// Ignore

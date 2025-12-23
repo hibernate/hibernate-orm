@@ -126,13 +126,6 @@ public interface BootstrapContext {
 	ClassLoaderAccess getClassLoaderAccess();
 
 	/**
-	 * Access to the shared {@link ClassmateContext} object used
-	 * throughout the bootstrap process.
-	 */
-	@Incubating
-	ClassmateContext getClassmateContext();
-
-	/**
 	 * Access to the {@link ArchiveDescriptorFactory} used for scanning.
 	 *
 	 * @return The {@link ArchiveDescriptorFactory}

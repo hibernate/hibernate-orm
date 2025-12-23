@@ -18,7 +18,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -68,8 +67,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	private boolean isJpaBootstrap;
 
-	private final ClassmateContext classmateContext;
-
 	private ScanOptions scanOptions;
 	private ScanEnvironment scanEnvironment;
 	private Object scannerSetting;
@@ -87,7 +84,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 			StandardServiceRegistry serviceRegistry,
 			MetadataBuildingOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
-		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
@@ -192,11 +188,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public ClassmateContext getClassmateContext() {
-		return classmateContext;
-	}
-
-	@Override
 	public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
 		return archiveDescriptorFactory;
 	}
@@ -258,7 +249,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	@Override
 	public void release() {
-		classmateContext.release();
 		classLoaderAccess.release();
 
 		scanOptions = null;

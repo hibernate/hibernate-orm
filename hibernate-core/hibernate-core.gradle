@@ -27,7 +27,6 @@ dependencies {
     api jakartaLibs.jta
 
     implementation libs.hibernateModels
-    implementation libs.classmate
     implementation libs.byteBuddy
 
     implementation jakartaLibs.jaxbApi

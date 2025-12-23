@@ -16,7 +16,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -27,12 +26,10 @@ import org.hibernate.type.descriptor.java.ByteJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.lang.reflect.Array.newInstance;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
 /**
@@ -81,7 +78,8 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	protected static JavaType<?> elementJavaType(JavaType<?> javaTypeDescriptor) {
-		if ( javaTypeDescriptor instanceof ByteArrayJavaType || javaTypeDescriptor instanceof PrimitiveByteArrayJavaType ) {
+		if ( javaTypeDescriptor instanceof ByteArrayJavaType
+			|| javaTypeDescriptor instanceof PrimitiveByteArrayJavaType ) {
 			// Special handling needed for Byte[] and byte[], because that would conflict with the VARBINARY mapping
 			return ByteJavaType.INSTANCE;
 		}
@@ -110,11 +108,11 @@ public class ArrayJdbcType implements JdbcType {
 		if ( elementJdbcType instanceof StructuredJdbcType structJdbcType ) {
 			return structJdbcType.getStructTypeName();
 		}
-		final JavaType<?> elementJavaType = elementJavaType( javaType );
+		final var elementJavaType = elementJavaType( javaType );
 		final Size size =
 				session.getJdbcServices().getDialect().getSizeStrategy()
 						.resolveSize( elementJdbcType, elementJavaType, null, null, null );
-		final DdlTypeRegistry ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
 		final String typeName =
 				ddlTypeRegistry.getDescriptor( elementJdbcType.getDdlTypeCode() )
 						.getTypeName( size, new BasicTypeImpl<>( elementJavaType, elementJdbcType), ddlTypeRegistry );
@@ -135,12 +133,13 @@ public class ArrayJdbcType implements JdbcType {
 
 	protected <T> Object[] getArray(BasicBinder<?> binder, ValueBinder<T> elementBinder, T value, WrapperOptions options)
 			throws SQLException {
-		final var elementJdbcType = ( (ArrayJdbcType) binder.getJdbcType() ).getElementJdbcType();
+		final var arrayJdbcType = (ArrayJdbcType) binder.getJdbcType();
+		final var elementJdbcType = arrayJdbcType.getElementJdbcType();
 		//noinspection unchecked
-		final JavaType<T> javaType = (JavaType<T>) binder.getJavaType();
+		final var javaType = (JavaType<T>) binder.getJavaType();
 		if ( elementJdbcType instanceof AggregateJdbcType ) {
 			final T[] domainObjects = (T[]) javaType.unwrap( value, Object[].class, options );
-			final Object[] objects = new Object[domainObjects.length];
+			final var objects = new Object[domainObjects.length];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
 				if ( domainObjects[i] != null ) {
 					objects[i] = elementBinder.getBindValue( domainObjects[i], options );
@@ -169,21 +168,21 @@ public class ArrayJdbcType implements JdbcType {
 	protected <X> X getArray(BasicExtractor<X> extractor, java.sql.Array array, WrapperOptions options)
 			throws SQLException {
 		final JavaType<X> javaType = extractor.getJavaType();
-		if (array != null
+		if ( array != null
 			&& getElementJdbcType() instanceof AggregateJdbcType aggregateJdbcType
-			&& aggregateJdbcType.getEmbeddableMappingType() != null) {
+			&& aggregateJdbcType.getEmbeddableMappingType() != null ) {
 
-			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
+			final var embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final Object rawArray = array.getArray();
-			final Object[] domainObjects = new Object[Array.getLength( rawArray )];
+			final var domainObjects = new Object[ Array.getLength( rawArray ) ];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
 				final Object rawJdbcValue = Array.get( rawArray, i );
 				if ( rawJdbcValue == null ) {
 					domainObjects[i] = null;
 				}
 				else {
-					final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
-					final StructAttributeValues attributeValues =
+					final var aggregateRawValues = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
+					final var attributeValues =
 							StructHelper.getAttributeValues( embeddableMappingType, aggregateRawValues, options );
 					domainObjects[i] = instantiate( embeddableMappingType, attributeValues );
 				}
@@ -198,7 +197,7 @@ public class ArrayJdbcType implements JdbcType {
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		@SuppressWarnings("unchecked")
-		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
+		final var pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
 		final ValueBinder<X> elementBinder = elementJdbcType.getBinder( pluralJavaType.getElementJavaType() );
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
@@ -210,7 +209,7 @@ public class ArrayJdbcType implements JdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final java.sql.Array array = getArray( value, options );
+				final var array = getArray( value, options );
 				try {
 					st.setObject( name, array, java.sql.Types.ARRAY );
 				}
@@ -225,10 +224,9 @@ public class ArrayJdbcType implements JdbcType {
 			}
 
 			private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {
-				final ArrayJdbcType arrayJdbcType = (ArrayJdbcType) getJdbcType();
-				final Object[] objects = arrayJdbcType.getArray( this, elementBinder, value, options );
-
-				final SharedSessionContractImplementor session = options.getSession();
+				final var arrayJdbcType = (ArrayJdbcType) getJdbcType();
+				final var objects = arrayJdbcType.getArray( this, elementBinder, value, options );
+				final var session = options.getSession();
 				final String typeName = arrayJdbcType.getElementTypeName( getJavaType(), session );
 				return session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
 						.createArrayOf( typeName, objects );

@@ -14,7 +14,6 @@ import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.UserDefinedArrayType;
@@ -71,60 +70,68 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		@SuppressWarnings("unchecked")
-		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
-		final ValueBinder<X> elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
-		return new BasicBinder<>( javaTypeDescriptor, this ) {
-			private String typeName(WrapperOptions options) {
-				final BasicPluralJavaType<?> javaType = (BasicPluralJavaType<?>) getJavaType();
-				final ArrayJdbcType jdbcType = (ArrayJdbcType) getJdbcType();
+		return new Binder<>( javaTypeDescriptor,
+				(BasicPluralJavaType<?>) javaTypeDescriptor );
+	}
+
+	private class Binder<X,E> extends BasicBinder<X> {
+		private final BasicPluralJavaType<E> pluralJavaType;
+
+		private Binder(JavaType<X> javaType, BasicPluralJavaType<E> pluralJavaType) {
+			super( javaType, OracleArrayJdbcType.this );
+			this.pluralJavaType = pluralJavaType;
+		}
+
+		private String typeName(WrapperOptions options) {
+				final var javaType = (BasicPluralJavaType<?>) getJavaType();
+				final var jdbcType = (ArrayJdbcType) getJdbcType();
 				return upperTypeName == null
 						? getTypeName( options, javaType, jdbcType ).toUpperCase( Locale.ROOT )
 						: upperTypeName;
-			}
-			@Override
-			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
-				st.setNull( index, ARRAY, typeName( options ) );
-			}
+		}
 
-			@Override
-			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
-				st.setNull( name, ARRAY, typeName( options ) );
-			}
+		@Override
+		protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+			st.setNull( index, ARRAY, typeName( options ) );
+		}
 
-			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setArray( index, getBindValue( value, options ) );
-			}
+		@Override
+		protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+			st.setNull( name, ARRAY, typeName( options ) );
+		}
 
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				final java.sql.Array arr = getBindValue( value, options );
-				try {
-					st.setObject( name, arr, ARRAY );
-				}
-				catch (SQLException ex) {
-					throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
-				}
-			}
+		@Override
+		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			st.setArray( index, getBindValue( value, options ) );
+		}
 
-			@Override
-			public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
-				final OracleArrayJdbcType oracleArrayJdbcType = (OracleArrayJdbcType) getJdbcType();
-				final Object[] objects = oracleArrayJdbcType.getArray( this, elementBinder, value, options );
-				final String arrayTypeName = typeName( options );
-				final OracleConnection oracleConnection =
-						options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
-								.unwrap( OracleConnection.class );
-				try {
-					return oracleConnection.createOracleArray( arrayTypeName, objects );
-				}
-				catch (Exception e) {
-					throw new HibernateException( "Couldn't create a java.sql.Array", e );
-				}
+		@Override
+		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+				throws SQLException {
+			final java.sql.Array arr = getBindValue( value, options );
+			try {
+				st.setObject( name, arr, ARRAY );
 			}
-		};
+			catch (SQLException ex) {
+				throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
+			}
+		}
+
+		@Override
+		public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
+			final var elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
+			final var objects = convertToArray( this, elementBinder, pluralJavaType, value, options );
+			final String arrayTypeName = typeName( options );
+			final var oracleConnection =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.unwrap( OracleConnection.class );
+			try {
+				return oracleConnection.createOracleArray( arrayTypeName, objects );
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Couldn't create a java.sql.Array", e );
+			}
+		}
 	}
 
 	@Override
@@ -153,17 +160,18 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	static String getTypeName(BasicType<?> elementType, Dialect dialect) {
-		final BasicValueConverter<?, ?> converter = elementType.getValueConverter();
-		if ( converter != null ) {
-			return dialect.getArrayTypeName(
-					converterClassName( converter ),
-					null, // not needed by OracleDialect.getArrayTypeName()
-					null // not needed by OracleDialect.getArrayTypeName()
-			);
-		}
-		else {
-			return getTypeName( elementType.getJavaTypeDescriptor(), elementType.getJdbcType(), dialect );
-		}
+		final var converter = elementType.getValueConverter();
+		return converter != null
+				? dialect.getArrayTypeName(
+						converterClassName( converter ),
+						null, // not needed by OracleDialect.getArrayTypeName()
+						null // not needed by OracleDialect.getArrayTypeName()
+				)
+				: getTypeName(
+						elementType.getJavaTypeDescriptor(),
+						elementType.getJdbcType(),
+						dialect
+				);
 	}
 
 	private static String converterClassName(BasicValueConverter<?, ?> converter) {
@@ -181,7 +189,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	private static String arrayClassName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
-		final Class<?> javaClass = elementJavaType.getJavaTypeClass();
+		final var javaClass = elementJavaType.getJavaTypeClass();
 		if ( javaClass.isArray() ) {
 			return dialect.getArrayTypeName(
 					javaClass.getComponentType().getSimpleName(),
@@ -193,20 +201,23 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 			return structJdbcType.getStructTypeName();
 		}
 		else {
-			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( null );
+			final var preferredJavaTypeClass =
+					elementJdbcType.getPreferredJavaTypeClass( null );
 			if ( preferredJavaTypeClass == javaClass) {
 				return javaClass.getSimpleName();
 			}
 			else {
 				if ( preferredJavaTypeClass.isArray() ) {
-					return javaClass.getSimpleName() + dialect.getArrayTypeName(
-							preferredJavaTypeClass.getComponentType().getSimpleName(),
-							null,
-							null
-					);
+					return javaClass.getSimpleName()
+							+ dialect.getArrayTypeName(
+									preferredJavaTypeClass.getComponentType().getSimpleName(),
+									null,
+									null
+							);
 				}
 				else {
-					return javaClass.getSimpleName() + preferredJavaTypeClass.getSimpleName();
+					return javaClass.getSimpleName()
+							+ preferredJavaTypeClass.getSimpleName();
 				}
 			}
 		}
@@ -219,18 +230,18 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		final JdbcType elementJdbcType = getElementJdbcType();
-		if ( elementJdbcType instanceof StructuredJdbcType ) {
-			// OracleAggregateSupport will take care of contributing the auxiliary database object
-			return;
+		final var elementJdbcType = getElementJdbcType();
+		if ( !(elementJdbcType instanceof StructuredJdbcType) ) {
+			final var dialect = database.getDialect();
+			final var pluralJavaType = (BasicPluralJavaType<?>) javaType;
+			final var elementJavaType = pluralJavaType.getElementJavaType();
+			final String elementTypeName =
+					elementType( elementJavaType, elementJdbcType, columnSize, context.getTypeConfiguration(),
+							dialect );
+			final String arrayTypeName = arrayTypeName( elementJavaType, elementJdbcType, dialect );
+			createUserDefinedArrayType( arrayTypeName, elementTypeName, columnSize, elementJdbcType, database );
 		}
-		final Dialect dialect = database.getDialect();
-		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
-		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
-		final String elementTypeName =
-				elementType( elementJavaType, elementJdbcType, columnSize, context.getTypeConfiguration(), dialect );
-		final String arrayTypeName = arrayTypeName( elementJavaType, elementJdbcType, dialect );
-		createUserDefinedArrayType( arrayTypeName, elementTypeName, columnSize, elementJdbcType, database );
+		// else OracleAggregateSupport will take care of contributing the auxiliary database object
 	}
 
 	private String arrayTypeName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
@@ -241,8 +252,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	private void createUserDefinedArrayType(
 			String arrayTypeName, String elementTypeName, Size columnSize, JdbcType elementJdbcType, Database database) {
-		final Namespace defaultNamespace = database.getDefaultNamespace();
-		final UserDefinedArrayType userDefinedArrayType =
+		final var defaultNamespace = database.getDefaultNamespace();
+		final var userDefinedArrayType =
 				defaultNamespace.createUserDefinedArrayType(
 						toIdentifier( arrayTypeName ),
 						name -> new UserDefinedArrayType( "orm", defaultNamespace, name )
@@ -275,7 +286,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 
 	@Override
 	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
-		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
+		final var pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		return getElementJdbcType()
 				.getExtraCreateTableInfo( pluralJavaType.getElementJavaType(), columnName, tableName, database );
 	}

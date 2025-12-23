@@ -68,7 +68,7 @@ public class ArrayJdbcType implements JdbcType {
 				elementJdbcType.getRecommendedJavaType( precision, scale, typeConfiguration );
 		final var javaType =
 				typeConfiguration.getJavaTypeRegistry()
-						.resolveDescriptor( newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass() );
+						.resolveDescriptor( elementJavaType.getJavaTypeClass().arrayType() );
 		if ( javaType instanceof BasicPluralType<?, ?> ) {
 			return javaType;
 		}
@@ -159,8 +159,9 @@ public class ArrayJdbcType implements JdbcType {
 							? underlyingJdbcType.getRecommendedJavaType(null, null, typeConfiguration )
 									.getJavaTypeClass()
 							: preferredJavaTypeClass;
-			final var arrayClass = (Class<? extends Object[]>)
-					newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
+			final var arrayClass =
+					(Class<? extends Object[]>)
+							elementJdbcJavaTypeClass.arrayType();
 			return javaType.unwrap( value, arrayClass, options );
 		}
 	}

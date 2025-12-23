@@ -36,7 +36,7 @@ public class ArrayType extends CollectionType {
 	public ArrayType(String role, String propertyRef, Class<?> elementClass) {
 		super(role, propertyRef );
 		this.elementClass = elementClass;
-		arrayClass = Array.newInstance(elementClass, 0).getClass();
+		arrayClass = elementClass.arrayType();
 	}
 
 	@Override

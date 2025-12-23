@@ -212,16 +212,16 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			ConverterDescriptor<?,?>> matcher) {
 		final List<ConverterDescriptor<?,?>> matches = new ArrayList<>();
 		for ( var descriptor : converterDescriptors() ) {
-//			if ( BOOT_LOGGER.isTraceEnabled() ) {
-//				BOOT_LOGGER.checkingAutoApplyAttributeConverter(
-//						descriptor.getAttributeConverterClass().getName(),
-//						descriptor.getDomainValueResolvedType().getSignature(),
-//						conversionSite.getSiteDescriptor(),
-//						memberDetails.getDeclaringType().getName(),
-//						memberDetails.getName(),
-//						memberDetails.getType().getName()
-//				);
-//			}
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.checkingAutoApplyAttributeConverter(
+						descriptor.getAttributeConverterClass().getName(),
+						descriptor.getDomainValueResolvedType().getTypeName(),
+						conversionSite.getSiteDescriptor(),
+						memberDetails.getDeclaringType().getName(),
+						memberDetails.getName(),
+						memberDetails.getType().getName()
+				);
+			}
 			final var match = matcher.apply( descriptor.getAutoApplyDescriptor() );
 			if ( match != null ) {
 				matches.add( descriptor );

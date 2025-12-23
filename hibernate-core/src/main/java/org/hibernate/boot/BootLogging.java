@@ -442,7 +442,7 @@ public interface BootLogging extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 160243, value = "Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)")
-	void checkingAutoApplyAttributeConverter(String converterClass, String domainTypeSignature, String siteDescriptor, String declaringType, String memberName, String memberTypeName);
+	void checkingAutoApplyAttributeConverter(String converterClass, String domainType, String siteDescriptor, String declaringType, String memberName, String memberTypeName);
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 160244, value = "Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed")

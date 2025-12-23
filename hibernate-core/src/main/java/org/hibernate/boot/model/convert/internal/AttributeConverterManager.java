@@ -27,8 +27,8 @@ import org.hibernate.models.spi.MemberDetails;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveMemberType;
+import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
+import static org.hibernate.internal.util.GenericTypeHelper.resolveMemberType;
 import static org.hibernate.internal.util.StringHelper.join;
 
 /**
@@ -117,7 +117,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 	private static Type getDomainType(RegisteredConversion conversion) {
 		// the registration did not define an explicit domain-type, so inspect the converter
 		return conversion.getExplicitDomainType().equals( void.class )
-				? resolveInterfaceTypeArguments( AttributeConverter.class, conversion.getConverterType() )[0]
+				? typeArguments( AttributeConverter.class, conversion.getConverterType() )[0]
 				: conversion.getExplicitDomainType();
 	}
 

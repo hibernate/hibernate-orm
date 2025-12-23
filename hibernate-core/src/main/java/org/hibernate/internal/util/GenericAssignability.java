@@ -2,12 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.model.convert.internal;
+package org.hibernate.internal.util;
 
 import java.lang.reflect.*;
-import java.util.*;
 
-public final class TypeAssignability {
+/**
+ * @author Gavin King
+ */
+public final class GenericAssignability {
 
 	public static boolean isAssignableFrom(Type to, Type from) {
 		return isAssignable( from, to );
@@ -56,9 +58,6 @@ public final class TypeAssignability {
 		return false;
 	}
 
-	/* ------------------------------------------------------------ */
-	/* Generic arrays */
-
 	private static boolean isAssignableToGenericArray(Type from, GenericArrayType to) {
 		final var toComponent = to.getGenericComponentType();
 		if ( from instanceof GenericArrayType gaFrom ) {
@@ -72,9 +71,6 @@ public final class TypeAssignability {
 		}
 	}
 
-	/* ------------------------------------------------------------ */
-	/* Parameterized types */
-
 	private static boolean isAssignableParameterized(ParameterizedType from, ParameterizedType to) {
 
 		final var fromRaw = (Class<?>) from.getRawType();
@@ -82,7 +78,7 @@ public final class TypeAssignability {
 
 		if ( toRaw.isAssignableFrom( fromRaw ) ) {
 			final var superType = findGenericSuperType( from, toRaw );
-			if ( !(superType instanceof ParameterizedType ps) ) {
+			if ( !( superType instanceof ParameterizedType ps ) ) {
 				return false;
 			}
 			else {
@@ -110,9 +106,6 @@ public final class TypeAssignability {
 				? isAssignableToWildcard( from, wt )
 				: isAssignable( from, to );
 	}
-
-	/* ------------------------------------------------------------ */
-	/* Inheritance walking */
 
 	private static boolean isAssignableViaInheritance(Type from, Class<?> toRaw) {
 
@@ -148,7 +141,7 @@ public final class TypeAssignability {
 		}
 
 		for ( var iface : raw.getGenericInterfaces() ) {
-			final Type found = findGenericSuperType( iface, target );
+			final var found = findGenericSuperType( iface, target );
 			if ( found != null ) {
 				return found;
 			}
@@ -161,9 +154,6 @@ public final class TypeAssignability {
 
 		return null;
 	}
-
-	/* ------------------------------------------------------------ */
-	/* Wildcards and type variables */
 
 	private static boolean isAssignableToWildcard(Type from, WildcardType to) {
 		for ( var lower : to.getLowerBounds() ) {
@@ -196,9 +186,6 @@ public final class TypeAssignability {
 		}
 		return true;
 	}
-
-	/* ------------------------------------------------------------ */
-	/* Utilities */
 
 	private static Class<?> rawClass(Type type) {
 		if ( type instanceof Class<?> c ) {

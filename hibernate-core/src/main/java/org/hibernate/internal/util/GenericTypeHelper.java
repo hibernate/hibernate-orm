@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.model.convert.internal;
+package org.hibernate.internal.util;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.models.spi.MemberDetails;
@@ -10,7 +10,10 @@ import org.hibernate.models.spi.MemberDetails;
 import java.lang.reflect.*;
 import java.util.*;
 
-public final class GenericTypeResolver {
+/**
+ * @author Gavin King
+ */
+public final class GenericTypeHelper {
 
 	public static Type inheritedMemberType(Class<?> subclass, Member superMember) {
 		return substituteTypeVariables( getMemberType( superMember ),
@@ -205,10 +208,10 @@ public final class GenericTypeResolver {
 		}
 	}
 
-	public static Type[] resolveInterfaceTypeArguments(
-			Class<?> genericInterface, Type implementingType) {
+	public static Type[] typeArguments(Class<?> genericInterface, Type implementingType) {
+
 		final Map<TypeVariable<?>, Type> typeMap = new HashMap<>();
-		if ( !resolveInterfaceRecursive( implementingType, genericInterface, typeMap ) ) {
+		if ( !collectSupertypeTypeArguments( implementingType, genericInterface, typeMap ) ) {
 			throw new IllegalArgumentException(
 					implementingType + " does not implement " + genericInterface );
 		}
@@ -221,7 +224,7 @@ public final class GenericTypeResolver {
 		return result;
 	}
 
-	private static boolean resolveInterfaceRecursive(
+	private static boolean collectSupertypeTypeArguments(
 			Type current,
 			Class<?> targetInterface,
 			Map<TypeVariable<?>, Type> typeMap) {
@@ -252,7 +255,7 @@ public final class GenericTypeResolver {
 				}
 
 				if ( targetInterface.isAssignableFrom( ifaceRaw ) ) {
-					if ( resolveInterfaceRecursive( iface, targetInterface, typeMap ) ) {
+					if ( collectSupertypeTypeArguments( iface, targetInterface, typeMap ) ) {
 						collectTypeArguments( iface, ifaceRaw, typeMap );
 						return true;
 					}
@@ -271,7 +274,7 @@ public final class GenericTypeResolver {
 					return true;
 				}
 
-				if ( resolveInterfaceRecursive( superclass, targetInterface, typeMap ) ) {
+				if ( collectSupertypeTypeArguments( superclass, targetInterface, typeMap ) ) {
 					collectTypeArguments( superclass, rawClass( superclass ), typeMap );
 					return true;
 				}

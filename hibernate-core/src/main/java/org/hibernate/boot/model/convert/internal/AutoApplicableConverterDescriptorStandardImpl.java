@@ -14,10 +14,10 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
 
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.erasedType;
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveMemberType;
-import static org.hibernate.boot.model.convert.internal.TypeAssignability.isAssignableFrom;
+import static org.hibernate.internal.util.GenericTypeHelper.erasedType;
+import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
+import static org.hibernate.internal.util.GenericTypeHelper.resolveMemberType;
+import static org.hibernate.internal.util.GenericAssignability.isAssignableFrom;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
 /**
@@ -64,7 +64,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		final Type elementType;
 		if ( Map.class.isAssignableFrom( erasedType ) ) {
 			final var typeArguments =
-					resolveInterfaceTypeArguments( Map.class, collectionMemberType );
+					typeArguments( Map.class, collectionMemberType );
 			if ( typeArguments.length < 2 ) {
 				return null;
 			}
@@ -72,7 +72,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		}
 		else if ( Collection.class.isAssignableFrom( erasedType ) ) {
 			final var typeArguments =
-					resolveInterfaceTypeArguments( Collection.class, collectionMemberType );
+					typeArguments( Collection.class, collectionMemberType );
 			if ( typeArguments.length == 0 ) {
 				return null;
 			}
@@ -100,7 +100,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		final Type keyType;
 		if ( Map.class.isAssignableFrom( erasedType( collectionMemberType ) ) ) {
 			final var typeArguments =
-					resolveInterfaceTypeArguments( Map.class, collectionMemberType );
+					typeArguments( Map.class, collectionMemberType );
 			if ( typeArguments.length == 0 ) {
 				return null;
 			}

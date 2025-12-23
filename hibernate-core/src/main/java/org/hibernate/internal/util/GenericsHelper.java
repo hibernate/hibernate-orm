@@ -18,7 +18,7 @@ public class GenericsHelper {
 			return null;
 		}
 
-		final Class<?> clazz = extractClass( base );
+		final var clazz = extractClass( base );
 		if ( clazz == null ) {
 			return null;
 		}
@@ -27,7 +27,7 @@ public class GenericsHelper {
 		types.add( clazz.getGenericSuperclass() );
 		types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
 
-		for ( Type type : types ) {
+		for ( var type : types ) {
 			type = resolveType( type, base );
 			if ( type instanceof ParameterizedType parameterizedType ) {
 				if ( genericType.equals( parameterizedType.getRawType() ) ) {
@@ -35,7 +35,7 @@ public class GenericsHelper {
 				}
 			}
 
-			final ParameterizedType parameterizedType = extractParameterizedType( type, genericType );
+			final var parameterizedType = extractParameterizedType( type, genericType );
 			if ( parameterizedType != null ) {
 				return parameterizedType;
 			}
@@ -45,12 +45,12 @@ public class GenericsHelper {
 	}
 
 	private static Type resolveTypeVariable(TypeVariable<?> typeVariable, ParameterizedType context) {
-		final Class<?> clazz = extractClass( context.getRawType() );
+		final var clazz = extractClass( context.getRawType() );
 		if ( clazz == null ) {
 			return null;
 		}
 
-		final TypeVariable<?>[] typeParameters = clazz.getTypeParameters();
+		final var typeParameters = clazz.getTypeParameters();
 		for ( int idx = 0; idx < typeParameters.length; idx++ ) {
 			if ( typeVariable.getName().equals( typeParameters[idx].getName() ) ) {
 				return resolveType( context.getActualTypeArguments()[idx], context );
@@ -77,13 +77,14 @@ public class GenericsHelper {
 		else if ( target instanceof TypeVariable<?> typeVariable ) {
 			return resolveTypeVariable( typeVariable, (ParameterizedType) context );
 		}
-		return target;
+		else {
+			return target;
+		}
 	}
 
 	private static ParameterizedType resolveParameterizedType(final ParameterizedType parameterizedType, Type context) {
-		final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-
-		final Type[] resolvedTypeArguments = new Type[actualTypeArguments.length];
+		final var actualTypeArguments = parameterizedType.getActualTypeArguments();
+		final var resolvedTypeArguments = new Type[actualTypeArguments.length];
 		for ( int idx = 0; idx < actualTypeArguments.length; idx++ ) {
 			resolvedTypeArguments[idx] = resolveType( actualTypeArguments[idx], context );
 		}

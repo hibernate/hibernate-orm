@@ -7,13 +7,10 @@ package org.hibernate.boot.model.convert.spi;
 import java.util.Objects;
 
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.spi.ClassmateContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
+import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
 
 /**
  * A registered conversion.
@@ -35,10 +32,9 @@ public record RegisteredConversion(
 	public RegisteredConversion(
 			Class<?> explicitDomainType,
 			Class<? extends AttributeConverter<?,?>> converterType,
-			boolean autoApply,
-			MetadataBuildingContext context) {
+			boolean autoApply) {
 		this( explicitDomainType, converterType, autoApply,
-				determineConverterDescriptor( explicitDomainType, converterType, autoApply, context ) );
+				determineConverterDescriptor( explicitDomainType, converterType, autoApply ) );
 	}
 
 	@Override
@@ -62,15 +58,14 @@ public record RegisteredConversion(
 	private static ConverterDescriptor<?,?> determineConverterDescriptor(
 			Class<?> explicitDomainType,
 			Class<? extends AttributeConverter<?, ?>> converterType,
-			boolean autoApply,
-			MetadataBuildingContext context) {
-		final ClassmateContext classmateContext = context.getBootstrapContext().getClassmateContext();
-		final var resolvedParamTypes = resolveConverterClassParamTypes( converterType, classmateContext );
-		final ResolvedType relationalType = resolvedParamTypes.get( 1 );
-		final ResolvedType domainTypeToMatch =
+			boolean autoApply) {
+		final var resolvedParamTypes =
+				resolveInterfaceTypeArguments( AttributeConverter.class, converterType );
+		final var relationalType = resolvedParamTypes[1];
+		final var domainTypeToMatch =
 				void.class.equals( explicitDomainType )
-						? resolvedParamTypes.get( 0 )
-						: classmateContext.getTypeResolver().resolve( explicitDomainType );
+						? resolvedParamTypes[0]
+						: explicitDomainType;
 		return ConverterDescriptors.of( converterType, domainTypeToMatch, relationalType, autoApply );
 	}
 

@@ -1304,8 +1304,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						}
 						@SuppressWarnings("unchecked") // Safe, because we just checked!
 						final var attributeConverterType = (Class<? extends AttributeConverter<?, ?>>) converterClass;
-						converterDescriptors.add( ConverterDescriptors.of( attributeConverterType,
-								metamodelBuilder.getBootstrapContext().getClassmateContext() ) );
+						converterDescriptors.add( ConverterDescriptors.of( attributeConverterType ) );
 					}
 					else {
 						metadataSources.addAnnotatedClass( converterClass );

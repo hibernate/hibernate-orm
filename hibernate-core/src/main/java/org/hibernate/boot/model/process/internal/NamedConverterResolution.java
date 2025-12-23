@@ -66,13 +66,10 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			MetadataBuildingContext context) {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-
 		final var bootstrapContext = context.getBootstrapContext();
 		final Class<? extends AttributeConverter<T, ?>> converterClass =
 				bootstrapContext.getClassLoaderService().classForName( converterClassName );
-		final ConverterDescriptor<T,?> converterDescriptor =
-				ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() );
-
+		final var converterDescriptor = ConverterDescriptors.of( converterClass );
 		return fromInternal(
 				explicitJtdAccess,
 				explicitStdAccess,

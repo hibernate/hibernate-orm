@@ -430,8 +430,7 @@ public final class AnnotationBinder {
 				.addRegisteredConversion( new RegisteredConversion(
 						registration.domainType(),
 						registration.converter(),
-						registration.autoApply(),
-						context
+						registration.autoApply()
 				) );
 	}
 

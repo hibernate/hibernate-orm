@@ -313,8 +313,7 @@ public abstract class SimpleValue implements KeyValue {
 				(Class<? extends AttributeConverter<?,?>>)
 						classForName( AttributeConverter.class, converterClassName, bootstrapContext );
 		attributeConverterDescriptor =
-				ConverterDescriptors.of( clazz, null, false,
-						bootstrapContext.getClassmateContext() );
+				ConverterDescriptors.of( clazz, null, false );
 	}
 
 	ClassLoaderService classLoaderService() {

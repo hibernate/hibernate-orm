@@ -24,10 +24,7 @@ public class YesNoBinder implements AttributeBinder<YesNo> {
 			PersistentClass persistentClass,
 			Property property) {
 		( (SimpleValue) property.getValue() ).setJpaAttributeConverterDescriptor(
-				ConverterDescriptors.of(
-						YesNoConverter.INSTANCE,
-						buildingContext.getBootstrapContext().getClassmateContext()
-				)
+				ConverterDescriptors.of( YesNoConverter.INSTANCE )
 		);
 	}
 }

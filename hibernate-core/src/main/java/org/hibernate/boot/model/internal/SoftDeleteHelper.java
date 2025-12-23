@@ -70,11 +70,10 @@ public class SoftDeleteHelper {
 		}
 		else {
 			final ConverterDescriptor<Boolean,?> converterDescriptor =
-					ConverterDescriptors.of( softDeleteConfig.converter(),
-							context.getBootstrapContext().getClassmateContext() );
+					ConverterDescriptors.of( softDeleteConfig.converter() );
 			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess(
-					typeConfiguration -> converterDescriptor.getRelationalValueResolvedType().getErasedType()
+					typeConfiguration -> converterDescriptor.getRelationalValueResolvedType()
 			);
 		}
 

@@ -10,32 +10,23 @@ import java.sql.Types;
 import java.time.Instant;
 
 import org.hibernate.IrrelevantEntity;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -71,13 +62,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class AttributeConverterTest {
 	@Test
 	public void testErrorInstantiatingConverterClass() {
-		Configuration cfg = new Configuration();
+		var cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		try {
 			cfg.addAttributeConverter( BlowsUpConverter.class );
-			try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory() ) {
-				final ManagedBeanRegistry managedBeanRegistry = sessionFactory.getManagedBeanRegistry();
-				final ManagedBean<BlowsUpConverter> converterBean = managedBeanRegistry.getBean( BlowsUpConverter.class );
+			try ( final var sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory() ) {
+				final var managedBeanRegistry = sessionFactory.getManagedBeanRegistry();
+				final var converterBean = managedBeanRegistry.getBean( BlowsUpConverter.class );
 				converterBean.getBeanInstance();
 				fail( "expecting an exception" );
 			}
@@ -108,25 +99,22 @@ public class AttributeConverterTest {
 
 	@Test
 	public void testBasicOperation() {
-		try ( StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
-			final JdbcTypeRegistry jdbcTypeRegistry = buildingContext.getBootstrapContext()
+		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			final var buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			final var jdbcTypeRegistry = buildingContext.getBootstrapContext()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();
-			final BasicValue basicValue = new BasicValue( buildingContext );
+			final var basicValue = new BasicValue( buildingContext );
 			basicValue.setJpaAttributeConverterDescriptor(
-					ConverterDescriptors.of(
-							new StringClobConverter(),
-							new ClassmateContext()
-					)
+					ConverterDescriptors.of( new StringClobConverter() )
 			);
 			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
 
-			final Type type = basicValue.getType();
+			final var type = basicValue.getType();
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
@@ -137,19 +125,19 @@ public class AttributeConverterTest {
 
 	@Test
 	public void testNonAutoApplyHandling() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( NotAutoAppliedConverter.class, false )
 					.build();
 
-			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			var tester = metadata.getEntityBinding( Tester.class.getName() );
+			var nameProp = tester.getProperty( "name" );
+			var nameValue = (SimpleValue) nameProp.getValue();
+			var type = nameValue.getType();
 			assertNotNull( type );
 			if ( ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter with autoApply=false was auto applied" );
@@ -163,28 +151,28 @@ public class AttributeConverterTest {
 
 	@Test
 	public void testBasicConverterApplication() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			final var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
-			final PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
-			final Property nameProp = tester.getProperty( "name" );
-			final BasicValue nameValue = (BasicValue) nameProp.getValue();
-			final Type type = nameValue.getType();
+			final var tester = metadata.getEntityBinding( Tester.class.getName() );
+			final var nameProp = tester.getProperty( "name" );
+			final var nameValue = (BasicValue) nameProp.getValue();
+			final var type = nameValue.getType();
 			assertNotNull( type );
 
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping) type;
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), Matchers.equalTo( String.class ) );
-			final JdbcType jdbcType = jdbcMapping.getJdbcType();
+			final var jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -195,30 +183,30 @@ public class AttributeConverterTest {
 	@Test
 	@JiraKey(value = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
 					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/orm.xml" ) )
 					.getMetadataBuilder()
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
-			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			BasicValue nameValue = (BasicValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			var tester = metadata.getEntityBinding( Tester.class.getName() );
+			var nameProp = tester.getProperty( "name" );
+			var nameValue = (BasicValue) nameProp.getValue();
+			var type = nameValue.getType();
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
 
-			final JdbcType jdbcType = jdbcMapping.getJdbcType();
+			final var jdbcType = jdbcMapping.getJdbcType();
 			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -229,32 +217,32 @@ public class AttributeConverterTest {
 	@Test
 	@JiraKey(value = "HHH-14881")
 	public void testBasicOrmXmlConverterWithOrmXmlPackage() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
 					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/package.xml" ) )
 					.getMetadataBuilder()
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
-			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			var tester = metadata.getEntityBinding( Tester.class.getName() );
+			var nameProp = tester.getProperty( "name" );
+			var nameValue = (SimpleValue) nameProp.getValue();
+			var type = nameValue.getType();
 			assertNotNull( type );
 			if ( !ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter not applied" );
 			}
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 			assertThat( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), equalTo( Clob.class ) );
 
-			final JdbcType sqlTypeDescriptor = jdbcMapping.getJdbcType();
+			final var sqlTypeDescriptor = jdbcMapping.getJdbcType();
 			assertThat( sqlTypeDescriptor, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
@@ -268,23 +256,23 @@ public class AttributeConverterTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester2.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
-			PersistentClass tester = metadata.getEntityBinding( Tester2.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
+			var tester = metadata.getEntityBinding( Tester2.class.getName() );
+			var nameProp = tester.getProperty( "name" );
+			var nameValue = (SimpleValue) nameProp.getValue();
+			var type = nameValue.getType();
 			assertNotNull( type );
 			if ( ConvertedBasicTypeImpl.class.isInstance( type ) ) {
 				fail( "AttributeConverter applied (should not have been)" );
 			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			var basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringJavaType.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), basicType.getJdbcType() );
 		}
@@ -295,15 +283,15 @@ public class AttributeConverterTest {
 
 	@Test
 	public void testBasicUsage() {
-		Configuration cfg = new Configuration();
+		var cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
 		cfg.addAnnotatedClass( Tester4.class );
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		try (SessionFactory sf = cfg.buildSessionFactory()) {
-			Session session = sf.openSession();
+		try (var sf = cfg.buildSessionFactory()) {
+			var session = sf.openSession();
 			session.beginTransaction();
 			session.persist( new Tester4( 1L, "steve", 200 ) );
 			session.getTransaction().commit();
@@ -337,21 +325,21 @@ public class AttributeConverterTest {
 	@Test
 	@JiraKey( value = "HHH-14206" )
 	public void testPrimitiveTypeConverterAutoApplied() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			final var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester5.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( IntegerToVarcharConverter.class, true )
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
-			final PersistentClass tester = metadata.getEntityBinding( Tester5.class.getName() );
-			final Property codeProp = tester.getProperty( "code" );
-			final BasicValue nameValue = (BasicValue) codeProp.getValue();
-			Type type = nameValue.getType();
+			final var tester = metadata.getEntityBinding( Tester5.class.getName() );
+			final var codeProp = tester.getProperty( "code" );
+			final var nameValue = (BasicValue) codeProp.getValue();
+			var type = nameValue.getType();
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
@@ -368,15 +356,15 @@ public class AttributeConverterTest {
 
 	@Test
 	public void testBasicTimestampUsage() {
-		Configuration cfg = new Configuration();
+		var cfg = new Configuration();
 		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.addAttributeConverter( InstantConverter.class, false );
 		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		try (SessionFactory sf = cfg.buildSessionFactory()) {
-			Session session = sf.openSession();
+		try (var sf = cfg.buildSessionFactory()) {
+			var session = sf.openSession();
 			session.beginTransaction();
 			session.persist( new IrrelevantInstantEntity( 1L ) );
 			session.getTransaction().commit();
@@ -401,38 +389,38 @@ public class AttributeConverterTest {
 	@Test
 	@JiraKey(value = "HHH-8866")
 	public void testEnumConverter() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+		final var ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+			var metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( EntityWithConvertibleField.class )
 					.getMetadataBuilder()
 					.applyAttributeConverter( ConvertibleEnumConverter.class, true )
 					.build();
-			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
 			// first lets validate that the converter was applied...
-			final PersistentClass tester = metadata.getEntityBinding( EntityWithConvertibleField.class.getName() );
-			final Property nameProp = tester.getProperty( "convertibleEnum" );
-			final BasicValue nameValue = (BasicValue) nameProp.getValue();
-			final Type type = nameValue.getType();
+			final var tester = metadata.getEntityBinding( EntityWithConvertibleField.class.getName() );
+			final var nameProp = tester.getProperty( "convertibleEnum" );
+			final var nameValue = (BasicValue) nameProp.getValue();
+			final var type = nameValue.getType();
 			assertNotNull( type );
 			assertThat( type, instanceOf( ConvertedBasicTypeImpl.class ) );
 
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			final var jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor(), instanceOf( EnumJavaType.class ) );
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 
 			// then lets build the SF and verify its use...
-			final SessionFactory sf = metadata.buildSessionFactory();
+			final var sf = metadata.buildSessionFactory();
 			try {
-				Session s = sf.openSession();
+				var s = sf.openSession();
 				s.getTransaction().begin();
-				EntityWithConvertibleField entity = new EntityWithConvertibleField();
+				var entity = new EntityWithConvertibleField();
 				entity.setId( "ID" );
 				entity.setConvertibleEnum( ConvertibleEnum.VALUE );
 				String entityID = entity.getId();

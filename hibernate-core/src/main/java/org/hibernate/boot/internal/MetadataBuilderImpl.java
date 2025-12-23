@@ -321,7 +321,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public void contributeAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( converterClass )
 		);
 	}
 
@@ -384,7 +384,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				ConverterDescriptors.of( attributeConverterClass, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverterClass )
 		);
 		return this;
 	}
@@ -392,8 +392,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				ConverterDescriptors.of( attributeConverterClass, autoApply, false,
-						bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverterClass, autoApply, false )
 		);
 		return this;
 	}
@@ -401,7 +400,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				ConverterDescriptors.of( attributeConverter, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverter )
 		);
 		return this;
 	}
@@ -409,7 +408,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				ConverterDescriptors.of( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverter, autoApply )
 		);
 		return this;
 	}

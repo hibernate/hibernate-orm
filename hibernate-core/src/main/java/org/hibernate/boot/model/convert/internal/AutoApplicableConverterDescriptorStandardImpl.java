@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -14,12 +14,11 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.members.ResolvedMember;
-
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveAttributeType;
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveMember;
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.typesMatch;
+import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.erasedType;
+import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
+import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveMemberType;
+import static org.hibernate.boot.model.convert.internal.TypeAssignability.isAssignableFrom;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
 /**
  * Standard implementation of AutoApplicableConverterDescriptor
@@ -42,44 +41,52 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
-		final ResolvedType attributeType = resolveAttributeType( memberDetails, context );
-
-		return typesMatch( linkedConverterDescriptor.getDomainValueResolvedType(), attributeType )
+		// TODO: arrays, etc
+		final var attributeType = resolveMemberType( memberDetails );
+		return isAssignableFrom( linkedConverterDescriptor.getDomainValueResolvedType(),
+						canonicalizePrimitive( attributeType ) )
 				? linkedConverterDescriptor
 				: null;
+	}
+
+	private static Type canonicalizePrimitive(Type attributeType) {
+		return attributeType instanceof Class<?> cl
+				? canonicalize( cl )
+				: attributeType;
 	}
 
 	@Override
 	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForCollectionElement(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
-		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
-
-		final ResolvedType elementType;
-		final ResolvedType type = collectionMember.getType();
-		final Class<?> erasedType = type.getErasedType();
+		final var collectionMemberType = resolveMemberType( memberDetails );
+		final var erasedType = erasedType( collectionMemberType );
+		final Type elementType;
 		if ( Map.class.isAssignableFrom( erasedType ) ) {
-			final List<ResolvedType> typeArguments = type.typeParametersFor(Map.class);
-			if ( typeArguments.size() < 2 ) {
+			final var typeArguments =
+					resolveInterfaceTypeArguments( Map.class, collectionMemberType );
+			if ( typeArguments.length < 2 ) {
 				return null;
 			}
-			elementType = typeArguments.get( 1 );
+			elementType = typeArguments[1];
 		}
 		else if ( Collection.class.isAssignableFrom( erasedType ) ) {
-			final List<ResolvedType> typeArguments = type.typeParametersFor(Collection.class);
-			if ( typeArguments.isEmpty() ) {
+			final var typeArguments =
+					resolveInterfaceTypeArguments( Collection.class, collectionMemberType );
+			if ( typeArguments.length == 0 ) {
 				return null;
 			}
-			elementType = typeArguments.get( 0 );
+			elementType = typeArguments[0];
 		}
 		else if ( erasedType.isArray() ) {
-			elementType = type.getArrayElementType();
+			elementType = erasedType.componentType();
 		}
 		else {
 			throw new HibernateException( "Attribute was neither a Collection nor a Map : " + erasedType);
 		}
 
-		return typesMatch( linkedConverterDescriptor.getDomainValueResolvedType(), elementType )
+		return isAssignableFrom( linkedConverterDescriptor.getDomainValueResolvedType(),
+						canonicalizePrimitive( elementType ) )
 				? linkedConverterDescriptor
 				: null;
 	}
@@ -89,21 +96,22 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 
-		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
-		final ResolvedType keyType;
-		final ResolvedType type = collectionMember.getType();
-		if ( Map.class.isAssignableFrom( type.getErasedType() ) ) {
-			final List<ResolvedType> typeArguments = type.typeParametersFor(Map.class);
-			if ( typeArguments.isEmpty() ) {
+		final var collectionMemberType = resolveMemberType( memberDetails );
+		final Type keyType;
+		if ( Map.class.isAssignableFrom( erasedType( collectionMemberType ) ) ) {
+			final var typeArguments =
+					resolveInterfaceTypeArguments( Map.class, collectionMemberType );
+			if ( typeArguments.length == 0 ) {
 				return null;
 			}
-			keyType = typeArguments.get(0);
+			keyType = typeArguments[0];
 		}
 		else {
-			throw new HibernateException( "Attribute was not a Map : " + type.getErasedType() );
+			throw new HibernateException( "Attribute was not a Map : " + collectionMemberType );
 		}
 
-		return typesMatch( linkedConverterDescriptor.getDomainValueResolvedType(), keyType )
+		return isAssignableFrom( linkedConverterDescriptor.getDomainValueResolvedType(),
+						canonicalizePrimitive( keyType ) )
 				? linkedConverterDescriptor
 				: null;
 	}

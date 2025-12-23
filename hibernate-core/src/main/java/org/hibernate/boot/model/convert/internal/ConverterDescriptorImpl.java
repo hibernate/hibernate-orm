@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -12,17 +11,19 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 
+import java.lang.reflect.Type;
+
 
 class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 	private final Class<? extends AttributeConverter<X, Y>> converterType;
-	private final ResolvedType domainTypeToMatch;
-	private final ResolvedType relationalType;
+	private final Type domainTypeToMatch;
+	private final Type relationalType;
 	private final AutoApplicableConverterDescriptor autoApplyDescriptor;
 
 	ConverterDescriptorImpl(
 			Class<? extends AttributeConverter<X, Y>> converterType,
-			ResolvedType domainTypeToMatch,
-			ResolvedType relationalType,
+			Type domainTypeToMatch,
+			Type relationalType,
 			boolean autoApply) {
 		this.converterType = converterType;
 		this.domainTypeToMatch = domainTypeToMatch;
@@ -38,12 +39,12 @@ class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 	}
 
 	@Override
-	public ResolvedType getDomainValueResolvedType() {
+	public Type getDomainValueResolvedType() {
 		return domainTypeToMatch;
 	}
 
 	@Override
-	public ResolvedType getRelationalValueResolvedType() {
+	public Type getRelationalValueResolvedType() {
 		return relationalType;
 	}
 
@@ -59,8 +60,8 @@ class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 		return new AttributeConverterBean<>(
 				converterBean,
 				javaTypeRegistry.resolveDescriptor( converterBean.getBeanClass() ),
-				javaTypeRegistry.getDescriptor( domainTypeToMatch.getErasedType() ),
-				javaTypeRegistry.getDescriptor( relationalType.getErasedType() )
+				javaTypeRegistry.getDescriptor( domainTypeToMatch ),
+				javaTypeRegistry.getDescriptor( relationalType)
 		);
 	}
 }

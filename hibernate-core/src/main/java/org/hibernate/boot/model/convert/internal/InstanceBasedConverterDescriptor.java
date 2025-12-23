@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -23,9 +22,8 @@ class InstanceBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<
 
 	InstanceBasedConverterDescriptor(
 			AttributeConverter<X,Y> converterInstance,
-			Boolean forceAutoApply,
-			ClassmateContext classmateContext) {
-		super( ReflectHelper.getClass( converterInstance ), forceAutoApply, classmateContext );
+			Boolean forceAutoApply) {
+		super( ReflectHelper.getClass( converterInstance ), forceAutoApply );
 		this.converterInstance = converterInstance;
 	}
 

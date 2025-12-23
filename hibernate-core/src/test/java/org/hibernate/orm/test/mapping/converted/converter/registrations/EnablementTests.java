@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter.registrations;
 
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
 
@@ -27,18 +26,18 @@ public class EnablementTests {
 			{
 				final Property property = descriptor.getProperty( "thing1" );
 				final BasicValue valueMapping = (BasicValue) property.getValue();
-				final ConverterDescriptor converterDescriptor = valueMapping.getJpaAttributeConverterDescriptor();
+				final var converterDescriptor = valueMapping.getJpaAttributeConverterDescriptor();
 				assertThat( converterDescriptor ).isNotNull();
 				assertThat( converterDescriptor.getAttributeConverterClass() ).isEqualTo( Thing1Converter.class );
-				assertThat( converterDescriptor.getDomainValueResolvedType().getErasedType() ).isEqualTo( Thing1.class );
+				assertThat( converterDescriptor.getDomainValueResolvedType() ).isEqualTo( Thing1.class );
 			}
 			{
 				final Property property = descriptor.getProperty( "thing2" );
 				final BasicValue valueMapping = (BasicValue) property.getValue();
-				final ConverterDescriptor converterDescriptor = valueMapping.getJpaAttributeConverterDescriptor();
+				final var converterDescriptor = valueMapping.getJpaAttributeConverterDescriptor();
 				assertThat( converterDescriptor ).isNotNull();
 				assertThat( converterDescriptor.getAttributeConverterClass() ).isEqualTo( Thing2Converter.class );
-				assertThat( converterDescriptor.getDomainValueResolvedType().getErasedType() ).isEqualTo( Thing2.class );
+				assertThat( converterDescriptor.getDomainValueResolvedType() ).isEqualTo( Thing2.class );
 			}
 		} );
 	}

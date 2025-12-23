@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
@@ -23,9 +22,8 @@ class ClassBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y
 	ClassBasedConverterDescriptor(
 			Class<? extends AttributeConverter<X,Y>> converterClass,
 			Boolean forceAutoApply,
-			ClassmateContext classmateContext,
 			boolean overrideable) {
-		super( converterClass, forceAutoApply, classmateContext );
+		super( converterClass, forceAutoApply );
 		this.overrideable = overrideable;
 	}
 

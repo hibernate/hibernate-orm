@@ -74,15 +74,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 							? void.class
 							: explicitDomainType,
 					registration.getConverterType(),
-					registration.isAutoApply(),
-					rootMetadataBuildingContext
+					registration.isAutoApply()
 			) );
 		} );
 		domainModelSource.getConverterRegistrations().forEach( (registration) -> {
 			converterRegistry.addAttributeConverter( ConverterDescriptors.of(
 					classLoaderService.classForName( registration.converterClass().getClassName() ),
-					registration.autoApply(), false,
-					bootstrapContext.getClassmateContext()
+					registration.autoApply(), false
 			) );
 		} );
 

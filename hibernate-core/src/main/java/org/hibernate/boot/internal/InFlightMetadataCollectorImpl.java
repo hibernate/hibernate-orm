@@ -55,7 +55,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -543,20 +542,16 @@ public class InFlightMetadataCollectorImpl
 		return attributeConverterManager;
 	}
 
-	private ClassmateContext getClassmateContext() {
-		return getBootstrapContext().getClassmateContext();
-	}
-
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				ConverterDescriptors.of( converterClass, null, false, getClassmateContext() ) );
+				ConverterDescriptors.of( converterClass, null, false ) );
 	}
 
 	@Override
 	public void addOverridableConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				ConverterDescriptors.of( converterClass, null, true, getClassmateContext() ) );
+				ConverterDescriptors.of( converterClass, null, true ) );
 	}
 
 	@Override
@@ -566,7 +561,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addRegisteredConversion(RegisteredConversion conversion) {
-		attributeConverterManager.addRegistration( conversion, bootstrapContext );
+		attributeConverterManager.addRegistration( conversion );
 	}
 
 	@Override

@@ -6,8 +6,6 @@ package org.hibernate.orm.test.mapping.converted.converter;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,7 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.erasedType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey(value = "HHH-8854")
 class AttributeConverterDefinitionTest {
@@ -26,13 +25,8 @@ class AttributeConverterDefinitionTest {
 	@MethodSource("arguments")
 	@ParameterizedTest
 	void test(Class<? extends AttributeConverter<?, ?>> attributeConverterClass, Class<?> expectedType) {
-		try (BootstrapContextImpl bootstrapContext = new BootstrapContextImpl()) {
-			final ConverterDescriptor<?,?> converterDescriptor =
-					ConverterDescriptors.of( attributeConverterClass,
-							bootstrapContext.getClassmateContext() );
-			assertThat( converterDescriptor.getDomainValueResolvedType().getErasedType() )
-					.isEqualTo( expectedType );
-		}
+		final var converterDescriptor = ConverterDescriptors.of( attributeConverterClass );
+		assertEquals( expectedType, erasedType( converterDescriptor.getDomainValueResolvedType() ) );
 	}
 
 	private static Stream<Arguments> arguments() {
@@ -67,7 +61,7 @@ class AttributeConverterDefinitionTest {
 			implements AttributeConverter<LocalDate, String> {
 	}
 
-	public static interface AttrConverterSameType<T> extends AttributeConverter<T, T> {
+	public interface AttrConverterSameType<T> extends AttributeConverter<T, T> {
 	}
 
 	public static class AttrConverterSameTypeImpl implements AttrConverterSameType<String> {
@@ -83,7 +77,7 @@ class AttributeConverterDefinitionTest {
 		}
 	}
 
-	public static interface DelegatingAttributeConverter<T, V> extends AttributeConverter<T, V> {
+	public interface DelegatingAttributeConverter<T, V> extends AttributeConverter<T, V> {
 		AttributeConverter<T, V> delegate();
 
 		@Override

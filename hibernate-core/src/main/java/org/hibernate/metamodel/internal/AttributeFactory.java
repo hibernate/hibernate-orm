@@ -367,7 +367,7 @@ public class AttributeFactory {
 			final var descriptor = value.getJpaAttributeConverterDescriptor();
 			if ( descriptor != null ) {
 				return context.getJavaTypeRegistry().resolveDescriptor(
-						descriptor.getRelationalValueResolvedType().getErasedType()
+						descriptor.getRelationalValueResolvedType()
 				);
 			}
 		}

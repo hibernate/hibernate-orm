@@ -261,8 +261,7 @@ public class ScanningCoordinator {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
 				managedResources.addAttributeConverterDefinition(
-						ConverterDescriptors.of( classLoaderService.classForName( classDescriptor.getName() ),
-								bootstrapContext.getClassmateContext() )
+						ConverterDescriptors.of( classLoaderService.classForName( classDescriptor.getName() ) )
 				);
 			}
 			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {

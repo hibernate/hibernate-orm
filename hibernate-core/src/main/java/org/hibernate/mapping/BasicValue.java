@@ -74,13 +74,13 @@ import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.hibernate.boot.model.convert.internal.TypeAssignability.isAssignableFrom;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;
@@ -503,18 +503,17 @@ public class BasicValue extends SimpleValue
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
 			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
-			final var classmateContext = getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
-				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE );
 			}
 			else if ( jdbcType.isString() ) {
 				// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
-				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE );
 			}
 			else {
 				// should indicate BIT or BOOLEAN == no conversion needed
 				//		- we still create the converter to properly set up JDBC type, etc
-				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE );
 			}
 		}
 		else {
@@ -536,12 +535,12 @@ public class BasicValue extends SimpleValue
 		}
 
 		@Override
-		public ResolvedType getDomainValueResolvedType() {
+		public java.lang.reflect.Type getDomainValueResolvedType() {
 			return underlyingDescriptor.getDomainValueResolvedType();
 		}
 
 		@Override
-		public ResolvedType getRelationalValueResolvedType() {
+		public java.lang.reflect.Type getRelationalValueResolvedType() {
 			return underlyingDescriptor.getRelationalValueResolvedType();
 		}
 
@@ -700,8 +699,8 @@ public class BasicValue extends SimpleValue
 		);
 
 		if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType
-				&& !attributeConverterDescriptor.getDomainValueResolvedType().getErasedType()
-						.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+				&& !isAssignableFrom( attributeConverterDescriptor.getDomainValueResolvedType(),
+						javaType.getJavaTypeClass() ) ) {
 			// In this case, the converter applies to the element of a BasicPluralJavaType
 			final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
 			final BasicType<?> registeredType = registeredElementType == null ? null

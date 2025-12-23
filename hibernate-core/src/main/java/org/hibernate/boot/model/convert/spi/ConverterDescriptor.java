@@ -6,8 +6,9 @@ package org.hibernate.boot.model.convert.spi;
 
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
+
+import java.lang.reflect.Type;
 
 /**
  * Boot-time descriptor of a JPA {@linkplain AttributeConverter converter}.
@@ -31,12 +32,12 @@ public interface ConverterDescriptor<X,Y> {
 	/**
 	 * The resolved Classmate type descriptor for the conversion's domain type
 	 */
-	ResolvedType getDomainValueResolvedType();
+	Type getDomainValueResolvedType();
 
 	/**
 	 * The resolved Classmate type descriptor for the conversion's relational type
 	 */
-	ResolvedType getRelationalValueResolvedType();
+	Type getRelationalValueResolvedType();
 
 	/**
 	 * Get the auto-apply checker for this converter.

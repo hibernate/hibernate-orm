@@ -10,7 +10,7 @@ import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 
 import jakarta.persistence.AttributeConverter;
 
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
+import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
 
 /**
  * A registered conversion.
@@ -60,7 +60,7 @@ public record RegisteredConversion(
 			Class<? extends AttributeConverter<?, ?>> converterType,
 			boolean autoApply) {
 		final var resolvedParamTypes =
-				resolveInterfaceTypeArguments( AttributeConverter.class, converterType );
+				typeArguments( AttributeConverter.class, converterType );
 		final var relationalType = resolvedParamTypes[1];
 		final var domainTypeToMatch =
 				void.class.equals( explicitDomainType )

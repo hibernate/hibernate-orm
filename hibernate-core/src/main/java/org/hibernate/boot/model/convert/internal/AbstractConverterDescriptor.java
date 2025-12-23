@@ -16,8 +16,8 @@ import jakarta.persistence.Converter;
 
 import java.lang.reflect.Type;
 
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.erasedType;
-import static org.hibernate.boot.model.convert.internal.GenericTypeResolver.resolveInterfaceTypeArguments;
+import static org.hibernate.internal.util.GenericTypeHelper.erasedType;
+import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +34,7 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 			Class<? extends AttributeConverter<X, Y>> converterClass,
 			Boolean forceAutoApply) {
 		this.converterClass = converterClass;
-		final var converterParamTypes = resolveInterfaceTypeArguments( AttributeConverter.class, converterClass );
+		final var converterParamTypes = typeArguments( AttributeConverter.class, converterClass );
 		domainType = converterParamTypes[0];
 		jdbcType = converterParamTypes[1];
 		autoApplicableDescriptor = resolveAutoApplicableDescriptor( converterClass, forceAutoApply );

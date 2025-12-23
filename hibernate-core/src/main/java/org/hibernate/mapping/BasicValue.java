@@ -80,7 +80,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.Boolean.parseBoolean;
-import static org.hibernate.boot.model.convert.internal.TypeAssignability.isAssignableFrom;
+import static org.hibernate.internal.util.GenericAssignability.isAssignableFrom;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;

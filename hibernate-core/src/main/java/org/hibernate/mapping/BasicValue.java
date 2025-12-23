@@ -1086,22 +1086,20 @@ public class BasicValue extends SimpleValue
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
 			else {
-				final var typeProperties = getCustomTypeProperties();
-				final var typeAnnotation = getTypeAnnotation();
-				final var memberDetails = getMemberDetails();
+				final var parameters = buildCustomTypeProperties();
 				resolution = new UserTypeResolution<>(
 						new CustomType<>(
-								getConfiguredUserTypeBean( explicitCustomType, typeProperties, typeAnnotation, memberDetails ),
+								getConfiguredUserTypeBean( explicitCustomType, getTypeAnnotation(), parameters ),
 								getTypeConfiguration()
 						),
 						null,
-						typeProperties
+						parameters
 				);
 			}
 		}
 	}
 
-	private Properties getCustomTypeProperties() {
+	private Properties buildCustomTypeProperties() {
 		final var properties = new Properties();
 		if ( isNotEmpty( getTypeParameters() ) ) {
 			properties.putAll( getTypeParameters() );
@@ -1113,83 +1111,78 @@ public class BasicValue extends SimpleValue
 	}
 
 	private UserType<?> getConfiguredUserTypeBean(
-			Class<? extends UserType<?>> explicitCustomType, Properties properties, Annotation typeAnnotation, MemberDetails memberDetails) {
-		final var creationContext = new UserTypeCreationContext() {
-			@Override
-			public MetadataBuildingContext getBuildingContext() {
-				return BasicValue.this.getBuildingContext();
-			}
-
-			@Override
-			public ServiceRegistry getServiceRegistry() {
-				return BasicValue.this.getServiceRegistry();
-			}
-
-			@Override
-			public MemberDetails getMemberDetails() {
-				return memberDetails;
-			}
-
-			@Override
-			public Properties getParameters() {
-				return properties;
-			}
-		};
-		final var typeInstance = instantiateUserType( explicitCustomType, creationContext, typeAnnotation );
-
-		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
-			if ( typeAnnotation == null ) {
-				throw new AnnotationException( String.format( "Custom type '%s' implements 'AnnotationBasedUserType' but no custom type annotation is present",
-						typeInstance.getClass().getName() ) );
-			}
-			initializeAnnotationBasedUserType( properties, typeAnnotation, memberDetails, annotationBased );
-		}
-
+			Class<? extends UserType<?>> explicitCustomType,
+			Annotation typeAnnotation, Properties parameters) {
+		final var typeInstance =
+				createUserTypeInstance( explicitCustomType, parameters, typeAnnotation );
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
 		}
-
-		if ( typeInstance instanceof DynamicParameterizedType ) {
-			if ( parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-				if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-					properties.put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
-				}
-			}
-		}
-
-		injectParameters( typeInstance, properties );
+		addParameterType( parameters, typeInstance );
+		injectParameters( typeInstance, parameters );
 		// envers - grr
-		setTypeParameters( properties );
-
+		setTypeParameters( parameters );
 		return typeInstance;
 	}
 
-	private <A extends Annotation> void initializeAnnotationBasedUserType(Properties properties,
-													Annotation typeAnnotation,
-													MemberDetails memberDetails,
-													AnnotationBasedUserType<A, ?> annotationBased) {
-		annotationBased.initialize( castAnnotationType( typeAnnotation, annotationBased ),
-				new UserTypeCreationContext() {
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return BasicValue.this.getBuildingContext();
-					}
+	private UserType<?> createUserTypeInstance(
+			Class<? extends UserType<?>> customType,
+			Properties parameters,
+			Annotation typeAnnotation) {
+		final var creationContext = new TypeCreationContext( parameters );
+		final var typeInstance = instantiateUserType( customType, typeAnnotation, creationContext );
+		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
+			initializeAnnotationBasedUserType( typeAnnotation, annotationBased, creationContext );
+		}
+		return typeInstance;
+	}
 
-					@Override
-					public ServiceRegistry getServiceRegistry() {
-						return BasicValue.this.getServiceRegistry();
-					}
+	private void addParameterType(Properties properties, UserType<?> typeInstance) {
+		if ( typeInstance instanceof DynamicParameterizedType
+				&& parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
+				&& properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+			properties.put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
+		}
+	}
 
-					@Override
-					public MemberDetails getMemberDetails() {
-						return memberDetails;
-					}
+	private <A extends Annotation> void initializeAnnotationBasedUserType(
+			Annotation typeAnnotation,
+			AnnotationBasedUserType<A, ?> annotationBased,
+			UserTypeCreationContext creationContext) {
+		if ( typeAnnotation == null ) {
+			throw new AnnotationException( String.format(
+					"Custom type '%s' implements 'AnnotationBasedUserType' but no custom type annotation is present",
+					annotationBased.getClass().getName() ) );
+		}
+		annotationBased.initialize( castAnnotationType( typeAnnotation, annotationBased ), creationContext );
+	}
 
-					@Override
-					public Properties getParameters() {
-						return properties;
-					}
-				} );
+	private class TypeCreationContext implements UserTypeCreationContext {
+		private final Properties parameters;
+
+		private TypeCreationContext(Properties parameters) {
+			this.parameters = parameters;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return BasicValue.this.getBuildingContext();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return BasicValue.this.getServiceRegistry();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return BasicValue.this.getMemberDetails();
+		}
+
+		@Override
+		public Properties getParameters() {
+			return parameters;
+		}
 	}
 
 	private <A extends Annotation> A castAnnotationType(
@@ -1215,20 +1208,23 @@ public class BasicValue extends SimpleValue
 	}
 
 	private <T extends UserType<?>> T instantiateUserType(
-			Class<T> customType, UserTypeCreationContext creationContext, Annotation typeAnnotation) {
+			Class<T> customType, Annotation typeAnnotation,
+			UserTypeCreationContext creationContext) {
 		try {
 			if ( typeAnnotation != null ) {
 				// attempt to instantiate it with the annotation and context object as constructor arguments
 				try {
-					final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType(),
-							UserTypeCreationContext.class );
+					final var constructor =
+							customType.getDeclaredConstructor( typeAnnotation.annotationType(),
+									UserTypeCreationContext.class );
 					constructor.setAccessible( true );
 					return constructor.newInstance( typeAnnotation, creationContext );
 				}
 				catch (NoSuchMethodException ignored) {
 					// attempt to instantiate it with the annotation as a constructor argument
 					try {
-						final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType() );
+						final var constructor =
+								customType.getDeclaredConstructor( typeAnnotation.annotationType() );
 						constructor.setAccessible( true );
 						return constructor.newInstance( typeAnnotation );
 					}
@@ -1240,7 +1236,8 @@ public class BasicValue extends SimpleValue
 
 			// attempt to instantiate it with the context object as a constructor argument
 			try {
-				final var constructor = customType.getDeclaredConstructor( UserTypeCreationContext.class );
+				final var constructor =
+						customType.getDeclaredConstructor( UserTypeCreationContext.class );
 				constructor.setAccessible( true );
 				return constructor.newInstance( creationContext );
 			}

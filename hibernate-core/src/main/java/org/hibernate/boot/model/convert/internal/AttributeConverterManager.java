@@ -27,8 +27,8 @@ import org.hibernate.models.spi.MemberDetails;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
-import static org.hibernate.internal.util.GenericTypeHelper.resolveMemberType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
+import static org.hibernate.internal.util.GenericsHelper.actualMemberType;
 import static org.hibernate.internal.util.StringHelper.join;
 
 /**
@@ -159,7 +159,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			Function<AutoApplicableConverterDescriptor, ConverterDescriptor<?,?>> matcher) {
 		if ( registeredConversionsByDomainType != null ) {
 			// we had registered conversions - see if any of them match and, if so, use that conversion
-			final var resolveAttributeType = resolveMemberType( memberDetails );
+			final var resolveAttributeType = actualMemberType( memberDetails );
 			final var registrationForDomainType =
 					registeredConversionsByDomainType.get( resolveAttributeType );
 			if ( registrationForDomainType != null ) {

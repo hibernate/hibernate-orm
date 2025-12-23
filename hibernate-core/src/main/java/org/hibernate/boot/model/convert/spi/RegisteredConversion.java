@@ -10,7 +10,7 @@ import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 
 import jakarta.persistence.AttributeConverter;
 
-import static org.hibernate.internal.util.GenericTypeHelper.typeArguments;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /**
  * A registered conversion.

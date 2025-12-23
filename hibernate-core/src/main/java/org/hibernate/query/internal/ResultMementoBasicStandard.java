@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.internal;
 
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -24,7 +24,7 @@ import org.hibernate.usertype.UserType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ColumnResult;
 
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.extractAttributeConverterParameterizedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /**
  * Implementation of {@link ResultMementoBasic} for scalar (basic) results.
@@ -86,15 +86,16 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 						typeConfiguration.getJavaTypeRegistry()
 								.resolveDescriptor( converterClass );
 
-				final var parameterizedType =
-						extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
+				final var typeArguments =
+						typeArguments( AttributeConverter.class,
+								converterBean.getBeanClass() );
 
 				builder = new CompleteResultBuilderBasicValuedConverted(
 						explicitColumnName,
 						converterBean,
 						converterJtd,
-						determineDomainJavaType( parameterizedType, typeConfiguration.getJavaTypeRegistry() ),
-						resolveUnderlyingMapping( parameterizedType, typeConfiguration )
+						determineDomainJavaType( typeArguments, typeConfiguration.getJavaTypeRegistry() ),
+						resolveUnderlyingMapping( typeArguments, typeConfiguration )
 				);
 			}
 			else {
@@ -139,25 +140,21 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	}
 
 	private BasicJavaType<?> determineDomainJavaType(
-			ParameterizedType parameterizedType,
+			Type[] typeArguments,
 			JavaTypeRegistry jtdRegistry) {
-		final var typeParameters = parameterizedType.getActualTypeArguments();
-		final var domainTypeType = typeParameters[ 0 ];
-		final var domainClass = (Class<?>) domainTypeType;
+		final var domainClass = (Class<?>) typeArguments[0];
 		return (BasicJavaType<?>) jtdRegistry.resolveDescriptor( domainClass );
 	}
 
 	private BasicValuedMapping resolveUnderlyingMapping(
-			ParameterizedType parameterizedType,
+			Type[] typeArguments,
 			TypeConfiguration typeConfiguration) {
-		final var typeParameters = parameterizedType.getActualTypeArguments();
-		return typeConfiguration.standardBasicTypeForJavaType( typeParameters[ 1 ] );
+		return typeConfiguration.standardBasicTypeForJavaType( typeArguments[1] );
 	}
 
 	public ResultMementoBasicStandard(
 			String explicitColumnName,
-			BasicType<?> explicitType,
-			ResultSetMappingResolutionContext context) {
+			BasicType<?> explicitType) {
 		this.explicitColumnName = explicitColumnName;
 		this.builder = new CompleteResultBuilderBasicValuedStandard(
 				explicitColumnName,

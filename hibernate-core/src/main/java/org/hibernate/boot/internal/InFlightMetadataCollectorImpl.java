@@ -1357,7 +1357,7 @@ public class InFlightMetadataCollectorImpl
 		public void process(InFlightMetadataCollector metadataCollector) {
 			final var persistentClass = metadataCollector.getEntityBinding( referencedClass );
 			if ( persistentClass == null ) {
-				throw new MappingException( "property-ref to unmapped class: " + referencedClass );
+				throw new MappingException( "Referenced field or property belongs to to unmapped class: " + referencedClass );
 			}
 
 			final var property = persistentClass.getReferencedProperty( propertyName );

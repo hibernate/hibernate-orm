@@ -48,7 +48,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see jakarta.persistence.SequenceGenerator#allocationSize
  * @see jakarta.persistence.TableGenerator#allocationSize
  */
-public class PooledOptimizer extends AbstractOptimizer implements InitialValueAwareOptimizer {
+public class PooledOptimizer extends BasePooledOptimizer implements InitialValueAwareOptimizer {
 
 	private static class GenerationState {
 		private IntegralDataTypeHolder hiValue;
@@ -115,8 +115,10 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 
 	@Override
 	public void reset() {
+		lock.lock();
 		noTenantState = null;
 		tenantSpecificState = null;
+		lock.unlock();
 	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {

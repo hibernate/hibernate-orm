@@ -534,7 +534,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		@Override
 		public IntegralDataTypeHolder getNextValue() {
 			return session.getTransactionCoordinator().createIsolationDelegate()
-					.delegateWork( this, true );
+						.delegateWork( this, true );
 		}
 		@Override
 		public IntegralDataTypeHolder execute(Connection connection)
@@ -544,6 +544,18 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		@Override
 		public String getTenantIdentifier() {
 			return session.getTenantIdentifier();
+		}
+		@Override
+		public void begin() {
+			optimizer.begin( this );
+		}
+		@Override
+		public void commit() {
+			optimizer.commit( this );
+		}
+		@Override
+		public void rollback() {
+			optimizer.rollback( this );
 		}
 	}
 

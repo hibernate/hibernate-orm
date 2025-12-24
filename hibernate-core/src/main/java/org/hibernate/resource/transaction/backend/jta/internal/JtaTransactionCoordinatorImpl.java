@@ -19,6 +19,7 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.S
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.SynchronizationCallbackTarget;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
+import org.hibernate.resource.transaction.spi.SynchronizationRegistryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
@@ -50,7 +51,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	private SynchronizationCallbackCoordinator callbackCoordinator;
 	private TransactionDriverControlImpl physicalTransactionDelegate;
 
-	private final SynchronizationRegistryStandardImpl synchronizationRegistry = new SynchronizationRegistryStandardImpl();
+	private final SynchronizationRegistryImplementor synchronizationRegistry = new SynchronizationRegistryStandardImpl();
 
 	private int timeOut = -1;
 
@@ -287,7 +288,9 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public IsolationDelegate createIsolationDelegate() {
-		return new JtaIsolationDelegate( transactionCoordinatorOwner, jtaPlatform.retrieveTransactionManager() );
+		return jtaPlatform.supportsSuspension()
+				? new JtaIsolationDelegate( transactionCoordinatorOwner, jtaPlatform.retrieveTransactionManager() )
+				: new JtaCompensatingIsolationDelegate( transactionCoordinatorOwner, this );
 	}
 
 	@Override

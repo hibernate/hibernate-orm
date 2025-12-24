@@ -15,9 +15,14 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey(value = "HHH-9731")
 @Jpa(annotatedClasses = {SelectCaseTest.Entity.class})
@@ -98,6 +103,34 @@ public class SelectCaseTest {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-12184")
+	public void selectCaseEnumExpression(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			entityManager.persist( new Entity( 1L, EnumValue.VALUE_1 ) );
+			entityManager.persist( new Entity( 2L, EnumValue.VALUE_2 ) );
+			entityManager.flush();
+
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<Entity> query = cb.createQuery( Entity.class );
+			final Root<Entity> root = query.from( Entity.class );
+			query
+					.select( cb.construct( Entity.class,
+							root.get( "id" ),
+							cb.selectCase()
+									.when( cb.equal( root.get( "id" ), 1L ), EnumValue.VALUE_2 )
+									.otherwise( EnumValue.VALUE_1 )
+					) )
+					.orderBy( cb.asc( root.get( "id" ) ) );
+
+			final List<Entity> resultList = entityManager.createQuery( query ).getResultList();
+			assertEquals( 2, resultList.size() );
+			assertEquals( EnumValue.VALUE_2, resultList.get( 0 ).value );
+			assertEquals( EnumValue.VALUE_1, resultList.get( 1 ).value );
+
+		} );
+	}
+
 	@jakarta.persistence.Entity
 	@Table(name = "entity")
 	public static class Entity {
@@ -108,6 +141,19 @@ public class SelectCaseTest {
 		@Enumerated(EnumType.STRING)
 		@Column(name = "val")
 		private EnumValue value;
+
+		public Entity() {
+		}
+
+		public Entity(Long id, EnumValue value) {
+			this.id = id;
+			this.value = value;
+		}
+
+		public Entity(Long id, Object value) {
+			this.id = id;
+			this.value = (EnumValue) value;
+		}
 	}
 
 	public enum EnumValue {

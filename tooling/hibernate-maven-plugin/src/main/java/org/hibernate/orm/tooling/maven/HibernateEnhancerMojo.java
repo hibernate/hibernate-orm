@@ -4,10 +4,12 @@
  */
 package org.hibernate.orm.tooling.maven;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
@@ -23,6 +25,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
@@ -154,6 +157,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		getLog().debug(FILESET_PROCESSED_SUCCESFULLY);
 	}
 
+	@SuppressWarnings("unchecked")
 	private ClassLoader createClassLoader() {
 		getLog().debug(CREATE_URL_CLASSLOADER_FOR_FOLDER.formatted(classesDirectory)) ;
 		List<URL> urls = new ArrayList<>();
@@ -163,6 +167,25 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		catch (MalformedURLException e) {
 			getLog().error(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER, e);
 		}
+
+		// Add dependencies to classpath as well - all but the ones used for testing purposes
+		MavenProject project = ( (MavenProject) getPluginContext().get( "project" ) );
+		Set<Artifact> artifacts = project.getArtifacts();
+		if ( artifacts != null) {
+			for ( Artifact a : artifacts ) {
+				if ( !Artifact.SCOPE_TEST.equals( a.getScope() ) ) {
+					try {
+						urls.add( a.getFile().toURI().toURL() );
+						getLog().debug( "Adding classpath entry for dependency " + a.getId() );
+					}
+					catch (MalformedURLException e) {
+						String msg = "Unable to resolve URL for dependency " + a.getId() + " at " + a.getFile().getAbsolutePath();
+						getLog().warn( msg );
+					}
+				}
+			}
+		}
+
 		return new URLClassLoader(
 				urls.toArray(new URL[0]),
 				Enhancer.class.getClassLoader());

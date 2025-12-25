@@ -2031,10 +2031,6 @@ public class SessionImpl
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		transactionObserver = new TransactionObserver() {
 			@Override
-			public void afterBegin() {
-			}
-
-			@Override
 			public void beforeCompletion() {
 				if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
 					managedFlush();

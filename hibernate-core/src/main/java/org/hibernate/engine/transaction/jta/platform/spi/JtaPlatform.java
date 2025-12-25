@@ -82,4 +82,15 @@ public interface JtaPlatform extends Service {
 	 * @throws SystemException Indicates a problem access the underlying status
 	 */
 	int getCurrentStatus() throws SystemException;
+
+	/**
+	 * Does this platform support transaction suspend and resume,
+	 * allowing us to perform work isolated from the surrounding
+	 * transaction?
+	 * @see org.hibernate.resource.transaction.spi.TransactionCoordinator#createIsolationDelegate
+	 * @since 7.3
+	 */
+	default boolean supportsSuspension() {
+		return true;
+	}
 }

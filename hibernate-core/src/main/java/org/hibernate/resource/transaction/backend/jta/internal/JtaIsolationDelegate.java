@@ -40,12 +40,19 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 	private final BiFunction<SQLException, String, JDBCException> sqlExceptionConverter;
 	private final TransactionManager transactionManager;
 
-	public JtaIsolationDelegate(TransactionCoordinatorOwner transactionCoordinatorOwner, TransactionManager transactionManager) {
-		this( transactionCoordinatorOwner.getJdbcSessionOwner(), transactionManager );
+	public JtaIsolationDelegate(
+			TransactionCoordinatorOwner transactionCoordinatorOwner,
+			TransactionManager transactionManager) {
+		this( transactionCoordinatorOwner.getJdbcSessionOwner(),
+				transactionManager );
 	}
 
-	public JtaIsolationDelegate(JdbcSessionOwner jdbcSessionOwner, TransactionManager transactionManager) {
-		this( jdbcSessionOwner.getJdbcConnectionAccess(), jdbcSessionOwner.getSqlExceptionHelper(), transactionManager );
+	public JtaIsolationDelegate(
+			JdbcSessionOwner jdbcSessionOwner,
+			TransactionManager transactionManager) {
+		this( jdbcSessionOwner.getJdbcConnectionAccess(),
+				jdbcSessionOwner.getSqlExceptionHelper(),
+				transactionManager );
 	}
 
 	public JtaIsolationDelegate(
@@ -69,7 +76,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 
 	@Override
 	public <T> T delegateWork(final WorkExecutorVisitable<T> work, final boolean transacted) throws HibernateException {
-		return doInSuspendedTransaction(
+		return doInIsolatedTransaction(
 				() -> transacted
 						? doInNewTransaction( () -> doTheWork( work ), transactionManager )
 						: doTheWork( work )
@@ -78,7 +85,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 
 	@Override
 	public <T> T delegateCallable(final Callable<T> callable, final boolean transacted) throws HibernateException {
-		return doInSuspendedTransaction(
+		return doInIsolatedTransaction(
 				() -> transacted
 						? doInNewTransaction( () -> call( callable ), transactionManager )
 						: call( callable ));
@@ -96,7 +103,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 		}
 	}
 
-	private <T> T doInSuspendedTransaction(HibernateCallable<T> callable) {
+	private <T> T doInIsolatedTransaction(HibernateCallable<T> callable) {
 		final Transaction surroundingTransaction;
 		try {
 			// suspend current JTA transaction, if any
@@ -230,6 +237,7 @@ public final class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	// Callable that does not throw Exception; in Java <8 there's no Supplier
+	@FunctionalInterface
 	private interface HibernateCallable<T> {
 		T call() throws HibernateException;
 	}

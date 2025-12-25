@@ -32,7 +32,8 @@ public class JtaObtainConnectionExceptionTest {
 		final JtaIsolationDelegate isolationDelegate = new JtaIsolationDelegate(
 				new ObtainConnectionSqlExceptionConnectionAccess(),
 				null,
-				new TransactionManagerImpl() );
+				new TransactionManagerImpl()
+		);
 
 		assertThrowsExactly( HibernateException.class, () ->
 				isolationDelegate.delegateWork(

@@ -7,7 +7,6 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -59,7 +58,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author Steve Ebersole
  */
-public class HiLoOptimizer extends AbstractOptimizer {
+public class HiLoOptimizer extends BasePooledOptimizer {
 
 	private static class GenerationState {
 		private IntegralDataTypeHolder lastSourceValue;
@@ -86,8 +85,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	public Serializable generate(AccessCallback callback) {
 		lock.lock();
 		try {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lastSourceValue == null ) {
 				// first call, so initialize ourselves.  we need to read the database
 				// value and set up the 'bucket' boundaries
@@ -121,8 +119,10 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	@Override
 	public void reset() {
+		lock.lock();
 		noTenantState = null;
 		tenantSpecificState = null;
+		lock.unlock();
 	}
 
 	private GenerationState locateGenerationState(String tenantId) {
@@ -209,7 +209,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
-		BasicValuedMapping integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final var integerType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		return new BinaryArithmeticExpression(
 				new BinaryArithmeticExpression(
 						databaseValue,

@@ -142,16 +142,6 @@ public class TransactionRollbackTest {
 		int unSuccessfulAfterCompletion;
 
 		@Override
-		public void afterBegin() {
-			// Nothing to do
-		}
-
-		@Override
-		public void beforeCompletion() {
-			// Nothing to do
-		}
-
-		@Override
 		public void afterCompletion(boolean successful, boolean delayed) {
 			if ( !successful ) {
 				unSuccessfulAfterCompletion++;

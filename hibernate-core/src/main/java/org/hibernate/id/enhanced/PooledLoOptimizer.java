@@ -39,7 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see jakarta.persistence.SequenceGenerator#allocationSize
  * @see jakarta.persistence.TableGenerator#allocationSize
  */
-public class PooledLoOptimizer extends AbstractOptimizer {
+public class PooledLoOptimizer extends BasePooledOptimizer {
 
 	private static class GenerationState {
 		// last value read from db source
@@ -95,8 +95,10 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 
 	@Override
 	public void reset() {
+		lock.lock();
 		noTenantState = null;
 		tenantSpecificState = null;
+		lock.unlock();
 	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {

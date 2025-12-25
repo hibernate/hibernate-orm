@@ -98,4 +98,8 @@ public interface Optimizer {
 	default int getAdjustment() {
 		return 1;
 	}
+
+	default void begin(AccessCallback callback) {}
+	default void commit(AccessCallback callback) {}
+	default void rollback(AccessCallback callback) {}
 }

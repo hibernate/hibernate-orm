@@ -503,7 +503,7 @@ public abstract sealed class PersistentClass
 		}
 		catch ( MappingException e ) {
 			throw new MappingException(
-					"property-ref [" + propertyPath + "] not found on entity [" + getEntityName() + "]", e
+					"Referenced field or property [" + propertyPath + "] not found on entity [" + getEntityName() + "]", e
 			);
 		}
 	}

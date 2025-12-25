@@ -19,17 +19,17 @@ public interface TransactionObserver {
 	 * Do not rely on this being called as the transaction may be started
 	 * in some way other than via the {@link org.hibernate.Transaction} API.
 	 */
-	void afterBegin();
+	default void afterBegin() {}
 
 	/**
 	 * Callback for processing the initial phase of transaction completion.
 	 */
-	void beforeCompletion();
+	default void beforeCompletion() {}
 
 	/**
 	 * Callback for processing the last phase of transaction completion.
 	 *
 	 * @param successful Was the transaction successful?
 	 */
-	void afterCompletion(boolean successful, boolean delayed);
+	default void afterCompletion(boolean successful, boolean delayed) {}
 }

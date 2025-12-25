@@ -18,7 +18,8 @@ import static org.hibernate.processor.util.Constants.NONNULL;
  * argument. This constructor is compatible with use via direct
  * instantiation or CDI-style constructor injection. By contrast,
  * {@link DefaultConstructor} is used to instantiate a repository
- * which obtains its session using field injection.
+ * which obtains its session using field injection. This class
+ * also takes care of adding the resource accessor method.
  *
  * @author Gavin King
  */

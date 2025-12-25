@@ -187,12 +187,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
-		this.members = new LinkedHashMap<>();
-		this.quarkusInjection = context.isQuarkusInjection();
-		this.springInjection = context.isSpringInjection();
-		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
-		jakartaDataStaticModel = jakartaDataStaticMetamodel;
 		this.primaryEntity = primaryEntity;
+		members = new LinkedHashMap<>();
+		quarkusInjection = context.isQuarkusInjection();
+		springInjection = context.isSpringInjection();
+		importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
+		jakartaDataStaticModel = jakartaDataStaticMetamodel;
 		importContext.importType(
 				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
 						jakartaDataStaticModel ) );
@@ -202,7 +202,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent,
-											  @Nullable TypeElement primaryEntity) {
+											@Nullable TypeElement primaryEntity) {
 		return create( element, context, false, false, false, parent, primaryEntity );
 	}
 
@@ -422,9 +422,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					}
 				}
 				else if ( method.getEnclosingElement().getKind().isInterface()
-						  && !method.isDefault()
-						  && !method.getModifiers().contains( Modifier.PRIVATE )
-						  && !isSessionGetter( method ) ) {
+						&& !method.isDefault()
+						&& !method.getModifiers().contains( Modifier.PRIVATE )
+						&& !isSessionGetter( method ) ) {
 					final String companionClassName = element.getQualifiedName().toString() + '$';
 					if ( context.getElementUtils().getTypeElement( companionClassName ) == null ) {
 						message( method, "repository method cannot be implemented (skipping whole repository)",
@@ -440,7 +440,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				primaryEntity = primaryEntity( lifecycleMethods );
 			}
 			if ( !checkEntity( primaryEntity, hibernateRepo )
-				 || !checkEntities( lifecycleMethods, hibernateRepo ) ) {
+				|| !checkEntities( lifecycleMethods, hibernateRepo ) ) {
 				// NOTE EARLY EXIT with initialized = false
 				return;
 			}
@@ -461,7 +461,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					gettersAndSettersOfClass.add( method );
 				}
 				else if ( element.getTypeParameters().isEmpty()
-						  && containsAnnotation( method, HQL, SQL, FIND ) ) {
+						&& containsAnnotation( method, HQL, SQL, FIND ) ) {
 					queryMethods.add( method );
 				}
 			}
@@ -606,8 +606,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( annotationValue != null && annotationValue.getValue() instanceof DeclaredType declaredType ) {
 				final TypeElement idClass = (TypeElement) declaredType.asElement();
 				if ( fields.stream().filter( this::isIdField ).count()
-					 + methods.stream().filter( this::isIdProperty ).count()
-					 == 1 ) {
+					+ methods.stream().filter( this::isIdProperty ).count()
+					== 1 ) {
 					for ( var field : fields ) {
 						if ( isIdField( field ) ) {
 							if ( hasAnnotation( field, ONE_TO_ONE ) ) {
@@ -670,12 +670,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean isIdProperty(ExecutableElement method) {
 		return hasAnnotation( method, ID )
-			   && isPersistent( method, AccessType.PROPERTY );
+			&& isPersistent( method, AccessType.PROPERTY );
 	}
 
 	private boolean isIdField(VariableElement field) {
 		return hasAnnotation( field, ID )
-			   && isPersistent( field, AccessType.FIELD );
+			&& isPersistent( field, AccessType.FIELD );
 	}
 
 	private static Stream<? extends Element> memberStream(TypeElement idClass) {
@@ -692,10 +692,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean isMatchingIdType(Element id, TypeMirror type, TypeMirror match) {
 		return isSameType( type, match )
-			   || isEquivalentPrimitiveType( type, match )
-			   || isEquivalentPrimitiveType( match, type )
-			   //TODO: check the id type of the associated entity
-			   || hasAnnotation( id, MANY_TO_ONE, ONE_TO_ONE );
+			|| isEquivalentPrimitiveType( type, match )
+			|| isEquivalentPrimitiveType( match, type )
+			//TODO: check the id type of the associated entity
+			|| hasAnnotation( id, MANY_TO_ONE, ONE_TO_ONE );
 	}
 
 	private boolean isSameType(TypeMirror type, TypeMirror match) {
@@ -704,11 +704,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean isEquivalentPrimitiveType(TypeMirror type, TypeMirror match) {
 		return type.getKind().isPrimitive()
-			   && isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
+			&& isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
 	}
 
 	private void addAccessors(@Nullable Element repositoryType, @Nullable TypeMirror idType,
-							  String repositoryAccessor, String repositorySuperType) {
+							String repositoryAccessor, String repositorySuperType) {
 		TypeElement finalPrimaryEntity = primaryEntity;
 		if ( repositoryType != null ) {
 			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,
@@ -789,7 +789,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						foundPersistenceEntity = true;
 					}
 					else if ( declaredType == parameterType
-							  && nonPersistenceParameter == null ) {
+							&& nonPersistenceParameter == null ) {
 						nonPersistenceParameter = parameter;
 					}
 				}
@@ -818,9 +818,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final Name name = typeElement.getQualifiedName();
 			if ( declaredType.getTypeArguments().size() == 2
-				 && (name.contentEquals( BASIC_REPOSITORY )
-					 || name.contentEquals( CRUD_REPOSITORY )
-					 || name.contentEquals( DATA_REPOSITORY )) ) {
+				&& (name.contentEquals( BASIC_REPOSITORY )
+					|| name.contentEquals( CRUD_REPOSITORY )
+					|| name.contentEquals( DATA_REPOSITORY )) ) {
 				final TypeMirror entityType = declaredType.getTypeArguments().get( 0 );
 				if ( entityType.getKind() == TypeKind.DECLARED ) {
 					final DeclaredType entityDeclared = (DeclaredType) entityType;
@@ -917,8 +917,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
-					  && !jakartaDataRepository
-					  && (context.usesQuarkusOrm() || context.usesQuarkusReactive() || context.usesQuarkusPanache2()) ) {
+					&& !jakartaDataRepository
+					&& (context.usesQuarkusOrm() || context.usesQuarkusReactive() || context.usesQuarkusPanache2()) ) {
 				// if we don't have a getter, and not a JD repository, but we're in Quarkus,
 				// we know how to find the default sessions
 				repository = true;
@@ -970,7 +970,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
 		if ( !hasAnnotation( type, ENTITY, MAPPED_SUPERCLASS, EMBEDDABLE )
-			 || isPanacheType( type ) ) {
+			|| isPanacheType( type ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					return method;
@@ -1010,6 +1010,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public boolean isProvidedSessionAccess() {
+		return isProvidedSessionAccess( sessionType );
+	}
+
+	public static boolean isProvidedSessionAccess(String sessionType) {
 		return sessionType.startsWith( SPRING_OBJECT_PROVIDER );
 	}
 
@@ -1070,6 +1074,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							quarkusInjection
 					)
 			);
+			if ( isProvidedSessionAccess( sessionType ) ) {
+				sessionGetter = name + "()";
+			}
 		}
 		else {
 			// use this getter to get the method, do not generate an injection point for its type
@@ -1183,7 +1190,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private static boolean isSessionGetter(ExecutableElement method) {
 		return method.getParameters().isEmpty()
-			   && isSessionGetterType( method.getReturnType() );
+			&& isSessionGetterType( method.getReturnType() );
 	}
 
 	private static boolean isSessionGetterType(TypeMirror returnType) {
@@ -1196,14 +1203,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( name.contentEquals( UNI ) || name.contentEquals( SPRING_OBJECT_PROVIDER ) ) {
 					final var typeArguments = declaredType.getTypeArguments();
 					return typeArguments.size() == 1
-						   && isSessionGetterType( typeArguments.get( 0 ) );
+						&& isSessionGetterType( typeArguments.get( 0 ) );
 				}
 				else {
 					return name.contentEquals( HIB_SESSION )
-						   || name.contentEquals( HIB_STATELESS_SESSION )
-						   || name.contentEquals( MUTINY_SESSION )
-						   || name.contentEquals( MUTINY_STATELESS_SESSION )
-						   || name.contentEquals( ENTITY_MANAGER );
+						|| name.contentEquals( HIB_STATELESS_SESSION )
+						|| name.contentEquals( MUTINY_SESSION )
+						|| name.contentEquals( MUTINY_STATELESS_SESSION )
+						|| name.contentEquals( ENTITY_MANAGER );
 				}
 			}
 			else {
@@ -1447,16 +1454,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			Element memberOfClass, AnnotationMirror annotation, AnnotationValue annotationVal, TypeElement assocTypeElement) {
 		final String mappedBy = annotationVal.getValue().toString();
 		if ( mappedBy != null && !mappedBy.isEmpty()
-			 // this happens for a typesafe ref, e.g. Page_BOOK
-			 // TODO: we should queue it to validate it later somehow
-			 && !mappedBy.equals( "<error>" ) ) {
+			// this happens for a typesafe ref, e.g. Page_BOOK
+			// TODO: we should queue it to validate it later somehow
+			&& !mappedBy.equals( "<error>" ) ) {
 			if ( mappedBy.indexOf( '.' ) > 0 ) {
 				//we don't know how to handle paths yet
 				return;
 			}
 			for ( Element member : context.getAllMembers( assocTypeElement ) ) {
 				if ( propertyName( member ).contentEquals( mappedBy )
-					 && compatibleAccess( assocTypeElement, member ) ) {
+					&& compatibleAccess( assocTypeElement, member ) ) {
 					validateBackRef( memberOfClass, annotation, assocTypeElement, member, annotationVal );
 					return;
 				}
@@ -1543,10 +1550,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
 		return (entityAccessTypeInfo.getAccessType() == membersKind
 				|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null)
-			   && !containsAnnotation( memberOfClass, TRANSIENT )
-			   && !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
-			   && !memberOfClass.getModifiers().contains( Modifier.STATIC )
-			   && !(memberOfClass.getKind() == ElementKind.METHOD
+			&& !containsAnnotation( memberOfClass, TRANSIENT )
+			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
+			&& !memberOfClass.getModifiers().contains( Modifier.STATIC )
+			&& !(memberOfClass.getKind() == ElementKind.METHOD
 					&& isSessionGetter( (ExecutableElement) memberOfClass ));
 	}
 
@@ -1563,7 +1570,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final VariableElement parameter = method.getParameters().get( 0 );
 			final DeclaredType declaredType = entityType( parameterType( parameter ) );
 			return declaredType != null
-				   && containsAnnotation( declaredType.asElement(), ENTITY );
+				&& containsAnnotation( declaredType.asElement(), ENTITY );
 
 		}
 		else {
@@ -1575,7 +1582,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		for ( ExecutableElement method : queryMethods ) {
 			final Set<Modifier> modifiers = method.getModifiers();
 			if ( modifiers.contains( Modifier.ABSTRACT )
-				 || modifiers.contains( Modifier.NATIVE ) ) {
+				|| modifiers.contains( Modifier.NATIVE ) ) {
 				addQueryMethod( method );
 			}
 		}
@@ -1705,10 +1712,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean hasOrder(ExecutableElement method) {
 		return hasAnnotation( method, JD_ORDER_BY, JD_ORDER_BY_LIST )
-			   || method.getParameters().stream()
-					   .anyMatch( param -> typeNameEquals( param.asType(), JD_ORDER )
-										   || typeNameEquals( param.asType(), JD_SORT )
-										   || typeNameEqualsArray( param.asType(), JD_SORT ) );
+			|| method.getParameters().stream()
+					.anyMatch( param -> typeNameEquals( param.asType(), JD_ORDER )
+										|| typeNameEquals( param.asType(), JD_SORT )
+										|| typeNameEqualsArray( param.asType(), JD_SORT ) );
 	}
 
 	private static TypeMirror ununi(TypeMirror returnType) {
@@ -1791,8 +1798,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isLegalDeleteReturnType(TypeMirror returnType) {
 		final TypeKind kind = returnType.getKind();
 		return kind == TypeKind.VOID
-			   || kind == TypeKind.INT
-			   || kind == TypeKind.LONG;
+			|| kind == TypeKind.INT
+			|| kind == TypeKind.LONG;
 	}
 
 	private static boolean isLegalReactiveDeleteReturnType(TypeMirror returnType) {
@@ -1802,7 +1809,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeElement typeElement = (TypeElement) type.asElement();
 			final Name name = typeElement.getQualifiedName();
 			return name.contentEquals( Void.class.getName() )
-				   || name.contentEquals( Integer.class.getName() );
+				|| name.contentEquals( Integer.class.getName() );
 		}
 		else {
 			return false;
@@ -1835,14 +1842,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( !hasAnnotation( declaredType.asElement(), ENTITY )
-					  // TODO: improve this (carefully consider the case of an erased type variable)
-					  && declaredParameterType == parameterType ) {
+					// TODO: improve this (carefully consider the case of an erased type variable)
+					&& declaredParameterType == parameterType ) {
 				message( parameter,
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
 			else if ( returnArgument
-					  && !isSameType( returnType, declaredParameterType ) ) {
+					&& !isSameType( returnType, declaredParameterType ) ) {
 				message( parameter,
 						"return type '" + returnType
 						+ "' disagrees with parameter type '" + parameterType + "'",
@@ -1877,7 +1884,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final TypeElement typeElement = (TypeElement) entityType.asElement();
 		for ( Element member : context.getAllMembers( typeElement ) ) {
 			if ( hasAnnotation( member, GENERATED_VALUE )
-				 && hasAnnotation( member, ID ) ) {
+				&& hasAnnotation( member, ID ) ) {
 				return true;
 			}
 			//TODO: look for generator annotations
@@ -1909,7 +1916,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final DeclaredType declaredType = (DeclaredType) parameterType;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
 				return typeElement.getQualifiedName().contentEquals( LIST )
-					   && !declaredType.getTypeArguments().isEmpty()
+					&& !declaredType.getTypeArguments().isEmpty()
 						? declaredType.getTypeArguments().get( 0 )
 						: context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
 			default:
@@ -1941,7 +1948,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final DeclaredType declaredType = (DeclaredType) parameterType;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
 				if ( typeElement.getQualifiedName().contentEquals( LIST )
-					 && !declaredType.getTypeArguments().isEmpty() ) {
+					&& !declaredType.getTypeArguments().isEmpty() ) {
 					final TypeMirror elementType = types.erasure( declaredType.getTypeArguments().get( 0 ) );
 					return elementType.getKind() == TypeKind.DECLARED ? (DeclaredType) elementType : null;
 				}
@@ -2034,7 +2041,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else {
 				if ( containerType != null
-					 && !containerType.getQualifiedName().contentEquals( OPTIONAL ) ) {
+					&& !containerType.getQualifiedName().contentEquals( OPTIONAL ) ) {
 					// multiple results, so it has to be a criteria finder
 					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
 				}
@@ -2313,7 +2320,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isFinderParameterMappingToAttribute(VariableElement parameter) {
 		final String typeName = parameter.asType().toString();
 		return !isSpecialParam( typeName )
-			   || isRangeParam( typeName );
+			|| isRangeParam( typeName );
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -2333,13 +2340,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private String getSessionVariableName(String sessionType) {
-		return switch ( sessionType ) {
-			case HIB_SESSION, HIB_STATELESS_SESSION,
-				 MUTINY_SESSION, MUTINY_STATELESS_SESSION,
-				 SPRING_STATELESS_SESSION_PROVIDER -> "session";
-//			case UNI_MUTINY_SESSION, UNI_MUTINY_STATELESS_SESSION -> "session";
-			default -> sessionGetter;
-		};
+		if ( isProvidedSessionAccess( sessionType) ) {
+			return sessionGetter;
+		}
+		else {
+			return switch ( sessionType ) {
+				case HIB_SESSION, HIB_STATELESS_SESSION,
+					MUTINY_SESSION, MUTINY_STATELESS_SESSION,
+					SPRING_STATELESS_SESSION_PROVIDER -> "session";
+//				case UNI_MUTINY_SESSION, UNI_MUTINY_STATELESS_SESSION -> "session";
+				default -> sessionGetter;
+			};
+		}
 	}
 
 	private static List<String> enabledFetchProfiles(ExecutableElement method) {
@@ -2387,7 +2399,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		warnAboutMissingOrder( method );
 		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
-			 && matchesNaturalKey( entity, fieldTypes ) ) {
+			&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
 							this, method,
@@ -2544,13 +2556,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static List<Boolean> parameterMultivalued(ExecutableElement method, FieldType fieldType) {
 		return method.getParameters().stream()
 				.map( param -> isFinderParameterMappingToAttribute( param )
-							   && fieldType == FieldType.MULTIVALUED )
+							&& fieldType == FieldType.MULTIVALUED )
 				.collect( toList() );
 	}
 
 	private static FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
 		if ( (usingStatelessSession( sessionType ) || usingReactiveSession( sessionType ))
-			 && !profiles.isEmpty() ) {
+			&& !profiles.isEmpty() ) {
 			// no support for passing fetch profiles i.e. IdentifierLoadAccess
 			// in SS or M.S except via Query.enableFetchProfile()
 			return FieldType.BASIC;
@@ -2571,9 +2583,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean matchesNaturalKey(TypeElement entity, List<@Nullable FieldType> fieldTypes) {
 		return fieldTypes.stream().allMatch( type -> type == FieldType.NATURAL_ID )
-			   && entity.getEnclosedElements().stream()
-						  .filter( member -> hasAnnotation( member, NATURAL_ID ) )
-						  .count() == fieldTypes.size();
+			&& entity.getEnclosedElements().stream()
+						.filter( member -> hasAnnotation( member, NATURAL_ID ) )
+						.count() == fieldTypes.size();
 	}
 
 	enum FieldType {
@@ -2630,7 +2642,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else {
 				final AnnotationValue value = getAnnotationValue( idClass );
 				if ( value != null
-					 && isSameType( actualParameterType( param ),
+					&& isSameType( actualParameterType( param ),
 						(TypeMirror) value.getValue() ) ) {
 					return FieldType.ID;
 				}
@@ -2750,7 +2762,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {
 		final Element member = memberMatchingPath( entity, parameterName( param ) );
 		return isNullable( param )
-			   && (member == null || isNullable( member ));
+			&& (member == null || isNullable( member ));
 	}
 
 	private AccessType getAccessType(TypeElement entity) {
@@ -3077,8 +3089,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String trimmed = hql.trim();
 		final String keyword = trimmed.length() > 6 ? trimmed.substring( 0, 6 ) : "";
 		return keyword.equalsIgnoreCase( "update" )
-			   || keyword.equalsIgnoreCase( "delete" )
-			   || keyword.equalsIgnoreCase( "insert" );
+			|| keyword.equalsIgnoreCase( "delete" )
+			|| keyword.equalsIgnoreCase( "insert" );
 	}
 
 	private void validateHql(
@@ -3133,15 +3145,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
 			final String returnTypeName = fullReturnType( method );
 			return returnTypeName.equals( UNI_VOID )
-				   || returnTypeName.equals( UNI_BOOLEAN )
-				   || returnTypeName.equals( UNI_INTEGER );
+				|| returnTypeName.equals( UNI_BOOLEAN )
+				|| returnTypeName.equals( UNI_INTEGER );
 		}
 		else {
 			// non-reactive
 			return returnType.getKind() == TypeKind.VOID
-				   || returnType.getKind() == TypeKind.BOOLEAN
-				   || returnType.getKind() == TypeKind.INT
-				   || returnType.getKind() == TypeKind.LONG;
+				|| returnType.getKind() == TypeKind.BOOLEAN
+				|| returnType.getKind() == TypeKind.INT
+				|| returnType.getKind() == TypeKind.LONG;
 		}
 	}
 
@@ -3262,8 +3274,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final TypeElement typeElement = (TypeElement) returnType.asElement();
 		final Name qualifiedName = typeElement.getQualifiedName();
 		if ( qualifiedName.contentEquals( TUPLE )
-			 || qualifiedName.contentEquals( LIST )
-			 || qualifiedName.contentEquals( MAP ) ) {
+			|| qualifiedName.contentEquals( LIST )
+			|| qualifiedName.contentEquals( MAP ) ) {
 			// these are exceptionally allowed
 			return true;
 		}
@@ -3319,7 +3331,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( kind == TypeKind.ARRAY ) {
 			final ArrayType arrayType = (ArrayType) parameterType;
 			return itemType.isArray()
-				   && parameterMatches( arrayType.getComponentType(), itemType.getComponentType(),
+				&& parameterMatches( arrayType.getComponentType(), itemType.getComponentType(),
 					itemType.getComponentType().getTypeName() );
 		}
 		else {
@@ -3360,8 +3372,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String queryParamType =
 				expressible == null ? null : expressible.getTypeName(); //getTypeName() can return "unknown"
 		if ( queryParamType != null
-			 //TODO: arguments of functions get assigned "unknown" which sucks
-			 && !"unknown".equals( queryParamType ) ) {
+			//TODO: arguments of functions get assigned "unknown" which sucks
+			&& !"unknown".equals( queryParamType ) ) {
 			if ( param.getName() != null ) {
 				checkNamedParameter( param, paramNames, paramTypes, method, mirror, value, queryParamType );
 			}
@@ -3428,14 +3440,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String argType = stripTypeAnnotations( argumentType );
 		return param.allowMultiValuedBinding()
 				? isLegalAssignment( argType, LIST + '<' + queryParamType + '>' )
-				  || isLegalAssignment( argType, SET + '<' + queryParamType + '>' )
-				  || isLegalAssignment( argType, COLLECTION + '<' + queryParamType + '>' )
+				|| isLegalAssignment( argType, SET + '<' + queryParamType + '>' )
+				|| isLegalAssignment( argType, COLLECTION + '<' + queryParamType + '>' )
 				: isLegalAssignment( argType, queryParamType );
 	}
 
 	private static boolean isLegalAssignment(String argType, String paramType) {
 		return paramType.equals( argType )
-			   || paramType.equals( fromPrimitive( argType ) );
+			|| paramType.equals( fromPrimitive( argType ) );
 	}
 
 	private static @Nullable String fromPrimitive(String argType) {
@@ -3600,13 +3612,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
 			final Name name = annotationType.getQualifiedName();
 			if ( name.contentEquals( Constants.ID )
-				 || name.contentEquals( Constants.NOT_NULL )
-				 || name.contentEquals( Constants.NONNULL ) ) {
+				|| name.contentEquals( Constants.NOT_NULL )
+				|| name.contentEquals( Constants.NONNULL ) ) {
 				return false;
 			}
 			else if ( name.contentEquals( Constants.BASIC )
-					  || name.contentEquals( Constants.MANY_TO_ONE )
-					  || name.contentEquals( Constants.ONE_TO_ONE ) ) {
+					|| name.contentEquals( Constants.MANY_TO_ONE )
+					|| name.contentEquals( Constants.ONE_TO_ONE ) ) {
 				final AnnotationValue optional = getAnnotationValue( mirror, "optional" );
 				if ( optional != null && optional.getValue().equals( FALSE ) ) {
 					return false;
@@ -3694,21 +3706,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals( sessionType )
-			   || MUTINY_STATELESS_SESSION.equals( sessionType )
-			   || UNI_MUTINY_SESSION.equals( sessionType )
-			   || UNI_MUTINY_STATELESS_SESSION.equals( sessionType );
+			|| MUTINY_STATELESS_SESSION.equals( sessionType )
+			|| UNI_MUTINY_SESSION.equals( sessionType )
+			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType );
 	}
 
 	private static boolean usingStatelessSession(String sessionType) {
 		return HIB_STATELESS_SESSION.equals( sessionType )
-			   || MUTINY_STATELESS_SESSION.equals( sessionType )
-			   || UNI_MUTINY_STATELESS_SESSION.equals( sessionType )
-			   || SPRING_STATELESS_SESSION_PROVIDER.equals( sessionType );
+			|| MUTINY_STATELESS_SESSION.equals( sessionType )
+			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType )
+			|| SPRING_STATELESS_SESSION_PROVIDER.equals( sessionType );
 	}
 
 	private static boolean usingReactiveSessionAccess(String sessionType) {
 		return UNI_MUTINY_SESSION.equals( sessionType )
-			   || UNI_MUTINY_STATELESS_SESSION.equals( sessionType );
+			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType );
 	}
 
 	private boolean isLocal(Element methodOrParam) {
@@ -3749,7 +3761,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static String messageWithLocation(Element element, String message) {
 		return element.getKind() == ElementKind.PARAMETER
 				? message + " for parameter '" + element.getSimpleName()
-				  + "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
+				+ "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
 				: message + " for inherited member '" + element.getSimpleName() + "'";
 	}
 

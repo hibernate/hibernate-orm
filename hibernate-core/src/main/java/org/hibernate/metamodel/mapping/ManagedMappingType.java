@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -144,6 +145,9 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 					}
 				}
 			}
+		}
+		if ( onlyApplyForLoadByKey && this instanceof SingleTableEntityPersister persister ) {
+			return persister.getFactory().hasLoadByKeyFilter();
 		}
 		return false;
 	}

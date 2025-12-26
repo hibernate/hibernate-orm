@@ -199,6 +199,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public boolean hasLoadByKeyFilter() {
+		return delegate.hasLoadByKeyFilter();
+	}
+
+	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return delegate.containsFetchProfileDefinition( name );
 	}

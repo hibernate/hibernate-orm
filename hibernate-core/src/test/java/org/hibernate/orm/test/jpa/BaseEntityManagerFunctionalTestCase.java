@@ -25,6 +25,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
@@ -196,8 +197,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 	}
 
-	protected Map<Object,Object> buildSettings() {
-		final Map<Object,Object> settings = getConfig();
+	protected Map<String,Object> buildSettings() {
+		final Map<String,Object> settings = getConfig();
 		addMappings( settings );
 		if ( createSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -207,7 +208,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return settings;
 	}
 
-	protected void addMappings(Map<Object,Object> settings) {
+	protected void addMappings(Map<String,Object> settings) {
 		final String[] mappings = getMappings();
 		if ( mappings != null ) {
 			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
@@ -220,8 +221,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return NO_MAPPINGS;
 	}
 
-	protected Map<Object,Object> getConfig() {
-		final Map<Object, Object> config = Environment.getProperties();
+	protected Map<String,Object> getConfig() {
+		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 
 		config.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
 
@@ -246,7 +247,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return config;
 	}
 
-	protected void addConfigOptions(Map<Object,Object> options) {
+	protected void addConfigOptions(Map<String,Object> options) {
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];

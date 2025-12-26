@@ -17,9 +17,10 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -42,15 +43,15 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
 
-	protected Map getConfig() {
-		final Map<Object, Object> config = Environment.getProperties();
+	protected Map<String, Object> getConfig() {
+		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 		ServiceRegistryUtil.applySettings( config );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		ArrayList<Class> classes = new ArrayList<Class>();
+		ArrayList<Class<?>> classes = new ArrayList<>();
 
-		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );
+		classes.addAll( Arrays.asList( new Class<?>[] {TestEntity.class} ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
@@ -63,7 +64,7 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 		dropSchema.deleteOnExit();
 
 		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
 				getConfig()
 		);
 	}

@@ -96,7 +96,7 @@ import jakarta.persistence.PersistenceException;
 public class PersisterClassProviderTest {
 	@Test
 	public void testPersisterClassProvider() {
-		Map settings = SettingsGenerator.generateSettings(
+		Map<String,Object> settings = SettingsGenerator.generateSettings(
 				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
 		);

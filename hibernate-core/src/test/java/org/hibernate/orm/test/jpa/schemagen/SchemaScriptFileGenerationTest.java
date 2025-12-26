@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -105,15 +106,15 @@ public class SchemaScriptFileGenerationTest {
 		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 
-	private Map getConfig() {
-		final Map<Object, Object> config = Environment.getProperties();
+	private Map<String, Object> getConfig() {
+		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 		ServiceRegistryUtil.applySettings( config );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		ArrayList<Class> classes = new ArrayList<Class>();
+		ArrayList<Class<?>> classes = new ArrayList<>();
 
-		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );
+		classes.addAll( Arrays.asList( new Class<?>[] {TestEntity.class} ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}

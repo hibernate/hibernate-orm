@@ -95,7 +95,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 	private void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
 
-		final Properties properties = buildProperties();
+		final Map<String, Object> properties = PropertiesHelper.map( buildProperties() );
 		properties.put( AvailableSettings.LOADED_CLASSES, List.of( getAnnotatedClasses() ) );
 		ServiceRegistryUtil.applySettings( properties );
 

@@ -66,7 +66,7 @@ public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 
 		EntityManagerFactory entityManagerFactory = null;
 		try {
-			Map settings = buildSettings();
+			Map<String, Object> settings = buildSettings();
 			settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Collections.singletonList(

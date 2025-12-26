@@ -62,8 +62,8 @@ public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 	}
 
 	@Override
-	public Map<Class, String> getCachedClasses() {
-		Map<Class, String> result = new HashMap<>();
+	public Map<Class<?>, String> getCachedClasses() {
+		Map<Class<?>, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}

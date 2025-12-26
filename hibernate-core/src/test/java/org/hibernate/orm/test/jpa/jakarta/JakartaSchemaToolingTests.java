@@ -13,6 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.tool.schema.Action;
@@ -171,7 +172,7 @@ public class JakartaSchemaToolingTests {
 
 		final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
 				puDescriptor,
-				settings,
+				PropertiesHelper.map( settings ),
 				(mergedSettings) -> mergedSettings.getConfigurationValues().clear()
 		);
 

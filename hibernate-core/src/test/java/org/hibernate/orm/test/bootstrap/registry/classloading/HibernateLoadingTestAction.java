@@ -14,9 +14,9 @@ import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
 
 /**
  * A Runnable which initializes an EntityManagerFactory;
@@ -30,9 +30,9 @@ public class HibernateLoadingTestAction extends NotLeakingTestAction implements 
 	@Override
 	public final void run() {
 		super.run(); //for basic sanity self-check
-		final Map config = new HashMap();
+		final Map<String,Object> config = new HashMap<>();
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder(
-				new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
 					@Override
 					public boolean isExcludeUnlistedClasses() {
 						return true;

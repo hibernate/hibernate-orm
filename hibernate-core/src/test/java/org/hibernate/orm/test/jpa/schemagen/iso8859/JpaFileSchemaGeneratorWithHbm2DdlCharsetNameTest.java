@@ -26,8 +26,8 @@ public class JpaFileSchemaGeneratorWithHbm2DdlCharsetNameTest extends JpaSchemaG
 	}
 
 	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
+	protected Map<String,Object> buildSettings() {
+		Map<String,Object> settings = super.buildSettings();
 		settings.put( AvailableSettings.HBM2DDL_CHARSET_NAME, "ISO-8859-1" );
 		return settings;
 	}

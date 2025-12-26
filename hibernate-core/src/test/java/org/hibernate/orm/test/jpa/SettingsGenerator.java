@@ -13,8 +13,8 @@ import org.junit.Assert;
  * @author Steve Ebersole
  */
 public class SettingsGenerator {
-	public static Map generateSettings(Object... keysAndValues) {
-		final Map settings = ServiceRegistryUtil.createBaseSettings();
+	public static Map<String,Object> generateSettings(Object... keysAndValues) {
+		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
 
 		if ( keysAndValues != null ) {
 			if ( keysAndValues.length %2 != 0 ) {
@@ -23,7 +23,7 @@ public class SettingsGenerator {
 
 
 			for ( int i = 0; i < keysAndValues.length; ) {
-				settings.put( keysAndValues[i], keysAndValues[i+1] );
+				settings.put( keysAndValues[i].toString(), keysAndValues[i+1] );
 				i+=2;
 			}
 		}

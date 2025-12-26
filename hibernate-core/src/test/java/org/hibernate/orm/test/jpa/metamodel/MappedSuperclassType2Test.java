@@ -45,17 +45,13 @@ public class MappedSuperclassType2Test {
 			}
 		};
 
-		final Map settings = ServiceRegistryUtil.createBaseSettings();
+		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
-		try {
+		try ( EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build() ) {
 			ManagedType<SomeMappedSuperclass> type = emf.getMetamodel().managedType( SomeMappedSuperclass.class );
 			// the issue was in regards to throwing an exception, but also check for nullness
 			assertNotNull( type );
-		}
-		finally {
-			emf.close();
 		}
 	}
 }

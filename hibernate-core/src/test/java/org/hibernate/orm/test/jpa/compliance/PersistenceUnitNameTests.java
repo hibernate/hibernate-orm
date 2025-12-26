@@ -62,11 +62,11 @@ public class PersistenceUnitNameTests {
 	}
 
 	@SuppressWarnings("deprecation")
-	private static Map<?,?> buildSettings(ServiceRegistryScope scope) {
-		final ConfigurationService service = scope.getRegistry().getService( ConfigurationService.class );
+	private static Map<String,Object> buildSettings(ServiceRegistryScope scope) {
+		final var service = scope.getRegistry().getService( ConfigurationService.class );
 		assert service != null;
 		final Map<String, Object> allSettings = service.getSettings();
-		final HashMap<Object, Object> settings = new HashMap<>();
+		final Map<String, Object> settings = new HashMap<>();
 		settings.put( JdbcSettings.DRIVER, allSettings.get( JdbcSettings.DRIVER ) );
 		settings.put( JdbcSettings.USER, allSettings.get( JdbcSettings.USER ) );
 		settings.put( JdbcSettings.PASS, allSettings.get( JdbcSettings.PASS ) );

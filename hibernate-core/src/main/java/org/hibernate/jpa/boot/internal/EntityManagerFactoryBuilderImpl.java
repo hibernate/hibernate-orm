@@ -210,7 +210,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		try {
 			// merge configuration sources and build the "standard" service registry
 			final var registryBuilder = getStandardServiceRegistryBuilder( bootstrapServiceRegistry );
-			final MergedSettings mergedSettings =
+			final var mergedSettings =
 					mergeSettings( persistenceUnit, integrationSettings, registryBuilder, mergedSettingsBaseline );
 			ignoreFlushBeforeCompletion( mergedSettings );
 			// keep the merged config values for phase-2
@@ -627,13 +627,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static String getCfgXmlResourceName(Map<String, Object> integrationSettings, MergedSettings mergedSettings) {
 		final String cfgXmlResourceName = (String) mergedSettings.getConfigurationValues().remove( CFG_XML_FILE );
-		if ( isEmpty( cfgXmlResourceName ) ) {
-			// see if integration settings named a Hibernate config file....
-			return (String) integrationSettings.get( CFG_XML_FILE );
-		}
-		else {
-			return cfgXmlResourceName;
-		}
+		return isEmpty( cfgXmlResourceName )
+				// see if integration settings named a Hibernate config file
+				? (String) integrationSettings.get( CFG_XML_FILE )
+				: cfgXmlResourceName;
 	}
 
 	/**

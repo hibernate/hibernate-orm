@@ -267,7 +267,7 @@ public class InterceptorTest {
 	}
 
 
-	protected Map basicSettings() {
+	protected Map<String, Object> basicSettings() {
 		return SettingsGenerator.generateSettings(
 				AvailableSettings.HBM2DDL_AUTO, "create-drop",
 				AvailableSettings.DIALECT, DialectContext.getDialect().getClass().getName(),
@@ -275,7 +275,7 @@ public class InterceptorTest {
 		);
 	}
 
-	private void buildEntityManagerFactory(Map settings) {
+	private void buildEntityManagerFactory(Map<String,Object> settings) {
 		entityManagerFactory = Bootstrap
 			.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings )
 			.build();

@@ -47,7 +47,7 @@ class UniqueConstraintColumnOrderTest {
 			}
 		};
 
-		Map<Object, Object> settings = Map.of( AvailableSettings.HBM2DDL_AUTO, "create" );
+		Map<String, Object> settings = Map.of( AvailableSettings.HBM2DDL_AUTO, "create" );
 		EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder( puDescriptor, settings );
 
 		Path ddlScript = tempDir.resolve( "ddl.sql" );

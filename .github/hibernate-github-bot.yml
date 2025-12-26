@@ -81,3 +81,24 @@ branches:
   ignore:
     - user: dependabot[bot]
       titlePattern: ".*"
+pullRequestTasks:
+  # Make the bot add list of tasks to the pull requests and enable the check that makes sure all tasks are completed:
+  enabled: true
+  tasks:
+    # List of tasks for commits without a Jira ID
+    # or for those with Jira ID but that don't have a specific configuration for a corresponding issue type:
+    default:
+      - Add test (if relevant)
+      - Add migration guide entry (if relevant)
+    # Tasks specific to the bug issue type:
+    bug:
+      - Add test reproducing the bug
+      - Add migration guide entry (if relevant)
+    # Tasks specific to the improvement issue type:
+    improvement:
+      - Add tests for feature/improvement
+      - Add javadoc to API (if any)
+      - Document feature/improvement in user guide
+      - Document feature/improvement in introduction guide (if the feature potentially has a wide range of users)
+      - Add links to the new documentation from relevant pre-existing sections of the documentation (if relevant)
+      - Add migration guide entry (if relevant)

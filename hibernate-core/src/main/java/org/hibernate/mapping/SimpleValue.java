@@ -1128,6 +1128,11 @@ public abstract class SimpleValue implements KeyValue {
 			return SimpleValue.this.getType();
 		}
 
+		@Override
+		public MemberDetails getMemberDetails() {
+			return SimpleValue.this.getMemberDetails();
+		}
+
 		// we could add this if it helps integrate old infrastructure
 //		@Override
 //		public Properties getParameters() {

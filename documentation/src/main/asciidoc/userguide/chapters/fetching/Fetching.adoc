@@ -285,7 +285,7 @@ Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsin
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
 list of attribute names, optionally including any subgraph specifications.
 The starting point for such parsing operations is either `org.hibernate.graph.GraphParser`
-or `SessionFactory#parseEntityGraph`
+or `SessionFactory#parseEntityGraph`.
 
 [NOTE]
 ====
@@ -294,6 +294,21 @@ syntax described here is specific to Hibernate. We do hope to eventually make th
 the Jakarta Persistence specification proper.
 ====
 
+===== Graph parser mode configuration
+
+Since Hibernate 7.3, a new configuration setting controls which syntax the `LegacyGraphParser` uses:
+
+`hibernate.graph_parser_mode`::
+Determines which parsing syntax is active.
++
+* `legacy` — The historical syntax used before Hibernate 7.3.
+* `modern` — Enables the new syntax that supports root-subtype subgraphs and improved readability.
+
+.Default value
+[source,properties]
+----
+hibernate.graph_parser_mode = legacy
+----
 
 .Parsing a simple graph
 ====
@@ -318,9 +333,13 @@ include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-d
 ----
 ====
 
+===== Subtype-specific subgraphs (examples showing both supported forms)
+
 Parsing can also handle subtype specific subgraphs.  For example, given an entity hierarchy of
 `LegalEntity` <- (`Corporation` | `Person` | `NonProfit`) and an attribute named `responsibleParty` whose
 type is the `LegalEntity` base type we might have:
+
+* **Legacy form (hibernate.graph_parser_mode = legacy)**
 
 ====
 [source, java, indent=0]
@@ -329,12 +348,34 @@ responsibleParty(Corporation: ceo)
 ----
 ====
 
+* **Modern form (hibernate.graph_parser_mode = modern)**
+
+====
+[source, java, indent=0]
+----
+responsibleParty:Corporation(ceo)
+----
+====
+
+Both forms produce the same runtime EntityGraph structure.
+
 We can even duplicate the attribute names to apply different subtype subgraphs:
+
+* **Legacy form (hibernate.graph_parser_mode = legacy)**
 
 ====
 [source, java, indent=0]
 ----
 responsibleParty(taxIdNumber), responsibleParty(Corporation: ceo), responsibleParty(NonProfit: sector)
+----
+====
+
+* **Modern form (hibernate.graph_parser_mode = modern)**
+
+====
+[source, java, indent=0]
+----
+responsibleParty(taxIdNumber), responsibleParty:Corporation(ceo), responsibleParty:NonProfit(sector)
 ----
 ====
 
@@ -352,6 +393,20 @@ invoiceGraph.addAttributeNode( "responsibleParty" );
 invoiceGraph.addSubgraph( "responsibleParty" ).addAttributeNode( "taxIdNumber" );
 invoiceGraph.addSubgraph( "responsibleParty", Corporation.class ).addAttributeNode( "ceo" );
 invoiceGraph.addSubgraph( "responsibleParty", NonProfit.class ).addAttributeNode( "sector" );
+----
+====
+
+===== Root-subtype subgraphs (modern-only feature)
+
+The modern parser mode also supports defining subgraphs that originate at a subtype of the **root entity**.
+This feature is **only available** when `hibernate.graph_parser_mode=modern`.
+Given an entity hierarchy of `LegalEntity` <- (`Corporation` | `Person` | `NonProfit`) with an attribute `ceo` that exists only on `Corporation`
+and an attribute `sector` that exists only on `NonProfit`, you can define such subgraphs directly in a `LegalEntity` graph definition:
+
+====
+[source,java,indent=0]
+----
+:Corporation(ceo), :NonProfit(sector)
 ----
 ====
 
@@ -391,6 +446,29 @@ class Book {
 ----
 ====
 
+Since Hibernate 7.3 a `root` attribute is available on the Hibernate-specific `@NamedEntityGraph` annotation
+to explicitly indicate the entity type that is the root of the graph.
+
+When `@NamedEntityGraph` is placed on a package, the `root` attribute **must** be specified.
+If the annotation is placed on a package and the `root` is omitted:
+* In `legacy` parser mode a deprecation warning will be emitted.
+* In `modern` parser mode the omission is **not allowed** and results in an error.
+
+.Package-level @NamedEntityGraph example
+====
+[source, java, indent=0]
+----
+@org.hibernate.annotations.NamedEntityGraph(
+    name = "Book.graph",
+    root = Book.class,
+    graph = "title,isbn,author(name,phoneNumber)"
+)
+package com.example.model;
+----
+====
+
+This annotation works in conjunction with the `LegacyGraphParser` and respects the syntax
+defined by `hibernate.graph_parser_mode`.
 
 [[fetching-strategies-dynamic-fetching-profile]]
 === Dynamic fetching via Hibernate profiles

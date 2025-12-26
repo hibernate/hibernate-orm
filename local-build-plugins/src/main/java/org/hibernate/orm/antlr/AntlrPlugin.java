@@ -27,6 +27,7 @@ public class AntlrPlugin implements Plugin<Project> {
 
 	public static final String HQL_PKG = "org.hibernate.grammars.hql";
 	public static final String SQL_PKG = "org.hibernate.grammars.importsql";
+	public static final String LEGACY_GRAPH_PKG = "org.hibernate.grammars.graph.legacy";
 	public static final String GRAPH_PKG = "org.hibernate.grammars.graph";
 	public static final String ORDER_PKG = "org.hibernate.grammars.ordering";
 
@@ -68,6 +69,15 @@ public class AntlrPlugin implements Plugin<Project> {
 					grammarDescriptor.getPackageName().set( HQL_PKG );
 					grammarDescriptor.getLexerFileName().set( "HqlLexer.g4" );
 					grammarDescriptor.getParserFileName().set( "HqlParser.g4" );
+				}
+		);
+
+		antlrSpec.getGrammarDescriptors().create(
+				"deprecated-graph",
+				(grammarDescriptor) -> {
+					grammarDescriptor.getPackageName().set( LEGACY_GRAPH_PKG );
+					grammarDescriptor.getLexerFileName().set( "LegacyGraphLanguageLexer.g4" );
+					grammarDescriptor.getParserFileName().set( "LegacyGraphLanguageParser.g4" );
 				}
 		);
 

@@ -2,18 +2,19 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.entitygraph.named.parsed.pkg;
+package org.hibernate.orm.test.entitygraph.named.parsed.pckgwithgraphnameduplication;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Basic;
+
 import org.hibernate.annotations.NamedEntityGraph;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-@NamedEntityGraph( name = "duplicated-name", graph = "name")
+@NamedEntityGraph(name = "duplicated-name", graph = "name")
 public class Duplicator {
 	@Id
 	private Integer id;

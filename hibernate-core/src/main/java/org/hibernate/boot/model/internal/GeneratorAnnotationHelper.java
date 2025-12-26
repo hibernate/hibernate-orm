@@ -282,7 +282,7 @@ public class GeneratorAnnotationHelper {
 			BiConsumer<A,Properties> configExtractor,
 			GeneratorCreationContext creationContext) {
 		if ( generator instanceof AnnotationBasedGenerator<?> annotationBasedGenerator ) {
-			initializeGenerator( annotationBasedGenerator, annotation, idMember, creationContext );
+			initializeGenerator( annotationBasedGenerator, annotation, creationContext );
 		}
 		if ( generator instanceof Configurable configurable ) {
 			configureGenerator( annotation, configBaseline, configExtractor, creationContext, configurable );
@@ -323,10 +323,8 @@ public class GeneratorAnnotationHelper {
 	public static <A extends Annotation> void initializeGenerator(
 			AnnotationBasedGenerator<A> generator,
 			Annotation annotation,
-			MemberDetails idMember,
 			GeneratorCreationContext creationContext) {
-		generator.initialize( castAnnotationType( annotation, generator),
-				idMember.toJavaMember(), creationContext );
+		generator.initialize( castAnnotationType( annotation, generator), creationContext );
 	}
 
 	private static <A extends Annotation> A castAnnotationType(

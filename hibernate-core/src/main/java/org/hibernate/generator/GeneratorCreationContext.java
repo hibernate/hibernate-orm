@@ -13,6 +13,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -84,4 +85,12 @@ public interface GeneratorCreationContext {
 		final var database = getDatabase();
 		return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
 	}
+
+	/**
+	 * Access to the {@link MemberDetails}.
+	 */
+	default MemberDetails getMemberDetails() {
+		return null;
+	}
+
 }

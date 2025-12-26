@@ -44,7 +44,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	protected Comparator<?> getVersionComparator() {
+	protected Comparator<Object> getVersionComparator() {
 		// natural id has no comparator
 		return null;
 	}

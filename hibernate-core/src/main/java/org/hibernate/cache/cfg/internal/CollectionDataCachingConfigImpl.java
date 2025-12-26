@@ -12,6 +12,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.type.BasicType;
 
+import static org.hibernate.cache.cfg.internal.ComparatorUtil.versionComparator;
+
 /**
  * @author Steve Ebersole
  */
@@ -40,10 +42,11 @@ public class CollectionDataCachingConfigImpl
 	}
 
 	@Override
-	public Comparator<?> getOwnerVersionComparator() {
+	public Comparator<Object> getOwnerVersionComparator() {
 		if ( isVersioned() ) {
-			final var type = (BasicType<?>) collectionDescriptor.getOwner().getVersion().getType();
-			return type.getJavaTypeDescriptor().getComparator();
+			final var type = (BasicType<?>)
+					collectionDescriptor.getOwner().getVersion().getType();
+			return versionComparator( type );
 		}
 		else {
 			return null;

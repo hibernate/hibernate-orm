@@ -6,11 +6,11 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.SqlAstTranslatorWithOnDuplicateKeyUpdate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ import java.util.List;
  * @author Christian Beikov
  * @author Cong Wang
  */
-public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final TiDBDialect dialect;
 
@@ -339,5 +340,16 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
+	@Override
+	protected void renderNewRowAlias() {
+	}
+
+	@Override
+	protected void renderUpdateValue(ColumnValueBinding columnValueBinding) {
+		appendSql( "values(" );
+		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+		appendSql( ")" );
 	}
 }

@@ -424,7 +424,7 @@ public class GeneratorBinder {
 				memberDetails,
 				annotationType
 		);
-		callInitialize( annotation, memberDetails, creationContext, generator );
+		callInitialize( annotation, creationContext, generator );
 		callConfigure( creationContext, generator, emptyMap(), value );
 		return generator;
 	}
@@ -614,11 +614,10 @@ public class GeneratorBinder {
 
 	private static <A extends Annotation> void callInitialize(
 			A annotation,
-			MemberDetails memberDetails,
 			GeneratorCreationContext creationContext,
 			Generator generator) {
 		if ( generator instanceof AnnotationBasedGenerator<?> annotationBasedGenerator ) {
-			initializeGenerator( annotationBasedGenerator, annotation, memberDetails, creationContext );
+			initializeGenerator( annotationBasedGenerator, annotation, creationContext );
 		}
 	}
 

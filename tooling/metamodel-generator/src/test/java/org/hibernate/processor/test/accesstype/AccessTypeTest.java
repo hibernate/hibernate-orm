@@ -42,7 +42,9 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 		Product.class,
 		Room.class,
 		Shop.class,
-		User.class
+		User.class,
+		Client.class,
+		SpecialClient.class
 })
 @WithMappingFiles("orm.xml")
 class AccessTypeTest {
@@ -114,5 +116,13 @@ class AccessTypeTest {
 	void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
+	}
+
+	@Test
+	void testAccessTypeOverrideOnIdProperty() {
+		assertPresenceOfFieldInMetamodelFor( Client.class, "id", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( Client.class, "id", Integer.class, "access type overriding" );
+		assertPresenceOfFieldInMetamodelFor( SpecialClient.class, "specialName", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( SpecialClient.class, "specialName", String.class, "access type overriding" );
 	}
 }

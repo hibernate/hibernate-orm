@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -24,6 +25,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -248,6 +250,27 @@ public class ToOneAttributeMapping
 				declaringType,
 				propertyAccess
 		);
+
+		if ( entityMappingType.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
+			// validate the type.
+			var declaredType = propertyAccess.getGetter().getReturnTypeClass();
+			if ( !Object.class.equals( declaredType ) ) {
+				var targetType = entityMappingType.getMappedJavaType().getJavaTypeClass();
+				if ( !declaredType.isAssignableFrom( targetType ) ) {
+					throw new MappingException(
+							String.format(
+									Locale.ROOT,
+									"To-one mapping [%s.%s] was mapped with targetEntity=`%s`, but the attribute is declared as `%s`",
+									declaringType.getNavigableRole().getFullPath(),
+									name,
+									targetType.getName(),
+									declaredType.getName()
+							)
+					);
+				}
+			}
+		}
+
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		isNullable = bootValue.isNullable();
 		isLazy = navigableRole.getParent().getParent() == null

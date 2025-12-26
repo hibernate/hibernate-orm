@@ -1,0 +1,31 @@
+[[hibernate-assistant]]
+== Hibernate Assistant
+:assistant-project-dir: {root-project-dir}/tooling/hibernate-assistant
+
+[WARNING]
+====
+This entire module is currently incubating and may experience breaking changes at any time, including in a micro (patch) release.
+====
+
+[[assistant-overview]]
+=== Overview
+
+The Hibernate Assistant module serves as a bridge between your existing Hibernate ORM application and generative AI services. It provides the foundational components needed to expose your domain model and database operations to Large Language Models (LLMs), enabling natural language interactions with your data layer. Rather than prescribing a specific AI provider or implementation, this module focuses on providing flexible, reusable building blocks that can be integrated with any LLM service or framework.
+
+This module contains:
+
+1. The `HibernateAssistant` interface: to provide a simple, provider-agnostic, natural-language focused API to Hibernate ORM's persistence capabilities.
+2. Serialization utilities: to ease the use of Hibernate ORM in the context of generative AI, for example when implementing the above.
+
+No implementation is included, but the above provides the building blocks for integration with generative AI services/APIs.
+
+[[assistant-serialization]]
+=== Serialization Components
+
+To facilitate communication between Hibernate and LLM providers, the module includes two key Service Provider Interfaces (SPIs):
+
+`MetamodelSerializer`:: Generates a structured textual representation of your Hibernate mapping model, including entity classes, relationships, properties, and constraints. This allows the LLM to understand your domain model's structure and semantics.
+
+`ResultsSerializer`:: Converts query results and data into a structured textual format suitable for LLM consumption and interpretation. This enables the AI to reason about actual data from your database.
+
+Default JSON-based implementations of both serializers are provided, offering a ready-to-use foundation for most integration scenarios.

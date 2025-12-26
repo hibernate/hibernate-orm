@@ -153,7 +153,7 @@ public class SQLServer2005DialectTestCase {
 		String expected = "select top(?) col0_.CONTENTID as CONTENT1_12_ " +
 						"where col0_.CONTENTTYPE='PAGE' and (col0_.CONTENTID in " +
 						"(select distinct col2_.PREVVER from CONTENT col2_ where (col2_.PREVVER is not null)))";
-		assertThat( withLimit( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) ) ).isEqualTo( expected );
+		assertThat( withLimit( selectDistinctSubselectSQL, toRowSelection( null, 5 ) ) ).isEqualTo( expected );
 	}
 
 	@Test
@@ -227,14 +227,14 @@ public class SQLServer2005DialectTestCase {
 
 		String expected = "select top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 						"from Product2 product2x0_ order by product2x0_.id";
-		assertThat( withLimit( query, toRowSelection( 0, 1 ) )).isEqualTo( expected );
+		assertThat( withLimit( query, toRowSelection( null, 1 ) )).isEqualTo( expected );
 
 		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 									"from Product2 product2x0_ order by product2x0_.id";
 
 		expected = "select distinct top(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
 				"from Product2 product2x0_ order by product2x0_.id";
-		assertThat( withLimit( distinctQuery, toRowSelection( 0, 5 ) )).isEqualTo( expected );
+		assertThat( withLimit( distinctQuery, toRowSelection( null, 5 ) )).isEqualTo( expected );
 	}
 
 	@Test
@@ -358,13 +358,13 @@ public class SQLServer2005DialectTestCase {
 		final String query = "select t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC";
 
 		String expected = "select top(?) t1.c1 as col_0_0, (select case when count(t2.c1)>0 then 'ADDED' else 'UNMODIFIED' end from table2 t2 WHERE (t2.c1 in (?))) as col_1_0 from table1 t1 WHERE 1=1 ORDER BY t1.c1 ASC";
-		assertThat( withLimit( query, toRowSelection( 0, 5 ) ) ).isEqualTo( expected );
+		assertThat( withLimit( query, toRowSelection( null, 5 ) ) ).isEqualTo( expected );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-8916")
 	public void testGetLimitStringUsingCTEQueryNoOffset() {
-		Limit selection = toRowSelection( 0, 5 );
+		Limit selection = toRowSelection( null, 5 );
 
 		// test top-based CTE with single CTE query_ definition with no odd formatting
 		final String query1 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT c1, c2 FROM a";
@@ -574,7 +574,7 @@ public class SQLServer2005DialectTestCase {
 		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

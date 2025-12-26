@@ -41,7 +41,7 @@ public class SQLServer2012DialectTestCase {
 	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnly() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
-		assertThat( withLimit( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT ) )
+		assertThat( withLimit( input, toRowSelection( null, 10 ) ).toLowerCase( Locale.ROOT ) )
 				.isEqualTo( input + " offset 0 rows fetch first ? rows only" );
 	}
 
@@ -57,7 +57,7 @@ public class SQLServer2012DialectTestCase {
 	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnlyNoOrderBy() {
 		final String input = "select f1 from table";
-		assertThat( withLimit( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT ) )
+		assertThat( withLimit( input, toRowSelection( null, 10 ) ).toLowerCase( Locale.ROOT ) )
 				.isEqualTo( "select f1 from table order by @@version offset 0 rows fetch first ? rows only" );
 	}
 
@@ -73,7 +73,7 @@ public class SQLServer2012DialectTestCase {
 		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
-	private Limit toRowSelection(int firstRow, int maxRows) {
+	private Limit toRowSelection(Integer firstRow, Integer maxRows) {
 		final Limit selection = new Limit();
 		selection.setFirstRow( firstRow );
 		selection.setMaxRows( maxRows );

@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
@@ -75,12 +76,17 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if ( entryId != currentId
 						&& !entry.getStatus().isDeletedOrGone()
 						&& !persister.getIdentifierType().isEqual( entryId, currentId, session.getFactory() ) ) {
-				throw new HibernateException( "Identifier of an instance of '" + persister.getEntityName()
-											+ "' was altered from " + entryId + " to " + currentId );
+				throwIdentifiedAlteredException( persister, entryId, currentId );
 			}
 		}
 		// else this is a situation where the entity id is assigned by a post-insert
 		// generator and was saved outside the transaction, forcing it to be delayed
+	}
+
+	// Used by Hibernate Reactive
+	protected void throwIdentifiedAlteredException(EntityPersister persister, Object entryId, Object currentId) {
+		throw new HibernateException( "Identifier of an instance of '" + persister.getEntityName()
+									+ "' was altered from " + entryId + " to " + currentId );
 	}
 
 	private void checkNaturalId(
@@ -249,6 +255,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		// we'll use scheduled updates for that.
 		new Nullability( session, NullabilityCheckType.UPDATE ).checkNullability( values, persister );
 
+		addEntityUpdateActionToActionQueue( event, session, entry, values, dirtyProperties, status, persister, entity, nextVersion );
+
+		return intercepted;
+	}
+
+	// Used by Hibernate Reactive
+	protected void addEntityUpdateActionToActionQueue(FlushEntityEvent event, EventSource session, EntityEntry entry, Object[] values, int[] dirtyProperties, Status status, EntityPersister persister, Object entity, Object nextVersion) {
 		// schedule the update
 		// note that we intentionally do _not_ pass in currentPersistentState!
 		session.getActionQueue().addAction(
@@ -268,8 +281,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						session
 				)
 		);
-
-		return intercepted;
 	}
 
 	private static int[] getDirtyProperties(FlushEntityEvent event, boolean intercepted) {

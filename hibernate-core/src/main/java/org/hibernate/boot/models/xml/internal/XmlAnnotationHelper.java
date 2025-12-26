@@ -135,6 +135,7 @@ import static org.hibernate.boot.models.JpaAnnotations.ATTRIBUTE_OVERRIDES;
 import static org.hibernate.boot.models.JpaAnnotations.CHECK_CONSTRAINT;
 import static org.hibernate.boot.models.JpaAnnotations.COLUMN;
 import static org.hibernate.boot.models.JpaAnnotations.CONVERT;
+import static org.hibernate.boot.models.JpaAnnotations.CONVERTS;
 import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_DEFAULT_LISTENERS;
 import static org.hibernate.boot.models.JpaAnnotations.EXCLUDE_SUPERCLASS_LISTENERS;
 import static org.hibernate.boot.models.JpaAnnotations.INDEX;
@@ -806,6 +807,28 @@ public class XmlAnnotationHelper {
 
 	public static void applyConverts(
 			List<JaxbConvertImpl> jaxbConverts,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext){
+		if ( isEmpty( jaxbConverts ) ) {
+			return;
+		}
+
+		final ConvertsJpaAnnotation convertsUsage = (ConvertsJpaAnnotation) target.replaceAnnotationUsage(
+				CONVERT,
+				CONVERTS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		final Convert[] convertUsages = new Convert[jaxbConverts.size()];
+		convertsUsage.value( convertUsages );
+
+		for ( int i = 0; i < jaxbConverts.size(); i++ ) {
+			convertUsages[i] = transformConvert( jaxbConverts.get( i ), null, xmlDocumentContext );
+		}
+	}
+
+	public static void applyConverts(
+			List<JaxbConvertImpl> jaxbConverts,
 			String namePrefix,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
@@ -815,7 +838,7 @@ public class XmlAnnotationHelper {
 
 		final ConvertsJpaAnnotation convertsUsage = (ConvertsJpaAnnotation) memberDetails.replaceAnnotationUsage(
 				CONVERT,
-				JpaAnnotations.CONVERTS,
+				CONVERTS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		final Convert[] convertUsages = new Convert[jaxbConverts.size()];

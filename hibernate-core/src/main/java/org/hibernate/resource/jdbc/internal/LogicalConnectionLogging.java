@@ -122,6 +122,10 @@ public interface LogicalConnectionLogging extends BasicLogger {
 	@Message(id = 10003020, value = "Closed logical connection")
 	void logicalConnectionClosed();
 
+	@LogMessage(level = WARN)
+	@Message(id = 10003021, value = "Could not release JDBC resources during logical connection close @%s")
+	void couldNotReleaseResourcesOnClose(int hashCode, @Cause Throwable e);
+
 	@LogMessage(level = DEBUG)
 	@Message(
 			id = 10003030,

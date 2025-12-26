@@ -21,7 +21,6 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
 
 import org.jboss.logging.Logger;
 
@@ -50,9 +49,10 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 
 	@Override
 	public void addCollection(CollectionMetadataContext context) {
+		final var referencingEntityName = context.getReferencingEntityName();
 		LOG.debugf(
 				"Adding audit mapping for property %s.%s: collection with a join table",
-				context.getReferencingEntityName(),
+				referencingEntityName,
 				context.getPropertyName()
 		);
 
@@ -93,6 +93,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 		// Getting the id-mapping data of the referencing entity (the entity that "owns" this collection).
 		final EntityConfiguration referencingEntityConfiguration = context.getReferencingEntityConfiguration();
 		final IdMappingData referencingIdMapping = referencingEntityConfiguration.getIdMappingData();
+		final var referencedEntityName = context.getReferencedEntityName();
 
 		// Only valid for an inverse relation; null otherwise.
 		String mappedBy;
@@ -104,25 +105,26 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 		if ( context.getCollection().isInverse() ) {
 			// If the relation is inverse, then referencedEntityName is not null.
 			mappedBy = CollectionMappedByResolver.resolveMappedBy(
+					referencingEntityName,
 					context.getCollection().getCollectionTable(),
-					getReferencedEntityMapping( context ),
-					context.getPropertyAuditingData()
+					context.getPropertyAuditingData(),
+					referencedEntityName,
+					getMetadataBuildingContext()
 			);
 			referencingPrefixRelated = mappedBy + "_";
-			referencedPrefix = StringTools.getLastComponent( context.getReferencedEntityName() );
+			referencedPrefix = StringTools.getLastComponent( referencedEntityName );
 		}
 		else {
-
 			mappedBy = null;
-			referencingPrefixRelated = StringTools.getLastComponent( context.getReferencingEntityName() ) + "_";
-			referencedPrefix = context.getReferencedEntityName() == null ? "element" : context.getPropertyName();
+			referencingPrefixRelated = StringTools.getLastComponent( referencingEntityName ) + "_";
+			referencedPrefix = referencedEntityName == null ? "element" : context.getPropertyName();
 		}
 
 		// Storing the id data of the referencing entity: original mapper, prefixed mapper and entity name.
 		final MiddleIdData referencingIdData = createMiddleIdData(
 				referencingIdMapping,
 				referencingPrefixRelated,
-				context.getReferencingEntityName()
+				referencingEntityName
 		);
 
 		// Creating a query generator builder, to which additional id data will be added, in case this collection
@@ -253,10 +255,6 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 
 	private boolean isRevisionTypeInId(CollectionMetadataContext context) {
 		return isEmbeddableElementType( context ) || isLobMapElementType( context );
-	}
-
-	private PersistentClass getReferencedEntityMapping(CollectionMetadataContext context) {
-		return getMetadataBuildingContext().getMetadataCollector().getEntityBinding( context.getReferencedEntityName() );
 	}
 
 	private void storeMiddleEntityRelationInformation(

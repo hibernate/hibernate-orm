@@ -4,25 +4,26 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.lang.invoke.MethodHandles;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-
 import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
+import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
+import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
+import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.ManyToOne;
-import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Helper class that provides a way to resolve the {@code mappedBy} attribute for collections.
@@ -37,18 +38,39 @@ public class CollectionMappedByResolver {
 			CollectionMappedByResolver.class.getName()
 	);
 
-	public static String resolveMappedBy(Collection collection, PropertyAuditingData propertyAuditingData) {
-		final PersistentClass referencedClass = getReferenceCollectionClass( collection );
+	public static String resolveMappedBy(
+			String entityName,
+			Collection collection,
+			PropertyAuditingData propertyAuditingData,
+			String referencedEntityName,
+			EnversMetadataBuildingContext buildingContext) {
+		final var referencedClass = getReferencedClass( referencedEntityName, buildingContext );
 		final ResolverContext resolverContext = new ResolverContext( collection, propertyAuditingData );
-		return getMappedBy( referencedClass, resolverContext );
+		return getMappedBy( entityName, referencedClass, resolverContext, buildingContext );
 	}
 
-	public static String resolveMappedBy(Table collectionTable, PersistentClass referencedClass, PropertyAuditingData propertyAuditingData) {
-		return getMappedBy( referencedClass, new ResolverContext( collectionTable, propertyAuditingData ) );
+	public static String resolveMappedBy(
+			String entityName,
+			Table collectionTable,
+			PropertyAuditingData propertyAuditingData,
+			String referencedEntityName,
+			EnversMetadataBuildingContext buildingContext) {
+		final var referencedClass = getReferencedClass( referencedEntityName, buildingContext );
+		return getMappedBy(
+				entityName,
+				referencedClass,
+				new ResolverContext( collectionTable, propertyAuditingData ),
+				buildingContext
+		);
 	}
 
-	public static boolean isMappedByKey(Collection collection, String mappedBy) {
-		final PersistentClass referencedClass = getReferenceCollectionClass( collection );
+	public static boolean isMappedByKey(
+			Collection collection,
+			String mappedBy,
+			String referencedEntityName,
+			EnversMetadataBuildingContext buildingContext) {
+		final PersistentClass referencedClass = getReferencedClass( referencedEntityName,
+				buildingContext ).getPersistentClass();
 		if ( referencedClass != null ) {
 			final String keyMappedBy = searchMappedByKey( referencedClass, collection );
 			return mappedBy.equals( keyMappedBy );
@@ -56,7 +78,11 @@ public class CollectionMappedByResolver {
 		return false;
 	}
 
-	private static String getMappedBy(PersistentClass referencedClass, ResolverContext resolverContext) {
+	private static String getMappedBy(
+			String entityName,
+			ClassAuditingData referencedClass,
+			ResolverContext resolverContext,
+			EnversMetadataBuildingContext buildingContext) {
 		// If there's an @AuditMappedBy specified, returning it directly.
 		final String auditMappedBy = resolverContext.propertyAuditingData.getAuditMappedBy();
 		if ( auditMappedBy != null ) {
@@ -70,13 +96,15 @@ public class CollectionMappedByResolver {
 			LOG.debugf(
 					"Going to search the mapped by attribute for %s in superclasses of entity: %s",
 					resolverContext.propertyAuditingData.getName(),
-					referencedClass.getClassName()
+					referencedClass.getEntityName()
 			);
 
-			PersistentClass tempClass = referencedClass;
-			while ( mappedBy == null && tempClass.getSuperclass() != null ) {
-				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = searchMappedBy( tempClass.getSuperclass(), resolverContext );
+			PersistentClass tempClass = referencedClass.getPersistentClass().getSuperclass();
+			while ( mappedBy == null && tempClass != null ) {
+				final var superclassName = tempClass.getEntityName();
+				LOG.debugf( "Searching in superclass: %s", superclassName );
+				final var auditingData = buildingContext.getClassesAuditingData().getClassAuditingData( superclassName );
+				mappedBy = searchMappedBy( auditingData, resolverContext );
 				tempClass = tempClass.getSuperclass();
 			}
 		}
@@ -84,10 +112,12 @@ public class CollectionMappedByResolver {
 		if ( mappedBy == null ) {
 			throw new EnversMappingException(
 					String.format(
-							Locale.ENGLISH,
-							"Unable to read mapped by attribute for %s in %s!",
+							Locale.ROOT,
+							"Could not resolve mapped by property for association [%s.%s] in the referenced entity [%s],"
+							+ " please ensure that the association is audited on both sides.",
+							entityName,
 							resolverContext.propertyAuditingData.getName(),
-							referencedClass.getClassName()
+							referencedClass.getEntityName()
 					)
 			);
 		}
@@ -95,49 +125,64 @@ public class CollectionMappedByResolver {
 		return mappedBy;
 	}
 
-	private static String searchMappedBy(PersistentClass persistentClass, ResolverContext resolverContext) {
+	private static String searchMappedBy(ClassAuditingData referencedClass, ResolverContext resolverContext) {
 		if ( resolverContext.getCollection() != null ) {
-			return searchMappedBy( persistentClass, resolverContext.getCollection() );
+			return searchMappedBy( referencedClass, resolverContext.getCollection() );
 		}
-		return searchMappedBy( persistentClass, resolverContext.getTable() );
+		return searchMappedBy( referencedClass, resolverContext.getTable() );
 	}
 
-	private static String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
-		final List<Property> assocClassProps = referencedClass.getProperties();
+	private static String searchMappedBy(ClassAuditingData referencedClass, Collection collectionValue) {
+		final var persistentClass = referencedClass.getPersistentClass();
+		final List<Property> assocClassProps = referencedClass.getPersistentClass().getProperties();
 		for ( Property property : assocClassProps ) {
 			final List<Selectable> assocClassSelectables = property.getValue().getSelectables();
 			final List<Selectable> collectionKeySelectables = collectionValue.getKey().getSelectables();
 			if ( Objects.equals( assocClassSelectables, collectionKeySelectables ) ) {
-				return property.getName();
+				final var propertyName = property.getName();
+				// We need to check if the property is audited as well
+				return referencedClass.contains( propertyName ) ? propertyName : null;
 			}
 		}
 		// HHH-7625
 		// Support ToOne relations with mappedBy that point to an @IdClass key property.
-		return searchMappedByKey( referencedClass, collectionValue );
+		return searchMappedByKey( persistentClass, collectionValue );
 	}
 
-	private static String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
-		return searchMappedBy( referencedClass.getProperties(), collectionTable );
+	private static String searchMappedBy(ClassAuditingData referencedClass, Table collectionTable) {
+		return searchMappedBy( referencedClass, referencedClass.getPersistentClass().getProperties(), collectionTable );
 	}
 
-	private static String searchMappedBy(List<Property> properties, Table collectionTable) {
+	private static String searchMappedBy(AuditedPropertiesHolder propertiesHolder, List<Property> properties, Table collectionTable) {
 		for ( Property property : properties ) {
 			if ( property.getValue() instanceof Collection ) {
 				// The equality is intentional. We want to find a collection property with the same collection table.
 				//noinspection ObjectEquality
-				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
-					return property.getName();
+				if ( ((Collection) property.getValue()).getCollectionTable() == collectionTable ) {
+					final var propertyName = property.getName();
+					// We need to check if the property is audited as well
+					return propertiesHolder.contains( propertyName ) ? propertyName : null;
 				}
 			}
-			else if ( property.getValue() instanceof Component ) {
+			else if ( property.getValue() instanceof Component component ) {
 				// HHH-12240
 				// Should we find an embeddable, we should traverse it as well to see if the collection table
 				// happens to be an attribute inside the embeddable rather than directly on the entity.
-				final Component component = (Component) property.getValue();
-
-				final String mappedBy = searchMappedBy( component.getProperties(), collectionTable );
-				if ( mappedBy != null ) {
-					return property.getName() + "_" + mappedBy;
+				final var componentName = property.getName();
+				final var componentData = propertiesHolder.getPropertyAuditingData( componentName );
+				if ( componentData == null ) {
+					// If the component is not audited, no need to check sub-properties
+					return null;
+				}
+				else {
+					final String mappedBy = searchMappedBy(
+							(ComponentAuditingData) componentData,
+							component.getProperties(),
+							collectionTable
+					);
+					if ( mappedBy != null ) {
+						return property.getName() + "_" + mappedBy;
+					}
 				}
 			}
 		}
@@ -161,18 +206,8 @@ public class CollectionMappedByResolver {
 		return null;
 	}
 
-	private static PersistentClass getReferenceCollectionClass(Collection collectionValue) {
-		PersistentClass referencedClass = null;
-		if ( collectionValue.getElement() instanceof OneToMany ) {
-			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
-			referencedClass = oneToManyValue.getAssociatedClass();
-		}
-		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bidirectional relation with @JoinTable on the owning @ManyToOne side.
-			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
-		}
-		return referencedClass;
+	private static ClassAuditingData getReferencedClass(String className, EnversMetadataBuildingContext buildingContext) {
+		return buildingContext.getClassesAuditingData().getClassAuditingData( className );
 	}
 
 	private static class ResolverContext {

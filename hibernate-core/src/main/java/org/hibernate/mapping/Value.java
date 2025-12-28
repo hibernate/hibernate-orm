@@ -12,6 +12,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
@@ -53,6 +54,7 @@ public interface Value extends Serializable {
 
 	/**
 	 * Does the mapping involve at least one column?
+	 *
 	 * @since 7.3
 	 */
 	boolean hasColumns();
@@ -151,16 +153,20 @@ public interface Value extends Serializable {
 	boolean isSame(Value other);
 
 	boolean[] getColumnInsertability();
+
 	boolean hasAnyInsertableColumns();
 
 	boolean[] getColumnUpdateability();
+
 	boolean hasAnyUpdatableColumns();
 
 	@Incubating
 	default MetadataBuildingContext getBuildingContext() {
 		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
 	}
+
 	ServiceRegistry getServiceRegistry();
+
 	Value copy();
 
 	boolean isColumnInsertable(int index);
@@ -183,12 +189,27 @@ public interface Value extends Serializable {
 	 * @param owner the owner of this value, used just for error reporting
 	 */
 	@Internal
-	default void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+	default void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
 		for ( int i = 0; i < getSelectables().size(); i++ ) {
 			final Selectable selectable = getSelectables().get( i );
 			if ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) {
 				final Column col = (Column) selectable;
-				if ( !distinctColumns.add( col.getName() ) ) {
+
+				final var primaryTable = getTable();
+
+				Identifier catalog = null;
+				Identifier schema = null;
+				Identifier table = null;
+
+				if ( primaryTable != null ) {
+					catalog = primaryTable.getCatalogIdentifier();
+					schema = primaryTable.getSchemaIdentifier();
+					table = primaryTable.getNameIdentifier();
+				}
+
+				Identifier columnName = col.getNameIdentifier( getBuildingContext() );
+
+				if ( !distinctColumns.add( new QualifiedColumnName( catalog, schema, table, columnName ) ) ){
 					throw new MappingException(
 							"Column '" + col.getName()
 									+ "' is duplicated in mapping for " + owner

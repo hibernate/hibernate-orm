@@ -323,16 +323,16 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+	public void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
 		if ( aggregateColumn == null ) {
 			if ( isPolymorphic() ) {
 				// We can allow different subtypes reusing the same columns
 				// since only one subtype can exist at one time
-				final Map<String, Set<String>> distinctColumnsByClass = new HashMap<>();
+				final Map<String, Set<QualifiedColumnName>> distinctColumnsByClass = new HashMap<>();
 				for ( var prop : properties ) {
 					if ( prop.isUpdatable() || prop.isInsertable() ) {
 						final String declaringClass = propertyDeclaringClasses.get( prop );
-						final Set<String> set = distinctColumnsByClass.computeIfAbsent(
+						final Set<QualifiedColumnName> set = distinctColumnsByClass.computeIfAbsent(
 								declaringClass,
 								k -> new HashSet<>( distinctColumns )
 						);

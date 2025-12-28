@@ -104,7 +104,7 @@ public final class MappingHelper {
 	}
 
 	public static void checkPropertyColumnDuplication(
-			Set<String> distinctColumns,
+			Set<QualifiedColumnName> distinctColumns,
 			List<Property> properties,
 			String owner) throws MappingException {
 		for ( var property : properties ) {

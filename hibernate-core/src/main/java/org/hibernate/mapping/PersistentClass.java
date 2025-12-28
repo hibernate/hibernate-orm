@@ -908,7 +908,7 @@ public abstract sealed class PersistentClass
 
 	protected void checkColumnDuplication() {
 		final String owner = "entity '" + getEntityName() + "'";
-		final HashSet<String> cols = new HashSet<>();
+		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded

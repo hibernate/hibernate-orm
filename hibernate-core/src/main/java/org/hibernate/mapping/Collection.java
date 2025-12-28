@@ -396,7 +396,7 @@ public abstract sealed class Collection
 
 	private void checkColumnDuplication() throws MappingException {
 		final String owner = "collection '" + getReferencedPropertyName() + "'";
-		final HashSet<String> cols = new HashSet<>();
+		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		getKey().checkColumnDuplication( cols, owner );
 		if ( isIndexed() ) {
 			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );

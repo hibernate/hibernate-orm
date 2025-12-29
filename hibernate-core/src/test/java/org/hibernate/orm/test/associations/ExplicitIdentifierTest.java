@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -55,23 +54,19 @@ public class ExplicitIdentifierTest {
 		scope.inTransaction( session -> {
 
 			assertEquals( "implicit", session.createNativeQuery(
-							session.getDialect() instanceof HSQLDialect ?
-									"select COLUMN_name from \"TABLE_`ExplicitIdentifierTest$PersonImplicit`\""
-									: "select COLUMN_name from TABLE_ExplicitIdentifierTest$PersonImplicit",
+							"select COLUMN_name from TABLE_PersonImplicit",
 							String.class )
 					.getSingleResult() );
 
 			if ( session.getDialect().getSequenceSupport().supportsSequences() ) {
 				assertEquals( 51, session.createNativeQuery(
 						session.getDialect().getSequenceSupport()
-								.getSequenceNextValString( session.getDialect() instanceof HSQLDialect
-										? "\"SEQUENCE_`TABLE_`ExplicitIdentifierTest$PersonImplicit`_SEQ`\""
-										: "SEQUENCE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ" ),
+								.getSequenceNextValString( "SEQUENCE_TABLE_PersonImplicit_SEQ" ),
 						Integer.class ).getSingleResult() );
 			}
 			else {
 				assertEquals( 51, session.createNativeQuery(
-						"select next_val from TABLE_TABLE_ExplicitIdentifierTest$PersonImplicit_SEQ",
+						"select next_val from TABLE_TABLE_PersonImplicit_SEQ",
 						Integer.class ).getSingleResult() );
 			}
 		} );
@@ -114,7 +109,7 @@ public class ExplicitIdentifierTest {
 		scope.dropData();
 	}
 
-	@Entity
+	@Entity(name = "PersonImplicit")
 	public static class PersonImplicit {
 
 		@Id
@@ -125,7 +120,7 @@ public class ExplicitIdentifierTest {
 		String name;
 	}
 
-	@Entity
+	@Entity(name = "PersonExplicit")
 	@Table(name = "PersonExplicit")
 	public static class PersonExplicit {
 

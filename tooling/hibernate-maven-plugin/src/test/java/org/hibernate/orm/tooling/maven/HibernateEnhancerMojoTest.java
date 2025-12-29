@@ -21,12 +21,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
@@ -48,6 +50,7 @@ public class HibernateEnhancerMojoTest {
 	private Field fileSetsField;
 	private Field sourceSetField;
 	private Field enhancerField;
+	private Field projectField;
 
 	private File classesDirectory;  // folder '${tempDir}/classes'
 	private File fooFolder;         // folder '${classesDirectory}/org/foo'
@@ -67,8 +70,13 @@ public class HibernateEnhancerMojoTest {
 		sourceSetField.setAccessible(true);
 		enhancerField = HibernateEnhancerMojo.class.getDeclaredField("enhancer");
 		enhancerField.setAccessible(true);
+		projectField = HibernateEnhancerMojo.class.getDeclaredField( "project");
+		projectField.setAccessible(true);
 		enhanceMojo = new HibernateEnhancerMojo();
 		enhanceMojo.setLog(createLog());
+		var project = new MavenProject();
+		project.setArtifacts( new HashSet());
+		projectField.set(enhanceMojo, project);
 		classesDirectory = new File(tempDir, "classes");
 		classesDirectory.mkdirs();
 		classesDirectoryField.set(enhanceMojo, classesDirectory);

@@ -4,10 +4,13 @@
  */
 package org.hibernate.orm.tooling.maven;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
@@ -23,11 +26,13 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
  */
-@Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_CLASSES,
+		requiresDependencyResolution = ResolutionScope.COMPILE)
 public class HibernateEnhancerMojo extends AbstractMojo {
 
 	final private List<File> sourceSet = new ArrayList<File>();
@@ -88,6 +93,12 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 			defaultValue = "false",
 			required = true)
 	private boolean enableExtendedEnhancement;
+
+	/**
+	 * The Maven Project Object
+	 */
+	@Parameter(defaultValue = "${project}", readonly = true, required = true)
+	private MavenProject project;
 
 	public void execute() {
 		getLog().debug(STARTING_EXECUTION_OF_ENHANCE_MOJO);
@@ -163,6 +174,24 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		catch (MalformedURLException e) {
 			getLog().error(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER, e);
 		}
+
+		// Add dependencies to classpath as well - all but the ones used for testing purposes
+		final Set<Artifact> artifacts = this.project.getArtifacts();
+		if (artifacts != null) {
+			for (var artifact : artifacts) {
+				if ( !Artifact.SCOPE_TEST.equals(artifact.getScope() ) ) {
+					try {
+						urls.add(artifact.getFile().toURI().toURL() );
+						getLog().debug(CREATE_URL_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT.formatted(artifact.getId()));
+					}
+					catch (MalformedURLException e) {
+						getLog().error(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT
+								.formatted(artifact.getId(), artifact.getFile().getAbsolutePath()), e);
+					}
+				}
+			}
+		}
+
 		return new URLClassLoader(
 				urls.toArray(new URL[0]),
 				Enhancer.class.getClassLoader());
@@ -307,6 +336,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	static final String ERROR_WHILE_ENHANCING_CLASS_FILE = "An exception occurred while trying to class file: %s";
 	static final String UNABLE_TO_DISCOVER_TYPES_FOR_CLASS_FILE = "Unable to discover types for classes in file: %s";
 	static final String UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER = "An unexpected error occurred while constructing the classloader";
+	static final String UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT = "Unable to resolve URL for dependency %s at %s";
 
 	// debug messages
 	static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
@@ -332,5 +362,5 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	static final String ADDED_DEFAULT_FILESET_WITH_BASE_DIRECTORY = "Addded a default FileSet with base directory: %s";
 	static final String STARTING_EXECUTION_OF_ENHANCE_MOJO = "Starting execution of enhance mojo";
 	static final String ENDING_EXECUTION_OF_ENHANCE_MOJO = "Ending execution of enhance mojo";
-
+	static final String CREATE_URL_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT = "Adding classpath entry for dependency %s";
 }

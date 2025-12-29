@@ -236,6 +236,11 @@ public class EnhancerMojoTestIT {
 				projectDir.getAbsolutePath(),
 				null,
 				null);
+		mavenCli.doMain(
+				new String[]{"dependency:copy-dependencies"},
+				projectDir.getAbsolutePath(),
+				null,
+				null);
 		// The results are verified in the respective tests
 	}
 
@@ -273,7 +278,10 @@ public class EnhancerMojoTestIT {
 	}
 
 	private ClassLoader getTestClassLoader() throws Exception {
-		return new URLClassLoader( new URL[] { new File(projectDir, "target/classes").toURI().toURL() } );
+		return new URLClassLoader( new URL[]{
+				new File(projectDir, "target/classes").toURI().toURL(),
+				new File(projectDir, "target/dependency/geolatte-geom-1.10.jar").toURI().toURL(),
+		});
 	}
 
 	private boolean isEnhanced(String className) throws Exception {

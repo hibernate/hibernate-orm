@@ -126,7 +126,7 @@ public class BasicTypeRegistry implements Serializable {
 		return getRegisteredType( javaType.getTypeName() );
 	}
 
-	public <J> @Nullable BasicType<J> getRegisteredType(Class<J> javaType) {
+	public <J> @Nullable BasicType<J> getRegisteredType(Class<? extends J> javaType) {
 		//noinspection unchecked
 		return (BasicType<J>) getRegisteredType( javaType.getTypeName() );
 	}

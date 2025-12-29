@@ -763,8 +763,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentHashMap<Type, BasicType<?>> basicTypeByJavaType = new ConcurrentHashMap<>();
 
-	private static <J> BasicType<J> checkExisting(Class<J> javaClass, BasicType<?> existing) {
-		if ( existing.getJavaType() != canonicalize( javaClass ) ) {
+	private static <J> BasicType<J> checkExisting(Class<? extends J> javaClass, BasicType<?> existing) {
+		if ( !existing.getJavaType().isAssignableFrom( canonicalize( javaClass ) ) ) {
 			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
 		}
 		@SuppressWarnings("unchecked") // safe, we just checked
@@ -779,13 +779,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
 	}
 
-	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<J> javaClass) {
+	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<? extends J> javaClass) {
 		final var existing = basicTypeByJavaType.get( javaClass );
 		if ( existing != null ) {
 			return checkExisting( javaClass, existing );
 		}
 		else {
-			final var registeredType = basicTypeRegistry.getRegisteredType( javaClass );
+			final var registeredType = basicTypeRegistry.<J>getRegisteredType( javaClass );
 			if ( registeredType != null ) {
 				basicTypeByJavaType.put( javaClass, registeredType );
 				return registeredType;

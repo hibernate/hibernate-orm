@@ -47,6 +47,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		builder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Test
+	void testJoining() {
+		sessionFactory().inTransaction( (session) -> {
+			session.createQuery( "select u from User u join u.person p" ).list();
+		} );
+	}
+
 	@Override
 	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
 		MetadataImplementor metadata = super.produceModel( serviceRegistry );

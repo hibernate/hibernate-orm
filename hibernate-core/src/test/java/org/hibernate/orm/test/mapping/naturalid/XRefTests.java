@@ -5,8 +5,11 @@
 package org.hibernate.orm.test.mapping.naturalid;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Table;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cache.internal.NaturalIdCacheKey;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.hibernate.KeyType.NATURAL;
 
 /// Tests for [org.hibernate.engine.spi.NaturalIdResolutions]
@@ -34,7 +38,12 @@ import static org.hibernate.KeyType.NATURAL;
 /// @author Steve Ebersole
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting( name = CacheSettings.USE_SECOND_LEVEL_CACHE, value = "true" ) )
-@DomainModel(annotatedClasses = {XRefTests.Book.class,XRefTests.Bookmark.class,XRefTests.Pen.class})
+@DomainModel(annotatedClasses = {
+		XRefTests.Another.class,
+		XRefTests.Book.class,
+		XRefTests.Bookmark.class,
+		XRefTests.Pen.class
+})
 @SessionFactory(useCollectingStatementInspector = true)
 public class XRefTests {
 	public static final String BOOK_ISBN = "123-4567-890";
@@ -198,6 +207,31 @@ public class XRefTests {
 		assertThat( resolution.getValue() ).isEqualTo( id );
 	}
 
+	@Test
+	void testDeletionInOtherSession(SessionFactoryScope factoryScope) {
+		var created = factoryScope.fromTransaction( (session) -> {
+			var other = new Another( "something" );
+			session.persist( other );
+			return other;
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var b = session.getReference( Another.class, created.id );
+			session.remove( b );
+		} );
+
+		created.name = "something else";
+		try {
+			factoryScope.inTransaction( (session) -> {
+				session.merge( created );
+			} );
+			fail( "Expecting OptimisticLockException / StaleObjectStateException" );
+		}
+		catch (OptimisticLockException expected) {
+			assertThat( expected.getCause() ).isInstanceOf( StaleObjectStateException.class );
+		}
+	}
+
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
@@ -271,6 +305,23 @@ public class XRefTests {
 			this.id = id;
 			this.manufacturer = manufacturer;
 			this.sku = sku;
+		}
+	}
+
+	@Entity(name="Another")
+	@Table(name="others")
+	public static class Another {
+		@Id
+		@GeneratedValue
+		private Integer id;
+		@NaturalId
+		private String name;
+
+		public Another() {
+		}
+
+		public Another(String name) {
+			this.name = name;
 		}
 	}
 }

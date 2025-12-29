@@ -16,6 +16,13 @@
       <artifactId>hibernate-core</artifactId>
       <version>${hibernate.version}</version>
     </dependency>
+    <!-- Just an arbitrary library. We need to make sure it's not included in hibernate-core because hibernate-core
+         itself is included in the Maven plugin -->
+    <dependency>
+      <groupId>org.geolatte</groupId>
+      <artifactId>geolatte-geom</artifactId>
+      <version>1.10</version>
+    </dependency>
   </dependencies>
 
   <build>

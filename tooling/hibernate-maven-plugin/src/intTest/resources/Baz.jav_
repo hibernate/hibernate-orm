@@ -1,5 +1,6 @@
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import org.geolatte.geom.Circle;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ public class Baz {
 
     @OneToMany(mappedBy = "baz")
     private List<Bar> bars = new ArrayList<Bar>();
+
+    private Circle circle;
 
     String getFoo() {
         return foo;

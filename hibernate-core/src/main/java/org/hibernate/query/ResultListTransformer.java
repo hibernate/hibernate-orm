@@ -5,12 +5,16 @@
 package org.hibernate.query;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
+import org.hibernate.NonUniqueResultException;
 
 /**
  * Defines some processing performed on the overall result {@link List}
  * of a {@link Query} before the result list is returned to the caller.
+ *
+ * @param <T> The result list element type
  *
  * @see Query#setResultListTransformer
  * @see Query#list
@@ -36,4 +40,29 @@ public interface ResultListTransformer<T> {
 	 * @return The transformed result.
 	 */
 	List<T> transformList(List<T> resultList);
+
+	/**
+	 * A {@code ResultListTransformer} which collapses a list of results
+	 * into a single result when all results are equal, or throws
+	 * {@link NonUniqueResultException} otherwise.
+	 *
+	 * @param <T> The result list element type
+	 *
+	 * @since 7.3
+	 */
+	static <T> ResultListTransformer<T> uniqueResultTransformer() {
+		return resultList ->
+				switch ( resultList.size() ) {
+					case 0, 1 -> resultList;
+					default -> {
+						final var first = resultList.get( 0 );
+						for ( int i = 1; i < resultList.size(); i++ ) {
+							if ( !Objects.equals( first, resultList.get( i ) ) ) {
+								throw new NonUniqueResultException( resultList.size() );
+							}
+						}
+						yield List.of( first );
+					}
+				};
+	}
 }

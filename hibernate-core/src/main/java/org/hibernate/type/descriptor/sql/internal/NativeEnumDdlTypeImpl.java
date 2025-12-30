@@ -37,7 +37,7 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 		return ENUM;
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
 		return dialect.getEnumTypeDeclaration(
 				type.getReturnedClass().getSimpleName(),

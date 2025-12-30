@@ -14,6 +14,10 @@ import java.util.Properties;
  *
  * @see org.hibernate.annotations.Type#parameters
  *
+ * @apiNote The interface {@link AnnotationBasedUserType} provides a modernized
+ * alternative approach to defining configurable custom types. This interface will
+ * eventually be deprecated.
+ *
  * @author Michael Gloegl
  */
 public interface ParameterizedType {

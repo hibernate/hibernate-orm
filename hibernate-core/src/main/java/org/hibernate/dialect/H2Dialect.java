@@ -30,6 +30,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
 import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.H2JsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -73,6 +74,8 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -83,6 +86,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -230,6 +234,8 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -247,6 +253,7 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -1135,6 +1142,36 @@ public class H2Dialect extends Dialect {
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// Just a guess
 		return true;
+	}
+
+	/**
+	 * Uses {@code CREATE DOMAIN} to emulate a named enum type.
+	 */
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		final int maxLength =
+				Arrays.stream(values)
+						.map( String::length )
+						.max( Integer::compareTo )
+						.orElseThrow();
+		final var domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as varchar(")
+				.append( maxLength )
+				.append( ") check (value in (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		domain.append( "))" );
+		return new String[] { domain.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop domain if exists " + name };
 	}
 
 }

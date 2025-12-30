@@ -24,10 +24,8 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * @author Gavin King
  */
 public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
-	private final Dialect dialect;
 
 	public NamedNativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
-		this.dialect = dialect;
 	}
 
 	@Override
@@ -35,9 +33,9 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 		return NAMED_ORDINAL_ENUM;
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
+		return type.getReturnedClass().getSimpleName();
 	}
 
 	@Override
@@ -52,11 +50,11 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() );
+		return javaType.getJavaTypeClass().getSimpleName();
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) javaType.getJavaType() );
+		return javaType.getJavaTypeClass().getSimpleName();
 	}
 }

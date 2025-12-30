@@ -100,7 +100,6 @@ public class BasicTypeRegistry implements Serializable {
 		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
 		final var createdType = createBasicType( typeReference, javaType, jdbcType );
 		typesByName.put( typeReference.getName(), createdType );
-		typesByName.put( name, createdType );
 		return createdType;
 	}
 

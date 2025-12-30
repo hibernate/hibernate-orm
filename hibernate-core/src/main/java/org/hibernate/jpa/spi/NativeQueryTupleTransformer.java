@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
@@ -133,6 +135,19 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 		public String toString() {
 			return Arrays.toString( tuple );
 		}
+
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof NativeTupleImpl that
+				&& Objects.equals( this.aliasToValue, that.aliasToValue );
+		}
+
+		@Override
+		public int hashCode() {
+			return Arrays.hashCode( tuple );
+		}
+
 
 		@Override
 		public List<TupleElement<?>> getElements() {

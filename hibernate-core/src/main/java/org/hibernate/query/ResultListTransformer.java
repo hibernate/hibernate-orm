@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,7 +58,11 @@ public interface ResultListTransformer<T> {
 					default -> {
 						final var first = resultList.get( 0 );
 						for ( int i = 1; i < resultList.size(); i++ ) {
-							if ( !Objects.equals( first, resultList.get( i ) ) ) {
+							final T current = resultList.get( i );
+							if ( !Objects.equals( first, current )
+									// also consider case of multiple select items in an Object[]
+									&& !( first instanceof Object[] array
+											&& !Arrays.equals( array, (Object[]) current ) ) ) {
 								throw new NonUniqueResultException( resultList.size() );
 							}
 						}

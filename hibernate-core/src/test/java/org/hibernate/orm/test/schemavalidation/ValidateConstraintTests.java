@@ -121,7 +121,8 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 				fail( "Not expecting an exception" );
 			}
 		}
-		updateSchema( schema2, schemaTooling, registry );
+		dropSchema( schema1, schemaTooling, registry );
+		createSchema( schema2, schemaTooling, registry );
 		schemaToDrop = schema2;
 
 		// validate the second schema change
@@ -137,7 +138,8 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 				fail( "Not expecting an exception" );
 			}
 		}
-		updateSchema( schema3, schemaTooling, registry );
+		dropSchema( schema2, schemaTooling, registry );
+		createSchema( schema3, schemaTooling, registry );
 		schemaToDrop = schema3;
 
 		// validate the 3rd schema change
@@ -153,7 +155,8 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 				fail( "Not expecting an exception" );
 			}
 		}
-		updateSchema( schema4, schemaTooling, registry );
+		dropSchema( schema3, schemaTooling, registry );
+		createSchema( schema4, schemaTooling, registry );
 		schemaToDrop = schema4;
 
 		// validate the 4th schema change
@@ -169,7 +172,8 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 				fail( "Not expecting an exception" );
 			}
 		}
-		updateSchema( schema5, schemaTooling, registry );
+		dropSchema( schema4, schemaTooling, registry );
+		createSchema( schema5, schemaTooling, registry );
 		schemaToDrop = schema5;
 
 	}

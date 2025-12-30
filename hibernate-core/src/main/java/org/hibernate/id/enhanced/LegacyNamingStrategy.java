@@ -79,7 +79,6 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 
 	private String implicitSequenceName(Map<?, ?> configValues) {
 		final String explicitSuffix = getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, configValues );
-
 		if ( isNotEmpty( explicitSuffix ) ) {
 			// an "implicit name suffix" was specified
 			final String rootTableName = getString( TABLE, configValues );
@@ -102,7 +101,6 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
 		final String implicitName = implicitTableName( configValues );
-
 		return implicitName.contains( "." )
 				? QualifiedNameParser.INSTANCE.parse( implicitName )
 				: new QualifiedTableName(

@@ -72,6 +72,18 @@ Raw `Map` types were eliminated from the signatures of methods of the class
 
 This section describes changes in behavior that applications should be aware of.
 
+=== Result deduplication
+
+In Hibernate 6.x query result lists with duplicate results were handled in an
+ad hoc and inconsistent way by `getSingleResult()` and `getSingleResultOrNull()`.
+As of Hibernate 7.3, these methods _always_ throw when the result list contains
+more than one element (which is faithful to the documented semantics of these
+methods). If automatic deduplication is required, use:
+
+[source,java]
+query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
+
+which collapses duplicate results according to value equality.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes

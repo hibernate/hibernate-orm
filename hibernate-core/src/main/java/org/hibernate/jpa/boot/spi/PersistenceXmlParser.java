@@ -5,32 +5,24 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.transform.stream.StreamSource;
 
-import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl;
-import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl;
-import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl.JaxbPropertyImpl;
 import org.hibernate.boot.jaxb.internal.ConfigurationBinder;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
@@ -40,6 +32,8 @@ import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
+import static org.hibernate.boot.archive.internal.ArchiveHelper.getJarURLFromURLEntry;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
@@ -95,17 +89,18 @@ public final class PersistenceXmlParser {
 				providedClassLoaders.add( providedClassLoader );
 			}
 
-			@SuppressWarnings("unchecked")
-			final Collection<ClassLoader> classLoaders =
-					(Collection<ClassLoader>) integration.get( AvailableSettings.CLASSLOADERS );
+			final var classLoaders =
+					(Collection<?>)
+							integration.get( AvailableSettings.CLASSLOADERS );
 			if ( classLoaders != null ) {
-				providedClassLoaders.addAll( classLoaders );
+				for ( var classLoader : classLoaders ) {
+					providedClassLoaders.add( (ClassLoader) classLoader );
+				}
 			}
 
-			classLoaderService = new ClassLoaderServiceImpl(
-					providedClassLoaders,
-					TcclLookupPrecedence.from( integration, TcclLookupPrecedence.AFTER )
-			);
+			classLoaderService =
+					new ClassLoaderServiceImpl( providedClassLoaders,
+							TcclLookupPrecedence.from( integration, TcclLookupPrecedence.AFTER ) );
 		}
 	}
 
@@ -162,28 +157,20 @@ public final class PersistenceXmlParser {
 			JPA_LOGGER.attemptingToParsePersistenceXml( xmlUrl.toExternalForm() );
 		}
 
-		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
-
-		final JaxbPersistenceImpl jaxbPersistence = loadUrlWithJaxb( xmlUrl );
-		final List<JaxbPersistenceUnitImpl> jaxbPersistenceUnits = jaxbPersistence.getPersistenceUnit();
-
-		for ( int i = 0; i < jaxbPersistenceUnits.size(); i++ ) {
-			final JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
-
+		final URL persistenceUnitRootUrl = getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
+		for ( var jaxbPersistenceUnit : loadUrlWithJaxb( xmlUrl ).getPersistenceUnit() ) {
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
 				JPA_LOGGER.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
-				continue;
 			}
-
-			final ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
-					new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
-			bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
-
-			// per JPA spec, any settings passed in to PersistenceProvider bootstrap methods should override
-			// values found in persistence.xml
-			applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
-
-			persistenceUnits.put( persistenceUnitDescriptor.getName(), persistenceUnitDescriptor );
+			else {
+				final var persistenceUnitDescriptor =
+						new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
+				bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
+				// per JPA spec, any settings passed in to PersistenceProvider
+				// bootstrap methods should override values found in persistence.xml
+				applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
+				persistenceUnits.put( persistenceUnitDescriptor.getName(), persistenceUnitDescriptor );
+			}
 		}
 	}
 
@@ -191,7 +178,7 @@ public final class PersistenceXmlParser {
 			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
-		if ( StringHelper.isNotEmpty( name ) ) {
+		if ( isNotEmpty( name ) ) {
 			JPA_LOGGER.persistenceUnitNameFromXml( name );
 			persistenceUnitDescriptor.setName( name );
 		}
@@ -208,21 +195,19 @@ public final class PersistenceXmlParser {
 		persistenceUnitDescriptor.addMappingFiles( jaxbPersistenceUnit.getMappingFiles() );
 		persistenceUnitDescriptor.addJarFileUrls( jaxbPersistenceUnit.getJarFiles() );
 
-		final JaxbPropertiesImpl propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
+		final var propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
 		if ( propertyContainer != null ) {
-			for ( JaxbPropertyImpl property : propertyContainer.getProperties() ) {
+			for ( var property : propertyContainer.getProperties() ) {
 				persistenceUnitDescriptor.getProperties()
 						.put( property.getName(), property.getValue() );
 			}
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private static void setTransactionType(
 			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
-		final jakarta.persistence.spi.PersistenceUnitTransactionType transactionType =
-				jaxbPersistenceUnit.getTransactionType();
+		final var transactionType = jaxbPersistenceUnit.getTransactionType();
 		if ( transactionType != null ) {
 			persistenceUnitDescriptor.setTransactionType(
 					PersistenceUnitTransactionTypeHelper.toNewForm( transactionType ) );
@@ -289,7 +274,7 @@ public final class PersistenceXmlParser {
 
 		applyTransactionTypeOverride( persistenceUnitDescriptor, defaultTransactionType );
 
-		final Properties properties = persistenceUnitDescriptor.getProperties();
+		final var properties = persistenceUnitDescriptor.getProperties();
 		ConfigurationHelper.overrideProperties( properties, integration );
 	}
 
@@ -334,16 +319,14 @@ public final class PersistenceXmlParser {
 	private JaxbPersistenceImpl loadUrlWithJaxb(URL xmlUrl) {
 		final String resourceName = xmlUrl.toExternalForm();
 		try {
-			URLConnection conn = xmlUrl.openConnection();
+			var connection = xmlUrl.openConnection();
 			// avoid JAR locking on Windows and Tomcat
-			conn.setUseCaches( false );
-
-			try ( InputStream inputStream = conn.getInputStream() ) {
-				final StreamSource inputSource = new StreamSource( inputStream );
-				final ConfigurationBinder configurationBinder = new ConfigurationBinder( classLoaderService );
-				final Binding<JaxbPersistenceImpl> binding =
-						configurationBinder.bind( inputSource, new Origin( SourceType.URL, resourceName ) );
-				return binding.getRoot();
+			connection.setUseCaches( false );
+			try ( var inputStream = connection.getInputStream() ) {
+				return new ConfigurationBinder( classLoaderService )
+						.bind( new StreamSource( inputStream ),
+								new Origin( SourceType.URL, resourceName ) )
+						.getRoot();
 			}
 			catch (IOException e) {
 				throw new PersistenceException( "Unable to obtain input stream from [" + resourceName + "]", e );

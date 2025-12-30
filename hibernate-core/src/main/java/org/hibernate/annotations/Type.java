@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -85,9 +86,14 @@ public @interface Type {
 
 	/**
 	 * Parameters to be injected into the custom type after it is
-	 * instantiated. The {@link UserType} implementation must implement
+	 * instantiated. The {@link UserType} implementation may implement
 	 * {@link org.hibernate.usertype.ParameterizedType} to receive the
-	 * parameters.
+	 * parameters, or it may obtain them via
+	 * {@link UserTypeCreationContext#getParameters()}.
+	 *
+	 * @apiNote A better approach is to declare a custom annotation type,
+	 * as described {@linkplain Type above}, and specify parameters in a
+	 * type safe way as members of the custom annotation.
 	 */
 	Parameter[] parameters() default {};
 }

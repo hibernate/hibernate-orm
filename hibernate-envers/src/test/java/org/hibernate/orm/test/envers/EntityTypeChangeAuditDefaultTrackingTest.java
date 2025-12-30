@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 
 /**
@@ -66,7 +65,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 	}
 
 	private EntityManagerFactory buildEntityManagerFactory() {
-		Map<Object, Object> settings = buildSettings();
+		var settings = buildSettings();
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList( ApplicationCustomer.class, CustomTrackingRevisionEntity.class )

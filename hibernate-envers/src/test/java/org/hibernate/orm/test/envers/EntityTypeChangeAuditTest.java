@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,7 +97,7 @@ public class EntityTypeChangeAuditTest extends EntityManagerFactoryBasedFunction
 	}
 
 	private EntityManagerFactory buildEntityManagerFactory() {
-		Map<Object, Object> settings = buildSettings();
+		var settings = buildSettings();
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(

@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,7 +100,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 	}
 
 	private EntityManagerFactory buildEntityManagerFactory() {
-		Map<Object, Object> settings = buildSettings();
+		var settings = buildSettings();
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(

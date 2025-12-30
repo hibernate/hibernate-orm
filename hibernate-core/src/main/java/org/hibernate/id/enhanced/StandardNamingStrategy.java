@@ -74,36 +74,32 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final String rootTableName = getString( TABLE, configValues );
-		final String implicitName = implicitSequenceName( rootTableName, configValues );
-		return qualifiedSequenceName( catalogName, schemaName, serviceRegistry, implicitName );
-
+		return qualifiedSequenceName( catalogName, schemaName, serviceRegistry,
+				implicitSequenceName( getString( TABLE, configValues ), configValues ) );
 	}
 
 	private static String implicitSequenceName(String rootTableName, Map<?, ?> configValues) {
 		final String explicitSuffix = getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, configValues );
 		final String base = getString( IMPLICIT_NAME_BASE, configValues, rootTableName );
-
-		if ( isNotEmpty( explicitSuffix ) ) {
+		if ( isNotEmpty( explicitSuffix ) && isNotEmpty( base ) ) {
 			// an "implicit name suffix" was specified
-			if ( isNotEmpty( base ) ) {
-				return isQuoted( base )
-						? "`" + unQuote( base ) + explicitSuffix + "`"
-						: base + explicitSuffix;
-			}
-		}
-
-		final String annotationGeneratorName = getString( GENERATOR_NAME, configValues );
-		if ( isNotEmpty( annotationGeneratorName ) ) {
-			return annotationGeneratorName;
-		}
-		else if ( isNotEmpty( base ) ) {
 			return isQuoted( base )
-					? "`" + unQuote( base ) + DEF_SEQUENCE_SUFFIX + "`"
-					: base + DEF_SEQUENCE_SUFFIX;
+					? "`" + unQuote( base ) + explicitSuffix + "`"
+					: base + explicitSuffix;
 		}
 		else {
-			throw new MappingException( "Unable to determine implicit sequence name; target table - " + rootTableName );
+			final String annotationGeneratorName = getString( GENERATOR_NAME, configValues );
+			if ( isNotEmpty( annotationGeneratorName ) ) {
+				return annotationGeneratorName;
+			}
+			else if ( isNotEmpty( base ) ) {
+				return isQuoted( base )
+						? "`" + unQuote( base ) + DEF_SEQUENCE_SUFFIX + "`"
+						: base + DEF_SEQUENCE_SUFFIX;
+			}
+			else {
+				throw new MappingException( "Unable to determine implicit sequence name for target table '" + rootTableName + "'" );
+			}
 		}
 	}
 
@@ -113,8 +109,8 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
-		final String implicitName = implicitTableName( configValues );
-		return qualifiedTableName( catalogName, schemaName, serviceRegistry, implicitName );
+		return qualifiedTableName( catalogName, schemaName, serviceRegistry,
+				implicitTableName( configValues ) );
 	}
 
 	private static String implicitTableName(Map<?, ?> configValues) {

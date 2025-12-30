@@ -6,6 +6,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
@@ -108,5 +109,18 @@ public class TupleImpl implements Tuple {
 	@Override
 	public String toString() {
 		return Arrays.toString( row );
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof TupleImpl that
+			&& Objects.equals( tupleMetadata.getAliases(),
+				that.tupleMetadata.getAliases() )
+			&& Arrays.equals( this.row, that.row );
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode( row );
 	}
 }

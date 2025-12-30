@@ -79,3 +79,7 @@ session.find( Order.class,
         new PersonNameKey( "Bilbo", "Baggins" ),
         KeyType.NATURAL );
 ----
+
+== AnnotationBasedUserType and UserTypeCreationContext
+
+As an alternative to and eventual replacement for `ParameterizedType`, the new interface `AnnotationBasedUserType` offers a programming model for configurable custom types inspired by the success of `AnnotationBasedGenerator`.

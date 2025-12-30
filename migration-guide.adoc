@@ -53,6 +53,15 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+=== Classmate removal
+
+The dependency on Classmate was removed, which had a minor impact on certain SPIs.
+In particular, `ClassmateContext` was completely removed.
+
+=== Raw types in JPA `Bootstrap`
+
+Raw `Map` types were eliminated from the signatures of methods of the class
+`org.hibernate.jpa.boot.spi.Bootstrap`.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior

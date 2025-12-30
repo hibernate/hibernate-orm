@@ -11,6 +11,26 @@ import java.lang.annotation.Annotation;
 
 /**
  * A {@link UserType} which receives parameters from a custom annotation.
+ * <p>
+ * Implementing this interface is the same as providing a constructor with the same
+ * signature as the {@link #initialize} method. But implementing this interface is
+ * slightly more typesafe.
+ * <p>
+ * For example, implementing {@code AnnotationBasedUserType<AnnotationType>} is the
+ * same as providing a constructor with this signature:
+ * <pre>
+ * public CustomTypeClass(AnnotationType config,
+ *                        UserTypeCreationContext creationContext)
+ * </pre>
+ * <p>
+ * where {@code CustomTypeClass} is the class that implements {@code UserType}, and
+ * {@code AnnotationType} is the custom annotation type used to configure the custom
+ * type. That is, it is an annotation type annotated
+ * {@link org.hibernate.annotations.Type @Type}.
+ * <pre>
+ * &#64;Type(CustomTypeClass.class)
+ * public &#64;interface AnnotationType { ... }
+ * </pre>
  *
  * @param <A> The user type annotation type supported by an implementation
  * @param <J> The java type

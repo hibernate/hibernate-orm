@@ -20,16 +20,22 @@ import java.lang.reflect.Member;
  * For example, implementing {@code AnnotationBasedGenerator<AnnotationType>} is the
  * same as providing a constructor with this signature:
  * <pre>
- * public GeneratorClass(AnnotationType config, Member idMember,
+ * public GeneratorClass(AnnotationType config,
  *                      GeneratorCreationContext creationContext)
  * </pre>
  * <p>
  * where {@code GeneratorClass} is the class that implements {@code Generator}, and
  * {@code AnnotationType} is the generator annotation type used to configure the
- * generator.
+ * generator. That is, it is an annotation type annotated
+ * {@link org.hibernate.annotations.ValueGenerationType @ValueGenerationType}
+ * or {@link org.hibernate.annotations.IdGeneratorType @IdGeneratorType}.
+ * <pre>
+ * &#64;IdGeneratorType(GeneratorClass.class)
+ * public &#64;interface AnnotationType { ... }
+ * </pre>
  * <p>
- * Every instance of this class must implement either {@link BeforeExecutionGenerator} or
- * {@link OnExecutionGenerator}.
+ * Every instance of this interface must also implement either
+ * {@link BeforeExecutionGenerator} or {@link OnExecutionGenerator}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *

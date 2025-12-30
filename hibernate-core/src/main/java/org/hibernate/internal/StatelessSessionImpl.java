@@ -991,6 +991,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		final Object result =
 				getLoadQueryInfluencers()
+						// TODO: This is wrong. StatelessSession is not supposed
+						//       to be affected by cascade = REFRESH. Fix in H8.
 						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
 								() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );

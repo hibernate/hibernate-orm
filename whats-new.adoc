@@ -80,6 +80,12 @@ session.find( Order.class,
         KeyType.NATURAL );
 ----
 
+[[annotation-based-user-type]]
 == AnnotationBasedUserType and UserTypeCreationContext
 
 As an alternative to and eventual replacement for `ParameterizedType`, the new interface `AnnotationBasedUserType` offers a programming model for configurable custom types inspired by the success of `AnnotationBasedGenerator`.
+
+[[order-column-check]]
+== Check constraints on List order columns
+
+The schema export tooling now automatically generates check constraints on `@OrderColumn`s.

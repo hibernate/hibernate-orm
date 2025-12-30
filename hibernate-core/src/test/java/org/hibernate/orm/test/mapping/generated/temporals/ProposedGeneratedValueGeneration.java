@@ -4,13 +4,11 @@
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
-import java.lang.reflect.Member;
 import java.util.EnumSet;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.internal.util.StringHelper;
 
@@ -25,7 +23,7 @@ public class ProposedGeneratedValueGeneration implements OnExecutionGenerator {
 	private final EnumSet<EventType> timing;
 	private final String defaultValue;
 
-	public ProposedGeneratedValueGeneration(ProposedGenerated annotation, Member member, GeneratorCreationContext context) {
+	public ProposedGeneratedValueGeneration(ProposedGenerated annotation) {
 		timing = EventTypeSets.fromArray( annotation.timing() );
 		defaultValue = StringHelper.nullIfEmpty( annotation.sqlDefaultValue() );
 	}

@@ -50,8 +50,8 @@ public interface AnnotationBasedGenerator<A extends Annotation> extends Generato
 	 *                   values and store them in fields.
 	 * @param member the Java member annotated with the generator annotation.
 	 * @param context a {@link GeneratorCreationContext}
-	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
-	 *                                          an implementation can't create a value for the given property type.
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization,
+	 *         for example, if an implementation can't create a value for the given property type.
 	 * @deprecated Use {@link #initialize(Annotation, GeneratorCreationContext)} instead
 	 */
 	@Deprecated(since = "7.3", forRemoval = true)
@@ -65,8 +65,8 @@ public interface AnnotationBasedGenerator<A extends Annotation> extends Generato
 	 *                   implementations will retrieve the annotation's attribute
 	 *                   values and store them in fields.
 	 * @param context a {@link GeneratorCreationContext}
-	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
-	 *                                          an implementation can't create a value for the given property type.
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization,
+	 *         for example, if an implementation can't create a value for the given property type.
 	 *
 	 * @since 7.3
 	 */

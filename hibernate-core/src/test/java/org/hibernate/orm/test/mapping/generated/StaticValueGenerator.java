@@ -4,13 +4,11 @@
  */
 package org.hibernate.orm.test.mapping.generated;
 
-import java.lang.reflect.Member;
 import java.util.EnumSet;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.GeneratorCreationContext;
 
 /**
  * @author Steve Ebersole
@@ -19,7 +17,7 @@ public class StaticValueGenerator implements BeforeExecutionGenerator {
 	private final String staticValue;
 	private final EnumSet<EventType> events;
 
-	public StaticValueGenerator(StaticGeneration annotation, Member member, GeneratorCreationContext context) {
+	public StaticValueGenerator(StaticGeneration annotation) {
 		this.staticValue = annotation.value();
 		this.events = toEnumSet( annotation.event() );
 	}

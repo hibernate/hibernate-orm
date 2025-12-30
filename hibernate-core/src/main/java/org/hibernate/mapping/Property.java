@@ -24,6 +24,7 @@ import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -619,6 +620,13 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public Value getValue() {
 			return value;
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return value instanceof SimpleValue simpleValue
+					? simpleValue.getMemberDetails()
+					: null; // TODO: Give Property a reference to the MemberDetails
 		}
 
 		@Override

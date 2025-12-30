@@ -6,7 +6,6 @@ package org.hibernate.orm.test.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Member;
 import java.util.Date;
 import java.util.EnumSet;
 
@@ -15,7 +14,6 @@ import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -82,7 +80,7 @@ public class DatabaseTimestampsColumnTest {
 	public static class TimestampValueGeneration implements OnExecutionGenerator {
 		private EnumSet<EventType> events;
 
-		public TimestampValueGeneration(Timestamp annotation, Member member, GeneratorCreationContext context) {
+		public TimestampValueGeneration(Timestamp annotation) {
 			events = EventTypeSets.fromArray( annotation.value() );
 		}
 

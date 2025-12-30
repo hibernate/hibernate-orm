@@ -4,7 +4,6 @@
  */
 package org.hibernate.generator.internal;
 
-import java.lang.reflect.Member;
 import java.util.EnumSet;
 
 import org.hibernate.PropertyValueException;
@@ -28,13 +27,13 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	private final String entityName;
 	private final String propertyName;
 
-	public TenantIdGeneration(TenantId annotation, Member member, GeneratorCreationContext context) {
+	public TenantIdGeneration(TenantId annotation, GeneratorCreationContext context) {
 		final var persistentClass = context.getPersistentClass();
 		entityName =
 				persistentClass != null
 						? persistentClass.getEntityName()
 						// it's an attribute of an embeddable
-						: member.getDeclaringClass().getName();
+						: context.getMemberDetails().toJavaMember().getDeclaringClass().getName();
 		propertyName = context.getProperty().getName();
 	}
 

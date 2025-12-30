@@ -567,15 +567,22 @@ public class GeneratorBinder {
 		try {
 			try {
 				return generatorClass.getConstructor( annotationType, Member.class, GeneratorCreationContext.class )
+						// support for deprecated signature (eventually remove)
 						.newInstance( annotation, memberDetails.toJavaMember(), creationContext);
 			}
 			catch (NoSuchMethodException ignore) {
 				try {
-					return generatorClass.getConstructor( annotationType )
-							.newInstance( annotation );
+					return generatorClass.getConstructor( annotationType, GeneratorCreationContext.class )
+							.newInstance( annotation, creationContext );
 				}
-				catch (NoSuchMethodException i) {
-					return instantiateGeneratorViaDefaultConstructor( generatorClass );
+				catch (NoSuchMethodException ignoreAgain) {
+					try {
+						return generatorClass.getConstructor( annotationType )
+								.newInstance( annotation );
+					}
+					catch (NoSuchMethodException i) {
+						return instantiateGeneratorViaDefaultConstructor( generatorClass );
+					}
 				}
 			}
 		}

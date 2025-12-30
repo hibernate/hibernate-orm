@@ -9,6 +9,8 @@ import java.util.Map;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Join;
 
 import jakarta.persistence.OrderColumn;
@@ -53,13 +55,20 @@ public class IndexColumn extends AnnotatedColumn {
 		if ( listIndexBase != null ) {
 			column.setBase( listIndexBase.value() );
 		}
-
+		column.addIndexCheckConstraint( context.getMetadataCollector().getDatabase().getDialect() );
 		return column;
+	}
+
+	private void addIndexCheckConstraint(Dialect dialect) {
+		getMappingColumn()
+				.addCheckConstraint( new CheckConstraint( null,
+						getMappingColumn().getQuotedName( dialect )
+								+ ">=" + getBase() ) );
 	}
 
 	private static void createParent(
 			PropertyHolder propertyHolder,
-			Map<String,Join> secondaryTables,
+			Map<String, Join> secondaryTables,
 			IndexColumn column,
 			MetadataBuildingContext context) {
 		final var parent = new AnnotatedColumns();
@@ -84,15 +93,9 @@ public class IndexColumn extends AnnotatedColumn {
 	 * @param propertyHolder Information about the property
 	 * @param inferredData Yeah, right.  Uh...
 	 * @param secondaryTables Any secondary tables available.
-	 *
 	 * @return The index column
 	 */
-	public static IndexColumn buildColumnFromOrderColumn(
-			OrderColumn orderColumn,
-			PropertyHolder propertyHolder,
-			PropertyData inferredData,
-			Map<String, Join> secondaryTables,
-			MetadataBuildingContext context) {
+	public static IndexColumn buildColumnFromOrderColumn(OrderColumn orderColumn, PropertyHolder propertyHolder, PropertyData inferredData, Map<String, Join> secondaryTables, MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
 			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
 			final String explicitName = orderColumn.name();

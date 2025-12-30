@@ -256,7 +256,7 @@ public class AnnotatedColumn {
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
 			}
-			for ( CheckConstraint constraint : checkConstraints ) {
+			for ( var constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}
 			mappingColumn.setOptions( options );
@@ -313,7 +313,7 @@ public class AnnotatedColumn {
 				// assign a unique key name to the column
 				getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
 			}
-			for ( CheckConstraint constraint : checkConstraints ) {
+			for ( var constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}
 			mappingColumn.setDefaultValue( defaultValue );

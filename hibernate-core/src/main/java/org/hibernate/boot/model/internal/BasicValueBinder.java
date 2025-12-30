@@ -1186,7 +1186,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			firstColumn.linkWithAggregateValue( basicValue, aggregateComponent );
 		}
 		else {
-			for ( AnnotatedColumn column : columns.getColumns() ) {
+			for ( var column : columns.getColumns() ) {
 				column.linkWithValue( basicValue );
 			}
 		}

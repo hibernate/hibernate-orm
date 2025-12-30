@@ -49,7 +49,7 @@
         
         <set name="manyToMany" table="m2mjointable" inverse="true">
             <key/>
-            <many-to-many class="DataPoint"/>
+            <many-to-many class="AssociatedDataPoint"/>
         </set>
 	</class>
 </hibernate-mapping>

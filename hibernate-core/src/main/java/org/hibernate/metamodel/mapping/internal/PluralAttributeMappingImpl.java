@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -18,10 +19,12 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -37,6 +40,11 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -65,10 +73,13 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 
@@ -176,6 +187,127 @@ public class PluralAttributeMappingImpl
 		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
+
+		if ( elementDescriptor instanceof EntityCollectionPart elementMapping ) {
+			validateTargetEntity( elementMapping, declaringType, attributeName, propertyAccess, collectionDescriptor, creationProcess );
+		}
+	}
+
+	/**
+	 * @implNote This is check based on best effort.  If we are not able to resolve
+	 * something needed for the check we simply short-circuit in the "affirmative".
+	 * In testing, this mainly manifested in cases with embeddable inheritance
+	 * given how the EmbeddableMappingType is built and an inability to locate
+	 * subtype members.
+	 */
+	private static void validateTargetEntity(
+			EntityCollectionPart elementPart,
+			ManagedMappingType declaringType,
+			String attributeName,
+			PropertyAccess propertyAccess,
+			CollectionPersister collectionDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		final ManagedTypeRepresentationStrategy representationStrategy;
+		if ( declaringType instanceof EntityMappingType declaringEntityType ) {
+			representationStrategy = declaringEntityType.getRepresentationStrategy();
+		}
+		else if ( declaringType instanceof EmbeddableMappingType declaringEmbeddableType ) {
+			representationStrategy = declaringEmbeddableType.getRepresentationStrategy();
+		}
+		else {
+			// should never happen, but be lenient
+			return;
+		}
+
+		if ( representationStrategy.getMode() != RepresentationMode.POJO ) {
+			// nothing to check against with dynamic models
+			return;
+		}
+
+		var modelsContext = creationProcess.getCreationContext().getBootstrapContext().getModelsContext();
+		var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+		var declaringClassDetails = classDetailsRegistry.resolveClassDetails( declaringType.getJavaType().getTypeName() );
+
+		final MemberDetails attributeMemberDetails;
+		if ( propertyAccess.getGetter().getMember() instanceof Field ) {
+			attributeMemberDetails = locateField( declaringClassDetails, attributeName );
+		}
+		else if ( propertyAccess.getGetter().getMember() instanceof Method method ) {
+			attributeMemberDetails = locateGetter( declaringClassDetails, method );
+		}
+		else {
+			// we need access to the field or getter...
+			return;
+		}
+		if ( attributeMemberDetails == null ) {
+			// generally indicates the case of embeddable inheritance mentioned
+			// in the `implNote`
+			return;
+		}
+
+		var elementTypeDetails = attributeMemberDetails.getElementType();
+		var elementType = elementTypeDetails.determineRawClass().toJavaClass();
+
+		if ( !Object.class.equals( elementType ) ) {
+			var targetType = elementPart.getJavaType().getJavaTypeClass();
+			if ( !elementType.isAssignableFrom( targetType ) ) {
+				throw new MappingException(
+						String.format(
+								ROOT,
+								"Plural attribute [%s.%s] was mapped with targetEntity=`%s`, but the attribute is declared as `%s`",
+								declaringType.getNavigableRole().getFullPath(),
+								attributeName,
+								targetType.getName(),
+								elementType.getName()
+						)
+				);
+			}
+		}
+	}
+
+	/**
+	 * Locate the corresponding field details.
+	 *
+	 * @return The field details, or {@code null} if we cannot locate it.
+	 *
+	 * @implNote See `implNote` on {@linkplain #validateTargetEntity} for details
+	 * about why we return {@code null} instead of throwing an exception.
+	 */
+	private static FieldDetails locateField(ClassDetails declaringClassDetails, String attributeName) {
+		assert declaringClassDetails != null;
+		var classDetails = declaringClassDetails;
+		while ( classDetails != null && classDetails != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			var fieldDetails = classDetails.findFieldByName( attributeName );
+			if ( fieldDetails != null ) {
+				return fieldDetails;
+			}
+			classDetails = classDetails.getSuperClass();
+		}
+		return null;
+	}
+
+	/**
+	 * Locate the corresponding getter method details.
+	 *
+	 * @return The getter method details, or {@code null} if we cannot locate it.
+	 *
+	 * @implNote See `implNote` on {@linkplain #validateTargetEntity} for details
+	 * about why we return {@code null} instead of throwing an exception.
+	 */
+	private static MethodDetails locateGetter(ClassDetails declaringClassDetails, Method method) {
+		assert declaringClassDetails != null;
+		var classDetails = declaringClassDetails;
+		while ( classDetails != null && classDetails != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			for ( int i = 0; i < classDetails.getMethods().size(); i++ ) {
+				var methodDetails = classDetails.getMethods().get(i);
+				if ( methodDetails.getName().equals( method.getName() )
+						&& methodDetails.getMethodKind() == MethodDetails.MethodKind.GETTER ) {
+					return methodDetails;
+				}
+			}
+			classDetails = classDetails.getSuperClass();
+		}
+		return null;
 	}
 
 

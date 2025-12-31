@@ -7905,89 +7905,101 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
-		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
 				&& queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
 				appendSql( "not " );
 			}
-
-			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
-			final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
-			final boolean needsSelectAliases = this.needsSelectAliases;
-			try {
-				this.queryPartForRowNumbering = null;
-				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
-				queryPartStack.push( subQuery );
-				appendSql( "exists (" );
-				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
-						|| subQuery.getHavingClauseRestrictions() != null ) {
-					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
-					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
-					visitSelectClause( subQuery.getSelectClause() );
-					visitFromClause( subQuery.getFromClause() );
-					visitWhereClause( subQuery.getWhereClauseRestrictions() );
-					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
-
-					appendSql( " having " );
-					clauseStack.push( Clause.HAVING );
-					try {
-						renderer.renderComparison(
-								subQuery.getSelectClause().getSqlSelections(),
-								lhsTuple,
-								tupleComparisonOperator
-						);
-						final Predicate havingClauseRestrictions = subQuery.getHavingClauseRestrictions();
-						if ( havingClauseRestrictions != null ) {
-							appendSql( " and (" );
-							havingClauseRestrictions.accept( this );
-							appendSql( CLOSE_PARENTHESIS );
-						}
-					}
-					finally {
-						clauseStack.pop();
-					}
-				}
-				else {
-					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
-					appendSql( "select 1" );
-					visitFromClause( subQuery.getFromClause() );
-					appendSql( " where " );
-					clauseStack.push( Clause.WHERE );
-					try {
-						renderer.renderComparison(
-								subQuery.getSelectClause().getSqlSelections(),
-								lhsTuple,
-								tupleComparisonOperator
-						);
-						final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
-						if ( whereClauseRestrictions != null ) {
-							appendSql( " and (" );
-							whereClauseRestrictions.accept( this );
-							appendSql( CLOSE_PARENTHESIS );
-						}
-					}
-					finally {
-						clauseStack.pop();
-					}
-				}
-
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			finally {
-				queryPartStack.pop();
-				this.queryPartForRowNumbering = queryPartForRowNumbering;
-				this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
-				this.needsSelectAliases = needsSelectAliases;
-			}
+			appendSql( "exists" );
+			renderRelationalEmulationSubQuery(
+					querySpec,
+					lhsTuple,
+					renderer,
+					tupleComparisonOperator
+			);
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate IN predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate relational tuple subquery predicate with limit/offset or set operations: " + predicate );
+		}
+	}
+
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
+		final boolean needsSelectAliases = this.needsSelectAliases;
+		try {
+			this.queryPartForRowNumbering = null;
+			this.queryPartForRowNumberingClauseDepth = -1;
+			this.needsSelectAliases = false;
+			queryPartStack.push( subQuery );
+			appendSql( OPEN_PARENTHESIS );
+			if ( !subQuery.getGroupByClauseExpressions().isEmpty()
+					|| subQuery.getHavingClauseRestrictions() != null ) {
+				// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
+				// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
+				visitSelectClause( subQuery.getSelectClause() );
+				visitFromClause( subQuery.getFromClause() );
+				visitWhereClause( subQuery.getWhereClauseRestrictions() );
+				visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
+
+				appendSql( " having " );
+				clauseStack.push( Clause.HAVING );
+				try {
+					renderer.renderComparison(
+							subQuery.getSelectClause().getSqlSelections(),
+							lhsTuple,
+							tupleComparisonOperator
+					);
+					final Predicate havingClauseRestrictions = subQuery.getHavingClauseRestrictions();
+					if ( havingClauseRestrictions != null ) {
+						appendSql( " and (" );
+						havingClauseRestrictions.accept( this );
+						appendSql( CLOSE_PARENTHESIS );
+					}
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+			else {
+				// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+				appendSql( "select 1" );
+				visitFromClause( subQuery.getFromClause() );
+				appendSql( " where " );
+				clauseStack.push( Clause.WHERE );
+				try {
+					renderer.renderComparison(
+							subQuery.getSelectClause().getSqlSelections(),
+							lhsTuple,
+							tupleComparisonOperator
+					);
+					final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
+					if ( whereClauseRestrictions != null ) {
+						appendSql( " and (" );
+						whereClauseRestrictions.accept( this );
+						appendSql( CLOSE_PARENTHESIS );
+					}
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		finally {
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
+			this.needsSelectAliases = needsSelectAliases;
 		}
 	}
 
@@ -8005,66 +8017,77 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			SqlTuple lhsTuple,
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
-		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
 				&& queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate comparing against the top element when there are no limit/offsets
 			lhsTuple.accept( this );
 			appendSql( tupleComparisonOperator.sqlText() );
-
-			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
-			final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
-			final boolean needsSelectAliases = this.needsSelectAliases;
-			try {
-				this.queryPartForRowNumbering = null;
-				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
-				queryPartStack.push( subQuery );
-				appendSql( OPEN_PARENTHESIS );
-				visitSelectClause( subQuery.getSelectClause() );
-				visitFromClause( subQuery.getFromClause() );
-				visitWhereClause( subQuery.getWhereClauseRestrictions() );
-				visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
-				visitHavingClause( subQuery );
-
-				appendSql( " order by " );
-				final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
-				final String order;
-				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
-						|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
-					// Default order is asc so we don't need to specify the order explicitly
-					order = "";
-				}
-				else {
-					order = " desc";
-				}
-				appendSql( '1' );
-				appendSql( order );
-				for ( int i = 1; i < sqlSelections.size(); i++ ) {
-					appendSql( COMMA_SEPARATOR_CHAR );
-					appendSql( i + 1 );
-					appendSql( order );
-				}
-				renderFetch(
-						new QueryLiteral<>( 1, getIntegerType() ),
-						null,
-						FetchClauseType.ROWS_ONLY
-				);
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			finally {
-				queryPartStack.pop();
-				this.queryPartForRowNumbering = queryPartForRowNumbering;
-				this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
-				this.needsSelectAliases = needsSelectAliases;
-			}
+			renderQuantifiedEmulationSubQuery(
+					querySpec,
+					tupleComparisonOperator
+			);
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate quantified tuple subquery predicate with limit/offset or set operations: " + predicate );
 		}
+	}
+
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
+		final boolean needsSelectAliases = this.needsSelectAliases;
+		try {
+			this.queryPartForRowNumbering = null;
+			this.queryPartForRowNumberingClauseDepth = -1;
+			this.needsSelectAliases = false;
+			queryPartStack.push( subQuery );
+			appendSql( OPEN_PARENTHESIS );
+			visitSelectClause( subQuery.getSelectClause() );
+			visitFromClause( subQuery.getFromClause() );
+			visitWhereClause( subQuery.getWhereClauseRestrictions() );
+			visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
+			visitHavingClause( subQuery );
+
+			appendSql( " order by " );
+			final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
+			final String order;
+			if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
+					|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+				// Default order is asc so we don't need to specify the order explicitly
+				order = "";
+			}
+			else {
+				order = " desc";
+			}
+			appendSql( '1' );
+			appendSql( order );
+			for ( int i = 1; i < sqlSelections.size(); i++ ) {
+				appendSql( COMMA_SEPARATOR_CHAR );
+				appendSql( i + 1 );
+				appendSql( order );
+			}
+			renderFetchFirstRow();
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		finally {
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
+			this.needsSelectAliases = needsSelectAliases;
+		}
+	}
+
+	protected void renderFetchFirstRow() {
+		renderFetch(
+				new QueryLiteral<>( 1, getIntegerType() ),
+				null,
+				FetchClauseType.ROWS_ONLY
+		);
 	}
 
 	@Override

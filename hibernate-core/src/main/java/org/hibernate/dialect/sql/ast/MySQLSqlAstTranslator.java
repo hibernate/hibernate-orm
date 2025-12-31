@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MySQLDialect;
@@ -37,14 +41,11 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 /**
  * A SQL AST translator for MySQL.
  *
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
@@ -466,5 +467,64 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
 						? determineColumnReferenceQualifier( column )
 						: null );
+	}
+
+	private boolean needsDmlSubqueryWrapper() {
+		final Statement statement = getStatement();
+		return statement instanceof DeleteStatement || statement instanceof UpdateStatement;
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		final boolean needsParenthesis = !statement.getQueryPart().isRoot();
+		if ( needsParenthesis && needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.visitSelectStatement( statement );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitSelectStatement( statement );
+		}
+	}
+
+	@Override
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderFetchFirstRow() {
+		appendSql( " limit 1" );
 	}
 }

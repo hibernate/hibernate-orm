@@ -48,6 +48,7 @@ import static org.hibernate.generator.EventType.UPDATE;
  *     {@link AnnotationBasedGenerator#initialize},
  * <li>declare a constructor with the same signature as {@link AnnotationBasedGenerator#initialize},
  * <li>declare a constructor which accepts just the annotation instance, or
+ * <li>declare a constructor which accepts just the {@link GeneratorCreationContext} instance, or
  * <li>declare only a default constructor, in which case it does not receive parameters.
  * </ul>
  * <p>

@@ -566,24 +566,36 @@ public class GeneratorBinder {
 			Class<? extends G> generatorClass) {
 		try {
 			try {
-				return generatorClass.getConstructor( annotationType, Member.class, GeneratorCreationContext.class )
-						// support for deprecated signature (eventually remove)
-						.newInstance( annotation, memberDetails.toJavaMember(), creationContext);
+				final var constructor = generatorClass.getDeclaredConstructor( annotationType, Member.class, GeneratorCreationContext.class );
+				// support for deprecated signature (eventually remove)
+				constructor.setAccessible( true );
+				return constructor.newInstance( annotation, memberDetails.toJavaMember(), creationContext);
 			}
 			catch (NoSuchMethodException ignore) {
 				try {
-					return generatorClass.getConstructor( annotationType, GeneratorCreationContext.class )
-							.newInstance( annotation, creationContext );
+					final var constructor = generatorClass.getDeclaredConstructor( annotationType, GeneratorCreationContext.class );
+					constructor.setAccessible( true );
+					return constructor.newInstance( annotation, creationContext );
 				}
 				catch (NoSuchMethodException ignoreAgain) {
 					try {
-						return generatorClass.getConstructor( annotationType )
-								.newInstance( annotation );
+						final var constructor = generatorClass.getDeclaredConstructor( annotationType );
+						constructor.setAccessible( true );
+						return constructor.newInstance( annotation );
 					}
 					catch (NoSuchMethodException i) {
-						return instantiateGeneratorViaDefaultConstructor( generatorClass );
+						try {
+							final var constructor = generatorClass.getDeclaredConstructor( GeneratorCreationContext.class );
+							constructor.setAccessible( true );
+							return constructor.newInstance( creationContext );
+						}
+						catch (NoSuchMethodException ignored) {
+							// no such constructor
+						}
 					}
 				}
+
+				return instantiateGeneratorViaDefaultConstructor( generatorClass );
 			}
 		}
 		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
@@ -609,7 +621,9 @@ public class GeneratorBinder {
 	 */
 	private static <G extends Generator> G instantiateGeneratorViaDefaultConstructor(Class<? extends G> generatorClass) {
 		try {
-			return generatorClass.getDeclaredConstructor().newInstance();
+			final var constructor = generatorClass.getDeclaredConstructor();
+			constructor.setAccessible( true );
+			return constructor.newInstance();
 		}
 		catch (NoSuchMethodException e) {
 			throw new org.hibernate.InstantiationException( "No appropriate constructor for id generator class", generatorClass);

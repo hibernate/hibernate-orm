@@ -31,8 +31,8 @@ import java.util.List;
  * <p>
  * Furthermore, the basic operations of a stateless session do not have
  * corresponding {@linkplain jakarta.persistence.CascadeType cascade types},
- * and so an operation performed via a stateless session never cascades to
- * associated instances.
+ * and so an operation performed on one entity via a stateless session never
+ * cascades to associated entities.
  * <p>
  * The basic operations of a stateless session are {@link #get(Class, Object)},
  * {@link #insert(Object)}, {@link #update(Object)}, {@link #delete(Object)},

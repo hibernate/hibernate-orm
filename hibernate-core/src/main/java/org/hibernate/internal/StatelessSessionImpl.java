@@ -1064,25 +1064,26 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final var persister = requireEntityPersister( entityName );
 		final var entityKey = generateEntityKey( id, persister );
 
-		// first, try to load it from the temp PC associated to this SS
+		// First, try to load it from the temporary PersistenceContext
 		final var persistenceContext = getPersistenceContext();
 		final var holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null && holder.getEntity() != null ) {
-			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
-			// containing eager fetches via join fetch
+			// We found it in the temporary persistence context.
+			// Should indicate we are in the midst of processing a
+			// result set containing eager fetches via join fetch.
 			return holder.getEntity();
 		}
 
 		if ( !eager ) {
-			// caller did not request forceful eager loading, see if we can create
-			// some form of proxy
+			// The caller did not request forceful eager loading;
+			// see if we can create some form of proxy.
 
 			// first, check to see if we can use "bytecode proxies"
-
 			final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				// if the entity defines a HibernateProxy factory, see if there is an
-				// existing proxy associated with the PC - and if so, use it
+				// If the entity defines a HibernateProxy factory,
+				// see if there is an existing proxy associated with
+				// the persistence context - and if so, use it
 				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
 					final Object proxy = holder == null ? null : holder.getProxy();
 
@@ -1095,9 +1096,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
 					}
 
-					// specialized handling for entities with subclasses with a HibernateProxy factory
+					// Specialized handling for entities with subclasses with
+					// a HibernateProxy factory.
 					if ( persister.hasSubclasses() ) {
-						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
+						// Entities with subclasses that define a ProxyFactory
+						// can create a HibernateProxy.
 						SESSION_LOGGER.creatingHibernateProxyToHonorLaziness();
 						return createProxy( entityKey );
 					}
@@ -1106,8 +1109,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				else if ( !persister.hasSubclasses() ) {
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
-				// The entity will get loaded below.
+				// If we get here, then the entity class has subclasses and there
+				// is no HibernateProxy factory. The entity will be loaded below.
 			}
 			else {
 				if ( persister.hasProxy() ) {
@@ -1119,14 +1122,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		// otherwise immediately materialize it
+		// Otherwise, immediately materialize it.
 		return internalLoadGet( entityName, id, persistenceContext );
 	}
 
 	// For Hibernate Reactive
 	protected Object internalLoadGet(String entityName, Object id, PersistenceContext persistenceContext) {
-		// IMPLEMENTATION NOTE: increment/decrement the load count before/after getting the value
-		//                      to ensure that #get does not clear the PersistenceContext.
+		// Increment/decrement the load count before/after getting the value
+		// to ensure that #get does not clear the PersistenceContext.
 		persistenceContext.beforeLoad();
 		try {
 			return get( entityName, id );

@@ -11,7 +11,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.FetchSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -100,6 +99,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -223,7 +223,7 @@ public class MySQLDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
-		storageEngine = createStorageEngine( Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE ) );
+		storageEngine = createStorageEngine( Environment.getProperties().getProperty( STORAGE_ENGINE ) );
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {

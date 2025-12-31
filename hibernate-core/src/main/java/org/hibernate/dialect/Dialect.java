@@ -63,7 +63,6 @@ import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
@@ -73,7 +72,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -151,7 +149,6 @@ import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.TableMigrator;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -178,8 +175,6 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -194,11 +189,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
@@ -215,7 +205,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
@@ -912,7 +901,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
-		final StringBuilder check = new StringBuilder();
+		final var check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -1105,14 +1094,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		final var typeConfiguration = functionContributions.getTypeConfiguration();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
-		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
-		final BasicType<Instant> instantType = basicTypeRegistry.resolve( StandardBasicTypes.INSTANT );
-		final BasicType<OffsetDateTime> offsetDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.OFFSET_DATE_TIME );
-		final BasicType<LocalDateTime> localDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME );
-		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
-		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
+		final var timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final var dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final var timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		final var instantType = basicTypeRegistry.resolve( StandardBasicTypes.INSTANT );
+		final var offsetDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.OFFSET_DATE_TIME );
+		final var localDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME );
+		final var localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
+		final var localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
@@ -1126,7 +1115,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.DEFAULT );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
-		//supported on one database, but can be emulated using sum() and case,
+		//supported on one database but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
 
 		functionFactory.everyAny_sumCase( supportsPredicateAsExpression() );
@@ -1135,8 +1124,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		//Note that while certain mathematical functions return the same type
 		//as their arguments, this is not the case in general - any function
-		//involving exponentiation by a non-integer power, logarithms,
-		//trigonometric functions, etc., should be considered to be of type
+		//involving exponentiation by a noninteger power, logarithms,
+		//trigonometric functions, and so on should be treated as returning
 		//Double. In particular, there is no meaningful concept of an "exact
 		//decimal" version of these functions, and if any database attempted
 		//to implement such a silly thing, it would be dog slow.
@@ -1194,8 +1183,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionFactory.length_characterLength();
 
-		//only some databases support the ANSI SQL-style position() function, so
-		//define it here as an alias for locate()
+		//only some databases support the ANSI SQL-style position() function,
+		//so define it here as an alias for locate()
 
 		functionRegistry.register( "position",
 				new LocatePositionEmulation( typeConfiguration ) );
@@ -1206,15 +1195,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.register( "overlay",
 				new InsertSubstringOverlayEmulation( typeConfiguration, false ) );
 
-		//ANSI SQL trim() function is supported on almost all of the databases
-		//we care about, but on some it must be emulated using ltrim(), rtrim(),
+		//ANSI SQL trim() function is supported on almost all databases we
+		//care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
 		functionRegistry.register( "trim",
 				new TrimFunction( this, typeConfiguration ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
-		//about but in certain cases it doesn't allow some useful typecasts,
+		//about, but in certain cases it doesn't allow some useful typecasts,
 		//which must be emulated in a dialect-specific way
 
 		//Note that two case are especially tricky to make portable:
@@ -1289,8 +1278,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
-		//by default, we don't allow plain parameters for the timestamp argument as most database don't support this
-		functionFactory.timestampaddAndDiff( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+
+		functionFactory.timestampaddAndDiff( this );
 		functionRegistry.registerAlternateKey( "dateadd", "timestampadd" );
 		functionRegistry.registerAlternateKey( "datediff", "timestampdiff" );
 
@@ -1324,6 +1313,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current date", "current_date" );
 		functionRegistry.registerAlternateKey( "current time", "current_time" );
 		functionRegistry.registerAlternateKey( "current timestamp", "current_timestamp" );
+
 		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
 
 		functionRegistry.register(
@@ -1575,133 +1565,133 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	protected String buildStringToBooleanCast(String trueValue, String falseValue) {
 		final boolean supportsValuesList = supportsValuesList();
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "(select v.x from (" );
+		final var fragment = new StringBuilder();
+		fragment.append( "(select v.x from (" );
 		if ( supportsValuesList ) {
-			sb.append( "values (" );
-			sb.append( trueValue );
-			sb.append( "),(" );
-			sb.append( falseValue );
-			sb.append( ")) v(x)" );
+			fragment.append( "values (" );
+			fragment.append( trueValue );
+			fragment.append( "),(" );
+			fragment.append( falseValue );
+			fragment.append( ")) v(x)" );
 		}
 		else {
-			sb.append( "select " );
-			sb.append( trueValue );
-			sb.append( " x");
-			sb.append( getFromDualForSelectOnly() );
-			sb.append(" union all select " );
-			sb.append( falseValue );
-			sb.append( getFromDualForSelectOnly() );
-			sb.append( ") v" );
+			fragment.append( "select " );
+			fragment.append( trueValue );
+			fragment.append( " x");
+			fragment.append( getFromDualForSelectOnly() );
+			fragment.append(" union all select " );
+			fragment.append( falseValue );
+			fragment.append( getFromDualForSelectOnly() );
+			fragment.append( ") v" );
 		}
-		sb.append( " left join (" );
+		fragment.append( " left join (" );
 		if ( supportsValuesList ) {
-			sb.append( "values" );
+			fragment.append( "values" );
 			char separator = ' ';
 			for ( String trueStringValue : Dialect.TRUE_STRING_VALUES ) {
-				sb.append( separator );
-				sb.append( "('" );
-				sb.append( trueStringValue );
-				sb.append( "'," );
-				sb.append( trueValue );
-				sb.append( ')' );
+				fragment.append( separator );
+				fragment.append( "('" );
+				fragment.append( trueStringValue );
+				fragment.append( "'," );
+				fragment.append( trueValue );
+				fragment.append( ')' );
 				separator = ',';
 			}
 			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
-				sb.append( ",('" );
-				sb.append( falseStringValue );
-				sb.append( "'," );
-				sb.append( falseValue );
-				sb.append( ')' );
+				fragment.append( ",('" );
+				fragment.append( falseStringValue );
+				fragment.append( "'," );
+				fragment.append( falseValue );
+				fragment.append( ')' );
 			}
-			sb.append( ") t(k,v)" );
+			fragment.append( ") t(k,v)" );
 		}
 		else {
-			sb.append( "select '" );
-			sb.append( Dialect.TRUE_STRING_VALUES[0] );
-			sb.append( "' k," );
-			sb.append( trueValue );
-			sb.append( " v" );
-			sb.append( getFromDualForSelectOnly() );
+			fragment.append( "select '" );
+			fragment.append( Dialect.TRUE_STRING_VALUES[0] );
+			fragment.append( "' k," );
+			fragment.append( trueValue );
+			fragment.append( " v" );
+			fragment.append( getFromDualForSelectOnly() );
 			for ( int i = 1; i < Dialect.TRUE_STRING_VALUES.length; i++ ) {
-				sb.append( " union all select '" );
-				sb.append( Dialect.TRUE_STRING_VALUES[i] );
-				sb.append( "'," );
-				sb.append( trueValue );
-				sb.append( getFromDualForSelectOnly() );
+				fragment.append( " union all select '" );
+				fragment.append( Dialect.TRUE_STRING_VALUES[i] );
+				fragment.append( "'," );
+				fragment.append( trueValue );
+				fragment.append( getFromDualForSelectOnly() );
 			}
 			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
-				sb.append( " union all select '" );
-				sb.append( falseStringValue );
-				sb.append( "'," );
-				sb.append( falseValue );
-				sb.append( getFromDualForSelectOnly() );
+				fragment.append( " union all select '" );
+				fragment.append( falseStringValue );
+				fragment.append( "'," );
+				fragment.append( falseValue );
+				fragment.append( getFromDualForSelectOnly() );
 			}
-			sb.append( ") t" );
+			fragment.append( ") t" );
 		}
-		sb.append( " on " );
-		sb.append( getLowercaseFunction() );
-		sb.append( "(?1)=t.k where t.v is null or v.x=t.v)" );
-		return sb.toString();
+		fragment.append( " on " );
+		fragment.append( getLowercaseFunction() );
+		fragment.append( "(?1)=t.k where t.v is null or v.x=t.v)" );
+		return fragment.toString();
 	}
 
 	protected String buildStringToBooleanCastDecode(String trueValue, String falseValue) {
 		final boolean supportsValuesList = supportsValuesList();
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "(select v.x from (" );
+		final var fragment = new StringBuilder();
+		fragment.append( "(select v.x from (" );
 		if ( supportsValuesList ) {
-			sb.append( "values (" );
-			sb.append( trueValue );
-			sb.append( "),(" );
-			sb.append( falseValue );
-			sb.append( ")) v(x)" );
+			fragment.append( "values (" );
+			fragment.append( trueValue );
+			fragment.append( "),(" );
+			fragment.append( falseValue );
+			fragment.append( ")) v(x)" );
 		}
 		else {
-			sb.append( "select " );
-			sb.append( trueValue );
-			sb.append( " x");
-			sb.append( getFromDualForSelectOnly() );
-			sb.append(" union all select " );
-			sb.append( falseValue );
-			sb.append( getFromDualForSelectOnly() );
-			sb.append( ") v" );
+			fragment.append( "select " );
+			fragment.append( trueValue );
+			fragment.append( " x");
+			fragment.append( getFromDualForSelectOnly() );
+			fragment.append(" union all select " );
+			fragment.append( falseValue );
+			fragment.append( getFromDualForSelectOnly() );
+			fragment.append( ") v" );
 		}
-		sb.append( ", (" );
+		fragment.append( ", (" );
 		if ( supportsValuesList ) {
-			sb.append( "values (" );
-			sb.append( buildStringToBooleanDecode( trueValue, falseValue ) );
-			sb.append( ")) t(v)" );
+			fragment.append( "values (" );
+			fragment.append( buildStringToBooleanDecode( trueValue, falseValue ) );
+			fragment.append( ")) t(v)" );
 		}
 		else {
-			sb.append( "select " );
-			sb.append( buildStringToBooleanDecode( trueValue, falseValue ) );
-			sb.append( " v");
-			sb.append( getFromDualForSelectOnly() );
-			sb.append(") t" );
+			fragment.append( "select " );
+			fragment.append( buildStringToBooleanDecode( trueValue, falseValue ) );
+			fragment.append( " v");
+			fragment.append( getFromDualForSelectOnly() );
+			fragment.append(") t" );
 		}
-		sb.append( " where t.v is null or v.x=t.v)" );
-		return sb.toString();
+		fragment.append( " where t.v is null or v.x=t.v)" );
+		return fragment.toString();
 	}
 
 	protected String buildStringToBooleanDecode(String trueValue, String falseValue) {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "decode(" );
-		sb.append( getLowercaseFunction() );
-		sb.append( "(?1)" );
+		final var fragment = new StringBuilder();
+		fragment.append( "decode(" );
+		fragment.append( getLowercaseFunction() );
+		fragment.append( "(?1)" );
 		for ( String trueStringValue : TRUE_STRING_VALUES ) {
-			sb.append( ",'" );
-			sb.append( trueStringValue );
-			sb.append( "'," );
-			sb.append( trueValue );
+			fragment.append( ",'" );
+			fragment.append( trueStringValue );
+			fragment.append( "'," );
+			fragment.append( trueValue );
 		}
 		for ( String falseStringValue : FALSE_STRING_VALUES ) {
-			sb.append( ",'" );
-			sb.append( falseStringValue );
-			sb.append( "'," );
-			sb.append( falseValue );
+			fragment.append( ",'" );
+			fragment.append( falseStringValue );
+			fragment.append( "'," );
+			fragment.append( falseValue );
 		}
-		sb.append( ",null)" );
-		return sb.toString();
+		fragment.append( ",null)" );
+		return fragment.toString();
 	}
 
 	/**
@@ -1906,8 +1896,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// by default, not much to do...
 		registerColumnTypes( typeContributions, serviceRegistry );
-		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		final var nationalizationSupport = getNationalizationSupport();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
 			jdbcTypeRegistry.addDescriptor( NCharJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( NVarcharJdbcType.INSTANCE );
@@ -1966,9 +1956,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original != target ) {
 				try {
 					// the BLOB just read during the load phase of merge
-					final OutputStream connectedStream = target.setBinaryStream( 1L );
+					final var connectedStream = target.setBinaryStream( 1L );
 					// the BLOB from the detached state
-					final InputStream detachedStream = original.getBinaryStream();
+					final var detachedStream = original.getBinaryStream();
 					detachedStream.transferTo( connectedStream );
 					return target;
 				}
@@ -1990,9 +1980,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original != target ) {
 				try {
 					// the CLOB just read during the load phase of merge
-					final OutputStream connectedStream = target.setAsciiStream( 1L );
+					final var connectedStream = target.setAsciiStream( 1L );
 					// the CLOB from the detached state
-					final InputStream detachedStream = original.getAsciiStream();
+					final var detachedStream = original.getAsciiStream();
 					detachedStream.transferTo( connectedStream );
 					return target;
 				}
@@ -2014,9 +2004,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original != target ) {
 				try {
 					// the NCLOB just read during the load phase of merge
-					final OutputStream connectedStream = target.setAsciiStream( 1L );
+					final var connectedStream = target.setAsciiStream( 1L );
 					// the NCLOB from the detached state
-					final InputStream detachedStream = original.getAsciiStream();
+					final var detachedStream = original.getAsciiStream();
 					detachedStream.transferTo( connectedStream );
 					return target;
 				}
@@ -2043,9 +2033,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+			final var jdbcServices = session.getFactory().getJdbcServices();
 			try {
-				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
+				final var lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
@@ -2061,9 +2051,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+			final var jdbcServices = session.getFactory().getJdbcServices();
 			try {
-				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
+				final var lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createClob( "" )
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
@@ -2079,9 +2069,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+			final var jdbcServices = session.getFactory().getJdbcServices();
 			try {
-				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
+				final var lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
 						? lobCreator.createNClob( "" )
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
@@ -2357,8 +2347,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			return NON_CLAUSE_STRATEGY;
 		}
 
-		final LockMode lockMode = lockOptions.getLockMode();
-		final PessimisticLockKind lockKind = PessimisticLockKind.interpret( lockMode );
+		final var lockMode = lockOptions.getLockMode();
+		final var lockKind = PessimisticLockKind.interpret( lockMode );
 		if ( lockKind == PessimisticLockKind.NONE ) {
 			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 		}
@@ -2528,10 +2518,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate lock clause.
 	 */
 	public String getWriteLockString(Timeout timeout) {
-		if ( timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
+		final int milliseconds = timeout.milliseconds();
+		if ( milliseconds == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
 			return getForUpdateSkipLockedString();
 		}
-		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
+		else if ( milliseconds == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
 			return getForUpdateNowaitString();
 		}
 		else if ( Timeouts.isRealTimeout( timeout ) && supportsWait() ) {
@@ -2712,7 +2703,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.getLockMode();
+		final var lockMode = lockOptions.getLockMode();
 		lockOptions.setLockMode( lockMode );
 		return getForUpdateString( lockOptions );
 	}
@@ -2914,15 +2905,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(since = "6.6")
 	public String getDropTableString(String tableName) {
-		final StringBuilder buf = new StringBuilder( "drop table " );
+		final var dropTable = new StringBuilder( "drop table " );
 		if ( supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
+			dropTable.append( "if exists " );
 		}
-		buf.append( tableName ).append( getCascadeConstraintsString() );
+		dropTable.append( tableName ).append( getCascadeConstraintsString() );
 		if ( supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
+			dropTable.append( " if exists" );
 		}
-		return buf.toString();
+		return dropTable.toString();
 	}
 
 	/**
@@ -2987,15 +2978,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param tableName The name of the table to alter
 	 * @return The command used to alter a table.
 	 *
-	 * @since 5.2.11
+	 * @since 5.2
 	 */
 	public String getAlterTableString(String tableName) {
-		final StringBuilder sb = new StringBuilder( "alter table " );
+		final var alterTable = new StringBuilder( "alter table " );
 		if ( supportsIfExistsAfterAlterTable() ) {
-			sb.append( "if exists " );
+			alterTable.append( "if exists " );
 		}
-		sb.append( tableName );
-		return sb.toString();
+		alterTable.append( tableName );
+		return alterTable.toString();
 	}
 
 	/**
@@ -3130,22 +3121,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			String referencedTable,
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
-		final StringBuilder res = new StringBuilder( 30 );
-
-		res.append( " add constraint " )
+		final var addConstraint = new StringBuilder( 30 );
+		addConstraint.append( " add constraint " )
 				.append( quote( constraintName ) )
 				.append( " foreign key (" )
 				.append( join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
-
 		if ( !referencesPrimaryKey ) {
-			res.append( " (" )
+			addConstraint.append( " (" )
 					.append( join( ", ", primaryKey ) )
 					.append( ')' );
 		}
-
-		return res.toString();
+		return addConstraint.toString();
 	}
 
 	/**
@@ -3772,7 +3760,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Apply dialect-specific quoting if the given name is quoted using backticks.
 	 * <p>
 	 * By default, the incoming name is checked to see if its first character is
-	 * a backtick ({@code `}). If it is, the dialect specific quoting is applied.
+	 * a backtick ({@code `}). If it is, the dialect-specific quoting is applied.
 	 *
 	 * @param name The value to be quoted.
 	 * @return The quoted (or unmodified, if not starting with backtick) value.
@@ -3783,12 +3771,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		if ( name == null ) {
 			return null;
 		}
-
-		if ( name.charAt( 0 ) == '`' ) {
-			return openQuote() + name.substring( 1, name.length() - 1 ) + closeQuote();
-		}
 		else {
-			return name;
+			return name.charAt( 0 ) == '`'
+					? openQuote() + name.substring( 1, name.length() - 1 ) + closeQuote()
+					: name;
 		}
 	}
 
@@ -4167,17 +4153,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get the comment into a form supported for UDT definition.
-	 *
-	 * @param comment The comment to apply
-	 *
-	 * @return The comment fragment
-	 */
-	public String getUserDefinedTypeComment(String comment) {
-		return "";
-	}
-
-	/**
 	 * Get the comment into a form supported for column definition.
 	 *
 	 * @param comment The comment to apply
@@ -4537,7 +4512,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         false otherwise.
 	 */
 	public boolean supportsTupleDistinctCounts() {
-		// oddly most database in fact seem to, so true is the default.
+		// oddly, most databases in fact seem to, so true is the default.
 		return true;
 	}
 
@@ -4721,7 +4696,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect supports returning the {@link org.hibernate.annotations.RowId} column
+	 * Does this dialect support returning the {@link org.hibernate.annotations.RowId} column
 	 * after execution of an {@code insert} statement, using native SQL syntax?
 	 *
 	 * @return {@code true} is the dialect supports returning the rowid column
@@ -4950,7 +4925,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does the database support user defined types?
+	 * Does the database support user-defined types?
 	 *
 	 * @see org.hibernate.annotations.Struct
 	 *
@@ -4974,7 +4949,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this database prefer to use array types for multi-valued parameters.
+	 * Does this database prefer to use array types for multivalued parameters?
 	 *
 	 * @return boolean
 	 *
@@ -5218,11 +5193,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
-		if ( queryOptions.getDatabaseHints() != null && !queryOptions.getDatabaseHints().isEmpty() ) {
-			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
+		final var databaseHints = queryOptions.getDatabaseHints();
+		if ( databaseHints != null && !databaseHints.isEmpty() ) {
+			sql = getQueryHintString( sql, databaseHints );
 		}
-		if ( commentsEnabled && queryOptions.getComment() != null ) {
-			sql = prependComment( sql, queryOptions.getComment() );
+		if ( commentsEnabled ) {
+			final String comment = queryOptions.getComment();
+			if ( comment != null ) {
+				sql = prependComment( sql, comment );
+			}
 		}
 		return sql;
 	}
@@ -5240,10 +5219,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @since 7.0
 	 */
 	public static String addUseIndexQueryHint(String query, String hints) {
-		final Matcher matcher = QUERY_PATTERN.matcher( query );
+		final var matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
 			final String startToken = matcher.group( 1 );
-			return startToken + " use index (" + hints + ")" + query.substring( startToken.length() );
+			return startToken + " use index (" + hints + ")"
+					+ query.substring( startToken.length() );
 		}
 		else {
 			return query;
@@ -5452,7 +5432,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//milliseconds or microseconds is the maximum
 		//for most dialects that support explicit
 		//precision, with the exception of Oracle,
-		//which accepts up to 9 digits, and DB2 which
+		//which accepts up to 9 digits, and DB2, which
 		//accepts up to 12 digits!
 		return 6; //microseconds!
 	}
@@ -5475,9 +5455,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect round a temporal when converting from a precision higher to a lower one?
+	 * Does this dialect round a temporal when converting from
+	 * higher precision to lower?
 	 *
-	 * @return true if rounding is applied, false if truncation is applied
+	 * @return {@code true} if rounding is used;
+	 *         {@code false} if truncation is used
 	 */
 	public boolean doesRoundTemporalOnOverflow() {
 		return true;
@@ -5522,8 +5504,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The "native" precision for arithmetic with datetimes
 	 * and day-to-second durations. Datetime differences
-	 * will be calculated with this precision except when a
-	 * precision is explicitly specified as a
+	 * will be calculated with this precision except when
+	 * the precision is explicitly specified as a
 	 * {@link TemporalUnit}.
 	 * <p>
 	 * Usually 1 (nanoseconds), 1_000 (microseconds), or
@@ -5575,7 +5557,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Obtain a {@link RowLockStrategy} for the given {@link LockMode}.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.3", forRemoval = true)
 	public RowLockStrategy getLockRowIdentifier(LockMode lockMode) {
 		return switch (lockMode) {
 			case PESSIMISTIC_READ ->
@@ -5686,17 +5671,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String[] getTruncateTableStatements(String[] tableNames) {
 		if ( canBatchTruncate() ) {
-			final StringBuilder builder = new StringBuilder();
+			final var truncatedTables = new StringBuilder();
 			for ( String tableName : tableNames ) {
-				if ( !builder.isEmpty() ) {
-					builder.append(", ");
+				if ( !truncatedTables.isEmpty() ) {
+					truncatedTables.append(", ");
 				}
-				builder.append( tableName );
+				truncatedTables.append( tableName );
 			}
-			return new String[] { getTruncateTableStatement( builder.toString() ) };
+			return new String[] { getTruncateTableStatement( truncatedTables.toString() ) };
 		}
 		else {
-			final String[] statements = new String[tableNames.length];
+			final var statements = new String[tableNames.length];
 			for ( int i = 0; i < tableNames.length; i++ ) {
 				statements[i] = getTruncateTableStatement( tableNames[i] );
 			}
@@ -5798,9 +5783,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				Integer precision,
 				Integer scale,
 				Long length) {
-			final Size size = new Size();
+			final var size = new Size();
 			final int ddlTypeCode = jdbcType.getDdlTypeCode();
-			// Set the explicit length to null if we encounter the JPA default 255
+			// Set the explicit length to null if we encounter the JPA default of 255
 			if ( length != null && length == Size.DEFAULT_LENGTH ) {
 				length = null;
 			}
@@ -5833,7 +5818,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					if ( scale != null && scale != 0 ) {
 						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
 					}
-					// but if the user explicitly specifies a precision, we need to convert it:
+					// but if the user explicitly specifies the precision, we need to convert it:
 					if ( precision != null ) {
 						// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
 						// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
@@ -5882,7 +5867,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * database (often the {@code to_char()} function).
 	 * <p>
 	 * Since it's never possible to translate every
-	 * pattern letter sequences understood by
+	 * pattern letter sequence understood by
 	 * {@code DateTimeFormatter}, only the following
 	 * subset of pattern letters is accepted by
 	 * Hibernate:
@@ -5898,8 +5883,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *     <li>d: day of month</li>
 	 *     <li>D: day of year</li>
 	 *     <li>a: AM/PM</li>
-	 *     <li>H: hour of day (24 hour time)</li>
-	 *     <li>h: hour of AM/PM (12 hour time)</li>
+	 *     <li>H: hour of day (24-hour time)</li>
+	 *     <li>h: hour of AM/PM (12-hour time)</li>
 	 *     <li>m: minutes</li>
 	 *     <li>s: seconds</li>
 	 *     <li>z,Z,x: timezone offset</li>
@@ -6192,14 +6177,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect supports timezone offsets in temporal literals.
+	 * Does this dialect support timezone offsets in temporal literals?
 	 */
 	public boolean supportsTemporalLiteralOffset() {
 		return false;
 	}
 
 	/**
-	 * How the dialect supports time zone types like {@link Types#TIMESTAMP_WITH_TIMEZONE}.
+	 * How the dialect supports time zone types like
+	 * {@link Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP WITH TIME ZONE}.
 	 */
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NONE;
@@ -6210,7 +6196,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * acts as a high-performance row locator, or null if
 	 * this dialect has no such pseudo-column.
 	 * <p>
-	 * If the {@code rowid}-like value is an explicitly-declared
+	 * If the {@code rowid}-like value is an explicitly declared
 	 * named column instead of an implicit pseudo-column, and if
 	 * the given name is nonempty, return the given name.
 	 *
@@ -6406,44 +6392,49 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax.
+	 * Is this dialect known to support what ANSI SQL calls the
+	 * <em>row value constructor</em> syntax, sometimes called
+	 * "tuples".
 	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
+	 * That is, does it support comparisons like:
+	 * <pre>(FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole')</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors as operands of the
+	 *         equality operator; false otherwise.
 	 */
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
 	}
 
 	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
-	 * and <code>&ge;</code> operators.
+	 * Is this dialect known to support what ANSI SQL calls the
+	 * <em>row value constructor</em> syntax with the {@code <}
+	 * {@code >}, {@code <=} and {@code >=} operators.
 	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
+	 * That is, does it support comparisons like:
+	 * <pre>(FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole')</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with relational comparison operators; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors as operands of
+	 *         relational comparison operators; false otherwise.
 	 */
 	public boolean supportsRowValueConstructorGtLtSyntax() {
 		return supportsRowValueConstructorSyntax();
 	}
 
 	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
-	 * and <code>is not distinct from</code> operators.
+	 * Is this dialect known to support what ANSI SQL calls the
+	 * <em>row value constructor</em> syntax with the
+	 * {@code is distinct from} and {@code is not distinct from}
+	 * operators.
 	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
+	 * This is, does it support comparisons like:
+	 * <pre>(FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole')</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with distinct from comparison operators; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors as operands of
+	 *         {@code is distinct from}; false otherwise.
 	 */
 	public boolean supportsRowValueConstructorDistinctFromSyntax() {
 		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
@@ -6471,40 +6462,48 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
+	 * Is this dialect known to support what ANSI SQL calls the
+	 * <em>row value constructor</em> syntax with quantified
+	 * predicates.
 	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
+	 * That is, does it support comparisons like:
+	 * <pre>(FIRST_NAME, LAST_NAME) = ALL (select ...)</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with quantified predicates; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors as operands with
+	 *         quantified predicates; false otherwise.
 	 */
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return true;
 	}
 
 	/**
-	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN lists as well?
+	 * If the dialect supports
+	 * {@linkplain #supportsRowValueConstructorSyntax row value
+	 * constructors}, does it allow them in {@code IN} lists?
 	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
+	 * For example:
+	 * <pre>(FIRST_NAME, LAST_NAME) IN ((?, ?), (?, ?))</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN list; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors in {@code IN} lists;
+	 *         false otherwise.
 	 */
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}
 
 	/**
-	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN subqueries as well?
+	 * If the dialect supports
+	 * {@linkplain #supportsRowValueConstructorSyntax row value
+	 * constructors}, does it allow them in {@code IN} subqueries?
 	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
+	 * For example:
+	 * <pre>(FIRST_NAME, LAST_NAME) IN (SELECT ... )</pre>
 	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN subqueries; false otherwise.
+	 * @return True if this SQL dialect is known to support the
+	 *         use of row value constructors in {@code IN}
+	 *         subqueries; false otherwise.
 	 */
 	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
 		return supportsRowValueConstructorSyntaxInInList();

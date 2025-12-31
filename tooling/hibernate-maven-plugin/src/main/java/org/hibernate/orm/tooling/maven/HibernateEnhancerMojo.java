@@ -6,6 +6,7 @@ package org.hibernate.orm.tooling.maven;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -100,7 +101,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	private MavenProject project;
 
-	public void execute() {
+	public void execute() throws MojoExecutionException {
 		getLog().debug(STARTING_EXECUTION_OF_ENHANCE_MOJO);
 		processParameters();
 		if (enhancementIsNeeded()) {
@@ -162,22 +163,23 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				getLog().debug(SKIPPING_NON_CLASS_FILE.formatted(candidateFile));
 			}
 		}
-		getLog().debug(FILESET_PROCESSED_SUCCESFULLY);
+		getLog().debug(FILESET_PROCESSED_SUCCESSFULLY);
 	}
 
-	private ClassLoader createClassLoader() {
+	private ClassLoader createClassLoader() throws MojoExecutionException {
 		getLog().debug(CREATE_URL_CLASSLOADER_FOR_FOLDER.formatted(classesDirectory)) ;
 		List<URL> urls = new ArrayList<>();
 		try {
 			urls.add(classesDirectory.toURI().toURL());
 		}
 		catch (MalformedURLException e) {
-			getLog().error(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER, e);
+			throw new MojoExecutionException(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER, e);
 		}
 
 		// Add dependencies to classpath as well - all but the ones used for testing purposes
 		final Set<Artifact> artifacts = this.project.getArtifacts();
 		if (artifacts != null) {
+			boolean success = true;
 			for (var artifact : artifacts) {
 				if ( !Artifact.SCOPE_TEST.equals(artifact.getScope() ) ) {
 					try {
@@ -185,10 +187,14 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 						getLog().debug(CREATE_URL_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT.formatted(artifact.getId()));
 					}
 					catch (MalformedURLException e) {
+						success = false;
 						getLog().error(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT
 								.formatted(artifact.getId(), artifact.getFile().getAbsolutePath()), e);
 					}
 				}
+			}
+			if (!success) {
+				throw new MojoExecutionException(UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_DEPENDENCIES);
 			}
 		}
 
@@ -197,7 +203,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				Enhancer.class.getClassLoader());
 	}
 
-	private EnhancementContext createEnhancementContext() {
+	private EnhancementContext createEnhancementContext() throws MojoExecutionException {
 		getLog().debug(CREATE_ENHANCEMENT_CONTEXT) ;
 		return new EnhancementContext(
 				createClassLoader(),
@@ -207,14 +213,14 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				enableExtendedEnhancement);
 	}
 
-	private void createEnhancer() {
+	private void createEnhancer() throws MojoExecutionException {
 		getLog().debug(CREATE_BYTECODE_ENHANCER) ;
 		enhancer = BytecodeProviderInitiator
 				.buildDefaultBytecodeProvider()
 				.getEnhancer(createEnhancementContext());
 	}
 
-	private void discoverTypes() {
+	private void discoverTypes() throws MojoExecutionException {
 		getLog().debug(STARTING_TYPE_DISCOVERY) ;
 		for (File classFile : sourceSet) {
 			discoverTypesForClass(classFile);
@@ -222,16 +228,16 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		getLog().debug(ENDING_TYPE_DISCOVERY) ;
 	}
 
-	private void discoverTypesForClass(File classFile) {
+	private void discoverTypesForClass(File classFile) throws MojoExecutionException {
 		getLog().debug(TRYING_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(classFile));
 		try {
 			enhancer.discoverTypes(
 					determineClassName(classFile),
-					Files.readAllBytes( classFile.toPath()));
-			getLog().info(SUCCESFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(classFile));
+					Files.readAllBytes(classFile.toPath()));
+			getLog().info(SUCCESSFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(classFile));
 		}
 		catch (IOException e) {
-			getLog().error(UNABLE_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(classFile), e);
+			throw new MojoExecutionException(UNABLE_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(classFile), e);
 		}
 	}
 
@@ -245,20 +251,24 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				.replace(File.separatorChar, '.');
 	}
 
-	private void performEnhancement() {
+	private void performEnhancement() throws MojoExecutionException {
 		getLog().debug(STARTING_CLASS_ENHANCEMENT) ;
+		boolean success = true;
 		for (File classFile : sourceSet) {
 			long lastModified = classFile.lastModified();
-			enhanceClass(classFile);
+			success = enhanceClass(classFile) & success;
 			final boolean timestampReset = classFile.setLastModified( lastModified );
 			if ( !timestampReset ) {
 				getLog().debug(SETTING_LASTMODIFIED_FAILED_FOR_CLASS_FILE.formatted(classFile));
 			}
 		}
+		if (!success) {
+			throw new MojoExecutionException(ERROR_WHILE_ENHANCING_CLASSES);
+		}
 		getLog().debug(ENDING_CLASS_ENHANCEMENT) ;
 	}
 
-	private void enhanceClass(File classFile) {
+	private boolean enhanceClass(File classFile) throws MojoExecutionException {
 		getLog().debug(TRYING_TO_ENHANCE_CLASS_FILE.formatted(classFile));
 		try {
 			byte[] newBytes = enhancer.enhance(
@@ -266,43 +276,48 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 					Files.readAllBytes(classFile.toPath()));
 			if (newBytes != null) {
 				writeByteCodeToFile(newBytes, classFile);
-				getLog().info(SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(classFile));
+				getLog().info(SUCCESSFULLY_ENHANCED_CLASS_FILE.formatted(classFile));
 			}
 			else {
 				getLog().info(SKIPPING_FILE.formatted(classFile));
 			}
 		}
 		catch (EnhancementException | IOException e) {
-			getLog().error(ERROR_WHILE_ENHANCING_CLASS_FILE.formatted(classFile), e);;
+			getLog().error(ERROR_WHILE_ENHANCING_CLASS_FILE.formatted(classFile), e);
+			return false;
 		}
+		return true;
 	}
 
-	private void writeByteCodeToFile(byte[] bytes, File file) {
+	private void writeByteCodeToFile(byte[] bytes, File file) throws MojoExecutionException {
 		getLog().debug(WRITING_BYTE_CODE_TO_FILE.formatted(file));
 		if (clearFile(file)) {
 			try {
-				Files.write( file.toPath(), bytes);
+				Files.write(file.toPath(), bytes);
 				getLog().debug(AMOUNT_BYTES_WRITTEN_TO_FILE.formatted(bytes.length, file));
 			}
 			catch (FileNotFoundException e) {
-				getLog().error(ERROR_OPENING_FILE_FOR_WRITING.formatted(file), e );
+				throw new MojoExecutionException(ERROR_OPENING_FILE_FOR_WRITING.formatted(file), e);
 			}
 			catch (IOException e) {
-				getLog().error(ERROR_WRITING_BYTES_TO_FILE.formatted(file), e );
+				throw new MojoExecutionException(ERROR_WRITING_BYTES_TO_FILE.formatted(file), e);
 			}
+		}
+		else {
+			throw new MojoExecutionException(UNABLE_TO_DELETE_FILE.formatted(file));
 		}
 	}
 
-	private boolean clearFile(File file) {
+	private boolean clearFile(File file) throws MojoExecutionException {
 		getLog().debug(TRYING_TO_CLEAR_FILE.formatted(file));
 		boolean success = false;
 		if ( file.delete() ) {
 			try {
 				if ( !file.createNewFile() ) {
-					getLog().error(UNABLE_TO_CREATE_FILE.formatted(file));
+					throw new MojoExecutionException(UNABLE_TO_CREATE_FILE.formatted(file));
 				}
 				else {
-					getLog().info(SUCCESFULLY_CLEARED_FILE.formatted(file));
+					getLog().info(SUCCESSFULLY_CLEARED_FILE.formatted(file));
 					success = true;
 				}
 			}
@@ -310,17 +325,14 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 				getLog().warn(PROBLEM_CLEARING_FILE.formatted(file), e);
 			}
 		}
-		else {
-			getLog().error(UNABLE_TO_DELETE_FILE.formatted(file));
-		}
 		return success;
 	}
 
 	// info messages
-	static final String SUCCESFULLY_CLEARED_FILE = "Succesfully cleared the contents of file: %s";
-	static final String SUCCESFULLY_ENHANCED_CLASS_FILE = "Succesfully enhanced class file: %s";
+	static final String SUCCESSFULLY_CLEARED_FILE = "Successfully cleared the contents of file: %s";
+	static final String SUCCESSFULLY_ENHANCED_CLASS_FILE = "Successfully enhanced class file: %s";
 	static final String SKIPPING_FILE = "Skipping file: %s";
-	static final String SUCCESFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE = "Succesfully discovered types for classes in file: %s";
+	static final String SUCCESSFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE = "Successfully discovered types for classes in file: %s";
 	static final String ADDED_FILE_TO_SOURCE_SET = "Added file to source set: %s";
 
 	// warning messages
@@ -333,10 +345,12 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	static final String UNABLE_TO_DELETE_FILE = "Unable to delete file: %s";
 	static final String ERROR_WRITING_BYTES_TO_FILE = "Error writing bytes to file : %s";
 	static final String ERROR_OPENING_FILE_FOR_WRITING = "Error opening file for writing : %s";
-	static final String ERROR_WHILE_ENHANCING_CLASS_FILE = "An exception occurred while trying to class file: %s";
+	static final String ERROR_WHILE_ENHANCING_CLASS_FILE = "An exception occurred while trying to enhance the class file: %s";
+	static final String ERROR_WHILE_ENHANCING_CLASSES = "An exception occurred while trying to enhance class file. See above logs for more details.";
 	static final String UNABLE_TO_DISCOVER_TYPES_FOR_CLASS_FILE = "Unable to discover types for classes in file: %s";
 	static final String UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER = "An unexpected error occurred while constructing the classloader";
 	static final String UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT = "Unable to resolve URL for dependency %s at %s";
+	static final String UNEXPECTED_ERROR_WHILE_CONSTRUCTING_CLASSLOADER_DEPENDENCIES = "An unexpected error occurred while constructing the classloader. See above logs for more details.";
 
 	// debug messages
 	static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
@@ -356,10 +370,10 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	static final String PROCESSING_FILE_SET = "Processing FileSet";
 	static final String USING_BASE_DIRECTORY = "Using base directory: %s";
 	static final String SKIPPING_NON_CLASS_FILE = "Skipping non '.class' file: %s";
-	static final String FILESET_PROCESSED_SUCCESFULLY = "FileSet was processed succesfully";
+	static final String FILESET_PROCESSED_SUCCESSFULLY = "FileSet was processed successfully";
 	static final String STARTING_ASSEMBLY_OF_SOURCESET = "Starting assembly of the source set";
 	static final String ENDING_ASSEMBLY_OF_SOURCESET = "Ending the assembly of the source set";
-	static final String ADDED_DEFAULT_FILESET_WITH_BASE_DIRECTORY = "Addded a default FileSet with base directory: %s";
+	static final String ADDED_DEFAULT_FILESET_WITH_BASE_DIRECTORY = "Added a default FileSet with base directory: %s";
 	static final String STARTING_EXECUTION_OF_ENHANCE_MOJO = "Starting execution of enhance mojo";
 	static final String ENDING_EXECUTION_OF_ENHANCE_MOJO = "Ending execution of enhance mojo";
 	static final String CREATE_URL_CLASSLOADER_ADD_DEPENDENCY_ARTIFACT = "Adding classpath entry for dependency %s";

@@ -692,11 +692,6 @@ public class H2Dialect extends Dialect {
 		return lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout );
 	}
 
-	private String withRealTimeout(String lockString, int millis) {
-		assert Timeouts.isRealTimeout( millis );
-		return lockString + " wait " + Timeouts.getTimeoutInSeconds( millis );
-	}
-
 	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;

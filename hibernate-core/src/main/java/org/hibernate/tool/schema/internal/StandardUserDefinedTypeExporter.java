@@ -101,13 +101,15 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 	 */
 	protected void applyComments(UserDefinedObjectType udt, String formattedTypeName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
-			if ( udt.getComment() != null ) {
-				sqlStrings.add( "comment on type " + formattedTypeName + " is '" + udt.getComment() + "'" );
+			final String comment = udt.getComment();
+			if ( comment != null ) {
+				sqlStrings.add( "comment on type " + formattedTypeName + " is '" + comment + "'" );
 			}
 			for ( var column : udt.getColumns() ) {
 				final String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + formattedTypeName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+					sqlStrings.add( "comment on column " + formattedTypeName + '.' + column.getQuotedName( dialect )
+									+ " is '" + columnComment + "'" );
 				}
 			}
 		}

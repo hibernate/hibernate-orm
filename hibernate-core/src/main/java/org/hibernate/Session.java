@@ -78,9 +78,9 @@ import java.util.List;
 /// [query level][Query#setReadOnly(boolean)].
 ///
 /// The state of a transient or detached instance may be made persistent by copying it to
-/// a persistent instance using [#merge(Object)]. All older operations which moved a
-/// detached instance to the persistent state are now deprecated, and clients should now
-/// migrate to the use of `merge()`.
+/// a persistent instance using [#merge(Object)]. Since version 7, all older operations
+/// which moved a detached instance to the persistent state have been completely removed,
+/// and clients must now migrate to the use of `merge()`.
 ///
 /// The persistent state of a managed entity may be refreshed from the database, discarding
 /// all modifications to the object held in memory, by calling [#refresh(Object)].
@@ -119,7 +119,7 @@ import java.util.List;
 /// use the following idiom:
 ///
 /// ```java
-/// try (Session session = factory.openSession()) {
+/// try (var session = factory.openSession()) {
 /// 	Transaction tx = null;
 /// 	try {
 ///     	tx = session.beginTransaction();
@@ -163,8 +163,8 @@ import java.util.List;
 ///
 /// ```java
 /// session.doWork(connection -> {
-/// 	try ( PreparedStatement ps = connection.prepareStatement(...) ) {
-/// 		ps.execute();
+/// 	try (var statement = connection.prepareStatement(...)) {
+/// 		statement.execute();
 /// 	}
 /// });
 /// ```

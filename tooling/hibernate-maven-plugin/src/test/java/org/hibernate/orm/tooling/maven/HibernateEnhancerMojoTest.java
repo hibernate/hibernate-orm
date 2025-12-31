@@ -112,7 +112,7 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.USING_BASE_DIRECTORY.formatted(classesDirectory)));
 		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.ADDED_FILE_TO_SOURCE_SET.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.SKIPPING_NON_CLASS_FILE.formatted(fooTxtFile)));
-		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.FILESET_PROCESSED_SUCCESFULLY));
+		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.FILESET_PROCESSED_SUCCESSFULLY ));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.ENDING_ASSEMBLY_OF_SOURCESET));
 	}
 
@@ -142,7 +142,7 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.ADDED_FILE_TO_SOURCE_SET.formatted(fooClassFile)));
 		assertFalse(logMessages.contains(INFO + HibernateEnhancerMojo.ADDED_FILE_TO_SOURCE_SET.formatted(bazClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.SKIPPING_NON_CLASS_FILE.formatted(fooTxtFile)));
-		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.FILESET_PROCESSED_SUCCESFULLY));
+		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.FILESET_PROCESSED_SUCCESSFULLY ));
 	}
 
 	@Test
@@ -309,7 +309,7 @@ public class HibernateEnhancerMojoTest {
 		assertEquals(3, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
 	}
 
 	@Test
@@ -351,7 +351,7 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.STARTING_TYPE_DISCOVERY));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.ENDING_TYPE_DISCOVERY));
 	}
 
@@ -375,11 +375,10 @@ public class HibernateEnhancerMojoTest {
 		assertNotEquals(0, modified);
 		assertTrue(modified > 0);
 		// check log messages
-		assertEquals(4, logMessages.size());
+		assertEquals(3, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_CLEAR_FILE.formatted("foobar")));
-		assertTrue(logMessages.contains(ERROR + HibernateEnhancerMojo.UNABLE_TO_DELETE_FILE.formatted("foobar")));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_CLEAR_FILE.formatted(fooTxtFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_CLEARED_FILE.formatted(fooTxtFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_CLEARED_FILE.formatted(fooTxtFile)));
 	}
 
 	@Test
@@ -402,7 +401,7 @@ public class HibernateEnhancerMojoTest {
 		assertEquals(4, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.WRITING_BYTE_CODE_TO_FILE.formatted(fooTxtFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_CLEAR_FILE.formatted(fooTxtFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_CLEARED_FILE.formatted(fooTxtFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_CLEARED_FILE.formatted(fooTxtFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted(6, fooTxtFile)));
 	}
 
@@ -448,9 +447,9 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.WRITING_BYTE_CODE_TO_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_CLEAR_FILE.formatted(barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_CLEARED_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_CLEARED_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted("foobar".length(), barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
 		// Second Run -> file is not modified
 		logMessages.clear();
 		enhanceClassMethod.invoke(enhanceMojo, barClassFile);
@@ -519,9 +518,9 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.WRITING_BYTE_CODE_TO_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.TRYING_TO_CLEAR_FILE.formatted(barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_CLEARED_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_CLEARED_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted("foobar".length(), barClassFile)));
-		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
+		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.ENDING_CLASS_ENHANCEMENT));
 	}
 

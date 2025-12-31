@@ -124,7 +124,6 @@ import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.TIME;
@@ -132,8 +131,6 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -283,15 +280,12 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	protected String castType(int sqlTypeCode) {
 		if ( getVersion().isSameOrAfter( 9 ) ) {
 			switch ( sqlTypeCode ) {
-				case VARCHAR:
 				case LONG32VARCHAR:
 				case CLOB:
 					return "varchar(max)";
-				case NVARCHAR:
 				case LONG32NVARCHAR:
 				case NCLOB:
 					return "nvarchar(max)";
-				case VARBINARY:
 				case LONG32VARBINARY:
 				case BLOB:
 					return "varbinary(max)";

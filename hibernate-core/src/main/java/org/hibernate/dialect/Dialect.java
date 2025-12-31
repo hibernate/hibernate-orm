@@ -205,6 +205,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
@@ -447,24 +448,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( CHAR ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARCHAR, LONG32VARCHAR, VARCHAR )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+				sqlTypeBuilder( VARCHAR, LONG32VARCHAR, LONG32VARCHAR )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ), castType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor( simpleSqlType( CLOB ) );
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( NCHAR ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( NVARCHAR, LONG32NVARCHAR, NVARCHAR )
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+				sqlTypeBuilder( NVARCHAR, LONG32NVARCHAR, LONG32NVARCHAR )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ), castType( NVARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor( simpleSqlType( NCLOB ) );
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( BINARY ) );
 		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARBINARY, LONG32VARBINARY, VARBINARY )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+				sqlTypeBuilder( VARBINARY, LONG32VARBINARY, LONG32VARBINARY )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ), castType( VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor( simpleSqlType( BLOB ) );
@@ -646,6 +647,64 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected String castType(int sqlTypeCode) {
 		return columnType( sqlTypeCode );
+	}
+
+	private static final Pattern COLUMN_DEFINITION_PATTERN = Pattern.compile(
+			"(.+)(?:\b("
+			// Somewhat SQL standard
+			+ "not|null|default|generated|as|check|constraint|unique|primary|references|storage|compression|collate|visible|invisible|comment|index"
+			// H2: https://www.h2database.com/html/grammar.html#column_definition
+			+ "|selectivity"
+			// MySQL: https://dev.mysql.com/doc/refman/8.4/en/create-table.html
+			+ "|auto_increment|column_format|engine_attribute|secondary_engine_attribute"
+			// MariaDB: https://mariadb.com/docs/server/reference/sql-statements/data-definition/create/create-table
+			+ "|on"
+			// SQL Server: https://learn.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql?view=sql-server-ver17
+			+ "|filestream|sparse|masked|identity|rowguidcol|encrypted"
+			// Oracle: https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/CREATE-TABLE.html#GUID-F9CE0CC3-13AE-4744-A43C-EAC7A71AAAB6__GUID-80BBBA52-C051-4B1B-95E0-32748065F07E
+			+ "|sort|scope|with|reservable|domain"
+			// DB2 z/OS: https://www.ibm.com/docs/en/db2-for-zos/13.0.0?topic=statements-create-table
+			+ "|fieldproc|implicitly|inline"
+			// DB2 LUW: https://www.ibm.com/docs/en/db2/12.1.x?topic=statements-create-table
+			+ "|logged|compact|column|secured"
+			// Cockroach: https://www.cockroachlabs.com/docs/stable/sql-grammar.html#col_qualification
+			+ "|create|family"
+			// HANA: https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/create-table-statement-data-definition?locale=en-US
+			+ "|memory|clientside|enable|disable|fuzzy|persistent|page|numa"
+			// Spanner: https://docs.cloud.google.com/spanner/docs/reference/standard-sql/data-definition-language
+			+ "|options"
+			+ ")\b)?.*",
+			Pattern.CASE_INSENSITIVE
+	);
+
+	/**
+	 * Extracts the SQL type name from a SQL column definition.
+	 *
+	 * @param columnDefinition a SQL column definition
+	 * @return a SQL cast type name
+	 *
+	 * @since 7.3
+	 */
+	public String sqlTypeFromDefinition(String columnDefinition) {
+		final Matcher matcher = COLUMN_DEFINITION_PATTERN.matcher( columnDefinition );
+		if ( matcher.matches() ) {
+			return matcher.group( 1 );
+		}
+		else {
+			return columnDefinition;
+		}
+	}
+
+	/**
+	 * Extracts the cast type name from a SQL type.
+	 *
+	 * @param sqlType a SQL type
+	 * @return a SQL cast type name
+	 *
+	 * @since 7.3
+	 */
+	public String castTypeFromSqlType(String sqlType) {
+		return sqlType;
 	}
 
 	/**

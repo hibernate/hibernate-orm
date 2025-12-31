@@ -61,6 +61,7 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 			sqlAppender.append( "cast(array[] as " );
 			sqlAppender.append( DdlTypeHelper.getCastTypeName(
 					returnType,
+					walker.getSessionFactory().getJdbcServices().getDialect(),
 					walker.getSessionFactory().getTypeConfiguration()
 			) );
 			sqlAppender.append( ')' );

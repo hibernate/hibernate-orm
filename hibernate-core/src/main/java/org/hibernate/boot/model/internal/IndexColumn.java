@@ -97,14 +97,14 @@ public class IndexColumn extends AnnotatedColumn {
 	 */
 	public static IndexColumn buildColumnFromOrderColumn(OrderColumn orderColumn, PropertyHolder propertyHolder, PropertyData inferredData, Map<String, Join> secondaryTables, MetadataBuildingContext context) {
 		if ( orderColumn != null ) {
-			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
+			final String columnDefinition = nullIfEmpty( orderColumn.columnDefinition() );
 			final String explicitName = orderColumn.name();
 			final String name = explicitName.isBlank()
 					? inferredData.getPropertyName() + "_ORDER"
 					: explicitName;
 			final IndexColumn column = new IndexColumn();
 			column.setLogicalColumnName( name );
-			column.setSqlType( sqlType );
+			column.setColumnDefinition( columnDefinition );
 			column.setNullable( orderColumn.nullable() );
 //			column.setJoins( secondaryTables );
 			column.setInsertable( orderColumn.insertable() );

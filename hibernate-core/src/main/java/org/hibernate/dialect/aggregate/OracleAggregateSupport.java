@@ -141,7 +141,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case NCLOB:
 								return template.replace(
 										placeholder,
-										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getSqlTypeName() + ')'
 								);
 
 							case DATE:
@@ -214,7 +214,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										// returning binary data is not yet implemented in the json functions,
 										// so use the xml implementation
-										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob))) as " + column.getColumnDefinition() + ')'
+										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob))) as " + column.getSqlTypeName() + ')'
 								);
 							case ARRAY:
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
@@ -237,7 +237,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									default:
 										return template.replace(
 												placeholder,
-												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getSqlTypeName() + ')'
 										);
 								}
 							case JSON:
@@ -249,7 +249,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
+										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getSqlTypeName() + ')'
 								);
 
 						}
@@ -279,7 +279,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						// Unfortunately, the parsing is nationalized, so we need to replace the standard decimal separator dot with the nationalized one first
 						return template.replace(
 								placeholder,
-								"cast(replace(xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as varchar2(255)),'.',substr(to_char(0.1),1,1)) as " + column.getColumnDefinition() + ")"
+								"cast(replace(xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as varchar2(255)),'.',substr(to_char(0.1),1,1)) as " + column.getSqlTypeName() + ")"
 						);
 					case DATE:
 						return template.replace(
@@ -330,7 +330,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as " + column.getColumnDefinition() + ")"
+								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as " + column.getSqlTypeName() + ")"
 						);
 				}
 			case STRUCT:
@@ -386,17 +386,17 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			return length;
 		}
 		else {
-			final String columnDefinition = column.getColumnDefinition();
-			assert columnDefinition != null;
-			final int parenthesisIndex = columnDefinition.indexOf( '(' );
+			final String sqlTypeName = column.getSqlTypeName();
+			assert sqlTypeName != null;
+			final int parenthesisIndex = sqlTypeName.indexOf( '(' );
 			if ( parenthesisIndex != -1 ) {
 				int end;
-				for ( end = parenthesisIndex + 1; end < columnDefinition.length(); end++ ) {
-					if ( !Character.isDigit( columnDefinition.charAt( end ) ) ) {
+				for ( end = parenthesisIndex + 1; end < sqlTypeName.length(); end++ ) {
+					if ( !Character.isDigit( sqlTypeName.charAt( end ) ) ) {
 						break;
 					}
 				}
-				return Long.parseLong( columnDefinition.substring( parenthesisIndex + 1, end ) );
+				return Long.parseLong( sqlTypeName.substring( parenthesisIndex + 1, end ) );
 			}
 			// Default to the max varchar length
 			return 4000L;
@@ -581,8 +581,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private String determineJsonTypeName(SelectableMapping aggregateColumn) {
-		final String columnDefinition = aggregateColumn.getColumnDefinition();
-		if ( columnDefinition == null ) {
+		final String sqlTypeName = aggregateColumn.getSqlTypeName();
+		if ( sqlTypeName == null ) {
 			assert aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == JSON;
 			return switch ( jsonSupport ) {
 				case OSON -> "json";
@@ -590,7 +590,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				case NONE -> "clob";
 			};
 		}
-		return columnDefinition;
+		return sqlTypeName;
 	}
 
 	enum JsonSupport {
@@ -803,12 +803,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
+		private final String sqlTypeName;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String sqlTypeName) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
+			this.sqlTypeName = sqlTypeName;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
@@ -822,7 +822,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ),
+									sqlTypeName )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -893,7 +894,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+			super( aggregateColumn, aggregateColumn.getSqlTypeName() );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns, typeConfiguration );
 		}

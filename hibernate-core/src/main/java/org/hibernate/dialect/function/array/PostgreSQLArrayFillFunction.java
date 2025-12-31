@@ -34,6 +34,7 @@ public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
 		if ( needsElementCasting( elementExpression ) ) {
 			elementCastType = DdlTypeHelper.getCastTypeName(
 					elementExpression.getExpressionType(),
+					walker.getSessionFactory().getJdbcServices().getDialect(),
 					walker.getSessionFactory().getTypeConfiguration()
 			);
 			sqlAppender.append( "cast(" );

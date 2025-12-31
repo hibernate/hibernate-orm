@@ -183,7 +183,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 			final String columnDefinition = joinColumn.columnDefinition();
 			if ( !columnDefinition.isBlank() ) {
-				setSqlType( context.getObjectNameNormalizer().applyGlobalQuoting( columnDefinition ) );
+				setColumnDefinition( context.getObjectNameNormalizer().applyGlobalQuoting( columnDefinition ) );
 			}
 
 			setNullable( joinColumn.nullable() );
@@ -258,7 +258,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String logicalColumnName =
 				normalizer.normalizeIdentifierQuotingAsString( columnName.isBlank() ? defaultColumnName : columnName );
 		final var column = new AnnotatedJoinColumn();
-		column.setSqlType( columnDef );
+		column.setColumnDefinition( columnDef );
 		column.setLogicalColumnName( logicalColumnName );
 		column.setReferencedColumn( referencedColumnName );
 //		column.setPropertyHolder(propertyHolder);
@@ -347,6 +347,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				mappingColumn != null && mappingColumn.getSqlType() != null
 						? mappingColumn.getSqlType()
 						: referencedColumn.getSqlType(),
+				mappingColumn != null && mappingColumn.getColumnDefinition() != null
+						? mappingColumn.getColumnDefinition()
+						: referencedColumn.getColumnDefinition(),
 				mappingColumn != null && mappingColumn.isUnique(),
 				false
 		);
@@ -392,6 +395,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				column.getArrayLength(),
 				getMappingColumn().isNullable(),
 				column.getSqlType(),
+				column.getColumnDefinition(),
 				getMappingColumn().isUnique(),
 				false //We do copy no strategy here
 		);
@@ -433,9 +437,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		if ( mappingColumn != null ) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not
-			if ( isEmpty( sqlType ) ) {
-				sqlType = column.getSqlType();
-				mappingColumn.setSqlType( sqlType );
+			if ( isEmpty( columnDefinition ) ) {
+				columnDefinition = column.getColumnDefinition();
+				mappingColumn.setColumnDefinition( columnDefinition );
 			}
 
 			// these properties can only be applied on the referenced column - we can just take them over

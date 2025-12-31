@@ -56,9 +56,9 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 	}
 
 	public static String jsonValueReturningType(SqlTypedMapping column) {
-		final String columnDefinition = column.getColumnDefinition();
-		assert columnDefinition != null;
-		return jsonValueReturningType( columnDefinition );
+		final String sqlTypeName = column.getSqlTypeName();
+		assert sqlTypeName != null;
+		return jsonValueReturningType( sqlTypeName );
 	}
 
 	public static String jsonValueReturningType(String columnDefinition) {
@@ -81,7 +81,11 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		if ( arguments.returningType() != null && !isEncodedBoolean( arguments.returningType().getJdbcMapping() ) ) {
 			sqlAppender.appendSql( " returning " );
 			sqlAppender.appendSql( jsonValueReturningType(
-					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() )
+					getCastTypeName(
+							arguments.returningType(),
+							walker.getSessionFactory().getJdbcServices().getDialect(),
+							walker.getSessionFactory().getTypeConfiguration()
+					)
 			) );
 		}
 	}

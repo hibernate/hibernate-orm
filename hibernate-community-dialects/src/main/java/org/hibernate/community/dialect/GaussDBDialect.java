@@ -227,17 +227,6 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	protected String castType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
-			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
-			case NCLOB -> "clob";
-			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
-			default -> super.castType( sqlTypeCode );
-		};
-	}
-
-	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();

@@ -111,7 +111,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_UTC:
 						return template.replace(
 								placeholder,
-								"cast(trim(trailing 'Z' from json_value(" + parentPartExpression + columnExpression + "' returning varchar(35))) as " + column.getColumnDefinition() + ")"
+								"cast(trim(trailing 'Z' from json_value(" + parentPartExpression + columnExpression + "' returning varchar(35))) as " + column.getSqlTypeName() + ")"
 						);
 					case BINARY:
 					case VARBINARY:
@@ -136,7 +136,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ")"
+								"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getSqlTypeName() + ")"
 						);
 				}
 			case SQLXML:
@@ -168,7 +168,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_UTC:
 						return template.replace(
 								placeholder,
-								"cast(replace(trim(trailing 'Z' from xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as varchar(35))),'T',' ') as " + column.getColumnDefinition() + ")"
+								"cast(replace(trim(trailing 'Z' from xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as varchar(35))),'T',' ') as " + column.getSqlTypeName() + ")"
 						);
 					case SQLXML:
 						return template.replace(
@@ -196,7 +196,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as " + column.getColumnDefinition() + ")"
+								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + ") as " + column.getSqlTypeName() + ")"
 						);
 				}
 			case STRUCT:
@@ -387,7 +387,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 
 	private static String determineTypeName(SelectableMapping column, TypeConfiguration typeConfiguration) {
 		final String typeName;
-		if ( column.getColumnDefinition() == null ) {
+		if ( column.getSqlTypeName() == null ) {
 			final DdlType ddlType = typeConfiguration.getDdlTypeRegistry().getDescriptor(
 					column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode()
 			);
@@ -401,8 +401,8 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					typeConfiguration.getDdlTypeRegistry()
 			);
 		}
-		else{
-			typeName = column.getColumnDefinition();
+		else {
+			typeName = column.getSqlTypeName();
 		}
 		return typeName;
 	}

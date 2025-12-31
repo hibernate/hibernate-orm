@@ -160,15 +160,9 @@ public class SpannerDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "string";
-			case BINARY:
-			case VARBINARY:
 			case LONG32VARBINARY:
 				return "bytes";
 		}

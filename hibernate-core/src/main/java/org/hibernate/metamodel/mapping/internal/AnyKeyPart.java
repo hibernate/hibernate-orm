@@ -46,6 +46,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -56,6 +57,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final boolean partitioned;
 	private final JdbcMapping jdbcMapping;
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public AnyKeyPart(
 			NavigableRole navigableRole,
 			DiscriminatedAssociationModelPart anyPart,
@@ -94,6 +96,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		);
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public AnyKeyPart(
 			NavigableRole navigableRole,
 			DiscriminatedAssociationModelPart anyPart,
@@ -112,6 +115,47 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean updateable,
 			boolean partitioned,
 			JdbcMapping jdbcMapping) {
+		this(
+				navigableRole,
+				anyPart,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				columnDefinition,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping
+		);
+	}
+
+	public AnyKeyPart(
+			NavigableRole navigableRole,
+			DiscriminatedAssociationModelPart anyPart,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
@@ -120,6 +164,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
+		this.sqlTypeName = sqlTypeName;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -189,6 +234,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

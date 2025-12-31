@@ -201,6 +201,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return null;
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}

@@ -70,6 +70,7 @@ public class AnnotatedColumn {
 	private String explicitTableName; // the JPA @Column annotation lets you specify a table name
 	private boolean isImplicit;
 	public String sqlType;
+	public String columnDefinition;
 	private Long length;
 	private Integer precision;
 	private Integer scale;
@@ -108,6 +109,10 @@ public class AnnotatedColumn {
 
 	public String getSqlType() {
 		return sqlType;
+	}
+
+	public String getColumnDefinition() {
+		return columnDefinition;
 	}
 
 	public Long getLength() {
@@ -168,6 +173,10 @@ public class AnnotatedColumn {
 
 	public void setSqlType(String sqlType) {
 		this.sqlType = sqlType;
+	}
+
+	public void setColumnDefinition(String columnDefinition) {
+		this.columnDefinition = columnDefinition;
 	}
 
 	public void setLength(Long length) {
@@ -250,6 +259,7 @@ public class AnnotatedColumn {
 					arrayLength,
 					nullable,
 					sqlType,
+					columnDefinition,
 					unique,
 					true
 			);
@@ -283,6 +293,7 @@ public class AnnotatedColumn {
 			Integer arrayLength,
 			boolean nullable,
 			String sqlType,
+			String columnDefinition,
 			boolean unique,
 			boolean applyNamingStrategy) {
 		if ( isNotEmpty( formulaString ) ) {
@@ -305,6 +316,7 @@ public class AnnotatedColumn {
 			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
+			mappingColumn.setColumnDefinition( columnDefinition );
 			mappingColumn.setUnique( unique );
 			// if the column name is not determined, we will assign the
 			// name to the unique key later this method gets called again
@@ -805,7 +817,7 @@ public class AnnotatedColumn {
 					database,
 					column,
 					fractionalSeconds,
-					getSqlType( context, column ),
+					getColumnDefinition( context, column ),
 					getTableName( column, database ),
 					context.getBootstrapContext().getModelsContext()
 			);
@@ -822,7 +834,7 @@ public class AnnotatedColumn {
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( table ).render();
 	}
 
-	private static String getSqlType(
+	private static String getColumnDefinition(
 			MetadataBuildingContext context,
 			jakarta.persistence.Column column) {
 		final String columnDefinition = column.columnDefinition();
@@ -841,14 +853,14 @@ public class AnnotatedColumn {
 			Database database,
 			jakarta.persistence.Column column,
 			FractionalSeconds fractionalSeconds,
-			String sqlType,
+			String columnDefinition,
 			String tableName,
 			ModelsContext sourceModelContext) {
 		final String columnName = logicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
 		final var annotatedColumn = new AnnotatedColumn();
 		annotatedColumn.setLogicalColumnName( columnName );
 		annotatedColumn.setImplicit( false );
-		annotatedColumn.setSqlType( sqlType );
+		annotatedColumn.setColumnDefinition( columnDefinition );
 		annotatedColumn.setLength( (long) column.length() );
 		if ( fractionalSeconds != null ) {
 			annotatedColumn.setTemporalPrecision( fractionalSeconds.value() );

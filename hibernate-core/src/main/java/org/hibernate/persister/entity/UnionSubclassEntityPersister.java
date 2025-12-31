@@ -21,6 +21,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -150,18 +151,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		subclassSpaces = toStringArray( subclassTables );
 
-		subquery = generateSubquery( persistentClass );
+		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
 		addAll( tableExpressions, subclassSpaces );
 		tableExpressions.add( subquery );
 		var parentPersistentClass = persistentClass.getSuperclass();
 		while ( parentPersistentClass != null ) {
-			tableExpressions.add( generateSubquery( parentPersistentClass ) );
+			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
 			parentPersistentClass = parentPersistentClass.getSuperclass();
 		}
 		for ( var subclassPersistentClass : persistentClass.getSubclassClosure() ) {
 			if ( subclassPersistentClass.hasSubclasses() ) {
-				tableExpressions.add( generateSubquery( subclassPersistentClass ) );
+				tableExpressions.add( generateSubquery( subclassPersistentClass, creationContext.getMetadata() ) );
 			}
 		}
 		subclassTableExpressions = toStringArray( tableExpressions );
@@ -413,7 +414,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new int[getPropertySpan()];
 	}
 
-	protected String generateSubquery(PersistentClass model) {
+	protected String generateSubquery(PersistentClass model, MetadataImplementor metadata) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 		if ( !model.hasSubclasses() ) {
@@ -444,7 +445,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					subquery.append( "select " );
 					for ( var column : columns ) {
 						if ( !table.containsColumn( column ) ) {
-							subquery.append( getSelectClauseNullString( column, dialect ) )
+							subquery.append( getSelectClauseNullString( column, dialect, metadata ) )
 									.append( " as " );
 						}
 						subquery.append( column.getQuotedName( dialect ) )
@@ -459,14 +460,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	private String getSelectClauseNullString(Column column, Dialect dialect) {
+	private String getSelectClauseNullString(Column column, Dialect dialect, MetadataImplementor metadata) {
+		final var columnSize = column.getColumnSize( dialect, metadata );
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
-						column.getTypeName(),
-						column.getLength(),
-						column.getArrayLength(),
-						column.getPrecision(),
-						column.getScale(),
+						column.getColumnDefinition(),
+						column.getSqlType(),
+						columnSize.getLength(),
+						columnSize.getArrayLength(),
+						columnSize.getPrecision(),
+						columnSize.getScale(),
 						column.getTemporalPrecision(),
 						column.getType()
 				),

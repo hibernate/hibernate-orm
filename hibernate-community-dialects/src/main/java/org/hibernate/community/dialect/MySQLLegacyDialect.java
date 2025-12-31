@@ -93,6 +93,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Locale;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -283,42 +284,67 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case BIT:
-				//special case for casting to Boolean
-				return "unsigned";
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
-				return "signed";
-			case FLOAT:
-			case REAL:
-			case DOUBLE:
-				//MySQL doesn't let you cast to DOUBLE/FLOAT
-				//but don't just return 'decimal' because
-				//the default scale is 0 (no decimal places)
-				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
-					// In newer versions of MySQL, casting to float/double is supported
-					? super.castType( sqlTypeCode )
-					: "decimal($p,$s)";
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				//MySQL doesn't let you cast to TEXT/LONGTEXT
-				return "char";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
-				return "binary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			// special case for casting to Boolean
+			case BOOLEAN, BIT -> "unsigned";
+			// MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			// MySQL doesn't let you cast to DOUBLE/FLOAT
+			// but don't just return 'decimal' because
+			// the default scale is 0 (no decimal places)
+			case REAL -> supportsCastToFloat() ? "float" : "decimal($p,$s)";
+			case FLOAT, DOUBLE -> supportsCastToFloat() ? "double" : "decimal($p,$s)";
+			// MySQL doesn't let you cast to TEXT/LONGTEXT
+			case CHAR, VARCHAR -> "char($l)";
+			case LONG32VARCHAR, CLOB -> "char";
+			case NCHAR, NVARCHAR -> "char($l) character set utf8mb4";
+			case LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
+			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+			case BINARY, VARBINARY -> "binary($l)";
+			case LONG32VARBINARY, BLOB -> "binary";
+			default -> super.castType(sqlTypeCode);
+		};
+	}
+
+	@Override
+	public String castTypeFromSqlType(String sqlType) {
+		final String lowerCastType = sqlType.toLowerCase( Locale.ROOT );
+		final int parenthesisIndex = lowerCastType.indexOf( '(' );
+		final String castMappingSource = parenthesisIndex == -1
+				? lowerCastType.trim()
+				: lowerCastType.substring( 0, parenthesisIndex ).trim();
+		return switch ( castMappingSource ) {
+			case "bit" -> "unsigned";
+
+			case "tinyint", "smallint", "integer", "bigint" -> "signed";
+
+			case "char" -> {
+				final String baseType = "char" + (parenthesisIndex == -1 ? ""
+						: sqlType.substring( parenthesisIndex, sqlType.indexOf( ')', parenthesisIndex ) + 1 ));
+				yield baseType + (lowerCastType.contains( "utf8mb4" ) ? " character set utf8mb4" : "");
+			}
+			case "varchar", "mediumtext", "text", "longtext" ->
+					lowerCastType.contains( "utf8mb4" ) ? "char character set utf8mb4" : "char";
+
+			case "enum" -> "char";
+
+			case "binary" -> "binary" + (parenthesisIndex == -1 ? ""
+					: sqlType.substring( parenthesisIndex, sqlType.indexOf( ')', parenthesisIndex ) + 1 ));
+
+			case "varbinary", "tinyblob", "mediumblob", "blob", "longblob" -> "binary";
+
+			case "real" -> supportsCastToFloat() ? "float" : "decimal(8," + Size.DEFAULT_SCALE + ")";
+			case "double precision" -> supportsCastToFloat() ? "double" : "decimal(17," + Size.DEFAULT_SCALE + ")";
+			case "float" -> lowerCastType.equals( "float(53)" )
+					? supportsCastToFloat() ? "double" : "decimal(17," + Size.DEFAULT_SCALE + ")"
+					: supportsCastToFloat() ? "float" : "decimal(8," + Size.DEFAULT_SCALE + ")";
+
+			default -> sqlType;
+		};
+	}
+
+	protected boolean supportsCastToFloat() {
+		return getMySQLVersion().isSameOrAfter( 8, 0, 17 );
 	}
 
 	@Override
@@ -341,18 +367,20 @@ public class MySQLLegacyDialect extends Dialect {
 		final int maxTinyLobLen = 255;
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
+		// On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
+		final int maxCharSize = (1 << 30) - 1;
 
 		final CapacityDependentDdlType.Builder varcharBuilder =
 				CapacityDependentDdlType.builder(
 								VARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( CLOB ),
-								columnType( CHAR ),
-								castType( CHAR ),
+								castType( CLOB ),
 								this
 						)
 						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
+						.withTypeCapacity( maxCharSize, columnType( CLOB ), castType( VARCHAR ) );
 		if ( getMaxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
@@ -363,12 +391,12 @@ public class MySQLLegacyDialect extends Dialect {
 								NVARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( NCLOB ),
-								columnType( NCHAR ),
-								castType( NCHAR ),
+								castType( NCLOB ),
 								this
 						)
-						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
+						.withTypeCapacity( maxCharSize, columnType( NCLOB ), castType( NVARCHAR ) );
 		if ( getMaxVarcharLength() < maxLobLen ) {
 			nvarcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
@@ -379,26 +407,26 @@ public class MySQLLegacyDialect extends Dialect {
 								VARBINARY,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( BLOB ),
-								columnType( BINARY ),
-								castType( BINARY ),
+								castType( BLOB ),
 								this
 						)
 						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
-						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
+						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
+						.withTypeCapacity( Integer.MAX_VALUE, columnType( BLOB ), castType( VARBINARY ) );
 		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY,
-				columnType( BLOB ), castType( BINARY ), this ) );
+				columnType( BLOB ), "binary", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR,
-				columnType( CLOB ), castType( CHAR ), this ) );
+				columnType( CLOB ), "char", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR,
-				columnType( CLOB ), castType( NCHAR ), this ) );
+				columnType( NCLOB ), "char character set utf8mb4", this ) );
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BLOB, columnType( BLOB ), castType( BINARY ), this )
+				CapacityDependentDdlType.builder( BLOB, columnType( BLOB ), castType( BLOB ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
 						.withTypeCapacity( maxLobLen, "blob" )
@@ -406,7 +434,7 @@ public class MySQLLegacyDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CLOB, columnType( CLOB ), castType( CHAR ), this )
+				CapacityDependentDdlType.builder( CLOB, columnType( CLOB ), castType( CLOB ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -414,15 +442,22 @@ public class MySQLLegacyDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), castType( NCHAR ), this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-						.withTypeCapacity( maxLobLen, "text" )
+				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), castType( NCLOB ), this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
+						.withTypeCapacity( maxLobLen, "text character set utf8mb4" )
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		// Register a custom DdlType for float to control the cast type name
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder( FLOAT, columnType( FLOAT ), castType( FLOAT ), this )
+						.withTypeCapacity( 24, columnType( FLOAT ), castType( REAL ) )
+						.build()
+		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( castType( VARCHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( castType( INTEGER ), this ) );
 	}
 
 	@Override

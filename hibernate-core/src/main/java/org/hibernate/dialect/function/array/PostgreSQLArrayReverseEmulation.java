@@ -39,6 +39,7 @@ public class PostgreSQLArrayReverseEmulation extends AbstractArrayReverseFunctio
 			if ( needsArrayCasting( pluralType.getElementType() ) ) {
 				arrayTypeName = DdlTypeHelper.getCastTypeName(
 						returnType,
+						walker.getSessionFactory().getJdbcServices().getDialect(),
 						walker.getSessionFactory().getTypeConfiguration()
 				);
 			}

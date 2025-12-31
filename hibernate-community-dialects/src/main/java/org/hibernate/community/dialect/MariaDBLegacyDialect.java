@@ -133,6 +133,10 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		}
 	}
 
+	protected boolean supportsCastToFloat() {
+		return getVersion().isSameOrAfter( 10, 4, 5 );
+	}
+
 	@Override
 	public AggregateSupport getAggregateSupport() {
 		return getVersion().isSameOrAfter( 10, 2 )

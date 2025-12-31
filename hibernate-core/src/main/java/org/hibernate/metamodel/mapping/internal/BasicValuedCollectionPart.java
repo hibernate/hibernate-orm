@@ -125,6 +125,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return selectableMapping.getSqlTypeName();
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return selectableMapping.getLength();
 	}

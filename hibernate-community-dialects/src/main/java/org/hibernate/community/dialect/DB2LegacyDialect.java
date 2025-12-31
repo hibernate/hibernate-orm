@@ -274,8 +274,8 @@ public class DB2LegacyDialect extends Dialect {
 		if ( getDB2Version().isBefore( 11 ) ) {
 			// should use 'binary' since version 11
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), this )
-							.withTypeCapacity( 254, columnType( BINARY ) )
+					CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), columnType( VARBINARY ), this )
+							.withTypeCapacity( 254, columnType( BINARY ), castType( BINARY ) )
 							.build()
 			);
 		}

@@ -6330,6 +6330,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					null,
 					null,
 					null,
+					null,
 					precision,
 					0,
 					null,
@@ -6338,6 +6339,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( bindValue instanceof BigDecimal bigDecimal ) {
 			return new SqlTypedMappingImpl(
+					null,
 					null,
 					null,
 					null,

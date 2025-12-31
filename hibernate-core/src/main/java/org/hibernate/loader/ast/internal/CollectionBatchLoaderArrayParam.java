@@ -71,7 +71,9 @@ public class CollectionBatchLoaderArrayParam
 
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
 				selectable.getColumnDefinition(),
+				selectable.getSqlTypeName(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),

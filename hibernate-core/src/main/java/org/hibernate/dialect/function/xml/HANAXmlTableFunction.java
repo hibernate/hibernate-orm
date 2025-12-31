@@ -449,6 +449,7 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"case " + Template.TEMPLATE + "." + name + " when 'true' then " + trueFragment + " when 'false' then " + falseFragment + " end",
 						null,
+						null,
 						"varchar(5)",
 						null,
 						null,

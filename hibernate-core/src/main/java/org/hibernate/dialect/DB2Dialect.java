@@ -280,8 +280,8 @@ public class DB2Dialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), this )
-						.withTypeCapacity( 254, columnType( BINARY ) )
+				CapacityDependentDdlType.builder( BINARY, columnType( VARBINARY ), columnType( VARBINARY ), this )
+						.withTypeCapacity( 254, columnType( BINARY ), columnType( BINARY ) )
 						.build()
 		);
 	}

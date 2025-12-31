@@ -88,13 +88,13 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 							// Since data is HEX encoded, multiply the max length by 2 since we need 2 hex chars per byte
 							return template.replace(
 									placeholder,
-									"(select convert(" + column.getColumnDefinition() + ",v,2) from openjson(" + aggregateParentReadExpression + ") with (v varchar(max) '$." + columnExpression + "'))"
+									"(select convert(" + column.getSqlTypeName() + ",v,2) from openjson(" + aggregateParentReadExpression + ") with (v varchar(max) '$." + columnExpression + "'))"
 							);
 						}
 						else {
 							return template.replace(
 									placeholder,
-									"convert(" + column.getColumnDefinition() + ",json_value(" + parentJsonPartExpression + columnExpression + "'),2)"
+									"convert(" + column.getSqlTypeName() + ",json_value(" + parentJsonPartExpression + columnExpression + "'),2)"
 							);
 						}
 					case CHAR:
@@ -108,7 +108,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						if ( determineLength( column ) > JSON_VALUE_MAX_LENGTH ) {
 							return template.replace(
 									placeholder,
-									"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getColumnDefinition() + " '$." + columnExpression + "'))"
+									"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getSqlTypeName() + " '$." + columnExpression + "'))"
 							);
 						}
 						// Fall-through intended
@@ -131,12 +131,12 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_WITH_TIMEZONE:
 						return template.replace(
 								placeholder,
-								"cast(json_value(" + parentJsonPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ")"
+								"cast(json_value(" + parentJsonPartExpression + columnExpression + "') as " + column.getSqlTypeName() + ")"
 						);
 					default:
 						return template.replace(
 								placeholder,
-								"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getColumnDefinition() + " '$." + columnExpression + "'))"
+								"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getSqlTypeName() + " '$." + columnExpression + "'))"
 						);
 				}
 			case SQLXML:
@@ -172,12 +172,12 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								"convert(" + column.getColumnDefinition() + "," + xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','nvarchar(max)'),2)"
+								"convert(" + column.getSqlTypeName() + "," + xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','nvarchar(max)'),2)"
 						);
 					default:
 						return template.replace(
 								placeholder,
-								xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','" + column.getColumnDefinition() + "')"
+								xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','" + column.getSqlTypeName() + "')"
 						);
 				}
 		}
@@ -190,17 +190,17 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 			return length;
 		}
 		else {
-			final String columnDefinition = column.getColumnDefinition();
-			assert columnDefinition != null;
-			final int parenthesisIndex = columnDefinition.indexOf( '(' );
+			final String sqlTypeName = column.getSqlTypeName();
+			assert sqlTypeName != null;
+			final int parenthesisIndex = sqlTypeName.indexOf( '(' );
 			if ( parenthesisIndex != -1 ) {
 				int end;
-				for ( end = parenthesisIndex + 1; end < columnDefinition.length(); end++ ) {
-					if ( !Character.isDigit( columnDefinition.charAt( end ) ) ) {
+				for ( end = parenthesisIndex + 1; end < sqlTypeName.length(); end++ ) {
+					if ( !Character.isDigit( sqlTypeName.charAt( end ) ) ) {
 						break;
 					}
 				}
-				return Long.parseLong( columnDefinition.substring( parenthesisIndex + 1, end ) );
+				return Long.parseLong( sqlTypeName.substring( parenthesisIndex + 1, end ) );
 			}
 			// Default to the max varchar length
 			return 8000L;
@@ -463,12 +463,12 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
+		private final String sqlTypeName;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String sqlTypeName) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
+			this.sqlTypeName = sqlTypeName;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
@@ -482,7 +482,8 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ),
+									sqlTypeName )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -554,7 +555,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+			super( aggregateColumn, aggregateColumn.getSqlTypeName() );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}

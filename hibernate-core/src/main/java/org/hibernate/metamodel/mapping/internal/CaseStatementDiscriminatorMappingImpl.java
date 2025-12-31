@@ -156,6 +156,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return null;
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}

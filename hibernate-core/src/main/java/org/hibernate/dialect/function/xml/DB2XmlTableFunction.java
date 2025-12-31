@@ -94,6 +94,7 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"decode(" + Template.TEMPLATE + "." + name + ",'true'," + trueFragment + ",'false'," + falseFragment + ")",
 						null,
+						null,
 						"varchar(5)",
 						null,
 						null,

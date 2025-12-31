@@ -54,10 +54,10 @@ public class ColumnDefinitionQuotingTest {
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
 						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
-						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( idColumn.getColumnDefinition(), ssr ) );
 
 						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
-						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( otherColumn.getColumnDefinition(), ssr ) );
 					}
 				}
 		);
@@ -81,10 +81,10 @@ public class ColumnDefinitionQuotingTest {
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
 						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
-						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( idColumn.getColumnDefinition(), ssr ) );
 
 						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
-						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( otherColumn.getColumnDefinition(), ssr ) );
 					}
 				}
 		);
@@ -119,10 +119,10 @@ public class ColumnDefinitionQuotingTest {
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 
 						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
-						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( idColumn.getColumnDefinition(), ssr ) );
 
 						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
-						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
+						assertTrue( isQuoted( otherColumn.getColumnDefinition(), ssr ) );
 					}
 				}
 		);
@@ -146,10 +146,10 @@ public class ColumnDefinitionQuotingTest {
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 
 						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
-						assertTrue( !isQuoted( idColumn.getSqlType(), ssr ) );
+						assertTrue( !isQuoted( idColumn.getColumnDefinition(), ssr ) );
 
 						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
-						assertTrue( !isQuoted( otherColumn.getSqlType(), ssr ) );
+						assertTrue( !isQuoted( otherColumn.getColumnDefinition(), ssr ) );
 					}
 				}
 		);

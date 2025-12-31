@@ -182,6 +182,9 @@ public class OracleLegacyDialect extends Dialect {
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
 			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
 
+	private static final String DOMAIN_KEYWORD = "domain";
+	private static final String JSON_KEYWORD = "json";
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
@@ -590,6 +593,25 @@ public class OracleLegacyDialect extends Dialect {
 				return "xmlparse(document ?1)";
 		}
 		return super.castPattern(from, to);
+	}
+
+	@Override
+	public String sqlTypeFromDefinition(String columnDefinition) {
+		final String definition = columnDefinition.trim();
+		if ( definition.length() > DOMAIN_KEYWORD.length()
+			&& definition.regionMatches( true, 0, DOMAIN_KEYWORD, 0, DOMAIN_KEYWORD.length() )
+			&& Character.isWhitespace( definition.charAt( DOMAIN_KEYWORD.length() ) ) ) {
+			return super.sqlTypeFromDefinition( definition.substring( DOMAIN_KEYWORD.length() + 1 ) );
+		}
+		else if ( definition.length() > JSON_KEYWORD.length()
+				&& definition.regionMatches( true, 0, JSON_KEYWORD, 0, JSON_KEYWORD.length() )
+				&& Character.isWhitespace( definition.charAt( JSON_KEYWORD.length() ) ) ) {
+			// Ignore JSON options that can follow
+			return "json";
+		}
+		else {
+			return super.sqlTypeFromDefinition( definition );
+		}
 	}
 
 	/**

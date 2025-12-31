@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class SqlTypedMappingImpl implements SqlTypedMapping {
 
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -26,6 +27,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 		this( null, null, null, null, null, null, jdbcMapping );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public SqlTypedMappingImpl(
 			@Nullable String columnDefinition,
 			@Nullable Long length,
@@ -36,6 +38,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 		this( columnDefinition, length, null, precision, scale, temporalPrecision, jdbcMapping );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public SqlTypedMappingImpl(
 			@Nullable String columnDefinition,
 			@Nullable Long length,
@@ -44,8 +47,21 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
 			JdbcMapping jdbcMapping) {
+		this( columnDefinition, columnDefinition, length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
+	}
+
+	public SqlTypedMappingImpl(
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
+			JdbcMapping jdbcMapping) {
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.columnDefinition = columnDefinition == null ? null : columnDefinition.intern();
+		this.sqlTypeName = sqlTypeName == null ? null : sqlTypeName.intern();
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -57,6 +73,11 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

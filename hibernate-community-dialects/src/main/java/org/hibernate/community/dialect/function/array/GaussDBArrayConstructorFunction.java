@@ -41,6 +41,7 @@ public class GaussDBArrayConstructorFunction extends ArrayConstructorFunction {
 			if ( needsArrayCasting( pluralType.getElementType() ) ) {
 				arrayTypeName = DdlTypeHelper.getCastTypeName(
 						returnType,
+						walker.getSessionFactory().getJdbcServices().getDialect(),
 						walker.getSessionFactory().getTypeConfiguration()
 				);
 				sqlAppender.append( "cast(" );

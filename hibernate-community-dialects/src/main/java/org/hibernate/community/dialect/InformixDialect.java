@@ -40,6 +40,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.CheckConstraint;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -257,21 +259,21 @@ public class InformixDialect extends Dialect {
 		//float(n) and just always defaults to
 		//double precision.
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, "float", this )
-						.withTypeCapacity( 8, "smallfloat" )
+				CapacityDependentDdlType.builder( FLOAT, "float", "float", this )
+						.withTypeCapacity( 8, "smallfloat", "smallfloat" )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "lvarchar",this )
-						.withTypeCapacity( 255, "varchar($l)" )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.withTypeCapacity( 255, "varchar($l)", "varchar($l)" )
+						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ), castType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), "nvarchar(255)", this )
-						.withTypeCapacity( 255, "nvarchar($l)" )
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( 255, "nvarchar($l)", "nvarchar($l)" )
+						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ), castType( NVARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "char(36)", this ) );
@@ -1100,6 +1102,21 @@ public class InformixDialect extends Dialect {
 						// which we expect to be ignored by higher layers
 						: "integer";
 		return "cast(null as " + castType + ")";
+	}
+
+	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
+		final String castTypeName;
+		if ( sqlType.getSqlTypeName() != null ) {
+			castTypeName = sqlType.getSqlTypeName();
+		}
+		else {
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			castTypeName = ddlTypeRegistry
+					.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+					.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		}
+		return "cast(null as " + castTypeName + ")";
 	}
 
 	private static String castType(DdlType descriptor) {

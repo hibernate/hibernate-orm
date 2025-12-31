@@ -139,6 +139,7 @@ import java.util.regex.Pattern;
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -157,6 +158,7 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
@@ -349,8 +351,8 @@ public class HANALegacyDialect extends Dialect {
 
 		// varbinary max length 5000
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, CapacityDependentDdlType.LobKind.BIGGEST_LOB, "blob", this )
-						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+				CapacityDependentDdlType.builder( BINARY, CapacityDependentDdlType.LobKind.BIGGEST_LOB, columnType( BLOB ), castType( BLOB ), this )
+						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ), castType( VARBINARY ) )
 						.build()
 		);
 

@@ -153,6 +153,10 @@ public class MariaDBDialect extends MySQLDialect {
 		}
 	}
 
+	protected boolean supportsCastToFloat() {
+		return true;
+	}
+
 	@Override
 	public AggregateSupport getAggregateSupport() {
 		return MySQLAggregateSupport.forMariaDB( this );

@@ -31,7 +31,6 @@ import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Bryan Varner
  * @author Christoph Dreis
  */
-@RequiresDialect(PostgreSQLDialect.class)
+//@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLDialectTestCase {
 
 	@Test
@@ -176,6 +175,7 @@ public class PostgreSQLDialectTestCase {
 		);
 		final String textNullString = dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
+						null,
 						null,
 						(long) Length.LONG32,
 						null,

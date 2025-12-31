@@ -144,17 +144,17 @@ public class SybaseASEDialect extends SybaseDialect {
 		if ( getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( TIME, "bigtime", "bigtime", this )
-							.withTypeCapacity( 3, "time" )
+							.withTypeCapacity( 3, "time", "time" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( TIMESTAMP, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
+							.withTypeCapacity( 3, "datetime", "datetime" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( TIMESTAMP_WITH_TIMEZONE, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
+							.withTypeCapacity( 3, "datetime", "datetime" )
 							.build()
 			);
 		}

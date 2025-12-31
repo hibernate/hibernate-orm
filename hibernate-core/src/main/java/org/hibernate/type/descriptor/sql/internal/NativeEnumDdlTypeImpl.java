@@ -26,9 +26,11 @@ import static org.hibernate.type.SqlTypes.ENUM;
  */
 
 public class NativeEnumDdlTypeImpl implements DdlType {
+	private final String castTypeName;
 	private final Dialect dialect;
 
-	public NativeEnumDdlTypeImpl(Dialect dialect) {
+	public NativeEnumDdlTypeImpl(String castTypeName, Dialect dialect) {
+		this.castTypeName = castTypeName;
 		this.dialect = dialect;
 	}
 
@@ -53,12 +55,14 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
-		return "varchar(" + size +  ")";
+		return size == null || size > dialect.getMaxVarcharCapacity()
+				? DdlTypeImpl.getRawTypeName( castTypeName )
+				: DdlTypeImpl.replace( castTypeName, size, precision, scale );
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return "varchar";
+		return DdlTypeImpl.getRawTypeName( castTypeName );
 	}
 
 	@Override

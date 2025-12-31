@@ -62,6 +62,7 @@ public sealed class Column
 	private boolean unique;
 	private String uniqueKeyName;
 	private String sqlTypeName;
+	private String columnDefinition;
 	private Integer sqlTypeCode;
 	private Boolean sqlTypeLob;
 	private boolean quoted;
@@ -112,6 +113,10 @@ public sealed class Column
 
 	public void setValue(Value value) {
 		this.value = value;
+		if ( value != null && columnDefinition != null ) {
+			// As soon as the Value is linked, determine the SQL type from a columnDefinition
+			deriveSqlTypeFromColumnDefinition();
+		}
 	}
 
 	public JdbcMapping getType() {
@@ -559,6 +564,22 @@ public sealed class Column
 			throw new AssertionFailure( "conflicting type names" );
 		}
 		sqlTypeName = typeName;
+	}
+
+	public String getColumnDefinition() {
+		return columnDefinition;
+	}
+
+	public void setColumnDefinition(String columnDefinition) {
+		this.columnDefinition = columnDefinition;
+		if ( getValue() != null && columnDefinition != null ) {
+			deriveSqlTypeFromColumnDefinition();
+		}
+	}
+
+	private void deriveSqlTypeFromColumnDefinition() {
+		assert columnDefinition != null;
+		sqlTypeName = getMetadataCollector().getDatabase().getDialect().sqlTypeFromDefinition( columnDefinition );
 	}
 
 	public boolean isSqlTypeLob() {

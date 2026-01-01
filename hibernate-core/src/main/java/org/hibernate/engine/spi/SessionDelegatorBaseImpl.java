@@ -627,11 +627,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public MutationQueryImplementor<?> createQuery(CriteriaStatement<?> criteriaStatement) {
+		//noinspection resource
 		return createMutationQuery( criteriaStatement );
 	}
 
 	@Override
 	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
+		//noinspection resource
 		//noinspection resource
 		return queryDelegate().createQuery( queryString );
 	}

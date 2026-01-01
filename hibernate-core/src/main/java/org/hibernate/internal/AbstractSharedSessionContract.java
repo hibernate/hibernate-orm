@@ -62,7 +62,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import java.util.function.Supplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -94,9 +93,11 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.internal.MutationQueryImpl;
 import org.hibernate.query.internal.SelectionQueryImpl;
+import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -104,9 +105,7 @@ import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
-import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
-import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -137,6 +136,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.CacheMode.fromJpaModes;
@@ -1388,7 +1388,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	@Override
 	public <R> SelectionQueryImplementor<R> createSelectionQuery(String hql, EntityGraph<R> resultGraph) {
 		checksBeforeQueryCreation();
 		final var resultType = resultGraph.getGraphedType().getJavaType();
@@ -2076,29 +2075,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public <R> SelectionQueryImplementor<R> createSelectionQuery(CriteriaSelect<R> criteria) {
 		return createSelectionQuery( (CriteriaQuery<R>) criteria );
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {

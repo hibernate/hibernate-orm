@@ -19,6 +19,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 
+
 /**
  * Defines the "internal contract" between {@link Session} and other parts of Hibernate
  * including implementors of {@link org.hibernate.type.Type}, {@link EntityPersister},

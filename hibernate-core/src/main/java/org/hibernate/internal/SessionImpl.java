@@ -274,25 +274,6 @@ public class SessionImpl
 		return lockOptions;
 	}
 
-//	protected void applyQuerySettingsAndHints(Query query) {
-//		final Object queryTimeout = getHintedQueryTimeout();
-//		if ( queryTimeout != null ) {
-//			query.setTimeout( Timeouts.fromHintTimeout( queryTimeout ) );
-//		}
-//
-//		if ( query instanceof SelectionQuery<?> selectionQuery ) {
-//			final var lockOptionsForRead = getLockOptionsForRead();
-//			if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
-//				selectionQuery.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
-//			}
-//
-//			final Object lockTimeout = getHintedLockTimeout();
-//			if ( lockTimeout != null ) {
-//				selectionQuery.setLockTimeout( Timeouts.fromHintTimeout( lockTimeout ) );
-//
-//			}
-//		}
-//	}
 
 	@Override
 	public void clear() {

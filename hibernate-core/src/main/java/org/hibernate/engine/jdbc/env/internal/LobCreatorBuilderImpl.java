@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.NONE;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.getSupportedContextualLobTypes;
-import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_LOGGER;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESSAGE_LOGGER;
 
 /**

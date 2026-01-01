@@ -196,4 +196,9 @@ public interface JdbcLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value =  "AutoCommit was initially %s", id = 100047)
 	void initialAutoCommit(boolean wasInitiallyAutoCommit);
+
+
+	@LogMessage(level = TRACE)
+	@Message(value = "ResultSet statement was not registered (on register)", id = 100048)
+	void resultSetStatementWasNotRegistered();
 }

@@ -315,6 +315,7 @@ public abstract sealed class PersistentClass
 
 	public abstract KeyValue getIdentifier();
 
+	@Override
 	public abstract Property getVersion();
 
 	public abstract Property getDeclaredVersion();
@@ -325,8 +326,8 @@ public abstract sealed class PersistentClass
 
 	public abstract boolean isPolymorphic();
 
+	@Override
 	public abstract boolean isVersioned();
-
 
 	public boolean isCached() {
 		return isCached;
@@ -986,6 +987,7 @@ public abstract sealed class PersistentClass
 		return false;
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		return identifierMapper;
 	}

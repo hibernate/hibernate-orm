@@ -346,7 +346,7 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyNonAggregatedIdAttributes(
-				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
+				Set<? extends SingularPersistentAttribute<? super J, ?>> idAttributes,
 				EmbeddableDomainType<?> idClassType) {
 			if ( id != null ) {
 				throw new IllegalArgumentException( "`AbstractIdentifiableType#id` already set on call to `#applyNonAggregatedIdAttribute`" );

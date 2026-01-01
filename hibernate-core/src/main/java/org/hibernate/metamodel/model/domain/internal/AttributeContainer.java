@@ -35,7 +35,7 @@ public interface AttributeContainer<J> extends ManagedDomainType<J> {
 		}
 
 		default void applyNonAggregatedIdAttributes(
-				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
+				Set<? extends SingularPersistentAttribute<? super J, ?>> idAttributes,
 				EmbeddableDomainType<?> idClassType) {
 			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"

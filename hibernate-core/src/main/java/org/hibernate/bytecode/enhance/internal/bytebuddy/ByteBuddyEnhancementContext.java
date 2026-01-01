@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
@@ -24,7 +25,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 
+import static java.lang.Character.toUpperCase;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
+import static org.hibernate.bytecode.enhance.internal.bytebuddy.PersistentAttributeTransformer.collectPersistentFields;
 
 class ByteBuddyEnhancementContext {
 
@@ -102,52 +105,72 @@ class ByteBuddyEnhancementContext {
 	}
 
 	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {
-		if ( isDiscoveredType( managedCtClass ) ) {
-			return;
+		if ( !isDiscoveredType( managedCtClass ) ) {
+			final var determinedPersistenceType = determinePersistenceType( managedCtClass );
+			registerDiscoveredType( managedCtClass, determinedPersistenceType );
+			if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {
+				final var enhancedFields =
+						collectPersistentFields( managedCtClass, this, typePool, constants )
+								.getEnhancedFields();
+				for ( var enhancedField : enhancedFields ) {
+					final var type = enhancedField.getType().asErasure();
+					if ( !type.isInterface() && enhancedField.hasAnnotation( Embedded.class ) ) {
+						registerDiscoveredType( type, Type.PersistenceType.EMBEDDABLE );
+					}
+					discoverCompositeTypes( type, typePool );
+				}
+			}
 		}
-		final Type.PersistenceType determinedPersistenceType;
+	}
+
+	private Type.PersistenceType determinePersistenceType(TypeDescription managedCtClass) {
 		if ( isEntityClass( managedCtClass ) ) {
-			determinedPersistenceType = Type.PersistenceType.ENTITY;
+			return Type.PersistenceType.ENTITY;
 		}
 		else if ( isCompositeClass( managedCtClass ) ) {
-			determinedPersistenceType = Type.PersistenceType.EMBEDDABLE;
+			return Type.PersistenceType.EMBEDDABLE;
 		}
 		else if ( isMappedSuperclassClass( managedCtClass ) ) {
-			determinedPersistenceType = Type.PersistenceType.MAPPED_SUPERCLASS;
+			return Type.PersistenceType.MAPPED_SUPERCLASS;
 		}
 		else {
 			// Default to assuming a basic type if this is not a managed type
-			determinedPersistenceType = Type.PersistenceType.BASIC;
-		}
-		registerDiscoveredType( managedCtClass, determinedPersistenceType );
-		if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {
-			final EnhancerImpl.AnnotatedFieldDescription[] enhancedFields = PersistentAttributeTransformer.collectPersistentFields(
-							managedCtClass,
-							this,
-							typePool,
-							constants
-					)
-					.getEnhancedFields();
-			for ( EnhancerImpl.AnnotatedFieldDescription enhancedField : enhancedFields ) {
-				final TypeDescription type = enhancedField.getType().asErasure();
-				if ( !type.isInterface() && enhancedField.hasAnnotation( Embedded.class ) ) {
-					registerDiscoveredType( type, Type.PersistenceType.EMBEDDABLE );
-				}
-				discoverCompositeTypes( type, typePool );
-			}
+			return Type.PersistenceType.BASIC;
 		}
 	}
 
 	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {
 		//There is a non-straightforward cache here, but we really need this to be able to
 		//efficiently handle enhancement of large models.
+		var getters = getGetters( fieldDescription.getDeclaringType().asErasure() );
 
-		final TypeDescription erasure = fieldDescription.getDeclaringType().asErasure();
+		final String capitalizedFieldName =
+				toUpperCase( fieldDescription.getName().charAt( 0 ) )
+				+ fieldDescription.getName().substring( 1 );
 
+		final var getCandidate = getters.get( "get" + capitalizedFieldName );
+		final var isCandidate = getters.get( "is" + capitalizedFieldName );
+
+		if ( getCandidate != null ) {
+			if ( isCandidate != null ) {
+				// if there are two candidates, the existing code considered there was no getter;
+				// not sure it's such a good idea, but throwing an exception apparently throws
+				// exception in cases where Hibernate does not usually produce a mapping error.
+				return Optional.empty();
+			}
+			else {
+				return Optional.of( getCandidate );
+			}
+		}
+		else {
+			return Optional.ofNullable( isCandidate );
+		}
+	}
+
+	private @NonNull Map<String, MethodDescription> getGetters(TypeDescription erasure) {
 		//Always try to get with a simple "get" before doing a "computeIfAbsent" operation,
 		//otherwise large models might exhibit significant contention on the map.
-		Map<String, MethodDescription> getters = getterByTypeMap.get( erasure );
-
+		var getters = getterByTypeMap.get( erasure );
 		if ( getters == null ) {
 			//poor man lock striping: as CHM#computeIfAbsent has too coarse lock granularity
 			//and has been shown to trigger significant, unnecessary contention.
@@ -155,7 +178,7 @@ class ByteBuddyEnhancementContext {
 			final Object candidateLock = new Object();
 			final Object existingLock = locksMap.putIfAbsent( lockKey, candidateLock );
 			final Object lock = existingLock == null ? candidateLock : existingLock;
-			synchronized ( lock ) {
+			synchronized (lock) {
 				getters = getterByTypeMap.get( erasure );
 				if ( getters == null ) {
 					getters = MethodGraph.Compiler.DEFAULT.compile( erasure )
@@ -168,24 +191,6 @@ class ByteBuddyEnhancementContext {
 				}
 			}
 		}
-
-		String capitalizedFieldName = Character.toUpperCase( fieldDescription.getName().charAt( 0 ) )
-				+ fieldDescription.getName().substring( 1 );
-
-		MethodDescription getCandidate = getters.get( "get" + capitalizedFieldName );
-		MethodDescription isCandidate = getters.get( "is" + capitalizedFieldName );
-
-		if ( getCandidate != null ) {
-			if ( isCandidate != null ) {
-				// if there are two candidates, the existing code considered there was no getter.
-				// not sure it's such a good idea but throwing an exception apparently throws exception
-				// in cases where Hibernate does not usually throw a mapping error.
-				return Optional.empty();
-			}
-
-			return Optional.of( getCandidate );
-		}
-
-		return Optional.ofNullable( isCandidate );
+		return getters;
 	}
 }

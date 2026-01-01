@@ -58,8 +58,7 @@ public class SetFieldOnArgument implements ByteCodeAppender {
 				}
 			}
 		}
-		else {
-			final Field setter = (Field) setterMember;
+		else if ( setterMember instanceof Field setter ) {
 			type = setter.getType();
 			methodVisitor.visitVarInsn( getLoadOpCode( type ), 1 );
 			methodVisitor.visitFieldInsn(
@@ -69,6 +68,9 @@ public class SetFieldOnArgument implements ByteCodeAppender {
 					Type.getDescriptor( type )
 			);
 		}
+		else {
+			throw new AssertionError( "Unknown setter member type" );
+		}
 		methodVisitor.visitInsn( Opcodes.RETURN );
 		return new Size(
 				is64BitType( type ) ? 3 : 2,
@@ -77,18 +79,14 @@ public class SetFieldOnArgument implements ByteCodeAppender {
 	}
 
 	private int getLoadOpCode(Class<?> type) {
-		if ( type.isPrimitive() ) {
-			switch ( type.getTypeName() ) {
-				case "long":
-					return Opcodes.LLOAD;
-				case "float":
-					return Opcodes.FLOAD;
-				case "double":
-					return Opcodes.DLOAD;
-			}
-			return Opcodes.ILOAD;
-		}
-		return Opcodes.ALOAD;
+		return type.isPrimitive()
+				? switch ( type.getTypeName() ) {
+					case "long" -> Opcodes.LLOAD;
+					case "float" -> Opcodes.FLOAD;
+					case "double" -> Opcodes.DLOAD;
+					default -> Opcodes.ILOAD;
+				}
+				: Opcodes.ALOAD;
 	}
 
 	private boolean is64BitType(Class<?> type) {

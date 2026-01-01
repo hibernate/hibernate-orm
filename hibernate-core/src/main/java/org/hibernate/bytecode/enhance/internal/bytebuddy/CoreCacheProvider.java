@@ -46,12 +46,10 @@ class CoreCacheProvider implements TypePool.CacheProvider {
 	 */
 	@Override
 	public TypePool.Resolution register(String name, TypePool.Resolution resolution) {
-		//Ensure we DO NOT cache anything from a non-core namespace, to not leak application specific code:
+		//Ensure we DO NOT cache anything from a non-core namespace to not leak application-specific code:
 		if ( acceptedPrefixes.isCoreClassName( name ) ) {
-			TypePool.Resolution cached = storage.putIfAbsent( name, resolution );
-			return cached == null
-					? resolution
-					: cached;
+			final var cached = storage.putIfAbsent( name, resolution );
+			return cached == null ? resolution : cached;
 		}
 		else {
 			return resolution;

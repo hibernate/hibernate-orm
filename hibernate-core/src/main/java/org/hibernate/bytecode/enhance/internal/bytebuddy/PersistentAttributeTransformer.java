@@ -4,15 +4,17 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -108,25 +110,26 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			ByteBuddyEnhancementContext enhancementContext,
 			TypePool classPool,
 			EnhancerImplConstants constants) {
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		final List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		// HHH-10981 There is no need to do it for @MappedSuperclass
 		// HHH-15505 This needs to be done first so that fields with the same name in the mappedsuperclass and entity are handled correctly
 		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass, enhancementContext ) );
 		}
-		for ( FieldDescription ctField : managedCtClass.getDeclaredFields() ) {
+		for ( var ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
-			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
-				continue;
-			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
-			if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
-				persistentFieldList.add( annotatedField );
+			if ( !ctField.getName().startsWith( "$$_hibernate_" )
+				&& !"this$0".equals( ctField.getName() ) ) {
+				final var annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
+				if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
+					persistentFieldList.add( annotatedField );
+				}
 			}
 		}
 
-		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
+		final var orderedFields =
+				enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
 		if ( ENHANCEMENT_LOGGER.isTraceEnabled() ) {
 			ENHANCEMENT_LOGGER.persistentFieldsForEntity(
 					managedCtClass.getName(),
@@ -140,15 +143,14 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypeDefinition managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext) {
 		if ( managedCtClass == null || managedCtClass.represents( Object.class ) ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
-
+		final var managedCtSuperclass = managedCtClass.getSuperClass();
 		// If managedCtSuperclass is null, managedCtClass can be either interface or module-info.
 		// Interfaces are already filtered-out, and module-info does not have any fields to enhance
 		// so we can safely return empty list.
 		if ( managedCtSuperclass == null || enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
@@ -156,15 +158,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		ENHANCEMENT_LOGGER.foundMappedSuperclass( String.valueOf( managedCtSuperclass ) );
 
-		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		final List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 
-		for ( FieldDescription ctField : managedCtSuperclass.getDeclaredFields() ) {
-			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
-				continue;
-			}
-			AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
-			if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
-				persistentFieldList.add( annotatedField );
+		for ( var ctField : managedCtSuperclass.getDeclaredFields() ) {
+			if ( !ctField.getName().startsWith( "$$_hibernate_" )
+				&& !"this$0".equals( ctField.getName() ) ) {
+				final var annotatedField = new AnnotatedFieldDescription( enhancementContext, ctField );
+				if ( !ctField.isStatic() && enhancementContext.isPersistentField( annotatedField ) ) {
+					persistentFieldList.add( annotatedField );
+				}
 			}
 		}
 		persistentFieldList.addAll( collectInheritPersistentFields( managedCtSuperclass, enhancementContext ) );
@@ -183,14 +185,14 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-				AnnotatedFieldDescription enhancedField = getEnhancedField( owner, name, desc );
+				final var enhancedField = getEnhancedField( owner, name, desc );
 				if ( enhancedField != null ) {
 					switch ( opcode ) {
 						case Opcodes.GETFIELD:
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name,
+									PERSISTENT_FIELD_READER_PREFIX + name,
 									"()" + desc,
 									false
 							);
@@ -204,7 +206,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + name,
+									PERSISTENT_FIELD_WRITER_PREFIX + name,
 									"(" + desc + ")V",
 									false
 							);
@@ -217,7 +219,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	}
 
 	private AnnotatedFieldDescription getEnhancedField(String owner, String name, String desc) {
-		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
+		for ( var enhancedField : enhancedFields ) {
 			if ( enhancedField.getName().equals( name )
 					&& enhancedField.getDescriptor().equals( desc )
 					&& enhancedField.getDeclaringType().asErasure().getInternalName().equals( owner ) ) {
@@ -243,9 +245,9 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		// 1. We sometimes need to write to final fields when they are lazy.
 		// 2. Those fields are already written to by Hibernate ORM through reflection anyway.
 		// 3. The compiler already makes sure that final fields are not written to from the user's source code.
-		List<FieldDescription.InDefinedShape> enhancedFieldsAsDefined = new ArrayList<>();
-		for ( AnnotatedFieldDescription f : enhancedFields ) {
-			enhancedFieldsAsDefined.add( f.asDefined() );
+		final List<FieldDescription.InDefinedShape> enhancedFieldsAsDefined = new ArrayList<>();
+		for ( var fieldDescription : enhancedFields ) {
+			enhancedFieldsAsDefined.add( fieldDescription.asDefined() );
 		}
 		// Replace the private modifier with package-private for all enhanced fields,
 		// because our AccessOptimizer needs to get/set fields and can't use field reader/writer,
@@ -256,10 +258,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 						REMOVE_PRIVATE_FINAL_MODIFIER
 				)
 		);
-		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
+		for ( var enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(
-							EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + enhancedField.getName(),
+							PERSISTENT_FIELD_READER_PREFIX + enhancedField.getName(),
 							enhancedField.asDefined().getType().asErasure(),
 							constants.modifierPUBLIC
 					)
@@ -269,7 +271,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			if ( !enhancedField.getFieldDescription().isFinal() ) {
 				builder = builder
 						.defineMethod(
-								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
+								PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
 								constants.TypeVoid,
 								constants.modifierPUBLIC
 						)
@@ -306,7 +308,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
 		}
-		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
+		else if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
 			if ( enhancedField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
 				return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
 			}
@@ -332,7 +334,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
 		}
-		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
+		else if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
 			if ( enhancedField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
 				return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
 			}
@@ -367,16 +369,18 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				Implementation.Context implementationContext,
 				MethodDescription instrumentedMethod
 		) {
+			final String descriptor = persistentField.asDefined().getType().asErasure().getDescriptor();
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
-					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
+					PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
+					Type.getMethodDescriptor( Type.getType( descriptor ) ),
 					false
 			);
-			methodVisitor.visitInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
-			return new Size( persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+			methodVisitor.visitInsn( Type.getType( descriptor ).getOpcode( Opcodes.IRETURN ) );
+			return new Size( persistentField.getType().getStackSize().getSize(),
+					instrumentedMethod.getStackSize() );
 		}
 	}
 
@@ -397,30 +401,33 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				Implementation.Context implementationContext,
 				MethodDescription instrumentedMethod
 		) {
+			final String descriptor = persistentField.asDefined().getType().asErasure().getDescriptor();
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitVarInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitVarInsn( Type.getType( descriptor ).getOpcode( Opcodes.ILOAD ), 1 );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
-					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
+					PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( descriptor ) ),
 					false
 			);
 			methodVisitor.visitInsn( Opcodes.RETURN );
-			return new Size( 1 + persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+			return new Size( 1 + persistentField.getType().getStackSize().getSize(),
+					instrumentedMethod.getStackSize() );
 		}
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if ( this == o ) {
+	public boolean equals(final Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || PersistentAttributeTransformer.class != o.getClass() ) {
+		else if ( !(object instanceof PersistentAttributeTransformer that) ) {
 			return false;
 		}
-		final PersistentAttributeTransformer that = (PersistentAttributeTransformer) o;
-		return Objects.equals( managedCtClass, that.managedCtClass );
+		else {
+			return Objects.equals( managedCtClass, that.managedCtClass );
+		}
 	}
 
 	@Override

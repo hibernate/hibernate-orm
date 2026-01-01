@@ -8,25 +8,26 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
+import static java.lang.Integer.toHexString;
 import static org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl.EMBEDDED_MEMBER;
 
 public class NameEncodeHelper {
 
 	public static String encodeName(String[] propertyNames, Member[] getters, Member[] setters) {
-		final StringBuilder sb = new StringBuilder();
+		final var encoded = new StringBuilder();
 		for ( int i = 0; i < propertyNames.length; i++ ) {
 			final String propertyName = propertyNames[i];
 			final Member getter = getters[i];
 			final Member setter = setters[i];
-			// Encode the two member types as 4 bit integer encoded as hex character
-			sb.append( Integer.toHexString( getKind( getter ) << 2 | getKind( setter ) ) );
-			sb.append( propertyName );
+			// Encode the two member types as 4-bit integer encoded as hex character
+			encoded.append( toHexString( getKind( getter ) << 2 | getKind( setter ) ) );
+			encoded.append( propertyName );
 		}
-		return sb.toString();
+		return encoded.toString();
 	}
 
 	private static int getKind(Member member) {
-		// Encode the member type as 2 bit integer
+		// Encode the member type as 2-bit integer
 		if ( member == EMBEDDED_MEMBER ) {
 			return 0;
 		}

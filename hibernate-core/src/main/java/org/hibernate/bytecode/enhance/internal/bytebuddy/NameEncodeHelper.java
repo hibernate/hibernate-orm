@@ -16,12 +16,9 @@ public class NameEncodeHelper {
 	public static String encodeName(String[] propertyNames, Member[] getters, Member[] setters) {
 		final var encoded = new StringBuilder();
 		for ( int i = 0; i < propertyNames.length; i++ ) {
-			final String propertyName = propertyNames[i];
-			final Member getter = getters[i];
-			final Member setter = setters[i];
 			// Encode the two member types as 4-bit integer encoded as hex character
-			encoded.append( toHexString( getKind( getter ) << 2 | getKind( setter ) ) );
-			encoded.append( propertyName );
+			encoded.append( toHexString( getKind( getters[i] ) << 2 | getKind( setters[i] ) ) );
+			encoded.append( propertyNames[i] );
 		}
 		return encoded.toString();
 	}

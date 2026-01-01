@@ -298,18 +298,20 @@ public class SetPropertyValues implements ByteCodeAppender {
 
 	private static void visitSetter(MethodVisitor methodVisitor, Member setterMember, Class<?> type) {
 		if ( setterMember instanceof Method setter ) {
+			final var declaringClass = setter.getDeclaringClass();
 			methodVisitor.visitMethodInsn(
-					setter.getDeclaringClass().isInterface() ?
-							Opcodes.INVOKEINTERFACE :
-							Opcodes.INVOKEVIRTUAL,
-					Type.getInternalName( setter.getDeclaringClass() ),
+					declaringClass.isInterface()
+							? Opcodes.INVOKEINTERFACE
+							: Opcodes.INVOKEVIRTUAL,
+					Type.getInternalName( declaringClass ),
 					setter.getName(),
 					Type.getMethodDescriptor( setter ),
-					setter.getDeclaringClass().isInterface()
+					declaringClass.isInterface()
 			);
-			if ( setter.getReturnType() != void.class ) {
+			final var returnType = setter.getReturnType();
+			if ( returnType != void.class ) {
 				// Setters could return something which we have to ignore
-				switch ( setter.getReturnType().getTypeName() ) {
+				switch ( returnType.getTypeName() ) {
 					case "long":
 					case "double":
 						methodVisitor.visitInsn( Opcodes.POP2 );

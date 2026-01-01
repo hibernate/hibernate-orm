@@ -4,7 +4,12 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -20,6 +25,7 @@ import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.restriction.Restriction;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -47,7 +53,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
  *
  * @author Steve Ebersole
  */
-public class MutationSpecificationImpl<T> implements MutationSpecification<T>, TypedQueryReference<Void> {
+public class MutationSpecificationImpl<T> implements MutationSpecification<T>, JpaTypedQueryReference<Void> {
 
 	public enum MutationType {
 //		INSERT,
@@ -103,6 +109,36 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	@Override
 	public Map<String,Object> getHints() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return null;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return null;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return null;
+	}
+
+	@Override
+	public Timeout getTimeout() {
+		return null;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return "";
 	}
 
 	@Override

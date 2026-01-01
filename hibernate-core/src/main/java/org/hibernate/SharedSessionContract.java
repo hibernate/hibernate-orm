@@ -10,13 +10,30 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityHandler;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.QueryProducer;
+import org.hibernate.query.IllegalMutationQueryException;
+import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 
 import static org.hibernate.internal.TransactionManagement.manageTransaction;
 
@@ -25,26 +42,7 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
-
-	/**
-	 * Obtain a {@link StatelessSession} builder with the ability to copy certain
-	 * information from this session.
-	 *
-	 * @return the session builder
-	 *
-	 * @since 7.2
-	 */
-	@Incubating
-	SharedStatelessSessionBuilder statelessWithOptions();
-
-	/**
-	 * Obtain a {@link Session} builder with the ability to copy certain
-	 * information from this session.
-	 *
-	 * @return the session builder
-	 */
-	SharedSessionBuilder sessionWithOptions();
+public interface SharedSessionContract extends EntityHandler, AutoCloseable, Serializable {
 
 	/**
 	 * Obtain the tenant identifier associated with this session, as a string.
@@ -183,6 +181,432 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * @since 6.2
 	 */
 	boolean isJoinedToTransaction();
+
+	/// Corollary to [#find(Class,Object)] for dynamic models.
+	///
+	/// @param entityName The entity name
+	/// @param id The identifier
+	/// @return The persistent instance, or null
+	/// @throws IllegalArgumentException If the given name does not match
+	/// a mapped dynamic entity
+	/// @see SessionFactory#createGraphForDynamicEntity(String)
+	/// @see #find(EntityGraph, Object, FindOption...)
+	default Object find(String entityName, Object id) {
+		return find( entityName, id, LockMode.NONE );
+	}
+
+	/// Corollary to [#find(Class,Object,FindOption...)] for dynamic models.
+	///
+	/// @param entityName The entity name
+	/// @param key The key (primary or natural, based on [KeyType])
+	/// @param findOptions Options for the load operation.
+	///
+	/// @return The persistent instance, or null
+	///
+	/// @throws IllegalArgumentException If the given name does not match
+	/// a mapped dynamic entity
+	///
+	/// @see SessionFactory#createGraphForDynamicEntity(String)
+	/// @see #find(EntityGraph,Object,FindOption...)
+	Object find(String entityName, Object key, FindOption... findOptions);
+
+	/// Form of [#find(String,Object)] throwing [jakarta.persistence.EntityNotFoundException]
+	/// if no entity exists for that id rather than returning null.
+	///
+	/// @param entityName The entity name
+	/// @param id The identifier
+	/// @return The persistent instance
+	/// @throws IllegalArgumentException If the given name does not match
+	/// a mapped dynamic entity
+	/// @throws jakarta.persistence.EntityNotFoundException if no entity
+	/// was found for the given `id`
+	/// @see SessionFactory#createGraphForDynamicEntity(String)
+	/// @see #get(EntityGraph, Object, FindOption...)
+	default Object get(String entityName, Object id) {
+		return get( entityName, id, LockMode.NONE );
+	}
+
+	/// Form of [#find(String,Object,FindOption...)] throwing [jakarta.persistence.EntityNotFoundException]
+	/// if no entity exists for that id rather than returning null.
+	///
+	/// @param entityName The entity name
+	/// @param key The key (primary or natural, based on [KeyType])
+	/// @param findOptions Options for the load operation.
+	///
+	/// @return a persistent instance
+	///
+	/// @throws IllegalArgumentException If the given name does not match
+	/// a mapped dynamic entity
+	/// @throws jakarta.persistence.EntityNotFoundException if no entity
+	/// was found for the given `key`
+	///
+	/// @see SessionFactory#createGraphForDynamicEntity(String)
+	/// @see #get(EntityGraph,Object,FindOption...)
+	Object get(String entityName, Object key, FindOption... findOptions);
+
+	/**
+	 * Create a typed {@link Query} instance for the given HQL query
+	 * string and given query result type.
+	 * <ul>
+	 * <li>If the query has a single item in the {@code select} list,
+	 *     then the select item must be assignable to the given result
+	 *     type.
+	 * <li>Otherwise, if there are multiple select items, then the
+	 *     select items will be packaged into an instance of the
+	 *     result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items,
+	 *     or it must be one of the types {@code Object[]},
+	 *     {@link java.util.List}, {@link java.util.Map}, or
+	 *     {@link jakarta.persistence.Tuple}.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred from the given query result type:
+	 * <ul>
+	 * <li>if the result type is an entity type, the query must have
+	 *     exactly one root entity in the {@code from} clause, it must
+	 *     be assignable to the result type, and the inferred select
+	 *     list will contain just that entity, or
+	 * <li>otherwise, the select list contains every root entity and
+	 *     every non-{@code fetch} joined entity, and each query result
+	 *     will be packaged into an instance of the result type, just
+	 *     as specified above.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * Passing {@code Object.class} as the query result type is not
+	 * recommended.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+	 *
+	 * @param queryString The HQL query
+	 * @param resultClass The {@link Class} object representing the
+	 *                    query result type, which should not be
+	 *                    {@code Object.class}
+	 * @return The {@link Query} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
+	 */
+	@Override
+	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+
+	/**
+	 * @see jakarta.persistence.EntityHandler#createQuery(String,EntityGraph)
+	 */
+	@Override
+	<T> Query<T> createQuery(String s, EntityGraph<T> entityGraph);
+
+	/**
+	 * Create a {@link SelectionQuery} instance for the given HQL query
+	 * string and given query result type.
+	 * <ul>
+	 * <li>If the query has a single item in the {@code select} list,
+	 *     then the select item must be assignable to the given result
+	 *     type.
+	 * <li>Otherwise, if there are multiple select items, then the
+	 *     select items will be packaged into an instance of the
+	 *     result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items,
+	 *     or it must be one of the types {@code Object[]},
+	 *     {@link java.util.List}, {@link java.util.Map}, or
+	 *     {@link jakarta.persistence.Tuple}.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred from the given query result type:
+	 * <ul>
+	 * <li>if the result type is an entity type, the query must have
+	 *     exactly one root entity in the {@code from} clause, it must
+	 *     be assignable to the result type, and the inferred select
+	 *     list will contain just that entity, or
+	 * <li>otherwise, the select list contains every root entity and
+	 *     every non-{@code fetch} joined entity, and each query result
+	 *     will be packaged into an instance of the result type, just
+	 *     as specified above.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * Passing {@code Object.class} as the query result type is not
+	 * recommended.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+
+	 * @param hqlString The HQL {@code select} query as a string
+	 * @param resultType The {@link Class} object representing the
+	 *                   query result type, which should not be
+	 *                   {@code Object.class}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
+
+	/**
+	 * Create a {@link SelectionQuery} instance for the given HQL query
+	 * string and given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 * The query result type is the root entity of the given graph.
+	 * <ul>
+	 * <li>If the query has an explicit {@code select} clause, there must
+	 *     be a single item in the {@code select} list, and the select
+	 *     item must be assignable to the root type of the given graph.
+	 * <li>Otherwise, if a query has no explicit {@code select} list, the
+	 *     select list is inferred from the given entity graph. The query
+	 *     must have exactly one root entity in the {@code from} clause,
+	 *     it must be assignable to the root type of the given graph, and
+	 *     the inferred select list will contain just that entity.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+
+	 * @param hqlString The HQL {@code select} query as a string
+	 * @param resultGraph An {@link EntityGraph} whose root type is the
+	 *                    query result type, which is interpreted as a
+	 *                    {@linkplain org.hibernate.graph.GraphSemantic#LOAD
+	 *                    load graph}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
+	 *
+	 * @since 7.0
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph);
+
+	/**
+	 * Create a {@link MutationQuery} reference for the given HQL insert,
+	 * update, or delete statement.
+	 *
+	 * @param hqlString The HQL {@code insert}, {@code update}, or
+	 *                  {@code delete} statement
+	 *
+	 * @throws IllegalMutationQueryException if the given HQL query
+	 *         is a {@code select} query
+	 */
+	MutationQuery createMutationQuery(String hqlString);
+
+	/**
+	 * Create a typed {@link Query} instance for the given typed query reference.
+	 *
+	 * @param typedQueryReference the type query reference
+	 *
+	 * @return The {@link Query} instance for execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the name of the typed query reference or if
+	 * the query result is found to not be assignable to
+	 * result class of the typed query reference
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(TypedQueryReference)
+	 */
+	@Override
+	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
+
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}.
+	 */
+	@Override
+	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	/**
+	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaSelect)
+	 */
+	@Override
+	<T> Query<T> createQuery(CriteriaSelect<T> criteriaSelect);
+
+	/**
+	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaUpdate)
+	 */
+	@Override
+	Query<?> createQuery(CriteriaUpdate<?> criteriaUpdate);
+
+	/**
+	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaDelete)
+	 */
+	@Override
+	Query<?> createQuery(CriteriaDelete<?> criteriaDelete);
+
+	/**
+	 * Create a {@link SelectionQuery} reference for the given
+	 * {@link CriteriaQuery}.
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaSelect)
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(CriteriaSelect<R> criteria);
+
+	/**
+	 * Create a {@link SelectionQuery} reference for the given
+	 * {@link CriteriaQuery}.
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria);
+
+	/**
+	 * Create a {@link MutationQuery} from the given update criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+
+	/**
+	 * Create a {@link MutationQuery} from the given delete criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+
+	/**
+	 * Create a {@link MutationQuery} from the given insert criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native SQL query.
+	 *
+	 * @param sqlString The native (SQL) query string
+	 *
+	 * @return The {@link NativeQuery} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String)
+	 */
+	@Override
+	NativeQuery<?> createNativeQuery(String sqlString);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using an implicit mapping to the specified Java type.
+	 * <ul>
+	 * <li>If the given class is an entity class, this method is equivalent
+	 *     to {@code createNativeQuery(sqlString).addEntity(resultClass)}.
+	 * <li>If the given class has a registered
+	 *     {@link org.hibernate.type.descriptor.java.JavaType}, then the
+	 *     query must return a result set with a single column whose
+	 *     {@code JdbcType} is compatible with that {@code JavaType}.
+	 * <li>Otherwise, the select items will be packaged into an instance of
+	 *     the result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items, or it
+	 *     must be one of the types {@code Object[]}, {@link java.util.List},
+	 *     {@link java.util.Map}, or {@link jakarta.persistence.Tuple}.
+	 * </ul>
+	 *
+	 * @param sqlString The native (SQL) query string
+	 * @param resultClass The Java type to map results to
+	 *
+	 * @return The {@link NativeQuery} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String,Class)
+	 */
+	@Override
+	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using an implicit mapping to the specified Java entity type.
+	 * <p>
+	 * The given class must be an entity class. This method is equivalent to
+	 * {@code createNativeQuery(sqlString).addEntity(tableAlias, resultClass)}.
+	 *
+	 * @param sqlString Native (SQL) query string
+	 * @param resultClass The Java entity class to map results to
+	 * @param tableAlias The table alias for columns in the result set
+	 *
+	 * @return The {@link NativeQuery} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
+	 */
+	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native SQL query
+	 * using an explicit mapping to the specified Java type.
+	 * <p>
+	 * The given result set mapping name must identify a mapping defined by
+	 * a {@link jakarta.persistence.SqlResultSetMapping} annotation.
+	 *
+	 * @param sqlString The native (SQL) query string
+	 * @param resultSetMappingName The explicit result mapping name
+	 *
+	 * @return The {@link NativeQuery} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
+	 * @see jakarta.persistence.SqlResultSetMapping
+	 */
+	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native SQL statement.
+	 *
+	 * @param sqlString a native SQL statement string
+	 *
+	 * @return The NativeQuery instance for manipulation and execution
+	 */
+	MutationQuery createNativeMutationQuery(String sqlString);
+
+	/**
+	 * Create a typed {@link Query} instance for the given named query.
+	 * The named query might be defined in HQL or in native SQL.
+	 *
+	 * @param name the name of a query defined in metadata
+	 * @param resultClass the type of the query result
+	 *
+	 * @return The {@link Query} instance for manipulation and execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the given name or if the query string is
+	 * found to be invalid or if the query result is found to
+	 * not be assignable to the specified type
+	 *
+	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
+	 */
+	@Override
+	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+
+	@Override
+	Query<?> createNamedQuery(String s);
+
+	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName);
+	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
+
+	@Override
+	NativeQuery<?> createNativeQuery(String sql, String resultSetMapping);
+
+	@Override
+	<T> TypedQuery<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping);
+
+	/**
+	 * Create a {@link SelectionQuery} instance for the named
+	 * {@link jakarta.persistence.NamedQuery} with the given result type.
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query is not a select query
+	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 */
+	<R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType);
+
+	/**
+	 * Create a {@link MutationQuery} instance for the given named insert,
+	 * update, or delete HQL query. The named query might be defined as
+	 * {@linkplain  jakarta.persistence.NamedQuery HQL}) or
+	 * {@linkplain  jakarta.persistence.NamedNativeQuery native-SQL}.
+	 *
+	 * @throws IllegalMutationQueryException if the given HQL query is a select query
+	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 */
+	MutationQuery createNamedMutationQuery(String name);
 
 	/**
 	 * Obtain a {@link ProcedureCall} based on a named template
@@ -498,6 +922,25 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	}
 
 	/**
+	 * Obtain a {@link StatelessSession} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 *
+	 * @since 7.2
+	 */
+	@Incubating
+	SharedStatelessSessionBuilder statelessWithOptions();
+
+	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
+	 *
+	 * @return the session builder
+	 */
+	SharedSessionBuilder sessionWithOptions();
+
+	/**
 	 * Return an object of the specified type to allow access to
 	 * a provider-specific API.
 	 *
@@ -520,4 +963,53 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 		throw new PersistenceException(
 				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecations
+
+
+	/**
+	 * Create a {@link Query} instance for the given HQL query, or
+	 * HQL insert, update, or delete statement.
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred:
+	 * <ul>
+	 * <li>if there is exactly one root entity in the {@code from}
+	 *     clause, and it has no non-{@code fetch} joins, then that
+	 *     root entity is the only element of the select list, or
+	 * <li>if there is an entity with the alias {@code this}, then
+	 *     that entity is the only element of the select list, or
+	 * <li>otherwise, the query is considered ambiguous, and this
+	 *     method throws a {@link SemanticException}.
+	 * </ul>
+	 * <p>
+	 * The query must have an explicit {@code from} clause, which
+	 * can never be inferred.
+	 *
+	 * @deprecated The overloaded form
+	 * {@link #createQuery(String, Class)} which takes a result type
+	 * is strongly recommended in preference to this method, since it
+	 * returns a typed {@code Query} object, and because it is able to
+	 * use the given result type to infer the {@code select} list, and
+	 * even sometimes the {@code from} clause. Alternatively,
+	 * {@link #createSelectionQuery(String, Class)} is preferred for
+	 * queries, and {@link #createMutationQuery(String)} for insert,
+	 * update, and delete statements.
+	 *
+	 * @apiNote Returns a raw {@code Query} type instead of a wildcard
+	 * type {@code Query<?>}, to match the signature of the JPA method
+	 * {@link jakarta.persistence.EntityManager#createQuery(String)}.
+	 *
+	 * @param queryString The HQL query
+	 *
+	 * @return The {@link Query} instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 */
+	@Override
+	@Deprecated
+	@SuppressWarnings("rawtypes")
+	Query createQuery(String queryString);
 }

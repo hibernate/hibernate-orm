@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -26,7 +27,7 @@ public class MutationQueryOptions implements QueryOptions {
 	public static final MutationQueryOptions INSTANCE = new MutationQueryOptions();
 
 	@Override
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return null;
 	}
 

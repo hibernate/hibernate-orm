@@ -874,6 +874,7 @@ public class BinderHelper {
 		return switch ( fetch ) {
 			case EAGER -> FetchMode.JOIN;
 			case LAZY -> FetchMode.SELECT;
+			case DEFAULT -> throw new UnsupportedOperationException( "Not implemented yet - decide how to handle" );
 		};
 	}
 

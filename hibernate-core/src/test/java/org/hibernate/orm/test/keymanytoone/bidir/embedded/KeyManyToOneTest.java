@@ -48,7 +48,7 @@ public class KeyManyToOneTest {
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Order> criteria = criteriaBuilder.createQuery( Order.class );
 			Root<Order> root = criteria.from( Order.class );
-			Join<Object, Object> customer = root.join( "customer", JoinType.INNER );
+			Join<Order, Object> customer = root.join( "customer", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( customer.get( "name" ), "Acme" ) );
 			s.createQuery( criteria ).list();
 		} );

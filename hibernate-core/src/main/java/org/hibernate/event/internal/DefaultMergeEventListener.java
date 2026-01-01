@@ -417,7 +417,7 @@ public class DefaultMergeEventListener
 		final Object result =
 				session.getLoadQueryInfluencers()
 						.fromInternalFetchProfile( CascadingFetchProfile.MERGE,
-								() -> session.get( entityName, clonedIdentifier ) );
+								() -> session.find( entityName, clonedIdentifier ) );
 
 		if ( result == null ) {
 			EVENT_LISTENER_LOGGER.detachedInstanceNotFoundInDatabase();

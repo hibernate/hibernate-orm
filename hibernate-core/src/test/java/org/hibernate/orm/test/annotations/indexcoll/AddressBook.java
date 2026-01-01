@@ -51,7 +51,7 @@ public class AddressBook {
 		this.entries = entries;
 	}
 
-	@MapKey(name = "person.lastname")
+	@MapKey("person.lastname")
 	@OneToMany(mappedBy = "book")
 	public Map<String, AddressEntry> getLastNameEntries() {
 		return lastNameEntries;
@@ -61,7 +61,7 @@ public class AddressBook {
 		this.lastNameEntries = lastNameEntries;
 	}
 
-	@MapKey(name = "directory")
+	@MapKey("directory")
 	@OneToMany(mappedBy = "book")
 	public Map<AlphabeticalDirectory, AddressEntry> getDirectoryEntries() {
 		return directoryEntries;

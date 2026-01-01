@@ -266,7 +266,7 @@ public class SQLServerDialectTest {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Object[]> criteria = criteriaBuilder.createQuery( Object[].class );
 			Root<Category> root = criteria.from( Category.class );
-			Join<Object, Object> products = root.join( "products", JoinType.INNER );
+			Join<Category, Object> products = root.join( "products", JoinType.INNER );
 			criteria.multiselect( root.get( "id" ), criteriaBuilder.countDistinct( products.get( "id" ) ) );
 			criteria.groupBy( root.get( "id" ) );
 			criteria.orderBy( criteriaBuilder.asc( root.get( "id" ) ) );

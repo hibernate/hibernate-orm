@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.named;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
@@ -32,6 +33,11 @@ public interface NamedResultSetMappingMemento {
 	String getName();
 
 	/**
+	 * Obtain the memento for each result in the mapping.
+	 */
+	List<ResultMemento> getResultMementos();
+
+	/**
 	 * Resolve this memento. This involves building {@link org.hibernate.query.results.ResultBuilder}
 	 * instances for each defined result and registering them with the passed {@code resultSetMapping}.
 	 * Any known query spaces should be passed to the {@code querySpaceConsumer}.
@@ -40,4 +46,11 @@ public interface NamedResultSetMappingMemento {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context);
+
+	/**
+	 * Converts this named mapping into a {@linkplain jakarta.persistence.sql.ResultSetMapping}.
+	 *
+	 * @since 8.0
+	 */
+	<R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping();
 }

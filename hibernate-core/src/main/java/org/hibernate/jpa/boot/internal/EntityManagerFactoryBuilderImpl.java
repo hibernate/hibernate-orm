@@ -827,7 +827,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static PersistenceUnitTransactionType configuredTransactionType(
-			PersistenceUnitDescriptor persistenceUnit, Map<?, ?> integrationSettingsCopy, MergedSettings mergedSettings) {
+			PersistenceUnitDescriptor persistenceUnit,
+			Map<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
 		Object intgTxnType = integrationSettingsCopy.remove( JAKARTA_TRANSACTION_TYPE );
 		if ( intgTxnType == null ) {
 			intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );

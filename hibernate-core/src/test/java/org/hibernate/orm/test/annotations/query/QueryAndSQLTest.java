@@ -313,7 +313,7 @@ public class QueryAndSQLTest {
 				session -> {
 					Plane p = new Plane();
 					session.persist( p );
-					Query q = session.getNamedQuery( "plane.getAll" );
+					Query q = session.createNamedQuery( "plane.getAll" );
 					assertEquals( 1, q.list().size() );
 					session.remove( q.list().get( 0 ) );
 				}
@@ -340,20 +340,20 @@ public class QueryAndSQLTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.getNamedQuery( "night.moreRecentThan" );
+					Query q = session.createNamedQuery( "night.moreRecentThan" );
 					q.setParameter( "date", aMonthAgo, StandardBasicTypes.DATE );
 					assertEquals( 1, q.list().size() );
-					q = session.getNamedQuery( "night.moreRecentThan" );
+					q = session.createNamedQuery( "night.moreRecentThan" );
 					q.setParameter( "date", inAMonth, StandardBasicTypes.DATE );
 					assertEquals( 0, q.list().size() );
 					Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.setStatisticsEnabled( true );
 					stats.clear();
-					q = session.getNamedQuery( "night.duration" );
+					q = session.createNamedQuery( "night.duration" );
 					q.setParameter( "duration", 14l );
 					assertEquals( 1, q.list().size() );
 					assertEquals( 1, stats.getQueryCachePutCount() );
-					q = session.getNamedQuery( "night.duration" );
+					q = session.createNamedQuery( "night.duration" );
 					q.setParameter( "duration", 14l );
 					session.remove( q.list().get( 0 ) );
 					assertEquals( 1, stats.getQueryCacheHitCount() );
@@ -386,13 +386,13 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.getNamedQuery( "night.getAll.bySQL" );
+						Query q = session.createNamedQuery( "night.getAll.bySQL" );
 						q.setParameter( 1, 9990 );
 						List result = q.list();
 						assertEquals( 1, result.size() );
 						Night n2 = (Night) result.get( 0 );
 						assertEquals( n2.getDuration(), n.getDuration() );
-						List areas = session.getNamedQuery( "getAreaByNative" ).list();
+						List areas = session.createNamedQuery( "getAreaByNative" ).list();
 						assertTrue( 1 == areas.size() );
 						assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
 						session.remove( areas.get( 0 ) );
@@ -422,7 +422,7 @@ public class QueryAndSQLTest {
 		scope.inSession(
 				session -> {
 					try {
-						session.getNamedQuery( "night.olderThan" );
+						session.createNamedQuery( "night.olderThan" );
 					}
 					catch (MappingException ex) {
 						fail( "Query imported from MappedSuperclass" );
@@ -460,7 +460,7 @@ public class QueryAndSQLTest {
 					Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.setStatisticsEnabled( true );
 					stats.clear();
-					Query q = session.getNamedQuery( "night&areaCached" );
+					Query q = session.createNamedQuery( "night&areaCached" );
 					q.setCacheable( true );
 					List result = q.list();
 					assertEquals( 1, result.size() );
@@ -493,7 +493,7 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.getNamedQuery( "implicitSample" );
+						Query q = session.createNamedQuery( "implicitSample" );
 						List result = q.list();
 						assertEquals( 1, result.size() );
 						assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
@@ -531,7 +531,7 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.getNamedQuery( "compositekey" );
+						Query q = session.createNamedQuery( "compositekey" );
 						List result = q.list();
 						assertEquals( 1, result.size() );
 						Object[] row = (Object[]) result.get( 0 );
@@ -575,7 +575,7 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						List results = session.getNamedQuery( "all.dictionaries" ).list();
+						List results = session.createNamedQuery( "all.dictionaries" ).list();
 						assertEquals( 2, results.size() );
 						assertTrue(
 								results.get( 0 ) instanceof SynonymousDictionary
@@ -610,10 +610,10 @@ public class QueryAndSQLTest {
 
 		scope.inTransaction(
 				session -> {
-					Query query = session.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
+					Query query = session.createNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
 					query.uniqueResult();
 					assertEquals( 1, sessionFactory.getStatistics().getQueryCachePutCount() );
-					session.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
+					session.createNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
 					assertEquals( 1, sessionFactory.getStatistics().getQueryCacheHitCount() );
 				}
 		);

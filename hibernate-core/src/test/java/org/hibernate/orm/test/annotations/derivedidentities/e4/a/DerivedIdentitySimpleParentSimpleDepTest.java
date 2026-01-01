@@ -105,7 +105,7 @@ public class DerivedIdentitySimpleParentSimpleDepTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					FinancialHistory history = session.get( FinancialHistory.class, "aaa" );
+					FinancialHistory history = session.find( FinancialHistory.class, "aaa" );
 					if ( history != null ) {
 						session.remove( history );
 						session.remove( history.patient );
@@ -115,7 +115,7 @@ public class DerivedIdentitySimpleParentSimpleDepTest {
 
 		scope.inTransaction(
 				session -> {
-					MedicalHistory history = session.get( MedicalHistory.class, "aaa" );
+					MedicalHistory history = session.find( MedicalHistory.class, "aaa" );
 					if ( history != null ) {
 						session.remove( history );
 						session.remove( history.patient );

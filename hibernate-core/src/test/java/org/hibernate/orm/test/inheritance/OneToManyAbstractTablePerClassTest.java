@@ -118,7 +118,7 @@ public class OneToManyAbstractTablePerClassTest {
 		@OrderColumn(name = "listIndex")
 		@JoinColumn(name = "listParent")
 		List<TablePerClassBase> childrenList = new ArrayList<>();
-		@MapKey(name = "id")
+		@MapKey("id")
 		@OneToMany(mappedBy = "parent")
 		Map<Integer, TablePerClassBase> childrenMap = new HashMap<>();
 

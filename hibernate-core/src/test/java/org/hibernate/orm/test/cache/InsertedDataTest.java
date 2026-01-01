@@ -122,7 +122,7 @@ public class InsertedDataTest {
 
 		assertTrue( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 
-		CacheableItem item1 = scope.fromTransaction( s -> s.get( CacheableItem.class, item.getId() ) );
+		CacheableItem item1 = scope.fromTransaction( s -> s.find( CacheableItem.class, item.getId() ) );
 
 		assertNull( item1, "it should be null" );
 	}
@@ -155,7 +155,7 @@ public class InsertedDataTest {
 		assertFalse( scope.getSessionFactory().getCache().containsEntity( CacheableItem.class, item.getId() ) );
 
 		Long id = item.getId();
-		item = scope.fromTransaction( s -> s.get( CacheableItem.class, id ) );
+		item = scope.fromTransaction( s -> s.find( CacheableItem.class, id ) );
 		assertNull( item, "it should be null" );
 	}
 }

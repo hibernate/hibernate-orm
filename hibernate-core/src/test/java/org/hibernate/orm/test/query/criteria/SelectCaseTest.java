@@ -58,7 +58,7 @@ public class SelectCaseTest {
 					CriteriaQuery<Tuple> criteriaQuery = cb.createTupleQuery();
 					Root<Person> personRoot = criteriaQuery.from( Person.class );
 
-					Join<Object, Object> secondaryJoin = personRoot.join( "address" );
+					Join<Person, Object> secondaryJoin = personRoot.join( "address" );
 					criteriaQuery.multiselect(
 							cb.selectCase( secondaryJoin.get( "code" ) )
 									.when( "GR", personRoot.get( "age" ) )

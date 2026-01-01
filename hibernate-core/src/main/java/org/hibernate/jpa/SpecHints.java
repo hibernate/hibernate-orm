@@ -40,7 +40,7 @@ public interface SpecHints {
 	String HINT_SPEC_LOAD_GRAPH = "jakarta.persistence.loadgraph";
 
 	/**
-	 * Hint requesting a pessimistic lock timeout (in milliseconds).
+	 * The Jakarta Persistence defined hint requesting a pessimistic lock timeout (in milliseconds).
 	 */
 	String HINT_SPEC_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
 
@@ -52,7 +52,7 @@ public interface SpecHints {
 	String HINT_SPEC_LOCK_SCOPE = "jakarta.persistence.lock.scope";
 
 	/**
-	 * The Jakarta Persistence defined hint for requesting a timeout
+	 * The Jakarta Persistence defined hint requesting a timeout (in milliseconds)
 	 * be applied to a {@link jakarta.persistence.Query} executions.
 	 *
 	 * @implSpec Not valid for load and/or lock operations

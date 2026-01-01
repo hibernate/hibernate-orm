@@ -60,9 +60,9 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNull( session.get( Part.class, "Get" ) );
-					assertNull( session.get( Product.class, "Widget" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNull( session.find( Part.class, "Get" ) );
+					assertNull( session.find( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -90,8 +90,8 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
@@ -121,8 +121,8 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
@@ -200,8 +200,8 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
@@ -236,8 +236,8 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);
@@ -268,7 +268,7 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}
 		);

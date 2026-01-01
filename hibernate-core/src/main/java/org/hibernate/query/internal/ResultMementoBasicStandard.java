@@ -171,4 +171,9 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			ResultSetMappingResolutionContext context) {
 		return builder;
 	}
+
+	@Override
+	public Class<?> getResultJavaType() {
+		return builder.getJavaType();
+	}
 }

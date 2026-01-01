@@ -68,7 +68,7 @@ public class SimpleTests {
 
 			try ( final SessionFactory sf = metadata.buildSessionFactory() ) {
 				sf.inSession( (session) -> {
-					session.createSelectionQuery( "from MappedEntity" ).list();
+					session.createSelectionQuery( "from MappedEntity", MappedEntity.class ).list();
 				} );
 			}
 		}

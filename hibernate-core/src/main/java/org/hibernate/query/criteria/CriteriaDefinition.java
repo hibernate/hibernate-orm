@@ -13,7 +13,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.query.common.FetchClauseType;
@@ -214,7 +213,7 @@ public abstract class CriteriaDefinition<R>
 		this( entityManager.getEntityManagerFactory(), baseQuery );
 	}
 
-	public SelectionQuery<R> createSelectionQuery(QueryProducer session) {
+	public SelectionQuery<R> createSelectionQuery(SharedSessionContract session) {
 		return session.createQuery( query );
 	}
 

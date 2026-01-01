@@ -4,12 +4,16 @@
  */
 package org.hibernate.query.named;
 
-import java.util.Map;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -17,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<R> {
 	private final String name;
+
 	private final @Nullable Class<R> resultType;
 
 	private final Boolean cacheable;
@@ -26,7 +31,7 @@ public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<
 	private final FlushMode flushMode;
 	private final Boolean readOnly;
 
-	private final Integer timeout;
+	private final Timeout timeout;
 	private final Integer fetchSize;
 
 	private final String comment;
@@ -41,7 +46,7 @@ public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String, Object> hints) {
@@ -66,6 +71,11 @@ public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<
 	@Override
 	public @Nullable Class<R> getResultType() {
 		return resultType;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return null;
 	}
 
 	@Override
@@ -94,7 +104,7 @@ public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<
 	}
 
 	@Override
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return timeout;
 	}
 
@@ -109,8 +119,27 @@ public abstract class AbstractNamedQueryMemento<R> implements NamedQueryMemento<
 	}
 
 	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheMode == null ? null : cacheMode.getJpaRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheMode == null ? null : cacheMode.getJpaStoreMode();
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return LockModeType.NONE;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return PessimisticLockScope.NORMAL;
+	}
+
+	@Override
 	public Map<String, Object> getHints() {
 		return hints;
 	}
-
 }

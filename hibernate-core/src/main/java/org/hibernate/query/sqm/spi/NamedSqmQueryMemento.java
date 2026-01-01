@@ -33,7 +33,7 @@ public interface NamedSqmQueryMemento<E> extends NamedQueryMemento<E> {
 
 	LockOptions getLockOptions();
 
-	Map<String, String> getParameterTypes();
+	Map<String, String> getAnticipatedParameterTypes();
 
 	@Override
 	NamedSqmQueryMemento<E> makeCopy(String name);

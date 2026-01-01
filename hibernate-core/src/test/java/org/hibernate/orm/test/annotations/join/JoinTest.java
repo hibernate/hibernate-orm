@@ -157,7 +157,7 @@ public class JoinTest {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Life> criteria = criteriaBuilder.createQuery( Life.class );
 					Root<Life> root = criteria.from( Life.class );
-					jakarta.persistence.criteria.Join<Object, Object> owner = root.join( "owner", JoinType.INNER );
+					jakarta.persistence.criteria.Join<Life, Object> owner = root.join( "owner", JoinType.INNER );
 					criteria.where( criteriaBuilder.equal( owner.get( "name" ), "kitty" ) );
 					Life life = session.createQuery( criteria ).uniqueResult();
 

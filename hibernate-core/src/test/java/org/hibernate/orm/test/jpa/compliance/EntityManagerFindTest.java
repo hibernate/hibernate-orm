@@ -30,14 +30,11 @@ public class EntityManagerFindTest {
 
 	@Test
 	public void testFindWrongTypeAsId(EntityManagerFactoryScope scope) {
-		scope.inEntityManager(
-				entityManager ->
-						Assertions.assertThrows(
-								IllegalArgumentException.class,
-								() ->
-										entityManager.find( TestEntity.class, "ID" )
-						)
-		);
+		scope.inEntityManager(entityManager ->
+			Assertions.assertThrows(
+					IllegalArgumentException.class,
+					() -> entityManager.find( TestEntity.class, "ID" )
+			) );
 	}
 
 	@Test

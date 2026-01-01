@@ -367,9 +367,9 @@ public class BulkManipulationTest {
 			Car c = (Car) session.createQuery( "from Car where owner = 'Kirsten'" ).uniqueResult();
 			c.setOwner( "NotKirsten" );
 			assertEquals( 0,
-					session.getNamedQuery( "native-delete-car" ).setParameter( 1, "Kirsten" ).executeUpdate() );
+					session.createNamedQuery( "native-delete-car" ).setParameter( 1, "Kirsten" ).executeUpdate() );
 			assertEquals( 1,
-					session.getNamedQuery( "native-delete-car" ).setParameter( 1, "NotKirsten" ).executeUpdate() );
+					session.createNamedQuery( "native-delete-car" ).setParameter( 1, "NotKirsten" ).executeUpdate() );
 
 			assertEquals( 0, session.createNativeQuery( "delete from SUV where owner = :owner" )
 					.setParameter( "owner", "NotThere" )

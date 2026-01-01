@@ -27,30 +27,23 @@ import org.hibernate.SessionCheckMode;
 import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
-import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
-import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
-/// Support for loading multiple entities (of a type) by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
+/// Base support for loading multiple entities (of a type) by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
 ///
-/// @see org.hibernate.Session#findMultiple
 /// @see KeyType
 ///
 /// @author Steve Ebersole
-public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
+public abstract class AbstractFindMultipleByKeyOperation implements MultiIdLoadOptions, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
 
 	private KeyType keyType = KeyType.IDENTIFIER;
@@ -76,7 +69,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 	private NaturalIdSynchronization naturalIdSynchronization;
 
 	@SuppressWarnings("PatternVariableHidesField")
-	public FindMultipleByKeyOperation(
+	public AbstractFindMultipleByKeyOperation(
 			@NonNull EntityPersister entityDescriptor,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
@@ -168,95 +161,52 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		enabledFetchProfiles.add( profileName );
 	}
 
-	public List<T> performFind(
-			List<?> keys,
-			@Nullable GraphSemantic graphSemantic,
-			@Nullable RootGraphImplementor<T> rootGraph,
-			LoadAccessContext loadAccessContext) {
-		// todo (natural-id-class) : these impls are temporary
-		//		longer term, move the logic here as much of it can be shared
-		return keyType == KeyType.NATURAL
-				? findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext )
-				: findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
+	public EntityPersister getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
-	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
-		final var naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
-		final var session = loadAccessContext.getSession();
-
-		performAnyNeededCrossReferenceSynchronizations(
-				naturalIdSynchronization != NaturalIdSynchronization.DISABLED,
-				entityDescriptor,
-				session
-		);
-
-		return withOptions( loadAccessContext, graphSemantic, rootGraph, () -> {
-			// normalize the incoming natural-id values and get them in array form as needed
-			// by MultiNaturalIdLoader
-			final int size = keys.size();
-			final var naturalIds = new Object[size];
-			for ( int i = 0; i < size; i++ ) {
-				naturalIds[i] = naturalIdMapping.normalizeInput( keys.get( i ) );
-			}
-			//noinspection unchecked
-			return (List<T>)
-					entityDescriptor.getMultiNaturalIdLoader()
-							.multiLoad( naturalIds, this, session );
-		} );
+	public KeyType getKeyType() {
+		return keyType;
 	}
 
-	private List<T> withOptions(
-			LoadAccessContext loadAccessContext,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<T> rootGraph,
-			Supplier<List<T>> action) {
-		final var session = loadAccessContext.getSession();
-		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles =
-				influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-		final var effectiveEntityGraph =
-				rootGraph == null
-						? null
-						: influencers.applyEntityGraph( rootGraph, graphSemantic );
-
-		final var readOnly = session.isDefaultReadOnly();
-		session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
-
-		final var cacheMode = session.getCacheMode();
-		session.setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode ) );
-
-		try {
-			return action.get();
-		}
-		finally {
-			loadAccessContext.delayedAfterCompletion();
-			if ( effectiveEntityGraph != null ) {
-				effectiveEntityGraph.clear();
-			}
-			influencers.setEnabledFetchProfileNames( fetchProfiles );
-			session.setDefaultReadOnly( readOnly );
-			session.setCacheMode( cacheMode );
-		}
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheStoreMode;
 	}
 
-//	private Object getCachedNaturalIdResolution(
-//			Object normalizedNaturalIdValue,
-//			LoadAccessContext loadAccessContext) {
-//		loadAccessContext.checkOpenOrWaitingForAutoClose();
-//		loadAccessContext.pulseTransactionCoordinator();
-//
-//		return loadAccessContext
-//				.getSession()
-//				.getPersistenceContextInternal()
-//				.getNaturalIdResolutions()
-//				.findCachedIdByNaturalId( normalizedNaturalIdValue, entityDescriptor );
-//	}
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheRetrieveMode;
+	}
 
-	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
-		final var ids = keys.toArray( new Object[0] );
-		//noinspection unchecked
-		return withOptions( loadAccessContext, graphSemantic, rootGraph,
-				() -> (List<T>) entityDescriptor.multiLoad( ids, loadAccessContext.getSession(), this ) );
+	public LockMode getLockMode() {
+		return lockMode;
+	}
+
+	public Locking.Scope getLockScope() {
+		return lockScope;
+	}
+
+	public Locking.FollowOn getLockFollowOn() {
+		return lockFollowOn;
+	}
+
+	public Timeout getLockTimeout() {
+		return lockTimeout;
+	}
+
+	public ReadOnlyMode getReadOnlyMode() {
+		return readOnlyMode;
+	}
+
+	public Set<String> getEnabledFetchProfiles() {
+		return enabledFetchProfiles;
+	}
+
+	public Set<String> getDisabledFetchProfiles() {
+		return disabledFetchProfiles;
+	}
+
+	public NaturalIdSynchronization getNaturalIdSynchronization() {
+		return naturalIdSynchronization;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -305,7 +255,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 	/// @deprecated [org.hibernate.MultiIdentifierLoadAccess] and [org.hibernate.MultiIdentifierLoadAccess]
 	/// are both also deprecated.
 	@Deprecated
-	public FindMultipleByKeyOperation(
+	public AbstractFindMultipleByKeyOperation(
 			EntityPersister entityDescriptor,
 			KeyType keyType,
 			BatchSize batchSize,

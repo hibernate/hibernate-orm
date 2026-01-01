@@ -14,7 +14,6 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Product;
 import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * @author Steve Ebersole
@@ -40,28 +38,7 @@ public class ImplicitSelectWithJoinTests {
 	@Test
 	public void testNoExpectedTypeWithThis(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SelectionQuery<?> query = session.createSelectionQuery( HQL0 );
-
-			{
-				final List<?> results = query.list();
-				assertThat( results ).hasSize( 1 );
-				final Object result = results.get( 0 );
-				assertThat( result ).isInstanceOf( Product.class );
-			}
-
-			try (ScrollableResults<?> results = query.scroll()) {
-				assertThat( results.next() ).isTrue();
-				final Object result = results.get();
-				assertThat( result ).isInstanceOf( Product.class );
-				assertThat( results.next() ).isFalse();
-			}
-		} );
-	}
-
-	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
-	public void testNoExpectedType(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			final SelectionQuery<?> query = session.createSelectionQuery( HQL );
+			final SelectionQuery<?> query = session.createSelectionQuery( HQL0, Object.class );
 
 			{
 				final List<?> results = query.list();
@@ -98,59 +75,6 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( results.next() ).isFalse();
 			}
 		} );
-	}
-
-	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
-	public void testArrayResultNoResultType(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			final SelectionQuery<?> query = session.createSelectionQuery( HQL3 );
-
-			{
-				final List<?> results = query.list();
-				assertThat( results ).hasSize( 1 );
-				final Object result = results.get( 0 );
-				assertThat( result ).isNotNull();
-				assertInstanceOf( Object[].class, result );
-				assertThat( (Object[]) result ).hasSize(4);
-				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
-			}
-
-			try (ScrollableResults<?> results = query.scroll()) {
-				assertThat( results.next() ).isTrue();
-				final Object result = results.get();
-				assertThat( result ).isNotNull();
-				assertInstanceOf( Object[].class, result );
-				assertThat( (Object[]) result ).hasSize(4);
-				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
-				assertThat( results.next() ).isFalse();
-			}
-		} );
-
-		// frankly, this would be more consistent and more backward-compatible
-//		scope.inTransaction( (session) -> {
-//			final SelectionQuery<?> query = session.createSelectionQuery( HQL );
-//
-//			{
-//				final List<?> results = query.list();
-//				assertThat( results ).hasSize( 1 );
-//				final Object result = results.get( 0 );
-//				assertThat( result ).isNotNull();
-//				assertInstanceOf( Object[].class, result );
-//				assertThat( (Object[]) result ).hasSize(2);
-//				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
-//			}
-//
-//			{
-//				final ScrollableResults<?> results = query.scroll();
-//				assertThat( results.next() ).isTrue();
-//				final Object result = results.get();
-//				assertThat( result ).isNotNull();
-//				assertInstanceOf( Object[].class, result );
-//				assertThat( (Object[]) result ).hasSize(2);
-//				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
-//				assertThat( results.next() ).isFalse();
-//			}
-//		} );
 	}
 
 	@Test

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
@@ -34,7 +35,7 @@ public interface QueryOptions {
 	 * The timeout to apply to the query.  May also be defined at the transaction
 	 * level using {@link org.hibernate.Transaction#getTimeout}
 	 */
-	Integer getTimeout();
+	Timeout getTimeout();
 
 	/**
 	 * The flush mode to use for the query execution

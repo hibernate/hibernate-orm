@@ -7,6 +7,7 @@ package org.hibernate.boot.query;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -30,7 +31,7 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 
 	private LockOptions lockOptions;
 
-	private Integer timeout;
+	private Timeout timeout;
 	private Integer fetchSize;
 
 	private String comment;
@@ -81,7 +82,7 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 		return getThis();
 	}
 
-	public T setTimeout(Integer timeout) {
+	public T setTimeout(Timeout timeout) {
 		this.timeout = timeout;
 		return getThis();
 	}
@@ -134,7 +135,7 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 		return lockOptions;
 	}
 
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return timeout;
 	}
 

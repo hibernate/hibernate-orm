@@ -60,12 +60,12 @@ import jakarta.persistence.metamodel.Type;
  * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
  * calling:
  * <ul>
- * <li>{@link QueryProducer#createQuery(String, Class)}, passing the HQL as a
+ * <li>{@link org.hibernate.SharedSessionContract#createQuery(String, Class)}, passing the HQL as a
  *     string,
- * <li>{@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ * <li>{@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
  *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
  *     object}, or
- * <li>{@link QueryProducer#createNamedQuery(String, Class)} passing the name
+ * <li>{@link org.hibernate.SharedSessionContract#createNamedQuery(String, Class)} passing the name
  *     of a query defined using {@link jakarta.persistence.NamedQuery} or
  *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
@@ -89,8 +89,6 @@ import jakarta.persistence.metamodel.Type;
  * @author Steve Ebersole
  *
  * @param <R> The result type, for typed queries, or {@link Object} for untyped queries
- *
- * @see QueryProducer
  */
 @Incubating
 public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R> {
@@ -227,11 +225,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * number of affected entities.
 	 * <p>
 	 * For use with instances of {@link MutationQuery} created using
-	 * {@link QueryProducer#createMutationQuery(String)},
-	 * {@link QueryProducer#createNamedMutationQuery(String)},
-	 * {@link QueryProducer#createNativeMutationQuery(String)},
-	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
@@ -240,21 +238,13 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *          {@link jakarta.persistence.Query}, which defines this method.
 	 *          See {@link MutationQuery} and {@link SelectionQuery}.
 	 *
-	 * @see QueryProducer#createMutationQuery
-	 * @see QueryProducer#createMutationQuery(String)
-	 * @see QueryProducer#createNamedMutationQuery(String)
-	 * @see QueryProducer#createNativeMutationQuery(String)
-	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)
-	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)
-	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 */
 	@Override
 	int executeUpdate();
 
 	/**
-	 * Get the {@link QueryProducer} which produced this {@code Query},
-	 * that is, the {@link org.hibernate.Session} or
+	 * Get the {@link org.hibernate.Session} or
 	 * {@link org.hibernate.StatelessSession} that was used to create
 	 * this {@code Query} instance.
 	 *
@@ -921,6 +911,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setHint(String hintName, Object value);
+
+	@Override
+	default Query<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
+	}
 
 	@Override
 	Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);

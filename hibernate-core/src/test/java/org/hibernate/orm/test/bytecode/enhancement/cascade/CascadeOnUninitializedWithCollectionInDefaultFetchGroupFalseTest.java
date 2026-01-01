@@ -161,8 +161,8 @@ public class CascadeOnUninitializedWithCollectionInDefaultFetchGroupFalseTest {
 		// both the Person and its Address should be deleted
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Person.class, person.getId() ) );
-					assertNull( session.get( Person.class, person.getPrimaryAddress().getId() ) );
+					assertNull( session.find( Person.class, person.getId() ) );
+					assertNull( session.find( Person.class, person.getPrimaryAddress().getId() ) );
 				}
 		);
 	}
@@ -205,8 +205,8 @@ public class CascadeOnUninitializedWithCollectionInDefaultFetchGroupFalseTest {
 
 		// both the Person and its Address should be deleted
 		scope.inTransaction( session -> {
-					assertNull( session.get( Person.class, person.getId() ) );
-					assertNull( session.get( Person.class, person.getAddresses().iterator().next().getId() ) );
+					assertNull( session.find( Person.class, person.getId() ) );
+					assertNull( session.find( Person.class, person.getAddresses().iterator().next().getId() ) );
 				}
 		);
 	}

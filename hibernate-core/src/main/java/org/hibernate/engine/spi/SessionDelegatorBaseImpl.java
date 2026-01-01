@@ -6,6 +6,8 @@ package org.hibernate.engine.spi;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
@@ -20,6 +22,7 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -56,12 +59,12 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -499,6 +502,60 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T get(Class<T> entityClass, Object id, LockModeType lockModeType) {
+		//noinspection resource
+		return delegate().get( entityClass, id, lockModeType );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
+		//noinspection resource
+		return delegate().get( entityClass, key, findOptions );
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		//noinspection resource
+		return delegate().get( entityGraph, key, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+		//noinspection resource
+		return delegate().getMultiple( entityClass, keys, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		//noinspection resource
+		return delegate().getMultiple( entityGraph, keys, findOptions );
+	}
+
+	@Override
+	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+		//noinspection resource
+		return delegate().getEntityGraph( entityClass, name );
+	}
+
+	@Override
+	public <C> void runWithConnection(ConnectionConsumer<C> connectionConsumer) {
+		//noinspection resource
+		delegate().runWithConnection( connectionConsumer );
+	}
+
+	@Override
+	public <C, T> T callWithConnection(ConnectionFunction<C, T> connectionFunction) {
+		//noinspection resource
+		return delegate().callWithConnection( connectionFunction );
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		//noinspection resource
+		return delegate().getEntityGraphs( entityClass );
+	}
+
+	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		return delegate.createEntityGraph( rootType );
 	}
@@ -518,117 +575,120 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getEntityGraph( graphName );
 	}
 
-	@Override
-	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
-		return delegate.createQuery( selectQuery );
-	}
-
-	@Override
-	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return delegate.getEntityGraphs( entityClass );
-	}
-
-	private QueryProducerImplementor queryDelegate() {
-		return delegate;
+	private SessionImplementor queryDelegate() {
+		return delegate();
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		//noinspection resource
-		return delegate().createMutationQuery( updateQuery );
+		return queryDelegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		//noinspection resource
-		return delegate().createMutationQuery( deleteQuery );
+		return queryDelegate().createMutationQuery( deleteQuery );
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
 		//noinspection resource
-		return delegate().createMutationQuery( insert );
+		return queryDelegate().createMutationQuery( insert );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		//noinspection resource
+		return queryDelegate().createQuery( criteriaQuery );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> criteriaQuery) {
+		//noinspection resource
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
 	@Override
 	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+		//noinspection resource
 		return queryDelegate().createQuery( updateQuery );
 	}
 
 	@Override
 	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+		//noinspection resource
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(TypedQueryReference<T> typedQueryReference) {
-		return queryDelegate().createQuery( typedQueryReference );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
-		return queryDelegate().getNamedQuery( name );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
-		return queryDelegate().getNamedNativeQuery( name );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
-		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
-	}
-
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(String queryString) {
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
+		//noinspection resource
 		return queryDelegate().createQuery( queryString );
 	}
 
 	@Override
-	public SelectionQuery<?> createSelectionQuery(String hqlString) {
-		return queryDelegate().createSelectionQuery( hqlString );
+	public <R> QueryImplementor<R> createQuery(String hqlString, EntityGraph<R> resultGraph) {
+		//noinspection resource
+		return queryDelegate().createQuery( hqlString, resultGraph );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
+		//noinspection resource
 		return queryDelegate().createSelectionQuery( hqlString, resultType );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		//noinspection resource
 		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		//noinspection resource
+		return queryDelegate().createSelectionQuery( criteria );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaSelect<R> criteria) {
+		//noinspection resource
 		return queryDelegate().createSelectionQuery( criteria );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
+		//noinspection resource
 		return queryDelegate().createQuery( queryString, resultType );
 	}
 
 	@Override
+	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+		//noinspection resource
+		return queryDelegate().createQuery( typedQueryReference );
+	}
+
+	@Override
 	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
+		//noinspection resource
 		return queryDelegate().createNamedQuery( name );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
+		//noinspection resource
 		return queryDelegate().createNamedQuery( name, resultClass );
 	}
 
 	@Override
-	public SelectionQuery<?> createNamedSelectionQuery(String name) {
-		//noinspection resource
-		return delegate().createNamedSelectionQuery( name );
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName) {
+		return queryDelegate().createNamedQuery( name, resultSetMappingName );
+	}
+
+	@Override
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+		return queryDelegate().createNamedQuery( name, resultSetMappingName, resultClass );
 	}
 
 	@Override
@@ -639,6 +699,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
+		//noinspection resource
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -646,57 +707,74 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	//note: we're doing something a bit funny here to work around
 	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
+		//noinspection resource
 		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
+		//noinspection resource
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
 	@Override
 	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
-		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
+		//noinspection resource
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+	}
+
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+		//noinspection resource
+		return queryDelegate().createNativeQuery( sql, resultSetMapping );
 	}
 
 	@Override
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
+		//noinspection resource
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
 	}
 
 	@Override
 	public MutationQuery createMutationQuery(String statementString) {
-		return delegate.createMutationQuery( statementString );
+		//noinspection resource
+		return queryDelegate().createMutationQuery( statementString );
 	}
 
 	@Override
 	public MutationQuery createNamedMutationQuery(String name) {
-		return delegate.createNamedMutationQuery( name );
+		//noinspection resource
+		return queryDelegate().createNamedMutationQuery( name );
 	}
 
 	@Override
 	public MutationQuery createNativeMutationQuery(String sqlString) {
-		return delegate.createNativeMutationQuery( sqlString );
+		//noinspection resource
+		return queryDelegate().createNativeMutationQuery( sqlString );
 	}
 
 	@Override
 	public ProcedureCall createNamedStoredProcedureQuery(String name) {
-		return delegate.createNamedStoredProcedureQuery( name );
+		//noinspection resource
+		return queryDelegate().createNamedStoredProcedureQuery( name );
 	}
 
 	@Override
 	public ProcedureCall createStoredProcedureQuery(String procedureName) {
-		return delegate.createStoredProcedureQuery( procedureName );
+		//noinspection resource
+		return queryDelegate().createStoredProcedureQuery( procedureName );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
-		return delegate.createStoredProcedureQuery( procedureName, resultClasses );
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
+		//noinspection resource
+		return queryDelegate().createStoredProcedureQuery( procedureName, resultClasses );
 	}
 
 	@Override
 	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
-		return delegate.createStoredProcedureQuery( procedureName, resultSetMappings );
+		//noinspection resource
+		return queryDelegate().createStoredProcedureQuery( procedureName, resultSetMappings );
 	}
 
 	@Override
@@ -717,6 +795,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T unwrap(Class<T> cls) {
 		return delegate.unwrap( cls );
+	}
+
+	@Override
+	public NativeQuery getNamedNativeQuery(String name) {
+		return delegate().getNamedNativeQuery( name );
 	}
 
 	/**
@@ -897,11 +980,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey) {
-		return delegate.find( entityName, primaryKey );
-	}
-
-	@Override
 	public Object find(String entityName, Object primaryKey, FindOption... options) {
 		return delegate.find( entityName, primaryKey, options );
 	}
@@ -1007,8 +1085,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object get(String entityName, Object id) {
-		return delegate.get( entityName, id );
+	public Object get(String entityName, Object key, FindOption... findOptions) {
+		return delegate.get( entityName, key, findOptions );
 	}
 
 	@Override

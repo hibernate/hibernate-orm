@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.map;
 
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.dialect.MariaDBDialect;
@@ -81,7 +80,7 @@ public class MapIndexFormulaTest {
 
 		scope.inTransaction(
 				session -> {
-					Group g = session.get( Group.class, "developers" );
+					Group g = session.find( Group.class, "developers" );
 					assertEquals( 1, g.getUsers().size() );
 					Map smap = ( (User) g.getUsers().get( "gavin" ) ).getSession();
 					assertEquals( 1, smap.size() );
@@ -97,13 +96,13 @@ public class MapIndexFormulaTest {
 
 		scope.inTransaction(
 				session -> {
-					Group g = session.get( Group.class, "developers" );
-					assertEquals( g.getUsers().size(), 1 );
+					Group g = session.find( Group.class, "developers" );
+					assertEquals( 1, g.getUsers().size() );
 					User t = (User) g.getUsers().get( "turin" );
 					Map smap = t.getSession();
-					assertEquals( smap.size(), 0 );
+					assertEquals( 0, smap.size() );
 					assertEquals(
-							1l,
+							1L,
 							session.createQuery( "select count(*) from User" ).uniqueResult()
 					);
 					session.remove( g );
@@ -133,9 +132,11 @@ public class MapIndexFormulaTest {
 					session.flush();
 					session.clear();
 
-					List results = session.getNamedQuery( "userSessionData" ).setParameter( "uname", "%in" ).list();
-					assertEquals( results.size(), 2 );
-					gavin = (User) results.get( 0 );
+					var results = session.createNamedQuery( "userSessionData", User.class )
+							.setParameter( "uname", "%in" )
+							.list();
+					assertEquals( 2, results.size() );
+					gavin = results.get( 0 );
 					assertEquals( "gavin", gavin.getName() );
 					assertEquals( 2, gavin.getSession().size() );
 					session.createMutationQuery( "delete SessionAttribute" ).executeUpdate();

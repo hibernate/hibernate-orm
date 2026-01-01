@@ -4,12 +4,23 @@
  */
 package org.hibernate.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
@@ -54,6 +65,8 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.find.FindByKeyOperation;
+import org.hibernate.internal.find.Helper;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -109,17 +122,25 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
@@ -140,10 +161,13 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  * @author Steve Ebersole
  */
 abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
 	private transient JdbcServices jdbcServices;
+
+	// Defaults to null, meaning the properties
+	// are the default properties of the factory.
+	private Map<String, Object> properties;
 
 	private UUID sessionIdentifier;
 	private Object sessionToken;
@@ -253,6 +277,316 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	final SessionFactoryOptions getSessionFactoryOptions() {
 		return factoryOptions;
 	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// EntityHandler (JPA)
+
+	@Override
+	public EntityManagerFactory getEntityManagerFactory() {
+		checkOpen();
+		return getFactory();
+	}
+
+	@Override
+	public Metamodel getMetamodel() {
+		checkOpen();
+		return factory.getJpaMetamodel();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheMode().getJpaStoreMode();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheMode().getJpaRetrieveMode();
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
+	}
+
+	protected Map<String, Object> properties() {
+		return properties;
+	}
+
+	@Override
+	public Map<String, Object> getProperties() {
+		// EntityManager Javadoc implies that the
+		// returned map should be a mutable copy,
+		// not an unmodifiable map. There's no
+		// good reason to cache the initial
+		// properties, since we have to copy them
+		// each time this method is called.
+		return properties == null
+				? getInitialProperties()
+				: new HashMap<>( properties );
+	}
+
+	protected abstract Map<String, Object> getInitialProperties();
+
+	@Override
+	public void setProperty(String propertyName, Object value) {
+		checkOpen();
+		if ( propertyName == null ) {
+			SESSION_LOGGER.nullPropertyKey();
+		}
+		else if ( !(value instanceof Serializable) ) {
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
+		}
+		else {
+			// store property for future reference
+			if ( properties == null ) {
+				properties = getInitialProperties();
+			}
+			properties.put( propertyName, value );
+			// now actually update the setting if
+			// it's one that affects this Session
+			interpretProperty( propertyName, value );
+		}
+	}
+
+	protected abstract void interpretProperty(String propertyName, Object value);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// loading
+
+	/**
+	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
+	 *
+	 * @param entityDescriptor The entity type being loaded.
+	 * @param options Any options to apply.
+	 */
+	protected abstract <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options);
+
+	/**
+	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
+	 *
+	 * @param entityDescriptor The entity type being loaded.
+	 * @param graphSemantic Semantic of the supplied {@code rootGraph}.
+	 * @param rootGraph The EntityGraph to apply to the load.
+	 * @param options Any options to apply.
+	 */
+	protected abstract <T> FindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options);
+
+	/**
+	 * JPA requires {@code find()} and {@code get()} to throw {@linkplain IllegalArgumentException}
+	 * if the specified {@code entityClass} is not actually a known entity class.
+	 * However, Hibernate internals throw the much more meaningful {@linkplain UnknownEntityTypeException}.
+	 * Here we catch {@linkplain UnknownEntityTypeException} and convert it to {@linkplain IllegalArgumentException}.
+	 */
+	protected EntityPersister requireEntityPersisterForLoad(Class<?> entityClass) {
+		try {
+			return requireEntityPersister( entityClass );
+		}
+		catch (UnknownEntityTypeException e) {
+			var iae = new IllegalArgumentException( e.getMessage() );
+			iae.addSuppressed( e );
+			throw iae;
+		}
+	}
+
+	/**
+	 * Corollary to {@linkplain #requireEntityPersisterForLoad(Class)}, but for
+	 * dynamic models.
+	 *
+	 * @implNote Even though JPA does not define support for dynamic models, we want to be consistent here.
+	 */
+	protected EntityPersister requireEntityPersisterForLoad(String entityName) {
+		try {
+			return requireEntityPersister( entityName );
+		}
+		catch (UnknownEntityTypeException e) {
+			var iae = new IllegalArgumentException( e.getMessage() );
+			iae.addSuppressed( e );
+			throw iae;
+		}
+	}
+
+	protected static EntityNotFoundException notFound(String entityName, Object key) {
+		return new EntityNotFoundException(
+				String.format(
+						Locale.ROOT,
+						"No entity of type `%s` existed for key `%s`",
+						entityName,
+						key
+				)
+		);
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object id) {
+		checkOpen();
+
+		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
+		//noinspection unchecked
+		return (T) byKey( persister ).performFind( id );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object id, LockModeType lockModeType) {
+		checkOpen();
+
+		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
+		//noinspection unchecked
+		return (T) byKey( persister, lockModeType ).performFind( id );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object key, FindOption... findOptions) {
+		checkOpen();
+
+		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
+		//noinspection unchecked
+		return (T) byKey( persister, findOptions ).performFind( key );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		checkOpen();
+
+		final var graph = (RootGraphImplementor<T>) entityGraph;
+		final var type = graph.getGraphedType();
+
+		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
+			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, findOptions ).performFind( key );
+	}
+
+	@Override
+	public Object find(String entityName, Object key, FindOption... findOptions) {
+		checkOpen();
+		var entityDescriptor = requireEntityPersisterForLoad( entityName );
+		return byKey( entityDescriptor, findOptions ).performFind( key );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object id) {
+		var result = find( entityClass, id );
+		if ( result == null ) {
+			throw notFound( entityClass.getName(), id );
+		}
+		return result;
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object id, LockModeType lockModeType) {
+		return get( entityClass, id, LockMode.fromJpaLockMode( lockModeType ) );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
+		var result = find( entityClass, key, findOptions );
+		if ( result == null ) {
+			throw notFound( entityClass.getName(), key );
+		}
+		return result;
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		var result = find( entityGraph, key, findOptions );
+		if ( result == null ) {
+			final var graph = (RootGraphImplementor<T>) entityGraph;
+			throw notFound( graph.getGraphedType().getTypeName(), key );
+		}
+		return result;
+	}
+
+	@Override
+	public Object get(String entityName, Object key, FindOption... findOptions) {
+		var result = find( entityName, key, findOptions );
+		if ( result == null ) {
+			throw notFound( entityName, key );
+		}
+		return result;
+	}
+
+	@Override
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+		var results = findMultiple( entityClass, keys, findOptions );
+		Helper.verifyGetMultipleResults( results, entityClass.getName(), keys, findOptions );
+		return results;
+	}
+
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		var results = findMultiple( entityGraph, keys, findOptions );
+		Helper.verifyGetMultipleResults( results, ( (RootGraph<T>) entityGraph ).getGraphedType().getTypeName(), keys );
+		return results;
+	}
+
+	@Override
+	public <C> void runWithConnection(ConnectionConsumer<C> action) {
+		doWork( connection -> {
+			try {
+				//noinspection unchecked
+				action.accept( (C) connection );
+			}
+			catch (SQLException e) {
+				throw getJdbcServices().getSqlExceptionHelper().convert( e, "Error in runWithConnection" );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Override
+	public <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return doReturningWork( connection -> {
+			try {
+				//noinspection unchecked
+				return function.apply( (C) connection );
+			}
+			catch (SQLException e) {
+				throw getJdbcServices().getSqlExceptionHelper().convert( e, "Error in callWithConnection" );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return createQuery( (CriteriaQuery<T>) selectQuery );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(String hql, EntityGraph<T> entityGraph) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+		// this one and EntityType
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Shared builders
 
 	@Override
 	public SharedStatelessSessionBuilder statelessWithOptions() {
@@ -914,12 +1248,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic HQL handling
 
-	@Override @Deprecated @SuppressWarnings({"rawtypes", "deprecation"})
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(String queryString) {
-		return createQuery( queryString, null );
+		return createQuery( queryString, (Class<?>) null );
 	}
 
-	@Override
 	public SelectionQuery<?> createSelectionQuery(String hqlString) {
 		return interpretAndCreateSelectionQuery( hqlString, null );
 	}
@@ -1040,21 +1373,25 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	/**
+	 * @deprecated This is a JPA defined method, but Hibernate considers it deprecated.
+	 * Use {@linkplain #createNativeQuery(String, Class)} instead.
+	 */
+	@Override @Deprecated
 	public NativeQueryImplementor<?> createNativeQuery(String sqlString) {
 		return createNativeQuery( sqlString, (Class<?>) null );
 	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	/**
+	 * @deprecated This is a JPA defined method, but Hibernate considers it deprecated.
+	 * Use {@linkplain #createNativeQuery(String, String, Class)} instead.
+	 */
+	@Override @Deprecated
 	public NativeQueryImplementor<?> createNativeQuery(String sqlString, String resultSetMappingName) {
 		checksBeforeQueryCreation();
 		return buildNativeQuery( sqlString, resultSetMappingName, null );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	//note: we're doing something a bit funny here to work around
-	//      the clashing signatures declared by the supertypes
-	public NativeQueryImplementor createNativeQuery(String sqlString, @Nullable Class resultClass) {
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, @Nullable Class<T> resultClass) {
 		checksBeforeQueryCreation();
 		return buildNativeQuery( sqlString, resultClass );
 	}
@@ -1142,12 +1479,12 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// named query handling
 
+	/**
+	 * @deprecated This is a JPA-defined method, but Hibernate considers it
+	 * bad thus we deprecate it through our APIs.  Use {@linkplain #createNamedQuery(String, Class)}
+	 * instead.
+	 */
 	@Override @Deprecated
-	public QueryImplementor<?> getNamedQuery(String queryName) {
-		return createNamedQuery( queryName );
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<?> createNamedQuery(String name) {
 		checksBeforeQueryCreation();
 		try {
@@ -1177,8 +1514,15 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public SelectionQuery<?> createNamedSelectionQuery(String queryName) {
-		return createNamedSelectionQuery( queryName, null );
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName) {
+		final NamedNativeQueryMemento<?> queryMemento = getNativeQueryMemento( name );
+		return queryMemento.toQuery( this, resultSetMappingName );
+	}
+
+	@Override
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+		final NamedNativeQueryMemento<?> queryMemento = getNativeQueryMemento( name );
+		return queryMemento.toQuery( this, resultSetMappingName );
 	}
 
 	@Override
@@ -1323,33 +1667,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			query.setLockOptions( memento.getLockOptions() );
 		}
 		return query;
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<?> getNamedNativeQuery(String queryName) {
-		final var namedNativeDescriptor = getNativeQueryMemento( queryName );
-		if ( namedNativeDescriptor != null ) {
-			return namedNativeDescriptor.toQuery( this );
-		}
-		else {
-			throw noQueryForNameException( queryName );
-		}
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<?> getNamedNativeQuery(String queryName, String resultSetMapping) {
-		final var namedNativeDescriptor = getNativeQueryMemento( queryName );
-		if ( namedNativeDescriptor != null ) {
-			return namedNativeDescriptor.toQuery( this, resultSetMapping );
-		}
-		else {
-			throw noQueryForNameException( queryName );
-		}
-	}
-
-	private RuntimeException noQueryForNameException(String queryName) {
-		return getExceptionConverter()
-				.convert( new IllegalArgumentException( "No query with given name '" + queryName + "'" ) );
 	}
 
 	@Override
@@ -1593,6 +1910,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaSelect<R> criteria) {
+		return createSelectionQuery( (CriteriaQuery<R>) criteria );
+	}
+
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<?> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
@@ -1774,4 +2096,19 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 	}
 
+	protected static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+		final CacheRetrieveMode cacheRetrieveMode =
+				(CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		return cacheRetrieveMode == null
+				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
+				: cacheRetrieveMode;
+	}
+
+	protected static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+		final CacheStoreMode cacheStoreMode =
+				(CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		return cacheStoreMode == null
+				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
+				: cacheStoreMode;
+	}
 }

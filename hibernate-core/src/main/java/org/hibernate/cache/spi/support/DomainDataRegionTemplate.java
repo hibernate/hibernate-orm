@@ -48,7 +48,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 			DomainDataRegionBuildingContext buildingContext) {
 		super( regionConfig, regionFactory, defaultKeysFactory, buildingContext );
 		this.storageAccess = storageAccess;
-
 		// now the super-type calls will have access to the `DomainDataStorageAccess` reference
 		completeInstantiation( regionConfig, buildingContext );
 	}
@@ -63,12 +62,13 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 
 	@Override
 	public EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
-		final var namedEntityRole = entityAccessConfig.getNavigableRole();
 		final var accessType = entityAccessConfig.getAccessType();
-
-		L2CACHE_LOGGER.tracef( "Generating entity cache access [%s] : %s",
-				accessType.getExternalName(), namedEntityRole );
-
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.generatingEntityAccess(
+					entityAccessConfig.getNavigableRole().toString(),
+					accessType.getExternalName()
+			);
+		}
 		return switch ( accessType ) {
 			case READ_ONLY -> generateReadOnlyEntityAccess( entityAccessConfig );
 			case READ_WRITE -> generateReadWriteEntityAccess( entityAccessConfig );
@@ -115,12 +115,13 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 
 	@Override
 	public NaturalIdDataAccess generateNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
-		final var namedEntityRole = accessConfig.getNavigableRole();
 		final var accessType = accessConfig.getAccessType();
-
-		L2CACHE_LOGGER.tracef( "Generating entity natural-id access [%s] : %s",
-				accessType.getExternalName(), namedEntityRole );
-
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.generatingNaturalIdAccess(
+					accessConfig.getNavigableRole().toString(),
+					accessType.getExternalName()
+			);
+		}
 		return switch ( accessType ) {
 			case READ_ONLY -> generateReadOnlyNaturalIdAccess( accessConfig );
 			case READ_WRITE -> generateReadWriteNaturalIdAccess( accessConfig );
@@ -162,13 +163,14 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 
 	@Override
 	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
-		final var namedCollectionRole = accessConfig.getNavigableRole();
-
+		final var accessType = accessConfig.getAccessType();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-			L2CACHE_LOGGER.trace( "Generating collection cache access: " + namedCollectionRole );
+			L2CACHE_LOGGER.generatingCollectionAccess(
+					accessConfig.getNavigableRole().toString(),
+					accessType.getExternalName()
+			);
 		}
-
-		return switch ( accessConfig.getAccessType() ) {
+		return switch ( accessType ) {
 			case READ_ONLY -> generateReadOnlyCollectionAccess( accessConfig );
 			case READ_WRITE -> generateReadWriteCollectionAccess( accessConfig );
 			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteCollectionAccess( accessConfig );

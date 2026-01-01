@@ -77,6 +77,10 @@ public interface JdbcLogging extends BasicLogger {
 	void closingUnreleasedBatch(int hashCode);
 
 	@LogMessage(level = DEBUG)
+	@Message(value = "Skipping aggressive release in AFTER_STATEMENT mode (%s)", id = 100010)
+	void skippingAggressiveRelease(String reason);
+
+	@LogMessage(level = DEBUG)
 	@Message(value = """
 			Database:
 				name: %s

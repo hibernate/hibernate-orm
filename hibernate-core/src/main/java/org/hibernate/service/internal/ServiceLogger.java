@@ -77,4 +77,9 @@ public interface ServiceLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 10455, value = "Adding integrator: %s")
 	void addingIntegrator(String name);
+
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 10456, value = "Overriding existing service binding: %s" )
+	void overridingExistingBinding(String name);
 }

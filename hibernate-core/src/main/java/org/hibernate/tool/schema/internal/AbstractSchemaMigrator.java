@@ -76,8 +76,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter,
 			TargetDescriptor targetDescriptor) {
-		final var sqlGenerationContext = sqlGenerationContext( metadata, options );
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
+			final var sqlGenerationContext = sqlGenerationContext( metadata, options );
 			final var jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			try ( var isolator = tool.getDdlTransactionIsolator( jdbcContext ) ) {
 				final var databaseInformation = buildDatabaseInformation( isolator, sqlGenerationContext );

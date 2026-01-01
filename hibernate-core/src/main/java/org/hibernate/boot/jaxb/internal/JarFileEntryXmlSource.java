@@ -14,9 +14,7 @@ import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 

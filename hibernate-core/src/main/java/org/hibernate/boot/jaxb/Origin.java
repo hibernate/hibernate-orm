@@ -15,6 +15,7 @@ import java.util.Objects;
  * @author Steve Ebersole
  */
 public class Origin implements Serializable {
+	// cannot be a record class because it is extended in Gradle plugin
 
 	private final SourceType type;
 	private final String name;
@@ -44,15 +45,17 @@ public class Origin implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( !(o instanceof Origin other) ) {
+		else if ( !(object instanceof Origin that) ) {
 			return false;
 		}
-		return type == other.type
-			&& Objects.equals( name, other.name );
+		else {
+			return this.type == that.type
+				&& Objects.equals( this.name, that.name );
+		}
 
 	}
 
@@ -63,6 +66,7 @@ public class Origin implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format( Locale.ENGLISH, "Origin(name=%s,type=%s)", name, type );
+		return String.format( Locale.ENGLISH,
+				"Origin(name=%s,type=%s)", name, type );
 	}
 }

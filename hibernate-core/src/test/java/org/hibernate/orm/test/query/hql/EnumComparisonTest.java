@@ -27,27 +27,27 @@ public class EnumComparisonTest {
 			session.createMutationQuery("delete WithEnum").executeUpdate();
 			session.persist(new WithEnum());
 			assertEquals(1,
-					session.createSelectionQuery("from WithEnum where stringEnum > X").getResultList().size());
+					session.createSelectionQuery("from WithEnum where stringEnum > X", WithEnum.class).getResultList().size());
 			assertEquals(1,
-					session.createSelectionQuery("from WithEnum where ordinalEnum > X").getResultList().size());
+					session.createSelectionQuery("from WithEnum where ordinalEnum > X", WithEnum.class).getResultList().size());
 			assertEquals(1,
-					session.createSelectionQuery("from WithEnum where stringEnum > 'X'").getResultList().size());
+					session.createSelectionQuery("from WithEnum where stringEnum > 'X'", WithEnum.class).getResultList().size());
 			assertEquals(1,
-					session.createSelectionQuery("from WithEnum where ordinalEnum > 1").getResultList().size());
+					session.createSelectionQuery("from WithEnum where ordinalEnum > 1", WithEnum.class).getResultList().size());
 			try {
-				session.createSelectionQuery("from WithEnum where ordinalEnum > 'X'").getResultList();
+				session.createSelectionQuery("from WithEnum where ordinalEnum > 'X'", WithEnum.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {
 			}
 			try {
-				session.createSelectionQuery("from WithEnum where stringEnum > 1").getResultList();
+				session.createSelectionQuery("from WithEnum where stringEnum > 1", WithEnum.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {
 			}
-			session.createSelectionQuery("select max(ordinalEnum) from WithEnum").getSingleResult();
-			session.createSelectionQuery("select max(stringEnum) from WithEnum").getSingleResult();
+			session.createSelectionQuery("select max(ordinalEnum) from WithEnum", Enum.class).getSingleResult();
+			session.createSelectionQuery("select max(stringEnum) from WithEnum", Enum.class).getSingleResult();
 		});
 	}
 

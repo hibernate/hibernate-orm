@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.CollectionAttribute;
 import jakarta.persistence.metamodel.ListAttribute;
@@ -137,6 +138,16 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	@Override
 	public String getName() {
 		return polymorphicJavaType.getTypeName();
+	}
+
+	@Override
+	public EntityGraph<T> createEntityGraph() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<String, EntityGraph<T>> getNamedEntityGraphs() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

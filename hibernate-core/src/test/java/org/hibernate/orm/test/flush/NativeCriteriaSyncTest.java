@@ -49,7 +49,7 @@ public class NativeCriteriaSyncTest {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<SimpleEntityWithAssociation> criteria = criteriaBuilder.createQuery( SimpleEntityWithAssociation.class );
 			Root<SimpleEntityWithAssociation> root = criteria.from( SimpleEntityWithAssociation.class );
-			Join<Object, Object> join = root.join(
+			Join<SimpleEntityWithAssociation, Object> join = root.join(
 					"manyToManyAssociatedEntities",
 					JoinType.INNER
 			);

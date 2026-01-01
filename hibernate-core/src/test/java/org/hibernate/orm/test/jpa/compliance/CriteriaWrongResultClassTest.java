@@ -59,7 +59,7 @@ public class CriteriaWrongResultClassTest {
 
 		@OneToMany
 		@JoinTable(name = "DEPARTMENT_EMPLOYEE_TABLE")
-		@MapKey(name = "nickname")
+		@MapKey("nickname")
 		private Map<String, Person> people = new HashMap<>();
 
 		public Department() {

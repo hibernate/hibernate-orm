@@ -88,12 +88,12 @@ public class EntityNonEntityTest {
 						.getEntityDescriptor( Cellular.class.getName() )
 		);
 
-		assertThrows( UnknownEntityTypeException.class, () -> scope.inTransaction(
+		assertThrows( IllegalArgumentException.class, () -> scope.inTransaction(
 				session ->
 						session.get( Cellular.class, 1 )
 		) );
 
-		assertThrows( UnknownEntityTypeException.class, () -> scope.inTransaction(
+		assertThrows( IllegalArgumentException.class, () -> scope.inTransaction(
 				session ->
 						session.get( Cellular.class.getName(), 1 )
 		) );

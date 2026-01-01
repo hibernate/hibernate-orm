@@ -39,6 +39,11 @@ public class ResultMementoInstantiationStandard implements ResultMementoInstanti
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return instantiatedJtd.getJavaTypeClass();
+	}
+
+	@Override
 	public ResultBuilder resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {

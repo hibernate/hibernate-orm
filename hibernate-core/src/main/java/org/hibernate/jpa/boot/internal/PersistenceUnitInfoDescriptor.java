@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -19,13 +20,12 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
-/**
- * @author Steve Ebersole
- */
+/// Wraps a JPA {@linkplain PersistenceUnitInfo} as Hibernate's {@linkplain PersistenceUnitDescriptor}
+///
+/// @author Steve Ebersole
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
 
 	private final PersistenceUnitInfo persistenceUnitInfo;
@@ -62,11 +62,6 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
-		return PersistenceUnitTransactionTypeHelper.toNewForm( getTransactionType() );
-	}
-
-	@Override @SuppressWarnings("removal")
-	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 		return persistenceUnitInfo.getTransactionType();
 	}
 
@@ -93,6 +88,11 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	@Override
 	public boolean isExcludeUnlistedClasses() {
 		return persistenceUnitInfo.excludeUnlistedClasses();
+	}
+
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return persistenceUnitInfo.getDefaultToOneFetchType();
 	}
 
 	@Override

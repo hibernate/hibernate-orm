@@ -60,7 +60,7 @@ public class NamedQueryTest {
 	public void testNamedQueriesOrdinalParametersAreOneBased(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.getNamedQuery( "NamedQuery" );
+					Query query = session.createNamedQuery( "NamedQuery", Game.class );
 					query.setParameter( 1, GAME_TITLES[0] );
 					List list = query.getResultList();
 					assertEquals( 1, list.size() );
@@ -73,7 +73,7 @@ public class NamedQueryTest {
 	public void testNoExceptionThrownForNamedUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.getNamedQuery( "NamedUpdate" );
+					Query query = session.createNamedQuery( "NamedUpdate" );
 					query.setParameter( 1, GAME_TITLES[0] + " 2" );
 					query.setParameter( 2, GAME_TITLES[0] );
 					assertDoesNotThrow( () -> query.executeUpdate(), "without fixing, 'java.lang.IllegalStateException: Expecting a SELECT query' exception would be thrown" );

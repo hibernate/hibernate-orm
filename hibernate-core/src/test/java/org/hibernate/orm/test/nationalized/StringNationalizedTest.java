@@ -4,19 +4,15 @@
  */
 package org.hibernate.orm.test.nationalized;
 
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -59,9 +55,9 @@ public class StringNationalizedTest {
 
 		scope.inSession(
 				session -> {
-					final Query query = session.createQuery( "from NationalizedEntity where name = :name", null );
+					var query = session.createQuery( "from NationalizedEntity where name = :name", NationalizedEntity.class );
 					query.setParameter( "name", "Hello" );
-					final List list = query.list();
+					var list = query.list();
 					assertThat( list.size(), is( 1 ) );
 				}
 		);

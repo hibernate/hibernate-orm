@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -20,6 +21,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -124,6 +126,24 @@ public abstract class AbstractQuery<R>
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
 		return this;
+	}
+
+	@Override
+	public TypedQuery<R> setTimeout(Integer integer) {
+		getQueryOptions().setTimeout( integer );
+		return this;
+	}
+
+	@Override
+	public PessimisticLockScope getLockScope() {
+		var options = getLockOptions();
+		return options == null ? null : options.getScope().getCorrespondingJpaScope();
+	}
+
+	@Override
+	public EntityGraph<? super R> getEntityGraph() {
+		//noinspection unchecked
+		return (EntityGraph<? super R>) getQueryOptions().getAppliedGraph().getGraph();
 	}
 
 	@Override
@@ -340,13 +360,14 @@ public abstract class AbstractQuery<R>
 		final var queryOptions = getQueryOptions();
 		final var lockOptions = getLockOptions();
 
-		if ( queryOptions.getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, queryOptions.getTimeout() );
-			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
-			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
+		if ( Timeouts.isRealTimeout( queryOptions.getTimeout() ) ) {
+			final Timeout timeout = queryOptions.getTimeout();
+			hints.put( HINT_TIMEOUT, Timeouts.getTimeoutInSeconds( timeout) );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, timeout.milliseconds() );
+			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, timeout.milliseconds() );
 		}
 
-		if ( lockOptions.getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
+		if ( Timeouts.isRealTimeout( lockOptions.getTimeout() ) ) {
 			hints.put( HINT_SPEC_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 		}
@@ -463,6 +484,16 @@ public abstract class AbstractQuery<R>
 	public <P> QueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

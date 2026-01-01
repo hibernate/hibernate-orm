@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.io.Serializable;
-import java.util.Map;
-
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -20,7 +21,8 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Definition of a named query, defined in the mapping metadata.
@@ -53,7 +55,7 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 			FlushMode flushMode,
 			Boolean readOnly,
 			LockOptions lockOptions,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String,String> parameterTypes,
@@ -99,8 +101,22 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 	}
 
 	@Override
-	public Map<String, String> getParameterTypes() {
+	public Map<String, String> getAnticipatedParameterTypes() {
 		return parameterTypes;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return lockOptions == null
+				? LockModeType.NONE
+				: lockOptions.getLockMode().toJpaLockMode();
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return lockOptions == null
+				? PessimisticLockScope.NORMAL
+				: lockOptions.getScope().getCorrespondingJpaScope();
 	}
 
 	@Override

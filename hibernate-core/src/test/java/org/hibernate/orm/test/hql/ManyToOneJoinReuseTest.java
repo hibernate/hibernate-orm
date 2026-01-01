@@ -71,7 +71,7 @@ public class ManyToOneJoinReuseTest {
 					JpaCriteriaQuery<BookList> query = cb.createQuery( BookList.class );
 
 					JpaRoot<BookList> root = query.from( BookList.class );
-					Join<Object, Object> join = root.join( "book", JoinType.INNER );
+					Join<BookList, Object> join = root.join( "book", JoinType.INNER );
 					query.where(
 							cb.and(
 									root.get( "book" ).isNotNull(),

@@ -50,6 +50,11 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return entityDescriptor.getJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public ResultBuilderEntityValued resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.intg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -66,7 +67,7 @@ public class AdditionalMappingContributorTests {
 
 		sessionFactoryScope.inTransaction( (session) -> {
 			//noinspection deprecation
-			final List<?> results = session.createSelectionQuery( "from Entity2" ).list();
+			final List<?> results = session.createSelectionQuery( "from Entity2", Entity2.class ).list();
 			assertThat( results ).hasSize( 0 );
 		} );
 	}
@@ -89,7 +90,7 @@ public class AdditionalMappingContributorTests {
 
 		sessionFactoryScope.inTransaction( (session) -> {
 			//noinspection deprecation
-			final List<?> results = session.createSelectionQuery( "from Entity3" ).list();
+			final List<?> results = session.createSelectionQuery( "from Entity3", Entity3.class ).list();
 			assertThat( results ).hasSize( 0 );
 		} );
 	}
@@ -121,11 +122,11 @@ public class AdditionalMappingContributorTests {
 
 		sessionFactoryScope.inTransaction( (session) -> {
 			//noinspection deprecation
-			final List<?> results4 = session.createSelectionQuery( "from Entity4" ).list();
+			final List<?> results4 = session.createSelectionQuery( "from Entity4", Entity4.class ).list();
 			assertThat( results4 ).hasSize( 0 );
 
 			//noinspection deprecation
-			final List<?> results5 = session.createSelectionQuery( "from ___Entity5___" ).list();
+			final List<?> results5 = session.createSelectionQuery( "from ___Entity5___", Entity5.class ).list();
 			assertThat( results5 ).hasSize( 0 );
 		} );
 	}
@@ -150,7 +151,7 @@ public class AdditionalMappingContributorTests {
 
 		sessionFactoryScope.inTransaction( (session) -> {
 			//noinspection deprecation
-			final List<?> results6 = session.createSelectionQuery( "from Entity6" ).list();
+			final List<?> results6 = session.createSelectionQuery( "from Entity6", Map.class ).list();
 			assertThat( results6 ).hasSize( 0 );
 		} );
 	}

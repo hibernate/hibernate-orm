@@ -30,7 +30,7 @@ public class OrderCollectionOfJoinedHierarchyTest {
 	@Test
 	public void testQuerySyntaxCheck(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.get( Zoo.class, 1L )
+				session -> session.find( Zoo.class, 1L )
 		);
 	}
 

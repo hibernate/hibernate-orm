@@ -38,7 +38,7 @@ public class EmbeddableFetchImplTests {
 		scope.inTransaction(
 				// will throw exception if the patch accompanying this test is not applied
 				// for 'country' alias shows up in 'select', but not in 'from' clause
-				session -> session.get( ExpressCompany.class, "nonexistent" )
+				session -> session.find( ExpressCompany.class, "nonexistent" )
 		);
 	}
 

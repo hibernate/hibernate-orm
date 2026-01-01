@@ -165,7 +165,7 @@ public class ManyToManyTest {
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Supplier> criteria = criteriaBuilder.createQuery( Supplier.class );
 			Root<Supplier> root = criteria.from( Supplier.class );
-			Join<Object, Object> suppStores = root.join( "suppStores", JoinType.INNER );
+			Join<Supplier, Object> suppStores = root.join( "suppStores", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( suppStores.get( "name" ), "Fnac" ) );
 			List<Supplier> result = s.createQuery( criteria ).list();
 

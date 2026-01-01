@@ -33,7 +33,7 @@ public class OrmVersion1SupportedTest {
 					session.flush();
 					session.clear();
 
-					assertThat( session.getNamedQuery( "find.the.light" ).list().size() ).isEqualTo( 1 );
+					assertThat( session.createNamedQuery( "find.the.light" ).list().size() ).isEqualTo( 1 );
 				}
 		);
 	}

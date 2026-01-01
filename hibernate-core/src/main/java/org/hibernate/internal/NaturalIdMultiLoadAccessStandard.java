@@ -22,7 +22,7 @@ import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.find.FindMultipleByKeyOperation;
+import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -31,7 +31,7 @@ import java.util.List;
 
 /// Implementation of NaturalIdMultiLoadAccess.
 ///
-/// @deprecated Use [FindMultipleByKeyOperation] instead.
+/// @deprecated Use [StatefulFindMultipleByKeyOperation] instead.
 ///
 /// @author Steve Ebersole
 @Deprecated
@@ -128,18 +128,19 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	@Override
 	public List<T> multiLoad(Object... ids) {
 		return buildOperation()
-				.performFind( List.of( ids ), graphSemantic, rootGraph, (LoadAccessContext) session );
+				.performFind( List.of( ids ), graphSemantic, rootGraph );
 	}
 
 	@Override
 	public List<T> multiLoad(List<?> ids) {
 		return buildOperation()
-				.performFind( ids, graphSemantic, rootGraph, (LoadAccessContext) session );
+				.performFind( ids, graphSemantic, rootGraph );
 	}
 
-	private FindMultipleByKeyOperation<T> buildOperation() {
-		return new FindMultipleByKeyOperation<T>(
+	private StatefulFindMultipleByKeyOperation<T> buildOperation() {
+		return new StatefulFindMultipleByKeyOperation<T>(
 				entityDescriptor,
+				(LoadAccessContext) session,
 				KeyType.NATURAL,
 				batchSize == null ? null : new BatchSize( batchSize ),
 				SessionCheckMode.ENABLED,

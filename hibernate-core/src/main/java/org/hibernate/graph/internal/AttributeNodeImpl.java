@@ -50,6 +50,11 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	protected SubGraphImplementor<K> keySubgraph;
 
 	@Override
+	public Attribute<?, J> getAttribute() {
+		return attribute;
+	}
+
+	@Override
 	public boolean isRemoved() {
 		return removed;
 	}

@@ -294,8 +294,8 @@ public class ManyToOneTest {
 		);
 		scope.inTransaction(
 				session -> {
-					assertThat( session.get( OtherEntity.class, 2 ), nullValue() );
-					assertThat( session.get( SimpleEntity.class, 1 ), notNullValue() );
+					assertThat( session.find( OtherEntity.class, 2 ), nullValue() );
+					assertThat( session.find( SimpleEntity.class, 1 ), notNullValue() );
 				}
 		);
 	}

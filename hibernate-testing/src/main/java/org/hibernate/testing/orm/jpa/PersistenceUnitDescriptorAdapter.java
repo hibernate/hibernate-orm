@@ -8,6 +8,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -45,11 +47,6 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 		return null;
 	}
 
-	@Override @SuppressWarnings("removal")
-	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
-		return null;
-	}
-
 	@Override
 	public DataSource getJtaDataSource() {
 		return null;
@@ -83,6 +80,11 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	@Override
 	public boolean isExcludeUnlistedClasses() {
 		return false;
+	}
+
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return FetchType.EAGER;
 	}
 
 	@Override

@@ -4,7 +4,12 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -21,6 +26,7 @@ import org.hibernate.query.specification.SimpleProjectionSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -118,5 +124,50 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 	@Override
 	public Map<String, Object> getHints() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return null;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return null;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return null;
+	}
+
+	@Override
+	public Timeout getTimeout() {
+		return null;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return "";
+	}
+
+	@Override
+	public List<Class<?>> getParameterTypes() {
+		return null;
+	}
+
+	@Override
+	public List<String> getParameterNames() {
+		return null;
+	}
+
+	@Override
+	public List<Object> getArguments() {
+		return null;
 	}
 }

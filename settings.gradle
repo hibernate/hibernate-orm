@@ -37,6 +37,11 @@ dependencyResolutionManagement {
             mavenCentral()
         }
 
+        // temporary for 4.0 snapshot testing
+        maven {
+            url "https://central.sonatype.com/repository/maven-snapshots/"
+        }
+
         if (System.getProperty('JPA_PREVIEW') != null) {
 			maven {
 				url "https://jakarta.oss.sonatype.org/content/repositories/releases/"

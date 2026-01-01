@@ -336,7 +336,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
@@ -366,7 +366,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		final boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {

@@ -53,7 +53,7 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	}
 
 	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
-		final StringBuilder fragment = new StringBuilder();
+		final var fragment = new StringBuilder();
 		fragment.append( "unique (" );
 		boolean first = true;
 		for ( Column column : uniqueKey.getColumns() ) {
@@ -79,7 +79,7 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
-		final StringBuilder command = new StringBuilder( dialect.getAlterTableString(tableName) );
+		final var command = new StringBuilder( dialect.getAlterTableString(tableName) );
 		command.append( ' ' );
 		command.append( dialect.getDropUniqueKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {

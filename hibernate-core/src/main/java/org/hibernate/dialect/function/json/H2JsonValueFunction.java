@@ -161,7 +161,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		if ( "$".equals( jsonPath ) ) {
 			return parentPath;
 		}
-		final StringBuilder sb = new StringBuilder( parentPath.length() + jsonPath.length() );
+		final var sb = new StringBuilder( parentPath.length() + jsonPath.length() );
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
 		final boolean needsWrapping = jsonPathElements.get( 0 ) instanceof JsonPathHelper.JsonAttribute
 				&& isColumn

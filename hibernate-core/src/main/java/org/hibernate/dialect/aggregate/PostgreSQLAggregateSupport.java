@@ -170,7 +170,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
 			&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
 			&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_EXTRACT_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -180,7 +180,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 		else if ( aggregateParentReadExpression.startsWith( XML_QUERY_START )
 				&& aggregateParentReadExpression.endsWith( XML_QUERY_END )
 				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_QUERY_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_QUERY_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );

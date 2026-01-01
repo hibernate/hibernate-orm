@@ -42,7 +42,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -138,7 +137,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
@@ -205,8 +204,8 @@ public class SybaseASEDialect extends SybaseDialect {
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final var resultSet = statement.executeQuery( "SELECT @@options" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT @@options" ) ) {
 				if ( resultSet.next() ) {
 					final byte[] optionBytes = resultSet.getBytes( 1 );
 					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
@@ -224,8 +223,8 @@ public class SybaseASEDialect extends SybaseDialect {
 	private int pageSize(DialectResolutionInfo info) {
 		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final var resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT @@maxpagesize" ) ) {
 				if ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
@@ -343,17 +342,15 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch ( unit ) {
-			case NANOSECOND:
-				return "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";
-//				return "(cast(datediff(mcs,?2,?3) as numeric(21))*1000)";
-//				}
-			case NATIVE:
-				return "cast(datediff(ms,?2,?3) as numeric(21))";
-//				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
-			default:
-				return "datediff(?1,?2,?3)";
-		}
+		return switch ( unit ) {
+			case NANOSECOND ->
+//					"(cast(datediff(mcs,?2,?3) as numeric(21))*1000)";
+					"(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";
+			case NATIVE ->
+//					"cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
+					"cast(datediff(ms,?2,?3) as numeric(21))";
+			default -> "datediff(?1,?2,?3)";
+		};
 	}
 
 	@Override
@@ -644,13 +641,15 @@ public class SybaseASEDialect extends SybaseDialect {
 		if ( name == null || name.isEmpty() ) {
 			return name;
 		}
-		if ( name.charAt( 0 ) == '#' ) {
+		else if ( name.charAt( 0 ) == '#' ) {
 			// Temporary tables must start with a '#' character,
 			// but Sybase doesn't support quoting of such identifiers,
 			// so we simply don't apply quoting in this case
 			return name;
 		}
-		return super.toQuotedIdentifier( name );
+		else {
+			return super.toQuotedIdentifier( name );
+		}
 	}
 
 	@Override

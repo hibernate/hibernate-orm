@@ -220,7 +220,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		}
 
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final StringBuilder buffer = new StringBuilder( sql );
+		final var buffer = new StringBuilder( sql );
 		keyColumnNameMap.forEach( (tableAlias, keyColumnNames) -> {
 			int start = -1;
 			int end = -1;

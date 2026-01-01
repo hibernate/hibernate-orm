@@ -223,7 +223,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 							.resolve( StandardBasicTypes.STRING );
 					final Dialect dialect = walker.getCreationContext().getDialect();
 					Expression formatExpression = null;
-					final StringBuilder sb = new StringBuilder();
+					final var sb = new StringBuilder();
 					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
 					final String delimiter;
 					if ( supportsPatternLiterals ) {

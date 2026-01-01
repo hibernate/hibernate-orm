@@ -9,15 +9,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * Utility class that extracts some initial configuration from the database for {@link HANADialect}.
@@ -124,14 +123,14 @@ public class HANAServerConfiguration {
 		if ( versionString == null ) {
 			return HANADialect.MINIMUM_VERSION;
 		}
-		final String[] components = StringHelper.split( " ", versionString );
-		final DatabaseVersion databaseVersion = staticDetermineDatabaseVersion( components[0] );
+		final var components = split( " ", versionString );
+		final var databaseVersion = staticDetermineDatabaseVersion( components[0] );
 		if ( components.length == 1 || databaseVersion.isBefore( 4 ) ) {
 			return databaseVersion;
 		}
 		else {
 			// Parse the HANA Cloud version
-			final Matcher matcher = CLOUD_VERSION_PATTERN.matcher( components[1] );
+			final var matcher = CLOUD_VERSION_PATTERN.matcher( components[1] );
 			if ( matcher.matches() ) {
 				final int year = Integer.parseInt( matcher.group( 1 ) );
 				final int week = Integer.parseInt( matcher.group( 2 ) );
@@ -169,7 +168,7 @@ public class HANAServerConfiguration {
 		if ( versionString == null ) {
 			return HANADialect.MINIMUM_VERSION;
 		}
-		final String[] components = StringHelper.split( ".", versionString );
+		final var components = split( ".", versionString );
 		if ( components.length >= 3 ) {
 			try {
 				majorVersion = Integer.parseInt( components[0] );

@@ -43,7 +43,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 			final List<Column> columns = uniqueKey.getColumns();
 			final Map<Column, String> columnOrderMap = uniqueKey.getColumnOrderMap();
-			final StringBuilder statement =
+			final var statement =
 					new StringBuilder( dialect.getCreateIndexString( true ) )
 							.append( " " )
 							.append( dialect.qualifyIndexName() ? name : unqualify( name ) )

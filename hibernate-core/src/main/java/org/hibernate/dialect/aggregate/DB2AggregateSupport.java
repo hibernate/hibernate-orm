@@ -211,7 +211,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
 				&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
 				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_EXTRACT_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -320,7 +320,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			case XML_ARRAY:
 				return null;
 			case STRUCT:
-				final StringBuilder sb = new StringBuilder();
+				final var sb = new StringBuilder();
 				appendStructCustomWriteExpression( aggregateColumn, aggregatedColumns, sb );
 				return sb.toString();
 		}
@@ -1031,7 +1031,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 
 		private String columnXPath(SelectablePath selectablePath) {
 			final SelectablePath[] parts = selectablePath.getParts();
-			final StringBuilder xpath = new StringBuilder();
+			final var xpath = new StringBuilder();
 			for ( int i = 1; i < parts.length; i++ ) {
 				xpath.append( '/' );
 				xpath.append( parts[i].getSelectableName() );
@@ -1041,7 +1041,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 
 		private String columnVariable(SelectablePath selectablePath) {
 			final SelectablePath[] parts = selectablePath.getParts();
-			final StringBuilder variable = new StringBuilder();
+			final var variable = new StringBuilder();
 			for ( int i = 1; i < parts.length; i++ ) {
 				variable.append( parts[i].getSelectableName() );
 				variable.append( '-' );

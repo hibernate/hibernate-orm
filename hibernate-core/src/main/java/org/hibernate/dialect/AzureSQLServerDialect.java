@@ -11,7 +11,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
  *
  * @deprecated Use {@link SQLServerDialect} instead.
  */
-@Deprecated(forRemoval = true)
+@Deprecated(forRemoval = true, since = "7.2")
 public class AzureSQLServerDialect extends SQLServerDialect {
 
 	public AzureSQLServerDialect() {

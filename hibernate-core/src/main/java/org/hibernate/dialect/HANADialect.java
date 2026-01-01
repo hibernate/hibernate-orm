@@ -94,12 +94,9 @@ import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -286,7 +283,7 @@ public class HANADialect extends Dialect {
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// This is the best hook for consuming dialect configuration that we have for now,
 		// since this method is called very early in the bootstrap process
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
 		this.defaultTableTypeColumn = configurationService.getSetting(
 				USE_DEFAULT_TABLE_TYPE_COLUMN,
@@ -360,7 +357,7 @@ public class HANADialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// varbinary max length 5000
 		ddlTypeRegistry.addDescriptor(
@@ -436,7 +433,7 @@ public class HANADialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+		final var typeConfiguration = functionContributions.getTypeConfiguration();
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -1075,8 +1072,8 @@ public class HANADialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+		final var typeConfiguration = typeContributions.getTypeConfiguration();
+		final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		if ( treatDoubleTypedFieldsAsDecimal ) {
 			typeConfiguration.getBasicTypeRegistry()
 					.register(

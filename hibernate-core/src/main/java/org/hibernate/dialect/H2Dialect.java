@@ -78,7 +78,6 @@ import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -227,7 +226,7 @@ public class H2Dialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
@@ -241,7 +240,7 @@ public class H2Dialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		final JdbcTypeRegistry jdbcTypeRegistry =
+		final var jdbcTypeRegistry =
 				typeContributions.getTypeConfiguration()
 						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );

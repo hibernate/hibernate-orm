@@ -726,7 +726,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 		}
 
 		private String castValueExpression(String baseReadExpression, CastTarget castTarget, @Nullable Literal defaultExpression, SqmToSqlAstConverter converter) {
-			final StringBuilder sb = new StringBuilder( baseReadExpression.length() + 200 );
+			final var sb = new StringBuilder( baseReadExpression.length() + 200 );
 			if ( defaultExpression != null ) {
 				sb.append( "coalesce(" );
 			}
@@ -773,7 +773,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 		}
 
 		private String castQueryExpression(String baseReadExpression, JsonQueryEmptyBehavior emptyBehavior, JsonQueryWrapMode wrapMode, SqmToSqlAstConverter converter) {
-			final StringBuilder sb = new StringBuilder( baseReadExpression.length() + 200 );
+			final var sb = new StringBuilder( baseReadExpression.length() + 200 );
 			if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_ARRAY || emptyBehavior == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
 				sb.append( "coalesce(" );
 			}

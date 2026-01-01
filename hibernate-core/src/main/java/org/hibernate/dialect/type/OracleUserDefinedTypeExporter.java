@@ -445,7 +445,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName, int maxConcatParams) {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( "create or replace function " ).append( arrayTypeName ).append( "_concat(" );
 		sb.append( "arr0 in " ).append( arrayTypeName ).append( ",arr1 in " ).append( arrayTypeName );
 		for ( int i = 2; i < maxConcatParams; i++ ) {

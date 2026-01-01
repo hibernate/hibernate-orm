@@ -72,7 +72,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 	@Override
 	public String getSqlCreateCommand(TemporaryTable temporaryTable) {
 		final TemporaryTableStrategy temporaryTableStrategy = getDefaultTemporaryTableStrategy( temporaryTable );
-		final StringBuilder buffer = new StringBuilder( getCreateCommand( temporaryTableStrategy ) ).append( ' ' );
+		final var buffer = new StringBuilder( getCreateCommand( temporaryTableStrategy ) ).append( ' ' );
 		buffer.append( temporaryTable.getQualifiedTableName() );
 		buffer.append( '(' );
 

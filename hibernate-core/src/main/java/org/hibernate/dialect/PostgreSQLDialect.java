@@ -98,7 +98,6 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -107,7 +106,6 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -177,12 +175,11 @@ public class PostgreSQLDialect extends Dialect {
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( jdbcType.isXml() ) {
-				// Requires the use of xmltable which is not supported in check constraints
-				return;
+			final var jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( !jdbcType.isXml() ) {
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
+			// Otherwise requires the use of XMLTABLE which is not supported in check constraints
 		}
 	};
 
@@ -277,7 +274,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
@@ -375,7 +372,8 @@ public class PostgreSQLDialect extends Dialect {
 				// PostgreSQL names array types by prepending an underscore to the base name
 				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					final Integer sqlTypeCode =
+							resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -383,7 +381,7 @@ public class PostgreSQLDialect extends Dialect {
 								ColumnTypeInformation.EMPTY
 						);
 					}
-					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					final var elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
 					if ( elementDescriptor != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -394,7 +392,7 @@ public class PostgreSQLDialect extends Dialect {
 				}
 				break;
 			case STRUCT:
-				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
 						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 				);
@@ -426,7 +424,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		StringBuilder type = new StringBuilder();
+		final var type = new StringBuilder();
 		type.append( "create type " )
 				.append( name )
 				.append( " as enum (" );
@@ -560,6 +558,7 @@ public class PostgreSQLDialect extends Dialect {
 		super.initializeFunctionRegistry( functionContributions );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -694,24 +693,24 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 
 		if ( !supportsMinMaxOnUuid() ) {
-			functionContributions.getFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
-			functionContributions.getFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+			functionRegistry.register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			functionRegistry.register( "max", new PostgreSQLMinMaxFunction( "max" ) );
 		}
 
 		// Postgres uses # instead of ^ for XOR
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1#?2)" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"round", new PostgreSQLTruncRoundFunction( "round", true )
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"trunc",
 				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 		functionFactory.dateTrunc();
 
 		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
@@ -944,12 +943,13 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
-		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-		final String castTypeName = ddlTypeRegistry
-				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
-				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final var jdbcMapping = sqlType.getJdbcMapping();
+		final String castTypeName =
+				ddlTypeRegistry.getDescriptor( jdbcMapping.getJdbcType().getDdlTypeCode() )
+						.getCastTypeName( sqlType.toSize(), (SqlExpressible) jdbcMapping, ddlTypeRegistry );
 		// PostgreSQL assumes a plain null literal in the select statement to be of type text,
-		// which can lead to issues in e.g. the union subclass strategy, so do a cast
+		// which can lead to issues in, for example, the union subclass strategy, so do a cast.
 		return "cast(null as " + castTypeName + ")";
 	}
 
@@ -1477,7 +1477,7 @@ public class PostgreSQLDialect extends Dialect {
 	 * Allow for extension points to override this only
 	 */
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, see:
 		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
@@ -1592,13 +1592,10 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		if ( supportsMerge ) {
-			return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
-					.createMergeOperation( optionalTableUpdate );
-		}
-		else {
-			return new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
-		}
+		return supportsMerge
+				? new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+						.createMergeOperation( optionalTableUpdate )
+				: new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	@Override

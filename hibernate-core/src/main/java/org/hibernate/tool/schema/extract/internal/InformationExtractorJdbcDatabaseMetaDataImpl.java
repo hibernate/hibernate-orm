@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -36,6 +37,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	protected DatabaseMetaData getJdbcDatabaseMetaData() {
 		return getExtractionContext().getJdbcDatabaseMetaData();
+	}
+
+	Connection getConnection() {
+		return getExtractionContext().getJdbcConnection();
 	}
 
 	@Override

@@ -5,7 +5,6 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
@@ -68,11 +67,10 @@ public class MySQLServerConfiguration {
 	public static MySQLServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 		Integer bytesPerCharacter = null;
 		Boolean noBackslashEscapes = null;
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet =
-						statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" ) ) {
 				if ( resultSet.next() ) {
 					final String characterSet = resultSet.getString( 1 );
 					bytesPerCharacter = getBytesPerCharacter( characterSet );
@@ -107,9 +105,8 @@ public class MySQLServerConfiguration {
 		int bytesPerCharacter = 4;
 		boolean noBackslashEscapes = false;
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet =
-						statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" ) ) {
 				if ( resultSet.next() ) {
 					final String characterSet = resultSet.getString( 1 );
 					bytesPerCharacter = getBytesPerCharacter( characterSet );

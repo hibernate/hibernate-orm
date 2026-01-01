@@ -421,7 +421,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * This method is always called when a {@code Dialect} is instantiated.
 	 */
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( simpleSqlType( BOOLEAN ) );
 
@@ -810,7 +810,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, String[] values) {
-		final StringBuilder check = new StringBuilder();
+		final var check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -867,7 +867,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, Long[] values) {
-		final StringBuilder check = new StringBuilder();
+		final var check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -3639,7 +3639,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate SQL literal.
 	 */
 	public String toBooleanValueString(boolean bool) {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		appendBooleanValueString( new StringBuilderSqlAppender( sb ), bool );
 		return sb.toString();
 	}

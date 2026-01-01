@@ -231,7 +231,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if ( driverKind == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
@@ -604,10 +604,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				);
 			}
 
-			try ( var statement = connection.createStatement() ) {
-				try ( var resultSet = statement.executeQuery( command ) ) {
-					return resultSet.next() ? resultSet.getString( 1 ) : null;
-				}
+			try ( var statement = connection.createStatement();
+					var resultSet = statement.executeQuery( command ) ) {
+				return resultSet.next() ? resultSet.getString( 1 ) : null;
 			}
 		}
 	}

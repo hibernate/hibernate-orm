@@ -45,12 +45,12 @@ import java.util.stream.Stream;
  * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link QueryProducer#createSelectionQuery(String, Class)}, passing the
+ * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(String, Class)}, passing the
  *     HQL as a string,
- * <li>{@link QueryProducer#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
  *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
  *     query object}, or
- * <li>{@link QueryProducer#createNamedSelectionQuery(String, Class)} passing
+ * <li>{@link org.hibernate.SharedSessionContract#createNamedSelectionQuery(String, Class)} passing
  *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
  *     or {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>

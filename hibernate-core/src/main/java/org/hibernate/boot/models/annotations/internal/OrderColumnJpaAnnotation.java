@@ -27,6 +27,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 	private boolean insertable;
 	private boolean updatable;
 	private String columnDefinition;
+	private String comment;
 	private String options;
 
 	/**
@@ -38,6 +39,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 		this.insertable = true;
 		this.updatable = true;
 		this.columnDefinition = "";
+		this.comment = "";
 		this.options = "";
 	}
 
@@ -50,6 +52,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 		this.insertable = annotation.insertable();
 		this.updatable = annotation.updatable();
 		this.columnDefinition = annotation.columnDefinition();
+		this.comment = annotation.comment();
 		this.options = annotation.options();
 	}
 
@@ -62,6 +65,7 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 		this.insertable = (boolean) attributeValues.get( "insertable" );
 		this.updatable = (boolean) attributeValues.get( "updatable" );
 		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.comment = (String) attributeValues.get( "comment" );
 		this.options = (String) attributeValues.get( "options" );
 	}
 
@@ -121,6 +125,16 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 
 
 	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
+	}
+
+
+	@Override
 	public String options() {
 		return options;
 	}
@@ -145,6 +159,10 @@ public class OrderColumnJpaAnnotation implements OrderColumn,
 
 		if ( jaxbColumn.isUpdatable() != null ) {
 			updatable( jaxbColumn.isUpdatable() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbColumn.getComment() ) ) {
+			comment( jaxbColumn.getComment() );
 		}
 
 		if ( StringHelper.isNotEmpty( jaxbColumn.getColumnDefinition() ) ) {

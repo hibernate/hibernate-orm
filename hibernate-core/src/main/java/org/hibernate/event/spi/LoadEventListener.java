@@ -21,6 +21,16 @@ public interface LoadEventListener {
 	 */
 	void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
 
+	/**
+	 * Normal {@linkplain org.hibernate.Session#find} (and by extension
+	 * {@linkplain org.hibernate.Session#get}) handling.
+	 */
+	LoadType FIND = new LoadType( "FIND" )
+			.setAllowNulls( true )
+			.setAllowProxyCreation( true )
+			.setCheckDeleted( true )
+			.setNakedEntityReturned( false );
+
 	LoadType RELOAD = new LoadType( "RELOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )

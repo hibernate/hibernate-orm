@@ -251,7 +251,7 @@ public class TreatKeywordTest {
 					query.orderBy( cb.asc( root.get( "id" ) ) );
 					Subquery<String> subquery = query.subquery( String.class );
 					Root<JoinedEntitySubclass> subqueryRoot = subquery.correlate( root );
-					Join<Object, Object> other = subqueryRoot.join( "other" );
+					Join<JoinedEntitySubclass, Object> other = subqueryRoot.join( "other" );
 					subquery.select( other.get( "name" ) );
 					subquery.where( cb.equal( root.type(), cb.literal( JoinedEntitySubclass.class ) ) );
 					query.select( subquery );

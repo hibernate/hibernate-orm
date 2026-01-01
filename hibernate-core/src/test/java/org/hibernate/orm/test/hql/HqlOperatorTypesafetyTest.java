@@ -20,22 +20,22 @@ public class HqlOperatorTypesafetyTest {
 	@Test void testOperatorTyping(SessionFactoryScope scope) {
 		scope.inSession( s -> {
 			// these should succeed
-			s.createSelectionQuery("from Book where title = 'Hibernate'").getResultList();
-			s.createSelectionQuery("from Book where title > ''").getResultList();
-			s.createSelectionQuery("select edition + 1 from Book").getResultList();
-			s.createSelectionQuery("select title || '!' from Book").getResultList();
+			s.createSelectionQuery("from Book where title = 'Hibernate'", Book.class).getResultList();
+			s.createSelectionQuery("from Book where title > ''", Book.class).getResultList();
+			s.createSelectionQuery("select edition + 1 from Book", Integer.class).getResultList();
+			s.createSelectionQuery("select title || '!' from Book", String.class).getResultList();
 			try {
-				s.createSelectionQuery("from Book where title = 1").getResultList();
+				s.createSelectionQuery("from Book where title = 1", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("from Book where title > 1").getResultList();
+				s.createSelectionQuery("from Book where title > 1", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("select title + 1 from Book").getResultList();
+				s.createSelectionQuery("select title + 1 from Book", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
@@ -45,39 +45,39 @@ public class HqlOperatorTypesafetyTest {
 	@Test void testSubselectTyping(SessionFactoryScope scope) {
 		scope.inSession( s -> {
 			// these should succeed
-			s.createSelectionQuery("from Book where title in (select title from Book)").getResultList();
-			s.createSelectionQuery("from Book where title = any (select title from Book)").getResultList();
+			s.createSelectionQuery("from Book where title in (select title from Book)", Book.class).getResultList();
+			s.createSelectionQuery("from Book where title = any (select title from Book)", Book.class).getResultList();
 
 			// test tuple length errors
 			try {
-				s.createSelectionQuery("from Book where title = any (select title, isbn from Book)").getResultList();
+				s.createSelectionQuery("from Book where title = any (select title, isbn from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("from Book where title = every (select title, isbn from Book)").getResultList();
+				s.createSelectionQuery("from Book where title = every (select title, isbn from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("from Book where title in (select title, isbn from Book)").getResultList();
+				s.createSelectionQuery("from Book where title in (select title, isbn from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 
 			// test typing errors
 			try {
-				s.createSelectionQuery("from Book where 1 = any (select title from Book)").getResultList();
+				s.createSelectionQuery("from Book where 1 = any (select title from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("from Book where 1 = every (select title from Book)").getResultList();
+				s.createSelectionQuery("from Book where 1 = every (select title from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 			try {
-				s.createSelectionQuery("from Book where 1 in (select title from Book)").getResultList();
+				s.createSelectionQuery("from Book where 1 in (select title from Book)", Book.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}

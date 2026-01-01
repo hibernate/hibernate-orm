@@ -69,7 +69,7 @@ public class IdTest {
 					Hotel hotel = session.get( Hotel.class, 12L );
 					assertNotNull( hotel );
 					assertEquals( "California", hotel.getName() );
-					assertNull( session.get( Hotel.class, 13L ) );
+					assertNull( session.find( Hotel.class, 13L ) );
 					return hotel;
 				}
 		);

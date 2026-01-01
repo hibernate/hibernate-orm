@@ -351,7 +351,7 @@ public class CompositeIdWithGeneratorTest {
 		// attempt to re-fetch - show it was deleted
 		PurchaseRecord find = scope.fromTransaction(
 				session ->
-						session.get( PurchaseRecord.class, generatedId )
+						session.find( PurchaseRecord.class, generatedId )
 		);
 
 		assertThat( find ).isNull();

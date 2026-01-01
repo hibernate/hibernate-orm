@@ -80,7 +80,7 @@ public class SortNaturalTest {
 		private long id;
 
 		@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-		@MapKey(name = "name")
+		@MapKey("name")
 		@SortNatural
 		private SortedMap<String, Cat> cats = new TreeMap<>();
 	}

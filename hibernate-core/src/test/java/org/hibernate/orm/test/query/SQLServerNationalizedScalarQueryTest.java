@@ -38,8 +38,8 @@ public class SQLServerNationalizedScalarQueryTest {
 	@JiraKey(value = "HHH-16857")
 	@Test
 	public void testLiteral(SessionFactoryScope scope) {
-		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'").getResultList());
-		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'").getResultList());
+		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'", User.class).getResultList());
+		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'", User.class).getResultList());
 	}
 
 	@JiraKey(value = "HHH-10183")

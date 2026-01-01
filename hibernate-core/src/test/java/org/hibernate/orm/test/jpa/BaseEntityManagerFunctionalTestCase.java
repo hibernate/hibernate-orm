@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -128,12 +129,12 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
-		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
-			return null;
+		public FetchType getDefaultToOneFetchType() {
+			return FetchType.EAGER;
 		}
 
-		@Override @SuppressWarnings("removal")
-		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+		@Override
+		public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 			return null;
 		}
 

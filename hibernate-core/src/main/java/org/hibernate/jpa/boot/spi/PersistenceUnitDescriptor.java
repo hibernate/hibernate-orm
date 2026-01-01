@@ -7,6 +7,8 @@ package org.hibernate.jpa.boot.spi;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -22,6 +24,8 @@ import org.hibernate.bytecode.spi.ClassTransformer;
  *     {@link jakarta.persistence.spi.PersistenceUnitInfo}, or,
  * <li>in an SE environment, parsed by Hibernate itself.
  * </ul>
+ *
+ * @see jakarta.persistence.spi.PersistenceUnitInfo
  *
  * @author Steve Ebersole
  */
@@ -65,17 +69,26 @@ public interface PersistenceUnitDescriptor {
 	 */
 	boolean isExcludeUnlistedClasses();
 
+	/**
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getDefaultToOneFetchType()
+	 *
+	 * @since 8.0
+	 */
+	FetchType getDefaultToOneFetchType();
+
+	/**
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getTransactionType()
+	 */
 	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
 
 	/**
-	 * @deprecated since {@link jakarta.persistence.spi.PersistenceUnitTransactionType}
-	 *             will be removed in JPA 4
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getValidationMode
 	 */
-	@Deprecated(since = "7", forRemoval = true) @SuppressWarnings("removal")
-	jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType();
-
 	ValidationMode getValidationMode();
 
+	/**
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getSharedCacheMode
+	 */
 	SharedCacheMode getSharedCacheMode();
 
 	List<String> getManagedClassNames();

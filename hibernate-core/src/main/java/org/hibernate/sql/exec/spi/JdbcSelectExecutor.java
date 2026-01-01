@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.spi;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
@@ -192,7 +193,7 @@ public interface JdbcSelectExecutor {
 	private ExecutionContext getScrollContext(ExecutionContext context) {
 		class ScrollableExecutionContext extends BaseExecutionContext implements QueryOptions {
 
-			private final Integer timeout;
+			private final Timeout timeout;
 			private final FlushMode flushMode;
 			private final Boolean readOnly;
 			private final AppliedGraph appliedGraph;
@@ -210,7 +211,7 @@ public interface JdbcSelectExecutor {
 			private final ExecutionContext context;
 
 			public ScrollableExecutionContext(
-					Integer timeout,
+					Timeout timeout,
 					FlushMode flushMode,
 					Boolean readOnly,
 					AppliedGraph appliedGraph,
@@ -256,7 +257,7 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
-			public Integer getTimeout() {
+			public Timeout getTimeout() {
 				return timeout;
 			}
 

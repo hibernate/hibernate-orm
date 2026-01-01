@@ -20,6 +20,10 @@ import org.hibernate.Internal;
 @SuppressWarnings("unused")
 public class ConfigXsdSupport {
 
+	public static XsdDescriptor latestDescriptor() {
+		return _80();
+	}
+
 	/**
 	 * Needs synchronization on any access.
 	 * Custom keys:
@@ -31,8 +35,10 @@ public class ConfigXsdSupport {
 	 * 5: JPA 2.2 (default)
 	 * 6: Jakarta Persistence 3.0
 	 * 7: Jakarta Persistence 3.1
+	 * 8: Jakarta Persistence 3.2
+	 * 9: configurationXML 8.0 (JPA 4.0)
 	 */
-	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[8];
+	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[10];
 
 	public XsdDescriptor latestJpaDescriptor() {
 		return getJPA31();
@@ -217,6 +223,22 @@ public class ConfigXsdSupport {
 				xsdCache[index] = jpa32;
 			}
 			return jpa32;
+		}
+	}
+
+	public static XsdDescriptor _80() {
+		final int index = 9;
+		synchronized ( xsdCache ) {
+			XsdDescriptor xsd = xsdCache[index];
+			if ( xsd == null ) {
+				xsd = LocalXsdResolver.buildXsdDescriptor(
+						"org/hibernate/xsd/cfg/configuration-8.0.xsd",
+						"8.0" ,
+						"http://www.hibernate.org/xsd/orm/configuration"
+				);
+				xsdCache[index] = xsd;
+			}
+			return xsd;
 		}
 	}
 

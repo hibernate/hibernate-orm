@@ -1,0 +1,13 @@
+= Things to Fix
+
+== JPA Dependency
+
+=== settings.gradle
+
+* temporarily commented out `if` statement for using Jakarta snapshot repo (~ line 33).  Fix this after spec goes final.
+* `jpaVersion` set to 4.0.0-SNAPSHOT
+
+
+=== JpaVersion (local-build-plugins)
+
+Changed `DEFAULT_VERSION` to 4.0

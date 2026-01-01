@@ -8,6 +8,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Timeout;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
@@ -75,6 +77,15 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 	ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
+	<P> ProcedureCallImplementor<R> setParameter(String name, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCallImplementor<R> setParameter(String name, P value, Type<P> type);
+
+	@Override
+	<P> ProcedureCallImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
 	ProcedureCallImplementor<R> setParameter(int position, Object value);
 
 	@Override @Deprecated
@@ -82,6 +93,15 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 
 	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	<P> ProcedureCallImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> ProcedureCallImplementor<R> setParameter(int position, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCallImplementor<R> setParameter(int position, P value, Type<P> type);
 
 	@Override
 	ProcedureCallImplementor<R> setFlushMode(FlushModeType flushMode);
@@ -94,6 +114,8 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 
 	@Override
 	ProcedureCallImplementor<R> setTimeout(Integer timeout);
+	ProcedureCallImplementor<R> setTimeout(int timeout);
+	ProcedureCallImplementor<R> setTimeout(Timeout timeout);
 
 	@Override
 	NamedCallableQueryMemento toMemento(String name);

@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import jakarta.persistence.Query;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.TypedQuery;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.hibernate.Hibernate.getLobHelper;
@@ -72,9 +72,8 @@ public class BlobAttributeQueryUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					TypedQuery<?> query = session.createQuery(
-							"UPDATE TestEntity b SET b.blobValue = :blobValue WHERE b.id = :id",
-							null
+					Query query = session.createQuery(
+							"UPDATE TestEntity b SET b.blobValue = :blobValue WHERE b.id = :id"
 					);
 					query.setParameter( "id", 1 );
 					Blob value = BlobProxy.generateProxy( UPDATED_BYTES_2 );
@@ -107,9 +106,8 @@ public class BlobAttributeQueryUpdateTest {
 
 		scope.inTransaction(
 				session -> {
-					TypedQuery<?> query = session.createQuery(
-							"UPDATE TestEntity b SET b.blobValue = :blobValue WHERE b.id = :id",
-							null
+					Query query = session.createQuery(
+							"UPDATE TestEntity b SET b.blobValue = :blobValue WHERE b.id = :id"
 					);
 					query.setParameter( "id", 1 );
 					Blob value = getLobHelper().createBlob( UPDATED_BYTES_2 );

@@ -35,6 +35,11 @@ public class ModelPartResultMementoBasicImpl implements ModelPartResultMementoBa
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return modelPart.getJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public ResultBuilderBasicValued resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {

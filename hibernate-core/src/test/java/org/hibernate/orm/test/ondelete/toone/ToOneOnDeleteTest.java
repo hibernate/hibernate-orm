@@ -42,62 +42,57 @@ public class ToOneOnDeleteTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 	public void testManyToOne(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Parent parent = new Parent();
-					parent.id = 1L;
-					session.persist( parent );
+		scope.inTransaction( session -> {
+			Parent parent = new Parent();
+			parent.id = 1L;
+			session.persist( parent );
 
-					Child child1 = new Child();
-					child1.id = 1L;
-					child1.parent = parent;
-					session.persist( child1 );
+			Child child1 = new Child();
+			child1.id = 1L;
+			child1.parent = parent;
+			session.persist( child1 );
 
-					GrandChild grandChild11 = new GrandChild();
-					grandChild11.id = 1L;
-					grandChild11.parent = child1;
-					session.persist( grandChild11 );
+			GrandChild grandChild11 = new GrandChild();
+			grandChild11.id = 1L;
+			grandChild11.parent = child1;
+			session.persist( grandChild11 );
 
-					Child child2 = new Child();
-					child2.id = 2L;
-					child2.parent = parent;
-					session.persist( child2 );
+			Child child2 = new Child();
+			child2.id = 2L;
+			child2.parent = parent;
+			session.persist( child2 );
 
-					GrandChild grandChild21 = new GrandChild();
-					grandChild21.id = 2L;
-					grandChild21.parent = child2;
-					session.persist( grandChild21 );
+			GrandChild grandChild21 = new GrandChild();
+			grandChild21.id = 2L;
+			grandChild21.parent = child2;
+			session.persist( grandChild21 );
 
-					GrandChild grandChild22 = new GrandChild();
-					grandChild22.id = 3L;
-					grandChild22.parent = child2;
-					session.persist( grandChild22 );
-				}
-		);
+			GrandChild grandChild22 = new GrandChild();
+			grandChild22.id = 3L;
+			grandChild22.parent = child2;
+			session.persist( grandChild22 );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					assertNotNull( session.get(Child.class, 1L) );
-					assertNotNull( session.get(Child.class, 2L) );
-					assertNotNull( session.get(GrandChild.class, 2L) );
-					assertNotNull( session.get(GrandChild.class, 3L) );
-				}
-		);
-		scope.inTransaction(
-				session -> {
-					Parent parent = session.get( Parent.class, 1L );
-					session.remove( parent );
-				}
-		);
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get(Child.class, 1L) );
-					assertNull( session.get(Child.class, 2L) );
-					assertNull( session.get(GrandChild.class, 2L) );
-					assertNull( session.get(GrandChild.class, 3L) );
-					assertNull( session.get( Parent.class, 1L ) );
-				}
-		);	}
+		scope.inTransaction( session -> {
+			assertNotNull( session.find(Child.class, 1L) );
+			assertNotNull( session.find(Child.class, 2L) );
+			assertNotNull( session.find(GrandChild.class, 2L) );
+			assertNotNull( session.find(GrandChild.class, 3L) );
+		} );
+
+		scope.inTransaction( session -> {
+			Parent parent = session.get( Parent.class, 1L );
+			session.remove( parent );
+		} );
+
+		scope.inTransaction( session -> {
+			assertNull( session.find(Child.class, 1L) );
+			assertNull( session.find(Child.class, 2L) );
+			assertNull( session.find(GrandChild.class, 2L) );
+			assertNull( session.find(GrandChild.class, 3L) );
+			assertNull( session.find( Parent.class, 1L ) );
+		} );
+	}
 
 
 	@Entity(name = "Parent")

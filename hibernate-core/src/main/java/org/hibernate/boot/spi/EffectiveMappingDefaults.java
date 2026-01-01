@@ -7,6 +7,7 @@ package org.hibernate.boot.spi;
 import java.util.EnumSet;
 
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.cache.spi.access.AccessType;
@@ -121,6 +122,7 @@ public interface EffectiveMappingDefaults {
 	 *
 	 * @see MappingDefaults#areEntitiesImplicitlyLazy()
 	 * @see JaxbEntityMappingsImpl#isDefaultLazy()
+	 * @see JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getDefaultToOneFetchType()
 	 */
 	boolean isDefaultEntityLaziness();
 

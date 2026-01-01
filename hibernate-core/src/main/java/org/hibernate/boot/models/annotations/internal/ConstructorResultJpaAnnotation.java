@@ -7,6 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.EntityResult;
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ConstructorResult;
@@ -20,6 +21,7 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 
 	private java.lang.Class<?> targetClass;
 	private jakarta.persistence.ColumnResult[] columns;
+	private jakarta.persistence.EntityResult[] entities;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -33,6 +35,7 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	public ConstructorResultJpaAnnotation(ConstructorResult annotation, ModelsContext modelContext) {
 		this.targetClass = annotation.targetClass();
 		this.columns = extractJdkValue( annotation, CONSTRUCTOR_RESULT, "columns", modelContext );
+		this.entities = extractJdkValue( annotation, CONSTRUCTOR_RESULT, "entities", modelContext );
 	}
 
 	/**
@@ -43,6 +46,7 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 			ModelsContext modelContext) {
 		this.targetClass = (Class<?>) attributeValues.get( "targetClass" );
 		this.columns = (jakarta.persistence.ColumnResult[]) attributeValues.get( "columns" );
+		this.entities = (jakarta.persistence.EntityResult[]) attributeValues.get( "entities" );
 	}
 
 	@Override
@@ -70,4 +74,12 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	}
 
 
+	@Override
+	public EntityResult[] entities() {
+		return entities;
+	}
+
+	public void entities(EntityResult[] entities) {
+		this.entities = entities;
+	}
 }

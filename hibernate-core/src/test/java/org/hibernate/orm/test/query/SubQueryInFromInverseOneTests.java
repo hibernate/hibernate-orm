@@ -56,7 +56,7 @@ public class SubQueryInFromInverseOneTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Contact, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
 
 					subquery.multiselect( alternativeContact.alias( "contact" ) );
 					subquery.orderBy( cb.asc( alternativeContact.get( "name" ).get( "first" ) ) );
@@ -104,14 +104,14 @@ public class SubQueryInFromInverseOneTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Contact, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
 
 					subquery.multiselect( alternativeContact.alias( "contact" ) );
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
-					final Join<Object, Object> alt = a.join( "contact" );
+					final Join<Tuple, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
@@ -152,7 +152,7 @@ public class SubQueryInFromInverseOneTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
+					final Join<Contact, Object> alternativeContact = correlatedRoot.join( "alternativeContact" );
 
 					subquery.multiselect( alternativeContact.alias( "contact" ) );
 					subquery.orderBy( cb.desc( alternativeContact.get( "name" ).get( "first" ) ) );

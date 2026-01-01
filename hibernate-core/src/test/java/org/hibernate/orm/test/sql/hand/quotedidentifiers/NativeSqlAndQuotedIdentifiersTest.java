@@ -53,7 +53,7 @@ public class NativeSqlAndQuotedIdentifiersTest {
 	public void testCompleteScalarDiscovery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						session.getNamedQuery( "query-person" ).list()
+						session.createNamedQuery( "query-person" ).list()
 		);
 	}
 
@@ -61,7 +61,7 @@ public class NativeSqlAndQuotedIdentifiersTest {
 	public void testPartialScalarDiscovery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.getNamedNativeQuery( "query-person", "person-scalar" );
+					NativeQuery query = session.createNamedQuery( "query-person", "person-scalar" );
 					query.list();
 				}
 		);
@@ -71,7 +71,7 @@ public class NativeSqlAndQuotedIdentifiersTest {
 	public void testBasicEntityMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.getNamedNativeQuery( "query-person", "person-entity-basic" );
+					NativeQuery query = session.createNamedQuery( "query-person", "person-entity-basic" );
 					query.list();
 				}
 		);
@@ -81,7 +81,7 @@ public class NativeSqlAndQuotedIdentifiersTest {
 	public void testExpandedEntityMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.getNamedNativeQuery( "query-person", "person-entity-expanded" );
+					NativeQuery query = session.createNamedQuery( "query-person", "person-entity-expanded" );
 					query.list();
 				}
 		);

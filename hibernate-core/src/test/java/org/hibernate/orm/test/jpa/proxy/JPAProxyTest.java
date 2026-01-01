@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test relation between proxies and get()/load() processing
@@ -58,8 +58,12 @@ public class JPAProxyTest extends AbstractJPATest {
 		Long nonExistentId = -1L;
 		inTransaction(
 				session -> {
-					Item item = session.get( Item.class, nonExistentId );
-					assertNull(  item , "get() of non-existent entity did not return null");
+					try {
+						session.get( Item.class, nonExistentId );
+						fail();
+					}
+					catch (EntityNotFoundException expected) {
+					}
 				}
 		);
 

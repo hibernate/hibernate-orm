@@ -127,26 +127,20 @@ public class SimpleInheritanceTest {
 				}
 		);
 
-		Customer c = scope.fromTransaction(
-				s ->
-						s.get( Customer.class, employee.getId() )
-
-		);
+		Customer c = scope.fromTransaction( s -> s.find( Customer.class, employee.getId() ) );
 
 		assertNull( c );
 
 		scope.inTransaction(
 				s -> {
-					Employee e = s.get( Employee.class, employee.getId() );
-					Customer c1 = s.get( Customer.class, e.getId() );
+					Employee e = s.find( Employee.class, employee.getId() );
+					Customer c1 = s.find( Customer.class, e.getId() );
 					assertNotNull( e );
 					assertNull( c1 );
 				}
 		);
 
-		scope.inTransaction(
-				session -> session.remove( employee )
-		);
+		scope.inTransaction(session -> session.remove( employee ) );
 	}
 
 	@Test

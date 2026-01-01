@@ -4,18 +4,18 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.Map;
-
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +38,7 @@ public class NamedHqlQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition
 			FlushMode flushMode,
 			Boolean readOnly,
 			LockOptions lockOptions,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String,String> parameterTypes,

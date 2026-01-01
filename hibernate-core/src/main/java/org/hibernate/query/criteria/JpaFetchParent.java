@@ -31,8 +31,8 @@ public interface JpaFetchParent<O,T> extends FetchParent<O,T> {
 	<Y> JpaFetch<T, Y> fetch(PluralAttribute<? super T, ?, Y> attribute, JoinType jt);
 
 	@Override
-	<X, Y> JpaFetch<X, Y> fetch(String attributeName);
+	<Y> JpaFetch<T, Y> fetch(String attributeName);
 
 	@Override
-	<X, Y> JpaFetch<X, Y> fetch(String attributeName, JoinType jt);
+	<Y> JpaFetch<T, Y> fetch(String attributeName, JoinType jt);
 }

@@ -133,7 +133,7 @@ public class QueryHintSQLServer2012Test {
 						CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 						CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
 						Root<Employee> root = criteria.from( Employee.class );
-						Join<Object, Object> departement = root.join( "department", JoinType.INNER );
+						Join<Employee, Object> departement = root.join( "department", JoinType.INNER );
 						criteria.select( root ).where( criteriaBuilder.equal( departement.get( "name" ), "Sales" ) );
 //		Criteria criteria = s.createCriteria( Employee.class ).addQueryHint( "MAXDOP 2" ).createCriteria( "department" )
 //				.add( Restrictions.eq( "name", "Sales" ) );

@@ -31,7 +31,7 @@ public class IdClassCompositePKTest {
 					da.setDomainName( "org" );
 
 					session.persist( da );
-					Query q = session.getNamedQuery( "DomainAdmin.testQuery" );
+					Query q = session.createNamedQuery( "DomainAdmin.testQuery" );
 					assertEquals( 1, q.list().size() );
 				}
 		);

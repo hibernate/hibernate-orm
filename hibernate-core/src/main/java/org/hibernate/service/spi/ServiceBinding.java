@@ -10,13 +10,14 @@ import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
+
 /**
  * Models a binding for a particular service.
  *
  * @author Steve Ebersole
  */
 public final class ServiceBinding<R extends Service> {
-	private static final Logger LOG = Logger.getLogger( ServiceBinding.class );
 
 	public interface ServiceLifecycleOwner {
 		<R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
@@ -63,10 +64,8 @@ public final class ServiceBinding<R extends Service> {
 	}
 
 	public void setService(R service) {
-		if ( this.service != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Overriding existing service binding [" + serviceRole.getName() + "]" );
-			}
+		if ( this.service != null && SERVICE_LOGGER.isDebugEnabled() ) {
+			SERVICE_LOGGER.overridingExistingBinding( serviceRole.getName() );
 		}
 		this.service = service;
 	}

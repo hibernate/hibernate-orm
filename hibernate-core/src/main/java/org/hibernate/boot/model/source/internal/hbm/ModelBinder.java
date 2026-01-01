@@ -2207,8 +2207,8 @@ public class ModelBinder {
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.trace( "Mapped property: " + propertySource.getName()
-								+ " -> [" + columns( property.getValue() ) + "]" );
+			BOOT_LOGGER.mappedProperty( propertySource.getName(),
+					columns( property.getValue() ) );
 		}
 	}
 

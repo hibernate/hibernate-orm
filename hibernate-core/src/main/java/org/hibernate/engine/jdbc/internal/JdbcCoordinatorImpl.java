@@ -293,10 +293,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				JDBC_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
+				JDBC_LOGGER.skippingAggressiveRelease( "manually disabled" );
 			}
 			else if ( hasRegisteredResources() ) {
-				JDBC_LOGGER.trace( "Skipping aggressive release due to registered resources" );
+				JDBC_LOGGER.skippingAggressiveRelease( "registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();

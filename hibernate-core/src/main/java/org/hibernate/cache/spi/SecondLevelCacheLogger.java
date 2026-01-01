@@ -252,4 +252,25 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			id = NAMESPACE + 31
 	)
 	void noDefaultRegionFactory();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Generating entity cache access: %s [%s]",
+			id = NAMESPACE + 32
+	)
+	void generatingEntityAccess(String entityName, String accessType);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Generating collection cache access: %s [%s]",
+			id = NAMESPACE + 33
+	)
+	void generatingCollectionAccess(String role, String accessType);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Generating natural id access: %s [%s]",
+			id = NAMESPACE + 34
+	)
+	void generatingNaturalIdAccess(String role, String accessType);
 }

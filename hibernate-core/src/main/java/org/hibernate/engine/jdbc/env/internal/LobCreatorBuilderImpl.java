@@ -79,7 +79,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 					: new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
 		}
 		else {
-			LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
+			LOB_MESSAGE_LOGGER.fallingBackToNonContextual();
 			return NonContextualLobCreator.INSTANCE;
 		}
 	}

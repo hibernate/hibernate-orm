@@ -77,11 +77,13 @@ public class PropertyContainer {
 		AccessType localClassLevelAccessType = determineLocalClassDefinedAccessStrategy();
 		assert localClassLevelAccessType != null;
 
-		this.classLevelAccessType = localClassLevelAccessType != AccessType.DEFAULT
-				? localClassLevelAccessType
-				: defaultClassLevelAccessType;
-		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY
-				|| classLevelAccessType == AccessType.RECORD;
+		classLevelAccessType =
+				localClassLevelAccessType != AccessType.DEFAULT
+						? localClassLevelAccessType
+						: defaultClassLevelAccessType;
+		assert classLevelAccessType == AccessType.FIELD
+			|| classLevelAccessType == AccessType.PROPERTY
+			|| classLevelAccessType == AccessType.RECORD;
 
 		attributeMembers = resolveAttributeMembers( classDetails, typeAtStake, classLevelAccessType );
 	}
@@ -126,17 +128,15 @@ public class PropertyContainer {
 			List<RecordComponentDetails> recordComponents,
 			List<FieldDetails> fields,
 			List<MethodDetails> getters) {
-		final Map<String, MemberDetails> attributeMemberMap;
 		// If the record class has only record components which match up with fields and no additional getters,
 		// we must retain the property order, to match up with the record component order
 		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() ) {
-			attributeMemberMap = new LinkedHashMap<>();
+			return new LinkedHashMap<>();
 		}
 		//otherwise we sort them in alphabetical order, since this is at least deterministic
 		else {
-			attributeMemberMap = new TreeMap<>();
+			return new TreeMap<>();
 		}
-		return attributeMemberMap;
 	}
 
 	private static <E extends MemberDetails> List<E> collectPotentialAttributeMembers(List<E> source) {
@@ -230,22 +230,20 @@ public class PropertyContainer {
 			List<RecordComponentDetails> recordComponents) {
 		if ( classLevelAccessType == AccessType.FIELD ) {
 			for ( int i = 0; i < fields.size(); i++ ) {
-				final FieldDetails field = fields.get( i );
+				final var field = fields.get( i );
 				final String name = field.getName();
-				if ( persistentAttributeMap.containsKey( name ) ) {
-					continue;
+				if ( !persistentAttributeMap.containsKey( name ) ) {
+					persistentAttributeMap.put( name, field );
 				}
-
-				persistentAttributeMap.put( name, field );
 			}
 		}
 		else {
 			for ( int i = 0; i < getters.size(); i++ ) {
-				final MethodDetails getterDetails = getters.get( i );
+				final var getterDetails = getters.get( i );
 				final String name = getterDetails.resolveAttributeName();
 
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
-				final MethodDetails previous = persistentAttributesFromGetters.get( name );
+				final var previous = persistentAttributesFromGetters.get( name );
 				if ( previous != null && getterDetails != previous ) {
 					throwAmbiguousPropertyException( classDetails, previous, getterDetails );
 				}
@@ -260,14 +258,13 @@ public class PropertyContainer {
 			// we also have to add the attributes for record components,
 			// because record classes usually don't have getters, but just the record component accessors
 			for ( int i = 0; i < recordComponents.size(); i++ ) {
-				final RecordComponentDetails componentDetails = recordComponents.get( i );
+				final var componentDetails = recordComponents.get( i );
 				final String name = componentDetails.getName();
-				if ( persistentAttributeMap.containsKey( name ) ) {
-					continue;
+				if ( !persistentAttributeMap.containsKey( name ) ) {
+					persistentAttributeMap.put( name, componentDetails );
+					persistentAttributesFromComponents.put( name, componentDetails );
 				}
 
-				persistentAttributeMap.put( name, componentDetails );
-				persistentAttributesFromComponents.put( name, componentDetails );
 			}
 		}
 	}

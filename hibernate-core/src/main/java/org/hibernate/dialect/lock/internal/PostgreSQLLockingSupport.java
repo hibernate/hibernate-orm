@@ -79,19 +79,43 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 		return Helper.getLockTimeout(
 				"select current_setting('lock_timeout', true)",
 				(resultSet) -> {
-					// even though lock_timeout is "in milliseconds", `current_setting`
-					// returns a String form which unfortunately varies depending on
-					// the actual value:
-					//		* for zero (no timeout), "0" is returned
-					//		* for non-zero, `{timeout-in-seconds}s` is returned (e.g. "4s")
-					// so we need to "parse" that form here
-					final String value = resultSet.getString( 1 );
+					// Although lock_timeout is stored internally in milliseconds,
+					// `current_setting` returns a String in a canonical, human-readable form
+					// that varies depending on the value:
+					//   * "0" is returned for no timeout (WAIT_FOREVER)
+					//   * Non-zero values may be returned with units such as:
+					//       - milliseconds: "500ms"
+					//       - seconds:      "3s"
+					//       - minutes:      "1min"
+					//       - hours:        "1h"
+					// Therefore, we need to parse this String carefully to reconstruct the correct Timeout.
+					String value = resultSet.getString( 1 );
 					if ( "0".equals( value ) ) {
 						return Timeouts.WAIT_FOREVER;
 					}
-					assert value.endsWith( "s" );
-					final int secondsValue = Integer.parseInt( value.substring( 0, value.length() - 1 ) );
-					return Timeout.seconds( secondsValue );
+					if (value.endsWith("ms")) {
+						int millis = Integer.parseInt(value.substring(0, value.length() - 2));
+						return Timeout.milliseconds(millis);
+					}
+					if (value.endsWith("s")) {
+						int seconds = Integer.parseInt(value.substring(0, value.length() - 1));
+						return Timeout.seconds(seconds);
+					}
+					if (value.endsWith("min")) {
+						int minutes = Integer.parseInt(value.substring(0, value.length() - 3));
+						return Timeout.seconds(minutes * 60);
+					}
+					if (value.endsWith("h")) {
+						int hours = Integer.parseInt(value.substring(0, value.length() - 1));
+						return Timeout.seconds(hours * 3600);
+					}
+					if (value.endsWith("d")) {
+						int hours = Integer.parseInt(value.substring(0, value.length() - 1));
+						return Timeout.seconds(hours * 3600 * 24);
+					}
+					throw new IllegalArgumentException(
+							"Unexpected PostgreSQL lock_timeout format: " + value
+					);
 				},
 				connection,
 				factory

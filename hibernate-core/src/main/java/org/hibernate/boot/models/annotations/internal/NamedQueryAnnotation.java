@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Timeouts;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
@@ -255,7 +256,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 		}
 
 		if ( jaxbNamedQuery.getTimeout() != null ) {
-			timeout( jaxbNamedQuery.getTimeout() );
+			timeout( Timeouts.getTimeoutInSeconds( jaxbNamedQuery.getTimeout() ) );
 		}
 
 		if ( StringHelper.isNotEmpty( jaxbNamedQuery.getComment() ) ) {

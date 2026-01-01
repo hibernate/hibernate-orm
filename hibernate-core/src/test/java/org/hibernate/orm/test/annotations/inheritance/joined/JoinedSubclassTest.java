@@ -122,14 +122,14 @@ public class JoinedSubclassTest {
 		scope.inTransaction(
 				session -> {
 					String eventPK = "event1";
-					EventInformation event = session.get( EventInformation.class, eventPK );
+					EventInformation event = session.find( EventInformation.class, eventPK );
 					if ( event == null ) {
 						event = new EventInformation();
 						event.setNotificationId( eventPK );
 						session.persist( event );
 					}
 					String alarmPK = "alarm1";
-					Alarm alarm = session.get( Alarm.class, alarmPK );
+					Alarm alarm = session.find( Alarm.class, alarmPK );
 					if ( alarm == null ) {
 						alarm = new Alarm();
 						alarm.setNotificationId( alarmPK );

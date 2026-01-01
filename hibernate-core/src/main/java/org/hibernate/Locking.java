@@ -72,8 +72,7 @@ public interface Locking {
 		/**
 		 * All tables with fetched rows will be locked.
 		 *
-		 * @apiNote This is Hibernate's legacy behavior, and has no
-		 * corresponding JPA scope.
+		 * @see PessimisticLockScope#FETCHED
 		 */
 		INCLUDE_FETCHES;
 
@@ -86,11 +85,14 @@ public interface Locking {
 			return switch (this) {
 				case ROOT_ONLY -> PessimisticLockScope.NORMAL;
 				case INCLUDE_COLLECTIONS -> PessimisticLockScope.EXTENDED;
-				case INCLUDE_FETCHES -> null;
+				case INCLUDE_FETCHES -> PessimisticLockScope.FETCHED;
 			};
 		}
 
 		public static Scope fromJpaScope(PessimisticLockScope scope) {
+			if ( scope == PessimisticLockScope.FETCHED ) {
+				return INCLUDE_FETCHES;
+			}
 			if ( scope == PessimisticLockScope.EXTENDED ) {
 				return INCLUDE_COLLECTIONS;
 			}
@@ -103,6 +105,20 @@ public interface Locking {
 				return null;
 			}
 			return valueOf( name.toUpperCase( Locale.ROOT ) );
+		}
+
+		public static Scope fromHint(Object hintValue) {
+			assert hintValue != null;
+
+			if ( hintValue instanceof Scope scope ) {
+				return scope;
+			}
+
+			if ( hintValue instanceof PessimisticLockScope jpaScope ) {
+				return fromJpaScope( jpaScope );
+			}
+
+			return valueOf( hintValue.toString().toUpperCase( Locale.ROOT ) );
 		}
 	}
 

@@ -6,12 +6,13 @@ package org.hibernate.boot.jaxb.cfg.internal;
 
 import org.hibernate.internal.util.StringHelper;
 
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 /**
+ * JAXB marshal/unmarshal support for {@linkplain PersistenceUnitTransactionType}.
+ *
  * @author Steve Ebersole
  */
-@SuppressWarnings("removal")
 public class TransactionTypeMarshalling {
 	public static PersistenceUnitTransactionType fromXml(String name) {
 		if ( StringHelper.isEmpty( name ) ) {

@@ -49,7 +49,7 @@ public class ResultTransformerTest {
 		} );
 
 		scope.inSession( (session) -> {
-			Query q = session.getNamedQuery(Contract.class.getName() + ".testQuery");
+			Query q = session.createNamedQuery(Contract.class.getName() + ".testQuery");
 			q.setFetchSize(100);
 			q.setResultTransformer(
 					(ResultTransformer) (arg0, arg1) -> {

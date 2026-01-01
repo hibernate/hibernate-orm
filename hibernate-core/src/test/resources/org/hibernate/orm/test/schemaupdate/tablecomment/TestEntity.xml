@@ -3,11 +3,15 @@
   ~ SPDX-License-Identifier: Apache-2.0
   ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
     <package>org.hibernate.orm.test.schemaupdate.tablecomment</package>
     <entity class="TestEntity" metadata-complete="true">
-        <table name="PRIMARY_TABLE" comment="This is the primary table"/>
-        <secondary-table name="SECOND_TABLE" comment="This is the secondary table"/>
+        <table name="PRIMARY_TABLE">
+            <comment>This is the primary table</comment>
+        </table>
+        <secondary-table name="SECOND_TABLE">
+            <comment>This is the secondary table</comment>
+        </secondary-table>
         <attributes>
             <id name="id"/>
             <basic name="name">
@@ -17,8 +21,9 @@
                 <column name="secondName" table="SECOND_TABLE"/>
             </basic>
             <many-to-one name="testEntity">
-                <join-table name="JOIN_TABLE"
-                            comment="This is the join table"/>
+                <join-table name="JOIN_TABLE">
+                    <comment>This is the join table</comment>
+                </join-table>
             </many-to-one>
         </attributes>
     </entity>

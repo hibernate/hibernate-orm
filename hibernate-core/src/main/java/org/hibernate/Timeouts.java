@@ -110,7 +110,7 @@ public interface Timeouts {
 	 * Functionally, returns whether the {@linkplain Timeout#milliseconds() value} is greater than zero.
 	 */
 	static boolean isRealTimeout(Timeout timeout) {
-		return isRealTimeout( timeout.milliseconds() );
+		return timeout != null && isRealTimeout( timeout.milliseconds() );
 	}
 
 	/**
@@ -126,6 +126,10 @@ public interface Timeouts {
 	 */
 	static int getTimeoutInSeconds(Timeout timeout) {
 		return getTimeoutInSeconds( timeout.milliseconds() );
+	}
+
+	static Integer getEffectiveTimeoutInSeconds(Timeout timeout) {
+		return timeout == null ? null : getTimeoutInSeconds( timeout );
 	}
 
 	/**

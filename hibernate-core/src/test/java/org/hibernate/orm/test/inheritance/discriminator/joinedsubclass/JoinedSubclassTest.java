@@ -65,7 +65,7 @@ public class JoinedSubclassTest {
 	public void shouldNotRetrieveSubSubSubEntity(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					SubSubSubEntity loaded = session.get( SubSubSubEntity.class, subSubEntityId );
+					SubSubSubEntity loaded = session.find( SubSubSubEntity.class, subSubEntityId );
 					assertNull( loaded );
 				}
 		);

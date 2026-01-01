@@ -13,6 +13,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
+import jakarta.persistence.Timeout;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -104,7 +105,7 @@ public abstract class QueryBinder {
 				.setCacheable(hints.getCacheability())
 				.setCacheMode(hints.getCacheMode())
 				.setCacheRegion(hints.getString(HibernateHints.HINT_CACHE_REGION))
-				.setTimeout(hints.getTimeout())
+				.setTimeout(hints.getTimeoutRef())
 				.setFetchSize(hints.getInteger(HibernateHints.HINT_FETCH_SIZE))
 				.setFlushMode(hints.getFlushMode())
 				.setReadOnly(hints.getBooleanWrapper(HibernateHints.HINT_READ_ONLY))
@@ -164,7 +165,7 @@ public abstract class QueryBinder {
 				.setCacheable(hints.getCacheability())
 				.setCacheMode(hints.getCacheMode())
 				.setCacheRegion(hints.getString(HibernateHints.HINT_CACHE_REGION))
-				.setTimeout(hints.getTimeout())
+				.setTimeout(hints.getTimeoutRef())
 				.setFetchSize(hints.getInteger(HibernateHints.HINT_FETCH_SIZE))
 				.setFlushMode(hints.getFlushMode())
 				.setReadOnly(hints.getBooleanWrapper(HibernateHints.HINT_READ_ONLY))
@@ -239,7 +240,8 @@ public abstract class QueryBinder {
 			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
 			String registrationName, String resultSetMappingName,
 			Class<T> resultClass,
-			int timeout, int fetchSize,
+			int timeout,
+			int fetchSize,
 			HashSet<String> querySpaces,
 			AnnotationTarget location) {
 		return new NamedNativeQueryDefinition.Builder<T>(registrationName, location)
@@ -249,7 +251,7 @@ public abstract class QueryBinder {
 				.setCacheable(namedNativeQuery.cacheable())
 				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
 				.setCacheMode(getCacheMode(namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode()))
-				.setTimeout(timeout < 0 ? null : timeout)
+				.setTimeout(timeout < 0 ? null : Timeout.seconds( timeout ) )
 				.setFetchSize(fetchSize < 0 ? null : fetchSize)
 				.setFlushMode(getFlushMode(namedNativeQuery.flush(), namedNativeQuery.flushMode()))
 				.setReadOnly(namedNativeQuery.readOnly())
@@ -395,7 +397,7 @@ public abstract class QueryBinder {
 				.setCacheable(namedQuery.cacheable())
 				.setCacheRegion(nullIfEmpty(namedQuery.cacheRegion()))
 				.setCacheMode(getCacheMode(namedQuery.cacheRetrieveMode(), namedQuery.cacheStoreMode()))
-				.setTimeout(timeout < 0 ? null : timeout)
+				.setTimeout(timeout < 0 ? null : Timeout.seconds( timeout ))
 				.setFetchSize(fetchSize < 0 ? null : fetchSize)
 				.setFlushMode(getFlushMode(namedQuery.flush(), namedQuery.flushMode()))
 				.setReadOnly(namedQuery.readOnly())

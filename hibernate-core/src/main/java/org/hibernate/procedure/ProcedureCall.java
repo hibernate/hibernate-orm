@@ -8,11 +8,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
@@ -255,6 +257,15 @@ public interface ProcedureCall
 	/* Covariant overrides */
 
 	@Override
+	ProcedureCall setTimeout(Integer integer);
+
+	@Override
+	ProcedureCall setTimeout(int timeout);
+
+	@Override
+	ProcedureCall setTimeout(Timeout timeout);
+
+	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
 	@Override
@@ -285,7 +296,25 @@ public interface ProcedureCall
 	ProcedureCall setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
+	<P> ProcedureCall setParameter(String name, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCall setParameter(String name, P value, Type<P> type);
+
+	@Override
+	<P> ProcedureCall setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
 	ProcedureCall setParameter(int position, Object value);
+
+	@Override
+	<P> ProcedureCall setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> ProcedureCall setParameter(int position, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCall setParameter(int position, P value, Type<P> type);
 
 	@Override @Deprecated
 	ProcedureCall setParameter(int position, Calendar value, TemporalType temporalType);

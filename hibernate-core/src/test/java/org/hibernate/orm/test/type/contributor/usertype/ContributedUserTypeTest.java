@@ -77,7 +77,7 @@ public class ContributedUserTypeTest {
 	public void testParameter(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					session.createSelectionQuery( "from StringWrapperTestEntity e where e.stringWrapper = :p" )
+					session.createSelectionQuery( "from StringWrapperTestEntity e where e.stringWrapper = :p", StringWrapperTestEntity.class )
 							.setParameter( "p", new StringWrapper( "abc" ) )
 							.getResultList();
 				}
@@ -89,7 +89,7 @@ public class ContributedUserTypeTest {
 	public void testCompositeParameter(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					session.createSelectionQuery( "from MyCompositeValueTestEntity e where e.compositeValue = :c" )
+					session.createSelectionQuery( "from MyCompositeValueTestEntity e where e.compositeValue = :c", MyCompositeValueTestEntity.class )
 							.setParameter( "c", new MyCompositeValue( 1L, "1" ) )
 							.getResultList();
 				}

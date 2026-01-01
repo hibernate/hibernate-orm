@@ -150,7 +150,7 @@ public class ManyToManyMapKeyTest {
 		private String name;
 
 		@ManyToMany(cascade = CascadeType.REMOVE)
-		@MapKey(name = "mapKey")
+		@MapKey("mapKey")
 		private Map<MapKeyEntity, MapValueEntity> map = new HashMap<>();
 
 		public MapContainer() {

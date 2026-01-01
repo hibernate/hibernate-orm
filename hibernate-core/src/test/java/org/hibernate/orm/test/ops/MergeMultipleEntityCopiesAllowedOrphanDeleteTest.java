@@ -194,7 +194,7 @@ public class MergeMultipleEntityCopiesAllowedOrphanDeleteTest {
 					Item item = session.get( Item.class, item1.getId() );
 					assertThat( item.getSubItemsBackref().size(), is( 1 ) );
 					// because cascade includes "delete-orphan" the removed SubItem should have been deleted.
-					SubItem subItem = session.get( SubItem.class, subItem1.getId() );
+					SubItem subItem = session.find( SubItem.class, subItem1.getId() );
 					assertNull( subItem );
 				}
 		);
@@ -402,7 +402,7 @@ public class MergeMultipleEntityCopiesAllowedOrphanDeleteTest {
 					Category category = session.get( Category.class, category1.getId() );
 					assertThat( category.getSubCategories().size(), is( 1 ) );
 					assertTrue( category.getSubCategories().contains( subCategory2 ) );
-					SubCategory subCategory = session.get( SubCategory.class, subCategory1.getId() );
+					SubCategory subCategory = session.find( SubCategory.class, subCategory1.getId() );
 					assertNull( subCategory );
 				}
 		);

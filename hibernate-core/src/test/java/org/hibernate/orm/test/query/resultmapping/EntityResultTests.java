@@ -261,7 +261,7 @@ public class EntityResultTests extends AbstractUsageTest {
 		scope.inTransaction(
 				session -> {
 					final EntityWithEmbedded result = (EntityWithEmbedded) session
-							.getNamedNativeQuery( EntityWithEmbedded.IMPLICIT )
+							.createNamedQuery( EntityWithEmbedded.IMPLICIT )
 							.getSingleResult();
 					assertThat( result, notNullValue() );
 					assertThat( result.getId(), is( 1 ) );
@@ -277,7 +277,7 @@ public class EntityResultTests extends AbstractUsageTest {
 		scope.inTransaction(
 				session -> {
 					final EntityWithEmbedded result = (EntityWithEmbedded) session
-							.getNamedNativeQuery( EntityWithEmbedded.EXPLICIT )
+							.createNamedQuery( EntityWithEmbedded.EXPLICIT )
 							.getSingleResult();
 					assertThat( result, notNullValue() );
 					assertThat( result.getId(), is( 1 ) );
@@ -362,7 +362,7 @@ public class EntityResultTests extends AbstractUsageTest {
 		scope.inTransaction(
 				session -> {
 					final List<?> results = session
-							.getNamedNativeQuery( "hbm-implicit-resultset" )
+							.createNamedQuery( "hbm-implicit-resultset" )
 							.list();
 
 					assertThat( results.size(), is( 1 ) );

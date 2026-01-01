@@ -55,6 +55,11 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return entityDescriptor.getJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public ResultBuilderEntityValued resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {

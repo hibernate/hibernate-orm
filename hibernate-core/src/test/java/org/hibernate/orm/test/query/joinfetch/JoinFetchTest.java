@@ -119,7 +119,7 @@ public class JoinFetchTest {
 
 
 		scope.inTransaction( (s) -> {
-			Item i1 = (Item) s.getNamedQuery( Item.class.getName() + ".all" ).list().get( 0 );
+			Item i1 = (Item) s.createNamedQuery( Item.class.getName() + ".all" ).list().get( 0 );
 			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
 			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
 			assertEquals( 3, i1.getComments().size() );

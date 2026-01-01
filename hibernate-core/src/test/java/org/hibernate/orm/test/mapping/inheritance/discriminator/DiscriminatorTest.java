@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
 )
 @SessionFactory
-@SuppressWarnings("deprecation")
 public class DiscriminatorTest {
 
 	@AfterEach
@@ -104,8 +103,8 @@ public class DiscriminatorTest {
 					s.clear();
 
 
-					mark = s.get( Employee.class, mark.getId() );
-					joe = s.get( Customer.class, joe.getId() );
+					mark = s.find( Employee.class, mark.getId() );
+					joe = s.find( Customer.class, joe.getId() );
 
 					mark.setZip( "30306" );
 					assertThat( s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size(), is( 1 ) );
@@ -131,14 +130,14 @@ public class DiscriminatorTest {
 
 		Customer c = null;
 		scope.fromTransaction(
-				s -> s.get( Customer.class, employee.getId() )
+				s -> s.find( Customer.class, employee.getId() )
 		);
 		assertNull( c );
 
 		scope.inTransaction(
 				s -> {
-					Employee e = s.get( Employee.class, employee.getId() );
-					Customer customer = s.get( Customer.class, employee.getId() );
+					Employee e = s.find( Employee.class, employee.getId() );
+					Customer customer = s.find( Customer.class, employee.getId() );
 					assertNotNull( e );
 					assertNull( customer );
 				}
@@ -211,7 +210,7 @@ public class DiscriminatorTest {
 					// load the superclass proxy.
 					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertInstanceOf( HibernateProxy.class, pLoad );
-					Person pGet = s.get( Person.class, e.getId() );
+					Person pGet = s.find( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
@@ -238,7 +237,7 @@ public class DiscriminatorTest {
 					// load the superclass proxy.
 					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertInstanceOf( HibernateProxy.class, pLoad );
-					Person pGet = s.get( Person.class, e.getId() );
+					Person pGet = s.find( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
@@ -284,7 +283,7 @@ public class DiscriminatorTest {
 					assertInstanceOf( HibernateProxy.class, pLoad );
 					// evict the proxy
 					s.evict( pLoad );
-					Employee pGet = (Employee) s.get( Person.class, e.getId() );
+					Employee pGet = (Employee) s.find( Person.class, e.getId() );
 					Employee pQuery = (Employee) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();

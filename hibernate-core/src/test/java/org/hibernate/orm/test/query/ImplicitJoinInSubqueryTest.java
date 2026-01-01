@@ -32,14 +32,13 @@ public class ImplicitJoinInSubqueryTest {
 	public void testImplicitJoinInSubquery(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createSelectionQuery(
-							"select 1 from A a where exists (select 1 from B b where a.b.c.id = 5)"
-					).getResultList();
-					assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "b2_0.id=a1_0.b_id" );
-				}
-		);
+		scope.inTransaction( entityManager -> {
+			entityManager.createSelectionQuery(
+					"select 1 from A a where exists (select 1 from B b where a.b.c.id = 5)",
+					Integer.class
+			).getResultList();
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "b2_0.id=a1_0.b_id" );
+		} );
 	}
 
 	@Test
@@ -47,15 +46,14 @@ public class ImplicitJoinInSubqueryTest {
 	public void testImplicitJoinInSubquery2(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createSelectionQuery(
-							"select a from A a where exists (select 1 from B b where a.b.c is null)"
-					).getResultList();
-					assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "b1_0.c_id is null" );
-					assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( ".id=b1_0.c_id" );
-				}
-		);
+		scope.inTransaction(entityManager -> {
+			entityManager.createSelectionQuery(
+					"select a from A a where exists (select 1 from B b where a.b.c is null)",
+					A.class
+			).getResultList();
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "b1_0.c_id is null" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( ".id=b1_0.c_id" );
+		} );
 	}
 
 	@Entity(name = "A")

@@ -7,6 +7,7 @@ package org.hibernate.boot.internal;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.boot.spi.AbstractNamedQueryDefinition;
@@ -39,7 +40,7 @@ public class NamedNativeQueryDefinitionImpl<E> extends AbstractNamedQueryDefinit
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Integer firstResult,

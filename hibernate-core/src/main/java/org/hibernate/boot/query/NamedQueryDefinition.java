@@ -4,11 +4,10 @@
  */
 package org.hibernate.boot.query;
 
-import jakarta.persistence.TypedQueryReference;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedQueryMemento;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 
 
 /**
@@ -18,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedQueryDefinition<E> extends TypedQueryReference<E> {
+public interface NamedQueryDefinition<E> extends JpaTypedQueryReference<E> {
 	@Override
 	default String getName() {
 		return getRegistrationName();

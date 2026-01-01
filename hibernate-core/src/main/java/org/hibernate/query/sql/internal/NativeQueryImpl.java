@@ -590,7 +590,7 @@ public class NativeQueryImpl<R>
 				getCacheMode(),
 				options.getFlushMode(),
 				isReadOnly(),
-				getTimeout(),
+				getQueryOptions().getTimeout(),
 				getFetchSize(),
 				getComment(),
 				options.getLimit().getFirstRow(),

@@ -8,7 +8,6 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -18,10 +17,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.Metamodel;
 import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -34,7 +30,6 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -43,8 +38,13 @@ import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.FindByKeyOperation;
-import org.hibernate.internal.find.FindMultipleByKeyOperation;
+import org.hibernate.internal.find.Helper;
+import org.hibernate.internal.find.StatefulFindByKeyOperation;
+import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.internal.util.ExceptionHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -63,6 +63,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -78,9 +79,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,10 +160,6 @@ public class SessionImpl
 		extends AbstractSharedSessionContract
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
-
-	// Defaults to null, meaning the properties
-	// are the default properties of the factory.
-	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
@@ -248,9 +247,9 @@ public class SessionImpl
 			return initialSessionFlushMode;
 		}
 		else {
-			return properties == null
+			return properties() == null
 					? getSessionFactoryOptions().getInitialSessionFlushMode()
-					: ConfigurationHelper.getFlushMode( properties.get( HINT_FLUSH_MODE ), FlushMode.AUTO );
+					: ConfigurationHelper.getFlushMode( properties().get( HINT_FLUSH_MODE ), FlushMode.AUTO );
 		}
 	}
 
@@ -324,9 +323,9 @@ public class SessionImpl
 	}
 
 	private Object getSessionProperty(String propertyName) {
-		return properties == null
+		return properties() == null
 				? getDefaultProperties().get( propertyName )
-				: properties.get( propertyName );
+				: properties().get( propertyName );
 	}
 
 	private Map<String, Object> getDefaultProperties() {
@@ -928,18 +927,14 @@ public class SessionImpl
 	}
 
 
-	// load()/get() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public void load(Object object, Object id) {
-		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// find()/get()/load() operations
 
 	@Override
 	public <E> List<E> findMultiple(Class<E> entityType, List<?> keys, FindOption... options) {
 		//noinspection unchecked
 		return findMultiple(
-				requireEntityPersister( entityType ),
+				requireEntityPersisterForLoad( entityType ),
 				loadQueryInfluencers.getEffectiveEntityGraph().getSemantic(),
 				(RootGraphImplementor<E>) loadQueryInfluencers.getEffectiveEntityGraph().getGraph(),
 				(List<Object>) keys,
@@ -953,15 +948,16 @@ public class SessionImpl
 			RootGraphImplementor<E> rootGraph,
 			List<Object> keys,
 			FindOption... options) {
-		final var operation = new FindMultipleByKeyOperation<E>(
+		final var operation = new StatefulFindMultipleByKeyOperation<E>(
 				entityDescriptor,
+				this,
 				lockOptions,
 				getCacheMode(),
 				isDefaultReadOnly(),
 				getFactory(),
 				options
 		);
-		return operation.performFind( keys, graphSemantic, rootGraph, this );
+		return operation.performFind( keys, graphSemantic, rootGraph );
 	}
 
 	@Override
@@ -969,8 +965,8 @@ public class SessionImpl
 		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
 		final var type = rootGraph.getGraphedType();
 		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
-			case POJO -> requireEntityPersister( type.getJavaType() );
-			case MAP -> requireEntityPersister( type.getTypeName() );
+			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
+			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
 		};
 
 		//noinspection unchecked
@@ -978,13 +974,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id) {
-		return byId( entityClass ).load( id );
-	}
-
-	@Override
-	public Object get(String entityName, Object id) {
-		return byId( entityName ).load( id );
+	public void load(Object object, Object id) {
+		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
 	/**
@@ -1178,7 +1169,7 @@ public class SessionImpl
 
 	@Override
 	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
-		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
+		return new IdentifierLoadAccessImpl<>( this, requireEntityPersisterForLoad( entityClass ) );
 	}
 
 	@Override
@@ -1731,11 +1722,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
-		return createQuery( (CriteriaQuery<T>) selectQuery );
-	}
-
-	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
@@ -2101,7 +2087,6 @@ public class SessionImpl
 		return this;
 	}
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityManager impl
 
@@ -2120,122 +2105,169 @@ public class SessionImpl
 		}
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// loading
+
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
-		return find( entityClass, primaryKey, (LockOptions) null, null );
+	protected <T> StatefulFindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityDescriptor, null, null, options );
+	}
+
+	@Override
+	protected <T> StatefulFindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options) {
+		return new StatefulFindByKeyOperation<>(
+				entityDescriptor,
+				this,
+				graphSemantic,
+				rootGraph,
+				lockOptions,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find( entityClass, primaryKey, (LockOptions) null, properties );
-	}
-
-	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType) {
-		return find( entityClass, primaryKey, lockModeType, null );
+		return doFind( entityClass, primaryKey, LockMode.NONE, properties );
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
-		checkOpen();
 		if ( lockModeType == null ) {
 			throw new IllegalArgumentException("Given LockModeType was null");
 		}
-		final var lockMode = LockModeTypeHelper.getLockMode( lockModeType );
-		checkTransactionNeededForLock( lockMode );
-		return find( entityClass, primaryKey, buildLockOptions( lockMode, properties ), properties );
+		return doFind( entityClass, primaryKey, LockMode.fromJpaLockMode( lockModeType ), properties );
 	}
 
-	private <T> T find(Class<T> entityClass, Object primaryKey, LockOptions lockOptions, Map<String, Object> properties) {
-		try {
-			loadQueryInfluencers.getEffectiveEntityGraph().applyConfiguredGraph( properties );
-			loadQueryInfluencers.setReadOnly( readOnlyHint( properties ) );
-			return byId( entityClass )
-					.with( determineAppropriateLocalCacheMode( properties ) )
-					.with( lockOptions )
-					.load( primaryKey );
+	private <T> T doFind(Class<T> entityClass, Object primaryKey, LockMode lockMode, Map<String, Object> properties) {
+		checkOpen();
+
+		final FindOption[] options = determineFindOptions( lockMode, properties );
+
+		final EntityPersister entityDescriptor = requireEntityPersisterForLoad( entityClass );
+		//noinspection unchecked
+		return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
+	}
+
+	private <T> FindByKeyOperation<T> byKeyWithGraph(EntityPersister entityDescriptor, Map<String, Object> properties, FindOption[] options) {
+		var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+		var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+		if ( fetchHint == null ) {
+			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
 		}
-		catch ( FetchNotFoundException e ) {
-			// This may happen if the entity has an association mapped with
-			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
-			// entity is not found
-			throw e;
+		if ( loadHint == null ) {
+			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 		}
-		catch ( EntityFilterException e ) {
-			// This may happen if the entity has an association which is
-			// filtered by a FilterDef and this associated entity is not found
-			throw e;
+
+		GraphSemantic graphSemantic = null;
+		RootGraphImplementor<?> graph = null;
+
+		if ( fetchHint != null ) {
+			if ( loadHint != null ) {
+				// can't have both
+				throw new IllegalArgumentException(
+						"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
+						"only one should be passed"
+				);
+			}
+			graphSemantic = GraphSemantic.FETCH;
+			graph = fetchHint;
 		}
-		catch ( EntityNotFoundException e ) {
-			// We swallow other sorts of EntityNotFoundException and return null
-			// For example, DefaultLoadEventListener.proxyImplementation() throws
-			// EntityNotFoundException if there's an existing proxy in the session,
-			// but the underlying database row has been deleted (see HHH-7861)
-			logIgnoringEntityNotFound( entityClass, primaryKey );
-			return null;
+		else if ( loadHint != null ) {
+			graphSemantic = GraphSemantic.LOAD;
+			graph = loadHint;
 		}
-		catch ( ObjectDeletedException e ) {
-			// the spec is silent about people doing remove() find() on the same PC
-			return null;
+
+		return byKey( entityDescriptor, graphSemantic, graph, options );
+	}
+
+	private FindOption[] determineFindOptions(LockMode lockMode, Map<String, Object> properties) {
+		if ( !lockMode.greaterThan( LockMode.READ ) && CollectionHelper.isEmpty( properties ) ) {
+			return Helper.NO_OPTIONS;
 		}
-		catch ( ObjectNotFoundException e ) {
-			// should not happen on the entity itself with get
-			// TODO: in fact this will occur instead of EntityNotFoundException
-			//       when using StandardEntityNotFoundDelegate, so probably we
-			//       should return null here, as we do above
-			throw new IllegalArgumentException( e.getMessage(), e );
+
+		var options = new ArrayList<FindOption>();
+
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
+			options.add( lockMode );
 		}
-		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+
+		applyPropertiesAndHints( options, properties );
+
+		return options.toArray( new FindOption[0] );
+	}
+
+	private void applyPropertiesAndHints(ArrayList<FindOption> options, Map<String, Object> properties) {
+		if ( CollectionHelper.isEmpty( properties ) ) {
+			return;
 		}
-		catch ( JDBCException e ) {
-			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume situation HHH-12472 running on WildFly
-				// Just log the exception and return null
-				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
-				return null;
+
+		applyFollowOnLocking( options, properties );
+		applyTimeout( options, properties );
+		applyLockScope( options, properties );
+
+		if ( readOnlyHint( properties ) == Boolean.TRUE ) {
+			options.add( ReadOnlyMode.READ_ONLY );
+		}
+
+		options.add( determineAppropriateLocalCacheMode( properties ) );
+	}
+
+	private void applyLockScope(List<FindOption> options, Map<String, Object> properties) {
+		final Object scopeRef = properties.get( SpecHints.HINT_SPEC_LOCK_SCOPE );
+		if ( scopeRef != null ) {
+			options.add( Locking.Scope.fromHint( scopeRef ) );
+		}
+	}
+
+	private void applyTimeout(List<FindOption> options, Map<String, Object> properties) {
+		final Object lockTimeoutRef = properties.get( HINT_SPEC_LOCK_TIMEOUT );
+		if ( lockTimeoutRef != null ) {
+			final Timeout lockTimeout = Timeouts.fromHintTimeout( lockTimeoutRef );
+			if ( Timeouts.isRealTimeout( lockTimeout ) ) {
+				options.add( lockTimeout );
+				return;
+			}
+		}
+
+		final Object queryTimeoutRef = properties.get( HINT_SPEC_QUERY_TIMEOUT );
+		if ( queryTimeoutRef != null ) {
+			final Timeout queryTimeout = Timeouts.fromHintTimeout( queryTimeoutRef );
+			if ( Timeouts.isRealTimeout( queryTimeout ) ) {
+				options.add( queryTimeout );
+			}
+		}
+	}
+
+	private void applyFollowOnLocking(List<FindOption> options, Map<String, Object> properties) {
+		Locking.FollowOn followOn = null;
+
+		final Object followOnStrategyRef = properties.get( HibernateHints.HINT_FOLLOW_ON_STRATEGY );
+		if ( followOnStrategyRef != null ) {
+			if ( followOnStrategyRef instanceof Locking.FollowOn value ) {
+				followOn = value;
 			}
 			else {
-				throw getExceptionConverter().convert( e, lockOptions );
+				followOn = Locking.FollowOn.interpret( followOnStrategyRef.toString() );
 			}
 		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e, lockOptions );
+		else {
+			final Object followOnLockingRef = properties.get( HibernateHints.HINT_FOLLOW_ON_LOCKING );
+			if ( followOnLockingRef != null ) {
+				followOn = Locking.FollowOn.fromLegacyValue( getBoolean( followOnLockingRef ) );
+			}
 		}
-		finally {
-			loadQueryInfluencers.getEffectiveEntityGraph().clear();
-			loadQueryInfluencers.setReadOnly( null );
+
+		if ( followOn != null ) {
+			options.add( followOn );
 		}
-	}
-
-	// Hibernate Reactive calls this
-	protected static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
-		if ( SESSION_LOGGER.isDebugEnabled() ) {
-			SESSION_LOGGER.ignoringEntityNotFound(
-					entityClass != null ? entityClass.getName(): null,
-					primaryKey != null ? primaryKey.toString() : null
-			);
-		}
-	}
-
-	@Override
-	public <T> T find(Class<T> entityClass, Object key, FindOption... options) {
-		//noinspection unchecked
-		return (T) byKey( requireEntityPersister( entityClass ), options ).performFind( key, this );
-	}
-
-	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... options) {
-		final var graph = (RootGraphImplementor<T>) entityGraph;
-		final var type = graph.getGraphedType();
-
-		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
-			case POJO -> requireEntityPersister( type.getJavaType() );
-			case MAP -> requireEntityPersister( type.getTypeName() );
-		};
-
-		//noinspection unchecked
-		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, options ).performFind( key, this );
 	}
 
 	// Hibernate Reactive may need to use this
@@ -2268,64 +2300,17 @@ public class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = getSessionFactoryOptions().getCacheRetrieveMode( properties );
+			retrieveMode = getSessionFactoryOptions().getCacheRetrieveMode( properties() );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = getSessionFactoryOptions().getCacheStoreMode( properties );
+			storeMode = getSessionFactoryOptions().getCacheStoreMode( properties() );
 		}
 		return interpretCacheMode( storeMode, retrieveMode );
 	}
 
-	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		final CacheRetrieveMode cacheRetrieveMode =
-				(CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
-		return cacheRetrieveMode == null
-				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
-				: cacheRetrieveMode;
-	}
-
-	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		final CacheStoreMode cacheStoreMode =
-				(CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
-		return cacheStoreMode == null
-				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
-				: cacheStoreMode;
-	}
-
 	private void checkTransactionNeededForUpdateOperation() {
 		checkTransactionNeededForUpdateOperation( "No active transaction" );
-	}
-
-	@Override
-	public Object find(String entityName, Object key) {
-		return byKey( requireEntityPersister( entityName ) ).performFind( key, this );
-	}
-
-	@Override
-	public Object find(String entityName, Object key, FindOption... options) {
-		return byKey( requireEntityPersister( entityName ), options ).performFind( key, this );
-	}
-
-	private <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
-		return byKey( entityDescriptor, null, null, options );
-	}
-
-	private <T> FindByKeyOperation<T> byKey(
-			EntityPersister entityDescriptor,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<?> rootGraph,
-			FindOption... options) {
-		return new FindByKeyOperation<>(
-				entityDescriptor,
-				graphSemantic,
-				rootGraph,
-				lockOptions,
-				getCacheMode(),
-				isReadOnly(),
-				getFactory(),
-				options
-		);
 	}
 
 	@Override
@@ -2502,63 +2487,55 @@ public class SessionImpl
 
 	}
 
-	@Override
-	public void setProperty(String propertyName, Object value) {
-		checkOpen();
-		if ( propertyName == null ) {
-			SESSION_LOGGER.nullPropertyKey();
-		}
-		else if ( !(value instanceof Serializable) ) {
-			SESSION_LOGGER.nonSerializableProperty( propertyName );
-		}
-		else {
-			// store property for future reference
-			if ( properties == null ) {
-				properties = getInitialProperties();
-			}
-			properties.put( propertyName, value );
-			// now actually update the setting if
-			// it's one that affects this Session
-			interpretProperty( propertyName, value );
-		}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// After the "un seal" PR is applied, this should all be consolidated
+	// with the Session forms on SharedSessionContract
+
+	protected Map<String, Object> getInitialProperties() {
+		final var map = new HashMap<>( getDefaultProperties() );
+		//The FLUSH_MODE is always set at Session creation time,
+		//so it needs special treatment to not eagerly initialize this Map:
+		map.put( HINT_FLUSH_MODE, getHibernateFlushMode() );
+		return map;
 	}
 
-	private void interpretProperty(String propertyName, Object value) {
+	@Override
+	protected void interpretProperty(String propertyName, Object value) {
 		switch ( propertyName ) {
 			case HINT_FLUSH_MODE:
 				setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 				break;
 			case JPA_LOCK_SCOPE:
 			case JAKARTA_LOCK_SCOPE:
-				properties.put( JPA_LOCK_SCOPE, value);
-				properties.put( JAKARTA_LOCK_SCOPE, value);
-				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				properties().put( JPA_LOCK_SCOPE, value);
+				properties().put( JAKARTA_LOCK_SCOPE, value);
+				applyPropertiesToLockOptions( properties(), this::getLockOptionsForWrite );
 				break;
 			case JPA_LOCK_TIMEOUT:
 			case JAKARTA_LOCK_TIMEOUT:
-				properties.put( JPA_LOCK_TIMEOUT, value );
-				properties.put( JAKARTA_LOCK_TIMEOUT, value );
-				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+				properties().put( JPA_LOCK_TIMEOUT, value );
+				properties().put( JAKARTA_LOCK_TIMEOUT, value );
+				applyPropertiesToLockOptions( properties(), this::getLockOptionsForWrite );
 				break;
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
-				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
-				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties().put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties().put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
-								determineCacheStoreMode( properties ),
+								determineCacheStoreMode( properties() ),
 								(CacheRetrieveMode) value
 						)
 				);
 				break;
 			case JPA_SHARED_CACHE_STORE_MODE:
 			case JAKARTA_SHARED_CACHE_STORE_MODE:
-				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
-				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				properties().put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties().put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
 								(CacheStoreMode) value,
-								determineCacheRetrieveMode( properties )
+								determineCacheRetrieveMode( properties() )
 						)
 				);
 				break;
@@ -2580,29 +2557,15 @@ public class SessionImpl
 			case HINT_JDBC_BATCH_SIZE:
 				setJdbcBatchSize( parseInt( value.toString() ) );
 				break;
+			default:
+				SESSION_LOGGER.tracef( "Unsupported property : %s", propertyName  );
+				break;
 		}
 	}
 
-	private Map<String, Object> getInitialProperties() {
-		final var map = new HashMap<>( getDefaultProperties() );
-		//The FLUSH_MODE is always set at Session creation time,
-		//so it needs special treatment to not eagerly initialize this Map:
-		map.put( HINT_FLUSH_MODE, getHibernateFlushMode() );
-		return map;
-	}
 
-	@Override
-	public Map<String, Object> getProperties() {
-		// EntityManager Javadoc implies that the
-		// returned map should be a mutable copy,
-		// not an unmodifiable map. There's no
-		// good reason to cache the initial
-		// properties, since we have to copy them
-		// each time this method is called.
-		return properties == null
-				? getInitialProperties()
-				: new HashMap<>( properties );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	@Override
 	public ProcedureCall createNamedStoredProcedureQuery(String name) {
@@ -2677,18 +2640,6 @@ public class SessionImpl
 	public Object getDelegate() {
 		checkOpen();
 		return this;
-	}
-
-	@Override
-	public SessionFactoryImplementor getEntityManagerFactory() {
-		checkOpen();
-		return getFactory();
-	}
-
-	@Override
-	public Metamodel getMetamodel() {
-		checkOpen();
-		return getFactory().getJpaMetamodel();
 	}
 
 	@Override
@@ -2780,5 +2731,19 @@ public class SessionImpl
 	// Used by Hibernate reactive
 	protected Boolean getReadOnlyFromLoadQueryInfluencers() {
 		return loadQueryInfluencers == null ? null : loadQueryInfluencers.getReadOnly();
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public NativeQueryImplementor getNamedNativeQuery(String name) {
+		final QueryImplementor<?> query = createNamedQuery( name );
+		if ( !(query instanceof NativeQueryImplementor) ) {
+			throw new IllegalStateException( String.format( Locale.ROOT,
+					"Named query (%s) was not a native-query",
+					name
+			) );
+		}
+		//noinspection unchecked
+		return (NativeQueryImplementor) query;
 	}
 }

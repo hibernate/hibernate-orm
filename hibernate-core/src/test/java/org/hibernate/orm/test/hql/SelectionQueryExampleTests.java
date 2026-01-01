@@ -41,7 +41,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-selection-query[]
 			// can be validated while creating the SelectionQuery
-			SelectionQuery<?> badQuery = session.createSelectionQuery( "delete Person" );
+			SelectionQuery<?> badQuery = session.createSelectionQuery( "delete Person", Person.class );
 			//end::example-hql-selection-query[]
 		} );
 	}
@@ -64,7 +64,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-selection-query[]
 			// can be validated while creating the SelectionQuery
-			SelectionQuery<?> badQuery = session.getNamedQuery( "delete_Person" );
+			SelectionQuery<?> badQuery = session.createNamedQuery( "delete_Person" );
 			//end::example-hql-named-selection-query[]
 		} );
 	}
@@ -75,7 +75,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-selection-query-query[]
 			// cannot be validated until execution
-			Query query = session.getNamedQuery( "delete_Person" );
+			Query query = session.createNamedQuery( "delete_Person" );
 			query.getResultList();
 			//end::example-hql-named-selection-query-query[]
 		} );

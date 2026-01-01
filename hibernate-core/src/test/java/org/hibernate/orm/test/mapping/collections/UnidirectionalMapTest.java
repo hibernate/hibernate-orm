@@ -69,7 +69,7 @@ public class UnidirectionalMapTest {
 			name = "phone_register",
 			joinColumns = @JoinColumn(name = "phone_id"),
 			inverseJoinColumns = @JoinColumn(name = "person_id"))
-		@MapKey(name = "since")
+		@MapKey("since")
 		@MapKeyTemporal(TemporalType.TIMESTAMP)
 		private Map<Date, Phone> phoneRegister = new HashMap<>();
 

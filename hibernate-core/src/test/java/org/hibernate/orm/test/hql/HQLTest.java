@@ -21,7 +21,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.QueryProducer;
 import org.hibernate.testing.orm.domain.userguide.Account;
 import org.hibernate.testing.orm.domain.userguide.AddressType;
 import org.hibernate.testing.orm.domain.userguide.Call;
@@ -979,7 +978,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -993,7 +992,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_named_query_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-named-query-example[]
 			org.hibernate.query.Query<Person> query = session.createNamedQuery(
 				"get_person_by_name",
@@ -1005,7 +1004,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_basic_usage_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-basic-usage-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -1027,7 +1026,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_parameter_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -1042,7 +1041,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_parameter_inferred_type_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-inferred-type-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -1058,7 +1057,7 @@ public class HQLTest {
 	public void test_hql_api_parameter_short_form_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			LocalDateTime timestamp = LocalDateTime.now();
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-short-form-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -1077,7 +1076,7 @@ public class HQLTest {
 	public void test_hql_api_positional_parameter_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			Date timestamp = new Date();
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-ordinal-parameter-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
@@ -1092,7 +1091,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_list_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-list-example[]
 			List<Person> persons = session.createQuery(
 				"select p " +
@@ -1108,7 +1107,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_stream_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-stream-example[]
 			try(Stream<Person> persons = session.createQuery(
 				"select p " +
@@ -1135,7 +1134,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_stream_projection_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-stream-projection-example[]
 			try (Stream<Object[]> persons = session.createQuery(
 				"select p.name, p.nickName " +
@@ -1154,7 +1153,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_api_scroll_projection_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			//tag::hql-api-scroll-example[]
 			try (ScrollableResults<Person> scrollableResults = session.createQuery(
 					"select p " +
@@ -1177,7 +1176,7 @@ public class HQLTest {
 	public void test_hql_api_scroll_open_example(SessionFactoryScope factoryScope) {
 		//noinspection resource
 		ScrollableResults<Person> scrollableResults = factoryScope.fromTransaction( entityManager -> {
-			QueryProducer session = entityManager.unwrap(Session.class);
+			Session session = entityManager.unwrap(Session.class);
 			return session.createQuery(
 							"select p " +
 							"from Person p " +

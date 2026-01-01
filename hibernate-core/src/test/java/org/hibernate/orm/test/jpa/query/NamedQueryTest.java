@@ -96,7 +96,7 @@ public class NamedQueryTest {
 					assertEquals( 1, list.size() );
 
 					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
+					final org.hibernate.query.Query sessionQuery = session.createNamedQuery( "NamedQuery" );
 					sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					list = sessionQuery.getResultList();
 
@@ -146,8 +146,9 @@ public class NamedQueryTest {
 					assertEquals( 1, list.size() );
 
 					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.getNamedNativeQuery(
-							"NamedNativeQuery" );
+					final org.hibernate.query.Query sessionQuery = session.createNamedQuery(
+							"NamedNativeQuery"
+					);
 					sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					list = sessionQuery.getResultList();
 

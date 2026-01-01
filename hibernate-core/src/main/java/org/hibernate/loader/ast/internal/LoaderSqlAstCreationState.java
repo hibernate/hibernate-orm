@@ -14,6 +14,7 @@ import java.util.function.Function;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -248,7 +249,7 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return null;
 	}
 

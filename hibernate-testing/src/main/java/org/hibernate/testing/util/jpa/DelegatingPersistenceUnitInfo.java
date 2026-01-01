@@ -4,11 +4,12 @@
  */
 package org.hibernate.testing.util.jpa;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 import java.net.URL;
 import java.util.List;
@@ -41,7 +42,7 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 		return delegate.getQualifierAnnotationNames();
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return delegate.getTransactionType();
 	}
@@ -77,6 +78,11 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public List<String> getAllManagedClassNames() {
+		return delegate.getAllManagedClassNames();
+	}
+
+	@Override
 	public boolean excludeUnlistedClasses() {
 		return delegate.excludeUnlistedClasses();
 	}
@@ -89,6 +95,11 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	@Override
 	public ValidationMode getValidationMode() {
 		return delegate.getValidationMode();
+	}
+
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return delegate.getDefaultToOneFetchType();
 	}
 
 	@Override

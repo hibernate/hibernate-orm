@@ -2577,7 +2577,10 @@ public class FunctionTests {
 	public void testBetweenDates(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createSelectionQuery("select theDate from EntityOfBasics where theDate between local date and local date + 7 day").getResultList();
+					session.createSelectionQuery(
+							"select theDate from EntityOfBasics where theDate between local date and local date + 7 day",
+							Date.class
+					).getResultList();
 				}
 		);
 	}
@@ -2586,7 +2589,10 @@ public class FunctionTests {
 	public void testMemberOf(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createSelectionQuery("from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums").getResultList();
+					session.createSelectionQuery(
+							"from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums",
+							EntityOfLists.class
+					).getResultList();
 				}
 		);
 	}
@@ -2595,9 +2601,9 @@ public class FunctionTests {
 	public void testEnumIsNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createSelectionQuery("from EntityOfBasics where gender is null").getResultList();
-					session.createSelectionQuery("from EntityOfBasics e where e.gender is null").getResultList();
-					session.createSelectionQuery("from EntityOfBasics where :gender is null").setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
+					session.createSelectionQuery("from EntityOfBasics where gender is null", EntityOfBasics.class).getResultList();
+					session.createSelectionQuery("from EntityOfBasics e where e.gender is null", EntityOfBasics.class).getResultList();
+					session.createSelectionQuery("from EntityOfBasics where :gender is null", EntityOfBasics.class).setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
 				}
 		);
 	}

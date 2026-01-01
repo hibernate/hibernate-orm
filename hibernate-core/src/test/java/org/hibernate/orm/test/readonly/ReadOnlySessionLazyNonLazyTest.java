@@ -184,7 +184,8 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
-		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
+		Container c = s.get( Container.class, cOrig.getId()  );
+		Hibernate.initialize( c );
 		assertNotSame( cOrig, c );
 		expectedInitializedObjects = new HashSet(
 				Arrays.asList(

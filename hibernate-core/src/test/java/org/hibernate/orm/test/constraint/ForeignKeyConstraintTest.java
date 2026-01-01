@@ -167,9 +167,9 @@ public class ForeignKeyConstraintTest {
 	}
 
 	@Test
-	public void testGet(SessionFactoryScope scope) {
+	public void testFind(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.get( Student.class, 1L )
+				session -> session.find( Student.class, 1L )
 		);
 	}
 

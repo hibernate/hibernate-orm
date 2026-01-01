@@ -114,7 +114,7 @@ public class TransactionsTest {
 			// no-ops
 			session.getTransaction().begin();
 
-			Number customerCount = (Number) session.createSelectionQuery("select count(c) from Customer c").uniqueResult();
+			Number customerCount = session.createSelectionQuery("select count(c) from Customer c", Number.class).uniqueResult();
 
 			// Since we did not start the transaction (CMT),
 			// we also will not end it.  This call essentially
@@ -176,7 +176,7 @@ public class TransactionsTest {
 			session.getTransaction().begin();
 
 			session.persist(new Customer());
-			Customer customer = (Customer) session.createSelectionQuery("select c from Customer c").uniqueResult();
+			Customer customer = (Customer) session.createSelectionQuery("select c from Customer c", Customer.class).uniqueResult();
 
 			// calls TM/UT commit method, assuming we are initiator.
 			session.getTransaction().commit();

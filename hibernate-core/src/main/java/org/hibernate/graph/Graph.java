@@ -267,8 +267,6 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @param attribute An attribute of the represented type
 	 * @param type A subtype of the attribute type
 	 *
-	 * @see #addSubgraph(Attribute, Class)
-	 *
 	 * @since 7.0
 	 */
 	@Override
@@ -319,8 +317,6 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @param attribute An attribute of the represented type
 	 * @param type A subtype of the attribute type
-	 *
-	 * @see #addSubgraph(Attribute, Class)
 	 *
 	 * @deprecated Use {@link #addTreatedSubgraph(Attribute, Class)}
 	 */
@@ -546,20 +542,5 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	@Deprecated(since = "7.0", forRemoval = true)
 	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? super J, ?, AJ> attribute) {
 		return addSubGraph( attribute.getName(), attribute.getBindableJavaType() );
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<? super J, X>) attribute ).addTreatedSubgraph( type );
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		throw new UnsupportedOperationException( "This operation will be removed in JPA 4" );
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		throw new UnsupportedOperationException( "This operation will be removed in JPA 4" );
 	}
 }

@@ -227,7 +227,7 @@ public class SharedDomainDataAndQueryResultsTest {
 
 		scope.inTransaction( session -> {
 
-					List<Dog> dogs = session.getNamedQuery( "Dog.findAll" ).list();
+					List<Dog> dogs = session.createNamedQuery( "Dog.findAll", Dog.class ).list();
 
 					assertEquals( 2, dogs.size() );
 

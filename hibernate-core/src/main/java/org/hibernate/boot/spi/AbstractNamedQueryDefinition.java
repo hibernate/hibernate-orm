@@ -4,15 +4,19 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.query.NamedQueryDefinition;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +34,7 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 
 	private final LockOptions lockOptions;
 
-	private final Integer timeout;
+	private final Timeout timeout;
 	private final Integer fetchSize;
 
 	private final String comment;
@@ -47,7 +51,7 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 			FlushMode flushMode,
 			Boolean readOnly,
 			LockOptions lockOptions,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String,Object> hints,
@@ -94,6 +98,31 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 		return cacheMode;
 	}
 
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheMode == null ? null : cacheMode.getJpaRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheMode == null ? null : cacheMode.getJpaStoreMode();
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return lockOptions == null ? null : lockOptions.getLockMode().toJpaLockMode();
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return lockOptions == null ? null : lockOptions.getScope().getCorrespondingJpaScope();
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return null;
+	}
+
 	public FlushMode getFlushMode() {
 		return flushMode;
 	}
@@ -106,7 +135,7 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 		return lockOptions;
 	}
 
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return timeout;
 	}
 
@@ -122,5 +151,4 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 	public Map<String, Object> getHints() {
 		return hints;
 	}
-
 }

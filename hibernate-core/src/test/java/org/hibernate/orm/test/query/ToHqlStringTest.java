@@ -82,7 +82,7 @@ public class ToHqlStringTest {
 					CriteriaQuery<Object> criteriaQuery = builder.createQuery( Object.class );
 
 					Root<TestEntity> root = criteriaQuery.from( TestEntity.class );
-					Join<Object, Object> entity = builder.treat( root, TestEntitySub.class ).join( "entity" );
+					Join<TestEntitySub, Object> entity = builder.treat( root, TestEntitySub.class ).join( "entity" );
 					criteriaQuery = criteriaQuery.select( entity );
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );

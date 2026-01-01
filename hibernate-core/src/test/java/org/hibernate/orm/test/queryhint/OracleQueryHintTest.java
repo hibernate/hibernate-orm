@@ -118,7 +118,7 @@ public class OracleQueryHintTest {
 			final CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
 			Root<Employee> root = criteria.from( Employee.class );
-			Join<Object, Object> departmentJoin = root.join( "department" );
+			Join<Employee, Object> departmentJoin = root.join( "department" );
 			criteria.select( root ).where( criteriaBuilder.equal( departmentJoin.get( "name" ), "Sales" ) );
 //			Criteria criteria = s.createCriteria( Employee.class )
 //					.addQueryHint( "ALL_ROWS" )

@@ -18,6 +18,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -59,6 +62,61 @@ public class ConnectionLockTimeoutTests {
 
 				final Timeout resetLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
 				assertThat( resetLockTimeout.milliseconds() ).isEqualTo( Timeouts.WAIT_FOREVER_MILLI );
+			}
+			finally {
+				connectionStrategy.setLockTimeout( Timeout.milliseconds( expectedInitialValue ), conn, session.getFactory() );
+			}
+		} ) );
+	}
+
+	/**
+	 * Tests that lock_timeout values are correctly handled despite PostgreSQL
+	 * canonical formatting (e.g., "60s" displayed as "1min").
+	 */
+	@Test
+	void testCanonicalLockTimeoutFormat(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
+			final int expectedInitialValue;
+			if ( session.getDialect() instanceof MySQLDialect ) {
+				expectedInitialValue = 50;
+			}
+			else if ( session.getDialect() instanceof GaussDBDialect ) {
+				expectedInitialValue = 20 * 60 * 1000;
+			}
+			else {
+				expectedInitialValue = Timeouts.WAIT_FOREVER_MILLI;
+			}
+
+			final LockingSupport lockingSupport = session.getDialect().getLockingSupport();
+			final ConnectionLockTimeoutStrategy connectionStrategy = lockingSupport.getConnectionLockTimeoutStrategy();
+			final Timeout initialLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
+			assertThat( initialLockTimeout.milliseconds() ).isEqualTo( expectedInitialValue );
+
+			List<Duration> durs = List.of(
+					Duration.ofMillis(1),
+					Duration.ofMillis(2),
+					Duration.ofMillis(999),
+					Duration.ofSeconds(1),
+					Duration.ofSeconds(2),
+					Duration.ofSeconds(59),
+					Duration.ofMinutes(1),
+					Duration.ofMinutes(2),
+					Duration.ofMinutes(59),
+					Duration.ofHours(1),
+					Duration.ofHours(2),
+					Duration.ofHours(23),
+					Duration.ofDays(1)
+			);
+
+			try {
+				for ( Duration dur : durs ) {
+					int timeoutInMillis = (int) dur.toMillis();
+					Timeout timeout = Timeout.milliseconds( timeoutInMillis );
+					connectionStrategy.setLockTimeout( timeout, conn, session.getFactory() );
+
+					Timeout adjustedLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
+					assertThat( adjustedLockTimeout.milliseconds() ).isEqualTo( timeoutInMillis );
+				}
 			}
 			finally {
 				connectionStrategy.setLockTimeout( Timeout.milliseconds( expectedInitialValue ), conn, session.getFactory() );

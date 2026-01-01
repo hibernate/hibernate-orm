@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -14,8 +15,8 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -23,6 +24,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -709,6 +711,12 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
+	public EntityGraph<? super R> getEntityGraph() {
+		//noinspection unchecked
+		return (EntityGraph<? super R>) getQueryOptions().getAppliedGraph().getGraph();
+	}
+
+	@Override
 	public SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
 		return this;
@@ -752,9 +760,17 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setTimeout(Timeout timeout) {
+	public PessimisticLockScope getLockScope() {
+		verifySelect();
 		getSession().checkOpen( false );
-		getQueryOptions().getLockOptions().setTimeOut( timeout.milliseconds() );
+		return getLockOptions().getScope().getCorrespondingJpaScope();
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setTimeout(Timeout timeout) {
+		assert timeout != null;
+		getSession().checkOpen( false );
+		getQueryOptions().setTimeout( Timeouts.getTimeoutInSeconds( timeout ) );
 		return this;
 	}
 
@@ -896,7 +912,7 @@ public class SqmQueryImpl<R>
 					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),
-					getTimeout(),
+					getQueryOptions().getTimeout(),
 					getFetchSize(),
 					getComment(),
 					emptyMap(),
@@ -916,7 +932,7 @@ public class SqmQueryImpl<R>
 					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),
-					getTimeout(),
+					getQueryOptions().getTimeout(),
 					getFetchSize(),
 					getComment(),
 					emptyMap(),
@@ -1065,6 +1081,11 @@ public class SqmQueryImpl<R>
 		return this;
 	}
 
+	@Override
+	public <P> TypedQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
 	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
@@ -1087,6 +1108,11 @@ public class SqmQueryImpl<R>
 	public <P> SqmQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
+	}
+
+	@Override
+	public <P> TypedQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	@Override @Deprecated

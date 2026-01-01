@@ -65,27 +65,22 @@ public abstract class AbstractManyToManyAssociationClassTest {
 		deleteMembership( user, group, membership );
 		addMembership( user, group, membership );
 
-		scope.inTransaction(
-				session ->
-						session.merge( user )
-		);
+		scope.inTransaction( session -> session.merge( user ) );
 
-		scope.inTransaction(
-				session -> {
-					user = session.get( User.class, user.getId() );
-					group = session.get( Group.class, group.getId() );
-					membership = session.get( membership.getClass(), membership.getId() );
-					assertEquals( "user", user.getName() );
-					assertEquals( "group", group.getName() );
-					assertEquals( "membership", membership.getName() );
-					assertEquals( 1, user.getMemberships().size() );
-					assertEquals( 1, group.getMemberships().size() );
-					assertSame( membership, user.getMemberships().iterator().next() );
-					assertSame( membership, group.getMemberships().iterator().next() );
-					assertSame( user, membership.getUser() );
-					assertSame( group, membership.getGroup() );
-				}
-		);
+		scope.inTransaction( session -> {
+			user = session.get( User.class, user.getId() );
+			group = session.get( Group.class, group.getId() );
+			membership = session.get( membership.getClass(), membership.getId() );
+			assertEquals( "user", user.getName() );
+			assertEquals( "group", group.getName() );
+			assertEquals( "membership", membership.getName() );
+			assertEquals( 1, user.getMemberships().size() );
+			assertEquals( 1, group.getMemberships().size() );
+			assertSame( membership, user.getMemberships().iterator().next() );
+			assertSame( membership, group.getMemberships().iterator().next() );
+			assertSame( user, membership.getUser() );
+			assertSame( group, membership.getGroup() );
+		} );
 	}
 
 	@Test
@@ -94,27 +89,22 @@ public abstract class AbstractManyToManyAssociationClassTest {
 		membership = createMembership( "membership" );
 		addMembership( user, group, membership );
 
-		scope.inTransaction(
-				session ->
-						session.merge( user )
-		);
+		scope.inTransaction( session ->  session.merge( user ) );
 
-		scope.inTransaction(
-				session -> {
-					user = session.get( User.class, user.getId() );
-					group = session.get( Group.class, group.getId() );
-					membership = session.get( membership.getClass(), membership.getId() );
-					assertEquals( "user", user.getName() );
-					assertEquals( "group", group.getName() );
-					assertEquals( "membership", membership.getName() );
-					assertEquals( 1, user.getMemberships().size() );
-					assertEquals( 1, group.getMemberships().size() );
-					assertSame( membership, user.getMemberships().iterator().next() );
-					assertSame( membership, group.getMemberships().iterator().next() );
-					assertSame( user, membership.getUser() );
-					assertSame( group, membership.getGroup() );
-				}
-		);
+		scope.inTransaction( session -> {
+			user = session.get( User.class, user.getId() );
+			group = session.get( Group.class, group.getId() );
+			membership = session.get( membership.getClass(), membership.getId() );
+			assertEquals( "user", user.getName() );
+			assertEquals( "group", group.getName() );
+			assertEquals( "membership", membership.getName() );
+			assertEquals( 1, user.getMemberships().size() );
+			assertEquals( 1, group.getMemberships().size() );
+			assertSame( membership, user.getMemberships().iterator().next() );
+			assertSame( membership, group.getMemberships().iterator().next() );
+			assertSame( user, membership.getUser() );
+			assertSame( group, membership.getGroup() );
+		} );
 	}
 
 	@Test
@@ -125,27 +115,22 @@ public abstract class AbstractManyToManyAssociationClassTest {
 		group.setMemberships( new HashSet<>() );
 		addMembership( user, group, membership );
 
-		scope.inTransaction(
-				session ->
-						session.merge( user )
-		);
+		scope.inTransaction( session -> session.merge( user ) );
 
-		scope.inTransaction(
-				session -> {
-					user = session.get( User.class, user.getId() );
-					group = session.get( Group.class, group.getId() );
-					membership = session.get( membership.getClass(), membership.getId() );
-					assertEquals( "user", user.getName() );
-					assertEquals( "group", group.getName() );
-					assertEquals( "membership", membership.getName() );
-					assertEquals( 1, user.getMemberships().size() );
-					assertEquals( 1, group.getMemberships().size() );
-					assertSame( membership, user.getMemberships().iterator().next() );
-					assertSame( membership, group.getMemberships().iterator().next() );
-					assertSame( user, membership.getUser() );
-					assertSame( group, membership.getGroup() );
-				}
-		);
+		scope.inTransaction( session -> {
+			user = session.get( User.class, user.getId() );
+			group = session.get( Group.class, group.getId() );
+			membership = session.get( membership.getClass(), membership.getId() );
+			assertEquals( "user", user.getName() );
+			assertEquals( "group", group.getName() );
+			assertEquals( "membership", membership.getName() );
+			assertEquals( 1, user.getMemberships().size() );
+			assertEquals( 1, group.getMemberships().size() );
+			assertSame( membership, user.getMemberships().iterator().next() );
+			assertSame( membership, group.getMemberships().iterator().next() );
+			assertSame( user, membership.getUser() );
+			assertSame( group, membership.getGroup() );
+		} );
 	}
 
 	@Test
@@ -154,27 +139,22 @@ public abstract class AbstractManyToManyAssociationClassTest {
 		addMembership( user, group, membership );
 		membership.setName( "membership1" );
 
-		scope.inTransaction(
-				session ->
-						session.merge( user )
-		);
+		scope.inTransaction( session -> session.merge( user ) );
 
-		scope.inTransaction(
-				session -> {
-					user = session.get( User.class, user.getId() );
-					group = session.get( Group.class, group.getId() );
-					membership = session.get( membership.getClass(), membership.getId() );
-					assertEquals( "user", user.getName() );
-					assertEquals( "group", group.getName() );
-					assertEquals( "membership1", membership.getName() );
-					assertEquals( 1, user.getMemberships().size() );
-					assertEquals( 1, group.getMemberships().size() );
-					assertSame( membership, user.getMemberships().iterator().next() );
-					assertSame( membership, group.getMemberships().iterator().next() );
-					assertSame( user, membership.getUser() );
-					assertSame( group, membership.getGroup() );
-				}
-		);
+		scope.inTransaction( session -> {
+			user = session.get( User.class, user.getId() );
+			group = session.get( Group.class, group.getId() );
+			membership = session.get( membership.getClass(), membership.getId() );
+			assertEquals( "user", user.getName() );
+			assertEquals( "group", group.getName() );
+			assertEquals( "membership1", membership.getName() );
+			assertEquals( 1, user.getMemberships().size() );
+			assertEquals( 1, group.getMemberships().size() );
+			assertSame( membership, user.getMemberships().iterator().next() );
+			assertSame( membership, group.getMemberships().iterator().next() );
+			assertSame( user, membership.getUser() );
+			assertSame( group, membership.getGroup() );
+		} );
 	}
 
 	@Test
@@ -184,45 +164,36 @@ public abstract class AbstractManyToManyAssociationClassTest {
 		addMembership( user, group, membership );
 		membership.setName( "membership1" );
 
-		scope.inTransaction(
-				session ->
-						session.merge( user )
-		);
+		scope.inTransaction( session -> session.merge( user ) );
 
-		scope.inTransaction(
-				session -> {
-					user = session.get( User.class, user.getId() );
-					group = session.get( Group.class, group.getId() );
-					membership = session.get( membership.getClass(), membership.getId() );
-					assertEquals( "user", user.getName() );
-					assertEquals( "group", group.getName() );
-					assertEquals( "membership1", membership.getName() );
-					assertEquals( 1, user.getMemberships().size() );
-					assertEquals( 1, group.getMemberships().size() );
-					assertSame( membership, user.getMemberships().iterator().next() );
-					assertSame( membership, group.getMemberships().iterator().next() );
-					assertSame( user, membership.getUser() );
-					assertSame( group, membership.getGroup() );
-				}
-		);
+		scope.inTransaction( session -> {
+			user = session.get( User.class, user.getId() );
+			group = session.get( Group.class, group.getId() );
+			membership = session.get( membership.getClass(), membership.getId() );
+			assertEquals( "user", user.getName() );
+			assertEquals( "group", group.getName() );
+			assertEquals( "membership1", membership.getName() );
+			assertEquals( 1, user.getMemberships().size() );
+			assertEquals( 1, group.getMemberships().size() );
+			assertSame( membership, user.getMemberships().iterator().next() );
+			assertSame( membership, group.getMemberships().iterator().next() );
+			assertSame( user, membership.getUser() );
+			assertSame( group, membership.getGroup() );
+		} );
 	}
 
 	@Test
 	public void testDeleteDetached(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.remove( user );
-					session.remove( group );
-				}
-		);
+		scope.inTransaction( session -> {
+			session.remove( user );
+			session.remove( group );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					assertNull( session.get( User.class, user.getId() ) );
-					assertNull( session.get( Group.class, group.getId() ) );
-					assertNull( session.get( membership.getClass(), membership.getId() ) );
-				}
-		);
+		scope.inTransaction( session -> {
+			assertNull( session.find( User.class, user.getId() ) );
+			assertNull( session.find( Group.class, group.getId() ) );
+			assertNull( session.find( membership.getClass(), membership.getId() ) );
+		} );
 	}
 
 	public void deleteMembership(User u, Group g, Membership ug) {

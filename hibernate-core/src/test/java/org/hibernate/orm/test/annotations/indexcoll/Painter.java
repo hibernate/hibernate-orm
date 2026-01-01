@@ -32,7 +32,7 @@ public class Painter {
 	}
 
 	@OneToMany(cascade = {CascadeType.ALL})
-	@MapKey(name = "name")
+	@MapKey("name")
 	@JoinColumn
 	public Map<String, Painting> getPaintings() {
 		return paintings;

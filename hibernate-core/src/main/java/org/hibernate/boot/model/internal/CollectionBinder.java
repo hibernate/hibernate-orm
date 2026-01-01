@@ -82,6 +82,7 @@ import jakarta.persistence.UniqueConstraint;
 import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
+import static jakarta.persistence.FetchType.DEFAULT;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.CascadeType.DELETE_ORPHAN;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -113,6 +114,7 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
+import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -1418,28 +1420,32 @@ public abstract class CollectionBinder {
 
 	private FetchType getJpaFetchType() {
 		final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
-		final var manyToMany = property.getDirectAnnotationUsage( ManyToMany.class );
-		final var elementCollection = property.getDirectAnnotationUsage( ElementCollection.class );
-		final var manyToAny = property.getDirectAnnotationUsage( ManyToAny.class );
 		if ( oneToMany != null ) {
-			return oneToMany.fetch();
+			return handlingDefault( oneToMany.fetch() );
 		}
 
+		final var manyToMany = property.getDirectAnnotationUsage( ManyToMany.class );
 		if ( manyToMany != null ) {
-			return manyToMany.fetch();
+			return handlingDefault( manyToMany.fetch() );
 		}
 
+		final var elementCollection = property.getDirectAnnotationUsage( ElementCollection.class );
 		if ( elementCollection != null ) {
-			return elementCollection.fetch();
+			return handlingDefault( elementCollection.fetch() );
 		}
 
+		final var manyToAny = property.getDirectAnnotationUsage( ManyToAny.class );
 		if ( manyToAny != null ) {
-			return manyToAny.fetch();
+			return handlingDefault( manyToAny.fetch() );
 		}
 
 		throw new AssertionFailure(
 				"Define fetch strategy for collection not annotated @ManyToMany, @OneToMany, nor @ElementCollection"
 		);
+	}
+
+	private FetchType handlingDefault(FetchType specifiedType) {
+		return specifiedType == DEFAULT ? LAZY : specifiedType;
 	}
 
 	TypeDetails getElementType() {
@@ -1823,7 +1829,7 @@ public abstract class CollectionBinder {
 		hasMapKeyProperty = key != null;
 		if ( hasMapKeyProperty ) {
 			// JPA says: if missing, use primary key of associated entity
-			mapKeyPropertyName = nullIfEmpty( key.name() );
+			mapKeyPropertyName = coalesce( key.value(), key.name() );
 		}
 	}
 

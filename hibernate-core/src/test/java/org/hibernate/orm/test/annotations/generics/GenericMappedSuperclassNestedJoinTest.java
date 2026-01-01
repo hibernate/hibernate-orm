@@ -112,7 +112,7 @@ public class GenericMappedSuperclassNestedJoinTest {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<String> cq = cb.createQuery( String.class );
 			final Root<SelectionProductRuleProductLink> root = cq.from( SelectionProductRuleProductLink.class );
-			final Join<SelectionProductRuleProductLink, ?> p1 = root.join( "parent" );
+			final Join<SelectionProductRuleProductLink, Object> p1 = root.join( "parent" );
 			assertThat( p1.getJavaType() ).isEqualTo( SeqOrderLinkObjectWithUserContext.class );
 			assertThat( p1.getModel() ).isSameAs( root.getModel().getAttribute( "parent" ) );
 			assertThat( ( (SqmPath<?>) p1 ).getResolvedModel().getBindableJavaType() )

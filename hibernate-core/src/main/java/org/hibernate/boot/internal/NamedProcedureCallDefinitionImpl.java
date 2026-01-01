@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -213,5 +218,35 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	@Override
 	public Map<String, Object> getHints() {
 		return hints;
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return null;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return null;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return null;
+	}
+
+	@Override
+	public Timeout getTimeout() {
+		return null;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return "";
 	}
 }

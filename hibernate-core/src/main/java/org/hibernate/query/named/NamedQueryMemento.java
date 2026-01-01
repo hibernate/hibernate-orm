@@ -4,16 +4,16 @@
  */
 package org.hibernate.query.named;
 
-import java.util.Map;
-
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
-import jakarta.persistence.TypedQueryReference;
+import java.util.Map;
 
 /**
  * The runtime representation of named queries.  They are stored in and
@@ -23,7 +23,7 @@ import jakarta.persistence.TypedQueryReference;
  *
  * @author Steve Ebersole
  */
-public interface NamedQueryMemento<E> extends TypedQueryReference<E> {
+public interface NamedQueryMemento<E> extends JpaTypedQueryReference<E> {
 	/**
 	 * The name under which the query is registered
 	 */
@@ -44,7 +44,7 @@ public interface NamedQueryMemento<E> extends TypedQueryReference<E> {
 
 	Boolean getReadOnly();
 
-	Integer getTimeout();
+	Timeout getTimeout();
 
 	Integer getFetchSize();
 

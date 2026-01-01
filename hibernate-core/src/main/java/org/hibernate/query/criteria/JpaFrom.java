@@ -290,34 +290,34 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	<K, V> JpaMapJoin<T, K, V> join(MapAttribute<? super T, K, V> map, JoinType jt);
 
 	@Override
-	<X, Y> JpaJoin<X, Y> join(String attributeName);
+	<Y> JpaJoin<T, Y> join(String attributeName);
 
 	@Override
-	<X, Y> JpaCollectionJoin<X, Y> joinCollection(String attributeName);
+	<Y> JpaCollectionJoin<T, Y> joinCollection(String attributeName);
 
 	@Override
-	<X, Y> JpaSetJoin<X, Y> joinSet(String attributeName);
+	<Y> JpaSetJoin<T, Y> joinSet(String attributeName);
 
 	@Override
-	<X, Y> JpaListJoin<X, Y> joinList(String attributeName);
+	<Y> JpaListJoin<T, Y> joinList(String attributeName);
 
 	@Override
-	<X, K, V> JpaMapJoin<X, K, V> joinMap(String attributeName);
+	<K, V> JpaMapJoin<T, K, V> joinMap(String attributeName);
 
 	@Override
-	<X, Y> JpaJoin<X, Y> join(String attributeName, JoinType jt);
+	<Y> JpaJoin<T, Y> join(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> JpaCollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt);
+	<Y> JpaCollectionJoin<T, Y> joinCollection(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> JpaSetJoin<X, Y> joinSet(String attributeName, JoinType jt);
+	<Y> JpaSetJoin<T, Y> joinSet(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> JpaListJoin<X, Y> joinList(String attributeName, JoinType jt);
+	<Y> JpaListJoin<T, Y> joinList(String attributeName, JoinType jt);
 
 	@Override
-	<X, K, V> JpaMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
+	<K, V> JpaMapJoin<T, K, V> joinMap(String attributeName, JoinType jt);
 
 	@Override
 	<S extends T> JpaTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType);

@@ -7,11 +7,13 @@ package org.hibernate.testing.orm.jpa;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -50,7 +52,7 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return List.of();
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
@@ -79,6 +81,11 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return emptyList();
 	}
 
+	@Override
+	public List<String> getAllManagedClassNames() {
+		return getManagedClassNames();
+	}
+
 	public boolean excludeUnlistedClasses() {
 		return false;
 	}
@@ -89,6 +96,11 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 
 	public ValidationMode getValidationMode() {
 		return null;
+	}
+
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return FetchType.EAGER;
 	}
 
 	public Properties getProperties() {

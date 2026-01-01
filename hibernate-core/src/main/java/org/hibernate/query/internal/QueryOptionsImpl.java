@@ -11,6 +11,7 @@ import java.util.Set;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
@@ -31,7 +32,7 @@ import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
  * @author Steve Ebersole
  */
 public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
-	private Integer timeout;
+	private Timeout timeout;
 	private FlushMode flushMode;
 	private String comment;
 	private List<String> databaseHints;
@@ -58,11 +59,20 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Set<String> disabledFetchProfiles;
 
 	@Override
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return timeout;
 	}
 
+	@Override
+	public void setTimeout(int timeout) {
+		setTimeout( Timeout.seconds( timeout ) );
+	}
+
 	public void setTimeout(Integer timeout) {
+		setTimeout( Timeout.seconds( timeout ) );
+	}
+
+	public void setTimeout(Timeout timeout) {
 		this.timeout = timeout;
 	}
 
@@ -213,11 +223,6 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void setResultCacheRegionName(String resultCacheRegionName) {
 		this.resultCacheRegionName = resultCacheRegionName;
-	}
-
-	@Override
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
 	}
 
 	@Override

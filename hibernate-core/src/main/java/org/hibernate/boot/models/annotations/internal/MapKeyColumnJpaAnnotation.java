@@ -7,6 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.CheckConstraint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -30,6 +31,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	private boolean nullable;
 	private boolean insertable;
 	private boolean updatable;
+	private String comment;
 	private String columnDefinition;
 	private String options;
 	private String table;
@@ -46,6 +48,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 		this.nullable = false;
 		this.insertable = true;
 		this.updatable = true;
+		this.comment = "";
 		this.columnDefinition = "";
 		this.options = "";
 		this.table = "";
@@ -63,6 +66,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 		this.nullable = annotation.nullable();
 		this.insertable = annotation.insertable();
 		this.updatable = annotation.updatable();
+		this.comment = annotation.comment();
 		this.columnDefinition = annotation.columnDefinition();
 		this.options = annotation.options();
 		this.table = annotation.table();
@@ -80,6 +84,7 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 		this.nullable = (boolean) attributeValues.get( "nullable" );
 		this.insertable = (boolean) attributeValues.get( "insertable" );
 		this.updatable = (boolean) attributeValues.get( "updatable" );
+		this.comment = (String) attributeValues.get( "comment" );
 		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
 		this.options = (String) attributeValues.get( "options" );
 		this.table = (String) attributeValues.get( "table" );
@@ -144,6 +149,16 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 
 
 	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
+	}
+
+
+	@Override
 	public String columnDefinition() {
 		return columnDefinition;
 	}
@@ -202,6 +217,10 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 		this.scale = value;
 	}
 
+	@Override
+	public CheckConstraint[] check() {
+		return new CheckConstraint[0];
+	}
 
 	public void apply(JaxbMapKeyColumnImpl jaxbColumn, XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbColumn.getName() ) ) {
@@ -226,6 +245,10 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 
 		if ( jaxbColumn.isUpdatable() != null ) {
 			updatable( jaxbColumn.isUpdatable() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbColumn.getComment() ) ) {
+			comment( jaxbColumn.getComment() );
 		}
 
 		if ( StringHelper.isNotEmpty( jaxbColumn.getColumnDefinition() ) ) {

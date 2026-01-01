@@ -93,7 +93,7 @@ public class ManyToManyWithMaykeyAndSchemaDefinitionTest {
 		private String name;
 
 		@ManyToMany
-		@MapKey(name = "id")
+		@MapKey("id")
 		@JoinTable(name = "entitya_entityb", schema = "myschema", joinColumns = @JoinColumn(name = "entitya_pk"), inverseJoinColumns = @JoinColumn(name = "entityb_pk"))
 		private Map<String, EntityB> entityBMap = new HashMap<>();
 

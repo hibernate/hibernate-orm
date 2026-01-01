@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -283,13 +284,38 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T get(Class<T> entityType, Object id, LockModeType lockModeType) {
+		return this.lazySession.get().get( entityType, id, lockModeType );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityType, Object key, FindOption... findOptions) {
+		return this.lazySession.get().get( entityType, key, findOptions );
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		return this.lazySession.get().get( entityGraph, key, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(Class<T> entityType, List<?> keys, FindOption... findOptions) {
+		return this.lazySession.get().getMultiple( entityType, keys, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		return this.lazySession.get().getMultiple( entityGraph, keys, findOptions );
+	}
+
+	@Override
 	public <T> T get(Class<T> entityType, Object id, LockMode lockMode) {
 		return this.lazySession.get().get( entityType, id, lockMode );
 	}
 
 	@Override
-	public Object get(String entityName, Object id) {
-		return this.lazySession.get().get( entityName, id );
+	public Object get(String entityName, Object key, FindOption... findOptions) {
+		return this.lazySession.get().get( entityName, key, findOptions );
 	}
 
 	@Override
@@ -478,6 +504,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> EntityGraph<T> getEntityGraph(Class<T> aClass, String s) {
+		return null;
+	}
+
+	@Override
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		return this.lazySession.get().getEntityGraphs( entityClass );
 	}
@@ -498,6 +529,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> Query<T> createQuery(String query, EntityGraph<T> entityGraph) {
+		return this.lazySession.get().createQuery( query, entityGraph );
+	}
+
+	@Override
 	public <R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference) {
 		return this.lazySession.get().createQuery( typedQueryReference );
 	}
@@ -514,6 +550,16 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createNamedQuery( name, resultClass );
 	}
 
+	@Override
+	public <R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName) {
+		return this.lazySession.get().createNamedQuery( name, resultSetMappingName );
+	}
+
+	@Override
+	public <R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+		return this.lazySession.get().createNamedQuery( name, resultSetMappingName, resultClass );
+	}
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
@@ -527,7 +573,12 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> TypedQuery<T> createQuery(CriteriaSelect<T> selectQuery) {
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaSelect<R> criteria) {
+		return this.lazySession.get().createSelectionQuery( criteria );
+	}
+
+	@Override
+	public <T> Query<T> createQuery(CriteriaSelect<T> selectQuery) {
 		return this.lazySession.get().createQuery( selectQuery );
 	}
 
@@ -691,17 +742,17 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	@Deprecated
 	public NativeQuery createNativeQuery(String sqlString, String resultSetMappingName) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName );
+		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+	}
+
+	@Override
+	public <T> TypedQuery<T> createNativeQuery(String s, ResultSetMapping<T> resultSetMapping) {
+		return null;
 	}
 
 	@Override
 	public <R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass) {
 		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName, resultClass );
-	}
-
-	@Override
-	public SelectionQuery<?> createSelectionQuery(String hqlString) {
-		return this.lazySession.get().createSelectionQuery( hqlString );
 	}
 
 	@Override
@@ -745,11 +796,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public SelectionQuery<?> createNamedSelectionQuery(String name) {
-		return this.lazySession.get().createNamedSelectionQuery( name );
-	}
-
-	@Override
 	public <R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType) {
 		return this.lazySession.get().createNamedSelectionQuery( name, resultType );
 	}
@@ -757,27 +803,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public MutationQuery createNamedMutationQuery(String name) {
 		return this.lazySession.get().createNamedMutationQuery( name );
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	@Deprecated
-	public Query getNamedQuery(String queryName) {
-		return this.lazySession.get().getNamedQuery( queryName );
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	@Deprecated
-	public NativeQuery getNamedNativeQuery(String name) {
-		return this.lazySession.get().getNamedNativeQuery( name );
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	@Deprecated
-	public NativeQuery getNamedNativeQuery(String name, String resultSetMapping) {
-		return this.lazySession.get().getNamedNativeQuery( name, resultSetMapping );
 	}
 
 	@Override
@@ -808,11 +833,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		return this.lazySession.get().find( entityGraph, primaryKey, options );
-	}
-
-	@Override
-	public Object find(String entityName, Object primaryKey) {
-		return this.lazySession.get().find( entityName, primaryKey );
 	}
 
 	@Override
@@ -890,6 +910,11 @@ public class SessionLazyDelegator implements Session {
 		return type.isAssignableFrom( Session.class )
 				? type.cast( this )
 				: lazySession.get().unwrap( type );
+	}
+
+	@Override
+	public NativeQuery getNamedNativeQuery(String name) {
+		return lazySession.get().getNamedNativeQuery( name );
 	}
 
 	@Override

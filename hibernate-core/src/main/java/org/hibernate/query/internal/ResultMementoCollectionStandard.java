@@ -40,6 +40,11 @@ public class ResultMementoCollectionStandard implements ModelPartResultMementoCo
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return pluralAttributeDescriptor.getJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public ResultBuilder resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {

@@ -4,7 +4,12 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -18,6 +23,7 @@ import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.ProjectionSpecification;
 import org.hibernate.query.specification.QuerySpecification;
 import org.hibernate.query.specification.SelectionSpecification;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -36,7 +42,7 @@ import static org.hibernate.internal.util.type.PrimitiveWrappers.cast;
 /**
  * @author Gavin King
  */
-public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T>, TypedQueryReference<Object[]> {
+public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T>, JpaTypedQueryReference<Object[]> {
 
 	private final SelectionSpecification<T> selectionSpecification;
 	private final List<BiFunction<SqmSelectStatement<Object[]>, SqmRoot<T>, SqmSelectableNode<?>>> specifications = new ArrayList<>();
@@ -125,5 +131,35 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	@Override
 	public Map<String, Object> getHints() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return null;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return null;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return null;
+	}
+
+	@Override
+	public Timeout getTimeout() {
+		return null;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return "";
 	}
 }

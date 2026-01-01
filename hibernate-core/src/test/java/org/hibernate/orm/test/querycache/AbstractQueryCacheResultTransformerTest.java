@@ -752,7 +752,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				CriteriaBuilder builder = s.getCriteriaBuilder();
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( Object[].class );
 				JpaRoot<Student> root = criteria.from( Student.class );
-				Join<Object, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
+				Join<Student, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
 				root.fetch( "enrolments", JoinType.LEFT );
 				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
 
@@ -1509,7 +1509,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( Object[].class );
 				Root<Student> root = criteria.from( Student.class );
-				Join<Object, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
+				Join<Student, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
 
 				criteria.multiselect( root, preferredCourse );
 
@@ -1848,7 +1848,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				CriteriaBuilder builder = s.getCriteriaBuilder();
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
 				Root<Enrolment> root = criteria.from( Student.class );
-				final ListJoin<Object, Object> secretCodes = root.joinList( "secretCodes" );
+				final ListJoin<Enrolment, Object> secretCodes = root.joinList( "secretCodes" );
 				criteria.select( secretCodes );
 				return criteria;
 			}
@@ -3114,7 +3114,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
 				Root<Student> root = criteria.from( Student.class );
 
-				final MapJoin<Object, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
+				final MapJoin<Student, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
 
 				criteria.select( addresses.key() );
 				/*
@@ -3155,7 +3155,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
 				Root<Student> root = criteria.from( Student.class );
 
-				final MapJoin<Object, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
+				final MapJoin<Student, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
 
 				criteria.select( addresses.value() );
 				/*
@@ -3196,7 +3196,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery();
 				Root<Student> root = criteria.from( Student.class );
 
-				final MapJoin<Object, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
+				final MapJoin<Student, Object, Order> addresses = root.joinMap( "addresses", JoinType.INNER );
 
 				criteria.select( addresses.entry() );
 				/*

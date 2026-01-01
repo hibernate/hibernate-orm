@@ -78,7 +78,7 @@ public class GetLoadTest {
 					assertTrue( Hibernate.isInitialized( node ) );
 					assertFalse( Hibernate.isInitialized( node.getChildren() ) );
 					assertFalse( Hibernate.isInitialized( node.getParent() ) );
-					assertNull( s.get( Node.class, "xyz" ) );
+					assertNull( s.find( Node.class, "xyz" ) );
 				}
 		);
 
@@ -207,7 +207,7 @@ public class GetLoadTest {
 						entityManager.getTransaction().begin();
 						Session s = (Session) entityManager.getDelegate();
 
-						assertNull( s.get( Workload.class, 999 ) );
+						assertNull( s.find( Workload.class, 999 ) );
 
 						Workload proxy = s.getReference( Workload.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );
@@ -252,7 +252,7 @@ public class GetLoadTest {
 						entityManager.getTransaction().begin();
 						Session s = (Session) entityManager.getDelegate();
 
-						assertNull( s.get( Employee.class, 999 ) );
+						assertNull( s.find( Employee.class, 999 ) );
 
 						Employee proxy = s.getReference( Employee.class, 999 );
 						assertFalse( Hibernate.isInitialized( proxy ) );

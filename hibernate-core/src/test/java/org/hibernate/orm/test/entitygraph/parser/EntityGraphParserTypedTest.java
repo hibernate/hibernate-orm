@@ -65,8 +65,7 @@ public class EntityGraphParserTypedTest {
 		assertNotNull( node );
 		assertEquals( "linkToOne", node.getAttributeName() );
 		assertNullOrEmpty( node.getKeySubgraphs() );
-		@SuppressWarnings("rawtypes")
-		Map<Class, Subgraph> sub = node.getSubgraphs();
+		Map<Class<?>, Subgraph<?>> sub = node.getSubgraphs();
 		assertBasicAttributes( sub.get( GraphParsingTestEntity.class ), "name", "description" );
 	}
 
@@ -84,8 +83,7 @@ public class EntityGraphParserTypedTest {
 		assertNotNull( node );
 		assertEquals( "map", node.getAttributeName() );
 		assertNullOrEmpty( node.getSubgraphs() );
-		@SuppressWarnings("rawtypes")
-		Map<Class, Subgraph> sub = node.getKeySubgraphs();
+		Map<Class<?>, Subgraph<?>> sub = node.getKeySubgraphs();
 		assertBasicAttributes( sub.get( GraphParsingTestEntity.class ), "name", "description" );
 	}
 
@@ -103,8 +101,7 @@ public class EntityGraphParserTypedTest {
 		assertNotNull( node );
 		assertEquals( "map", node.getAttributeName() );
 		assertNullOrEmpty( node.getKeySubgraphs() );
-		@SuppressWarnings("rawtypes")
-		Map<Class, Subgraph> sub = node.getSubgraphs();
+		Map<Class<?>, Subgraph<?>> sub = node.getSubgraphs();
 		assertBasicAttributes( sub.get( GraphParsingTestEntity.class ), "name", "description" );
 	}
 
@@ -121,34 +118,24 @@ public class EntityGraphParserTypedTest {
 
 			AttributeNode<?> linkToOne = getAttributeNodeByName( graph, "linkToOne", true );
 			assertNullOrEmpty( linkToOne.getKeySubgraphs() );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> linkToOneSubgraphs = linkToOne.getSubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph linkToOneRoot = linkToOneSubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> linkToOneSubgraphs = linkToOne.getSubgraphs();
+			Subgraph<?> linkToOneRoot = linkToOneSubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( linkToOneRoot, "name", "description" );
 
 			AttributeNode<?> linkToOneMap = getAttributeNodeByName( linkToOneRoot, "map", true );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> linkToOneMapKeySubgraphs = linkToOneMap.getKeySubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph linkToOneMapKeyRoot = linkToOneMapKeySubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> linkToOneMapKeySubgraphs = linkToOneMap.getKeySubgraphs();
+			Subgraph<?> linkToOneMapKeyRoot = linkToOneMapKeySubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( linkToOneMapKeyRoot, "name" );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> linkToOneMapSubgraphs = linkToOneMap.getSubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph linkToOneMapRoot = linkToOneMapSubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> linkToOneMapSubgraphs = linkToOneMap.getSubgraphs();
+			Subgraph<?> linkToOneMapRoot = linkToOneMapSubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( linkToOneMapRoot, "description" );
 
 			AttributeNode<?> map = getAttributeNodeByName( graph, "map", true );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> mapKeySubgraphs = map.getKeySubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph mapKeyRoot = mapKeySubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> mapKeySubgraphs = map.getKeySubgraphs();
+			Subgraph<?> mapKeyRoot = mapKeySubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( mapKeyRoot, "name", "description" );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> mapSubgraphs = map.getSubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph mapRoot = mapSubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> mapSubgraphs = map.getSubgraphs();
+			Subgraph<?> mapRoot = mapSubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( mapRoot, "description" );
 		}
 	}
@@ -166,24 +153,18 @@ public class EntityGraphParserTypedTest {
 
 			AttributeNode<?> linkToOne = getAttributeNodeByName( graph, "linkToOne", true );
 			assertNullOrEmpty( linkToOne.getKeySubgraphs() );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> linkToOneSubgraphs = linkToOne.getSubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph linkToOneRoot = linkToOneSubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> linkToOneSubgraphs = linkToOne.getSubgraphs();
+			Subgraph<?> linkToOneRoot = linkToOneSubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( linkToOneRoot, "name", "description" );
 
 			AttributeNode<?> linkToOneMap = getAttributeNodeByName( linkToOneRoot, "map", true );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> linkToOneMapKeySubgraphs = linkToOneMap.getKeySubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph linkToOneMapKeyRoot = linkToOneMapKeySubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> linkToOneMapKeySubgraphs = linkToOneMap.getKeySubgraphs();
+			Subgraph<?> linkToOneMapKeyRoot = linkToOneMapKeySubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( linkToOneMapKeyRoot, "name" );
 
 			AttributeNode<?> map = getAttributeNodeByName( graph, "map", true );
-			@SuppressWarnings("rawtypes")
-			Map<Class, Subgraph> mapSubgraphs = map.getSubgraphs();
-			@SuppressWarnings("rawtypes")
-			Subgraph mapRoot = mapSubgraphs.get( GraphParsingTestEntity.class );
+			Map<Class<?>, Subgraph<?>> mapSubgraphs = map.getSubgraphs();
+			Subgraph<?> mapRoot = mapSubgraphs.get( GraphParsingTestEntity.class );
 			assertBasicAttributes( mapRoot, "description", "name" );
 		}
 	}

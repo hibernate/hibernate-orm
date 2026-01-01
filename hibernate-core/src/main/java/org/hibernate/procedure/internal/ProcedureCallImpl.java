@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -118,22 +119,6 @@ public class ProcedureCallImpl<R>
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
 	private ProcedureOutputsImpl outputs;
-
-	private static String mappingId(String procedureName, Class<?>[] resultClasses) {
-		assert resultClasses != null && resultClasses.length > 0;
-		return procedureName + ":" + join( ",", resultClasses );
-	}
-
-	private static String mappingId(String procedureName, String[] resultSetMappingNames) {
-		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
-		return procedureName + ":" + join( ",", resultSetMappingNames );
-	}
-
-	private void registerParameters(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
-		for ( var parameterMemento : memento.getParameterMementos() ) {
-			registerParameter( parameterMemento.resolve( session ) );
-		}
-	}
 
 	private ProcedureCallImpl(
 			SharedSessionContractImplementor session,
@@ -276,6 +261,22 @@ public class ProcedureCallImpl<R>
 		applyOptions( memento );
 	}
 
+	private static String mappingId(String procedureName, Class<?>[] resultClasses) {
+		assert resultClasses != null && resultClasses.length > 0;
+		return procedureName + ":" + join( ",", resultClasses );
+	}
+
+	private static String mappingId(String procedureName, String[] resultSetMappingNames) {
+		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
+		return procedureName + ":" + join( ",", resultSetMappingNames );
+	}
+
+	private void registerParameters(SharedSessionContractImplementor session, NamedCallableQueryMemento memento) {
+		for ( var parameterMemento : memento.getParameterMementos() ) {
+			registerParameter( parameterMemento.resolve( session ) );
+		}
+	}
+
 	private void applyCallableFunctionHint() {
 		final List<Class<?>> resultTypes = new ArrayList<>();
 		resultSetMapping.visitResultBuilders(
@@ -339,6 +340,14 @@ public class ProcedureCallImpl<R>
 
 	private void markAsFunctionCallRefRefCursor() {
 		functionReturn = new FunctionReturnImpl<>( this, Types.REF_CURSOR );
+	}
+
+	@Override
+	public <T> Parameter<T> registerResultParameter(Class<T> aClass) {
+		//noinspection resource
+		markAsFunctionCall( aClass );
+		//noinspection unchecked
+		return (Parameter<T>) functionReturn;
 	}
 
 	@Override
@@ -541,6 +550,16 @@ public class ProcedureCallImpl<R>
 				new ProcedureParameterImpl<>( name, mode, getExpressibleJavaType( parameterType ), parameterType );
 		registerParameter( parameter );
 		return parameter;
+	}
+
+	@Override
+	public <T> Parameter<T> registerConvertedParameter(int position, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public <T> Parameter<T> registerConvertedParameter(String parameterName, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	private <T> Class<T> getExpressibleJavaType(Type<T> parameterType) {
@@ -793,7 +812,7 @@ public class ProcedureCallImpl<R>
 				getCacheMode(),
 				getQueryOptions().getFlushMode(),
 				isReadOnly(),
-				getTimeout(),
+				getQueryOptions().getTimeout(),
 				getFetchSize(),
 				getComment(),
 				getHints()
@@ -887,6 +906,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public <T> T getOutputParameterValue(Parameter<T> parameter) {
+		return getOutputs().getOutputParameterValue( (ProcedureParameter<T>) parameter );
+	}
+
+	@Override
 	public boolean hasMoreResults() {
 		final var outputs = getOutputs();
 		return outputs.goToNext()
@@ -976,6 +1000,18 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public <R1> List<R1> getResultList(Class<R1> type) {
+		//noinspection unchecked
+		return (List<R1>) doList();
+	}
+
+	@Override
+	public <R1> List<R1> getResultList(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		//noinspection unchecked
+		return (List<R1>) doList();
+	}
+
+	@Override
 	public R getSingleResult() {
 		final var resultList = getResultList();
 		if ( resultList == null || resultList.isEmpty() ) {
@@ -990,6 +1026,18 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public <R1> R1 getSingleResult(Class<R1> aClass) {
+		//noinspection unchecked
+		return (R1) getSingleResult();
+	}
+
+	@Override
+	public <R1> R1 getSingleResult(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		//noinspection unchecked
+		return (R1) getSingleResult();
+	}
+
+	@Override
 	public R getSingleResultOrNull() {
 		final var resultList = getResultList();
 		if ( resultList == null || resultList.isEmpty() ) {
@@ -1000,6 +1048,18 @@ public class ProcedureCallImpl<R>
 												+ "' returned multiple results" );
 		}
 		return resultList.get( 0 );
+	}
+
+	@Override
+	public <R1> R1 getSingleResultOrNull(Class<R1> aClass) {
+		//noinspection unchecked
+		return (R1) getSingleResultOrNull();
+	}
+
+	@Override
+	public <R1> R1 getSingleResultOrNull(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		//noinspection unchecked
+		return (R1) getSingleResultOrNull();
 	}
 
 	@Override
@@ -1048,6 +1108,18 @@ public class ProcedureCallImpl<R>
 			timeout = -1;
 		}
 		super.setTimeout( (int) timeout );
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setTimeout(int timeout) {
+		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setTimeout(Timeout timeout) {
+		super.setTimeout( timeout );
 		return this;
 	}
 
@@ -1127,8 +1199,32 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+		super.setParameter( name, value, javaTypeClass );
+		return this;
+	}
+
+	@Override
+	public <P> ProcedureCallImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( name, value, converter );
+		return this;
+	}
+
+	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
 		super.setParameter( position, value );
+		return this;
+	}
+
+	@Override
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+		super.setParameter( position, value, javaTypeClass );
+		return this;
+	}
+
+	@Override
+	public <P> ProcedureCallImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( position, value, converter );
 		return this;
 	}
 

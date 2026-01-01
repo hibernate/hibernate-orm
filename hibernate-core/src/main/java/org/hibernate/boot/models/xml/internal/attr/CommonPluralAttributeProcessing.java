@@ -110,8 +110,10 @@ public class CommonPluralAttributeProcessing {
 					JpaAnnotations.MAP_KEY,
 					buildingContext
 			);
-			if ( jaxbPluralAttribute.getMapKey() != null && StringHelper.isNotEmpty( jaxbPluralAttribute.getMapKey().getName() ) ) {
-				mapKeyAnn.name( jaxbPluralAttribute.getMapKey().getName() );
+			if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getMapKey().getName() ) ) {
+				// since name() is deprecated with value() as a replacement
+				mapKeyAnn.value( jaxbPluralAttribute.getMapKey().getName() );
+				mapKeyAnn.name( "" );
 			}
 		}
 

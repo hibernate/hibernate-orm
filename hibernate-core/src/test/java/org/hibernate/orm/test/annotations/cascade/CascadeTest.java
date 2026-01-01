@@ -111,12 +111,9 @@ public class CascadeTest {
 					session.remove( t.mouth );
 				}
 		);
-		scope.inTransaction(
-				session -> {
-					Tooth t = session.get( Tooth.class, tooth.id );
-					assertNull( t );
-				}
-		);
+		scope.inTransaction( session -> {
+			assertNull( session.find( Tooth.class, tooth.id ) );
+		} );
 	}
 
 	@Test

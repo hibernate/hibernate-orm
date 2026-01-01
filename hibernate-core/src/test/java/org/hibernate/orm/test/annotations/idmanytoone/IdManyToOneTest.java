@@ -100,7 +100,7 @@ public class IdManyToOneTest {
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Course> criteria = criteriaBuilder.createQuery( Course.class );
 			Root<Course> root = criteria.from( Course.class );
-			Join<Object, Object> students = root.join( "students", JoinType.INNER );
+			Join<Course, Object> students = root.join( "students", JoinType.INNER );
 			Join<Object, Object> student = students.join( "student", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( student.get( "name" ), "Foo" ) );
 			s.createQuery( criteria ).list();

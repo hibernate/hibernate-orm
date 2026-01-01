@@ -27,14 +27,14 @@ import jakarta.persistence.metamodel.Type;
  * A {@code MutationQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link QueryProducer#createMutationQuery(String)}, passing the HQL as a
+ * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(String)}, passing the HQL as a
  *     string,
- * <li>{@link QueryProducer#createNativeMutationQuery(String)}, passing native
+ * <li>{@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)}, passing native
  *     SQL as a string,
- * <li>{@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
- *     {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
+ * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
+ *     {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
  *     passing a criteria update or delete object, or
- * <li>{@link QueryProducer#createNamedMutationQuery(String)}, passing the
+ * <li>{@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)}, passing the
  *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
  *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
@@ -63,18 +63,18 @@ public interface MutationQuery extends CommonQueryContract {
 	 * number of affected entities.
 	 * <p>
 	 * For use with instances of {@code MutationQuery} created using
-	 * {@link QueryProducer#createMutationQuery(String)},
-	 * {@link QueryProducer#createNamedMutationQuery(String)},
-	 * {@link QueryProducer#createNativeMutationQuery(String)},
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
 	 *
-	 * @see QueryProducer#createMutationQuery(String)
-	 * @see QueryProducer#createNamedMutationQuery(String)
-	 * @see QueryProducer#createNativeMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createNamedMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createNativeMutationQuery(String)
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 */

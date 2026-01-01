@@ -7,40 +7,32 @@ package org.hibernate.processor.util;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Hardy Ferentschik
  */
-public class FileTimeStampChecker implements Serializable {
+public final class FileTimeStampChecker implements Serializable {
 
-	private Map<String, Long> lastModifiedCache;
-
-	public FileTimeStampChecker() {
-		lastModifiedCache = new HashMap<String, Long>();
-	}
+	private final Map<String, Long> lastModifiedCache = new HashMap<>();
 
 	public void add(String fileName, Long lastModified) {
 		lastModifiedCache.put( fileName, lastModified );
 	}
 
 	@Override
-	public boolean equals(@Nullable Object o) {
-		if ( this == o ) {
+	public boolean equals(@Nullable Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof FileTimeStampChecker that ) ) {
 			return false;
 		}
-
-		FileTimeStampChecker that = (FileTimeStampChecker) o;
-
-		if ( !lastModifiedCache.equals( that.lastModifiedCache ) ) {
-			return false;
+		else {
+			return Objects.equals( this.lastModifiedCache, that.lastModifiedCache );
 		}
-
-		return true;
 	}
 
 	@Override
@@ -50,10 +42,6 @@ public class FileTimeStampChecker implements Serializable {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "FileTimeStampChecker" );
-		sb.append( "{lastModifiedCache=" ).append( lastModifiedCache );
-		sb.append( '}' );
-		return sb.toString();
+		return "FileTimeStampChecker{lastModifiedCache=" + lastModifiedCache + '}';
 	}
 }

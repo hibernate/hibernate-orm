@@ -15,7 +15,6 @@ import java.util.Objects;
  * @author Steve Ebersole
  */
 public class Origin implements Serializable {
-	public static final String UNKNOWN_FILE_PATH = "<unknown>";
 
 	private final SourceType type;
 	private final String name;

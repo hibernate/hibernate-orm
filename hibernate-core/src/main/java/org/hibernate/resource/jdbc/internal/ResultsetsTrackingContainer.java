@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * We used to record Statement(s) and their associated ResultSet(s) in a Map
@@ -123,12 +123,7 @@ final class ResultsetsTrackingContainer {
 	}
 
 	private ResultSetsSet ensureWriteable(final ResultSetsSet value) {
-		if ( value == null || value == EMPTY) {
-			return new ResultSetsSet();
-		}
-		else {
-			return value;
-		}
+		return value == null || value == EMPTY ? new ResultSetsSet() : value;
 	}
 
 	//As it's a get "for removal" we won't be wrapping an EMPTY set
@@ -179,7 +174,7 @@ final class ResultsetsTrackingContainer {
 		// proxy/wrapper around the JDBC Statement,
 		// causing excessive logging here. See HHH-8210.
 		if ( existingEntry == null ) {
-			CORE_LOGGER.trace( "ResultSet statement was not registered (on register)" );
+			JDBC_LOGGER.resultSetStatementWasNotRegistered();
 		}
 		return true;
 	}

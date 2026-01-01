@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static java.util.Collections.unmodifiableMap;
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 
@@ -129,7 +129,7 @@ public class MetadataContext {
 		return typeConfiguration;
 	}
 
-	public JavaTypeRegistry getJavaTypeRegistry(){
+	public JavaTypeRegistry getJavaTypeRegistry() {
 		return typeConfiguration.getJavaTypeRegistry();
 	}
 
@@ -172,7 +172,7 @@ public class MetadataContext {
 		return mappedSuperClassTypeMap;
 	}
 
-	public  void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
+	public void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
 		final var javaType = entityType.getJavaType();
 		if ( javaType != null && javaType != Map.class ) {
 			entityTypes.put( javaType, entityType );
@@ -222,7 +222,6 @@ public class MetadataContext {
 	 * implementation.  May return null if the given {@link PersistentClass} has not yet been processed.
 	 *
 	 * @param persistentClass The Hibernate (config time) metamodel instance representing an entity.
-	 *
 	 * @return Tne corresponding JPA {@link org.hibernate.type.EntityType}, or null if not yet processed.
 	 */
 	public EntityDomainType<?> locateEntityType(PersistentClass persistentClass) {
@@ -234,7 +233,6 @@ public class MetadataContext {
 	 * return null which could mean that no such mapping exists at least at this time.
 	 *
 	 * @param javaType The java class.
-	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
 	public EntityDomainType<?> locateEntityType(Class<?> javaType) {
@@ -246,7 +244,6 @@ public class MetadataContext {
 	 * return null which could means that no such mapping exists at least at this time.
 	 *
 	 * @param entityName The entity-name.
-	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
 	public IdentifiableDomainType<?> locateIdentifiableType(String entityName) {
@@ -287,9 +284,7 @@ public class MetadataContext {
 	}
 
 	public void wrapUp() {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Wrapping up metadata context..." );
-		}
+		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.wrappingUpMetadataContext();
 
 		final boolean staticMetamodelScanEnabled =
 				jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
@@ -298,8 +293,9 @@ public class MetadataContext {
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
 			if ( mapping instanceof PersistentClass persistentClass ) {
-				if ( CORE_LOGGER.isTraceEnabled() ) {
-					CORE_LOGGER.trace( "Starting entity [" + persistentClass.getEntityName() + ']' );
+				if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+					MAPPING_MODEL_CREATION_MESSAGE_LOGGER.startingEntity(
+							persistentClass.getEntityName() );
 				}
 				try {
 					final var jpaMapping = entityTypesByPersistentClass.get( persistentClass );
@@ -310,7 +306,7 @@ public class MetadataContext {
 
 					for ( var property : persistentClass.getDeclaredProperties() ) {
 						if ( property.getValue() == persistentClass.getIdentifierMapper() ) {
-							// property represents special handling for id-class mappings but we have already
+							// property represents special handling for id-class mappings, but we have already
 							// accounted for the embedded property mappings in #applyIdMetadata &&
 							// #buildIdClassAttributes
 							continue;
@@ -333,14 +329,16 @@ public class MetadataContext {
 					}
 				}
 				finally {
-					if ( CORE_LOGGER.isTraceEnabled() ) {
-						CORE_LOGGER.trace( "Completed entity [" + persistentClass.getEntityName() + ']' );
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.completedEntity(
+								persistentClass.getEntityName() );
 					}
 				}
 			}
 			else if ( mapping instanceof MappedSuperclass mappedSuperclass ) {
-				if ( CORE_LOGGER.isTraceEnabled() ) {
-					CORE_LOGGER.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
+				if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+					MAPPING_MODEL_CREATION_MESSAGE_LOGGER.startingMappedSuperclass(
+							mappedSuperclass.getMappedClass().getName() );
 				}
 				try {
 					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
@@ -363,15 +361,16 @@ public class MetadataContext {
 						buildAttribute( property, jpaType );
 					}
 
-					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
+					((AttributeContainer<?>) jpaType).getInFlightAccess().finishUp();
 
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpaType, processedMetamodelClasses );
 					}
 				}
 				finally {
-					if ( CORE_LOGGER.isTraceEnabled() ) {
-						CORE_LOGGER.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.completedMappedSuperclass(
+								mappedSuperclass.getMappedClass().getName() );
 					}
 				}
 			}
@@ -381,7 +380,7 @@ public class MetadataContext {
 		}
 
 
-		while ( ! embeddablesToProcess.isEmpty() ) {
+		while ( !embeddablesToProcess.isEmpty() ) {
 			final List<EmbeddableDomainType<?>> processingEmbeddables =
 					new ArrayList<>( embeddablesToProcess.size() );
 			for ( var embeddableDomainTypes : embeddablesToProcess.values() ) {
@@ -420,7 +419,7 @@ public class MetadataContext {
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {
-		final var attribute = buildAttribute( embeddable, property);
+		final var attribute = buildAttribute( embeddable, property );
 		if ( attribute != null ) {
 			final var superclassProperty =
 					getMappedSuperclassProperty( property.getName(),
@@ -547,7 +546,7 @@ public class MetadataContext {
 		final var idAttributes = idClassAttributes( idType, propertySpan, cidProperties );
 		final var managedType = (ManagedDomainType<T>) identifiableType;
 		final var container = (AttributeContainer<T>) managedType;
-		container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType);
+		container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 	}
 
 	private <T> Set<SingularPersistentAttribute<? super T, ?>> idClassAttributes(
@@ -560,7 +559,7 @@ public class MetadataContext {
 		}
 		else {
 			final Set<SingularPersistentAttribute<? super T, ?>> result = new HashSet<>( propertySpan );
-			for ( Property cidSubproperty : cidProperties ) {
+			for ( var cidSubproperty : cidProperties ) {
 				result.add( buildIdAttribute( idType, cidSubproperty ) );
 			}
 			return result;
@@ -570,7 +569,7 @@ public class MetadataContext {
 	private Property getMappedSuperclassIdentifier(PersistentClass persistentClass) {
 		MappedSuperclass mappedSuperclass = getMappedSuperclass( persistentClass );
 		while ( mappedSuperclass != null ) {
-			final Property declaredIdentifierProperty = mappedSuperclass.getDeclaredIdentifierProperty();
+			final var declaredIdentifierProperty = mappedSuperclass.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
 				return declaredIdentifierProperty;
 			}
@@ -607,7 +606,7 @@ public class MetadataContext {
 		final var managedType = (ManagedDomainType<X>) jpaMappingType;
 		final var attributeContainer = (AttributeContainer<X>) managedType;
 		if ( mappingType.hasIdentifierProperty() ) {
-			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
+			final var declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
 				final var attribute =
 						(SingularPersistentAttribute<X, ?>)
@@ -715,8 +714,9 @@ public class MetadataContext {
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
 			IdentifiableDomainType<X> ownerType,
 			List<Property> properties) {
-		if ( CORE_LOGGER.isTraceEnabled() ) {
-			CORE_LOGGER.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
+		if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.buildingOldSchoolCompositeIdentifier(
+					ownerType.getJavaType().getName() );
 		}
 		final Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
 		for ( var property : properties ) {
@@ -819,10 +819,7 @@ public class MetadataContext {
 			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
 		}
 		catch (NoSuchFieldException e) {
-			CORE_LOGGER.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
-//			throw new AssertionFailure(
-//					"Unable to locate static metamodel field: " + metamodelClass.getName() + '#' + name
-//			);
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
 		}
 	}
 
@@ -858,7 +855,7 @@ public class MetadataContext {
 		return new HashSet<>( knownMappedSuperclasses );
 	}
 
-	private final Map<Class<?>,BasicDomainType<?>> basicDomainTypeMap = new HashMap<>();
+	private final Map<Class<?>, BasicDomainType<?>> basicDomainTypeMap = new HashMap<>();
 
 	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
 		@SuppressWarnings("unchecked")

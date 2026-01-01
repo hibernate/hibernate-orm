@@ -6,7 +6,6 @@ package org.hibernate.service.spi;
 
 import org.hibernate.service.Service;
 
-import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 

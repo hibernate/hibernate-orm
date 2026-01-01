@@ -53,13 +53,14 @@ public interface LobCreationLogging extends BasicLogger {
 	void nonContextualLobCreationDialect();
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as createClob() method threw error : %s", id = 10010005)
+	@Message(value = "Disabling contextual LOB creation as createClob() method threw error: %s", id = 10010005)
 	void contextualClobCreationFailed(Throwable t);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual NCLOB creation as createNClob() method threw error : %s", id = 10010006)
+	@Message(value = "Disabling contextual NCLOB creation as createNClob() method threw error: %s", id = 10010006)
 	void contextualNClobCreationFailed(Throwable t);
 
-	@Message( value = "Falling back to non-contextual LOB creation", id = 10010007 )
+	@LogMessage(level = DEBUG)
+	@Message(value = "Falling back to non-contextual LOB creation", id = 10010007)
 	void fallingBackToNonContextual();
 }

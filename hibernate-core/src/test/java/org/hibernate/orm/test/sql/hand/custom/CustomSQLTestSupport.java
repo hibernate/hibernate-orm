@@ -83,7 +83,7 @@ public abstract class CustomSQLTestSupport {
 
 		scope.inTransaction(
 				session -> {
-					Iterator itr = session.getNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
+					Iterator itr = session.createNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
 					assertThat( itr.hasNext() ).isTrue();
 					Organization o = (Organization) itr.next();
 					assertThat( o.getEmployments() ).hasSize( 3 );

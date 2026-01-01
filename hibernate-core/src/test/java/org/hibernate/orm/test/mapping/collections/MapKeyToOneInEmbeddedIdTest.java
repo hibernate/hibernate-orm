@@ -79,7 +79,7 @@ public class MapKeyToOneInEmbeddedIdTest {
 		private Integer id;
 
 		@ManyToMany
-		@MapKey( name = "id.entity" )
+		@MapKey( "id.entity" )
 		private Map<EntityC, EntityB> bEntities = new HashMap<>();
 
 		public EntityA() {

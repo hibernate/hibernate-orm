@@ -59,7 +59,7 @@ public class HqlSelectTest {
 		});
 
 		scope.inTransaction( s -> {
-			WithHqlSelect wss = s.get( WithHqlSelect.class, withHqlSelect.id );
+			WithHqlSelect wss = s.find( WithHqlSelect.class, withHqlSelect.id );
 			assertNull( wss );
 		});
 	}

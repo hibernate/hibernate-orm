@@ -4,8 +4,10 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
@@ -238,10 +240,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				JDBC_LOGGER.settingFetchSize( fetchSize );
 				preparedStatement.setFetchSize( fetchSize );
 			}
-			final Integer timeout = queryOptions.getTimeout();
-			if ( timeout != null ) {
-				JDBC_LOGGER.settingQueryTimeout( timeout );
-				preparedStatement.setQueryTimeout( timeout );
+			final Timeout timeout = queryOptions.getTimeout();
+			if ( Timeouts.isRealTimeout( timeout ) ) {
+				// JDBC expects timeout in seconds
+				final int timeoutInSeconds = Timeouts.getTimeoutInSeconds( timeout );
+				JDBC_LOGGER.settingQueryTimeout( timeoutInSeconds );
+				preparedStatement.setQueryTimeout( timeoutInSeconds );
 			}
 		}
 	}

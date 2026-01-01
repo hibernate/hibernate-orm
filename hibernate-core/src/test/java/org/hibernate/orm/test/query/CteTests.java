@@ -348,7 +348,7 @@ public class CteTests {
 					);
 
 					final JpaRoot<Tuple> root = cq.from( alternativeContacts );
-					final JpaJoin<Object, Object> alt = root.join( "alt" );
+					final JpaJoin<Tuple, Object> alt = root.join( "alt" );
 					cq.multiselect( alt );
 					cq.orderBy( cb.asc( alt.get( "id" ) ) );
 
@@ -405,7 +405,7 @@ public class CteTests {
 					);
 
 					final JpaRoot<Tuple> root = cq.from( alternativeContacts );
-					final JpaJoin<Object, Object> alt = root.join( "alt" );
+					final JpaJoin<Tuple, Object> alt = root.join( "alt" );
 					cq.multiselect( alt, root.get( "isCycle" ) );
 					cq.orderBy( cb.asc( alt.get( "id" ) ), cb.asc( root.get( "isCycle" ) ) );
 
@@ -468,7 +468,7 @@ public class CteTests {
 					);
 
 					final JpaRoot<Tuple> root = cq.from( alternativeContacts );
-					final JpaJoin<Object, Object> alt = root.join( "alt" );
+					final JpaJoin<Tuple, Object> alt = root.join( "alt" );
 					cq.multiselect( alt, root.get( "isCycle" ) );
 					cq.orderBy( cb.asc( alt.get( "id" ) ), cb.asc( root.get( "isCycle" ) ) );
 

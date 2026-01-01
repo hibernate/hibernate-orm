@@ -26,6 +26,7 @@ public enum FetchTiming {
 		return switch (type) {
 			case EAGER -> IMMEDIATE;
 			case LAZY -> DELAYED;
+			case DEFAULT -> throw new UnsupportedOperationException( "Not implemented yet - decide how to handle" );
 		};
 	}
 }

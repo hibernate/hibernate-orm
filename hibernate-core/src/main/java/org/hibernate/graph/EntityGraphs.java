@@ -327,8 +327,9 @@ public final class EntityGraphs {
 			return false;
 		}
 		else if ( a.getAttributeName().equals( b.getAttributeName() ) ) {
-			return areEqual( a.getSubgraphs(), b.getSubgraphs() )
-				&& areEqual( a.getKeySubgraphs(), b.getKeySubgraphs() );
+			//noinspection rawtypes,unchecked
+			return areEqual( (Map) a.getSubgraphs(), (Map) b.getSubgraphs() )
+				&& areEqual( (Map) a.getKeySubgraphs(), (Map) b.getKeySubgraphs() );
 		}
 		else {
 			return false;

@@ -54,7 +54,7 @@ public class BasicSelectionQueryTests {
 	public void rawEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// its unbounded
-			final SelectionQuery<?> query = session.createSelectionQuery( "select c from DummyEntity c" );
+			final SelectionQuery<?> query = session.createSelectionQuery( "select c from DummyEntity c", Object.class );
 			checkResults( query, session );
 		} );
 	}
@@ -119,10 +119,10 @@ public class BasicSelectionQueryTests {
 	@Test
 	public void rawScalarSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SelectionQuery<?> nameQuery = session.createSelectionQuery( "select c.name from Contact c" );
+			final SelectionQuery<?> nameQuery = session.createSelectionQuery( "select c.name from Contact c", Object.class );
 			checkResults( nameQuery, session );
 
-			final SelectionQuery<?> firstNameQuery = session.createSelectionQuery( "select c.name.first from Contact c" );
+			final SelectionQuery<?> firstNameQuery = session.createSelectionQuery( "select c.name.first from Contact c", Object.class );
 			checkResults( firstNameQuery, session );
 		} );
 	}
@@ -141,10 +141,10 @@ public class BasicSelectionQueryTests {
 	@Test
 	public void rawNamedSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SelectionQuery<?> nameQuery = session.createNamedSelectionQuery( "hql-name" );
+			final SelectionQuery<?> nameQuery = session.createNamedSelectionQuery( "hql-name", Object.class );
 			checkResults( nameQuery, session );
 
-			final SelectionQuery<?> firstNameQuery = session.createNamedSelectionQuery( "hql-first-name" );
+			final SelectionQuery<?> firstNameQuery = session.createNamedSelectionQuery( "hql-first-name", Object.class );
 			checkResults( firstNameQuery, session );
 		} );
 	}
@@ -153,7 +153,7 @@ public class BasicSelectionQueryTests {
 	public void mutationAsSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			try {
-				session.createSelectionQuery( "delete from Contact" );
+				session.createSelectionQuery( "delete from Contact", Object.class );
 				fail( "Expecting IllegalSelectQueryException" );
 			}
 			catch (IllegalSelectQueryException expected) {
@@ -165,7 +165,7 @@ public class BasicSelectionQueryTests {
 	public void namedMutationAsSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			try {
-				session.createNamedSelectionQuery( "hql-mutation" );
+				session.createNamedSelectionQuery( "hql-mutation", Object.class );
 				fail( "Expecting IllegalSelectQueryException" );
 			}
 			catch (IllegalSelectQueryException expected) {

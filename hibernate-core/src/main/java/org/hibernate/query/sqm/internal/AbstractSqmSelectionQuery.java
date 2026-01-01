@@ -312,7 +312,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( memento.getParameterTypes() != null ) {
 			final var basicTypeRegistry = getTypeConfiguration().getBasicTypeRegistry();
 			final var parameterMetadata = getParameterMetadata();
-			memento.getParameterTypes().forEach( (key, value) ->
+			memento.getAnticipatedParameterTypes().forEach( (key, value) ->
 					parameterMetadata.getQueryParameter( key )
 							.applyAnticipatedType( basicTypeRegistry.getRegisteredType( value ) ) );
 		}

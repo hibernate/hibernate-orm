@@ -20,7 +20,7 @@ import org.hibernate.annotations.SortNatural;
 public class Training {
 	@Id @GeneratedValue private Long id;
 	@SortNatural
-	@MapKey(name="name") @ManyToMany SortedMap<String, Trainee> trainees = new TreeMap<String, Trainee>();
+	@MapKey("name") @ManyToMany SortedMap<String, Trainee> trainees = new TreeMap<>();
 
 	public Long getId() {
 		return id;

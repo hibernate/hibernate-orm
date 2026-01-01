@@ -255,6 +255,15 @@ public class QueryProcessing {
 					constructorResult.columns( columnResults );
 				}
 			}
+			if ( CollectionHelper.isNotEmpty( jaxbConstructorResult.getEntities() ) ) {
+				final EntityResult[] entityResults = extractEntityResults(
+						jaxbConstructorResult.getEntities(),
+						xmlDocumentContext
+				);
+				if ( entityResults != null ) {
+					constructorResult.entities( entityResults );
+				}
+			}
 		}
 		return constructorResults;
 	}

@@ -37,6 +37,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 
+import static jakarta.persistence.FetchType.DEFAULT;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
@@ -347,7 +348,7 @@ public class ToOneBinder {
 			toOne.setUnwrapProxy( true );
 		}
 		else {
-			final boolean eager = isEager( property );
+			final boolean eager = isEager( property, toOne.getBuildingContext() );
 			toOne.setLazy( !eager );
 			toOne.setUnwrapProxy( eager );
 			toOne.setUnwrapProxyImplicit( true );
@@ -374,7 +375,7 @@ public class ToOneBinder {
 			setHibernateFetchMode( toOne, property, fetchAnnotationUsage.value() );
 		}
 		else {
-			toOne.setFetchMode( getFetchMode( getJpaFetchType( property ) ) );
+			toOne.setFetchMode( getFetchMode( getJpaFetchType( property, toOne.getBuildingContext() ) ) );
 		}
 	}
 
@@ -396,22 +397,30 @@ public class ToOneBinder {
 		}
 	}
 
-	private static boolean isEager(MemberDetails property) {
-		return getJpaFetchType( property ) == EAGER;
+	private static boolean isEager(MemberDetails property, MetadataBuildingContext context) {
+		return getJpaFetchType( property, context ) == EAGER;
 	}
 
-	private static FetchType getJpaFetchType(MemberDetails property) {
+	private static FetchType getJpaFetchType(MemberDetails property, MetadataBuildingContext context) {
 		final var manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
-		final var oneToOne = property.getDirectAnnotationUsage( OneToOne.class );
 		if ( manyToOne != null ) {
-			return manyToOne.fetch();
+			return handlingDefault( manyToOne.fetch(), context );
 		}
-		else if ( oneToOne != null ) {
-			return oneToOne.fetch();
+
+		final var oneToOne = property.getDirectAnnotationUsage( OneToOne.class );
+		if ( oneToOne != null ) {
+			return handlingDefault( oneToOne.fetch(), context );
 		}
-		else {
-			throw new AssertionFailure("Define fetch strategy on a property not annotated with @OneToMany nor @OneToOne");
-		}
+
+		throw new AssertionFailure("Define fetch strategy on a property not annotated with @OneToMany nor @OneToOne");
+	}
+
+	private static FetchType handlingDefault(FetchType specifiedType, MetadataBuildingContext context) {
+		return specifiedType == DEFAULT
+				// todo (jpa4) : account for the JPA 4.0 notion of default-to-one-fetch-type
+				//		ideally, somehow account for it as part of MappingDefaults
+				? context.getEffectiveDefaults().isDefaultEntityLaziness() ? LAZY : EAGER
+				: specifiedType;
 	}
 
 	static void bindOneToOne(

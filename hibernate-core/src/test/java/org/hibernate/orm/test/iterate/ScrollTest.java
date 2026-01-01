@@ -49,7 +49,7 @@ public class ScrollTest {
 
 		scope.inTransaction(
 				s -> {
-					try (ScrollableResults sr = s.getNamedQuery( "Item.nameDesc" ).scroll()) {
+					try (ScrollableResults sr = s.createNamedQuery( "Item.nameDesc", Item.class ).scroll()) {
 						assertTrue( sr.next() );
 						Item i1 = (Item) sr.get();
 						assertTrue( sr.next() );

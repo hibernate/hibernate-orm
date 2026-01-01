@@ -48,6 +48,11 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	protected SubGraphImplementor<E> valueSubgraph;
 	protected SubGraphImplementor<K> keySubgraph;
 
+	@Override
+	public Attribute<?, J> getAttribute() {
+		return attribute;
+	}
+
 	static <J> AttributeNodeImpl<J,?,?> create(
 			PersistentAttribute<?, J> attribute, boolean mutable) {
 		if ( attribute instanceof PluralPersistentAttribute<?, J, ?> pluralAttribute ) {

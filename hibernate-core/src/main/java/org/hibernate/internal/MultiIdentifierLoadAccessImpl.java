@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.find.FindMultipleByKeyOperation;
+import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -38,7 +38,7 @@ import static java.util.Collections.emptyList;
 ///
 /// @author Steve Ebersole
 ///
-/// @deprecated Use [FindMultipleByKeyOperation] instead.
+/// @deprecated Use [StatefulFindMultipleByKeyOperation] instead.
 @Deprecated
 class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiIdLoadOptions {
 	private final SharedSessionContractImplementor session;
@@ -172,12 +172,13 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(K... ids) {
-		return buildOperation().performFind( List.of( ids ), graphSemantic, rootGraph, (LoadAccessContext) session );
+		return buildOperation().performFind( List.of( ids ), graphSemantic, rootGraph );
 	}
 
-	private FindMultipleByKeyOperation<T> buildOperation() {
-		return new FindMultipleByKeyOperation<T>(
+	private StatefulFindMultipleByKeyOperation<T> buildOperation() {
+		return new StatefulFindMultipleByKeyOperation<T>(
 				entityPersister,
+				(LoadAccessContext) session,
 				KeyType.IDENTIFIER,
 				batchSize,
 				sessionCheckMode,
@@ -198,7 +199,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	public <K> List<T> multiLoad(List<K> ids) {
 		return ids.isEmpty()
 				? emptyList()
-				: buildOperation().performFind( (List<Object>)ids, graphSemantic, rootGraph, (LoadAccessContext) session );
+				: buildOperation().performFind( (List<Object>)ids, graphSemantic, rootGraph );
 	}
 
 	@Override

@@ -52,15 +52,15 @@ public class JoinedSubclassTest {
 
 		Customer c = scope.fromTransaction(
 				session ->
-						session.get( Customer.class, e.getId() )
+						session.find( Customer.class, e.getId() )
 
 		);
 		assertNull( c );
 
 		scope.inTransaction(
 				session -> {
-					Employee employee = session.get( Employee.class, e.getId() );
-					Customer customer = session.get( Customer.class, e.getId() );
+					Employee employee = session.find( Employee.class, e.getId() );
+					Customer customer = session.find( Customer.class, e.getId() );
 					assertNotNull( employee );
 					assertNull( customer );
 				}

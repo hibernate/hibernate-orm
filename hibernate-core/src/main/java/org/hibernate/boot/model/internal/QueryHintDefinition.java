@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.util.Map;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -107,6 +108,11 @@ public class QueryHintDefinition {
 		}
 
 		return getInteger( HibernateHints.HINT_TIMEOUT );
+	}
+
+	public Timeout getTimeoutRef() {
+		final Integer timeoutSeconds = getTimeout();
+		return timeoutSeconds == null ? null : Timeout.seconds( timeoutSeconds );
 	}
 
 	public boolean getCacheability() {

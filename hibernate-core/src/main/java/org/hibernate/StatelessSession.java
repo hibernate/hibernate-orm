@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
 import org.hibernate.graph.GraphSemantic;
 
@@ -78,7 +79,7 @@ import java.util.List;
  *
  * @author Gavin King
  */
-public interface StatelessSession extends SharedSessionContract {
+public interface StatelessSession extends SharedSessionContract, EntityAgent {
 
 	/**
 	 * Insert a record.
@@ -94,7 +95,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *
 	 * @return The identifier of the inserted entity
 	 */
-	Object insert(Object entity);
+	void insert(Object entity);
 
 	/**
 	 * Insert multiple records in the same order as the entity
@@ -237,28 +238,6 @@ public interface StatelessSession extends SharedSessionContract {
 	 */
 	@Incubating
 	void upsert(String entityName, Object entity);
-
-	/**
-	 * Retrieve a record.
-	 *
-	 * @param entityName The name of the entity to retrieve
-	 * @param id The id of the entity to retrieve
-	 *
-	 * @return a detached entity instance, or null if there
-	 *         is no instance with the given id
-	 */
-	Object get(String entityName, Object id);
-
-	/**
-	 * Retrieve a record.
-	 *
-	 * @param entityClass The class of the entity to retrieve
-	 * @param id The id of the entity to retrieve
-	 *
-	 * @return a detached entity instance, or null if there
-	 *         is no instance with the given id
-	 */
-	<T> T get(Class<T> entityClass, Object id);
 
 	/**
 	 * Retrieve a record, obtaining the specified lock mode.
@@ -471,7 +450,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *
 	 * @since 6.0
 	 */
-	void fetch(Object association);
+	<T> T fetch(T association);
 
 	/**
 	 * Return the identifier value of the given entity, which may be detached.
@@ -483,4 +462,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 6.6
 	 */
 	Object getIdentifier(Object entity);
+
+	@Override
+	<T> T unwrap(Class<T> type);
 }

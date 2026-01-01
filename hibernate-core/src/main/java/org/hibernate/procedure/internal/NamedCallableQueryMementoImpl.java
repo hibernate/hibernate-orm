@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.ParameterMode;
 
-import org.hibernate.CacheMode;
+import jakarta.persistence.Timeout;import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.BindableType;
@@ -56,7 +56,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Obj
 			CacheMode cacheMode,
 			FlushMode flushMode,
 			Boolean readOnly,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String, Object> hints) {

@@ -4,7 +4,10 @@
  */
 package org.hibernate.internal;
 
+import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityHandler;
+import jakarta.persistence.EntityListenerRegistration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -13,6 +16,7 @@ import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -108,6 +112,7 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
+import java.lang.annotation.Annotation;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -381,6 +386,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EventListenerGroups getEventListenerGroups() {
 		return eventListenerGroups;
+	}
+
+	@Override
+	public <E> EntityListenerRegistration addListener(
+			Class<E> entityType,
+			Class<? extends Annotation> callbackType,
+			Consumer<? super E> callback) {
+		// todo (jpa4) : implement this.
+		//		the idea would be to register this with the `CallbackRegistry`, but
+		//		need some changes to `CallbackRegistry` and `Callback` for that to work.
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	@Override
@@ -702,6 +718,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public EntityAgent createEntityAgent() {
+		validateNotClosed();
+		return openStatelessSession();
+	}
+
+	@Override
+	public EntityAgent createEntityAgent(Map<?, ?> map) {
+		// todo (jpa4) : for now...
+		return createEntityAgent();
+	}
+
+	@Override
 	public NodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return queryEngine.getCriteriaBuilder();
@@ -927,13 +955,59 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
+		final var result = new HashMap<String, ResultSetMapping<R>>();
+		queryEngine.getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
+			if ( memento.getResultMementos().size() != 1 ) {
+				return;
+			}
+
+			var resultMemento = memento.getResultMementos().get( 0 );
+			if ( resultType.isAssignableFrom( resultMemento.getResultJavaType() ) ) {
+				result.put( memento.getName(), memento.toJpaMapping() );
+			}
+		} );
+		return result;
+	}
+
+	@Override
 	public void runInTransaction(Consumer<EntityManager> work) {
 		inTransaction( work );
 	}
 
 	@Override
+	public <H extends EntityHandler> void runInTransaction(Class<H> handlerType, Consumer<H> consumer) {
+		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			inTransaction( (Consumer<EntityManager>) consumer );
+		}
+		else if ( EntityAgent.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			inStatelessTransaction( (Consumer<EntityAgent>) consumer );
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown EntityHandler type passed : " + handlerType.getName() );
+		}
+	}
+
+	@Override
 	public <R> R callInTransaction(Function<EntityManager, R> work) {
 		return fromTransaction( work );
+	}
+
+	@Override
+	public <R, H extends EntityHandler> R callInTransaction(Class<H> handlerType, Function<H, R> function) {
+		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			return fromTransaction( (Function<EntityManager,R>) function );
+		}
+		else if ( EntityAgent.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			return fromStatelessTransaction( (Function<EntityAgent,R>) function );
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown EntityHandler type passed : " + handlerType.getName() );
+		}
 	}
 
 	@Override

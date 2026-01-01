@@ -44,7 +44,7 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 		final XMLEventReader reader = new ConfigurationEventReader( staxEventReader, xmlEventFactory );
 		final JaxbPersistenceImpl bindingRoot = jaxb(
 				reader,
-				ConfigXsdSupport.configurationXsd().getSchema(),
+				ConfigXsdSupport.latestDescriptor().getSchema(),
 				jaxbContext(),
 				origin
 		);

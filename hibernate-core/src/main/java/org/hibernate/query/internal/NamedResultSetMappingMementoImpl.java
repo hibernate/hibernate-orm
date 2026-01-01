@@ -34,6 +34,7 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 		return name;
 	}
 
+	@Override
 	public List<ResultMemento> getResultMementos() {
 		return unmodifiableList( resultMementos );
 	}
@@ -46,5 +47,10 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 		resultMementos.forEach(
 				memento -> resultSetMapping.addResultBuilder( memento.resolve( querySpaceConsumer, context ) )
 		);
+	}
+
+	@Override
+	public jakarta.persistence.sql.ResultSetMapping<?> toJpaMapping() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 }

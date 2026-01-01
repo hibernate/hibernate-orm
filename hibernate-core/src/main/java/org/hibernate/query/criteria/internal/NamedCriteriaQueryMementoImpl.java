@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import java.io.Serializable;
-import java.util.Locale;
-import java.util.Map;
-
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -22,9 +22,11 @@ import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+
+import java.io.Serializable;
+import java.util.Locale;
+import java.util.Map;
 
 public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<E>
 		implements NamedSqmQueryMemento<E>, Serializable {
@@ -48,7 +50,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 			FlushMode flushMode,
 			Boolean readOnly,
 			LockOptions lockOptions,
-			Integer timeout,
+			Timeout timeout,
 			Integer fetchSize,
 			String comment,
 			Map<String, String> parameterTypes,
@@ -65,6 +67,20 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 	@Override
 	public void validate(QueryEngine queryEngine) {
 		// nothing to do
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return lockOptions == null
+				? LockModeType.NONE
+				: lockOptions.getLockMode().toJpaLockMode();
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return lockOptions == null
+				? PessimisticLockScope.NORMAL
+				: lockOptions.getScope().getCorrespondingJpaScope();
 	}
 
 	private static <T> void checkResultType(Class<T> resultType, SqmSelectStatement<?> selectStatement) {
@@ -134,7 +150,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 	}
 
 	@Override
-	public Map<String, String> getParameterTypes() {
+	public Map<String, String> getAnticipatedParameterTypes() {
 		return parameterTypes;
 	}
 

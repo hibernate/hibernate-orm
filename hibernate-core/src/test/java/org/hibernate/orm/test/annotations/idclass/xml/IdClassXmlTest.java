@@ -40,7 +40,7 @@ public class IdClassXmlTest {
 					link.setSpeciesId( 1L );
 					session.persist( link );
 
-					Query q = session.getNamedQuery( "testQuery" );
+					Query q = session.createNamedQuery( "testQuery" );
 					final List<HabitatSpeciesLink> list = q.list();
 					assertEquals( 1, list.size() );
 				}

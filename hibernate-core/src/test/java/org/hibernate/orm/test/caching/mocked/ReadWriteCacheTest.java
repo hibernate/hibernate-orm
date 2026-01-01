@@ -243,8 +243,7 @@ public class ReadWriteCacheTest {
 	}
 
 	private void assertBookNotFound(long bookId, Session session) {
-		Book book = session.get( Book.class, bookId );
-		assertNull( book );
+		assertNull( session.find( Book.class, bookId ) );
 	}
 
 	private void createBook(long bookId, Session session) {

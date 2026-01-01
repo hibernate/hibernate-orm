@@ -202,9 +202,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	protected void collectHints(Map<String, Object> hints) {
 		final var queryOptions = getQueryOptions();
 
-		if ( queryOptions.getTimeout() != null ) {
-			hints.put( HINT_TIMEOUT, queryOptions.getTimeout() );
-			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout() * 1000 );
+		if ( Timeouts.isRealTimeout( queryOptions.getTimeout() ) ) {
+			hints.put( HINT_TIMEOUT, Timeouts.getTimeoutInSeconds( queryOptions.getTimeout() ) );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, queryOptions.getTimeout().milliseconds() );
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
@@ -434,6 +434,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		applyGraph( rootGraph, graphSemantic );
 	}
 
+
 	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
 		getQueryOptions().applyGraph( entityGraph, graphSemantic );
 	}
@@ -592,7 +593,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public Integer getTimeout() {
-		return getQueryOptions().getTimeout();
+		return Timeouts.getEffectiveTimeoutInSeconds( getQueryOptions().getTimeout() );
 	}
 
 
@@ -939,7 +940,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
-
 
 	@Override
 	public <P> CommonQueryContract setParameter(Parameter<P> parameter, P value) {

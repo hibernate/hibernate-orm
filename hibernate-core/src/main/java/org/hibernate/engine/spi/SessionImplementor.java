@@ -4,8 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import jakarta.persistence.ConnectionConsumer;
-import jakarta.persistence.ConnectionFunction;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -18,6 +16,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.criteria.CriteriaSelect;
+
 
 /**
  * Defines the "internal contract" between {@link Session} and other parts of Hibernate
@@ -93,30 +92,4 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
 	void forceFlush(EntityKey e) throws HibernateException;
-
-	@Override
-	default <C> void runWithConnection(ConnectionConsumer<C> action) {
-		doWork( connection -> {
-			try {
-				//noinspection unchecked
-				action.accept( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
-
-	@Override
-	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
-		return doReturningWork( connection -> {
-			try {
-				//noinspection unchecked
-				return function.apply( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
 }

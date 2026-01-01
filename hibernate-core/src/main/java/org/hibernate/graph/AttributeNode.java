@@ -78,7 +78,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * @see #getSubGraphs()
 	 */
 	@Override
-	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getSubgraphs() {
+	default Map<Class<?>, Subgraph<?>> getSubgraphs() {
 		return unmodifiableMap( getSubGraphs() );
 	}
 
@@ -92,7 +92,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * @see #getKeySubGraphs()
 	 */
 	@Override
-	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getKeySubgraphs() {
+	default Map<Class<?>, Subgraph<?>> getKeySubgraphs() {
 		return unmodifiableMap( getKeySubGraphs() );
 	}
 

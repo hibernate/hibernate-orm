@@ -14,6 +14,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
@@ -214,9 +215,9 @@ public class EntityManagerFactoryBasedFunctionalTest
 			return false;
 		}
 
-		@Override @SuppressWarnings("removal")
-		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
-			return null;
+		@Override
+		public FetchType getDefaultToOneFetchType() {
+			return FetchType.EAGER;
 		}
 
 		@Override

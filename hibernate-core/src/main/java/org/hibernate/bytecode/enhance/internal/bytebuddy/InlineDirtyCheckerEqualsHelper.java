@@ -7,21 +7,22 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import java.util.Objects;
 
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 public final class InlineDirtyCheckerEqualsHelper {
+
+	private static boolean isLoaded(PersistentAttributeInterceptable persistentAttributeInterceptable, String fieldName) {
+		final var persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+		return persistentAttributeInterceptor == null
+			|| persistentAttributeInterceptor.isAttributeLoaded( fieldName );
+	}
 
 	public static boolean areEquals(
 			PersistentAttributeInterceptable persistentAttributeInterceptable,
 			String fieldName,
 			Object a,
 			Object b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return Objects.deepEquals( a, b );
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& Objects.deepEquals( a, b );
 	}
 
 	public static boolean areEquals(
@@ -29,12 +30,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			boolean a,
 			boolean b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -42,12 +39,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			byte a,
 			byte b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -55,12 +48,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			short a,
 			short b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -68,12 +57,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			char a,
 			char b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -81,12 +66,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			int a,
 			int b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -94,12 +75,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			long a,
 			long b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -107,12 +84,8 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			float a,
 			float b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 
 	public static boolean areEquals(
@@ -120,11 +93,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			String fieldName,
 			double a,
 			double b) {
-		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
-			return false;
-		}
-		return a == b;
+		return isLoaded( persistentAttributeInterceptable, fieldName )
+			&& a == b;
 	}
 }

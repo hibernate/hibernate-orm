@@ -10,10 +10,9 @@ import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging
 
 import jakarta.persistence.Id;
 
-import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.type.TypeDefinition;
-import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.OpenedClassReader;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -58,57 +57,57 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( opcode != Opcodes.GETFIELD && opcode != Opcodes.PUTFIELD ) {
 					super.visitFieldInsn( opcode, owner, name, desc );
-					return;
 				}
+				else {
+					final var declaredOwnerType = findDeclaredType( owner );
+					final var field = findField( declaredOwnerType, name, desc );
+					// try to discover composite types on the fly to support some testing scenarios
+					enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
 
-				TypeDescription declaredOwnerType = findDeclaredType( owner );
-				AnnotatedFieldDescription field = findField( declaredOwnerType, name, desc );
-				// try to discover composite types on the fly to support some testing scenarios
-				enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
+					if ( (enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
+						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ))
+							&& !field.getType().asErasure().equals( managedCtClass )
+							&& enhancementContext.isPersistentField( field )
+							&& !field.hasAnnotation( Id.class )
+							&& !field.getName().equals( "this$0" ) ) {
 
-				if ( ( enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
-						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() ) )
-						&& !field.getType().asErasure().equals( managedCtClass )
-						&& enhancementContext.isPersistentField( field )
-						&& !field.hasAnnotation( Id.class )
-						&& !field.getName().equals( "this$0" ) ) {
+						ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
+								declaredOwnerType.getName(),
+								field.getName(),
+								instrumentedType.getName(),
+								instrumentedMethod.getName()
+						);
 
-					ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
-							declaredOwnerType.getName(),
-							field.getName(),
-							instrumentedType.getName(),
-							instrumentedMethod.getName()
-					);
-
-					switch ( opcode ) {
-						case Opcodes.GETFIELD:
-							methodVisitor.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									owner,
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name,
-									Type.getMethodDescriptor( Type.getType( desc ) ),
-									false
-							);
-							return;
-						case Opcodes.PUTFIELD:
-							if ( field.getFieldDescription().isFinal() ) {
-								// Final fields will only be written to from the constructor,
-								// so there's no point trying to replace final field writes with a method call.
-								break;
-							}
-							methodVisitor.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									owner,
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + name,
-									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( desc ) ),
-									false
-							);
-							return;
-						default:
-							throw new EnhancementException( "Unexpected opcode: " + opcode );
+						switch ( opcode ) {
+							case Opcodes.GETFIELD:
+								methodVisitor.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										owner,
+										EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name,
+										Type.getMethodDescriptor( Type.getType( desc ) ),
+										false
+								);
+								return;
+							case Opcodes.PUTFIELD:
+								if ( field.getFieldDescription().isFinal() ) {
+									// Final fields will only be written to from the constructor,
+									// so there's no point trying to replace final field writes with a method call.
+									break;
+								}
+								methodVisitor.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										owner,
+										EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + name,
+										Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( desc ) ),
+										false
+								);
+								return;
+							default:
+								throw new EnhancementException( "Unexpected opcode: " + opcode );
+						}
 					}
+					super.visitFieldInsn( opcode, owner, name, desc );
 				}
-				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}
@@ -116,50 +115,51 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 	private TypeDescription findDeclaredType(String name) {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name
 		final String cleanedName = name.replace( '/', '.' );
-		final TypePool.Resolution resolution = classPool.describe( cleanedName );
+		final var resolution = classPool.describe( cleanedName );
 		if ( !resolution.isResolved() ) {
-			final String msg = String.format(
+			throw new EnhancementException( String.format(
 					"Unable to perform extended enhancement - Unable to locate [%s]",
 					cleanedName
-			);
-			throw new EnhancementException( msg );
+			) );
 		}
 		return resolution.resolve();
 	}
 
 	private AnnotatedFieldDescription findField(TypeDescription declaredOwnedType, String name, String desc) {
+		final var fields = findFields( declaredOwnedType, name, desc );
+		if ( fields.size() != 1 ) {
+			throw new EnhancementException( String.format(
+					"Unable to perform extended enhancement - No unique field [%s] defined by [%s]",
+					name,
+					declaredOwnedType.getName()
+			) );
+		}
+		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
+	}
+
+	private static @NonNull FieldList<?> findFields(TypeDescription declaredOwnedType, String name, String desc) {
 		TypeDefinition ownerType = declaredOwnedType;
-		ElementMatcher.Junction<NamedElement.WithDescriptor> fieldFilter = named( name ).and( hasDescriptor( desc ) );
-
+		final var fieldFilter = named( name ).and( hasDescriptor( desc ) );
 		FieldList<?> fields = ownerType.getDeclaredFields().filter( fieldFilter );
-
 		// Look in the superclasses if necessary
 		while ( fields.isEmpty() && ownerType.getSuperClass() != null ) {
 			ownerType = ownerType.getSuperClass();
 			fields = ownerType.getDeclaredFields().filter( fieldFilter );
 		}
-
-		if ( fields.size() != 1 ) {
-			final String msg = String.format(
-					"Unable to perform extended enhancement - No unique field [%s] defined by [%s]",
-					name,
-					declaredOwnedType.getName()
-			);
-			throw new EnhancementException( msg );
-		}
-		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
+		return fields;
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if ( this == o ) {
+	public boolean equals(final Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || FieldAccessEnhancer.class != o.getClass() ) {
+		else if ( !(object instanceof FieldAccessEnhancer that) ) {
 			return false;
 		}
-		final FieldAccessEnhancer that = (FieldAccessEnhancer) o;
-		return Objects.equals( managedCtClass, that.managedCtClass );
+		else {
+			return Objects.equals( this.managedCtClass, that.managedCtClass );
+		}
 	}
 
 	@Override

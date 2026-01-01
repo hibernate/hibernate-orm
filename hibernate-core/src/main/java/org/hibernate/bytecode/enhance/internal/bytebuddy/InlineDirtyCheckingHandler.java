@@ -11,10 +11,8 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
-import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
@@ -26,6 +24,10 @@ import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
+
+import static net.bytebuddy.ClassFileVersion.JAVA_V6;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_CHANGER_NAME;
 
 final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppender {
 
@@ -85,7 +87,9 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				Advice.WithCustomMapping advice = Advice.withCustomMapping();
 				advice = persistentField.isVisibleTo( managedCtClass )
 						? advice.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription(), persistentField.getGetter().get().getReturnType() ) );
+						: advice.bind( CodeTemplates.FieldValue.class,
+								new CodeTemplates.GetterMapping( persistentField.getFieldDescription(),
+										persistentField.getGetter().get().getReturnType() ) );
 
 				implementation = advice
 						.bind( CodeTemplates.FieldName.class, persistentField.getName() )
@@ -111,18 +115,20 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			MethodVisitor methodVisitor,
 			Context implementationContext,
 			MethodDescription instrumentedMethod) {
-		// if (arg != field) {
-
+		final var type = persistentField.getType();
+		final var erasure = type.asErasure();
+		final var declaringType = persistentField.getDeclaringType();
 		if ( applyLazyCheck ) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 			methodVisitor.visitLdcInsn( persistentField.getName() );
 		}
-		methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
+		methodVisitor.visitVarInsn( Type.getType( erasure.getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		if ( persistentField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
+		final var declaringTypeErasure = declaringType.asErasure();
+		if ( declaringTypeErasure.equals( managedCtClass ) ) {
 			methodVisitor.visitFieldInsn(
 					Opcodes.GETFIELD,
-					persistentField.getDeclaringType().asErasure().getInternalName(),
+					declaringTypeErasure.getInternalName(),
 					persistentField.getName(),
 					persistentField.getDescriptor()
 			);
@@ -130,16 +136,16 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		else {
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKEVIRTUAL,
-					persistentField.getDeclaringType().asErasure().getInternalName(),
-					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
+					declaringTypeErasure.getInternalName(),
+					PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
 					Type.getMethodDescriptor( Type.getType( persistentField.getDescriptor() ) ),
 					false
 			);
 		}
 		int branchCode;
 		if ( applyLazyCheck ) {
-			if ( persistentField.getType().isPrimitive() ) {
-				final Type fieldType = Type.getType( persistentField.getDescriptor() );
+			if ( type.isPrimitive() ) {
+				final var fieldType = Type.getType( persistentField.getDescriptor() );
 				methodVisitor.visitMethodInsn(
 						Opcodes.INVOKESTATIC,
 						HELPER_TYPE_NAME,
@@ -172,14 +178,14 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			branchCode = Opcodes.IFNE;
 		}
 		else {
-			if ( persistentField.getType().isPrimitive() ) {
-				if ( persistentField.getType().represents( long.class ) ) {
+			if ( type.isPrimitive() ) {
+				if ( type.represents( long.class ) ) {
 					methodVisitor.visitInsn( Opcodes.LCMP );
 				}
-				else if ( persistentField.getType().represents( float.class ) ) {
+				else if ( type.represents( float.class ) ) {
 					methodVisitor.visitInsn( Opcodes.FCMPL );
 				}
-				else if ( persistentField.getType().represents( double.class ) ) {
+				else if ( type.represents( double.class ) ) {
 					methodVisitor.visitInsn( Opcodes.DCMPL );
 				}
 				else {
@@ -202,7 +208,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				branchCode = Opcodes.IFNE;
 			}
 		}
-		Label skip = new Label();
+		final var skip = new Label();
 		methodVisitor.visitJumpInsn( branchCode, skip );
 		// this.$$_hibernate_trackChange(fieldName)
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
@@ -210,30 +216,32 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		methodVisitor.visitMethodInsn(
 				Opcodes.INVOKEVIRTUAL,
 				managedCtClass.getInternalName(),
-				EnhancerConstants.TRACKER_CHANGER_NAME,
+				TRACKER_CHANGER_NAME,
 				Type.getMethodDescriptor( Type.VOID_TYPE, STRING_TYPE ),
 				false
 		);
 		// }
 		methodVisitor.visitLabel( skip );
-		if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
+		if ( implementationContext.getClassFileVersion().isAtLeast( JAVA_V6 ) ) {
 			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}
-		return new Size( 3 + 2 * persistentField.getType().asErasure().getStackSize().getSize(), instrumentedMethod.getStackSize() );
+		return new Size( 3 + 2 * erasure.getStackSize().getSize(),
+				instrumentedMethod.getStackSize() );
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if ( this == o ) {
+	public boolean equals(final Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || InlineDirtyCheckingHandler.class != o.getClass() ) {
+		else if ( !(object instanceof InlineDirtyCheckingHandler that) ) {
 			return false;
 		}
-		final InlineDirtyCheckingHandler that = (InlineDirtyCheckingHandler) o;
-		return Objects.equals( delegate, that.delegate ) &&
-			Objects.equals( managedCtClass, that.managedCtClass ) &&
-			Objects.equals( persistentField, that.persistentField );
+		else {
+			return Objects.equals( delegate, that.delegate )
+				&& Objects.equals( managedCtClass, that.managedCtClass )
+				&& Objects.equals( persistentField, that.persistentField );
+		}
 	}
 
 	@Override

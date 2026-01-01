@@ -49,7 +49,7 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 	}
 
 	public CoreTypePool(CorePrefixFilter acceptedPrefixes) {
-		//While we implement a cache in this class we also want to enable
+		//While we implement a cache in this class, we also want to enable
 		//ByteBuddy's default caching mechanism as it will cache the more
 		//useful output of the parsing and introspection of such types.
 		super( new CoreCacheProvider( acceptedPrefixes ) );
@@ -59,14 +59,14 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 	@Override
 	protected Resolution doDescribe(final String name) {
 		if ( acceptedPrefixes.isCoreClassName( name ) ) {
-			final Resolution resolution = resolutions.get( name );
+			final var resolution = resolutions.get( name );
 			if ( resolution != null ) {
 				return resolution;
 			}
 			else {
-				//We implement this additional layer of caching, which is on top of
-				//ByteBuddy's default caching, so as to prevent resolving the same
-				//types concurrently from the classloader.
+				//We implement this additional layer of caching, over ByteBuddy's
+				//built-in caching, to prevent resolving the same types concurrently
+				//from the classloader.
 				//This is merely an efficiency improvement and will NOT provide a
 				//strict guarantee of symbols being resolved exactly once as there
 				//is no SPI within ByteBuddy which would allow this: the point is to
@@ -83,8 +83,8 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 
 	private Resolution actualResolve(final String name) {
 		try {
-			final Class<?> aClass = Class.forName( name, false, hibernateClassLoader );
-			return new TypePool.Resolution.Simple( TypeDescription.ForLoadedType.of( aClass ) );
+			return new TypePool.Resolution.Simple( TypeDescription.ForLoadedType.of(
+					Class.forName( name, false, hibernateClassLoader ) ) );
 		}
 		catch ( ClassNotFoundException e ) {
 			return new Resolution.Illegal( name );

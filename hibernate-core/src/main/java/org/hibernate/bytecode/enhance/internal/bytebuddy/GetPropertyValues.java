@@ -22,8 +22,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Helper class to generate bytecode for getting property values, used by BytecodeProviderImpl.
@@ -71,7 +72,7 @@ public class GetPropertyValues implements ByteCodeAppender {
 			);
 
 			// Jump to the false label if the instanceof check fails
-			final Label instanceofFalseLabel = new Label();
+			final var instanceofFalseLabel = new Label();
 			methodVisitor.visitJumpInsn( Opcodes.IFEQ, instanceofFalseLabel );
 
 			// Cast to the subtype, so we can mark the property as initialized
@@ -83,7 +84,7 @@ public class GetPropertyValues implements ByteCodeAppender {
 			methodVisitor.visitVarInsn( Opcodes.ASTORE, 2 );
 
 			// Skip the cleanup
-			final Label instanceofEndLabel = new Label();
+			final var instanceofEndLabel = new Label();
 			methodVisitor.visitJumpInsn( Opcodes.GOTO, instanceofEndLabel );
 
 			// Here is the cleanup section for the false branch
@@ -105,8 +106,8 @@ public class GetPropertyValues implements ByteCodeAppender {
 			methodVisitor.visitLabel( instanceofEndLabel );
 			implementationContext.getFrameGeneration().full(
 					methodVisitor,
-					Collections.emptyList(),
-					Arrays.asList(
+					emptyList(),
+					List.of(
 							implementationContext.getInstrumentedType(),
 							constants.TypeObject,
 							constants.TypeLazyAttributeLoadingInterceptor
@@ -116,18 +117,18 @@ public class GetPropertyValues implements ByteCodeAppender {
 		methodVisitor.visitLdcInsn( getters.length );
 		methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, constants.internalName_Object );
 		for ( int index = 0; index < getters.length; index++ ) {
-			final Member getterMember = getters[index];
+			final var getterMember = getters[index];
 			methodVisitor.visitInsn( Opcodes.DUP );
 			methodVisitor.visitLdcInsn( index );
 
-			final Label arrayStoreLabel = new Label();
+			final var arrayStoreLabel = new Label();
 			if ( getterMember == BytecodeProviderImpl.EMBEDDED_MEMBER ) {
 				// The embedded property access returns the owner
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
 			}
 			else {
 				if ( persistentAttributeInterceptable ) {
-					final Label extractValueLabel = new Label();
+					final var extractValueLabel = new Label();
 
 					// Load the LazyAttributeLoadingInterceptor
 					methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
@@ -179,38 +180,39 @@ public class GetPropertyValues implements ByteCodeAppender {
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
 				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
 
+				final var declaringClass = getterMember.getDeclaringClass();
 				final Class<?> type;
 				if ( getterMember instanceof Method getter ) {
 					type = getter.getReturnType();
 					methodVisitor.visitMethodInsn(
-							getter.getDeclaringClass().isInterface() ?
-									Opcodes.INVOKEINTERFACE :
-									Opcodes.INVOKEVIRTUAL,
-							Type.getInternalName( getter.getDeclaringClass() ),
+							declaringClass.isInterface()
+									? Opcodes.INVOKEINTERFACE
+									: Opcodes.INVOKEVIRTUAL,
+							Type.getInternalName( declaringClass ),
 							getter.getName(),
 							Type.getMethodDescriptor( getter ),
-							getter.getDeclaringClass().isInterface()
+							declaringClass.isInterface()
 					);
 				}
 				else if ( getterMember instanceof Field getter ) {
 					type = getter.getType();
 					methodVisitor.visitFieldInsn(
 							Opcodes.GETFIELD,
-							Type.getInternalName( getter.getDeclaringClass() ),
+							Type.getInternalName( declaringClass ),
 							getter.getName(),
 							Type.getDescriptor( type )
 					);
 				}
-				else {
-					assert getterMember instanceof ForeignPackageMember;
-					final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) getterMember;
-					final Member underlyingMember = foreignPackageMember.getMember();
+				else if ( getterMember instanceof ForeignPackageMember foreignPackageMember ) {
+					final var underlyingMember = foreignPackageMember.getMember();
 					if ( underlyingMember instanceof Method getter ) {
 						type = getter.getReturnType();
 					}
-					else {
-						final Field getter = (Field) underlyingMember;
+					else if ( underlyingMember instanceof Field getter ) {
 						type = getter.getType();
+					}
+					else {
+						throw new AssertionError( "Unknown underlying member type" );
 					}
 					methodVisitor.visitMethodInsn(
 							Opcodes.INVOKESTATIC,
@@ -222,6 +224,9 @@ public class GetPropertyValues implements ByteCodeAppender {
 							),
 							false
 					);
+				}
+				else {
+					throw new AssertionError( "Unknown getter member type" );
 				}
 				if ( type.isPrimitive() ) {
 					PrimitiveBoxingDelegate.forPrimitive( new TypeDescription.ForLoadedType( type ) )
@@ -237,7 +242,7 @@ public class GetPropertyValues implements ByteCodeAppender {
 				methodVisitor.visitLabel( arrayStoreLabel );
 				implementationContext.getFrameGeneration().full(
 						methodVisitor,
-						Arrays.asList(
+						List.of(
 								constants.Type_Array_Object,
 								constants.Type_Array_Object,
 								constants.TypeIntegerPrimitive,

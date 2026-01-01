@@ -23,11 +23,10 @@ final class EnhancerClassFileLocator implements ClassFileLocator {
 
 	@Override
 	public Resolution locate(final String name) throws IOException {
-		final EnhancerCacheProvider.EnhancementState enhancementState = cacheProvider.getEnhancementState();
-		if ( enhancementState != null && enhancementState.getClassName().equals( name ) ) {
-			return enhancementState.getClassFileResolution();
-		}
-		return delegate.locate( name );
+		final var enhancementState = cacheProvider.getEnhancementState();
+		return enhancementState != null && enhancementState.getClassName().equals( name )
+				? enhancementState.getClassFileResolution()
+				: delegate.locate( name );
 	}
 
 	@Override

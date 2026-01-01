@@ -35,8 +35,14 @@ public final class CorePrefixFilter {
 	 * Do not invoke: use DEFAULT_INSTANCE
 	 */
 	CorePrefixFilter() {
-		//By default optimise for jakarta annotations, java util collections, and Hibernate marker interfaces
-		this("jakarta.", "java.", "org.hibernate.annotations.", "org.hibernate.bytecode.enhance.spi.", "org.hibernate.engine.spi.");
+		// By default, optimize for Jakarta annotations,
+		// java util collections,
+		// and Hibernate marker interfaces
+		this("jakarta.",
+				"java.",
+				"org.hibernate.annotations.",
+				"org.hibernate.bytecode.enhance.spi.",
+				"org.hibernate.engine.spi.");
 	}
 
 	public CorePrefixFilter(final String... acceptedPrefixes) {
@@ -44,7 +50,7 @@ public final class CorePrefixFilter {
 	}
 
 	public boolean isCoreClassName(final String name) {
-		for ( String acceptedPrefix : this.acceptedPrefixes ) {
+		for ( String acceptedPrefix : acceptedPrefixes ) {
 			if ( name.startsWith( acceptedPrefix ) ) {
 				return true;
 			}

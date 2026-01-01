@@ -55,20 +55,20 @@ public class UnsupportedEnhancementStrategyTest {
 		assertThatThrownBy( () -> doEnhance( SomeEntity.class, context ) ).isInstanceOf( EnhancementException.class )
 				.hasMessageContainingAll(
 						String.format(
-								"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s].",
+								"Enhancement of [%s] failed because no underlying field named [%s] exists for property accessor method [%s]",
 								SomeEntity.class.getName(),
 								"propertyMethod",
 								"getPropertyMethod"
-						), "To fix this, make sure all property accessor methods have a matching field."
+						), "ensure all property accessor methods have a matching field"
 				);
 		assertThatThrownBy( () -> doEnhance( SomeOtherEntity.class, context ) ).isInstanceOf( EnhancementException.class )
 				.hasMessageContainingAll(
 					String.format(
-							"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s].",
+							"Enhancement of [%s] failed because no underlying field named [%s] exists for property accessor method [%s]",
 							SomeOtherEntity.class.getName(),
 							"propertyMethod",
 							"setPropertyMethod"
-					), "To fix this, make sure all property accessor methods have a matching field."
+					), "ensure all property accessor methods have a matching field"
 			);
 	}
 

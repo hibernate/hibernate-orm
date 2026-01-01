@@ -36,7 +36,7 @@ public class CacheableFileXmlSource {
 			File serLocation,
 			boolean strict,
 			MappingBinder binder) {
-		final Origin origin = new Origin( SourceType.FILE, xmlFile.getAbsolutePath() );
+		final var origin = new Origin( SourceType.FILE, xmlFile.getAbsolutePath() );
 		return fromCacheableFile( xmlFile, serLocation, origin, strict, binder );
 	}
 
@@ -46,7 +46,7 @@ public class CacheableFileXmlSource {
 			Origin origin,
 			boolean strict,
 			MappingBinder binder) {
-		final File serFile = resolveSerFile( xmlFile, serLocation );
+		final var serFile = resolveSerFile( xmlFile, serLocation );
 
 		if ( strict ) {
 			try {
@@ -84,10 +84,8 @@ public class CacheableFileXmlSource {
 			}
 
 			JAXB_LOGGER.readingMappingsFromFile( xmlFile.getPath() );
-			final Binding<? extends JaxbBindableMappingDescriptor> binding = FileXmlSource.fromFile( xmlFile, binder );
-
+			final var binding = FileXmlSource.fromFile( xmlFile, binder );
 			writeSerFile( binding.getRoot(), xmlFile, serFile );
-
 			return binding;
 		}
 	}
@@ -108,11 +106,13 @@ public class CacheableFileXmlSource {
 		if ( serLocation == null ) {
 			return determineCachedFile( xmlFile );
 		}
-		if ( serLocation.isDirectory() ) {
+		else if ( serLocation.isDirectory() ) {
 			return determineCachedFile( xmlFile, serLocation );
 		}
-		assert serLocation.isFile();
-		return serLocation;
+		else {
+			assert serLocation.isFile();
+			return serLocation;
+		}
 	}
 
 	public static File determineCachedFile(File xmlFile) {
@@ -123,7 +123,8 @@ public class CacheableFileXmlSource {
 		return new File( serDirectory, xmlFile.getName() + ".bin" );
 	}
 
-	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile) throws SerializationException, FileNotFoundException {
+	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile)
+			throws SerializationException, FileNotFoundException {
 		JAXB_LOGGER.readingCachedMappings( serFile );
 		return SerializationHelper.deserialize( new FileInputStream( serFile ) );
 	}
@@ -152,8 +153,7 @@ public class CacheableFileXmlSource {
 	}
 
 	public static void createSerFile(File xmlFile, File outputFile, MappingBinder binder) {
-		final var binding = FileXmlSource.fromFile( xmlFile, binder );
-		writeSerFile( binding.getRoot(), xmlFile, outputFile );
+		writeSerFile( FileXmlSource.fromFile( xmlFile, binder ).getRoot(), xmlFile, outputFile );
 	}
 
 	public static boolean isSerfileObsolete(File xmlFile, File serFile) {

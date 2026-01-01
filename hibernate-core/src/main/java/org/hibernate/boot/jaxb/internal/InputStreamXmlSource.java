@@ -32,9 +32,12 @@ public class InputStreamXmlSource {
 			InputStream inputStream,
 			MappingBinder mappingBinder) {
 		JAXB_LOGGER.readingMappingsFromInputStream();
-
-		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-		return fromStream( inputStream, origin, false, mappingBinder );
+		return fromStream(
+				inputStream,
+				new Origin( SourceType.INPUT_STREAM, null ),
+				false,
+				mappingBinder
+		);
 	}
 
 	/**

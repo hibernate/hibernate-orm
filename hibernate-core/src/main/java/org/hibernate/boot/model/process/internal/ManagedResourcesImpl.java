@@ -124,7 +124,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Internal
-	public void addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {
+	public void addXmlBinding(Binding<? extends JaxbBindableMappingDescriptor> binding) {
 		mappingFileBindings.add( binding );
 	}
 }

@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -35,7 +34,6 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
@@ -220,9 +218,10 @@ public class MetadataBuildingProcess {
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
 		final var processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
-					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-					: new NoOpMetadataSourceProcessorImpl();
+			private final MetadataSourceProcessor hbmProcessor =
+					options.isXmlMappingEnabled()
+							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+							: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor =
 					new AnnotationMetadataSourceProcessorImpl(
@@ -364,21 +363,26 @@ public class MetadataBuildingProcess {
 				aggregatedPersistenceUnitMetadata
 		);
 
-		final List<String> allKnownClassNames = mutableJoin(
-				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
+		final var allKnownClassNames = mutableJoin(
+				managedResources.getAnnotatedClassReferences().stream()
+						.map( Class::getName ).toList(),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
 		);
-		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
-			try {
-				final var packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
-				allKnownClassNames.add( packageInfoClass.getName() );
-			}
-			catch (ClassLoadingException classLoadingException) {
-				// no package-info, so there can be no annotations... just skip it
-			}
-		} );
-		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
+		managedResources.getAnnotatedPackageNames()
+				.forEach( packageName -> {
+					try {
+						final Class<?> packageInfoClass =
+								modelsContext.getClassLoading()
+										.classForName( packageName + ".package-info" );
+						allKnownClassNames.add( packageInfoClass.getName() );
+					}
+					catch (ClassLoadingException classLoadingException) {
+						// no package-info, so there can be no annotations... just skip it
+					}
+				} );
+		managedResources.getAnnotatedClassReferences()
+				.forEach( clazz -> allKnownClassNames.add( clazz.getName() ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- process metadata-complete XML
@@ -420,16 +424,16 @@ public class MetadataBuildingProcess {
 		allKnownClassNames.forEach( (className) -> {
 			if ( categorizedClassNames.add( className ) ) {
 				// not known yet
-				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( className ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		} );
 		// apply known "names" - generally this handles dynamic models
 		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
 			if ( categorizedClassNames.add( mappedName ) ) {
 				// not known yet
-				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( mappedName );
-				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( mappedName ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		} );
 
@@ -442,17 +446,6 @@ public class MetadataBuildingProcess {
 				rootMappingDefaults,
 				aggregatedPersistenceUnitMetadata
 		);
-	}
-
-	private static void applyKnownClass(
-			String className,
-			HashSet<String> categorizedClassNames,
-			ClassDetailsRegistry classDetailsRegistry,
-			DomainModelCategorizationCollector modelCategorizationCollector) {
-		if ( categorizedClassNames.add( className ) ) {
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-			applyKnownClass( classDetails, categorizedClassNames,classDetailsRegistry, modelCategorizationCollector );
-		}
 	}
 
 	private static void applyKnownClass(
@@ -475,12 +468,15 @@ public class MetadataBuildingProcess {
 			ClassLoaderService classLoaderService,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 
-		final var contributions = new AdditionalMappingContributionsImpl(
-				metadataCollector,
-				options,
-				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
-				rootMetadataBuildingContext
-		);
+		final var contributions =
+				new AdditionalMappingContributionsImpl(
+						metadataCollector,
+						options,
+						options.isXmlMappingEnabled()
+								? new MappingBinder( classLoaderService, () -> false )
+								: null,
+						rootMetadataBuildingContext
+				);
 
 		final var additionalMappingContributors =
 				classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
@@ -554,9 +550,8 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
-			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final var binding = mappingBinder.bind( xmlStream, origin );
-			final var bindingRoot = binding.getRoot();
+			final var origin = new Origin( SourceType.INPUT_STREAM, null );
+			final var bindingRoot = mappingBinder.bind( xmlStream, origin ).getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
 				contributeBinding( hibernateMapping );
 			}
@@ -593,7 +588,7 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeTable(Table table) {
-			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
+			final var namespace = metadataCollector.getDatabase().locateNamespace(
 					table.getCatalogIdentifier(),
 					table.getSchemaIdentifier()
 			);
@@ -603,7 +598,7 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeSequence(Sequence sequence) {
-			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
+			final var namespace = metadataCollector.getDatabase().locateNamespace(
 					sequence.getName().getCatalogName(),
 					sequence.getName().getSchemaName()
 			);

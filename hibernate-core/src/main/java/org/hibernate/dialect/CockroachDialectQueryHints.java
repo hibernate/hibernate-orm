@@ -4,13 +4,12 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.internal.util.StringHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.hibernate.internal.util.StringHelper.split;
 
 class CockroachDialectQueryHints {
 
@@ -31,46 +30,38 @@ class CockroachDialectQueryHints {
 	}
 
 	public String getQueryHintString() {
-		List<IndexHint> indexHints = new ArrayList<>();
+		final List<IndexHint> indexHints = new ArrayList<>();
 		JoinHint joinHint = null;
-		for ( var h : hints ) {
-			IndexHint indexHint = parseIndexHints( h );
+		for ( var hint : hints ) {
+			final var indexHint = parseIndexHints( hint );
 			if ( indexHint != null ) {
 				indexHints.add( indexHint );
-				continue;
 			}
-			joinHint = parseJoinHints( h );
+			else {
+				joinHint = parseJoinHints( hint );
+			}
 		}
 
-		String result = addIndexHints( query, indexHints );
+		final String result = addIndexHints( query, indexHints );
 		return joinHint == null ? result : addJoinHint( query, joinHint );
 	}
 
 	private IndexHint parseIndexHints(String hint) {
-		var parts = StringHelper.split( "@", hint );
-		if ( parts.length == 2 ) {
-			return new IndexHint( parts[0], hint );
-		}
-		return null;
+		final var parts = split( "@", hint );
+		return parts.length == 2 ? new IndexHint( parts[0], hint ) : null;
 	}
 
 	private JoinHint parseJoinHints(String hint) {
 		var matcher = JOIN_HINT_PATTERN.matcher( hint );
-		if ( matcher.find() ) {
-			return new JoinHint( matcher.group( 1 ) );
-		}
-		return null;
+		return matcher.find() ? new JoinHint( matcher.group( 1 ) ) : null;
 	}
 
-	String addIndexHints(String query, List<IndexHint> hints) {
-
-		Matcher statementMatcher = TABLE_QUERY_PATTERN.matcher( query );
-
+	private String addIndexHints(String query, List<IndexHint> hints) {
+		final var statementMatcher = TABLE_QUERY_PATTERN.matcher( query );
 		if ( statementMatcher.matches() && statementMatcher.groupCount() > 2 ) {
-			String prefix = statementMatcher.group( 1 );
-			String fromList = statementMatcher.group( 2 );
-			String suffix = statementMatcher.group( 3 );
-			fromList = addIndexHintsToFromList( fromList, hints );
+			final String prefix = statementMatcher.group( 1 );
+			final String fromList = addIndexHintsToFromList( statementMatcher.group( 2 ), hints );
+			final String suffix = statementMatcher.group( 3 );
 			return prefix + fromList + suffix;
 		}
 		else {
@@ -78,23 +69,22 @@ class CockroachDialectQueryHints {
 		}
 	}
 
-	String addJoinHint(String query, JoinHint hint) {
-		var m = JOIN_PATTERN.matcher( query );
-		StringBuilder buffer = new StringBuilder();
+	private String addJoinHint(String query, JoinHint hint) {
+		final var matcher = JOIN_PATTERN.matcher( query );
+		final var buffer = new StringBuilder();
 		int start = 0;
-		while ( m.find() ) {
-			buffer.append(query, start, m.start());
-
-			if ( m.group( 1 ) == null ) {
+		while ( matcher.find() ) {
+			buffer.append( query, start, matcher.start() );
+			if ( matcher.group( 1 ) == null ) {
 				buffer.append( " inner" );
 			}
 			else {
-				buffer.append( m.group( 1 ) );
+				buffer.append( matcher.group( 1 ) );
 			}
 			buffer.append( " " )
 					.append( hint.joinType )
 					.append( " join" );
-			start = m.end();
+			start = matcher.end();
 		}
 		buffer.append( query.substring( start ) );
 		return buffer.toString();
@@ -109,22 +99,12 @@ class CockroachDialectQueryHints {
 	}
 
 
-	static class IndexHint {
-		final String table;
-		final String text;
-
-		IndexHint(String table, String text) {
-			this.table = table;
-			this.text = text;
-		}
-
+	private record IndexHint(String table, String text) {
 	}
 
-	static class JoinHint {
-		final String joinType;
-
-		JoinHint(String type) {
-			this.joinType = type.toLowerCase( Locale.ROOT );
+	private record JoinHint(String joinType) {
+		JoinHint(String joinType) {
+			this.joinType = joinType.toLowerCase( Locale.ROOT );
 		}
 	}
 }

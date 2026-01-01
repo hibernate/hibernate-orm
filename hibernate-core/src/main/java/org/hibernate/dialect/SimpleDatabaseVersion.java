@@ -21,20 +21,20 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 	}
 
 	public SimpleDatabaseVersion(DatabaseVersion version, boolean noVersionAsZero) {
-		this.major = version.getDatabaseMajorVersion();
+		major = version.getDatabaseMajorVersion();
 
 		if ( version.getDatabaseMinorVersion() == NO_VERSION ) {
-			this.minor = noVersionAsZero ? 0 : NO_VERSION;
+			minor = noVersionAsZero ? 0 : NO_VERSION;
 		}
 		else {
-			this.minor = version.getDatabaseMinorVersion();
+			minor = version.getDatabaseMinorVersion();
 		}
 
 		if ( version.getDatabaseMicroVersion() == NO_VERSION ) {
-			this.micro = noVersionAsZero ? 0 : NO_VERSION;
+			micro = noVersionAsZero ? 0 : NO_VERSION;
 		}
 		else {
-			this.micro = version.getDatabaseMicroVersion();
+			micro = version.getDatabaseMicroVersion();
 		}
 	}
 
@@ -87,7 +87,7 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 
 	@Override
 	public String toString() {
-		StringBuilder version = new StringBuilder();
+		final var version = new StringBuilder();
 		if ( major != NO_VERSION ) {
 			version.append( major );
 		}
@@ -103,15 +103,18 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof SimpleDatabaseVersion that ) ) {
 			return false;
 		}
-		SimpleDatabaseVersion that = (SimpleDatabaseVersion) o;
-		return major == that.major && minor == that.minor && micro == that.micro;
+		else {
+			return major == that.major
+				&& minor == that.minor
+				&& micro == that.micro;
+		}
 	}
 
 	@Override

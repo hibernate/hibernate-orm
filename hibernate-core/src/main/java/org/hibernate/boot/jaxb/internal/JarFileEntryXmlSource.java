@@ -43,7 +43,7 @@ public class JarFileEntryXmlSource {
 			Consumer<Binding<? extends JaxbBindableMappingDescriptor>> consumer) {
 		JAXB_LOGGER.tracef( "Seeking mapping documents in jar file: %s", jar.getName() );
 		final var origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
-		try ( var jarFile = new JarFile(jar) ) {
+		try ( var jarFile = new JarFile( jar ) ) {
 			final var entries = jarFile.entries();
 			while ( entries.hasMoreElements() ) {
 				final var jarEntry = entries.nextElement();

@@ -50,7 +50,6 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
@@ -70,7 +69,6 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -84,7 +82,6 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -351,7 +348,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// MySQL 5.7 brings JSON native support with a dedicated datatype
 		// https://dev.mysql.com/doc/refman/5.7/en/json.html
@@ -589,6 +586,8 @@ public class MySQLDialect extends Dialect {
 		super.initializeFunctionRegistry(functionContributions);
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.soundex();
 		functionFactory.radians();
@@ -639,11 +638,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.format_dateFormat();
 		functionFactory.makedateMaketime();
 		functionFactory.localtimeLocaltimestamp();
-
-		final BasicTypeRegistry basicTypeRegistry =
-				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-
-		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
 		// pi() produces a value with 7 digits unless we're explicit
 		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -716,7 +710,7 @@ public class MySQLDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
 		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
@@ -960,7 +954,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
-		final StringBuilder type = new StringBuilder();
+		final var type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
 		for ( String value : values ) {

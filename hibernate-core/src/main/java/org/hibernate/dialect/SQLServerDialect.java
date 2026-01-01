@@ -87,10 +87,8 @@ import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -217,11 +215,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	private static Integer getCompatibilityLevel(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet =
-						statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery(
+							"SELECT compatibility_level FROM sys.databases where name = db_name();" ) ) {
 				if ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
@@ -283,7 +281,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
@@ -748,7 +746,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		final StringBuilder buffer =
+		final var buffer =
 				new StringBuilder( sql.length() + hints.length() + 12 );
 		final int pos = sql.indexOf( ';' );
 		if ( pos > -1 ) {
@@ -1100,7 +1098,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getCreateIndexTail(boolean unique, List<Column> columns) {
 		if ( unique ) {
-			final StringBuilder tail = new StringBuilder();
+			final var tail = new StringBuilder();
 			for ( Column column : columns ) {
 				if ( column.isNullable() ) {
 					tail.append( tail.isEmpty() ? " where " : " and " )

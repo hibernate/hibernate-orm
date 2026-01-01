@@ -167,7 +167,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 				XML_EXTRACT_READ_INVOCATION_START, 0, XML_EXTRACT_READ_INVOCATION_START.length() )) {
 			final int argumentsStartIndex = patternIdx + XML_EXTRACT_READ_NULL_CHECK.length() + XML_EXTRACT_READ_INVOCATION_START.length();
 			separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR );
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - argumentsStartIndex + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - argumentsStartIndex + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, argumentsStartIndex, separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -177,7 +177,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 		else if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
 			&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
 			&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SIMPLE_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			final int xpathEnd;
 			if ( aggregateParentReadExpression.regionMatches( separatorIndex - 2, XML_EXTRACT_SEPARATOR, 0, XML_EXTRACT_SEPARATOR.length() ) ) {
 				xpathEnd = separatorIndex - 2;
@@ -209,7 +209,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 			caseExpression = aggregateParentReadExpression.substring( 0, patternIdx + XML_EXTRACT_READ_NULL_CHECK.length() );
 			final int argumentsStartIndex = patternIdx + XML_EXTRACT_READ_NULL_CHECK.length() + XML_EXTRACT_READ_INVOCATION_START.length();
 			final int separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR );
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - argumentsStartIndex + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - argumentsStartIndex + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, argumentsStartIndex, separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );

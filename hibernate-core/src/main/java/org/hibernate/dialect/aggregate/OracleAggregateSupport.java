@@ -37,7 +37,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -358,7 +357,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
 			&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
 			&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_EXTRACT_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -368,7 +367,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		else if ( aggregateParentReadExpression.startsWith( XML_QUERY_START )
 				&& aggregateParentReadExpression.endsWith( XML_QUERY_END )
 				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_QUERY_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
+			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_QUERY_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -511,7 +510,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Size castTargetSize,
 			BasicPluralType<?, ?> pluralType,
 			TypeConfiguration typeConfiguration) {
-		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		final BasicType<?> expressionType = pluralType.getElementType();
 		DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 		if ( ddlType == null ) {

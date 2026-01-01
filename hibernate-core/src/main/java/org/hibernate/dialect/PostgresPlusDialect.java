@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -24,6 +23,8 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE;
 
 /**
  * An SQL dialect for Postgres Plus
@@ -52,6 +53,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super.initializeFunctionRegistry( functionContributions );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
@@ -59,24 +61,24 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		functionFactory.systimestamp();
 
 		if ( getVersion().isSameOrAfter( 14 ) ) {
-			// Support for these functions were apparently only added in version 14
+			// These functions were apparently only added in version 14
 			functionFactory.bitand();
 			functionFactory.bitor();
-			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+			functionRegistry.patternDescriptorBuilder(
 							"bitxor",
 							"(bitor(?1,?2)-bitand(?1,?2))"
 					)
 					.setExactArgumentCount( 2 )
-					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 					.register();
 		}
 		else {
-			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
+			functionRegistry.patternDescriptorBuilder(
 							"bitxor",
 							"((?1|?2)-(?1&?2))"
 					)
 					.setExactArgumentCount( 2 )
-					.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+					.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 					.register();
 		}
 	}

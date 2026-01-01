@@ -8,7 +8,6 @@ import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonGenerator;
 import org.hibernate.dialect.type.OracleJsonJdbcType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -25,7 +24,6 @@ import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
@@ -74,10 +72,10 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 		return new BasicBinder<>( javaType, this ) {
 
 			private <T> byte[] toOson(T value, JavaType<T> javaType, WrapperOptions options) throws Exception {
-				final ByteArrayOutputStream out = new ByteArrayOutputStream();
+				final var out = new ByteArrayOutputStream();
 				if ( getEmbeddableMappingType() != null ) {
 					// OracleJsonFactory is used and not OracleOsonFactory as Jackson is not involved here
-					try (OracleJsonGenerator generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out )) {
+					try ( var generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out ) ) {
 						JsonGeneratingVisitor.INSTANCE.visit(
 								getEmbeddableMappingType(),
 								value,
@@ -87,7 +85,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 					}
 				}
 				else {
-					try (Closeable osonGen = OracleOsonJacksonHelper.createWriteTarget( out )) {
+					try ( var osonGen = OracleOsonJacksonHelper.createWriteTarget( out ) ) {
 						options.getJsonFormatMapper().writeToTarget( value, javaType, osonGen, options );
 					}
 				}
@@ -162,7 +160,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 					);
 				}
 				else {
-					try (Closeable osonParser = OracleOsonJacksonHelper.createReadSource( osonBytes )) {
+					try ( var osonParser = OracleOsonJacksonHelper.createReadSource( osonBytes ) ) {
 						return options.getJsonFormatMapper().readFromSource( getJavaType(), osonParser, options );
 					}
 				}
@@ -177,7 +175,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				if ( datum == null ) {
 					return null;
 				}
-				InputStream osonBytes = datum.getStream();
+				final var osonBytes = datum.getStream();
 				try {
 					return fromOson( osonBytes, options );
 				}
@@ -238,7 +236,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				}
 				else {
 					try {
-						OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
+						final var ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
 					catch (SQLException exc) {
@@ -263,7 +261,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				}
 				else {
 					try {
-						OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
+						final var ojd = statement.getObject( index, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
 					catch (SQLException exc) {
@@ -289,7 +287,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				}
 				else {
 					try {
-						OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
+						final var ojd = statement.getObject( name, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
 					catch (SQLException exc) {

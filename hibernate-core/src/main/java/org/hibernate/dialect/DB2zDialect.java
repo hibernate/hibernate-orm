@@ -128,7 +128,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		pattern.append("add_");
 		switch (unit) {
 			case NATIVE:
@@ -148,20 +148,16 @@ public class DB2zDialect extends DB2Dialect {
 		pattern.append("s(");
 		final String timestampExpression;
 		if ( unit.isDateUnit() ) {
-			if ( temporalType == TemporalType.TIME ) {
-				timestampExpression = "timestamp('1970-01-01',?3)";
-			}
-			else {
-				timestampExpression = "?3";
-			}
+			timestampExpression =
+					temporalType == TemporalType.TIME
+							? "timestamp('1970-01-01',?3)"
+							: "?3";
 		}
 		else {
-			if ( temporalType == TemporalType.DATE ) {
-				timestampExpression = "cast(?3 as timestamp)";
-			}
-			else {
-				timestampExpression = "?3";
-			}
+			timestampExpression =
+					temporalType == TemporalType.DATE
+							? "cast(?3 as timestamp)"
+							: "?3";
 		}
 		pattern.append(timestampExpression);
 		pattern.append(",");
@@ -194,7 +190,7 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	// I speculate that this is a correct implementation of rowids for DB2 for z/OS,
-	// just on the basis of the DB2 docs, but I currently have no way to test it
+	// just on the basis of the DB2 docs. But I currently have no way to test it.
 	// Note that the implementation inherited from DB2Dialect for LUW will not work!
 
 	@Override

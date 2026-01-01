@@ -4,10 +4,7 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -29,7 +26,7 @@ public enum Database {
 	DB2 {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			String databaseVersion = info.getDatabaseVersion();
+			final String databaseVersion = info.getDatabaseVersion();
 			if ( databaseVersion != null ) {
 				//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
 				switch ( databaseVersion.substring( 0, 3 ) ) {
@@ -42,17 +39,17 @@ public enum Database {
 						return new DB2zDialect( info );
 					}
 					case "QSQ": {
-						// i, this only works if "use drda metadata version" property is set to true in the drivers properties
+						// i
+						// this only works if the "use drda metadata version"
+						// property is set to true in the driver properties
 						return new DB2iDialect( info );
 					}
 				}
 			}
-			if ("DB2 UDB for AS/400".equals(info.getDatabaseName())) {
-				// i
-				return new DB2iDialect( info );
-			}
-
-			return new DB2Dialect( info );
+			// i
+			return "DB2 UDB for AS/400".equals( info.getDatabaseName() )
+					? new DB2iDialect( info ) // i
+					: new DB2Dialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -144,7 +141,7 @@ public enum Database {
 			}
 			else {
 				//in case the product name has been set to MySQL
-				String driverName = info.getDriverName();
+				final String driverName = info.getDriverName();
 				return driverName != null && driverName.startsWith( "MariaDB" );
 			}
 		}
@@ -196,10 +193,9 @@ public enum Database {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
 			final String version = getVersion( info );
-			if ( version.startsWith( "Cockroach" ) ) {
-				return new CockroachDialect( info, version );
-			}
-			return new PostgreSQLDialect( info );
+			return version.startsWith( "Cockroach" )
+					? new CockroachDialect( info, version )
+					: new PostgreSQLDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -210,10 +206,10 @@ public enum Database {
 			return "org.postgresql.Driver";
 		}
 		private String getVersion(DialectResolutionInfo info) {
-			final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+			final var databaseMetaData = info.getDatabaseMetadata();
 			if ( databaseMetaData != null ) {
-				try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
-					final ResultSet rs = statement.executeQuery( "select version()" );
+				try ( var statement = databaseMetaData.getConnection().createStatement();
+						var rs = statement.executeQuery( "select version()" ) ) {
 					if ( rs.next() ) {
 						return rs.getString( 1 );
 					}
@@ -262,15 +258,12 @@ public enum Database {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
-			if ( isASE( databaseName ) ) {
-				return new SybaseASEDialect( info );
-			}
-			return null;
+			return isASE( databaseName ) ? new SybaseASEDialect( info ) : null;
 		}
 		private boolean isASE(String databaseName) {
 			return "Sybase SQL Server".equals( databaseName )
 				|| "Adaptive Server Enterprise".equals( databaseName )
-					|| "ASE".equals( databaseName );
+				|| "ASE".equals( databaseName );
 		}
 		@Override
 		public boolean productNameMatches(String productName) {
@@ -279,7 +272,7 @@ public enum Database {
 		@Override
 		public boolean matchesUrl(String jdbcUrl) {
 			return jdbcUrl.startsWith( "jdbc:sybase:" )
-					|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
+				|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
 		}
 	};
 

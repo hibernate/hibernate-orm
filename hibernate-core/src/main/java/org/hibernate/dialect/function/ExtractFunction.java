@@ -147,7 +147,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			QueryEngine queryEngine) {
 		final NodeBuilder builder = field.nodeBuilder();
 
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+		final var typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType( Float.class );
 
@@ -240,7 +240,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			QueryEngine queryEngine) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+		final var typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType(Float.class);
 
 		final SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
@@ -266,7 +266,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			QueryEngine queryEngine) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
-		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
+		final var typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<ZoneOffset> offsetType = typeConfiguration.getBasicTypeForJavaType(ZoneOffset.class);
 		final BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType(String.class);
 

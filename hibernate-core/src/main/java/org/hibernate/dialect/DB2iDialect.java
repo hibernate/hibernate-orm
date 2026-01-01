@@ -114,7 +114,8 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? DB2iSequenceSupport.INSTANCE : NoSequenceSupport.INSTANCE;
+				? DB2iSequenceSupport.INSTANCE
+				: NoSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -133,7 +134,8 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isSameOrAfter(7, 3)
-				? FetchLimitHandler.INSTANCE : LegacyDB2LimitHandler.INSTANCE;
+				? FetchLimitHandler.INSTANCE
+				: LegacyDB2LimitHandler.INSTANCE;
 	}
 
 	@Override

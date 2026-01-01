@@ -159,7 +159,7 @@ public class C3P0ConnectionProvider
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, properties ); // defaults to false
 		isolation = extractIsolation( properties );
 
-		final Properties connectionProps = getConnectionProperties( properties );
+		final var connectionProps = getConnectionProperties( properties );
 		final var poolSettings = poolSettings( properties );
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 

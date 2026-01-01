@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
+import static java.lang.System.currentTimeMillis;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
@@ -138,7 +139,7 @@ public class CacheableFileXmlSource {
 				JAXB_LOGGER.writingCacheFile( xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
 			}
 			SerializationHelper.serialize( jaxbModel, fileOutputStream );
-			final boolean success = serFile.setLastModified( System.currentTimeMillis() );
+			final boolean success = serFile.setLastModified( currentTimeMillis() );
 			if ( !success ) {
 				JAXB_LOGGER.unableToUpdateCachedFileTimestamp( serFile.getAbsolutePath() );
 			}

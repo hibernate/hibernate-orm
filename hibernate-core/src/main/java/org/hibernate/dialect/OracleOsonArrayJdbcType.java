@@ -7,7 +7,6 @@ package org.hibernate.dialect;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
-import oracle.sql.json.OracleJsonGenerator;
 
 import org.hibernate.dialect.type.OracleJsonArrayJdbcType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -25,7 +24,6 @@ import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
@@ -62,17 +60,17 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicBinder<>( javaType, this ) {
 
 			private <T> byte[] toOsonStream(T value, JavaType<T> javaType, WrapperOptions options) throws Exception {
-				final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
-				final ByteArrayOutputStream out = new ByteArrayOutputStream();
-				try (OracleJsonGenerator generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out )) {
-					final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
+				final var domainObjects = javaType.unwrap( value, Object[].class, options );
+				final var out = new ByteArrayOutputStream();
+				try ( var generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out ) ) {
+					final var elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
 					if ( elementJavaType instanceof UnknownBasicJavaType<?> ) {
-						try (Closeable osonGen = OracleOsonJacksonHelper.createWriteTarget( out )) {
+						try ( var osonGen = OracleOsonJacksonHelper.createWriteTarget( out ) ) {
 							options.getJsonFormatMapper().writeToTarget( value, javaType, osonGen, options );
 						}
 					}
 					else {
-						final OsonDocumentWriter writer = new OsonDocumentWriter( generator );
+						final var writer = new OsonDocumentWriter( generator );
 						JsonGeneratingVisitor.INSTANCE.visitArray( elementJavaType, getElementJdbcType(), domainObjects, options, writer );
 					}
 				}
@@ -80,7 +78,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 			}
 
 			private boolean useUtf8(WrapperOptions options) {
-				final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType();
+				final var elementJavaType = ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType();
 				return elementJavaType instanceof UnknownBasicJavaType<?>
 					&& !options.getJsonFormatMapper().supportsTargetType( OracleOsonJacksonHelper.WRITER_CLASS );
 			}
@@ -136,7 +134,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 				if ( ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType() instanceof UnknownBasicJavaType<?> ) {
-					try (Closeable oParser = OracleOsonJacksonHelper.createReadSource( osonBytes )) {
+					try ( var oParser = OracleOsonJacksonHelper.createReadSource( osonBytes ) ) {
 						return options.getJsonFormatMapper().readFromSource( getJavaType(), oParser, options );
 					}
 				}
@@ -165,7 +163,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 			}
 
 			private boolean useUtf8(WrapperOptions options) {
-				final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType();
+				final var elementJavaType = ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType();
 				return elementJavaType instanceof UnknownBasicJavaType<?>
 					&& !options.getJsonFormatMapper().supportsTargetType( OracleOsonJacksonHelper.READER_CLASS );
 			}
@@ -214,7 +212,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						return fromString( statement.getBytes( index ), options );
 					}
 					else {
-						OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
+						final var ojd = statement.getObject( index, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
 				}
@@ -240,7 +238,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						return fromString( statement.getBytes( name ), options );
 					}
 					else {
-						OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
+						final var ojd = statement.getObject( name, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
 				}

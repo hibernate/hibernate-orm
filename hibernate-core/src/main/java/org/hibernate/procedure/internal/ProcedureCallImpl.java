@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -389,7 +390,13 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
-			registerParameter( position, type, mode );
+			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
+				// Hack to deal with HHH-12661
+				registerParameterWithConverter( position, getConvertedType( type ), mode );
+			}
+			else {
+				registerParameter( position, type, mode );
+			}
 		}
 		catch (HibernateException he) {
 			throw getExceptionConverter().convert( he );
@@ -408,7 +415,13 @@ public class ProcedureCallImpl<R>
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
-			registerParameter( parameterName, type, mode );
+			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
+				// Hack to deal with HHH-12661
+				registerParameterWithConverter( parameterName, getConvertedType( type ), mode );
+			}
+			else {
+				registerParameter( parameterName, type, mode );
+			}
 		}
 		catch (HibernateException he) {
 			throw getExceptionConverter().convert( he );
@@ -418,6 +431,34 @@ public class ProcedureCallImpl<R>
 			throw e;
 		}
 		return this;
+	}
+
+	private BasicType<?> getConvertedType(Class<?> type) {
+		final var convertedType =
+				getNodeBuilder().getTypeConfiguration().getBasicTypeRegistry()
+						.getRegisteredType( type.getTypeName() );
+		if ( convertedType == null ) {
+			throw new IllegalArgumentException( "Unregistered converter type: " + type.getName() );
+		}
+		return convertedType;
+	}
+
+	private <C> void registerParameterWithConverter(int position, BasicType<C> convertedType, ParameterMode mode) {
+		registerParameter( new ProcedureParameterImpl<>(
+				position,
+				mode,
+				getExpressibleJavaType( convertedType ),
+				convertedType
+		) );
+	}
+
+	private <C> void registerParameterWithConverter(String name, BasicType<C> convertedType, ParameterMode mode) {
+		registerParameter( new ProcedureParameterImpl<>(
+				name,
+				mode,
+				getExpressibleJavaType( convertedType ),
+				convertedType
+		) );
 	}
 
 	@Override

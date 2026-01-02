@@ -4,20 +4,15 @@
  */
 package org.hibernate.orm.test.procedure;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.NumericBooleanConverter;
@@ -42,12 +37,12 @@ import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
-import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Table;
 import org.hamcrest.MatcherAssert;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.cfg.QuerySettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -65,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				DB2StoredProcedureTest.IdHolder.class,
 				DB2StoredProcedureTest.Address.class,
 		},
-		properties = @Setting(name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
+		properties = @Setting(name = QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
 @RequiresDialect( value = DB2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18332" )
@@ -78,7 +73,7 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testStoredProcedureOutParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
+			final var query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
 			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.OUT );
 
@@ -94,7 +89,7 @@ public class DB2StoredProcedureTest {
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-18302" )
 	public void testStoredProcedureNamedParameters(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
+			final var query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
 
@@ -109,7 +104,7 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testStoredProcedureRefCursor(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_phones" );
+			final var query = entityManager.createStoredProcedureQuery( "sp_person_phones" );
 			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR );
 			query.setParameter( 1, 1L );
@@ -123,14 +118,10 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testHibernateProcedureCallRefCursor(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final Session session = entityManager.unwrap( Session.class );
+			final var session = entityManager.unwrap( Session.class );
 
-			final ProcedureCall call = session.createStoredProcedureCall( "sp_person_phones" );
-			final ProcedureParameter<Long> inParam = call.registerParameter(
-					1,
-					Long.class,
-					ParameterMode.IN
-			);
+			final var call = session.createStoredProcedureCall( "sp_person_phones" );
+			final var inParam = call.registerParameter( 1, Long.class, ParameterMode.IN );
 			call.setParameter( inParam, 1L );
 			call.registerParameter( 2, Class.class, ParameterMode.REF_CURSOR );
 
@@ -154,13 +145,13 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testFunctionCallWithJdbc(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final Session session = entityManager.unwrap( Session.class );
+			final var session = entityManager.unwrap( Session.class );
 			session.doWork( connection -> {
-				try (final PreparedStatement function = connection.prepareStatement(
+				try (final var function = connection.prepareStatement(
 						"select * from table(fn_person_and_phones( ? ))" )) {
 					function.setInt( 1, 1 );
 					function.execute();
-					try (final ResultSet resultSet = function.getResultSet()) {
+					try (final var resultSet = function.getResultSet()) {
 						while ( resultSet.next() ) {
 							assertThat( resultSet.getLong( 1 ) ).isInstanceOf( Long.class );
 							assertThat( resultSet.getString( 2 ) ).isInstanceOf( String.class );
@@ -174,14 +165,14 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testSysRefCursorAsOutParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery function = entityManager.createNamedStoredProcedureQuery( "singleRefCursor" );
+			final var function = entityManager.createNamedStoredProcedureQuery( "singleRefCursor" );
 
 			function.execute();
 
 			assertFalse( function.hasMoreResults() );
 			Long value = null;
 
-			try (final ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
+			try (final var resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
 				while ( resultSet.next() ) {
 					value = resultSet.getLong( 1 );
 				}
@@ -197,14 +188,14 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testOutAndSysRefCursorAsOutParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery function = entityManager.createNamedStoredProcedureQuery( "outAndRefCursor" );
+			final var function = entityManager.createNamedStoredProcedureQuery( "outAndRefCursor" );
 
 			function.execute();
 
 			assertFalse( function.hasMoreResults() );
 			Long value = null;
 
-			try (final ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
+			try (final var resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
 				while ( resultSet.next() ) {
 					value = resultSet.getLong( 1 );
 				}
@@ -218,15 +209,16 @@ public class DB2StoredProcedureTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18332" )
 	public void testBindParameterAsHibernateType(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phone_validity" )
+			final var query = entityManager.createStoredProcedureQuery( "sp_phone_validity" )
 					.registerStoredProcedureParameter( 1, NumericBooleanConverter.class, ParameterMode.IN )
 					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 					.setParameter( 1, true );
 
 			query.execute();
-			final List phones = query.getResultList();
+			final List<?> phones = query.getResultList();
 			assertEquals( 1, phones.size() );
 			assertEquals( "123-456-7890", phones.get( 0 ) );
 		} );
@@ -246,13 +238,13 @@ public class DB2StoredProcedureTest {
 		} );
 
 		scope.inTransaction( entityManager -> {
-			final StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_votes" )
+			final var query = entityManager.createStoredProcedureQuery( "sp_votes" )
 					.registerStoredProcedureParameter( 1, YesNoConverter.class, ParameterMode.IN )
 					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 					.setParameter( 1, true );
 
 			query.execute();
-			final List votes = query.getResultList();
+			final List<?> votes = query.getResultList();
 			assertEquals( 1, votes.size() );
 			assertEquals( 1, ( (Number) votes.get( 0 ) ).intValue() );
 		} );
@@ -263,7 +255,7 @@ public class DB2StoredProcedureTest {
 	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					var query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
 					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
@@ -271,7 +263,7 @@ public class DB2StoredProcedureTest {
 					query.setParameter( "street_in", STREET )
 							.setParameter( "city_in", CITY );
 					query.execute();
-					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					var rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
 						Assertions.assertTrue( rs.next() );
 						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
@@ -290,7 +282,7 @@ public class DB2StoredProcedureTest {
 	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					var query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
 					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
@@ -298,7 +290,7 @@ public class DB2StoredProcedureTest {
 					query.setParameter( "street_in", STREET )
 							.setParameter( "city_in", CITY );
 					query.execute();
-					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					var rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
 						Assertions.assertTrue( rs.next() );
 						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
@@ -317,7 +309,7 @@ public class DB2StoredProcedureTest {
 	public void testStoredProcedureInAndOutAndRefCursorParametersDifferentRegistrationOrder2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
+					var query = entityManager.createStoredProcedureQuery( "sp_get_address_by_street_city" );
 					query.registerStoredProcedureParameter( "rec_out", ResultSet.class, ParameterMode.REF_CURSOR );
 					query.registerStoredProcedureParameter( "city_in", String.class, ParameterMode.IN );
 					query.registerStoredProcedureParameter( "street_in", String.class, ParameterMode.IN );
@@ -325,7 +317,7 @@ public class DB2StoredProcedureTest {
 					query.setParameter( "street_in", STREET )
 							.setParameter( "city_in", CITY );
 					query.execute();
-					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
+					var rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
 						Assertions.assertTrue( rs.next() );
 						MatcherAssert.assertThat( rs.getString( "street" ), is( STREET ) );
@@ -342,8 +334,8 @@ public class DB2StoredProcedureTest {
 
 	@BeforeAll
 	public void prepareSchema(EntityManagerFactoryScope scope) {
-		scope.inTransaction( (entityManager) -> entityManager.unwrap( Session.class ).doWork( (connection) -> {
-			try (final Statement statement = connection.createStatement()) {
+		scope.inTransaction( entityManager -> entityManager.unwrap( Session.class ).doWork( connection -> {
+			try (final var statement = connection.createStatement()) {
 				statement.executeUpdate(
 						"CREATE OR REPLACE PROCEDURE sp_count_phones(  " +
 								"   IN personId INT,  " +
@@ -474,7 +466,7 @@ public class DB2StoredProcedureTest {
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope){
-		scope.inTransaction( (entityManager) -> {
+		scope.inTransaction( entityManager -> {
 			final Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
@@ -500,10 +492,10 @@ public class DB2StoredProcedureTest {
 
 	@AfterAll
 	public void cleanUpSchema(EntityManagerFactoryScope scope) {
-		scope.inEntityManager( (em) -> {
-			final Session session = em.unwrap( Session.class );
+		scope.inEntityManager( entityManager -> {
+			final var session = entityManager.unwrap( Session.class );
 			session.doWork( connection -> {
-				try (final Statement statement = connection.createStatement()) {
+				try (final var statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
 					statement.executeUpdate( "DROP PROCEDURE sp_person_phones" );
 					statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
@@ -522,11 +514,10 @@ public class DB2StoredProcedureTest {
 
 	@AfterEach
 	public void cleanData(EntityManagerFactoryScope scope) {
-		scope.inTransaction( (em) -> {
-			final List<Person> people = em.createQuery( "from Person", Person.class ).getResultList();
-			people.forEach( em::remove );
-
-			em.createQuery( "delete Address" ).executeUpdate();
+		scope.inTransaction( entityManager -> {
+			final List<Person> people = entityManager.createQuery( "from Person", Person.class ).getResultList();
+			people.forEach( entityManager::remove );
+			entityManager.createQuery( "delete Address" ).executeUpdate();
 		} );
 	}
 

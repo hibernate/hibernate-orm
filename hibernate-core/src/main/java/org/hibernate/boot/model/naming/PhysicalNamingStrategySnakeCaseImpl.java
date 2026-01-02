@@ -60,10 +60,17 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 
 	private String camelCaseToSnakeCase(String name) {
 		final StringBuilder builder = new StringBuilder( name.replace( '.', '_' ) );
-		for ( int i = 1; i < builder.length() - 1; i++ ) {
-			if ( isUnderscoreRequired( builder.charAt( i - 1 ), builder.charAt( i ), builder.charAt( i + 1 ) ) ) {
-				builder.insert( i++, '_' );
+		final String orig = builder.toString();
+		int builderIndex = 1;
+		for ( int i = 1; i <= orig.length() - 1; i++ ) {
+			if ( isUnderscoreRequired(
+					orig.charAt( i - 1 ),
+					orig.charAt( i ),
+					i == orig.length() - 1 ? '*' : orig.charAt(i + 1) )		// add some fictitious final character
+			) {
+				builder.insert( builderIndex++, '_' );
 			}
+			builderIndex++;
 		}
 		return builder.toString();
 	}
@@ -79,6 +86,6 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 	private boolean isUnderscoreRequired(final char before, final char current, final char after) {
 		return ( isLowerCase( before ) || isDigit( before ) )
 			&& isUpperCase( current )
-			&& ( isLowerCase( after ) || isDigit( after ) );
+			&& ( isLowerCase( after ) || isDigit( after ) || after == '*' );
 	}
 }

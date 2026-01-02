@@ -65,19 +65,22 @@ public class CamelCaseToUnderscoresNamingStrategyTest {
 				.isEqualTo( "hello3d4" );
 		assertThat( entityBinding.getProperty( "quoted" ).getSelectables().get( 0 ).getText() )
 				.isEqualTo( "Quoted-ColumnName" );
+		assertThat( entityBinding.getProperty( "wordX" ).getSelectables().get( 0 ).getText() )
+				.isEqualTo( "word_x" );
 	}
 
 	@Entity
 	@Table(name = "ABCD")
-	class B implements java.io.Serializable {
+	private static class B implements java.io.Serializable {
 		@Id
-		protected String AbcdEfghI21;
-		protected String wordWithDigitD1;
-		protected String hello1;
-		protected String hello1D2;
-		protected String hello3d4;
+		private String AbcdEfghI21;
+		private String wordWithDigitD1;
+		private String hello1;
+		private String hello1D2;
+		private String hello3d4;
 		@Column(name = "\"Quoted-ColumnName\"")
-		protected String quoted;
+		private String quoted;
+		private String wordX;
 
 		public String getAbcdEfghI21() {
 			return AbcdEfghI21;

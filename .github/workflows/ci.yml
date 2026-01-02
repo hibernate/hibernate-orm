@@ -1,0 +1,120 @@
+name: GH Actions CI
+
+on:
+  pull_request:
+    branches:
+      - '5.3'
+      # Ignore dependabot PRs that are not just about build dependencies or workflows;
+      # we'll reject such PRs and send one ourselves.
+      - '!dependabot/**'
+      - 'dependabot/maven/build-dependencies-**'
+      - 'dependabot/github_actions/workflow-actions-**'
+
+permissions: { } # none
+
+# See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
+concurrency:
+  # Consider that two builds are in the same concurrency group (cannot run concurrently)
+  # if they use the same workflow and are about the same branch ("ref") or pull request.
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
+  # Cancel previous builds in the same concurrency group even if they are in progress
+  # for pull requests or pushes to forks (not the upstream repository).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
+
+jobs:
+
+  # Main job for h2/docker DBs.
+  build:
+    permissions:
+      contents: read
+    name: OpenJDK 8 - ${{matrix.rdbms}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rdbms: h2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up Java 8
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
+          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+      - name: Cache Maven/Gradle Dependency/Dist Caches
+        id: cache-maven
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        # if it's not a pull request, we restore and save the cache
+        if: github.event_name != 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # The whole cache is dropped monthly to prevent unlimited growth.
+          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+      - name: Restore Maven/Gradle Dependency/Dist Caches
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        # if it a pull request, we restore the cache but we don't save it
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
+      - name: Run build script
+        run: ./ci/build-github.sh
+        shell: bash
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+          # For jobs running on 'push', publish build scan and cache immediately.
+          # This won't work for pull requests, since they don't have access to secrets.
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
+      # For jobs running on 'pull_request', upload build scan data.
+      # The actual publishing must be done in a separate job (see ci-report.yml).
+      # We don't write to the remote cache as that would be unsafe.
+      - name: Upload GitHub Actions artifact for the Develocity build scan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
+        with:
+          name: build-scan-data-${{ matrix.rdbms }}
+          path: ~/.gradle/build-scan-data
+
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: test-reports-java11-${{ matrix.rdbms }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh

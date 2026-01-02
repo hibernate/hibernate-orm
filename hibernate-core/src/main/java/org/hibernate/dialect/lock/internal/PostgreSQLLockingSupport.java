@@ -93,29 +93,17 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 					if ( "0".equals( value ) ) {
 						return Timeouts.WAIT_FOREVER;
 					}
-					if (value.endsWith("ms")) {
-						int millis = Integer.parseInt(value.substring(0, value.length() - 2));
-						return Timeout.milliseconds(millis);
-					}
-					if (value.endsWith("s")) {
-						int seconds = Integer.parseInt(value.substring(0, value.length() - 1));
-						return Timeout.seconds(seconds);
-					}
-					if (value.endsWith("min")) {
-						int minutes = Integer.parseInt(value.substring(0, value.length() - 3));
-						return Timeout.seconds(minutes * 60);
-					}
-					if (value.endsWith("h")) {
-						int hours = Integer.parseInt(value.substring(0, value.length() - 1));
-						return Timeout.seconds(hours * 3600);
-					}
-					if (value.endsWith("d")) {
-						int hours = Integer.parseInt(value.substring(0, value.length() - 1));
-						return Timeout.seconds(hours * 3600 * 24);
-					}
-					throw new IllegalArgumentException(
-							"Unexpected PostgreSQL lock_timeout format: " + value
-					);
+					final var unitStartIndex = findUnitStartIndex( value );
+					final var amount = Integer.parseInt( value, 0, unitStartIndex, 10 );
+					return switch ( unitStartIndex == -1 ? "ms" : value.substring( unitStartIndex ) ) {
+						case "ms" -> Timeout.milliseconds( amount );
+						case "s" -> Timeout.seconds( amount );
+						case "min" -> Timeout.seconds( amount * 60 );
+						case "h" -> Timeout.seconds( amount * 3600 );
+						case "d" -> Timeout.seconds( amount * 3600 * 24 );
+						default -> throw new IllegalArgumentException(
+							"Unexpected PostgreSQL lock_timeout format: " + value );
+					};
 				},
 				connection,
 				factory
@@ -143,5 +131,14 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 				connection,
 				factory
 		);
+	}
+
+	private static int findUnitStartIndex(String value) {
+		for ( int i = value.length() - 1; i > 0; i-- ) {
+			if ( Character.isDigit( value.charAt( i ) ) ) {
+				return i + 1;
+			}
+		}
+		return -1;
 	}
 }

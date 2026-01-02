@@ -259,7 +259,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				JavaType<E> fieldJtdTest,
 				NodeBuilder nodeBuilder) {
 			return new SqmFieldLiteral<>(
-					jpaMetamodel.getJavaConstant( prefix, terminal ),
+					jpaMetamodel.getJavaConstant( prefix, terminal, fieldJtdTest.getJavaTypeClass() ),
 					fieldJtdTest,
 					terminal,
 					nodeBuilder

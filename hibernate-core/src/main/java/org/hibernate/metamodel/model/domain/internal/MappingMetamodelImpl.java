@@ -485,8 +485,8 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> T getJavaConstant(String className, String fieldName) {
-		return jpaMetamodel.getJavaConstant( className, fieldName );
+	public <E> E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass) {
+		return jpaMetamodel.getJavaConstant( className, fieldName, javaTypeClass );
 	}
 
 	@Override

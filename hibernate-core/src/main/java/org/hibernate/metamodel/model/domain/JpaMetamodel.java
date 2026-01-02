@@ -107,7 +107,7 @@ public interface JpaMetamodel extends Metamodel {
 
 	JavaType<?> getJavaConstantType(String className, String fieldName);
 
-	<T> T getJavaConstant(String className, String fieldName);
+	<E> @Nullable E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

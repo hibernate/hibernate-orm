@@ -149,6 +149,7 @@ jobs:
       contents: read
     name: GraalVM 25 - ${{matrix.rdbms}}
     runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
+    if: github.repository == 'hibernate/hibernate-orm'
     strategy:
       fail-fast: false
       matrix:

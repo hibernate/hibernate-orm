@@ -134,7 +134,7 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 	}
 
 	private static int findUnitStartIndex(String value) {
-		for ( int i = value.length() - 1; i > 0; i-- ) {
+		for ( int i = value.length() - 1; i >= 0; i-- ) {
 			if ( Character.isDigit( value.charAt( i ) ) ) {
 				return i + 1;
 			}

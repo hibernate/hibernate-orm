@@ -37,6 +37,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 
 /**
  * A registry of {@link BasicType} instances
@@ -122,8 +123,17 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public <J> @Nullable BasicType<J> getRegisteredType(Class<J> javaType) {
-		//noinspection unchecked
-		return (BasicType<J>) getRegisteredType( javaType.getTypeName() );
+		final var type = getRegisteredType( javaType.getTypeName() );
+		if ( type!= null
+				// workaround for String keys which look like class names
+				&& canonicalize( javaType ) == type.getJavaType() ) {
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var castType = (BasicType<J>) type;
+			return castType;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public @Nullable BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
@@ -131,8 +141,17 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public <J> @Nullable BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
-		//noinspection unchecked
-		return (BasicType<J>) getRegisteredType( basicTypeReference.getName() );
+		final var type = getRegisteredType( basicTypeReference.getName() );
+		if ( type!= null
+				// workaround for String keys which look like class names
+				&& basicTypeReference.getJavaType() == type.getJavaType() ) {
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var castType = (BasicType<J>) type;
+			return castType;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public <J> BasicType<J> resolve(Class<J> javaType, int sqlTypeCode) {

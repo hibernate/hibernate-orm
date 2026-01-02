@@ -365,7 +365,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			//won't work at all without some special casing in the Dialects
 //			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			default: {
-				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				final var registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
 					return registeredBasicType;
 				}

@@ -106,6 +106,13 @@ public class TemporalTypeTest {
 					query.getResultList();
 				}
 		);
+		scope.inTransaction(
+				entityManager -> {
+					Query query = entityManager.createQuery("from DataPoint dp where my_function(:cal) = 1")
+							.setParameter("cal", calendar, TemporalType.TIMESTAMP);
+					query.getResultList();
+				}
+		);
 	}
 
 

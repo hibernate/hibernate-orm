@@ -14,6 +14,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Internal;
@@ -807,4 +808,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.Session#setProperty(String, Object)
 	 */
 	Map<String, Object> getDefaultSessionProperties();
+
+	/**
+	 * The graph parser mode to use for parsing entity graph strings.
+	 *
+	 * @see org.hibernate.cfg.GraphParserSettings#GRAPH_PARSER_MODE
+	 *
+	 * @since 7.0
+	 */
+	GraphParserMode getGraphParserMode();
+
 }

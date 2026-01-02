@@ -14,6 +14,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
@@ -590,6 +591,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public Map<String, Object> getDefaultSessionProperties() {
 		return delegate.getDefaultSessionProperties();
+	}
+
+	@Override
+	public GraphParserMode getGraphParserMode() {
+		return delegate.getGraphParserMode();
 	}
 
 	@Override

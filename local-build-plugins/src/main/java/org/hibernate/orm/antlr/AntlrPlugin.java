@@ -72,6 +72,15 @@ public class AntlrPlugin implements Plugin<Project> {
 		);
 
 		antlrSpec.getGrammarDescriptors().create(
+				"deprecated-graph",
+				(grammarDescriptor) -> {
+					grammarDescriptor.getPackageName().set( GRAPH_PKG );
+					grammarDescriptor.getLexerFileName().set( "GraphLanguageLexer.g4" );
+					grammarDescriptor.getParserFileName().set( "LegacyGraphLanguageParser.g4" );
+				}
+		);
+
+		antlrSpec.getGrammarDescriptors().create(
 				"graph",
 				(grammarDescriptor) -> {
 					grammarDescriptor.getPackageName().set( GRAPH_PKG );

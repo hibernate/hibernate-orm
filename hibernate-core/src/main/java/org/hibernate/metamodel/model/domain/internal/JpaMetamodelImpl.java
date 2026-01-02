@@ -512,7 +512,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 							}
 						}
 						throw new IllegalArgumentException( "Cannot resolve entity name : " + jpaEntityName );
-					}
+					},
+					serviceRegistry
 			);
 			entityGraphMap.put( definition.name(), graph );
 		}

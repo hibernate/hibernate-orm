@@ -7,10 +7,12 @@
  * @author Steve Ebersole
  */
 
-@NamedEntityGraph( name = "book-title-isbn", graph = "Book: title, isbn")
-@NamedEntityGraph( name = "book-title-isbn-author", graph = "Book: title, isbn, author")
-@NamedEntityGraph( name = "book-title-isbn-editor", graph = "Book: title, isbn, editor")
-@NamedEntityGraph( name = "duplicated-name", graph = "Book: title")
+@NamedEntityGraph(name = "book-title-isbn", graph = "Book: title, isbn")
+@NamedEntityGraph(name = "book-title-isbn-author", graph = "Book: title, isbn, author")
+@NamedEntityGraph(name = "book-title-isbn-editor", graph = "Book: title, isbn, editor")
+@NamedEntityGraph(name = "duplicated-name", graph = "Book: title")
+@NamedEntityGraph(root = Book.class, name = "book-title-with-root-attribute", graph = "title")
+@NamedEntityGraph(root = Book.class, name = "book-title-with-root-attribute-and-type-indicator", graph = "Book: title")
 package org.hibernate.orm.test.entitygraph.named.parsed.pkg;
 
 import org.hibernate.annotations.NamedEntityGraph;

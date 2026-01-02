@@ -103,7 +103,7 @@ public class QueryBuilder {
 
 		this.revisionType = sessionFactory.getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getRegisteredType( RevisionTypeType.class );
+				.getRegisteredType( RevisionTypeType.class.getName() );
 
 		final Parameters rootParameters = new Parameters( alias, "and", paramCounter );
 		parameters.add( rootParameters );

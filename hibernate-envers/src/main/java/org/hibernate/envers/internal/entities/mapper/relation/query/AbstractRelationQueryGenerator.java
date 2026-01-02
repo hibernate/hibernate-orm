@@ -62,7 +62,7 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 		final BasicType<?> revisionType = session.getFactory()
 				.getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getRegisteredType( RevisionTypeType.class );
+				.getRegisteredType( RevisionTypeType.class.getName() );
 
 		final Query query = session.createQuery( queryString );
 		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL, revisionType );

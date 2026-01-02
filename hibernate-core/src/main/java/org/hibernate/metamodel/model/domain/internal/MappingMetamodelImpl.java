@@ -59,7 +59,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.metamodel.EmbeddableType;
@@ -654,7 +653,7 @@ public class MappingMetamodelImpl
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var javaTypeDescriptor = javaTypeRegistry.findDescriptor( javaType );
 		if ( javaTypeDescriptor != null ) {
-			final JdbcType recommendedJdbcType =
+			final var recommendedJdbcType =
 					javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
 				return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, recommendedJdbcType );
@@ -684,6 +683,25 @@ public class MappingMetamodelImpl
 		final var clazz = unproxiedClass( bindValue );
 		// Resolve the superclass bindable type if necessary,
 		// as we don't register types for e.g. Inet4Address
+		var type = searchSupertypesForBindableType( clazz );
+		if ( type != null ) {
+			return type;
+		}
+
+		if ( clazz.isEnum() ) {
+			return null; //createEnumType( (Class) clazz );
+		}
+		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
+			final var parameterBindType = resolveParameterBindType( Serializable.class );
+			//noinspection unchecked (completely safe)
+			return (BindableType<? super T>) parameterBindType;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private <T> @Nullable BindableType<? super T> searchSupertypesForBindableType(Class<T> clazz) {
 		Class<? super T> c = clazz;
 		do {
 			final var type = resolveParameterBindType( c );
@@ -693,18 +711,7 @@ public class MappingMetamodelImpl
 			c = c.getSuperclass();
 		}
 		while ( c != Object.class );
-
-		if ( clazz.isEnum() ) {
-			return null; //createEnumType( (Class) clazz );
-		}
-		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
-			final var parameterBindType = resolveParameterBindType( Serializable.class );
-			//noinspection unchecked
-			return (BindableType<? super T>) parameterBindType;
-		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	private static <T> Class<T> unproxiedClass(T bindValue) {

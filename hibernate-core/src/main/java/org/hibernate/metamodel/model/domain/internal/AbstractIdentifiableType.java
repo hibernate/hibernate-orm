@@ -34,8 +34,6 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
-import org.jboss.logging.Logger;
-
 import static java.util.Collections.emptyList;
 
 /**
@@ -301,11 +299,16 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	private void checkDeclaredVersion() {
-		if ( versionAttribute == null || ( getSuperType() != null && getSuperType().hasVersionAttribute() )) {
+		if ( versionAttribute == null || supertypeDeclaresVersion() ) {
 			throw new IllegalArgumentException(
 					"The version attribute is not declared by this type [" + getJavaType() + "]"
 			);
 		}
+	}
+
+	private boolean supertypeDeclaresVersion() {
+		final var superType = getSuperType();
+		return superType != null && superType.hasVersionAttribute();
 	}
 
 //	@Override
@@ -406,11 +409,7 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	private static final Logger LOG = Logger.getLogger( AbstractIdentifiableType.class );
-
 	private SqmPathSource<?> interpretIdDescriptor() {
-		LOG.tracef( "Interpreting domain-model identifier descriptor" );
-
 		final var superType = getSuperType();
 		if ( superType != null ) {
 			final var idDescriptor = superType.getIdentifierDescriptor();
@@ -429,11 +428,10 @@ public abstract class AbstractIdentifiableType<J>
 		else {
 			if ( isIdMappingRequired() ) {
 				throw new UnsupportedMappingException(
-						"Could not build SqmPathSource for entity identifier : " + getTypeName() );
+						"Could not build SqmPathSource for entity identifier: " + getTypeName() );
 			}
 			return null;
 		}
-
 	}
 
 	private AbstractSqmPathSource<?> compositePathSource() {

@@ -900,7 +900,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <T> T getJavaConstant(String className, String fieldName) {
+		public <E> E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass) {
 			return null;
 		}
 

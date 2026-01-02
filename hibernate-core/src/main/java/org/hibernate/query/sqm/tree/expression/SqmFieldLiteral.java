@@ -4,12 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.QueryException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -37,18 +35,6 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	private final String fieldName;
 
 	public SqmFieldLiteral(
-			Field field,
-			JavaType<T> fieldJavaType,
-			NodeBuilder nodeBuilder){
-		this(
-				extractValue( field ),
-				fieldJavaType,
-				field.getName(),
-				nodeBuilder
-		);
-	}
-
-	public SqmFieldLiteral(
 			@Nullable T value,
 			JavaType<T> fieldJavaType,
 			String fieldName,
@@ -62,18 +48,6 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	@Override
 	public PersistenceType getPersistenceType() {
 		return BASIC;
-	}
-
-	// Checker Framework JDK seems to miss @Nullable for Field.get()
-	@SuppressWarnings("argument")
-	private static <T> @Nullable T extractValue(Field field) {
-		try {
-			//noinspection unchecked
-			return (T) field.get( null );
-		}
-		catch (IllegalAccessException e) {
-			throw new QueryException( "Could not access Field value for SqmFieldLiteral", e );
-		}
 	}
 
 	@Override

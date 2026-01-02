@@ -894,7 +894,7 @@ public class MetadataContext {
 		}
 		else {
 			if ( domainType.getJavaType() != javaType ) {
-				throw new AssertionFailure( "Basic type mismatch: "
+				throw new AssertionFailure( "Basic type mismatch:"
 						+ " expected " + javaType.getTypeName()
 						+ " but was " + domainType.getJavaType().getTypeName() );
 			}

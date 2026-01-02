@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -59,6 +60,7 @@ import jakarta.persistence.metamodel.Type;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectEntityGraph;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryReference;
 
@@ -144,9 +146,9 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		// NOTE: `managedTypeByName` is keyed by Hibernate entity name.
 		// If there is a direct match based on key, we want that one - see above.
-		// However, the JPA contract for `#entity` is to match `@Entity(name)`; if there
-		// was no direct match, we need to iterate over all of the and look based on
-		// JPA entity-name.
+		// However, the JPA contract for `#entity` is to match `@Entity(name)`;
+		// if there was no direct match, we need to iterate over all of them and
+		// look based on JPA entity name.
 
 		for ( var entry : managedTypeByName.entrySet() ) {
 			if ( entry.getValue() instanceof EntityDomainType<?> possibility ) {
@@ -213,10 +215,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				importInfo.loadedClass = loadedClass;
 			}
 		}
-		if ( loadedClass != null ) {
-			return resolveEntityReference( loadedClass );
-		}
-		return null;
+
+		return loadedClass == null ? null : resolveEntityReference( loadedClass );
 	}
 
 	@Override
@@ -338,8 +338,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				if ( clazz == null || !clazz.isEnum() ) {
 					return null;
 				}
-				//noinspection rawtypes,unchecked
-				return new EnumJavaType( clazz );
+				else {
+					//noinspection rawtypes,unchecked
+					return new EnumJavaType( clazz );
+				}
 			}
 			catch (ClassLoadingException e) {
 				throw new RuntimeException( e );
@@ -368,11 +370,19 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public <T> T getJavaConstant(String className, String fieldName) {
+	public <E> E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass) {
 		try {
 			final var referencedField = getJavaField( className, fieldName );
-			//noinspection unchecked
-			return (T) referencedField.get( null );
+			if ( referencedField == null ) {
+				throw new IllegalArgumentException( "Referenced field '" + fieldName
+						+ "' of class '" + className + "' does not exist" );
+			}
+			if ( !javaTypeClass.isAssignableFrom( canonicalize( referencedField.getType() ) ) ) {
+				throw new IllegalArgumentException( "Referenced field '" + fieldName
+						+ "' of class '" + className
+						+ "' is not assignable to '" + javaTypeClass.getTypeName() + "'" );
+			}
+			return javaTypeClass.cast( referencedField.get( null) );
 		}
 		catch (NoSuchFieldException | IllegalAccessException e) {
 			throw new RuntimeException( e );
@@ -381,10 +391,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private Field getJavaField(String className, String fieldName) throws NoSuchFieldException {
 		final Class<?> namedClass = classLoaderService.classForName( className );
-		if ( namedClass != null ) {
-			return namedClass.getDeclaredField( fieldName );
-		}
-		return null;
+		return namedClass == null ? null : namedClass.getDeclaredField( fieldName );
 	}
 
 	@Override
@@ -521,65 +528,29 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> EntityDomainType<T> resolveEntityReference(Class<T> javaType) {
+	private EntityDomainType<?> resolveEntityReference(Class<?> javaType) {
 		// try the incoming Java type as a "strict" entity reference
-		{
-			final var managedType = managedTypeByClass.get( javaType );
-			if ( managedType instanceof EntityDomainType<?> ) {
-				return (EntityDomainType<T>) managedType;
-			}
+		final var managedType = managedTypeByClass.get( javaType );
+		if ( managedType instanceof EntityDomainType<?> entityDomainType ) {
+			return entityDomainType;
 		}
 
 		// Next, try it as a proxy interface reference
-		{
-			final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
-			if ( proxyEntityName != null ) {
-				return (EntityDomainType<T>) entity( proxyEntityName );
-			}
+		final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
+		if ( proxyEntityName != null ) {
+			return entity( proxyEntityName );
 		}
 
 		// otherwise, try to handle it as a polymorphic reference
-		{
-			final var polymorphicDomainType =
-					(EntityDomainType<T>)
-							polymorphicEntityReferenceMap.get( javaType );
-			if ( polymorphicDomainType != null ) {
-				return polymorphicDomainType;
-			}
-
-			// create a set of descriptors that should be used to build the polymorphic EntityDomainType
-			final Set<EntityDomainType<? extends T>> matchingDescriptors = new HashSet<>();
-			for ( var managedType : managedTypeByName.values() ) {
-				if ( managedType.getPersistenceType() == Type.PersistenceType.ENTITY
-						// see if we should add EntityDomainType as one of the matching descriptors.
-						&& javaType.isAssignableFrom( managedType.getJavaType() ) ) {
-					// The queried type is assignable from the type of the current entity type.
-					// We should add it to the collecting set of matching descriptors. It should
-					// be added aside from a few cases...
-
-					// If the managed type has a supertype and the java type is assignable from the super type,
-					// do not add the managed type as the supertype itself will get added and the initializers
-					// for entity mappings already handle loading subtypes - adding it would be redundant and
-					// lead to incorrect results
-					final var superType = managedType.getSuperType();
-					if ( superType == null
-							|| superType.getPersistenceType() != Type.PersistenceType.ENTITY
-							|| !javaType.isAssignableFrom( superType.getJavaType() ) ) {
-						matchingDescriptors.add( (EntityDomainType<? extends T>) managedType );
-					}
-
-				}
-			}
-
-			// if we found any matching, create the virtual root EntityDomainType reference
-			if ( !matchingDescriptors.isEmpty() ) {
-				final var polymorphicRootDescriptor = new SqmPolymorphicRootDescriptor<>(
-						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),
-						matchingDescriptors,
-						this
-				);
-				polymorphicEntityReferenceMap.putIfAbsent( javaType, polymorphicRootDescriptor );
+		final var polymorphicDomainType =
+						polymorphicEntityReferenceMap.get( javaType );
+		if ( polymorphicDomainType != null ) {
+			return polymorphicDomainType;
+		}
+		else {
+			final var polymorphicRootDescriptor =
+					createPolymorphicRootDescriptor( javaType );
+			if ( polymorphicRootDescriptor != null ) {
 				return polymorphicRootDescriptor;
 			}
 		}
@@ -588,6 +559,50 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				"Could not resolve entity class '" + javaType.getName() + "'",
 				javaType.getName()
 		);
+	}
+
+	private <T> @Nullable SqmPolymorphicRootDescriptor<T> createPolymorphicRootDescriptor(Class<T> javaType) {
+		// create a set of descriptors that should be used to build the polymorphic EntityDomainType
+		final Set<EntityDomainType<? extends T>> matchingDescriptors = new HashSet<>();
+		for ( var managedType : managedTypeByName.values() ) {
+			if ( managedType.getPersistenceType() == Type.PersistenceType.ENTITY
+				// see if we should add EntityDomainType as one of the matching descriptors.
+				&& javaType.isAssignableFrom( managedType.getJavaType() ) ) {
+				// The queried type is assignable from the type of the current entity type.
+				// We should add it to the collecting set of matching descriptors. It should
+				// be added aside from a few cases...
+
+				// If the managed type has a supertype and the java type is assignable from the super type,
+				// do not add the managed type as the supertype itself will get added and the initializers
+				// for entity mappings already handle loading subtypes - adding it would be redundant and
+				// lead to incorrect results
+				final var superType = managedType.getSuperType();
+				if ( superType == null
+						|| superType.getPersistenceType() != Type.PersistenceType.ENTITY
+						|| !javaType.isAssignableFrom( superType.getJavaType() ) ) {
+					final var entityDomainType = (EntityDomainType<?>) managedType;
+					if ( !javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
+						throw new AssertionFailure( "Supertype mismatch: " + javaType.getTypeName()
+								+ " is not a supertype of " + entityDomainType.getJavaType().getTypeName() );
+					}
+					@SuppressWarnings("unchecked") // Safe, we just checked
+					final var castDomainType = (EntityDomainType<? extends T>) entityDomainType;
+					matchingDescriptors.add( castDomainType );
+				}
+			}
+		}
+
+		// if we found any matching, create the virtual root EntityDomainType reference
+		if ( !matchingDescriptors.isEmpty() ) {
+			final var polymorphicRootDescriptor = new SqmPolymorphicRootDescriptor<>(
+					typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),
+					matchingDescriptors,
+					this
+			);
+			polymorphicEntityReferenceMap.putIfAbsent( javaType, polymorphicRootDescriptor );
+			return polymorphicRootDescriptor;
+		}
+		return null;
 	}
 
 	@Override
@@ -744,12 +759,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			Class<J> mappedClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
-		final var supertype =
-				(IdentifiableDomainType<? super J>)
-						supertypeForPersistentClass( persistentClass, context, typeConfiguration );
-		return new EntityTypeImpl<>( entityJavaType( mappedClass, context ),
-				supertype, persistentClass, this );
+		return new EntityTypeImpl<>(
+				entityJavaType( mappedClass, context ),
+				narrowSupertype( mappedClass,
+					supertypeForPersistentClass( persistentClass, context, typeConfiguration ) ),
+				persistentClass,
+				this
+		);
 	}
 
 	private static <J> JavaType<J> entityJavaType(Class<J> mappedClass, MetadataContext context) {
@@ -790,20 +806,43 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			Class<T> mappedClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked")
-		final var superType =
-				(IdentifiableDomainType<? super T>)
-						supertypeForMappedSuperclass( mappedSuperclass, context, typeConfiguration );
-		final var javaType =
-				context.getTypeConfiguration().getJavaTypeRegistry()
-						.resolveManagedTypeDescriptor( mappedClass );
 		final var mappedSuperclassType =
-				new MappedSuperclassTypeImpl<>( javaType, mappedSuperclass, superType, this );
+				new MappedSuperclassTypeImpl<>(
+						context.getTypeConfiguration().getJavaTypeRegistry()
+								.resolveManagedTypeDescriptor( mappedClass ),
+						mappedSuperclass,
+						narrowSupertype( mappedClass,
+								supertypeForMappedSuperclass( mappedSuperclass, context, typeConfiguration ) ),
+						this
+				);
 		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
 		return mappedSuperclassType;
 	}
 
-	private IdentifiableDomainType<?> supertypeForPersistentClass(
+	private <J> @Nullable IdentifiableDomainType<? super J> narrowSupertype(
+			Class<J> mappedClass, @Nullable IdentifiableDomainType<?> supertypeDomainType) {
+		if ( supertypeDomainType == null ) {
+			return null;
+		}
+		else if ( mappedClass == null ) {
+			// dynamic map
+			//noinspection unchecked
+			return (IdentifiableDomainType<? super J>)
+					supertypeDomainType;
+		}
+		else {
+			if ( !supertypeDomainType.getJavaType().isAssignableFrom( mappedClass ) ) {
+				throw new AssertionFailure( "Supertype mismatch: "
+						+ supertypeDomainType.getJavaType().getTypeName()
+						+ " is not a supertype of " + mappedClass.getTypeName() );
+			}
+			@SuppressWarnings("unchecked") // Safe, we just checked
+			final var supertype = (IdentifiableDomainType<? super J>) supertypeDomainType;
+			return supertype;
+		}
+	}
+
+	private @Nullable IdentifiableDomainType<?> supertypeForPersistentClass(
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
@@ -824,7 +863,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private IdentifiableDomainType<?> supertypeForMappedSuperclass(
+	private @Nullable IdentifiableDomainType<?> supertypeForMappedSuperclass(
 			MappedSuperclass mappedSuperclass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {

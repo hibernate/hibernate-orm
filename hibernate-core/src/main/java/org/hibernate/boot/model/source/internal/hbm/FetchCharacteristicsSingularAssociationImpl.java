@@ -12,7 +12,8 @@ import org.hibernate.boot.model.source.spi.FetchCharacteristicsSingularAssociati
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.log.DeprecationLogger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * {@code hbm.xml} specific handling for FetchCharacteristicsSingularAssociation
@@ -169,7 +170,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 				//NOTE <many-to-many outer-join="..." is deprecated.:
 				// Default to join and non-lazy for the "second join"
 				// of the many-to-many
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedManyToManyOuterJoin();
+				DEPRECATION_LOGGER.deprecatedManyToManyOuterJoin();
 				builder.setFetchTiming( FetchTiming.IMMEDIATE );
 				builder.setFetchStyle( FetchStyle.JOIN );
 			}
@@ -178,7 +179,7 @@ public class FetchCharacteristicsSingularAssociationImpl implements FetchCharact
 			//NOTE <many-to-many fetch="..." is deprecated.:
 			// Default to join and non-lazy for the "second join"
 			// of the many-to-many
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedManyToManyFetch();
+			DEPRECATION_LOGGER.deprecatedManyToManyFetch();
 			builder.setFetchTiming( FetchTiming.IMMEDIATE );
 			builder.setFetchStyle( FetchStyle.JOIN );
 		}

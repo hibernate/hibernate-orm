@@ -19,6 +19,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -248,4 +249,25 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "DEPRECATED: use [%s] instead with custom [%s] implementation"
 	)
 	void deprecatedUuidGenerator(String name, String name2);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000041,
+			value = "Marking named native queries as callable is deprecated; use <named-stored-procedure-query/> instead"
+	)
+	void callableNamedNativeQuery();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000042,
+			value = "Implicit/explicit polymorphism no longer supported"
+	)
+	void explicitPolymorphism();
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			id = 90000043,
+			value = "Custom CollectionPersister implementations are no longer supported - %s (%s)"
+	)
+	void customCollectionPersister(String role, String name);
 }

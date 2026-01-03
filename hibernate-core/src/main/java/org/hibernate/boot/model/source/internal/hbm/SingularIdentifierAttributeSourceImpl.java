@@ -17,9 +17,10 @@ import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.SingularAttributeSource;
 import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tuple.GenerationTiming;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Implementation for {@code <id/>} mappings
@@ -49,7 +50,7 @@ class SingularIdentifierAttributeSourceImpl
 		super( mappingDocument );
 
 		if ( StringHelper.isEmpty( idElement.getName() ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfNonNamedIdAttribute( container.getAttributeRoleBase().getFullPath() );
+			DEPRECATION_LOGGER.logDeprecationOfNonNamedIdAttribute( container.getAttributeRoleBase().getFullPath() );
 			name = "id";
 		}
 		else {

@@ -597,6 +597,9 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public String toString() {
 		read();
+		if ( !this.isInitialized() ){
+			throw new IllegalStateException( "Uninitialized collection" );
+		}
 		return collection.toString();
 	}
 

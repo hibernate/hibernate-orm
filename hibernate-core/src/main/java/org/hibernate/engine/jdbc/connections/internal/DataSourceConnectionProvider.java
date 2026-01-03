@@ -23,8 +23,10 @@ import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.LOGIN_TIMEOUT;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
@@ -106,6 +108,16 @@ public class DataSourceConnectionProvider
 		}
 		if ( dataSource == null ) {
 			throw new ConnectionProviderConfigurationException( "Unable to determine appropriate DataSource to use" );
+		}
+
+		final Integer loginTimeout = getInteger( LOGIN_TIMEOUT, configuration );
+		if ( loginTimeout != null ) {
+			try {
+				dataSource.setLoginTimeout( loginTimeout );
+			}
+			catch (SQLException e) {
+				CONNECTION_INFO_LOGGER.couldNotSetLoginTimeout( e );
+			}
 		}
 
 		if ( configuration.containsKey( JdbcSettings.AUTOCOMMIT ) ) {

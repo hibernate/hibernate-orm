@@ -23,6 +23,7 @@ import org.hibernate.service.spi.Stoppable;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import static org.hibernate.cfg.JdbcSettings.LOGIN_TIMEOUT;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
@@ -34,6 +35,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
 import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
  * {@link ConnectionProvider} based on HikariCP connection pool.
@@ -70,6 +72,10 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 			CONNECTION_INFO_LOGGER.configureConnectionPool( "HikariCP" );
 			hikariConfig = loadConfiguration( configuration );
 			hikariDataSource = new HikariDataSource( hikariConfig );
+			final Integer loginTimeout = getInteger( LOGIN_TIMEOUT, configuration );
+			if ( loginTimeout != null ) {
+				hikariDataSource.setLoginTimeout( loginTimeout );
+			}
 		}
 		catch (Exception e) {
 			CONNECTION_INFO_LOGGER.unableToInstantiateConnectionPool( e );

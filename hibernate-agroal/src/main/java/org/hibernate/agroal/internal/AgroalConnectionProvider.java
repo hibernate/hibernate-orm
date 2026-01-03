@@ -7,6 +7,7 @@ package org.hibernate.agroal.internal;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -17,7 +18,6 @@ import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
@@ -36,6 +36,7 @@ import io.agroal.api.security.SimplePassword;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getDriverName;
@@ -82,7 +83,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	// --- Configurable
 
 	private static String extractIsolationAsString(Map<String, Object> properties) {
-		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
+		final Integer isolation = extractIsolation( properties );
 		return isolation != null
 				// Agroal resolves transaction isolation from the 'nice' name
 				? toIsolationNiceName( isolation )
@@ -115,7 +116,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 								: String.valueOf( 10 );
 				config.put( AgroalSettings.AGROAL_MAX_SIZE, maxSize );
 			}
-			final var agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX ).readProperties( config );
+			final var agroalProperties =
+					new AgroalPropertiesReader( CONFIG_PREFIX ).readProperties( config );
 			agroalProperties.modify()
 					.connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
 				copyProperty( properties, JdbcSettings.DRIVER, cf::connectionProviderClassName, identity() );
@@ -123,6 +125,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				copyProperty( properties, JdbcSettings.USER, cf::principal, NamePrincipal::new );
 				copyProperty( properties, JdbcSettings.PASS, cf::credential, SimplePassword::new );
 				copyProperty( properties, JdbcSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
+				copyProperty( properties, JdbcSettings.LOGIN_TIMEOUT, cf::loginTimeout,
+						value -> Duration.ofSeconds( Integer.parseInt( value ) ) );
 				resolveIsolationSetting( properties, cf );
 				return cf;
 			} ) );

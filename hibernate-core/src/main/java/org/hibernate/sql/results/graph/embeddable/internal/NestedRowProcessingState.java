@@ -34,18 +34,14 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	public static NestedRowProcessingState wrap(
 			AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
-		if ( processingState instanceof NestedRowProcessingState nestedRowProcessingState ) {
-			return new NestedRowProcessingState(
-					aggregateEmbeddableInitializer,
-					nestedRowProcessingState.processingState
-			);
-		}
-		return new NestedRowProcessingState( aggregateEmbeddableInitializer, processingState );
+		return processingState instanceof NestedRowProcessingState nestedState
+				? new NestedRowProcessingState( aggregateEmbeddableInitializer, nestedState.processingState )
+				: new NestedRowProcessingState( aggregateEmbeddableInitializer, processingState );
 	}
 
 	@Override
 	public Object getJdbcValue(int position) {
-		final Object[] jdbcValue = aggregateEmbeddableInitializer.getJdbcValues( processingState );
+		final var jdbcValue = aggregateEmbeddableInitializer.getJdbcValues( processingState );
 		return jdbcValue == null ? null : jdbcValue[position];
 	}
 

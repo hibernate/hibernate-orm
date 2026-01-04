@@ -30,8 +30,8 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState) {
-		final InitializerData data = initializer.getData( rowProcessingState );
-		final Initializer.State state = data.getState();
+		final var data = initializer.getData( rowProcessingState );
+		final var state = data.getState();
 		if ( state == Initializer.State.UNINITIALIZED ) {
 			initializer.resolveKey( data );
 		}

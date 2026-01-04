@@ -4,12 +4,10 @@
  */
 package org.hibernate.sql.results.spi;
 
-import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.scrollable.FetchingScrollableResultsImpl;
 import org.hibernate.internal.scrollable.ScrollableResultsImpl;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -73,9 +71,9 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 	}
 
 	private boolean containsCollectionFetches(JdbcValuesMapping valuesMapping) {
-		final List<DomainResult<?>> domainResults = valuesMapping.getDomainResults();
-		for ( DomainResult<?> domainResult : domainResults ) {
-			if ( domainResult instanceof EntityResult entityResult && entityResult.containsCollectionFetches() ) {
+		for ( var domainResult : valuesMapping.getDomainResults() ) {
+			if ( domainResult instanceof EntityResult<?> entityResult
+					&& entityResult.containsCollectionFetches() ) {
 				return true;
 			}
 		}

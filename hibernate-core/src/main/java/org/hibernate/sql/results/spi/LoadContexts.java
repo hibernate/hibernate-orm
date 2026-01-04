@@ -34,7 +34,7 @@ public class LoadContexts {
 	}
 
 	public void deregister(JdbcValuesSourceProcessingState state) {
-		final JdbcValuesSourceProcessingState previous = jdbcValuesSourceProcessingStateStack.pop();
+		final var previous = jdbcValuesSourceProcessingStateStack.pop();
 		if ( previous != state ) {
 			throw new IllegalStateException( "Illegal pop() with non-matching JdbcValuesSourceProcessingState" );
 		}

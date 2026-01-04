@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -30,7 +29,7 @@ public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<Object> rowReader) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		RuntimeException ex = null;
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );

@@ -172,7 +172,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		return true;
 	}
 
-	public EntityResultImpl getEntityResult() {
+	public EntityResultImpl<?> getEntityResult() {
 		return entityResult;
 	}
 

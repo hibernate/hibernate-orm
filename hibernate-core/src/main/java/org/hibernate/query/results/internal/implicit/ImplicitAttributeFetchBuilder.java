@@ -51,17 +51,17 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitAttributeFetchBuilder that ) ) {
 			return false;
 		}
-
-		final ImplicitAttributeFetchBuilder that = (ImplicitAttributeFetchBuilder) o;
-		return navigablePath.equals( that.navigablePath )
-			&& attributeMapping.equals( that.attributeMapping );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& attributeMapping.equals( that.attributeMapping );
+		}
 	}
 
 	@Override

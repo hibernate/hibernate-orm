@@ -8,7 +8,6 @@ import jakarta.persistence.NamedNativeQuery;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -38,20 +37,20 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 			DomainResultCreationState domainResultCreationState) {
 		assert resultPosition == 0;
 
-		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final int jdbcResultPosition = 1;
 
 		final String columnName = jdbcResultsMetadata.resolveColumnName( jdbcResultPosition );
-		final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+		final var basicType = jdbcResultsMetadata.resolveType(
 				jdbcResultPosition,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( suppliedResultClass ),
 				typeConfiguration
 		);
 
-		final SqlSelection selection =
+		final var selection =
 				sqlSelection( resultPosition, sqlExpressionResolver, columnName, basicType, typeConfiguration );
 		return new BasicResult<>( selection.getValuesArrayPosition(), columnName, basicType );
 	}

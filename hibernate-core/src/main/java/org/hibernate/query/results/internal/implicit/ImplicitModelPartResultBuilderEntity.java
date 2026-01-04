@@ -51,7 +51,7 @@ public class ImplicitModelPartResultBuilderEntity
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 		creationStateImpl.disallowPositionalSelections();
 		return (EntityResult) modelPart.createDomainResult(
 				navigablePath,
@@ -64,14 +64,15 @@ public class ImplicitModelPartResultBuilderEntity
 	private TableGroup tableGroup(DomainResultCreationStateImpl creationStateImpl) {
 		return creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
-				np ->
-						navigablePath.getParent() != null
-								? creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() )
+				navigablePath ->
+						this.navigablePath.getParent() != null
+								? creationStateImpl.getFromClauseAccess()
+										.getTableGroup( this.navigablePath.getParent() )
 								: modelPart.getEntityMappingType().createRootTableGroup(
 										// since this is only used for result set mappings,
 										// the canUseInnerJoins value is irrelevant.
 										true,
-										navigablePath,
+										this.navigablePath,
 										null,
 										null,
 										null,
@@ -81,17 +82,17 @@ public class ImplicitModelPartResultBuilderEntity
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object instanceof ImplicitModelPartResultBuilderEntity that ) ) {
 			return false;
 		}
-
-		final ImplicitModelPartResultBuilderEntity that = (ImplicitModelPartResultBuilderEntity) o;
-		return navigablePath.equals( that.navigablePath )
-			&& modelPart.equals( that.modelPart );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart );
+		}
 	}
 
 	@Override

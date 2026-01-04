@@ -10,8 +10,6 @@ import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -57,10 +55,10 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 		creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				fetchPath,
 				navigablePath -> {
-					final TableGroup parentTableGroup =
+					final var parentTableGroup =
 							creationStateImpl.getFromClauseAccess()
 									.getTableGroup( parent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
+					final var tableGroupJoin = fetchable.createTableGroupJoin(
 							fetchPath,
 							parentTableGroup,
 							null,
@@ -77,17 +75,17 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitFetchBuilderDiscriminatedAssociation that ) ) {
 			return false;
 		}
-
-		final ImplicitFetchBuilderDiscriminatedAssociation that = (ImplicitFetchBuilderDiscriminatedAssociation) o;
-		return fetchPath.equals( that.fetchPath )
-			&& fetchable.equals( that.fetchable );
+		else {
+			return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
+		}
 	}
 
 	@Override

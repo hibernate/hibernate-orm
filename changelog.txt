@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.14.Final (January 04, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37039
+
+
+** Bug
+    * HHH-20027 Fix failing parsing of PostgreSQL canonical lock_timeout formats (0, ms, s, min, h)
+
 Changes in 7.1.13.Final (December 21, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

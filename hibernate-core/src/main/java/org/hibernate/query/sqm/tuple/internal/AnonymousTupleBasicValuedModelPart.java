@@ -326,7 +326,6 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}

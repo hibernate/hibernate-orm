@@ -37,9 +37,11 @@ public class FilterImpl implements Filter, Serializable {
 	private @Nullable TreeMap<String,Object> parameters;
 	private final boolean autoEnabled;
 	private final boolean applyToLoadByKey;
+	private transient boolean validated;
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
+		validated = false;
 		validate();
 	}
 
@@ -117,6 +119,7 @@ public class FilterImpl implements Filter, Serializable {
 			parameters = new TreeMap<>();
 		}
 		parameters.put( name, argument );
+		validated = false;
 		return this;
 	}
 
@@ -148,6 +151,7 @@ public class FilterImpl implements Filter, Serializable {
 			parameters = new TreeMap<>();
 		}
 		parameters.put( name, values );
+		validated = false;
 		return this;
 	}
 
@@ -184,6 +188,9 @@ public class FilterImpl implements Filter, Serializable {
 	 * @throws HibernateException If the state is not currently valid.
 	 */
 	public void validate() throws HibernateException {
+		if ( validated ) {
+			return;
+		}
 		// for each of the defined parameters, make sure its argument
 		// has been set or a resolver has been implemented and specified
 		for ( final String parameterName : definition.getParameterNames() ) {
@@ -192,6 +199,7 @@ public class FilterImpl implements Filter, Serializable {
 						+ "' has neither an argument nor a resolver" );
 			}
 		}
+		validated = true;
 	}
 
 	private boolean hasResolver(String parameterName) {

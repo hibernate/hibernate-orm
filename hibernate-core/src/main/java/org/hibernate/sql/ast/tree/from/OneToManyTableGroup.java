@@ -152,7 +152,7 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
-	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+	public DomainResult<?> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		return elementTableGroup.createDomainResult( resultVariable, creationState );
 	}
 

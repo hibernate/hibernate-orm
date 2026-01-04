@@ -11,6 +11,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -692,19 +693,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return creationContext.getTypeConfiguration();
 	}
 
+	private SessionFactoryOptions getSessionFactoryOptions() {
+		// TODO : FIX ME
+		return creationContext.getSessionFactory().getSessionFactoryOptions();
+	}
+
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForUuid() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3590,8 +3596,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3670,8 +3675,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				queryPartTableGroup.getNavigablePath(),
 				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
-				queryPartTableGroup,
-				null
+				queryPartTableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3705,8 +3709,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				tableGroup.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3738,8 +3741,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				tableGroup.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 

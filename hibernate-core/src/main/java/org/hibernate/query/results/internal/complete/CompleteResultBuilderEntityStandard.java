@@ -122,12 +122,11 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 		final var impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
 		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
-
 		try {
 			// we just want it added to the registry
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
-					np -> entityDescriptor.createRootTableGroup(
+					path -> entityDescriptor.createRootTableGroup(
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,

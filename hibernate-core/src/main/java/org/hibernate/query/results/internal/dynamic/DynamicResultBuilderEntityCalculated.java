@@ -99,7 +99,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
@@ -119,7 +119,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, explicitLockMode );
 		}
 
-		return (EntityResult) entityMapping.createDomainResult(
+		return (EntityResult<?>) entityMapping.createDomainResult(
 				navigablePath,
 				tableGroup,
 				tableAlias,
@@ -128,19 +128,19 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicResultBuilderEntityCalculated that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderEntityCalculated) o;
-		return navigablePath.equals( that.navigablePath )
-			&& entityMapping.equals( that.entityMapping )
-			&& tableAlias.equals( that.tableAlias )
-			&& explicitLockMode == that.explicitLockMode;
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& entityMapping.equals( that.entityMapping )
+				&& tableAlias.equals( that.tableAlias )
+				&& explicitLockMode == that.explicitLockMode;
+		}
 	}
 
 	@Override

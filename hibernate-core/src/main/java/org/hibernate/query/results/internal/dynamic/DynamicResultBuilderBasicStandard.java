@@ -7,8 +7,6 @@ package org.hibernate.query.results.internal.dynamic;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -18,6 +16,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
+
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Standard DynamicResultBuilder for basic values.
@@ -119,10 +120,9 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final var expression = sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( columnName ),
-				state -> resultSetMappingSqlSelection( jdbcResultsMetadata, typeConfiguration )
-		);
+		final var expression =
+				sqlExpressionResolver.resolveSqlExpression( createColumnReferenceKey( columnName ),
+						state -> resultSetMappingSqlSelection( jdbcResultsMetadata, typeConfiguration ) );
 
 		final JavaType<?> javaType;
 		final JavaType<?> jdbcJavaType;
@@ -165,29 +165,31 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				columnPosition > 0
 						? columnPosition
 						: jdbcResultsMetadata.resolveColumnPosition( columnName );
-		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 		final var basicType =
 				explicitType != null
 						? explicitType
 						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration );
-		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
+		return new ResultSetMappingSqlSelection(
+				jdbcPositionToValuesArrayPosition( jdbcPosition ),
+				(BasicValuedMapping) basicType
+		);
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicResultBuilderBasicStandard that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderBasicStandard) o;
-		return columnPosition == that.columnPosition
-			&& columnName.equals( that.columnName )
-			&& resultAlias.equals( that.resultAlias )
-			&& Objects.equals( explicitType, that.explicitType )
-			&& Objects.equals( explicitJavaType, that.explicitJavaType );
+		else {
+			return columnPosition == that.columnPosition
+				&& columnName.equals( that.columnName )
+				&& resultAlias.equals( that.resultAlias )
+				&& Objects.equals( explicitType, that.explicitType )
+				&& Objects.equals( explicitJavaType, that.explicitJavaType );
+		}
 	}
 
 	@Override

@@ -17,6 +17,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+
 /**
  * ResultBuilder for handling {@link NamedNativeQuery#resultClass()} when the
  * class does not refer to an entity
@@ -63,9 +65,8 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 			TypeConfiguration typeConfiguration) {
 		return sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnName ),
-						state ->
-								new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType )
+						createColumnReferenceKey( columnName ),
+						state -> new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType )
 				),
 				basicType.getMappedJavaType(),
 				null,

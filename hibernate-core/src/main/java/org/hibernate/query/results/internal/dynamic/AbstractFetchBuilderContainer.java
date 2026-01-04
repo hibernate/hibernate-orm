@@ -7,7 +7,6 @@ package org.hibernate.query.results.internal.dynamic;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.results.FetchBuilder;
@@ -18,7 +17,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
 		implements DynamicFetchBuilderContainer {
-	private Map<Fetchable, FetchBuilder> fetchBuilderMap;
+	Map<Fetchable, FetchBuilder> fetchBuilderMap;
 
 	protected AbstractFetchBuilderContainer() {
 	}
@@ -29,7 +28,7 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			for ( var entry : original.fetchBuilderMap.entrySet() ) {
 				final var fetchBuilder =
 						entry.getValue() instanceof DynamicFetchBuilderStandard dynamicFetchBuilderStandard
-								? dynamicFetchBuilderStandard.cacheKeyInstance( this )
+								? dynamicFetchBuilderStandard.cacheKeyInstance()
 								: entry.getValue().cacheKeyInstance();
 				fetchBuilderMap.put( entry.getKey(), fetchBuilder );
 			}
@@ -91,20 +90,8 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		final var that = (AbstractFetchBuilderContainer<?>) o;
-		return Objects.equals( fetchBuilderMap, that.fetchBuilderMap );
-	}
+	public abstract boolean equals(Object object);
 
 	@Override
-	public int hashCode() {
-		return fetchBuilderMap != null ? fetchBuilderMap.hashCode() : 0;
-	}
+	public abstract int hashCode();
 }

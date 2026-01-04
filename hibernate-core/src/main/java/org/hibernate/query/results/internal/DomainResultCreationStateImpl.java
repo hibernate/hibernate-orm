@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results.internal;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
@@ -12,11 +14,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.Association;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -30,12 +30,10 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -47,7 +45,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.hibernate.query.results.internal.Builders.implicitFetchBuilder;
 import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
 import static org.hibernate.sql.results.ResultsLogger.RESULTS_LOGGER;
 
 /**
@@ -82,7 +82,7 @@ public class DomainResultCreationStateImpl
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
-	private boolean isProcedureOrNativeQuery;
+	private final boolean isProcedureOrNativeQuery;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -132,7 +132,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	public Function<Fetchable, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
-		return fetchBuilderResolverStack.getCurrent();
+		return currentFetchBuilderResolver();
 	}
 
 	public Function<Fetchable, FetchBuilder> popExplicitFetchMementoResolver() {
@@ -146,7 +146,7 @@ public class DomainResultCreationStateImpl
 			runnable.run();
 		}
 		finally {
-			final Function<Fetchable, FetchBuilder> popped = popExplicitFetchMementoResolver();
+			final var popped = popExplicitFetchMementoResolver();
 			assert popped == resolver;
 		}
 	}
@@ -172,15 +172,17 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public ModelPart resolveModelPart(NavigablePath navigablePath) {
-		final TableGroup tableGroup = fromClauseAccess.findTableGroup( navigablePath );
+		final var tableGroup = fromClauseAccess.findTableGroup( navigablePath );
 		if ( tableGroup != null ) {
 			return tableGroup.getModelPart();
 		}
 
-		if ( navigablePath.getParent() != null ) {
-			final TableGroup parentTableGroup = fromClauseAccess.findTableGroup( navigablePath.getParent() );
+		final var parentPath = navigablePath.getParent();
+		if ( parentPath != null ) {
+			final var parentTableGroup = fromClauseAccess.findTableGroup( parentPath );
 			if ( parentTableGroup != null ) {
-				return parentTableGroup.getModelPart().findSubPart( navigablePath.getLocalName(), null );
+				return parentTableGroup.getModelPart()
+						.findSubPart( navigablePath.getLocalName(), null );
 			}
 		}
 
@@ -198,7 +200,7 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
-		if (registeredLockModes == null ) {
+		if ( registeredLockModes == null ) {
 			registeredLockModes = new HashMap<>();
 		}
 		registeredLockModes.put( identificationVariable, explicitLockMode );
@@ -250,60 +252,45 @@ public class DomainResultCreationStateImpl
 	public Expression resolveSqlExpression(
 			ColumnReferenceKey key,
 			Function<SqlAstProcessingState, Expression> creator) {
-		final ResultSetMappingSqlSelection existing = sqlSelectionMap.get( key );
-		if ( existing != null ) {
-			return existing;
-		}
+		final var existing = sqlSelectionMap.get( key );
+		return existing != null ? existing : createSqlSelection( key, creator );
+	}
 
-		final Expression created = creator.apply( this );
+	private Expression createSqlSelection(
+			ColumnReferenceKey key,
+			Function<SqlAstProcessingState, Expression> creator) {
+		final var created = creator.apply( this );
 
+		final ResultSetMappingSqlSelection sqlSelection;
 		if ( created instanceof ResultSetMappingSqlSelection resultSetMappingSqlSelection ) {
-			sqlSelectionMap.put( key, resultSetMappingSqlSelection );
-			sqlSelectionConsumer.accept( resultSetMappingSqlSelection );
+			sqlSelection = resultSetMappingSqlSelection;
 		}
 		else if ( created instanceof ColumnReference columnReference) {
-			final String selectableName = columnReference.getSelectableName();
-			final int valuesArrayPosition;
-			if ( nestingFetchParent != null ) {
-				valuesArrayPosition = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
-			}
-			else {
-				final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectableName );
-				valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-			}
-
-			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
-					valuesArrayPosition,
-					columnReference.getJdbcMapping()
-			);
-
-			sqlSelectionMap.put( key, sqlSelection );
-			sqlSelectionConsumer.accept( sqlSelection );
-
-			return sqlSelection;
+			sqlSelection =
+					new ResultSetMappingSqlSelection(
+							valuesArrayPosition( columnReference.getSelectableName() ),
+							columnReference.getJdbcMapping()
+					);
 		}
-		else if ( created instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression ) {
-			final int valuesArrayPosition;
-			if ( nestingFetchParent != null ) {
-				valuesArrayPosition = nestingFetchParent.getReferencedMappingType().getSelectableIndex( DISCRIMINATOR_ALIAS );
-			}
-			else {
-				final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( DISCRIMINATOR_ALIAS );
-				valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-			}
-
-			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
-					valuesArrayPosition,
+		else if ( created instanceof CaseStatementDiscriminatorExpression ) {
+			sqlSelection = new ResultSetMappingSqlSelection(
+					valuesArrayPosition( DISCRIMINATOR_ALIAS ),
 					created.getExpressionType().getSingleJdbcMapping()
 			);
-
-			sqlSelectionMap.put( key, sqlSelection );
-			sqlSelectionConsumer.accept( sqlSelection );
-
-			return sqlSelection;
+		}
+		else {
+			return created;
 		}
 
-		return created;
+		sqlSelectionMap.put( key, sqlSelection );
+		sqlSelectionConsumer.accept( sqlSelection );
+		return sqlSelection;
+	}
+
+	private int valuesArrayPosition(String selectableName) {
+		return nestingFetchParent != null
+				? nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName )
+				: jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition( selectableName ) );
 	}
 
 	@Override
@@ -314,8 +301,10 @@ public class DomainResultCreationStateImpl
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );
 		}
-		assert expression instanceof ResultSetMappingSqlSelection;
-		return (SqlSelection) expression;
+		if ( !(expression instanceof ResultSetMappingSqlSelection sqlSelection) ) {
+			throw new IllegalArgumentException( "Expression must be a ResultSetMappingSqlSelection" );
+		}
+		return sqlSelection;
 	}
 
 	private static class LegacyFetchResolver {
@@ -329,71 +318,78 @@ public class DomainResultCreationStateImpl
 			if ( legacyFetchBuilders == null ) {
 				return null;
 			}
-
-			final Map<Fetchable, LegacyFetchBuilder> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
-			if ( fetchBuilders == null ) {
-				return null;
+			else {
+				final var fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
+				return fetchBuilders == null ? null : fetchBuilders.get( fetchedPart );
 			}
-
-			return fetchBuilders.get( fetchedPart );
 		}
 	}
 
 	@Override
 	public <R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action) {
-		final FetchParent oldNestingFetchParent = this.nestingFetchParent;
+		final var oldNestingFetchParent = this.nestingFetchParent;
 		this.nestingFetchParent = fetchParent;
 		final R result = action.apply( fetchParent );
 		this.nestingFetchParent = oldNestingFetchParent;
 		return result;
 	}
 
-	@Override
-	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
-		final EntityValuedModelPart parentModelPart = fetchParent.getEntityValuedModelPart();
-		final EntityIdentifierMapping identifierMapping = parentModelPart.getEntityMappingType().getIdentifierMapping();
-		final String identifierAttributeName = attributeName( identifierMapping );
+	private @NonNull FetchBuilder fetchBuilder(
+			Fetchable fetchable,
+			FetchBuilder explicitFetchBuilder,
+			LegacyFetchBuilder fetchBuilderLegacy,
+			NavigablePath fetchPath) {
+		if ( explicitFetchBuilder != null ) {
+			return explicitFetchBuilder;
+		}
+		else if ( fetchBuilderLegacy != null ) {
+			return fetchBuilderLegacy;
+		}
+		else {
+			return implicitFetchBuilder( fetchPath, fetchable, this );
+		}
+	}
 
-		final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( identifierMapping );
-		final LegacyFetchBuilder fetchBuilderLegacy;
+	private @Nullable LegacyFetchBuilder legacyFetchBuilder(
+			Fetchable fetchable, FetchParent fetchParent,
+			FetchBuilder explicitFetchBuilder) {
 		if ( explicitFetchBuilder == null ) {
-			fetchBuilderLegacy = legacyFetchResolver.resolve(
+			return legacyFetchResolver.resolve(
 					fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
 							.getPrimaryTableReference()
 							.getIdentificationVariable(),
-					identifierMapping
+					fetchable
 			);
 		}
 		else {
-			fetchBuilderLegacy = null;
+			return null;
 		}
+	}
 
-		final EntityIdentifierNavigablePath fetchPath = new EntityIdentifierNavigablePath(
-				fetchParent.getNavigablePath(),
-				identifierAttributeName
-		);
+	@Override
+	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
+		final var identifierMapping =
+				fetchParent.getEntityValuedModelPart()
+						.getEntityMappingType().getIdentifierMapping();
+
+		final var explicitFetchBuilder =
+				currentFetchBuilderResolver().apply( identifierMapping );
+
+		final var fetchBuilderLegacy =
+				legacyFetchBuilder( identifierMapping, fetchParent, explicitFetchBuilder );
+
+		final var fetchPath =
+				new EntityIdentifierNavigablePath(
+						fetchParent.getNavigablePath(),
+						attributeName( identifierMapping )
+				);
 
 		final boolean processingKeyFetches = this.processingKeyFetches;
 		this.processingKeyFetches = true;
 
 		try {
-			final FetchBuilder fetchBuilder;
-			if ( explicitFetchBuilder != null ) {
-				fetchBuilder = explicitFetchBuilder;
-			}
-			else if ( fetchBuilderLegacy != null ) {
-				fetchBuilder = fetchBuilderLegacy;
-			}
-			else {
-				fetchBuilder = Builders.implicitFetchBuilder( fetchPath, identifierMapping, this );
-			}
-
-			return fetchBuilder.buildFetch(
-					fetchParent,
-					fetchPath,
-					jdbcResultsMetadata,
-					this
-			);
+			return fetchBuilder( identifierMapping, explicitFetchBuilder, fetchBuilderLegacy, fetchPath )
+					.buildFetch( fetchParent, fetchPath, jdbcResultsMetadata, this );
 		}
 		finally {
 			this.processingKeyFetches = processingKeyFetches;
@@ -402,9 +398,9 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
-		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
-		final Consumer<Fetchable> fetchableConsumer = createFetchableConsumer( fetchParent, fetches );
+		final var fetchableContainer = fetchParent.getReferencedMappingContainer();
+		final var fetches = new ImmutableFetchList.Builder( fetchableContainer );
+		final var fetchableConsumer = createFetchableConsumer( fetchParent, fetches );
 		fetchableContainer.visitKeyFetchables( fetchableConsumer, null );
 		fetchableContainer.visitFetchables( fetchableConsumer, null );
 		return fetches.build();
@@ -415,58 +411,34 @@ public class DomainResultCreationStateImpl
 			if ( !fetchable.isSelectable() ) {
 				return;
 			}
-			FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( fetchable );
-			LegacyFetchBuilder fetchBuilderLegacy;
-			if ( explicitFetchBuilder == null ) {
-				fetchBuilderLegacy = legacyFetchResolver.resolve(
-						fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
-								.getPrimaryTableReference()
-								.getIdentificationVariable(),
-						fetchable
-				);
-			}
-			else {
-				fetchBuilderLegacy = null;
-			}
+			FetchBuilder explicitFetchBuilder = currentFetchBuilderResolver().apply( fetchable );
+			LegacyFetchBuilder fetchBuilderLegacy =
+					legacyFetchBuilder( fetchable, fetchParent, explicitFetchBuilder );
 			if ( fetchable instanceof Association association
 					&& fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
-				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
 				// If there are no fetch builders for this association, we only want to fetch the FK
 				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null  ) {
-					Fetchable modelPart = (Fetchable)
-							foreignKeyDescriptor.getSide( association.getSideNature().inverse() ).getModelPart();
-					explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( modelPart );
+					final var modelPart = (Fetchable)
+							association.getForeignKeyDescriptor()
+									.getSide( association.getSideNature().inverse() )
+									.getModelPart();
+					explicitFetchBuilder = currentFetchBuilderResolver().apply( modelPart );
 					if ( explicitFetchBuilder == null ) {
-						fetchBuilderLegacy = legacyFetchResolver.resolve(
-								fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
-										.getPrimaryTableReference()
-										.getIdentificationVariable(),
-								fetchable
-						);
+						fetchBuilderLegacy =
+								legacyFetchBuilder( fetchable, fetchParent, null );
 					}
 				}
 			}
-			final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
-			final FetchBuilder fetchBuilder;
-			if ( explicitFetchBuilder != null ) {
-				fetchBuilder = explicitFetchBuilder;
-			}
-			else {
-				if ( fetchBuilderLegacy == null ) {
-					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
-				}
-				else {
-					fetchBuilder = fetchBuilderLegacy;
-				}
-			}
-			final Fetch fetch = fetchBuilder.buildFetch(
-					fetchParent,
-					fetchPath,
-					jdbcResultsMetadata,
-					this
-			);
+			final var fetchPath = fetchParent.resolveNavigablePath( fetchable );
+			final var fetch =
+					fetchBuilder( fetchable, explicitFetchBuilder, fetchBuilderLegacy, fetchPath )
+							.buildFetch( fetchParent, fetchPath, jdbcResultsMetadata, this );
 			fetches.add( fetch );
 		};
+	}
+
+	private Function<Fetchable, FetchBuilder> currentFetchBuilderResolver() {
+		return fetchBuilderResolverStack.getCurrent();
 	}
 
 	@Override

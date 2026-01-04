@@ -57,10 +57,9 @@ public class TableGroupImpl extends AbstractTableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean resolve) {
-		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, resolve ) != null ) {
-			return primaryTableReference;
-		}
-		return super.getTableReference( navigablePath, tableExpression, resolve );
+		return primaryTableReference.getTableReference( navigablePath, tableExpression, resolve ) == null
+				? super.getTableReference( navigablePath, tableExpression, resolve )
+				: primaryTableReference;
 	}
 
 }

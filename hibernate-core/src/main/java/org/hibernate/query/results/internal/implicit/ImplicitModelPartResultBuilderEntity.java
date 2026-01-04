@@ -47,13 +47,13 @@ public class ImplicitModelPartResultBuilderEntity
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 		creationStateImpl.disallowPositionalSelections();
-		return (EntityResult) modelPart.createDomainResult(
+		return (EntityResult<?>) modelPart.createDomainResult(
 				navigablePath,
 				tableGroup( creationStateImpl ),
 				null,
@@ -64,20 +64,21 @@ public class ImplicitModelPartResultBuilderEntity
 	private TableGroup tableGroup(DomainResultCreationStateImpl creationStateImpl) {
 		return creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
-				navigablePath ->
-						this.navigablePath.getParent() != null
-								? creationStateImpl.getFromClauseAccess()
-										.getTableGroup( this.navigablePath.getParent() )
-								: modelPart.getEntityMappingType().createRootTableGroup(
-										// since this is only used for result set mappings,
-										// the canUseInnerJoins value is irrelevant.
-										true,
-										this.navigablePath,
-										null,
-										null,
-										null,
-										creationStateImpl
-								)
+				path -> {
+					final var parentPath = navigablePath.getParent();
+					return parentPath != null
+							? creationStateImpl.getFromClauseAccess().getTableGroup( parentPath )
+							: modelPart.getEntityMappingType().createRootTableGroup(
+									// since this is only used for result set mappings,
+									// the canUseInnerJoins value is irrelevant.
+									true,
+									navigablePath,
+									null,
+									null,
+									null,
+									creationStateImpl
+							);
+				}
 		);
 	}
 
@@ -86,7 +87,7 @@ public class ImplicitModelPartResultBuilderEntity
 		if ( this == object ) {
 			return true;
 		}
-		else if ( !(object instanceof ImplicitModelPartResultBuilderEntity that ) ) {
+		else if ( !( object instanceof ImplicitModelPartResultBuilderEntity that ) ) {
 			return false;
 		}
 		else {

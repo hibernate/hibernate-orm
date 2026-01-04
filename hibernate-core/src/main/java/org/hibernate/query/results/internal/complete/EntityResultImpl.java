@@ -55,10 +55,10 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 		if ( resultAlias != null ) {
 			sqlAstCreationState.registerLockMode( resultAlias, lockMode );
 		}
-		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				np ->
-						entityValuedModelPart.getEntityMappingType().getEntityPersister()
+		sqlAstCreationState.getFromClauseAccess()
+				.resolveTableGroup( navigablePath,
+						path -> entityValuedModelPart.getEntityMappingType()
+								.getEntityPersister()
 								.createRootTableGroup(
 										true,
 										navigablePath,
@@ -67,7 +67,7 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 										() -> p -> {},
 										sqlAstCreationState
 								)
-		);
+				);
 
 		this.identifierFetch = creationState.visitIdentifierFetch( this );
 		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );

@@ -20,6 +20,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * @author Steve Ebersole
@@ -86,7 +87,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 				creationStateImpl.getFromClauseAccess()
 						.getTableGroup( parent.getNavigablePath() );
 		return creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						parentTableGroup.resolveTableReference( fetchPath, fetchable,

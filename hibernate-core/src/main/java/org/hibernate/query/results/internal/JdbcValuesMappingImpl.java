@@ -40,6 +40,8 @@ public class JdbcValuesMappingImpl extends StandardJdbcValuesMapping {
 
 	@Override
 	public LockMode determineDefaultLockMode(String alias, LockMode defaultLockMode) {
-		return registeredLockModes == null ? defaultLockMode : registeredLockModes.getOrDefault( alias, defaultLockMode );
+		return registeredLockModes == null
+				? defaultLockMode
+				: registeredLockModes.getOrDefault( alias, defaultLockMode );
 	}
 }

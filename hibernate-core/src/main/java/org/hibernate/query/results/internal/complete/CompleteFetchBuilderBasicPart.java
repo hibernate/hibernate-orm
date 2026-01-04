@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.MissingSqlSelectionException;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -71,33 +72,17 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 			DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = impl( domainResultCreationState );
 
-		final String mappedTable = referencedModelPart.getContainingTableExpression();
+		final var tableReference =
+				creationStateImpl.getFromClauseAccess()
+						.getTableGroup( parent.getNavigablePath() )
+						.resolveTableReference( navigablePath, referencedModelPart,
+								referencedModelPart.getContainingTableExpression() );
 
-		final var tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
-		final var tableReference = tableGroup.resolveTableReference( navigablePath, referencedModelPart, mappedTable );
-
-		final String selectedAlias;
-		final int jdbcPosition;
-		if ( selectionAlias != null ) {
-			try {
-				jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
-			}
-			catch (Exception e) {
-				throw new MissingSqlSelectionException(
-						"ResultSet mapping specified selected-alias `" + selectionAlias
-								+ "` which was not part of the ResultSet",
-						e
-				);
-			}
-			selectedAlias = selectionAlias;
-		}
-		else {
-			if ( ! creationStateImpl.arePositionalSelectionsAllowed() ) {
-				throw new AssertionFailure( "Positional SQL selection resolution not allowed" );
-			}
-			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
-			selectedAlias = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
-		}
+		final int jdbcPosition = jdbcPosition( jdbcResultsMetadata, creationStateImpl );
+		final String selectedAlias =
+				selectionAlias == null
+						? jdbcResultsMetadata.resolveColumnName( jdbcPosition )
+						: selectionAlias;
 
 		final var jdbcMapping =
 				referencedModelPart instanceof DiscriminatorMapping discriminatorMapping
@@ -119,6 +104,27 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 				selectedAlias,
 				domainResultCreationState
 		);
+	}
+
+	private int jdbcPosition(JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationStateImpl creationStateImpl) {
+		if ( selectionAlias != null ) {
+			try {
+				return jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
+			}
+			catch (Exception e) {
+				throw new MissingSqlSelectionException(
+						"ResultSet mapping specified selected alias '" + selectionAlias
+								+ "' which was not part of the ResultSet",
+						e
+				);
+			}
+		}
+		else {
+			if ( !creationStateImpl.arePositionalSelectionsAllowed() ) {
+				throw new AssertionFailure( "Positional SQL selection resolution not allowed" );
+			}
+			return creationStateImpl.getNumberOfProcessedSelections() + 1;
+		}
 	}
 
 	@Override

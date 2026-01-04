@@ -93,14 +93,12 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 
 		final var impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
-
 		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
-
 		try {
 			// we just want it added to the registry
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
-					np -> entityDescriptor.createRootTableGroup(
+					path -> entityDescriptor.createRootTableGroup(
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
@@ -148,11 +146,11 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		else if ( !( o instanceof CompleteResultBuilderEntityJpa that ) ) {
+		else if ( !( object instanceof CompleteResultBuilderEntityJpa that ) ) {
 			return false;
 		}
 		else {

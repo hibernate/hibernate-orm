@@ -7,7 +7,6 @@ package org.hibernate.query.results.internal.complete;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -16,6 +15,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * CompleteResultBuilder for basic-valued ModelParts
@@ -63,8 +63,9 @@ public class CompleteResultBuilderBasicModelPart
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = impl( domainResultCreationState );
-		final var tableReference = tableReference( creationStateImpl );
-		final var sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
+		final var sqlSelection =
+				sqlSelection( jdbcResultsMetadata, creationStateImpl,
+						tableReference( creationStateImpl ) );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
@@ -80,7 +81,7 @@ public class CompleteResultBuilderBasicModelPart
 			DomainResultCreationStateImpl creationStateImpl,
 			TableReference tableReference) {
 		return creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableReference,
@@ -96,7 +97,8 @@ public class CompleteResultBuilderBasicModelPart
 	private TableReference tableReference(DomainResultCreationStateImpl creationStateImpl) {
 		return creationStateImpl.getFromClauseAccess()
 				.getTableGroup( navigablePath.getParent() )
-				.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
+				.resolveTableReference( navigablePath, modelPart,
+						modelPart.getContainingTableExpression() );
 	}
 
 	@Override

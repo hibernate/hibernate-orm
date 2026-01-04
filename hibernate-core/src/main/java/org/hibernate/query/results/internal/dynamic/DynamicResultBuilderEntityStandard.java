@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
@@ -16,7 +17,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -30,12 +30,13 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static java.util.Collections.addAll;
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * @author Steve Ebersole
@@ -108,7 +109,7 @@ public class DynamicResultBuilderEntityStandard
 		if ( idColumnNames == null ) {
 			idColumnNames = new ArrayList<>( aliases.length );
 		}
-		Collections.addAll( idColumnNames, aliases );
+		addAll( idColumnNames, aliases );
 		return this;
 	}
 
@@ -128,12 +129,12 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		return buildResultOrFetch(
-				(tableGroup) -> (EntityResult) entityMapping.createDomainResult(
+				(tableGroup) -> (EntityResult<?>) entityMapping.createDomainResult(
 						navigablePath,
 						tableGroup,
 						tableAlias,
@@ -182,11 +183,12 @@ public class DynamicResultBuilderEntityStandard
 			collectionTableGroup = null;
 			elementNavigablePath = navigablePath;
 		}
-		final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
+		final var tableGroup = fromClauseAccess.resolveTableGroup(
 				elementNavigablePath,
-				np -> {
+				path -> {
 					if ( lockMode != null ) {
-						domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
+						domainResultCreationState.getSqlAstCreationState()
+								.registerLockMode( tableAlias, lockMode );
 					}
 					return entityMapping.createRootTableGroup(
 							true,
@@ -199,17 +201,8 @@ public class DynamicResultBuilderEntityStandard
 				}
 		);
 		final var tableReference = tableGroup.getPrimaryTableReference();
-		final List<String> keyColumnAliases;
 		final var idFetchBuilder = findIdFetchBuilder();
-		if ( idColumnNames != null ) {
-			keyColumnAliases = idColumnNames;
-		}
-		else if ( idFetchBuilder != null ) {
-			keyColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
-		}
-		else {
-			keyColumnAliases = null;
-		}
+		final var keyColumnAliases = getKeyColumnAliases( idFetchBuilder );
 		if ( keyColumnAliases != null ) {
 			final ModelPart keyPart;
 			final TableGroup keyTableGroup;
@@ -221,30 +214,22 @@ public class DynamicResultBuilderEntityStandard
 				else {
 					// In here, we know that the idColumnNames refer to the columns of the join table,
 					// so we also need to resolve selections for the element identifier columns
-					final var elementDescriptor = (ManyToManyCollectionPart) pluralAttributeMapping.getElementDescriptor();
+					final var elementDescriptor =
+							(ManyToManyCollectionPart)
+									pluralAttributeMapping.getElementDescriptor();
 					keyPart = elementDescriptor.getForeignKeyDescriptor().getKeyPart();
 					keyTableGroup = collectionTableGroup;
-					final List<String> idColumnAliases;
-					if ( idFetchBuilder instanceof DynamicFetchBuilder dynamicFetchBuilder ) {
-						idColumnAliases = dynamicFetchBuilder.getColumnAliases();
-					}
-					else if ( idFetchBuilder instanceof CompleteFetchBuilder completeFetchBuilder ) {
-						idColumnAliases = completeFetchBuilder.getColumnAliases();
-					}
-					else {
-						throw new AssertionFailure( "Unexpected fetch builder" );
-					}
-
-					entityMapping
-							.getIdentifierMapping()
-							.forEachSelectable( (selectionIndex, selectableMapping) -> resolveSqlSelection(
-									idColumnAliases.get( selectionIndex ),
-									tableReference,
-									selectableMapping,
-									jdbcResultsMetadata,
-									domainResultCreationState
-							)
-					);
+					final var idColumnAliases = getIdColumnAliases( idFetchBuilder );
+					entityMapping.getIdentifierMapping()
+							.forEachSelectable( (selectionIndex, selectableMapping) ->
+									resolveSqlSelection(
+											idColumnAliases.get( selectionIndex ),
+											tableReference,
+											selectableMapping,
+											jdbcResultsMetadata,
+											domainResultCreationState
+									)
+							);
 				}
 			}
 			else {
@@ -254,7 +239,8 @@ public class DynamicResultBuilderEntityStandard
 
 			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> resolveSqlSelection(
 					keyColumnAliases.get( selectionIndex ),
-					keyTableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+					keyTableGroup.resolveTableReference(
+							selectableMapping.getContainingTableExpression() ),
 					selectableMapping,
 					jdbcResultsMetadata,
 					domainResultCreationState
@@ -273,13 +259,7 @@ public class DynamicResultBuilderEntityStandard
 
 		try {
 			creationState.pushExplicitFetchMementoResolver(
-					f -> {
-						if ( f != null ) {
-							return findFetchBuilder( f );
-						}
-						return null;
-					}
-			);
+					f -> f == null ? null : findFetchBuilder( f ) );
 			return resultOrFetchBuilder.apply( tableGroup );
 		}
 		finally {
@@ -287,10 +267,34 @@ public class DynamicResultBuilderEntityStandard
 		}
 	}
 
+	private static List<String> getIdColumnAliases(FetchBuilder idFetchBuilder) {
+		if ( idFetchBuilder instanceof DynamicFetchBuilder dynamicFetchBuilder ) {
+			return dynamicFetchBuilder.getColumnAliases();
+		}
+		else if ( idFetchBuilder instanceof CompleteFetchBuilder completeFetchBuilder ) {
+			return completeFetchBuilder.getColumnAliases();
+		}
+		else {
+			throw new AssertionFailure( "Unexpected fetch builder" );
+		}
+	}
+
+	private @Nullable List<String> getKeyColumnAliases(FetchBuilder idFetchBuilder) {
+		if ( idColumnNames != null ) {
+			return idColumnNames;
+		}
+		else if ( idFetchBuilder != null ) {
+			return ( (DynamicFetchBuilder) idFetchBuilder).getColumnAliases();
+		}
+		else {
+			return null;
+		}
+	}
+
 	private static void resolveDiscriminatorSqlSelection(String columnAlias, TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping, JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = impl( domainResultCreationState );
 		creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableReference,
@@ -316,7 +320,7 @@ public class DynamicResultBuilderEntityStandard
 			DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = impl( domainResultCreationState );
 		creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableReference,
@@ -356,7 +360,7 @@ public class DynamicResultBuilderEntityStandard
 
 	@Override
 	public int hashCode() {
-		int result = super.hashCode();
+		int result = fetchBuilderMap == null ? 0 : fetchBuilderMap.hashCode();
 		result = 31 * result + navigablePath.hashCode();
 		result = 31 * result + entityMapping.hashCode();
 		result = 31 * result + tableAlias.hashCode();
@@ -367,21 +371,21 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !( object instanceof DynamicResultBuilderEntityStandard that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderEntityStandard) o;
-		return navigablePath.equals( that.navigablePath )
-			&& entityMapping.equals( that.entityMapping )
-			&& tableAlias.equals( that.tableAlias )
-			&& lockMode == that.lockMode
-			&& Objects.equals( idColumnNames, that.idColumnNames )
-			&& Objects.equals( discriminatorColumnName, that.discriminatorColumnName )
-			&& super.equals( o );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& entityMapping.equals( that.entityMapping )
+				&& tableAlias.equals( that.tableAlias )
+				&& lockMode == that.lockMode
+				&& Objects.equals( idColumnNames, that.idColumnNames )
+				&& Objects.equals( discriminatorColumnName, that.discriminatorColumnName )
+				&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap );
+		}
 	}
 }

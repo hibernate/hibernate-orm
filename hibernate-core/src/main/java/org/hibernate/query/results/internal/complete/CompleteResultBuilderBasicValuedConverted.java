@@ -75,7 +75,8 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 		final String columnName =
 				explicitColumnName != null
 						? explicitColumnName
-				: jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
+						: jdbcResultsMetadata.resolveColumnName(
+								creationStateImpl.getNumberOfProcessedSelections() + 1 );
 		return new BasicResult<>(
 				sqlSelection( jdbcResultsMetadata, resultPosition, creationStateImpl, columnName )
 						.getValuesArrayPosition(),
@@ -93,7 +94,6 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			int resultPosition,
 			DomainResultCreationStateImpl creationStateImpl,
 			String columnName) {
-		final var sessionFactory = creationStateImpl.getSessionFactory();
 		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						createColumnReferenceKey( columnName ),
@@ -108,7 +108,8 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 				),
 				valueConverter.getRelationalJavaType(),
 				null,
-				sessionFactory.getTypeConfiguration()
+				creationStateImpl.getSessionFactory()
+						.getTypeConfiguration()
 		);
 	}
 

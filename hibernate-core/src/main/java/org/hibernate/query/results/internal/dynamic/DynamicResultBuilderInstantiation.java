@@ -34,17 +34,17 @@ public class DynamicResultBuilderInstantiation<J>
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
+		public boolean equals(Object object) {
+			if ( this == object ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !( object instanceof InstantiationArgument that ) ) {
 				return false;
 			}
-
-			final var that = (InstantiationArgument) o;
-			return argumentBuilder.equals( that.argumentBuilder )
-				&&  resultAlias.equals( that.resultAlias );
+			else {
+				return argumentBuilder.equals( that.argumentBuilder )
+					&&  resultAlias.equals( that.resultAlias );
+			}
 		}
 
 		@Override
@@ -65,7 +65,8 @@ public class DynamicResultBuilderInstantiation<J>
 
 	private DynamicResultBuilderInstantiation(DynamicResultBuilderInstantiation<J> original) {
 		this.javaType = original.javaType;
-		final List<InstantiationArgument> arguments = new ArrayList<>( original.argumentResultBuilders.size() );
+		final List<InstantiationArgument> arguments =
+				new ArrayList<>( original.argumentResultBuilders.size() );
 		for ( var arg : original.argumentResultBuilders ) {
 			arguments.add( new InstantiationArgument( arg.argumentBuilder.cacheKeyInstance(), arg.resultAlias ) );
 		}
@@ -97,7 +98,8 @@ public class DynamicResultBuilderInstantiation<J>
 			throw new IllegalStateException( "DynamicResultBuilderInstantiation defined no arguments" );
 		}
 
-		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
+		final List<ArgumentDomainResult<?>> argumentDomainResults =
+				new ArrayList<>( argumentResultBuilders.size() );
 		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
 			argumentDomainResults.add( new ArgumentDomainResult<>(
 					argumentResultBuilders.get( i )
@@ -114,17 +116,17 @@ public class DynamicResultBuilderInstantiation<J>
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicResultBuilderInstantiation<?> that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderInstantiation<?>) o;
-		return javaType.equals( that.javaType )
-			&& argumentResultBuilders.equals( that.argumentResultBuilders );
+		else {
+			return javaType.equals( that.javaType )
+				&& argumentResultBuilders.equals( that.argumentResultBuilders );
+		}
 	}
 
 	@Override

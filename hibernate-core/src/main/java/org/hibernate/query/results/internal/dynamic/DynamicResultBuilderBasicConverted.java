@@ -8,9 +8,7 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -19,6 +17,9 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
+
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * A ResultBuilder for explicitly converted scalar results
@@ -89,7 +90,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 						: jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
 		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnName ),
+						createColumnReferenceKey( columnName ),
 						state -> resultSetMappingSqlSelection( jdbcResultsMetadata, resultPosition, typeConfiguration )
 				),
 				basicValueConverter.getRelationalJavaType(),
@@ -109,7 +110,9 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	}
 
 	private ResultSetMappingSqlSelection resultSetMappingSqlSelection(
-			JdbcValuesMetadata jdbcResultsMetadata, int resultPosition, TypeConfiguration typeConfiguration) {
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int resultPosition,
+			TypeConfiguration typeConfiguration) {
 		final int jdbcPosition =
 				columnAlias != null
 						? jdbcResultsMetadata.resolveColumnPosition( columnAlias )
@@ -119,23 +122,24 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				basicValueConverter.getRelationalJavaType(),
 				typeConfiguration
 		);
-		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
+		return new ResultSetMappingSqlSelection(
+				jdbcPositionToValuesArrayPosition( jdbcPosition ),
+				(BasicValuedMapping) basicType
+		);
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicResultBuilderBasicConverted<?, ?> that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderBasicConverted<?, ?>) o;
-
-		return Objects.equals( columnAlias, that.columnAlias )
-			&& basicValueConverter.equals( that.basicValueConverter );
+		else {
+			return Objects.equals( columnAlias, that.columnAlias )
+				&& basicValueConverter.equals( that.basicValueConverter );
+		}
 	}
 
 	@Override

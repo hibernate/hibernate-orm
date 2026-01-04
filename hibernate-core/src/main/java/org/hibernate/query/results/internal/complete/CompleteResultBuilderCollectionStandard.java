@@ -137,13 +137,16 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			String[] columnNames,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl) {
-		final var typeConfiguration = creationStateImpl.getSessionFactory().getTypeConfiguration();
+		final var typeConfiguration =
+				creationStateImpl.getSessionFactory()
+						.getTypeConfiguration();
 		resolveSelections( modelPart, (selectionIndex, selectableMapping) ->
 				creationStateImpl.resolveSqlSelection(
 						resolveSqlExpression(
 								creationStateImpl,
 								jdbcResultsMetadata,
-								tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+								tableGroup.resolveTableReference(
+										selectableMapping.getContainingTableExpression() ),
 								selectableMapping,
 								columnNames[selectionIndex]
 						),
@@ -169,11 +172,11 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		else if ( !( o instanceof CompleteResultBuilderCollectionStandard that ) ) {
+		else if ( !( object instanceof CompleteResultBuilderCollectionStandard that ) ) {
 			return false;
 		}
 		else {

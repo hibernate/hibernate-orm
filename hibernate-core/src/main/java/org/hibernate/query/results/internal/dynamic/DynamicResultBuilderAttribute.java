@@ -9,7 +9,6 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -20,6 +19,7 @@ import java.util.Locale;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * DynamicResultBuilder based on a named mapped attribute
@@ -77,7 +77,8 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final var sqlSelection =
-				sqlSelection( jdbcResultsMetadata, domainResultCreationState, impl( domainResultCreationState ) );
+				sqlSelection( jdbcResultsMetadata, domainResultCreationState,
+						impl( domainResultCreationState ) );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
@@ -94,7 +95,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			DomainResultCreationStateImpl domainResultCreationStateImpl) {
 		return domainResultCreationStateImpl.resolveSqlSelection(
 				domainResultCreationStateImpl.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnAlias ),
+						createColumnReferenceKey( columnAlias ),
 						processingState -> {
 							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
@@ -108,19 +109,19 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicResultBuilderAttribute that) ) {
 			return false;
 		}
-
-		final var that = (DynamicResultBuilderAttribute) o;
-		return attributeMapping.equals( that.attributeMapping )
-			&& columnAlias.equals( that.columnAlias )
-			&& entityName.equals( that.entityName )
-			&& attributePath.equals( that.attributePath );
+		else {
+			return attributeMapping.equals( that.attributeMapping )
+				&& columnAlias.equals( that.columnAlias )
+				&& entityName.equals( that.entityName )
+				&& attributePath.equals( that.attributePath );
+		}
 	}
 
 	@Override

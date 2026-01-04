@@ -13,6 +13,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -92,26 +93,23 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						createColumnReferenceKey( columnName ),
-						processingState -> {
-							final BasicValuedMapping basicType;
-							if ( explicitType != null ) {
-								basicType = explicitType;
-							}
-							else {
-								basicType = jdbcResultsMetadata.resolveType(
-										jdbcPosition,
-										explicitJavaType,
-										typeConfiguration
-								);
-							}
-							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
-						}
+						processingState ->
+								new ResultSetMappingSqlSelection( jdbcPositionToValuesArrayPosition( jdbcPosition ),
+										basicType( jdbcResultsMetadata, jdbcPosition, typeConfiguration ) )
 				),
 				explicitJavaType,
 				null,
 				typeConfiguration
 		);
+	}
+
+	private BasicValuedMapping basicType(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int jdbcPosition,
+			TypeConfiguration typeConfiguration) {
+		return explicitType == null
+				? jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration )
+				: explicitType;
 	}
 
 	@Override

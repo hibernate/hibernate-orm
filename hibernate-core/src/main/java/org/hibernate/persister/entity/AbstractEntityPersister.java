@@ -1283,14 +1283,13 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final var entityResult = new EntityResultImpl(
+		final var entityResult = new EntityResultImpl<T>(
 				navigablePath,
 				this,
 				tableGroup,
 				resultVariable
 		);
 		entityResult.afterInitialize( entityResult, creationState );
-		//noinspection unchecked
 		return entityResult;
 	}
 

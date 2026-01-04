@@ -55,13 +55,12 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = isAffectedByFilter;
-		this.entityResult = new EntityResultImpl(
+		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				toOneMapping,
 				tableGroup,
 				null
 		);
-
 		this.entityResult.afterInitialize( this, creationState );
 	}
 
@@ -77,13 +76,12 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = false;
-		this.entityResult = new EntityResultImpl(
+		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				collectionPart,
 				tableGroup,
 				null
 		);
-
 		this.entityResult.afterInitialize( this, creationState );
 	}
 

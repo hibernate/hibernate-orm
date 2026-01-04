@@ -71,17 +71,17 @@ public class CompleteResultBuilderInstantiation
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderInstantiation that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderInstantiation that = (CompleteResultBuilderInstantiation) o;
-		return javaType.equals( that.javaType )
-			&& argumentResultBuilders.equals( that.argumentResultBuilders );
+		else {
+			return javaType.equals( that.javaType )
+				&& argumentResultBuilders.equals( that.argumentResultBuilders );
+		}
 	}
 
 	@Override

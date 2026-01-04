@@ -8,7 +8,6 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -19,6 +18,7 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -27,8 +27,8 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public class EntityResultImpl extends AbstractEntityResultGraphNode
-		implements EntityResult, InitializerProducer<EntityResultImpl> {
+public class EntityResultImpl<E> extends AbstractEntityResultGraphNode
+		implements EntityResult<E>, InitializerProducer<EntityResultImpl<E>> {
 
 	private final TableGroup tableGroup;
 	private final String resultVariable;
@@ -46,8 +46,8 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	@Override
 	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		if ( fetchable instanceof TableGroupProducer ) {
-			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
-				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
+			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
@@ -79,8 +79,13 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(
-			InitializerParent parent,
+	public JavaType<E> getResultJavaType() {
+		return (JavaType<E>) super.getResultJavaType();
+	}
+
+	@Override
+	public DomainResultAssembler<E> createResultAssembler(
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return new EntityAssembler<>(
 				this.getResultJavaType(),
@@ -90,7 +95,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 
 	@Override
 	public Initializer<?> createInitializer(
-			EntityResultImpl resultGraphNode,
+			EntityResultImpl<E> resultGraphNode,
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );

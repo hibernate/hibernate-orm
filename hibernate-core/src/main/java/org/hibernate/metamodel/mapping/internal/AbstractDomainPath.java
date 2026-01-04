@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
-import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -28,6 +27,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression.applyCollation;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -209,9 +209,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else {
-			final var subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
+			final var subPart =
+					embeddableValuedModelPart.findSubPart( modelPartName, null )
+							.asBasicValuedModelPart();
 			addSortSpecification(
-					castNonNull( subPart.asBasicValuedModelPart() ),
+					castNonNull( subPart ),
 					ast,
 					tableGroup,
 					collation,
@@ -260,8 +262,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			selectClause.addSqlSelection( new SqlSelectionImpl( valuesArrayPosition, expression ) );
 		}
 
-		final var sortExpression =
-				OrderingExpression.applyCollation( expression, collation, creationState );
+		final var sortExpression = applyCollation( expression, collation, creationState );
 		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 

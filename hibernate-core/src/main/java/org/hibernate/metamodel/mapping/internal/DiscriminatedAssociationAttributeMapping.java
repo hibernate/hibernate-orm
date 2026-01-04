@@ -466,7 +466,7 @@ public class DiscriminatedAssociationAttributeMapping
 			// this ^^ is what we want eventually, but for the time-being to ensure compatibility with
 			// writing just reuse the AnyType
 
-			final SharedSessionContractImplementor persistenceContext = (SharedSessionContractImplementor) session;
+			final var persistenceContext = (SharedSessionContractImplementor) session;
 			return anyType.disassemble( value, persistenceContext, null );
 		}
 
@@ -477,7 +477,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 			// again, what we want eventually ^^ versus what we should do now vv
 
-			final SharedSessionContractImplementor persistenceContext = (SharedSessionContractImplementor) session;
+			final var persistenceContext = (SharedSessionContractImplementor) session;
 			return anyType.assemble( cached, persistenceContext, null );
 		}
 	}

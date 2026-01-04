@@ -182,7 +182,7 @@ public class GeneratedValuesProcessor {
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
 		final var jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
+		final int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
 				entityDescriptor.getIdentifierMapping(),
 				jdbcParameters,

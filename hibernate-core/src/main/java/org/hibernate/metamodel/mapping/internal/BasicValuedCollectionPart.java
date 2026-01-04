@@ -26,7 +26,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -35,6 +34,8 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.sql.results.ResultsLogger.RESULTS_LOGGER;
 
 /**
  * Models a basic collection element/value or index/key
@@ -261,8 +262,8 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( ResultsLogger.RESULTS_LOGGER.isTraceEnabled() ) {
-			ResultsLogger.RESULTS_LOGGER.tracef(
+		if ( RESULTS_LOGGER.isTraceEnabled() ) {
+			RESULTS_LOGGER.tracef(
 					"Generating Fetch for collection-part: `%s` -> `%s`",
 					collectionDescriptor.getRole(),
 					nature.getName()
@@ -285,7 +286,6 @@ public class BasicValuedCollectionPart
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}

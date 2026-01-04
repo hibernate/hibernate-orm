@@ -47,9 +47,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.beans.Introspector;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +56,10 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static java.beans.Introspector.decapitalize;
+import static java.lang.reflect.Modifier.isStatic;
+import static java.util.Collections.emptyMap;
 
 /**
  * Multi-attribute NaturalIdMapping implementation
@@ -97,11 +99,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
 				() -> {
 					final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-					attributes.forEach(
-							(attribute) -> attribute.forEachJdbcType(
-									(index, jdbcMapping) -> jdbcMappings.add( jdbcMapping )
-							)
-					);
+					attributes.forEach( attribute -> attribute.forEachJdbcType(
+							(index, jdbcMapping) -> jdbcMappings.add( jdbcMapping )
+					) );
 					this.jdbcMappings = jdbcMappings;
 					return true;
 				}
@@ -224,8 +224,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 			for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
 				final var attributeMapping = getNaturalIdAttributes().get( i );
-				final boolean updatable = attributeMapping.getAttributeMetadata().isUpdatable();
-				if ( !updatable ) {
+				if ( !attributeMapping.getAttributeMetadata().isUpdatable() ) {
 					final Object currentValue = naturalId[i];
 					final Object previousValue = previousNaturalId[i];
 					if ( !attributeMapping.areEqual( currentValue, previousValue, session ) ) {
@@ -665,7 +664,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		@Override
 		public void resolveState(RowProcessingState rowProcessingState) {
-			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
+			for ( var subAssembler : subAssemblers ) {
 				subAssembler.resolveState( rowProcessingState );
 			}
 		}
@@ -702,19 +701,18 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			return new ValueNormalizerSupport( keyAttributes );
 		}
 
-		final ModelsContext modelsContext = creationProcess
-				.getCreationContext()
-				.getBootstrapContext()
-				.getModelsContext();
+		final var modelsContext =
+				creationProcess.getCreationContext().getBootstrapContext()
+						.getModelsContext();
 
 		var naturalIdClass = naturalIdClassDetails.toJavaClass( modelsContext.getClassLoading(), modelsContext );
 		var naturalIdClassComponents = extractComponents( naturalIdClass );
 		var naturalIdClassGetterAccess = createNaturalIdClassGetterAccess( naturalIdClass );
 
 		final List<AttributeMapper<Object, T>> attributeMappers = new ArrayList<>();
-		keyAttributes.forEach( (keyAttribute) -> {
+		keyAttributes.forEach( keyAttribute -> {
 			// find the matching MemberDetails on the `naturalIdClass`...
-			final Getter extractor = resolveMatchingExtractor(
+			final var extractor = resolveMatchingExtractor(
 					naturalIdClass,
 					keyAttribute,
 					naturalIdClassGetterAccess,
@@ -725,13 +723,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			//		between BasicAttributeMapperImpl and ToOneAttributeMapperImpl.
 			//		ideally we'd eventually support usage of the associated key entity's
 			//		id and then there would.  see the note in ToOneAttributeMapperImpl#extractFrom
-			final AttributeMapper<Object,T> attrMapper;
-			if ( keyAttribute instanceof ToOneAttributeMapping ) {
-				attrMapper = new ToOneAttributeMapperImpl<>( keyAttribute, extractor );
-			}
-			else {
-				attrMapper = new BasicAttributeMapperImpl<>( keyAttribute, extractor );
-			}
+			final var attrMapper =
+					keyAttribute instanceof ToOneAttributeMapping
+							? new ToOneAttributeMapperImpl<T>( keyAttribute, extractor )
+							: new BasicAttributeMapperImpl<T>( keyAttribute, extractor );
 			attributeMappers.add( attrMapper );
 		} );
 
@@ -800,7 +795,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		public Object[] doNormalize(T idClassValue) {
-			final Object[] result = new Object[idClassAttributeMappers.size()];
+			final var result = new Object[idClassAttributeMappers.size()];
 			for ( int i = 0; i < idClassAttributeMappers.size(); i++ ) {
 				var value = idClassAttributeMappers.get( i ).extractFrom( idClassValue );
 				result[i] = value;
@@ -833,70 +828,58 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			Map<String, RecordComponent> naturalIdClassComponents,
 			ModelsContext modelsContext) {
 		// first, if the `naturalIdClass` is a record, look for a component
+		final String keyName = keyAttribute.getAttributeName();
+
 		if ( naturalIdClass.isRecord() ) {
-			var component = naturalIdClassComponents.get( keyAttribute.getAttributeName() );
+			final var component = naturalIdClassComponents.get( keyName );
 			if ( component != null ) {
-				return new GetterMethodImpl(
-						naturalIdClass,
-						keyAttribute.getAttributeName(),
-						component.getAccessor()
-				);
+				return new GetterMethodImpl( naturalIdClass, keyName, component.getAccessor() );
 			}
 		}
 
 		// next look for a getter method
-		var getterMethod = getterMethodAccess.apply( keyAttribute.getAttributeName() );
+		final var getterMethod = getterMethodAccess.apply( keyName );
 		if ( getterMethod != null ) {
-			return new GetterMethodImpl(
-					naturalIdClass,
-					keyAttribute.getAttributeName(),
-					getterMethod
-			);
+			return new GetterMethodImpl( naturalIdClass, keyName, getterMethod );
 		}
 
 		// lastly, look for a field
 		try {
-			var field = naturalIdClass.getDeclaredField( keyAttribute.getAttributeName() );
-			return new GetterFieldImpl( naturalIdClass, keyAttribute.getAttributeName(), field );
+			return new GetterFieldImpl( naturalIdClass, keyName,
+					naturalIdClass.getDeclaredField( keyName ) );
 		}
 		catch (NoSuchFieldException ignore) {
 		}
 
-		throw new MappingException( "Unable to find NaturalIdClass accessor for natural-id attribute: " + keyAttribute.getAttributeName() );
+		throw new MappingException( "Unable to find NaturalIdClass accessor for natural id attribute: " + keyName );
 	}
 
 	private static <T> Map<String, Method> extractGetterMethods(Class<T> naturalIdClass) {
-		final Map<String, Method>  result = new HashMap<>();
-
-		for ( Method declaredMethod : naturalIdClass.getDeclaredMethods() ) {
+		final Map<String, Method> result = new HashMap<>();
+		for ( var declaredMethod : naturalIdClass.getDeclaredMethods() ) {
 			if ( declaredMethod.getParameterCount() == 0
 				&& declaredMethod.getReturnType() != void.class
-				&& !Modifier.isStatic(  declaredMethod.getModifiers() ) ) {
+				&& !isStatic( declaredMethod.getModifiers() ) ) {
 				var methodName = declaredMethod.getName();
 				if ( methodName.startsWith( "is" ) ) {
-					result.put(
-							Introspector.decapitalize( methodName.substring( 2 ) ),
-							declaredMethod
-					);
+					result.put( decapitalize( methodName.substring( 2 ) ),
+							declaredMethod );
 				}
 				else if ( methodName.startsWith( "get" ) ) {
-					result.put(
-							Introspector.decapitalize( methodName.substring( 3 ) ),
-							declaredMethod
-					);
+					result.put( decapitalize( methodName.substring( 3 ) ),
+							declaredMethod );
 				}
 			}
 		}
-
 		return result;
 	}
 
 	private static Map<String, RecordComponent> extractComponents(Class<?> naturalIdClass) {
 		if ( !naturalIdClass.isRecord() ) {
-			return Map.of();
+			return emptyMap();
 		}
 
-		final RecordComponent[] recordComponents = naturalIdClass.getRecordComponents();
+		final var recordComponents = naturalIdClass.getRecordComponents();
 		final Map<String, RecordComponent> result = new HashMap<>();
 		for ( RecordComponent recordComponent : recordComponents ) {
 			result.put( recordComponent.getName(), recordComponent );

@@ -34,10 +34,8 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
@@ -49,6 +47,8 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableForeignKeyResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 
 /**
  * @author Andrea Boriero
@@ -100,7 +100,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.targetSelectableMappings = targetSelectableMappings;
 		this.targetSide = new EmbeddedForeignKeyDescriptorSide( Nature.TARGET, targetMappingType );
 		this.keySide = new EmbeddedForeignKeyDescriptorSide( Nature.KEY, keyMappingType );
-		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
+		final List<String> columns =
+				new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
 				(columnIndex, selection) -> columns.add( selection.getSelectionExpression() )
 		);
@@ -132,7 +133,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.targetSide = original.targetSide;
 		this.keySide = new EmbeddedForeignKeyDescriptorSide(
 				Nature.KEY,
-				MappingModelCreationHelper.createInverseModelPart(
+				createInverseModelPart(
 						original.targetSide.getModelPart(),
 						keyDeclaringType,
 						keyDeclaringTableGroupProducer,
@@ -140,11 +141,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 						creationProcess
 				)
 		);
-		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
+		final List<String> columns =
+				new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
-				(columnIndex, selection) -> {
-					columns.add( selection.getSelectionExpression() );
-				}
+				(columnIndex, selection) -> columns.add( selection.getSelectionExpression() )
 		);
 		this.associationKey = new AssociationKey( keyTable, columns );
 		this.hasConstraint = original.hasConstraint;
@@ -156,10 +156,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.keySide = original.keySide;
 		this.targetTable = targetPart.getContainingTableExpression();
 		this.targetSelectableMappings = targetPart;
-		this.targetSide = new EmbeddedForeignKeyDescriptorSide(
-				Nature.TARGET,
-				targetPart
-		);
+		this.targetSide = new EmbeddedForeignKeyDescriptorSide( Nature.TARGET, targetPart );
 		this.associationKey = original.associationKey;
 		this.hasConstraint = original.hasConstraint;
 	}
@@ -317,19 +314,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
-		final TableGroupProducer tableGroupProducer;
-		if ( tableGroup instanceof OneToManyTableGroup oneToManyTableGroup ) {
-			tableGroupProducer = (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart();
-		}
-		else {
-			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
-		}
+		final var tableGroupProducer =
+				tableGroup instanceof OneToManyTableGroup oneToManyTableGroup
+					? (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart()
+					: (TableGroupProducer) tableGroup.getModelPart();
 		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
 	}
 
 	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
 		if ( tableGroup.isVirtual() ) {
-			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
+			final var virtualTableGroup = (VirtualTableGroup) tableGroup;
+			tableGroup = getUnderlyingTableGroup( virtualTableGroup.getUnderlyingTableGroup() );
 		}
 		return tableGroup;
 	}
@@ -372,7 +367,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				resultNavigablePath,
 				np -> {
-					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
+					final var tableGroupJoin = modelPart.createTableGroupJoin(
 							resultNavigablePath,
 							tableGroup,
 							null,
@@ -387,7 +382,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				}
 		);
 
-		final Nature currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
+		final Nature currentForeignKeyResolvingKey =
+				creationState.getCurrentlyResolvingForeignKeyPart();
 		try {
 			creationState.setCurrentlyResolvingForeignKeyPart( nature );
 			return new EmbeddableForeignKeyResultImpl<>(
@@ -408,15 +404,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
 			SqlAstCreationState creationState) {
-		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
+		final var lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetTable
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
+		final var rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				null,
 				keyTable
 		);
-
 		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );
 	}
 
@@ -428,7 +423,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		final var predicate = new Junction( Junction.Nature.CONJUNCTION );
 		targetSelectableMappings.forEachSelectable(
 				(i, selection) -> {
-					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
+					final var comparisonPredicate = new ComparisonPredicate(
 							new ColumnReference( targetSideReference, selection ),
 							ComparisonOperator.EQUAL,
 							new ColumnReference( keySideReference, keySelectableMappings.getSelectable( i ) )
@@ -460,9 +455,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
 				return false;
 			}
-			final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
-			final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
-			if ( !(lhsExpr instanceof ColumnReference lhs) || !(rhsExpr instanceof ColumnReference rhs) ) {
+			final var lhsExpr = comparisonPredicate.getLeftHandExpression();
+			final var rhsExpr = comparisonPredicate.getRightHandExpression();
+			if ( !( lhsExpr instanceof ColumnReference lhs ) || !( rhsExpr instanceof ColumnReference rhs ) ) {
 				return false;
 			}
 			if ( lhsIsKey == null ) {

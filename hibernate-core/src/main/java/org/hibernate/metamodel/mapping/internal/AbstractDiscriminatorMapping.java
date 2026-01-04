@@ -168,7 +168,6 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				discriminatorType.getValueConverter(),
 				fetchTiming,
 				true,
-				creationState,
 				false,
 				!sqlSelection.isVirtual()
 		);

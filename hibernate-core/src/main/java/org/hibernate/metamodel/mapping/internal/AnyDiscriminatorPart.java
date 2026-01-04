@@ -399,7 +399,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}
@@ -437,11 +436,9 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		var tableReference = tableGroup.resolveTableReference(
-				navigablePath,
-				this,
-				getContainingTableExpression()
-		);
+		final var tableReference =
+				tableGroup.resolveTableReference( navigablePath, this,
+						getContainingTableExpression() );
 		return creationState.getSqlExpressionResolver()
 				.resolveSqlExpression( tableReference, this );
 	}
@@ -472,7 +469,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 }

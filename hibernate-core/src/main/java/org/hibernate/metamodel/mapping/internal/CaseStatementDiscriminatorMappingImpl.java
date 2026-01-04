@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -62,14 +61,13 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				final String tableName = tableNames[notNullColumnTableNumbers[i]];
 				final String oneSubEntityColumn = notNullColumnNames[i];
 				final String discriminatorValue = discriminatorValues[i];
-				tableDiscriminatorDetailsMap.put(
-						tableName,
+				tableDiscriminatorDetailsMap.put( tableName,
 						new TableDiscriminatorDetails(
 								tableName,
 								oneSubEntityColumn,
-								getUnderlyingJdbcMapping().getJavaTypeDescriptor().wrap( discriminatorValue, null )
-						)
-				);
+								getUnderlyingJdbcMapping().getJavaTypeDescriptor()
+										.wrap( discriminatorValue, null )
+						) );
 			}
 		}
 	}
@@ -125,15 +123,15 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final var expressionResolver = creationState.getSqlExpressionResolver();
-		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey(
-						tableGroup.getPrimaryTableReference(),
-						getSelectionExpression(),
-						jdbcMappingToUse
-				),
-				sqlAstProcessingState -> createCaseSearchedExpression( tableGroup )
-		);
+		return creationState.getSqlExpressionResolver()
+				.resolveSqlExpression(
+						createColumnReferenceKey(
+								tableGroup.getPrimaryTableReference(),
+								getSelectionExpression(),
+								jdbcMappingToUse
+						),
+						sqlAstProcessingState -> createCaseSearchedExpression( tableGroup )
+				);
 	}
 
 	private Expression createCaseSearchedExpression(TableGroup entityTableGroup) {
@@ -263,7 +261,8 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		}
 
 		public List<TableReference> getUsedTableReferences() {
-			final ArrayList<TableReference> usedTableReferences = new ArrayList<>( tableDiscriminatorDetailsMap.size() );
+			final ArrayList<TableReference> usedTableReferences =
+					new ArrayList<>( tableDiscriminatorDetailsMap.size() );
 			tableDiscriminatorDetailsMap.forEach(
 					(tableName, tableDiscriminatorDetails) -> {
 						final var tableReference = entityTableGroup.getTableReference(
@@ -287,7 +286,8 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				SessionFactoryImplementor sessionFactory) {
 			if ( caseSearchedExpression == null ) {
 				// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
-				caseSearchedExpression = new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
+				caseSearchedExpression =
+						new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
 				tableDiscriminatorDetailsMap.forEach(
 						(tableName, tableDiscriminatorDetails) -> {
 							final var tableReference = entityTableGroup.getTableReference(
@@ -296,29 +296,26 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 									false
 							);
 
-							if ( tableReference == null ) {
-								// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
-								return;
+							if ( tableReference != null ) {
+								caseSearchedExpression.when(
+										new NullnessPredicate(
+												new ColumnReference(
+														tableReference,
+														tableDiscriminatorDetails.getCheckColumnName(),
+														false,
+														null,
+														getJdbcMapping()
+												),
+												true
+										),
+										new QueryLiteral<>(
+												tableDiscriminatorDetails.getDiscriminatorValue(),
+												getUnderlyingJdbcMapping()
+										)
+								);
 							}
-
-							final Predicate predicate = new NullnessPredicate(
-									new ColumnReference(
-											tableReference,
-											tableDiscriminatorDetails.getCheckColumnName(),
-											false,
-											null,
-											getJdbcMapping()
-									),
-									true
-							);
-
-							caseSearchedExpression.when(
-									predicate,
-									new QueryLiteral<>(
-											tableDiscriminatorDetails.getDiscriminatorValue(),
-											getUnderlyingJdbcMapping()
-									)
-							);
+							// else assume this is because it is a table that is
+							// not part of the processing entity's sub-hierarchy
 						}
 				);
 			}

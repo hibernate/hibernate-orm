@@ -234,14 +234,16 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		if ( pluralAttribute == null ) {
 			return false;
 		}
-
-		final var foreignKey = pluralAttribute.getKeyDescriptor();
-		if ( foreignKey == null ) {
-			return false;
+		else {
+			final var foreignKey = pluralAttribute.getKeyDescriptor();
+			if ( foreignKey == null ) {
+				return false;
+			}
+			else {
+				fetchAssociationKey = foreignKey.getAssociationKey();
+				return true;
+			}
 		}
-
-		fetchAssociationKey = foreignKey.getAssociationKey();
-		return true;
 	}
 
 	@Override

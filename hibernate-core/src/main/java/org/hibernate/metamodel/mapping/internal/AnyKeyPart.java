@@ -270,23 +270,20 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
-		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final var tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
-		final var tableReference = tableGroup.resolveTableReference( fetchablePath, table );
+		final var tableReference =
+				sqlAstCreationState.getFromClauseAccess()
+						.getTableGroup( fetchParent.getNavigablePath().getParent() )
+						.resolveTableReference( fetchablePath, table );
 
-		final var columnReference = sqlExpressionResolver.resolveSqlExpression(
-				tableReference,
-				this
-		);
-
-		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				columnReference,
-				jdbcMapping.getJdbcJavaType(),
-				fetchParent,
-				sqlAstCreationState.getCreationContext().getTypeConfiguration()
-		);
+		final var sqlSelection =
+				sqlExpressionResolver.resolveSqlSelection(
+						sqlExpressionResolver.resolveSqlExpression( tableReference, this ),
+						jdbcMapping.getJdbcJavaType(),
+						fetchParent,
+						sqlAstCreationState.getCreationContext().getTypeConfiguration()
+				);
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -294,7 +291,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}

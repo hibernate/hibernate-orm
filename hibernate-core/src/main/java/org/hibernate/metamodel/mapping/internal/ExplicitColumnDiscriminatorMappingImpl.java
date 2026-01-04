@@ -124,16 +124,13 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			JdbcMapping jdbcMappingToUse,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final var expressionResolver = creationState.getSqlExpressionResolver();
 		final var tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
-		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey(
-						tableGroup.getPrimaryTableReference(),
-						getSelectionExpression(),
-						jdbcMappingToUse
-				),
-				processingState -> new ColumnReference( tableReference, this )
-		);
+		return creationState.getSqlExpressionResolver()
+				.resolveSqlExpression(
+						createColumnReferenceKey( tableGroup.getPrimaryTableReference(),
+								getSelectionExpression(), jdbcMappingToUse ),
+						processingState -> new ColumnReference( tableReference, this )
+				);
 	}
 
 	@Override

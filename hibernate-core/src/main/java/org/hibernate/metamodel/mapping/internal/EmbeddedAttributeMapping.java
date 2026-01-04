@@ -153,7 +153,9 @@ public class EmbeddedAttributeMapping
 						: null
 		);
 
-		navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
+		navigableRole =
+				inverseModelPart.getNavigableRole().getParent()
+						.append( inverseModelPart.getFetchableName() );
 
 		tableExpression = selectableMappings.getSelectable( 0 ).getContainingTableExpression();
 		embeddableMappingType = embeddableTypeDescriptor.createInverseMappingType(
@@ -386,18 +388,20 @@ public class EmbeddedAttributeMapping
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		final var declaringType = getDeclaringType();
-		final TableGroupProducer producer;
+		return tableGroupProducer( getDeclaringType() )
+				.containsTableReference( tableExpression );
+	}
+
+	private static TableGroupProducer tableGroupProducer(ManagedMappingType declaringType) {
 		if ( declaringType instanceof TableGroupProducer tableGroupProducer ) {
-			producer = tableGroupProducer;
+			return tableGroupProducer;
 		}
 		else if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
-			producer = embeddableMappingType.getEmbeddedValueMapping();
+			return embeddableMappingType.getEmbeddedValueMapping();
 		}
 		else {
 			throw new AssertionFailure( "Unexpected declaring type" );
 		}
-		return producer.containsTableReference( tableExpression );
 	}
 
 	@Override

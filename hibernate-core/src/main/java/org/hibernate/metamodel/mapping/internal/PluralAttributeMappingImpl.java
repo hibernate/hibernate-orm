@@ -189,7 +189,7 @@ public class PluralAttributeMappingImpl
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
 		if ( elementDescriptor instanceof EntityCollectionPart elementMapping ) {
-			validateTargetEntity( elementMapping, declaringType, attributeName, propertyAccess, collectionDescriptor, creationProcess );
+			validateTargetEntity( elementMapping, declaringType, attributeName, propertyAccess, creationProcess );
 		}
 	}
 
@@ -205,49 +205,30 @@ public class PluralAttributeMappingImpl
 			ManagedMappingType declaringType,
 			String attributeName,
 			PropertyAccess propertyAccess,
-			CollectionPersister collectionDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final ManagedTypeRepresentationStrategy representationStrategy;
-		if ( declaringType instanceof EntityMappingType declaringEntityType ) {
-			representationStrategy = declaringEntityType.getRepresentationStrategy();
-		}
-		else if ( declaringType instanceof EmbeddableMappingType declaringEmbeddableType ) {
-			representationStrategy = declaringEmbeddableType.getRepresentationStrategy();
-		}
-		else {
-			// should never happen, but be lenient
+		final var representationStrategy = getTypeRepresentationStrategy( declaringType );
+		if ( representationStrategy == null
+				// nothing to check against with dynamic models
+				|| representationStrategy.getMode() != RepresentationMode.POJO  ) {
 			return;
 		}
 
-		if ( representationStrategy.getMode() != RepresentationMode.POJO ) {
-			// nothing to check against with dynamic models
-			return;
-		}
+		var declaringClassDetails =
+				creationProcess.getCreationContext().getBootstrapContext()
+						.getModelsContext().getClassDetailsRegistry()
+						.resolveClassDetails( declaringType.getJavaType().getTypeName() );
 
-		var modelsContext = creationProcess.getCreationContext().getBootstrapContext().getModelsContext();
-		var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
-		var declaringClassDetails = classDetailsRegistry.resolveClassDetails( declaringType.getJavaType().getTypeName() );
-
-		final MemberDetails attributeMemberDetails;
-		if ( propertyAccess.getGetter().getMember() instanceof Field ) {
-			attributeMemberDetails = locateField( declaringClassDetails, attributeName );
-		}
-		else if ( propertyAccess.getGetter().getMember() instanceof Method method ) {
-			attributeMemberDetails = locateGetter( declaringClassDetails, method );
-		}
-		else {
-			// we need access to the field or getter...
-			return;
-		}
+		final var attributeMemberDetails =
+				getMemberDetails( attributeName, propertyAccess, declaringClassDetails );
 		if ( attributeMemberDetails == null ) {
 			// generally indicates the case of embeddable inheritance mentioned
 			// in the `implNote`
 			return;
 		}
 
-		var elementTypeDetails = attributeMemberDetails.getElementType();
-		var elementType = elementTypeDetails.determineRawClass().toJavaClass();
-
+		var elementType =
+				attributeMemberDetails.getElementType()
+						.determineRawClass().toJavaClass();
 		if ( !Object.class.equals( elementType ) ) {
 			var targetType = elementPart.getJavaType().getJavaTypeClass();
 			if ( !elementType.isAssignableFrom( targetType ) ) {
@@ -265,6 +246,34 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	private static @Nullable MemberDetails getMemberDetails(
+			String attributeName, PropertyAccess propertyAccess, ClassDetails declaringClassDetails) {
+		final var member = propertyAccess.getGetter().getMember();
+		if ( member instanceof Field ) {
+			return locateField( declaringClassDetails, attributeName );
+		}
+		else if ( member instanceof Method method ) {
+			return locateGetter( declaringClassDetails, method );
+		}
+		else {
+			// we need access to the field or getter...
+			return null;
+		}
+	}
+
+	private static @Nullable ManagedTypeRepresentationStrategy getTypeRepresentationStrategy(ManagedMappingType declaringType) {
+		if ( declaringType instanceof EntityMappingType declaringEntityType ) {
+			return declaringEntityType.getRepresentationStrategy();
+		}
+		else if ( declaringType instanceof EmbeddableMappingType declaringEmbeddableType ) {
+			return declaringEmbeddableType.getRepresentationStrategy();
+		}
+		else {
+			// should never happen, but be lenient
+			return null;
+		}
+	}
+
 	/**
 	 * Locate the corresponding field details.
 	 *
@@ -277,7 +286,7 @@ public class PluralAttributeMappingImpl
 		assert declaringClassDetails != null;
 		var classDetails = declaringClassDetails;
 		while ( classDetails != null && classDetails != ClassDetails.OBJECT_CLASS_DETAILS ) {
-			var fieldDetails = classDetails.findFieldByName( attributeName );
+			final var fieldDetails = classDetails.findFieldByName( attributeName );
 			if ( fieldDetails != null ) {
 				return fieldDetails;
 			}
@@ -299,7 +308,7 @@ public class PluralAttributeMappingImpl
 		var classDetails = declaringClassDetails;
 		while ( classDetails != null && classDetails != ClassDetails.OBJECT_CLASS_DETAILS ) {
 			for ( int i = 0; i < classDetails.getMethods().size(); i++ ) {
-				var methodDetails = classDetails.getMethods().get(i);
+				final var methodDetails = classDetails.getMethods().get(i);
 				if ( methodDetails.getName().equals( method.getName() )
 						&& methodDetails.getMethodKind() == MethodDetails.MethodKind.GETTER ) {
 					return methodDetails;

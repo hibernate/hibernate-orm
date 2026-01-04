@@ -242,7 +242,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				creationState
 		);
 
-		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
+		return new TableGroupJoin( navigablePath, joinType, tableGroup );
 	}
 
 	@Override

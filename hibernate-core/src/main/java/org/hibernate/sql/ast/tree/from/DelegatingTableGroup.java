@@ -156,7 +156,7 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return getTableGroup().createDomainResult( resultVariable, creationState );

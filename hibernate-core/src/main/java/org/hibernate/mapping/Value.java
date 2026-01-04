@@ -86,9 +86,7 @@ public interface Value extends Serializable {
 
 	private JdbcMapping getType(MappingContext factory, Type elementType, int index) {
 		if ( elementType instanceof CompositeType compositeType ) {
-			final Type[] subtypes = compositeType.getSubtypes();
-			for ( int i = 0; i < subtypes.length; i++ ) {
-				final Type subtype = subtypes[i];
+			for ( final var subtype : compositeType.getSubtypes() ) {
 				final int columnSpan =
 						subtype instanceof EntityType entityType
 								? getIdType( entityType ).getColumnSpan( factory )

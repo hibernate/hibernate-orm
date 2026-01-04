@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -50,7 +51,6 @@ import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.internal.TableGroupJoinHelper;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -82,6 +82,7 @@ import java.util.function.Supplier;
 import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
+import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
 /**
  * @author Steve Ebersole
@@ -184,7 +185,9 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess );
+		softDeleteMapping =
+				resolveSoftDeleteMapping( this, bootDescriptor,
+						getSeparateCollectionTable(), creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
@@ -206,36 +209,45 @@ public class PluralAttributeMappingImpl
 			String attributeName,
 			PropertyAccess propertyAccess,
 			MappingModelCreationProcess creationProcess) {
-		final var representationStrategy = getTypeRepresentationStrategy( declaringType );
-		if ( representationStrategy == null
+		final var representationStrategy = typeRepresentationStrategy( declaringType );
+		if ( representationStrategy != null
 				// nothing to check against with dynamic models
-				|| representationStrategy.getMode() != RepresentationMode.POJO  ) {
-			return;
+				&& representationStrategy.getMode() == RepresentationMode.POJO ) {
+			final var attributeMemberDetails =
+					getMemberDetails( attributeName, propertyAccess,
+							declaringClassDetails( declaringType, creationProcess ) );
+			if ( attributeMemberDetails != null ) {
+				checkElementType( elementPart, declaringType, attributeName, attributeMemberDetails );
+			}
+			// else usually indicates the case of embeddable
+			// inheritance mentioned in the @implNote
 		}
+	}
 
-		var declaringClassDetails =
-				creationProcess.getCreationContext().getBootstrapContext()
-						.getModelsContext().getClassDetailsRegistry()
-						.resolveClassDetails( declaringType.getJavaType().getTypeName() );
+	private static ClassDetails declaringClassDetails(
+			ManagedMappingType declaringType,
+			MappingModelCreationProcess creationProcess) {
+		return creationProcess.getCreationContext().getBootstrapContext()
+				.getModelsContext().getClassDetailsRegistry()
+				.resolveClassDetails( declaringType.getJavaType().getTypeName() );
+	}
 
-		final var attributeMemberDetails =
-				getMemberDetails( attributeName, propertyAccess, declaringClassDetails );
-		if ( attributeMemberDetails == null ) {
-			// generally indicates the case of embeddable inheritance mentioned
-			// in the `implNote`
-			return;
-		}
-
-		var elementType =
+	private static void checkElementType(
+			EntityCollectionPart elementPart,
+			ManagedMappingType declaringType,
+			String attributeName,
+			MemberDetails attributeMemberDetails) {
+		final var elementType =
 				attributeMemberDetails.getElementType()
 						.determineRawClass().toJavaClass();
 		if ( !Object.class.equals( elementType ) ) {
-			var targetType = elementPart.getJavaType().getJavaTypeClass();
+			final var targetType = elementPart.getJavaType().getJavaTypeClass();
 			if ( !elementType.isAssignableFrom( targetType ) ) {
 				throw new MappingException(
 						String.format(
 								ROOT,
-								"Plural attribute [%s.%s] was mapped with targetEntity=`%s`, but the attribute is declared as `%s`",
+								"Plural attribute [%s.%s] was mapped with targetEntity=`%s`,"
+										+ " but the attribute is declared as `%s`",
 								declaringType.getNavigableRole().getFullPath(),
 								attributeName,
 								targetType.getName(),
@@ -261,7 +273,7 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	private static @Nullable ManagedTypeRepresentationStrategy getTypeRepresentationStrategy(ManagedMappingType declaringType) {
+	private static @Nullable ManagedTypeRepresentationStrategy typeRepresentationStrategy(ManagedMappingType declaringType) {
 		if ( declaringType instanceof EntityMappingType declaringEntityType ) {
 			return declaringEntityType.getRepresentationStrategy();
 		}
@@ -371,9 +383,9 @@ public class PluralAttributeMappingImpl
 				// and the FK-key refer to the same column then we say this is bidirectional,
 				// given that this is only invoked for model parts of the collection elements
 				? modelPart.getSideNature() == ForeignKeyDescriptor.Nature.KEY
-				&& collectionDescriptor.isOneToMany()
-				&& fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart()
-				&& areEqual( fkDescriptor.getKeyPart(), modelPart.getForeignKeyDescriptor().getKeyPart() )
+						&& collectionDescriptor.isOneToMany()
+						&& fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart()
+						&& areEqual( fkDescriptor.getKeyPart(), modelPart.getForeignKeyDescriptor().getKeyPart() )
 				: fetchablePath.getLocalName().equals( bidirectionalAttributeName );
 	}
 
@@ -383,8 +395,8 @@ public class PluralAttributeMappingImpl
 			return false;
 		}
 		for ( int i = 0; i < typeCount; i++ ) {
-			final SelectableMapping selectable1 = part1.getSelectable( i );
-			final SelectableMapping selectable2 = part2.getSelectable( i );
+			final var selectable1 = part1.getSelectable( i );
+			final var selectable2 = part2.getSelectable( i );
 			if ( selectable1.getJdbcMapping() != selectable2.getJdbcMapping()
 				|| !selectable1.getContainingTableExpression().equals( selectable2.getContainingTableExpression() )
 				|| !selectable1.getSelectionExpression().equals( selectable2.getSelectionExpression() ) ) {
@@ -686,19 +698,19 @@ public class PluralAttributeMappingImpl
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
-		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
-			final boolean alreadyVisited = creationState.isAssociationKeyVisited( fkDescriptor.getAssociationKey() );
-			if ( alreadyVisited ) {
-				return createSelectEagerCollectionFetch(
-						fetchParent,
-						fetchablePath,
-						creationState,
-						creationState.getSqlAstCreationState()
-				);
-			}
+		if ( fetchTiming == FetchTiming.IMMEDIATE
+				// if it's already visited
+				&& creationState.isAssociationKeyVisited( fkDescriptor.getAssociationKey() ) ) {
+			return createSelectEagerCollectionFetch(
+					fetchParent,
+					fetchablePath,
+					creationState,
+					creationState.getSqlAstCreationState()
+			);
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private Fetch createSelectEagerCollectionFetch(
@@ -706,20 +718,29 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState,
 			SqlAstCreationState sqlAstCreationState) {
-		final DomainResult<?> collectionKeyDomainResult;
-		if ( referencedPropertyName != null ) {
-			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
-					fetchablePath,
-					sqlAstCreationState.getFromClauseAccess()
-							.getTableGroup( fetchParent.getNavigablePath() ),
-					fetchParent,
-					creationState
-			);
+		return buildSelectEagerCollectionFetch( fetchablePath, this,
+				collectionKeyDomainResult( fetchParent, fetchablePath, creationState, sqlAstCreationState ),
+				fetchParent );
+	}
+
+	private @Nullable DomainResult<?> collectionKeyDomainResult(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState,
+			SqlAstCreationState sqlAstCreationState) {
+		if ( referencedPropertyName == null ) {
+			return null;
 		}
 		else {
-			collectionKeyDomainResult = null;
+			return getKeyDescriptor()
+					.createTargetDomainResult(
+							fetchablePath,
+							sqlAstCreationState.getFromClauseAccess()
+									.getTableGroup( fetchParent.getNavigablePath() ),
+							fetchParent,
+							creationState
+					);
 		}
-		return buildSelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
 	}
 
 	private TableGroup resolveCollectionTableGroup(
@@ -871,8 +892,8 @@ public class PluralAttributeMappingImpl
 				collectionPredicateCollector.getPredicate()
 		);
 		if ( predicateCollector != collectionPredicateCollector ) {
-			final var joinForPredicate = TableGroupJoinHelper.determineJoinForPredicateApply( tableGroupJoin );
-			joinForPredicate.applyPredicate( predicateCollector.getPredicate() );
+			determineJoinForPredicateApply( tableGroupJoin )
+					.applyPredicate( predicateCollector.getPredicate() );
 		}
 		return tableGroupJoin;
 	}
@@ -922,12 +943,9 @@ public class PluralAttributeMappingImpl
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( requestedJoinType == null ) {
-			if ( fetched ) {
-				return getDefaultSqlAstJoinType( lhs );
-			}
-			else {
-				return SqlAstJoinType.INNER;
-			}
+			return fetched
+					? getDefaultSqlAstJoinType( lhs )
+					: SqlAstJoinType.INNER;
 		}
 		else {
 			return requestedJoinType;
@@ -967,41 +985,60 @@ public class PluralAttributeMappingImpl
 			boolean addsPredicate,
 			Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
-		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
-		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
-		final TableGroup tableGroup;
-		if ( collectionDescriptor.isOneToMany() ) {
-			tableGroup = createOneToManyTableGroup(
-					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
-					joinType,
-					navigablePath,
-					fetched,
-					addsPredicate,
-					explicitSourceAlias,
-					sqlAliasBase,
-					creationState
-			);
-		}
-		else {
-			tableGroup = createCollectionTableGroup(
-					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
-					joinType,
-					navigablePath,
-					fetched,
-					addsPredicate,
-					explicitSourceAlias,
-					sqlAliasBase,
-					creationState
-			);
-		}
+		final var tableGroup =
+				rootTableGroup(
+						navigablePath,
+						lhs,
+						explicitSourceAlias,
+						fetched,
+						addsPredicate,
+						creationState,
+						determineSqlJoinType( lhs, requestedJoinType, fetched ),
+						creationState.getSqlAliasBaseGenerator()
+								.createSqlAliasBase( getSqlAliasStem() )
+				);
 
 		if ( predicateConsumer != null ) {
-			predicateConsumer.accept( getKeyDescriptor().generateJoinPredicate( lhs, tableGroup, creationState ) );
+			predicateConsumer.accept( getKeyDescriptor()
+					.generateJoinPredicate( lhs, tableGroup, creationState ) );
 		}
 
 		return tableGroup;
+	}
+
+	private @NonNull TableGroup rootTableGroup(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			boolean fetched,
+			boolean addsPredicate,
+			SqlAstCreationState creationState,
+			SqlAstJoinType joinType,
+			SqlAliasBase sqlAliasBase) {
+		return getCollectionDescriptor().isOneToMany()
+				? createOneToManyTableGroup(
+						lhs.canUseInnerJoins()
+						&& joinType == SqlAstJoinType.INNER,
+						joinType,
+						navigablePath,
+						fetched,
+						addsPredicate,
+						explicitSourceAlias,
+						sqlAliasBase,
+						creationState
+				)
+				: createCollectionTableGroup(
+						lhs.canUseInnerJoins()
+						&& joinType == SqlAstJoinType.INNER,
+						joinType,
+						navigablePath,
+						fetched,
+						addsPredicate,
+						explicitSourceAlias,
+						sqlAliasBase,
+						creationState
+				);
 	}
 
 
@@ -1019,33 +1056,27 @@ public class PluralAttributeMappingImpl
 			String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
+		final var oneToManyCollectionPart = (OneToManyCollectionPart) elementDescriptor;
 		final var sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
 				sourceAlias,
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final var oneToManyCollectionPart = (OneToManyCollectionPart) elementDescriptor;
-		final var elementTableGroup = oneToManyCollectionPart.createAssociatedTableGroup(
-				canUseInnerJoins,
-				navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-				fetched,
-				sourceAlias,
-				sqlAliasBase,
-				creationState
-		);
 		final var tableGroup = new OneToManyTableGroup(
 				this,
-				elementTableGroup,
-				creationState.getCreationContext().getSessionFactory()
+				oneToManyCollectionPart.createAssociatedTableGroup(
+						canUseInnerJoins,
+						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
+						fetched,
+						sourceAlias,
+						sqlAliasBase,
+						creationState
+				),
+				creationState.getCreationContext()
+						// TODO: FIX ME
+						.getSessionFactory()
 		);
-		// For inner joins we never need join nesting
-		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
-				// For outer joins we need nesting if there might be an on-condition that refers to the element table
-				&& ( addsPredicate
-				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
-				|| collectionDescriptor.hasWhereRestrictions() );
-
 		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
@@ -1057,10 +1088,21 @@ public class PluralAttributeMappingImpl
 					false,
 					creationState
 			);
-			tableGroup.registerIndexTableGroup( tableGroupJoin, nestedJoin );
+			tableGroup.registerIndexTableGroup( tableGroupJoin,
+					isNestedJoin( joinType, addsPredicate, creationState ) );
 		}
 
 		return tableGroup;
+	}
+
+	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
+		// For inner joins we never need join nesting
+		return joinType != SqlAstJoinType.INNER
+			// For outer joins we need nesting if there might be an on-condition that refers to the element table
+			&& ( addsPredicate
+					|| collectionDescriptor.hasWhereRestrictions()
+					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(),
+							creationState.applyOnlyLoadByKeyFilters() ) );
 	}
 
 	private TableGroup createCollectionTableGroup(
@@ -1097,14 +1139,12 @@ public class PluralAttributeMappingImpl
 				sqlAliasBase,
 				s -> false,
 				null,
-				creationState.getCreationContext().getSessionFactory()
+				creationState.getCreationContext()
+						// TODO: FIX ME
+						.getSessionFactory()
 		);
-		// For inner joins we never need join nesting
-		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
-				// For outer joins we need nesting if there might be an on-condition that refers to the element table
-				&& ( addsPredicate
-				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), creationState.applyOnlyLoadByKeyFilters() )
-				|| collectionDescriptor.hasWhereRestrictions() );
+
+		final boolean nestedJoin = isNestedJoin( joinType, addsPredicate, creationState );
 
 		if ( elementDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
@@ -1142,7 +1182,8 @@ public class PluralAttributeMappingImpl
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase, Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase explicitSqlAliasBase,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState) {
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(

@@ -262,8 +262,7 @@ public class AnonymousTupleEntityValuedModelPart
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				joinType,
-				lazyTableGroup,
-				null
+				lazyTableGroup
 		);
 		lazyTableGroup.setTableGroupInitializerCallback(
 				createTableGroupInitializerCallback(

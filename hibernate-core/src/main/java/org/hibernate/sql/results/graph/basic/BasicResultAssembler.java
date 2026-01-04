@@ -53,32 +53,33 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public J assemble(
-			RowProcessingState rowProcessingState) {
+	public J assemble(RowProcessingState rowProcessingState) {
 		final Object jdbcValue = extractRawValue( rowProcessingState );
 
 		if ( valueConverter != null ) {
-			if ( jdbcValue != null ) {
-				// the raw value type should be the converter's relational-JTD
-				if ( ! valueConverter.getRelationalJavaType().isInstance( jdbcValue ) ) {
-					throw new HibernateException(
-							String.format(
-									Locale.ROOT,
-									"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
-									valueConverter.getRelationalJavaType().getTypeName(),
-									jdbcValue.getClass().getName(),
-									jdbcValue
-							)
-					);
-				}
+			if ( jdbcValue != null
+					// the raw value type should be the converter's relational-JTD
+					&& !valueConverter.getRelationalJavaType().isInstance( jdbcValue ) ) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
+								valueConverter.getRelationalJavaType().getTypeName(),
+								jdbcValue.getClass().getName(),
+								jdbcValue
+						)
+				);
 			}
-
-			//noinspection unchecked,rawtypes
-			return (J) ( (BasicValueConverter) valueConverter ).toDomainValue( jdbcValue );
+			// Safe unchecked cast due to check above
+			@SuppressWarnings({"unchecked", "rawtypes"})
+			final Object domainValue =
+					( (BasicValueConverter) valueConverter )
+							.toDomainValue( jdbcValue );
+			return (J) domainValue;
 		}
-
-		//noinspection unchecked
-		return (J) jdbcValue;
+		else {
+			return (J) jdbcValue;
+		}
 	}
 
 	@Override
@@ -88,10 +89,9 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 
 	@Override
 	public JavaType<J> getAssembledJavaType() {
-		if ( valueConverter != null ) {
-			return valueConverter.getDomainJavaType();
-		}
-		return assembledJavaType;
+		return valueConverter != null
+				? valueConverter.getDomainJavaType()
+				: assembledJavaType;
 	}
 
 	/**

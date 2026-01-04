@@ -7,10 +7,8 @@ package org.hibernate.sql.results.graph.entity;
 import java.util.BitSet;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -42,34 +40,53 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	@Override
 	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
-		final NavigablePath navigablePath = getNavigablePath();
-		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
-				.getTableGroup( navigablePath );
-		final EntityResultGraphNode entityResultGraphNode = (EntityResultGraphNode) fetchParent;
-		final Fetch idFetch = creationState.visitIdentifierFetch( entityResultGraphNode );
-		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() &&
-				( idFetch.asFetchParent() == null || !idFetch.asFetchParent().containsCollectionFetches() ) ) {
-			identifierFetch = null;
-		}
-		else {
-			identifierFetch = idFetch;
-		}
+		final var navigablePath = getNavigablePath();
+		final var entityTableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.getTableGroup( navigablePath );
 
+		final var entityResultGraphNode = (EntityResultGraphNode) fetchParent;
+		identifierFetch = identifierFetch( creationState, entityResultGraphNode, navigablePath );
 		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );
 
-		final EntityRowIdMapping rowIdMapping = getEntityValuedModelPart().getEntityMappingType().getRowIdMapping();
+		rowIdResult = rowIdResult( creationState, navigablePath, entityTableGroup );
+
+		super.afterInitialize( fetchParent, creationState );
+	}
+
+	private DomainResult<Object> rowIdResult(
+			DomainResultCreationState creationState,
+			NavigablePath navigablePath,
+			TableGroup entityTableGroup) {
+		final var rowIdMapping =
+				getEntityValuedModelPart().getEntityMappingType()
+						.getRowIdMapping();
 		if ( rowIdMapping == null ) {
-			rowIdResult = null;
+			return null;
 		}
 		else {
-			rowIdResult = rowIdMapping.createDomainResult(
+			return rowIdMapping.createDomainResult(
 					navigablePath.append( rowIdMapping.getRowIdName() ),
 					entityTableGroup,
 					AbstractEntityPersister.ROWID_ALIAS,
 					creationState
 			);
 		}
-		super.afterInitialize( fetchParent, creationState );
+	}
+
+	private Fetch identifierFetch(
+			DomainResultCreationState creationState,
+			EntityResultGraphNode entityResultGraphNode,
+			NavigablePath navigablePath) {
+		final var idFetch = creationState.visitIdentifierFetch( entityResultGraphNode );
+		if ( navigablePath.getParent() == null
+				&& !creationState.forceIdentifierSelection()
+				&& ( idFetch.asFetchParent() == null || !idFetch.asFetchParent().containsCollectionFetches() ) ) {
+			return null;
+		}
+		else {
+			return idFetch;
+		}
 	}
 
 	@Override
@@ -106,7 +123,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
-		final EntityPersister entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
+		final var entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
 		if ( identifierFetch != null ) {
 			identifierFetch.collectValueIndexesToCache( valueIndexes );
 		}
@@ -119,7 +136,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			}
 			super.collectValueIndexesToCache( valueIndexes );
 		}
-		else if ( entityPersister.storeDiscriminatorInShallowQueryCacheLayout() && discriminatorFetch != null ) {
+		else if ( entityPersister.storeDiscriminatorInShallowQueryCacheLayout()
+					&& discriminatorFetch != null ) {
 			discriminatorFetch.collectValueIndexesToCache( valueIndexes );
 		}
 	}

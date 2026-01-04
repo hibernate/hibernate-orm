@@ -48,17 +48,17 @@ public class ImplicitFetchBuilderEntityPart implements ImplicitFetchBuilder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitFetchBuilderEntityPart that ) ) {
 			return false;
 		}
-
-		final ImplicitFetchBuilderEntityPart that = (ImplicitFetchBuilderEntityPart) o;
-		return fetchPath.equals( that.fetchPath )
-			&& fetchable.equals( that.fetchable );
+		else {
+			return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
+		}
 	}
 
 	@Override

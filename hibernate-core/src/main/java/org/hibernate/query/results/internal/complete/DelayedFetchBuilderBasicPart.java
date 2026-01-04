@@ -64,7 +64,6 @@ public class DelayedFetchBuilderBasicPart
 				null,
 				FetchTiming.DELAYED,
 				isEnhancedForLazyLoading,
-				domainResultCreationState,
 				false,
 				false
 		);
@@ -76,18 +75,18 @@ public class DelayedFetchBuilderBasicPart
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DelayedFetchBuilderBasicPart that ) ) {
 			return false;
 		}
-
-		final DelayedFetchBuilderBasicPart that = (DelayedFetchBuilderBasicPart) o;
-		return isEnhancedForLazyLoading == that.isEnhancedForLazyLoading
-			&& navigablePath.equals( that.navigablePath )
-			&& referencedModelPart.equals( that.referencedModelPart );
+		else {
+			return isEnhancedForLazyLoading == that.isEnhancedForLazyLoading
+				&& navigablePath.equals( that.navigablePath )
+				&& referencedModelPart.equals( that.referencedModelPart );
+		}
 	}
 
 	@Override

@@ -18,12 +18,16 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 /**
  * Support for instantiating embeddables as POJO representation
  */
-public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
+public class EmbeddableInstantiatorPojoStandard
+		extends AbstractPojoInstantiator
+		implements StandardEmbeddableInstantiator {
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorPojoStandard(Class<?> embeddableClass, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+	public EmbeddableInstantiatorPojoStandard(
+			Class<?> embeddableClass,
+			Supplier<EmbeddableMappingType> embeddableMappingAccess) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.constructor = resolveConstructor( embeddableClass );

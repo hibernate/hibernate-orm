@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.mapping.Component;
@@ -30,7 +29,7 @@ public class EmbeddableInstantiatorDynamicMap
 
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
-		final Map<?,?> dataMap = generateDataMap();
+		final var dataMap = generateDataMap();
 		final var values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
 			final var mappingType = runtimeDescriptorAccess.get();

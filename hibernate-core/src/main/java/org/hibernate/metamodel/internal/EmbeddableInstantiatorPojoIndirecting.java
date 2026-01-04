@@ -13,7 +13,9 @@ import org.hibernate.metamodel.spi.ValueAccess;
 /**
  * Support for instantiating embeddables as POJO representation through a constructor
  */
-public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantiator implements EmbeddableInstantiator {
+public class EmbeddableInstantiatorPojoIndirecting
+		extends AbstractPojoInstantiator
+		implements EmbeddableInstantiator {
 	protected final Constructor<?> constructor;
 	protected final int[] index;
 
@@ -30,7 +32,7 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 		if ( componentNames == null ) {
 			throw new IllegalArgumentException( "Can't determine field assignment for constructor: " + constructor );
 		}
-		final int[] index = new int[componentNames.length];
+		final var index = new int[componentNames.length];
 		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
 				? new EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index )
 				: new EmbeddableInstantiatorPojoIndirecting( constructor, index );

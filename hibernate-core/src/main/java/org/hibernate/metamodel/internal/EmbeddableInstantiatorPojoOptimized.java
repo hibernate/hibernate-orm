@@ -15,7 +15,9 @@ import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimi
  * Support for instantiating embeddables as POJO representation
  * using bytecode optimizer
  */
-public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
+public class EmbeddableInstantiatorPojoOptimized
+		extends AbstractPojoInstantiator
+		implements StandardEmbeddableInstantiator {
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final InstantiationOptimizer instantiationOptimizer;
 

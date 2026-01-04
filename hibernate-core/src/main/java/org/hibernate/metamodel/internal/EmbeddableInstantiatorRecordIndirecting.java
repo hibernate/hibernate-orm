@@ -22,8 +22,8 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
-		final String[] componentNames = getRecordComponentNames( javaType );
-		final int[] index = new int[componentNames.length];
+		final var componentNames = getRecordComponentNames( javaType );
+		final var index = new int[componentNames.length];
 		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
 				? new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index )
 				: new EmbeddableInstantiatorRecordIndirecting( javaType, index );
@@ -49,7 +49,8 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	// Handles gaps, by leaving the value null for that index
-	private static class EmbeddableInstantiatorRecordIndirectingWithGap extends EmbeddableInstantiatorRecordIndirecting {
+	private static class EmbeddableInstantiatorRecordIndirectingWithGap
+			extends EmbeddableInstantiatorRecordIndirecting {
 
 		public EmbeddableInstantiatorRecordIndirectingWithGap(Class<?> javaType, int[] index) {
 			super( javaType, index );

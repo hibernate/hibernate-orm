@@ -62,9 +62,9 @@ public class CompleteResultBuilderBasicModelPart
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final TableReference tableReference = tableReference( creationStateImpl );
-		final SqlSelection sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
+		final var creationStateImpl = impl( domainResultCreationState );
+		final var tableReference = tableReference( creationStateImpl );
+		final var sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
@@ -100,18 +100,18 @@ public class CompleteResultBuilderBasicModelPart
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderBasicModelPart that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
-		return navigablePath.equals( that.navigablePath )
-				&& modelPart.equals( that.modelPart )
-				&& columnAlias.equals( that.columnAlias );
+		else {
+			return navigablePath.equals( that.navigablePath )
+					&& modelPart.equals( that.modelPart )
+					&& columnAlias.equals( that.columnAlias );
+		}
 	}
 
 	@Override

@@ -110,18 +110,18 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object instanceof CompleteFetchBuilderEmbeddableValuedModelPart that ) ) {
 			return false;
 		}
-
-		final CompleteFetchBuilderEmbeddableValuedModelPart that = (CompleteFetchBuilderEmbeddableValuedModelPart) o;
-		return navigablePath.equals( that.navigablePath )
-			&& modelPart.equals( that.modelPart )
-			&& columnAliases.equals( that.columnAliases );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart )
+				&& columnAliases.equals( that.columnAliases );
+		}
 	}
 
 	@Override

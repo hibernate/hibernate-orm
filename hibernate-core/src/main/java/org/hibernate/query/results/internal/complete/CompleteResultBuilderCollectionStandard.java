@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -12,8 +11,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
-import org.hibernate.query.results.internal.FromClauseAccessImpl;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -24,6 +21,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.Arrays;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * @author Steve Ebersole
@@ -89,9 +87,9 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final FromClauseAccessImpl fromClauseAccess = creationStateImpl.getFromClauseAccess();
-		final TableGroup rootTableGroup = pluralAttributeDescriptor.createRootTableGroup(
+		final var creationStateImpl = impl( domainResultCreationState );
+		final var fromClauseAccess = creationStateImpl.getFromClauseAccess();
+		final var rootTableGroup = pluralAttributeDescriptor.createRootTableGroup(
 				false,
 				navigablePath,
 				tableAlias,
@@ -139,9 +137,10 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			String[] columnNames,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl) {
+		final var typeConfiguration = creationStateImpl.getSessionFactory().getTypeConfiguration();
 		resolveSelections( modelPart, (selectionIndex, selectableMapping) ->
 				creationStateImpl.resolveSqlSelection(
-						ResultsHelper.resolveSqlExpression(
+						resolveSqlExpression(
 								creationStateImpl,
 								jdbcResultsMetadata,
 								tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
@@ -150,16 +149,17 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 						),
 						selectableMapping.getJdbcMapping().getJdbcJavaType(),
 						null,
-						creationStateImpl.getSessionFactory().getTypeConfiguration()
+						typeConfiguration
 				) );
 	}
 
 	private static void resolveSelections(ModelPart modelPart, SelectableConsumer consumer) {
 		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-			final EntityMappingType entityMappingType = entityValuedModelPart.getEntityMappingType();
+			final var entityMappingType = entityValuedModelPart.getEntityMappingType();
 			int index = entityMappingType.getIdentifierMapping().forEachSelectable( consumer );
-			if ( entityMappingType.getDiscriminatorMapping() != null ) {
-				index += entityMappingType.getDiscriminatorMapping().forEachSelectable( index, consumer );
+			final var discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+			if ( discriminatorMapping != null ) {
+				index += discriminatorMapping.forEachSelectable( index, consumer );
 			}
 			entityMappingType.forEachSelectable( index, consumer );
 		}
@@ -173,17 +173,17 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( o instanceof CompleteResultBuilderCollectionStandard that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderCollectionStandard that = (CompleteResultBuilderCollectionStandard) o;
-		return tableAlias.equals( that.tableAlias )
-			&& navigablePath.equals( that.navigablePath )
-			&& pluralAttributeDescriptor.equals( that.pluralAttributeDescriptor )
-			&& Arrays.equals( keyColumnNames, that.keyColumnNames )
-			&& Arrays.equals( indexColumnNames, that.indexColumnNames )
-			&& Arrays.equals( elementColumnNames, that.elementColumnNames );
+		else {
+			return tableAlias.equals( that.tableAlias )
+				&& navigablePath.equals( that.navigablePath )
+				&& pluralAttributeDescriptor.equals( that.pluralAttributeDescriptor )
+				&& Arrays.equals( keyColumnNames, that.keyColumnNames )
+				&& Arrays.equals( indexColumnNames, that.indexColumnNames )
+				&& Arrays.equals( elementColumnNames, that.elementColumnNames );
+		}
 	}
 
 	@Override

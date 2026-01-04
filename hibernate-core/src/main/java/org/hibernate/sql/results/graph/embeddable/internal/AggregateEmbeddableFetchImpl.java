@@ -9,8 +9,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -87,9 +85,9 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var tableReference = tableGroup.getPrimaryTableReference();
 		final var selectableMapping = fetchContainer.getAggregateMapping();
-		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
+		final var expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
 				fetchParent,
@@ -139,8 +137,8 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	@Override
 	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		if ( fetchable instanceof TableGroupProducer ) {
-			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
-				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
+			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
@@ -173,7 +171,9 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 	}
 
 	@Override
-	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+	public EmbeddableInitializer<?> createInitializer(
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
 		return new AggregateEmbeddableInitializerImpl(
 				this,
 				discriminatorFetch,

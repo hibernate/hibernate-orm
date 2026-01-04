@@ -7,30 +7,20 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
-import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.util.MutableObject;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
@@ -47,16 +37,13 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
-import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -71,11 +58,9 @@ import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -83,7 +68,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -91,13 +75,11 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.ValueBinder;
 import org.jboss.logging.Logger;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,8 +88,19 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
+import static org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper.createRowNumberingExpression;
 import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.isId;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createInsertedRowNumbersSelectSql;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createTemporaryTableInsert;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.loadInsertedRowNumbers;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable;
 
 /**
 * @author Christian Beikov
@@ -143,16 +136,15 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		this.entityTable = entityTable;
 		this.sessionUidAccess = sessionUidAccess;
 
-		final TemporaryTableSessionUidColumn sessionUidColumn = entityTable.getSessionUidColumn();
-		if ( sessionUidColumn == null ) {
-			this.sessionUidParameter = null;
-		}
-		else {
-			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
-		}
-		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
-		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
-				getEntityDescriptor(),
+		final var sessionUidColumn = entityTable.getSessionUidColumn();
+		this.sessionUidParameter =
+				sessionUidColumn == null
+						? null
+						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+		final var executionContext = omittingLockingAndPaging( context );
+		final var entityDescriptor = getEntityDescriptor();
+		final var sqmConverter = new MultiTableSqmMutationConverter(
+				entityDescriptor,
 				sqmInsert,
 				sqmInsert.getTarget(),
 				domainParameterXref,
@@ -162,26 +154,27 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				getSessionFactory().getSqlTranslationEngine()
 		);
 
-		final TableGroup insertingTableGroup = sqmConverter.getMutatingTableGroup();
+		final var insertingTableGroup = sqmConverter.getMutatingTableGroup();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the insertion target using our special converter, collecting
 		// information about the target paths
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
-		final NamedTableReference entityTableReference = new NamedTableReference(
+		final var entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
 				true
 		);
-		final InsertSelectStatement insertStatement = new InsertSelectStatement( entityTableReference );
+		final var insertStatement = new InsertSelectStatement( entityTableReference );
 
-		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
+		final var additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
-					final SqmPathInterpretation<?> pathInterpretation = (SqmPathInterpretation<?>) assignable;
-					final List<TemporaryTableColumn> columns =
-							entityTable.findTemporaryTableColumns( getEntityDescriptor(), pathInterpretation.getExpressionType() );
-					for ( TemporaryTableColumn column : columns ) {
+					final var pathInterpretation = (SqmPathInterpretation<?>) assignable;
+					final var columns =
+							entityTable.findTemporaryTableColumns( entityDescriptor,
+									pathInterpretation.getExpressionType() );
+					for ( var column : columns ) {
 						insertStatement.addTargetColumnReference( new ColumnReference(
 								entityTableReference,
 								column.getColumnName(),
@@ -191,7 +184,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					targetPathColumns.add( new Assignment( assignable, (Expression) assignable ) );
 				},
 				sqmInsert,
-				getEntityDescriptor(),
+				entityDescriptor,
 				insertingTableGroup
 		);
 
@@ -199,35 +192,33 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
-		if ( sqmInsert instanceof SqmInsertSelectStatement ) {
-			final QueryPart queryPart = sqmConverter.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmInsert ).getSelectQueryPart() );
+		if ( sqmInsert instanceof SqmInsertSelectStatement<?> sqmInsertSelectStatement ) {
+			final var queryPart =
+					sqmConverter.visitQueryPart( sqmInsertSelectStatement.getSelectQueryPart() );
 			queryPart.visitQuerySpecs(
 					querySpec -> {
 						if ( additionalInsertValues.applySelections( querySpec, getSessionFactory() ) ) {
-							final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
+							final var rowNumberColumn = entityTable.getColumns()
 									.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
-							final ColumnReference columnReference = new ColumnReference(
+							final var columnReference = new ColumnReference(
 									(String) null,
 									rowNumberColumn.getColumnName(),
 									false,
 									null,
 									rowNumberColumn.getJdbcMapping()
 							);
-							insertStatement.getTargetColumns().set(
-									insertStatement.getTargetColumns().size() - 1,
-									columnReference
-							);
-							targetPathColumns.set(
-									targetPathColumns.size() - 1,
-									new Assignment( columnReference, columnReference )
-							);
+							insertStatement.getTargetColumns()
+									.set( insertStatement.getTargetColumns().size() - 1,
+											columnReference );
+							targetPathColumns.set( targetPathColumns.size() - 1,
+									new Assignment( columnReference, columnReference ) );
 						}
-						else if ( !(getEntityDescriptor().getGenerator() instanceof OnExecutionGenerator generator
-									&& generator.generatedOnExecution())
+						else if ( !( entityDescriptor.getGenerator() instanceof OnExecutionGenerator generator
+										&& generator.generatedOnExecution() )
 								&& !entityTable.isRowNumberGenerated() ) {
-							final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
+							final var rowNumberColumn = entityTable.getColumns()
 									.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
-							final ColumnReference columnReference = new ColumnReference(
+							final var columnReference = new ColumnReference(
 									(String) null,
 									rowNumberColumn.getColumnName(),
 									false,
@@ -236,28 +227,23 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							);
 							insertStatement.getTargetColumns().add( columnReference );
 							targetPathColumns.add( new Assignment( columnReference, columnReference ) );
-							querySpec.getSelectClause().addSqlSelection(
-									new SqlSelectionImpl(
-											0,
-											SqmInsertStrategyHelper.createRowNumberingExpression(
-													querySpec,
-													getSessionFactory()
-											)
-									)
-							);
+							querySpec.getSelectClause()
+									.addSqlSelection( new SqlSelectionImpl(0,
+											createRowNumberingExpression( querySpec, getSessionFactory() ) ) );
 						}
 						if ( sessionUidColumn != null ) {
-							final ColumnReference sessionUidColumnReference = new ColumnReference(
+							final var sessionUidColumnReference = new ColumnReference(
 									(String) null,
 									sessionUidColumn.getColumnName(),
 									false,
 									null,
 									sessionUidColumn.getJdbcMapping()
 							);
-							querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl(
-									insertStatement.getTargetColumns().size(),
-									sessionUidParameter
-							) );
+							querySpec.getSelectClause()
+									.addSqlSelection( new SqlSelectionImpl(
+											insertStatement.getTargetColumns().size(),
+											sessionUidParameter
+									) );
 							insertStatement.getTargetColumns().add( sessionUidColumnReference );
 							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 						}
@@ -268,13 +254,13 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		else {
 			// Add the row number column if there is one
 			final BasicType<?> rowNumberType;
-			if ( !(getEntityDescriptor().getGenerator() instanceof OnExecutionGenerator generator
-				&& generator.generatedOnExecution())
+			if ( !( entityDescriptor.getGenerator() instanceof OnExecutionGenerator generator
+						&& generator.generatedOnExecution() )
 				&& !entityTable.isRowNumberGenerated() ) {
-				final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
+				final var rowNumberColumn = entityTable.getColumns()
 						.get( entityTable.getColumns().size() - (sessionUidColumn == null ? 1 : 2) );
 				rowNumberType = (BasicType<?>) rowNumberColumn.getJdbcMapping();
-				final ColumnReference columnReference = new ColumnReference(
+				final var columnReference = new ColumnReference(
 						(String) null,
 						rowNumberColumn.getColumnName(),
 						false,
@@ -288,7 +274,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				rowNumberType = null;
 			}
 			if ( sessionUidColumn != null ) {
-				final ColumnReference sessionUidColumnReference = new ColumnReference(
+				final var sessionUidColumnReference = new ColumnReference(
 						(String) null,
 						sessionUidColumn.getColumnName(),
 						false,
@@ -298,19 +284,17 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				insertStatement.getTargetColumns().add( sessionUidColumnReference );
 				targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 			}
-			final List<SqmValues> sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmInsert ).getValuesList();
+			final var sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmInsert ).getValuesList();
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
 			for ( int i = 0; i < sqmValuesList.size(); i++ ) {
-				final Values values = sqmConverter.visitValues( sqmValuesList.get( i ) );
+				final var values = sqmConverter.visitValues( sqmValuesList.get( i ) );
 				additionalInsertValues.applyValues( values );
 				if ( rowNumberType != null ) {
-					values.getExpressions().add(
-							new QueryLiteral<>(
-									rowNumberType.getJavaTypeDescriptor()
-											.wrap( i + 1, getSessionFactory().getWrapperOptions() ),
-									rowNumberType
-							)
-					);
+					values.getExpressions().add( new QueryLiteral<>(
+							rowNumberType.getJavaTypeDescriptor()
+									.wrap( i + 1, getSessionFactory().getWrapperOptions() ),
+							rowNumberType
+					) );
 				}
 				if ( sessionUidParameter != null ) {
 					values.getExpressions().add( sessionUidParameter );
@@ -319,36 +303,38 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			}
 			insertStatement.setValuesList( valuesList );
 		}
-		final ConflictClause conflictClause = sqmConverter.visitConflictClause( sqmInsert.getConflictClause() );
+		final var conflictClause = sqmConverter.visitConflictClause( sqmInsert.getConflictClause() );
 		sqmConverter.pruneTableGroupJoins();
 
 		boolean assignsId = false;
-		for ( Assignment assignment : targetPathColumns ) {
-			assignsId = assignsId || assignment.getAssignable() instanceof SqmPathInterpretation<?> pathInterpretation
-									&& isId( pathInterpretation.getExpressionType() );
+		for ( var assignment : targetPathColumns ) {
+			assignsId = assignsId
+						|| assignment.getAssignable() instanceof SqmPathInterpretation<?> pathInterpretation
+								&& isId( pathInterpretation.getExpressionType() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// cross-reference the TableReference by alias.  The TableGroup already
 		// cross-references it by name, but the ColumnReference only has the alias
 
-		final Map<String, TableReference> tableReferenceByAlias = CollectionHelper.mapOfSize( insertingTableGroup.getTableReferenceJoins().size() + 1 );
+		final Map<String, TableReference> tableReferenceByAlias =
+				mapOfSize( insertingTableGroup.getTableReferenceJoins().size() + 1 );
 		collectTableReference( insertingTableGroup.getPrimaryTableReference(), tableReferenceByAlias::put );
 		for ( int i = 0; i < insertingTableGroup.getTableReferenceJoins().size(); i++ ) {
 			collectTableReference( insertingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		final ModelPartContainer updatingModelPart = insertingTableGroup.getModelPart();
+		final var updatingModelPart = insertingTableGroup.getModelPart();
 		assert updatingModelPart instanceof EntityMappingType;
 
 		final Map<String, List<Assignment>> assignmentsByTable =
-				CollectionHelper.mapOfSize( insertingTableGroup.getTableReferenceJoins().size() + 1 );
+				mapOfSize( insertingTableGroup.getTableReferenceJoins().size() + 1 );
 
 		this.domainParameterXref = domainParameterXref;
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter );
 		this.resolvedParameterMappingModelTypes = sqmConverter.getSqmParameterMappingModelExpressibleResolutions();
 
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -375,15 +361,14 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		// segment the assignments by table-reference
 
 		for ( int i = 0; i < targetPathColumns.size(); i++ ) {
-			final Assignment assignment = targetPathColumns.get( i );
-			final Assignable assignable = assignment.getAssignable();
-			final List<ColumnReference> assignmentColumnRefs = assignable.getColumnReferences();
+			final var assignment = targetPathColumns.get( i );
+			final var assignable = assignment.getAssignable();
+			final var assignmentColumnRefs = assignable.getColumnReferences();
 
 			TableReference assignmentTableReference = null;
-
 			for ( int c = 0; c < assignmentColumnRefs.size(); c++ ) {
-				final ColumnReference columnReference = assignmentColumnRefs.get( c );
-				final TableReference tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
+				final var columnReference = assignmentColumnRefs.get( c );
+				final var tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
 					throw new SemanticException( "Assignment referred to columns from multiple tables: " + i );
@@ -392,48 +377,51 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			}
 
 			assignmentsByTable.computeIfAbsent(
-					assignmentTableReference == null ? null : assignmentTableReference.getTableId(),
+					assignmentTableReference == null
+							? null
+							: assignmentTableReference.getTableId(),
 					k -> new ArrayList<>() ).add( assignment );
 		}
 
-		this.temporaryTableInsert = ExecuteWithTemporaryTableHelper.createTemporaryTableInsert(
-				insertStatement,
-				jdbcParameterBindings,
-				executionContext
-		);
+		this.temporaryTableInsert =
+				createTemporaryTableInsert(
+						insertStatement,
+						jdbcParameterBindings,
+						executionContext
+				);
 
-		final int tableSpan = getEntityDescriptor().getTableSpan();
+		final int tableSpan = entityDescriptor.getTableSpan();
 		this.rootTableInserter = createRootTableInserter(
 				insertStatement,
 				insertingTableGroup,
 				conflictClause,
 				assignsId,
-				getEntityDescriptor().getTableName( 0 ),
-				getEntityDescriptor().getKeyColumns( 0 ),
+				entityDescriptor.getTableName( 0 ),
+				entityDescriptor.getKeyColumns( 0 ),
 				assignmentsByTable,
 				executionContext
 		);
 
 		final ArrayList<JdbcOperationQueryMutation> nonRootTableInserts = new ArrayList<>( tableSpan );
-		if ( getEntityDescriptor().hasDuplicateTables() ) {
-			final String[] insertedTables = new String[tableSpan];
-			insertedTables[0] = getEntityDescriptor().getTableName( 0 );
+		if ( entityDescriptor.hasDuplicateTables() ) {
+			final var insertedTables = new String[tableSpan];
+			insertedTables[0] = entityDescriptor.getTableName( 0 );
 			for ( int i = 1; i < tableSpan; i++ ) {
-				if ( getEntityDescriptor().isInverseTable( i ) ) {
+				if ( entityDescriptor.isInverseTable( i ) ) {
 					continue;
 				}
-				final String tableName = getEntityDescriptor().getTableName( i );
+				final String tableName = entityDescriptor.getTableName( i );
 				insertedTables[i] = tableName;
-				if ( ArrayHelper.indexOf( insertedTables, i, tableName ) != -1 ) {
+				if ( indexOf( insertedTables, i, tableName ) != -1 ) {
 					// Since secondary tables could appear multiple times, we have to skip duplicates
 					continue;
 				}
-				final JdbcOperationQueryMutation insert = createTableInsert(
+				final var insert = createTableInsert(
 						insertStatement,
 						insertingTableGroup,
 						tableName,
-						getEntityDescriptor().getKeyColumns( i ),
-						getEntityDescriptor().isNullableTable( i ),
+						entityDescriptor.getKeyColumns( i ),
+						entityDescriptor.isNullableTable( i ),
 						assignmentsByTable,
 						executionContext
 				);
@@ -444,12 +432,12 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 		else {
 			for ( int i = 1; i < tableSpan; i++ ) {
-				final JdbcOperationQueryMutation insert = createTableInsert(
+				final var insert = createTableInsert(
 						insertStatement,
 						insertingTableGroup,
-						getEntityDescriptor().getTableName( i ),
-						getEntityDescriptor().getKeyColumns( i ),
-						getEntityDescriptor().isNullableTable( i ),
+						entityDescriptor.getTableName( i ),
+						entityDescriptor.getKeyColumns( i ),
+						entityDescriptor.isNullableTable( i ),
 						assignmentsByTable,
 						executionContext
 				);
@@ -492,32 +480,32 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			String[] keyColumns,
 			Map<String, List<Assignment>> assignmentsByTable,
 			ExecutionContext executionContext) {
-		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+		final var updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
 				true
 		);
 
-		final Generator generator = getEntityDescriptor().getGenerator();
-		final List<Assignment> assignments = assignmentsByTable.get( tableExpression );
+		final var generator = getEntityDescriptor().getGenerator();
+		final var assignments = assignmentsByTable.get( tableExpression );
 		if ( !assignsId
-			&& (assignments == null || assignments.isEmpty())
+			&& ( assignments == null || assignments.isEmpty() )
 			&& !generator.generatedOnExecution()
-			&& (!(generator instanceof BulkInsertionCapableIdentifierGenerator)
-				|| ((BulkInsertionCapableIdentifierGenerator) generator).supportsBulkInsertionIdentifierGeneration()) ) {
+			&& ( !( generator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapable )
+					|| bulkInsertionCapable.supportsBulkInsertionIdentifierGeneration() ) ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
-		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
+		final var dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Create the SQL AST and convert it into a JdbcOperation
-		final QuerySpec querySpec = new QuerySpec( true );
-		final NamedTableReference temporaryTableReference = new NamedTableReference(
+		final var querySpec = new QuerySpec( true );
+		final var temporaryTableReference = new NamedTableReference(
 				translatedInsertStatement.getTargetTable().getTableExpression(),
 				"hte_tmp"
 		);
-		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
+		final var temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
 				null,
 				temporaryTableReference,
@@ -529,29 +517,32 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			querySpec.setFetchClauseExpression(
 					new QueryLiteral<>(
 							1,
-							executionContext.getSession().getFactory().getQueryEngine().getCriteriaBuilder().getIntegerType()
+							executionContext.getSession().getFactory().getQueryEngine()
+									.getCriteriaBuilder().getIntegerType()
 					),
 					FetchClauseType.ROWS_ONLY
 			);
 		}
-		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTableReference );
+		final var insertStatement = new InsertSelectStatement( dmlTableReference );
 		insertStatement.setConflictClause( conflictClause );
 		insertStatement.setSourceSelectStatement( querySpec );
-		applyAssignments( assignments, insertStatement, temporaryTableReference, getEntityDescriptor() );
-		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
-		final SharedSessionContractImplementor session = executionContext.getSession();
+		applyAssignments( assignments, insertStatement, temporaryTableReference );
 		final JdbcSelect temporaryTableIdentitySelect;
 		final JdbcOperationQueryMutation temporaryTableIdUpdate;
 		final String temporaryTableRowNumberSelectSql;
 		final JdbcOperationQueryMutation rootTableInsert;
 		final JdbcOperationQueryMutation temporaryTableIdentityUpdate;
 		final String rootTableInsertWithReturningSql;
+		final var sqlAstTranslatorFactory =
+				getSessionFactory().getJdbcServices()
+						.getJdbcEnvironment().getSqlAstTranslatorFactory();
 		if ( !assignsId && generator.generatedOnExecution() ) {
-			final BasicEntityIdentifierMapping identifierMapping =
-					(BasicEntityIdentifierMapping) getEntityDescriptor().getIdentifierMapping();
-			final QuerySpec idSelectQuerySpec = new QuerySpec( true );
+			final var identifierMapping =
+					(BasicEntityIdentifierMapping)
+							getEntityDescriptor().getIdentifierMapping();
+			final var idSelectQuerySpec = new QuerySpec( true );
 			idSelectQuerySpec.getFromClause().addRoot( temporaryTableGroup );
-			final ColumnReference columnReference = new ColumnReference(
+			final var columnReference = new ColumnReference(
 					(String) null,
 					TemporaryTable.ENTITY_TABLE_IDENTITY_COLUMN,
 					false,
@@ -567,7 +558,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					)
 			);
 			if ( entityTable.getSessionUidColumn() != null ) {
-				final TemporaryTableColumn sessionUidColumn = entityTable.getSessionUidColumn();
+				final var sessionUidColumn = entityTable.getSessionUidColumn();
 				idSelectQuerySpec.applyPredicate( new ComparisonPredicate(
 						new ColumnReference(
 								temporaryTableReference,
@@ -580,24 +571,21 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 						sessionUidParameter
 				) );
 			}
-			final SelectStatement selectStatement = new SelectStatement(
-					idSelectQuerySpec,
-					Collections.singletonList(
-							new BasicFetch<>(
+			final var selectStatement =
+					new SelectStatement(
+							idSelectQuerySpec,
+							singletonList( new BasicFetch<>(
 									0,
 									null,
 									null,
 									identifierMapping,
 									FetchTiming.IMMEDIATE,
-									null,
 									false
-							)
-					)
-			);
-			temporaryTableIdentitySelect = jdbcServices.getJdbcEnvironment()
-					.getSqlAstTranslatorFactory()
-					.buildSelectTranslator( getSessionFactory(), selectStatement )
-					.translate( null, executionContext.getQueryOptions() );
+							) )
+					);
+			temporaryTableIdentitySelect =
+					sqlAstTranslatorFactory.buildSelectTranslator( getSessionFactory(), selectStatement )
+							.translate( null, executionContext.getQueryOptions() );
 			temporaryTableIdUpdate = null;
 			temporaryTableRowNumberSelectSql = null;
 
@@ -616,8 +604,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			// to then insert into the target tables in once statement
 			if ( insertStatement.getTargetColumns().stream()
 					.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
-				final EntityIdentifierMapping identifierMapping = getEntityDescriptor().getIdentifierMapping();
-				final List<TemporaryTableColumn> primaryKeyTableColumns =
+				final var identifierMapping = getEntityDescriptor().getIdentifierMapping();
+				final var primaryKeyTableColumns =
 						getPrimaryKeyTableColumns( getEntityDescriptor(), entityTable );
 
 				final TemporaryTableColumn sessionUidColumn;
@@ -641,18 +629,18 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					);
 				}
 				if ( needsIdentifierGeneration( generator, assignsId ) ) {
-					final BasicEntityIdentifierMapping basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
-					final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( basicIdentifierMapping );
+					final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
+					final var rootIdentity = new SqlTypedMappingJdbcParameter( basicIdentifierMapping );
 					final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
-					final ColumnReference idColumnReference = new ColumnReference( (String) null, basicIdentifierMapping );
+					final var idColumnReference = new ColumnReference( (String) null, basicIdentifierMapping );
 					temporaryTableAssignments.add( new Assignment( idColumnReference, rootIdentity ) );
 
 					final int rowNumberIndex =
 							entityTable.getColumns().size() - (entityTable.getSessionUidColumn() == null ? 1 : 2);
-					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns().get( rowNumberIndex );
-					final JdbcParameter rowNumber = new SqlTypedMappingJdbcParameter( rowNumberColumn );
+					final var rowNumberColumn = entityTable.getColumns().get( rowNumberIndex );
+					final var rowNumber = new SqlTypedMappingJdbcParameter( rowNumberColumn );
 
-					final UpdateStatement updateStatement = new UpdateStatement(
+					final var updateStatement = new UpdateStatement(
 							temporaryTableReference,
 							temporaryTableAssignments,
 							Predicate.combinePredicates(
@@ -671,14 +659,11 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							)
 					);
 
-					temporaryTableIdUpdate = jdbcServices.getJdbcEnvironment()
-							.getSqlAstTranslatorFactory()
-							.buildMutationTranslator( getSessionFactory(), updateStatement )
-							.translate( null, executionContext.getQueryOptions() );
-					temporaryTableRowNumberSelectSql = ExecuteWithTemporaryTableHelper.createInsertedRowNumbersSelectSql(
-							entityTable,
-							executionContext
-					);
+					temporaryTableIdUpdate =
+							sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), updateStatement )
+									.translate( null, executionContext.getQueryOptions() );
+					temporaryTableRowNumberSelectSql =
+							createInsertedRowNumbersSelectSql( entityTable, executionContext );
 				}
 				else {
 					temporaryTableIdUpdate = null;
@@ -714,7 +699,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			}
 		}
 		if ( entityTable.getSessionUidColumn() != null ) {
-			final TemporaryTableColumn sessionUidColumn = entityTable.getSessionUidColumn();
+			final var sessionUidColumn = entityTable.getSessionUidColumn();
 			querySpec.applyPredicate( new ComparisonPredicate(
 					new ColumnReference(
 							temporaryTableReference,
@@ -728,26 +713,26 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			) );
 		}
 
-		rootTableInsert = jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( getSessionFactory(), insertStatement )
-				.translate( null, executionContext.getQueryOptions() );
+		rootTableInsert =
+				sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), insertStatement )
+						.translate( null, executionContext.getQueryOptions() );
 
 		if ( !assignsId && generator.generatedOnExecution() ) {
-			final GeneratedValuesMutationDelegate insertDelegate = getEntityDescriptor().getInsertDelegate();
+			final var insertDelegate = getEntityDescriptor().getInsertDelegate();
 			// todo 7.0 : InsertGeneratedIdentifierDelegate will be removed once we're going to handle
 			//            generated values within the jdbc insert operaetion itself
-			final InsertGeneratedIdentifierDelegate identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
+			final var identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
 			rootTableInsertWithReturningSql = identifierDelegate.prepareIdentifierGeneratingInsert( rootTableInsert.getSqlString() );
-			final BasicEntityIdentifierMapping identifierMapping =
-					(BasicEntityIdentifierMapping) getEntityDescriptor().getIdentifierMapping();
+			final var identifierMapping =
+					(BasicEntityIdentifierMapping)
+							getEntityDescriptor().getIdentifierMapping();
 
-			final List<TemporaryTableColumn> primaryKeyTableColumns =
+			final var primaryKeyTableColumns =
 					getPrimaryKeyTableColumns( getEntityDescriptor(), entityTable );
 			assert primaryKeyTableColumns.size() == 1;
 
-			final JdbcParameter entityIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
-			final JdbcParameter rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
+			final var entityIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
+			final var rootIdentity = new SqlTypedMappingJdbcParameter( identifierMapping );
 			final List<Assignment> temporaryTableAssignments = new ArrayList<>( 1 );
 			temporaryTableAssignments.add(
 					new Assignment(
@@ -761,7 +746,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							rootIdentity
 					)
 			);
-			final UpdateStatement updateStatement = new UpdateStatement(
+			final var updateStatement = new UpdateStatement(
 					temporaryTableReference,
 					temporaryTableAssignments,
 					new ComparisonPredicate(
@@ -777,10 +762,9 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					)
 			);
 
-			temporaryTableIdentityUpdate = jdbcServices.getJdbcEnvironment()
-					.getSqlAstTranslatorFactory()
-					.buildMutationTranslator( getSessionFactory(), updateStatement )
-					.translate( null, executionContext.getQueryOptions() );
+			temporaryTableIdentityUpdate =
+					sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), updateStatement )
+							.translate( null, executionContext.getQueryOptions() );
 		}
 		else {
 			rootTableInsertWithReturningSql = null;
@@ -797,15 +781,14 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 	}
 
 	private boolean needsIdentifierGeneration(Generator identifierGenerator, boolean assignsId) {
-		if ( !assignsId && identifierGenerator instanceof OptimizableGenerator ) {
+		if ( !assignsId && identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
 			// If the generator uses an optimizer or is not bulk insertion capable,
 			// we have to generate identifiers for the new rows, as that couldn't
 			// have been done via a SQL expression
-			final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+			final var optimizer = optimizableGenerator.getOptimizer();
 			return optimizer != null && optimizer.getIncrementSize() > 1
-				|| identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
-					&& !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator )
-					.supportsBulkInsertionIdentifierGeneration();
+				|| identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapable
+						&& !bulkInsertionCapable.supportsBulkInsertionIdentifierGeneration();
 		}
 		else {
 			return false;
@@ -820,38 +803,38 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			boolean nullableTable,
 			Map<String, List<Assignment>> assignmentsByTable,
 			ExecutionContext executionContext) {
-		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+		final var updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
 				true
 		);
 
-		final List<Assignment> assignments = assignmentsByTable.get( tableExpression );
+		final var assignments = assignmentsByTable.get( tableExpression );
 		if ( nullableTable && ( assignments == null || assignments.isEmpty() ) ) {
 			// no assignments for this table - skip it
 			return null;
 		}
-		final NamedTableReference dmlTargetTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
+		final var dmlTargetTableReference =
+				resolveUnionTableReference( updatingTableReference, tableExpression );
 
-		final QuerySpec querySpec = new QuerySpec( true );
-		final NamedTableReference temporaryTableReference = new NamedTableReference(
+		final var querySpec = new QuerySpec( true );
+		final var temporaryTableReference = new NamedTableReference(
 				translatedInsertStatement.getTargetTable().getTableExpression(),
 				"hte_tmp"
 		);
-		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
+		final var temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
 				null,
 				temporaryTableReference,
 				getEntityDescriptor()
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
-		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTargetTableReference );
+		final var insertStatement = new InsertSelectStatement( dmlTargetTableReference );
 		insertStatement.setSourceSelectStatement( querySpec );
-		applyAssignments( assignments, insertStatement, temporaryTableReference, getEntityDescriptor() );
-		if ( insertStatement.getTargetColumns()
-				.stream()
-				.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
-			final List<TemporaryTableColumn> primaryKeyTableColumns =
+		applyAssignments( assignments, insertStatement, temporaryTableReference );
+		if ( insertStatement.getTargetColumns().stream()
+				.noneMatch( column -> keyColumns[0].equals( column.getColumnExpression() ) ) ) {
+			final var primaryKeyTableColumns =
 					getPrimaryKeyTableColumns( getEntityDescriptor().getEntityPersister(), entityTable );
 			getEntityDescriptor().getIdentifierMapping().forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				insertStatement.addTargetColumnReferences(
@@ -878,7 +861,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 
 		if ( entityTable.getSessionUidColumn() != null ) {
-			final TemporaryTableColumn sessionUidColumn = entityTable.getSessionUidColumn();
+			final var sessionUidColumn = entityTable.getSessionUidColumn();
 			querySpec.applyPredicate( new ComparisonPredicate(
 					new ColumnReference(
 							temporaryTableReference,
@@ -891,9 +874,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					sessionUidParameter
 			) );
 		}
-		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
+		return getSessionFactory().getJdbcServices()
+				.getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildMutationTranslator( getSessionFactory(), insertStatement )
 				.translate( null, executionContext.getQueryOptions() );
 	}
@@ -905,18 +887,22 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		return entityTable.getColumns().subList( startIndex, endIndex );
 	}
 
-	private void applyAssignments(List<Assignment> assignments, InsertSelectStatement insertStatement, NamedTableReference temporaryTableReference, EntityPersister entityDescriptor) {
+	private void applyAssignments(
+			List<Assignment> assignments,
+			InsertSelectStatement insertStatement,
+			NamedTableReference temporaryTableReference) {
 		if ( assignments != null && !assignments.isEmpty() ) {
-			for ( Assignment assignment : assignments ) {
-				final Assignable assignable = assignment.getAssignable();
+			for ( var assignment : assignments ) {
+				final var assignable = assignment.getAssignable();
 				insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
-				final List<TemporaryTableColumn> columns = entityTable.findTemporaryTableColumns(
+				final var columns = entityTable.findTemporaryTableColumns(
 						getEntityDescriptor().getEntityPersister(),
-						((SqmPathInterpretation<?>) assignable).getExpressionType()
+						( (SqmPathInterpretation<?>) assignable ).getExpressionType()
 				);
-				for ( TemporaryTableColumn temporaryTableColumn : columns ) {
-					insertStatement.getSourceSelectStatement().getFirstQuerySpec().getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
+				for ( var temporaryTableColumn : columns ) {
+					insertStatement.getSourceSelectStatement()
+							.getFirstQuerySpec().getSelectClause()
+							.addSqlSelection( new SqlSelectionImpl(
 									new ColumnReference(
 											temporaryTableReference.getIdentificationVariable(),
 											temporaryTableColumn.getColumnName(),
@@ -924,8 +910,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 											null,
 											temporaryTableColumn.getJdbcMapping()
 									)
-							)
-					);
+							) );
 				}
 			}
 		}
@@ -933,7 +918,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 
 	@Override
 	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -947,13 +932,9 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				context.getSession()
 		);
 		if ( sessionUidParameter != null ) {
-			jdbcParameterBindings.addBinding(
-					sessionUidParameter,
-					new JdbcParameterBindingImpl(
-							entityTable.getSessionUidColumn().getJdbcMapping(),
-							UUID.fromString( sessionUidAccess.apply( context.getSession() ) )
-					)
-			);
+			jdbcParameterBindings.addBinding( sessionUidParameter,
+					new JdbcParameterBindingImpl( entityTable.getSessionUidColumn().getJdbcMapping(),
+							UUID.fromString( sessionUidAccess.apply( context.getSession() ) ) ) );
 		}
 		return jdbcParameterBindings;
 	}
@@ -978,7 +959,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			&& rootTableInserter.temporaryTableIdentityUpdate.dependsOnParameterBindings() ) {
 			return true;
 		}
-		for ( JdbcOperationQueryMutation delete : nonRootTableInserts ) {
+		for ( var delete : nonRootTableInserts ) {
 			if ( delete.dependsOnParameterBindings() ) {
 				return true;
 			}
@@ -1006,7 +987,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			&& rootTableInserter.temporaryTableIdentityUpdate.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 			return true;
 		}
-		for ( JdbcOperationQueryMutation delete : nonRootTableInserts ) {
+		for ( var delete : nonRootTableInserts ) {
 			if ( !delete.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				return false;
 			}
@@ -1021,7 +1002,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			// This happens only for the special row_number column
 			return null;
 		}
-		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
+		final var tableReferenceByQualifier =
+				tableReferenceByAlias.get( columnReference.getQualifier() );
 		if ( tableReferenceByQualifier != null ) {
 			return tableReferenceByQualifier;
 		}
@@ -1049,31 +1031,26 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 	@Override
 	public int execute(JdbcParameterBindings jdbcParameterBindings, DomainQueryExecutionContext context) {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Starting multi-table insert execution - %s",
-					getSqmStatement().getTarget().getModel().getName()
-			);
+			LOG.tracef( "Starting multi-table insert execution - "
+					+ getSqmStatement().getTarget().getModel().getName() );
 		}
 
-		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
+		final var executionContext = omittingLockingAndPaging( context );
 		// NOTE: we could get rid of using a temporary table if the expressions in Values are "stable".
 		// But that is a non-trivial optimization that requires more effort
 		// as we need to split out individual inserts if we have a non-bulk capable optimizer
-		final boolean createdTable = ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
-				entityTable,
-				temporaryTableStrategy,
-				executionContext
-		);
-
+		final boolean createdTable =
+				performBeforeTemporaryTableUseActions(
+						entityTable,
+						temporaryTableStrategy,
+						executionContext
+				);
 		try {
-			final int rows = ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable(
-					temporaryTableInsert.jdbcOperation(),
-					jdbcParameterBindings,
-					executionContext
-			);
-
+			final int rows =
+					saveIntoTemporaryTable( temporaryTableInsert.jdbcOperation(),
+							jdbcParameterBindings, executionContext );
 			if ( rows != 0 ) {
-				final JdbcParameterBindings sessionUidBindings = new JdbcParameterBindingsImpl( 1 );
+				final var sessionUidBindings = new JdbcParameterBindingsImpl( 1 );
 				if ( sessionUidParameter != null ) {
 					sessionUidBindings.addBinding(
 							sessionUidParameter,
@@ -1084,14 +1061,15 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					);
 				}
 
-				final int insertedRows = insertRootTable(
-						rows,
-						createdTable,
-						sessionUidBindings,
-						executionContext
-				);
+				final int insertedRows =
+						insertRootTable(
+								rows,
+								createdTable,
+								sessionUidBindings,
+								executionContext
+						);
 
-				for ( JdbcOperationQueryMutation nonRootTableInsert : nonRootTableInserts ) {
+				for ( var nonRootTableInsert : nonRootTableInserts ) {
 					insertTable(
 							nonRootTableInsert,
 							sessionUidBindings,
@@ -1104,7 +1082,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			return rows;
 		}
 		finally {
-			ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
+			performAfterTemporaryTableUseActions(
 					entityTable,
 					sessionUidAccess,
 					getAfterUseAction(),
@@ -1118,16 +1096,16 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			boolean rowNumberStartsAtOne,
 			JdbcParameterBindings sessionUidBindings,
 			SqmJdbcExecutionContextAdapter executionContext) {
-		final EntityPersister entityPersister = getEntityDescriptor().getEntityPersister();
-		final Generator generator = entityPersister.getGenerator();
-		final EntityIdentifierMapping identifierMapping = entityPersister.getIdentifierMapping();
+		final var entityPersister = getEntityDescriptor().getEntityPersister();
+		final var generator = entityPersister.getGenerator();
+		final var identifierMapping = entityPersister.getIdentifierMapping();
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+		final var session = executionContext.getSession();
+		final var jdbcServices = session.getFactory().getJdbcServices();
 
 		final Map<Object, Object> entityTableToRootIdentity;
 		if ( rootTableInserter.temporaryTableIdentitySelect != null ) {
-			final List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
+			final var list = jdbcServices.getJdbcSelectExecutor().list(
 					rootTableInserter.temporaryTableIdentitySelect,
 					sessionUidBindings,
 					executionContext,
@@ -1137,21 +1115,17 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					rows
 			);
 			entityTableToRootIdentity = new LinkedHashMap<>( list.size() );
-			for ( Object o : list ) {
-				entityTableToRootIdentity.put( o, null );
+			for ( Object object : list ) {
+				entityTableToRootIdentity.put( object, null );
 			}
 		}
 		else {
 			entityTableToRootIdentity = null;
 
 			if ( rootTableInserter.temporaryTableIdUpdate != null ) {
-				final BeforeExecutionGenerator beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
-				final IntStream rowNumberStream = !rowNumberStartsAtOne
-						? IntStream.of( ExecuteWithTemporaryTableHelper.loadInsertedRowNumbers(
-						rootTableInserter.temporaryTableRowNumberSelectSql, entityTable, sessionUidAccess, rows,
-						executionContext ) )
-						: IntStream.range( 1, rows + 1 );
-				final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 3 );
+				final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+				final var rowNumberStream = rowNumberStream( rows, rowNumberStartsAtOne, executionContext );
+				final var updateBindings = new JdbcParameterBindingsImpl( 3 );
 				if ( sessionUidParameter != null ) {
 					updateBindings.addBinding(
 							sessionUidParameter,
@@ -1161,10 +1135,10 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							)
 					);
 				}
-				final List<JdbcParameterBinder> parameterBinders = rootTableInserter.temporaryTableIdUpdate.getParameterBinders();
-				final JdbcParameter rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
-				final JdbcParameter rowNumber = (JdbcParameter) parameterBinders.get( 1 );
-				final BasicEntityIdentifierMapping basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
+				final var parameterBinders = rootTableInserter.temporaryTableIdUpdate.getParameterBinders();
+				final var rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
+				final var rowNumber = (JdbcParameter) parameterBinders.get( 1 );
+				final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
 				rowNumberStream.forEach( rowNumberValue -> {
 					updateBindings.addBinding(
 							rowNumber,
@@ -1183,12 +1157,9 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
 							rootTableInserter.temporaryTableIdUpdate,
 							updateBindings,
-							sql -> session
-									.getJdbcCoordinator()
-									.getStatementPreparer()
+							sql -> session.getJdbcCoordinator().getStatementPreparer()
 									.prepareStatement( sql ),
-							(integer, preparedStatement) -> {
-							},
+							(integer, preparedStatement) -> {},
 							executionContext
 					);
 					assert updateCount == 1;
@@ -1197,14 +1168,14 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 
 		if ( rootTableInserter.rootTableInsertWithReturningSql != null ) {
-			final GeneratedValuesMutationDelegate insertDelegate = entityPersister.getEntityPersister().getInsertDelegate();
-			final BasicEntityIdentifierMapping basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
+			final var insertDelegate = entityPersister.getEntityPersister().getInsertDelegate();
+			final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
 			// todo 7.0 : InsertGeneratedIdentifierDelegate will be removed once we're going to handle
 			//            generated values within the jdbc insert operaetion itself
-			final InsertGeneratedIdentifierDelegate identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
-			final ValueBinder jdbcValueBinder = basicIdentifierMapping.getJdbcMapping().getJdbcValueBinder();
-			for ( Map.Entry<Object, Object> entry : entityTableToRootIdentity.entrySet() ) {
-				final GeneratedValues generatedValues = identifierDelegate.performInsertReturning(
+			final var identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
+			final var jdbcValueBinder = basicIdentifierMapping.getJdbcMapping().getJdbcValueBinder();
+			for ( var entry : entityTableToRootIdentity.entrySet() ) {
+				final var generatedValues = identifierDelegate.performInsertReturning(
 						rootTableInserter.rootTableInsertWithReturningSql,
 						session,
 						new Binder() {
@@ -1230,62 +1201,65 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				final Object rootIdentity = generatedValues.getGeneratedValue( identifierMapping );
 				entry.setValue( rootIdentity );
 			}
-			final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
-
-			final List<JdbcParameterBinder> parameterBinders = rootTableInserter.temporaryTableIdentityUpdate.getParameterBinders();
-			final JdbcParameter rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
-			final JdbcParameter entityIdentity = (JdbcParameter) parameterBinders.get( 1 );
-			for ( Map.Entry<Object, Object> entry : entityTableToRootIdentity.entrySet() ) {
-				JdbcMapping jdbcMapping = basicIdentifierMapping.getJdbcMapping();
-				updateBindings.addBinding( entityIdentity, new JdbcParameterBindingImpl( jdbcMapping, entry.getKey() ) );
-				updateBindings.addBinding( rootIdentity, new JdbcParameterBindingImpl( jdbcMapping, entry.getValue() ) );
+			final var updateBindings = new JdbcParameterBindingsImpl( 2 );
+			final var parameterBinders = rootTableInserter.temporaryTableIdentityUpdate.getParameterBinders();
+			final var rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
+			final var entityIdentity = (JdbcParameter) parameterBinders.get( 1 );
+			for ( var entry : entityTableToRootIdentity.entrySet() ) {
+				final var jdbcMapping = basicIdentifierMapping.getJdbcMapping();
+				updateBindings.addBinding( entityIdentity,
+						new JdbcParameterBindingImpl( jdbcMapping, entry.getKey() ) );
+				updateBindings.addBinding( rootIdentity,
+						new JdbcParameterBindingImpl( jdbcMapping, entry.getValue() ) );
 				jdbcServices.getJdbcMutationExecutor().execute(
 						rootTableInserter.temporaryTableIdentityUpdate,
 						updateBindings,
-						sql -> session
-								.getJdbcCoordinator()
-								.getStatementPreparer()
+						sql -> session.getJdbcCoordinator().getStatementPreparer()
 								.prepareStatement( sql ),
-						(integer, preparedStatement) -> {
-						},
+						(integer, preparedStatement) -> {},
 						executionContext
 				);
 			}
-
 			return entityTableToRootIdentity.size();
 		}
 		else {
 			return jdbcServices.getJdbcMutationExecutor().execute(
 					rootTableInserter.rootTableInsert,
 					sessionUidBindings,
-					sql -> session
-							.getJdbcCoordinator()
-							.getStatementPreparer()
+					sql -> session.getJdbcCoordinator().getStatementPreparer()
 							.prepareStatement( sql ),
-					(integer, preparedStatement) -> {
-					},
+					(integer, preparedStatement) -> {},
 					executionContext
 			);
 		}
+	}
+
+	private IntStream rowNumberStream(
+			int rows, boolean rowNumberStartsAtOne,
+			SqmJdbcExecutionContextAdapter executionContext) {
+		return !rowNumberStartsAtOne
+				? IntStream.of( loadInsertedRowNumbers(
+					rootTableInserter.temporaryTableRowNumberSelectSql,
+					entityTable, sessionUidAccess, rows, executionContext
+				) )
+				: IntStream.range( 1, rows + 1 );
 	}
 
 	private void insertTable(
 			JdbcOperationQueryMutation nonRootTableInsert,
 			JdbcParameterBindings sessionUidBindings,
 			ExecutionContext executionContext) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
-		jdbcServices.getJdbcMutationExecutor().execute(
-				nonRootTableInsert,
-				sessionUidBindings,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {
-				},
-				executionContext
-		);
+		executionContext.getSession().getFactory().getJdbcServices()
+				.getJdbcMutationExecutor().execute(
+						nonRootTableInsert,
+						sessionUidBindings,
+						sql -> executionContext.getSession()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareStatement( sql ),
+						(integer, preparedStatement) -> {},
+						executionContext
+				);
 	}
 
 	// For Hibernate Reactive

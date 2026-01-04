@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -199,8 +198,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final List<Expression> expressions = new ArrayList<>();
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {

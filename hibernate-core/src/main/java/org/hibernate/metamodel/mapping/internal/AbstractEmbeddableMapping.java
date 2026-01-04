@@ -58,6 +58,8 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
+
 /**
  * Base support for EmbeddableMappingType implementations
  */
@@ -351,7 +353,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					selectablePath = new SelectablePath( determineEmbeddablePrefix() + bootPropertyDescriptor.getName() );
 				}
 
-				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
+				attributeMapping = buildBasicAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						role,
 						attributeIndex,

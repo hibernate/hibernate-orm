@@ -387,7 +387,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				selectableMapping.getJdbcMapping(),
 				navigablePath,
 				// if the expression type is different that the expected type coerce the value
-				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType,
+				selectionType != null
+						&& selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType,
 				!sqlSelection.isVirtual()
 		);
 	}
@@ -500,7 +501,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		}
 		final var modelPart = side.getModelPart();
 		if ( modelPart.isEntityIdentifierMapping() ) {
-			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+			return ( (EntityIdentifierMapping) modelPart )
+					.getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
 		if ( lazyInitializer == null && isPersistentAttributeInterceptable( targetObject ) ) {
@@ -511,7 +513,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			}
 		}
 
-		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );
+		return ( (PropertyBasedMapping) modelPart )
+				.getPropertyAccess().getGetter().get( targetObject );
 	}
 
 	@Override

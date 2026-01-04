@@ -47,7 +47,9 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			String containingTableName,
 			String columnName,
 			BasicType<?> type) {
-		this.navigableRole = collectionDescriptor.getNavigableRole().append( Nature.ID.getName() );
+		this.navigableRole =
+				collectionDescriptor.getNavigableRole()
+						.append( Nature.ID.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.containingTableName = containingTableName;
 		this.columnName = columnName;
@@ -274,7 +276,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}
@@ -284,7 +285,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		final var astCreationState = creationState.getSqlAstCreationState();
-		final var astCreationContext = astCreationState.getCreationContext();
 		final var sqlExpressionResolver = astCreationState.getSqlExpressionResolver();
 
 		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
@@ -294,7 +294,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				),
 				type.getJdbcJavaType(),
 				null,
-				astCreationContext.getTypeConfiguration()
+				astCreationState.getCreationContext()
+						.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(

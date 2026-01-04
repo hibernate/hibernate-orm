@@ -165,9 +165,10 @@ public class BasicAttributeMapping
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.temporalPrecision = temporalPrecision;
-		this.selectablePath = selectablePath == null
-				? new SelectablePath( mappedColumnExpression )
-				: selectablePath;
+		this.selectablePath =
+				selectablePath == null
+						? new SelectablePath( mappedColumnExpression )
+						: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
@@ -181,16 +182,10 @@ public class BasicAttributeMapping
 		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
-
 		this.customReadExpression = customReadExpression;
-
-		if ( isFormula ) {
-			this.customWriteExpression = null;
-		}
-		else {
-			this.customWriteExpression = customWriteExpression;
-		}
-		this.isLazy = navigableRole.getParent().getParent() == null
+		this.customWriteExpression = isFormula ? null : customWriteExpression;
+		this.isLazy =
+				navigableRole.getParent().getParent() == null
 					&& declaringType.findContainingEntityMapping()
 							.getEntityPersister()
 							.getBytecodeEnhancementMetadata()
@@ -380,7 +375,8 @@ public class BasicAttributeMapping
 
 	@Override
 	public String toString() {
-		return "BasicAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
+		return "BasicAttributeMapping(" + navigableRole + ")@"
+			+ System.identityHashCode( this );
 	}
 
 	@Override
@@ -389,10 +385,9 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
-
-		//noinspection unchecked
-		return new BasicResult(
+		final var sqlSelection =
+				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
+		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping,
@@ -409,12 +404,9 @@ public class BasicAttributeMapping
 			DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final var tableReference = tableGroup.resolveTableReference(
-				navigablePath,
-				this,
-				getContainingTableExpression()
-		);
-
+		final var tableReference =
+				tableGroup.resolveTableReference( navigablePath, this,
+						getContainingTableExpression() );
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression( tableReference, this ),
 				jdbcMapping.getJdbcJavaType(),
@@ -486,7 +478,6 @@ public class BasicAttributeMapping
 				getJdbcMapping().getValueConverter(),
 				fetchTiming,
 				true,
-				creationState,
 				coerceResultType,
 				sqlSelection != null && !sqlSelection.isVirtual()
 		);

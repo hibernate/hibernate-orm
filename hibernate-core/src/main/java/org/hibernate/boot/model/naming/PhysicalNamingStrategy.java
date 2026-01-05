@@ -29,12 +29,12 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  * names, so the abstraction here is in some sense "incomplete".
  * <p>
  * A {@code PhysicalNamingStrategy} may be selected using the configuration property
- * {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}.
+ * {@value org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY}.
  *
  * @see ImplicitNamingStrategy
  * @see org.hibernate.cfg.Configuration#setPhysicalNamingStrategy(PhysicalNamingStrategy)
  * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy(PhysicalNamingStrategy)
- * @see org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY
+ * @see org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY
  *
  * @author Steve Ebersole
  */

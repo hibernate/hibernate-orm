@@ -14,6 +14,18 @@ import static java.lang.Character.isUpperCase;
 
 /**
  * Converts {@code camelCase} or {@code MixedCase} logical names to {@code snake_case}.
+ * <p>
+ * This strategy leaves quoted identifiers alone. If quoted identifiers should also be
+ * processed, then this class may be extended the implement the required behavior. For
+ * example:
+ * <pre>
+ * public class AlwaysSnakeEverythingStrategy extends PhysicalNamingStrategySnakeCaseImpl {
+ *     &#64;Override
+ *     protected Identifier quotedIdentifier(Identifier quotedName) {
+ *         return super.unquotedIdentifier( quotedName ).quoted();
+ *     }
+ * }
+ * </pre>
  *
  * @author Phillip Webb
  * @author Madhura Bhave
@@ -59,7 +71,7 @@ public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrate
 	}
 
 	private String camelCaseToSnakeCase(String name) {
-		final StringBuilder builder = new StringBuilder( name.replace( '.', '_' ) );
+		final var builder = new StringBuilder( name.replace( '.', '_' ) );
 		for ( int i = 1; i < builder.length() - 1; i++ ) {
 			if ( isUnderscoreRequired( builder.charAt( i - 1 ), builder.charAt( i ), builder.charAt( i + 1 ) ) ) {
 				builder.insert( i++, '_' );

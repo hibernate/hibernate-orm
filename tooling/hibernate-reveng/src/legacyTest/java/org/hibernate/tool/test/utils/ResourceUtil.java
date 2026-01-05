@@ -32,7 +32,7 @@ public class ResourceUtil {
 				File resourceFile = new File(resourcesDir, resource);
 				File parent = resourceFile.getParentFile();
 				if (!parent.exists()) {
-					parent.mkdirs();
+                    if (!parent.mkdirs()) throw new AssertionError();
 				}
 				Files.copy(inputStream, resourceFile.toPath());
 			}
@@ -55,8 +55,8 @@ public class ResourceUtil {
     String path = testClass.getPackage().getName().replace('.', File.separatorChar);
     URL resourceUrl = testClass.getClassLoader().getResource(path + File.separatorChar
         + resourceName);
-      File resourceFile = new File(resourceUrl.getFile());
-      return resourceFile;
+      assert resourceUrl != null;
+      return new File(resourceUrl.getFile());
     }
 	
 	private static String getRelativeResourcesRoot(Class<?> testClass) {

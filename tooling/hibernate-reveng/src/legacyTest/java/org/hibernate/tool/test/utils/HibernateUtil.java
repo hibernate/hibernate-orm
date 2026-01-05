@@ -40,7 +40,7 @@ public class HibernateUtil {
 	
 	public static ForeignKey getForeignKey(Table table, String fkName) {
 		ForeignKey result = null;
-		for (ForeignKey fk : table.getForeignKeys().values()) {
+		for (ForeignKey fk : table.getForeignKeyCollection()) {
 			if (fk.getName().equals(fkName)) {
 				result = fk;
 				break;

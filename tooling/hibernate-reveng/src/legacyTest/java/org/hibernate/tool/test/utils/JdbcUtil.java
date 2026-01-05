@@ -35,7 +35,6 @@ public class JdbcUtil {
      *
      * @param test object residing in the package of an optional alternate hibernate.properties.
      *             Set null for the default hibernate.properties.
-     * @return
      */
     public static Properties getConnectionProperties(Object test) {
         Properties properties = new Properties();
@@ -68,9 +67,8 @@ public class JdbcUtil {
     }
 
     public static InputStream getAlternateHibernateProperties(Object test) {
-        InputStream inputStream = ResourceUtil.resolveResourceLocation(
+        return ResourceUtil.resolveResourceLocation(
                 test.getClass(), "hibernate.properties");
-        return inputStream;
     }
 
     /**
@@ -137,7 +135,7 @@ public class JdbcUtil {
     /**
      * Establish a connection and execute create.sql.
      *
-     * @param Object residing in the package of create.sql and optional alternate hibernate.properties.
+     * @param test residing in the package of create.sql and optional alternate hibernate.properties.
      */
     public static void createDatabase(Object test) {
         establishJdbcConnection(test);
@@ -147,7 +145,7 @@ public class JdbcUtil {
     /**
      * Using an established connection, execute data.sql.
      *
-     * @param Object residing in the package of data.sql resource.
+     * @param test residing in the package of data.sql resource.
      */
     public static void populateDatabase(Object test) {
         executeSql(test, getSqls(test, "data.sql"));
@@ -156,7 +154,7 @@ public class JdbcUtil {
     /**
      * Using an established connection, execute drop.sql.
      *
-     * @param Object residing in the package of drop.sql resource.
+     * @param test residing in the package of drop.sql resource.
      */
     public static void dropDatabase(Object test) {
         executeSql(test, getSqls(test, "drop.sql"));
@@ -170,14 +168,14 @@ public class JdbcUtil {
             BufferedReader bufferedReader =
                     new BufferedReader(new InputStreamReader(inputStream));
             try {
-                String line = null;
-                ArrayList<String> lines = new ArrayList<String>();
+                String line;
+                ArrayList<String> lines = new ArrayList<>();
                 while ((line = bufferedReader.readLine()) != null) {
                     if (!line.trim().startsWith("#")) {
                         lines.add(line);
                     }
                 }
-                result = lines.toArray(new String[lines.size()]);
+                result = lines.toArray(new String[0]);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -203,8 +201,8 @@ public class JdbcUtil {
     private static void executeSql(Connection connection, String[] sqls)
             throws SQLException {
         Statement statement = connection.createStatement();
-        for (int i = 0; i < sqls.length; i++) {
-            statement.execute(sqls[i]);
+        for (String sql : sqls) {
+            statement.execute(sql);
         }
         if (!connection.getAutoCommit()) {
             connection.commit();

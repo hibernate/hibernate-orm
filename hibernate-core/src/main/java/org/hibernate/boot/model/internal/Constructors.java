@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 /**
- * @author Cavin King
+ * @author Gavin King
  * @since 7.3
  */
 public class Constructors {

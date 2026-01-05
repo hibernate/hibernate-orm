@@ -20,6 +20,10 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -112,6 +116,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		if ( correlated ) {
 			this.correlated = oldCorrelated;
 			appendSql( CLOSE_PARENTHESIS );
+			// Spanner requires the alias to be outside the parentheses UNNEST(... ) alias
+			super.renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
 
@@ -143,10 +149,51 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
+	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
+		// Spanner requires `UNNEST(...) alias`. Standard rendering places the alias
+		// inside the parentheses UNNEST(... alias). We suppress it here to manually
+		// render it outside the UNNEST wrapper in `renderDerivedTableReference`.
+		if ( correlated
+			&& tableReference instanceof DerivedTableReference
+			&& ((DerivedTableReference) tableReference).isLateral() ) {
+			return;
+		}
+		super.renderTableReferenceIdentificationVariable( tableReference );
+	}
+
+	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		renderTableReferenceIdentificationVariable( tableReference );
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		emulateQueryPartTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " in unnest(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( ')' );
+	}
+
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			throw new UnsupportedOperationException( "Escape character is not supported by Spanner" );
+		}
+		else {
+			super.visitLikePredicate( likePredicate );
 		}
 	}
 

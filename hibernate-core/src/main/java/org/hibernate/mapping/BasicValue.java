@@ -18,6 +18,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.internal.Constructors;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -1206,44 +1207,34 @@ public class BasicValue extends SimpleValue
 		throw new AssertionFailure( "Could not find implementing interface" );
 	}
 
-	private <T extends UserType<?>> T instantiateUserType(
-			Class<T> customType, Annotation typeAnnotation,
+	private <T extends UserType<?>, A extends Annotation> T instantiateUserType(
+			Class<T> customType, A typeAnnotation,
 			UserTypeCreationContext creationContext) {
 		try {
+			T userType;
 			if ( typeAnnotation != null ) {
+				@SuppressWarnings("unchecked") // totally safe
+				final var annotationType = (Class<A>) typeAnnotation.annotationType();
 				// attempt to instantiate it with the annotation and context object as constructor arguments
-				try {
-					final var constructor =
-							customType.getDeclaredConstructor( typeAnnotation.annotationType(),
-									UserTypeCreationContext.class );
-					constructor.setAccessible( true );
-					return constructor.newInstance( typeAnnotation, creationContext );
+				userType =
+						Constructors.construct( customType,
+								annotationType, typeAnnotation,
+								UserTypeCreationContext.class, creationContext );
+				if ( userType != null ) {
+					return userType;
 				}
-				catch (NoSuchMethodException ignored) {
-					// attempt to instantiate it with the annotation as a constructor argument
-					try {
-						final var constructor =
-								customType.getDeclaredConstructor( typeAnnotation.annotationType() );
-						constructor.setAccessible( true );
-						return constructor.newInstance( typeAnnotation );
-					}
-					catch (NoSuchMethodException ignored_) {
-						// no such constructor
-					}
+				// attempt to instantiate it with the annotation as a constructor argument
+				userType = Constructors.construct( customType, annotationType, typeAnnotation );
+				if ( userType != null ) {
+					return userType;
 				}
 			}
 
 			// attempt to instantiate it with the context object as a constructor argument
-			try {
-				final var constructor =
-						customType.getDeclaredConstructor( UserTypeCreationContext.class );
-				constructor.setAccessible( true );
-				return constructor.newInstance( creationContext );
+			userType = Constructors.construct( customType, UserTypeCreationContext.class, creationContext );
+			if ( userType != null ) {
+				return userType;
 			}
-			catch (NoSuchMethodException ignored) {
-				// no such constructor, instantiate it the old way
-			}
-
 		}
 		catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
 			throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );

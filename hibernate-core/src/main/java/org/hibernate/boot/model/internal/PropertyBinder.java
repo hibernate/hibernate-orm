@@ -41,7 +41,6 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
-import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -81,6 +80,7 @@ import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ATTRIBUTE;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.Binders.callPropertyBinder;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
@@ -303,30 +303,16 @@ public class PropertyBinder {
 			&& !memberDetails.hasDirectAnnotationUsage( Temporal.class );
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
 		final var metaAnnotatedTargets =
 				memberDetails.getMetaAnnotated( AttributeBinderType.class, getSourceModelContext() );
-		final var descriptorRegistry = getSourceModelContext().getAnnotationDescriptorRegistry();
-		for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
-			final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
-			final var metaAnnotatedDescriptor =
-					descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
-			final var binderTypeAnn =
-					metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
-			try {
-				final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
-				final var persistentClass =
-						entityBinder != null
-								? entityBinder.getPersistentClass()
-								: persistentClasses.get( holder.getEntityName() );
-				binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
-			}
-			catch ( Exception e ) {
-				throw new AnnotationException( "error processing @AttributeBinderType annotation '"
-						+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property '"
-						+ qualify( holder.getPath(), name ) + "'", e );
-			}
+		for ( final var metaAnnotatedTarget : metaAnnotatedTargets ) {
+			final var annotationType = metaAnnotatedTarget.annotationType();
+			final var persistentClass =
+					entityBinder != null
+							? entityBinder.getPersistentClass()
+							: persistentClasses.get( holder.getEntityName() );
+			callPropertyBinder( metaAnnotatedTarget, annotationType, persistentClass, property, buildingContext );
 		}
 	}
 

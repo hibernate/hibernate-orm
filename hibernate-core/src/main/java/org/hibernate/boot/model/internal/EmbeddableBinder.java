@@ -25,7 +25,6 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
-import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -65,6 +64,7 @@ import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.bui
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
@@ -316,17 +316,7 @@ public class EmbeddableBinder {
 						.getMetaAnnotated( TypeBinderType.class,
 								context.getBootstrapContext().getModelsContext() );
 		for ( var metaAnnotated : metaAnnotatedAnnotations ) {
-			final var binderType = metaAnnotated.annotationType().getAnnotation( TypeBinderType.class );
-			try {
-				//noinspection rawtypes
-				final TypeBinder binder = binderType.binder().getDeclaredConstructor().newInstance();
-				//noinspection unchecked
-				binder.bind( metaAnnotated, context, embeddable );
-			}
-			catch (Exception e) {
-				throw new AnnotationException(
-						"error processing @TypeBinderType annotation '" + metaAnnotated + "'", e );
-			}
+			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), embeddable, context );
 		}
 	}
 

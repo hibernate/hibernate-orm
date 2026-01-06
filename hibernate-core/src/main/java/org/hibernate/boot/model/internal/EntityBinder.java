@@ -63,7 +63,6 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
-import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -134,6 +133,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyCon
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
+import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.setType;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
@@ -383,23 +383,7 @@ public class EntityBinder {
 
 	private void callTypeBinders(PersistentClass persistentClass) {
 		for ( var metaAnnotated : annotatedClass.getMetaAnnotated( TypeBinderType.class, modelsContext() ) ) {
-			applyTypeBinder( metaAnnotated, persistentClass );
-		}
-	}
-
-	private void applyTypeBinder(Annotation containingAnnotation, PersistentClass persistentClass) {
-		final var binderClass =
-				containingAnnotation.annotationType()
-						.getAnnotation( TypeBinderType.class )
-						.binder();
-		try {
-			//noinspection rawtypes
-			final TypeBinder binder = binderClass.getConstructor().newInstance();
-			//noinspection unchecked
-			binder.bind( containingAnnotation, context, persistentClass );
-		}
-		catch ( Exception e ) {
-			throw new AnnotationException( "error processing @TypeBinderType annotation '" + containingAnnotation + "'", e );
+			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, context );
 		}
 	}
 

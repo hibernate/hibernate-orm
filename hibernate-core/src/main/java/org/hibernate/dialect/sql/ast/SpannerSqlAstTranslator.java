@@ -192,9 +192,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		if ( likePredicate.getEscapeCharacter() != null ) {
 			throw new UnsupportedOperationException( "Escape character is not supported by Spanner" );
 		}
-		else {
-			super.visitLikePredicate( likePredicate );
-		}
+		super.visitLikePredicate( likePredicate );
 	}
 
 }

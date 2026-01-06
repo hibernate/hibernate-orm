@@ -264,7 +264,7 @@ public class ScrollableResultsTests {
 		}
 
 		final SessionImplementor session = (SessionImplementor) query.getSession();
-		// HANA,Spanner supports only ResultSet.TYPE_FORWARD_ONLY
+		// HANA and Spanner support only ResultSet.TYPE_FORWARD_ONLY
 		if ( !(session.getFactory().getJdbcServices().getDialect() instanceof HANADialect) &&
 			!(session.getFactory().getJdbcServices().getDialect() instanceof SpannerDialect) ) {
 			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {

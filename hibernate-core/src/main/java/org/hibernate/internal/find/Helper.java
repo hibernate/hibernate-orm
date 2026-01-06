@@ -15,6 +15,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.java.CoercionException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,7 @@ public class Helper {
 		try {
 			return naturalIdMapping.normalizeInput( key );
 		}
-		catch (TypeMismatchException e) {
+		catch (TypeMismatchException | CoercionException e) {
 			// per expectation of EntityHandler#find / EntityHandler#get
 			var iae = new IllegalArgumentException( e.getMessage() );
 			iae.addSuppressed( e );

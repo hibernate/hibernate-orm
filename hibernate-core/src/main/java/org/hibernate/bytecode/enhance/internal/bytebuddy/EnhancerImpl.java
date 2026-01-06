@@ -242,8 +242,8 @@ public class EnhancerImpl implements Enhancer {
 			}
 			else {
 				ENHANCEMENT_LOGGER.enhancingAsMappedSuperclass( managedCtClass.getName() );
-				final var builder = builderSupplier.get();
-				builder.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
+				final var builder = builderSupplier.get()
+						.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
 				return createTransformer( managedCtClass ).applyTo( builder );
 			}
 		}

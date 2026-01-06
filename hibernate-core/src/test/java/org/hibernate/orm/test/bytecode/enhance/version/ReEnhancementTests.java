@@ -4,6 +4,14 @@
  */
 package org.hibernate.orm.test.bytecode.enhance.version;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import net.bytebuddy.description.type.TypeDefinition;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.ClassFileLocator.Compound;
+import net.bytebuddy.dynamic.ClassFileLocator.ForClassLoader;
+import net.bytebuddy.pool.TypePool;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException;
@@ -11,10 +19,14 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
+import org.hibernate.engine.spi.Managed;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -92,16 +104,55 @@ public class ReEnhancementTests {
 		}
 	}
 
-	private void attemptEnhancement(Class<?> clazz, Enhancer enhancer) {
+	@ParameterizedTest
+	@ValueSource(classes = {MappedSuper.class, EntityClass.class})
+	void testAlreadyEnhancedEntitiesShouldNotGetEnhancedAgain(Class<?> testClass) {
+		final var enhancementContext = new DefaultEnhancementContext();
+		final var byteBuddyState = new ByteBuddyState();
+		final var enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
+
+		final var firstRoundEnhancement = attemptEnhancement( testClass, enhancer );
+		final var secondRoundEnhancement = enhancer.enhance( testClass.getName(), firstRoundEnhancement );
+
+		// Enhancer returns null if it decides that the class is already enhanced.
+		assertThat( secondRoundEnhancement ).isNull();
+
+		try (final var enhancedClassLocator = ClassFileLocator.Simple.of( testClass.getName(), firstRoundEnhancement );
+			final var classLoaderLocator = ForClassLoader.of( ReEnhancementTests.class.getClassLoader() );
+			final var locator = new Compound( enhancedClassLocator, classLoaderLocator )) {
+
+			final var typePool = TypePool.Default.of( locator );
+			final var typeDescription = typePool.describe( testClass.getName() ).resolve();
+
+			assertThat( typeDescription.getInterfaces().stream()
+					.map( TypeDefinition::asErasure ) )
+					.anySatisfy( it -> it.isAssignableFrom( Managed.class ) );
+		}
+		catch (IOException e) {
+			throw new UncheckedIOException( e );
+		}
+	}
+
+	private byte[] attemptEnhancement(Class<?> clazz, Enhancer enhancer) {
 		final String classFileName = clazz.getName().replace( '.', '/' ) + ".class";
 		try (InputStream classFileStream = clazz.getClassLoader().getResourceAsStream( classFileName ) ) {
 			final byte[] originalBytes = ByteCodeHelper.readByteCode( classFileStream );
-			enhancer.enhance( clazz.getName(), originalBytes );
+			return enhancer.enhance( clazz.getName(), originalBytes );
 		}
 		catch (IOException e) {
 			throw new RuntimeException( e );
 		}
 	}
 
+	@MappedSuperclass
+	static abstract class MappedSuper {
+		@Id
+		private Long id;
+	}
 
+	@Entity
+	static class EntityClass {
+		@Id
+		private Long id;
+	}
 }

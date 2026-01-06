@@ -411,8 +411,8 @@ public class EnhancerImpl implements Enhancer {
 			}
 			else {
 				ENHANCEMENT_LOGGER.enhancingAsMappedSuperclass( managedCtClass.getName() );
-				DynamicType.Builder<?> builder = builderSupplier.get();
-				builder.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
+				DynamicType.Builder<?> builder = builderSupplier.get()
+						.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
 				return createTransformer( managedCtClass ).applyTo( builder );
 			}
 		}

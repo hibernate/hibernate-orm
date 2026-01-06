@@ -117,7 +117,12 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 
 	@Override
 	public Calendar coerce(Object value) {
-		return wrap( value, null );
+		try {
+			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
 	}
 
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {

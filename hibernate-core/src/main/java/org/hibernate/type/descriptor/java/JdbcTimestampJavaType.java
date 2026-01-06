@@ -107,7 +107,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 
 	@Override
 	public Timestamp coerce(Object value) {
-		return wrap( value, null );
+		try {
+			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
 	}
 
 	@Override

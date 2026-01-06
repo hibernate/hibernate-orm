@@ -193,7 +193,12 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public Object coerce(Object value) {
-		return wrap( value, null );
+		try {
+			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
 	}
 
 	@Override

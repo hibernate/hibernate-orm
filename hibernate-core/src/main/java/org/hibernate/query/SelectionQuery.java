@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -649,6 +650,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Set a {@link ResultListTransformer}.
 	 */
 	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
+	@Override
+	<P> SelectionQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> SelectionQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	SelectionQuery<R> setParameter(String name, Object value);

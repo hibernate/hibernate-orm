@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
@@ -651,6 +652,18 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public <P> SelectionQuery<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
+		return this;
+	}
+
+	@Override
+	public <P> SelectionQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( name, value, converter );
+		return this;
+	}
+
+	@Override
+	public <P> SelectionQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( position, value, converter );
 		return this;
 	}
 

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -346,6 +347,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public QueryOptions getQueryOptions() {
 		return getDelegate().getQueryOptions();
+	}
+
+	@Override
+	public <P> SelectionQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		return getDelegate().setConvertedParameter( name, value, converter );
+	}
+
+	@Override
+	public <P> SelectionQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		return getDelegate().setConvertedParameter( position, value, converter );
 	}
 
 	@Override

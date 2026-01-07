@@ -2,27 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.jpa.event.internal;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.boot.models.spi.JpaEventListener;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.event.spi.CallbackDefinition;
-import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.property.access.spi.Getter;
+package org.hibernate.jpa.boot.internal;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -30,15 +10,29 @@ import jakarta.persistence.ExcludeDefaultListeners;
 import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PersistenceException;
+import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.jpa.boot.spi.CallbackDefinition;
+import org.hibernate.jpa.boot.spi.EntityCallbackDefinition;
+import org.hibernate.jpa.boot.spi.ListenerCallbackDefinition;
+import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.ModelsContext;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
-/**
- * Resolves JPA callback definitions
- *
- * @author Steve Ebersole
- */
+/// Resolves JPA callback definitions
+///
+/// @author Steve Ebersole
 public final class CallbackDefinitionResolver {
 
 	private static List<CallbackDefinition> resolveEntityCallbacks(
@@ -64,7 +58,7 @@ public final class CallbackDefinitionResolver {
 					//overridden method, remove the superclass overridden method
 					if ( callbackDefinition == null ) {
 						final Method javaMethod = (Method) methodDetails.toJavaMember();
-						callbackDefinition = new EntityCallback.Definition( javaMethod, callbackType );
+						callbackDefinition = new EntityCallbackDefinition( javaMethod, callbackType );
 						final Class<?> returnType = javaMethod.getReturnType();
 						final Class<?>[] args = javaMethod.getParameterTypes();
 						if ( returnType != Void.TYPE || args.length != 0 ) {
@@ -123,7 +117,7 @@ public final class CallbackDefinitionResolver {
 						if ( callbackDefinition == null ) {
 							final Method method = (Method) methodDetails.toJavaMember();
 							final Class<?> listenerClass = listenerClassDetails.toJavaClass();
-							callbackDefinition = new ListenerCallback.Definition( listenerClass, method, callbackType );
+							callbackDefinition = new ListenerCallbackDefinition( listenerClass, method, callbackType );
 
 							final Class<?> returnType = method.getReturnType();
 							final Class<?>[] args = method.getParameterTypes();
@@ -148,70 +142,6 @@ public final class CallbackDefinitionResolver {
 				}
 			}
 		}
-		return callbackDefinitions;
-	}
-
-	/**
-	 * @deprecated See discussion in {@link EmbeddableCallback}.
-	 */
-	@Deprecated(since = "7")
-	private static List<CallbackDefinition> resolveEmbeddableCallbacks(
-			InFlightMetadataCollector metadataCollector,
-			Class<?> entityClass,
-			Property embeddableProperty,
-			CallbackType callbackType) {
-
-		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
-		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
-		final ClassDetails embeddableClassDetails = modelsContext.getClassDetailsRegistry().getClassDetails( embeddableClass.getName() );
-
-		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
-		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
-		final List<String> callbacksMethodNames = new ArrayList<>();
-		ClassDetails currentClass = embeddableClassDetails;
-		do {
-			CallbackDefinition callbackDefinition = null;
-			final List<MethodDetails> methodsDetailsList = currentClass.getMethods();
-			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-					final Method method = methodDetails.toJavaMember();
-					final String methodName = method.getName();
-					final String callbackName = callbackType.getCallbackAnnotation().getName();
-					final String currentClassName = currentClass.getName();
-
-					DEPRECATION_LOGGER.embeddableLifecycleCallback( callbackName, currentClassName );
-
-					if ( callbacksMethodNames.contains( methodName ) ) {
-						throw new PersistenceException( "Multiple callback methods annotated '@" + callbackName
-														+ "' in bean class '" + currentClassName + "'" );
-					}
-
-					//overridden method, remove the superclass overridden method
-					if ( callbackDefinition == null ) {
-						callbackDefinition = new EmbeddableCallback.Definition( embeddableGetter, method, callbackType );
-						final Class<?> returnType = method.getReturnType();
-						final Class<?>[] args = method.getParameterTypes();
-						if ( returnType != Void.TYPE || args.length != 0 ) {
-							throw new RuntimeException(
-									"Callback methods annotated on the bean class must return void and take no arguments: "
-									+ callbackName + " - " + methodDetails
-							);
-						}
-						ReflectHelper.ensureAccessibility( method );
-						callbackDefinitions.add( 0, callbackDefinition ); //superclass first
-						callbacksMethodNames.add( 0, methodName );
-					}
-				}
-
-			}
-
-			do {
-				currentClass = currentClass.getSuperClass();
-			}
-			while ( currentClass != null && !currentClass.hasDirectAnnotationUsage( MappedSuperclass.class ) );
-		}
-		while ( currentClass != null );
-
 		return callbackDefinitions;
 	}
 
@@ -269,27 +199,5 @@ public final class CallbackDefinitionResolver {
 		for ( CallbackType callbackType : CallbackType.values() ) {
 			persistentClass.addCallbackDefinitions( resolveEntityCallbacks( collector, entityClass, callbackType ) );
 		}
-
-		// Note: @Embeddable classes are not supposed to have entity callbacks according to
-		//       the JPA specification, and it doesn't even really make sense to allow them
-		//       to, since they don't have a well-defined "lifecycle", but unfortunately this
-		//       code was added by HHH-12326
-		collector.addSecondPass( persistentClasses -> {
-			for ( Property property : persistentClass.getDeclaredProperties() ) {
-			if ( property.getValue() instanceof Component component
-					// embedded components don't have their own class, so no need to check callbacks (see HHH-19671)
-					&& !component.isEmbedded() ) {
-					try {
-						final Class<?> mappedClass = persistentClass.getMappedClass();
-						for ( CallbackType type : CallbackType.values() ) {
-							property.addCallbackDefinitions( resolveEmbeddableCallbacks( collector, mappedClass, property, type ) );
-						}
-					}
-					catch (ClassLoadingException ignore) {
-						// a dynamic embeddable... cannot define listener methods
-					}
-				}
-			}
-		} );
 	}
 }

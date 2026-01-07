@@ -4,6 +4,14 @@
  */
 package org.hibernate.event.service.internal;
 
+import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.EventActionWithParameter;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistrationException;
+import org.hibernate.event.service.spi.JpaBootstrapSensitive;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.build.AllowReflection;
+
 import java.lang.reflect.Array;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,16 +23,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import org.hibernate.event.service.spi.DuplicationStrategy;
-import org.hibernate.event.service.spi.EventActionWithParameter;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistrationException;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.build.AllowReflection;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
@@ -62,7 +60,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private final EventType<T> eventType;
-	private final CallbackRegistry callbackRegistry;
 	private final boolean isJpaBootstrap;
 
 	//TODO at least the list of listeners should be made constant;
@@ -72,9 +69,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private volatile T[] listeners = null;
 	private volatile List<T> listenersAsList = emptyList();
 
-	public EventListenerGroupImpl(EventType<T> eventType, CallbackRegistry callbackRegistry, boolean isJpaBootstrap) {
+	public EventListenerGroupImpl(EventType<T> eventType, boolean isJpaBootstrap) {
 		this.eventType = eventType;
-		this.callbackRegistry = callbackRegistry;
 		this.isJpaBootstrap = isJpaBootstrap;
 	}
 
@@ -360,9 +356,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private void performInjections(T listener) {
-		if ( listener instanceof CallbackRegistryConsumer consumer ) {
-			consumer.injectCallbackRegistry( callbackRegistry );
-		}
 		if ( listener instanceof JpaBootstrapSensitive sensitive ) {
 			sensitive.wasJpaBootstrap( isJpaBootstrap );
 		}

@@ -13,8 +13,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.OptimisticLockHelper;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 /**
  * Performs needed {@link EntityEntry#getLockMode()}-related processing.
@@ -22,19 +20,11 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DefaultPostLoadEventListener implements PostLoadEventListener, CallbackRegistryConsumer {
-	private CallbackRegistry callbackRegistry;
-
-	@Override
-	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
-		this.callbackRegistry = callbackRegistry;
-	}
-
+public class DefaultPostLoadEventListener implements PostLoadEventListener {
 	@Override
 	public void onPostLoad(PostLoadEvent event) {
 		final Object entity = event.getEntity();
-
-		callbackRegistry.postLoad( entity );
+		event.getPersister().getEntityCallbacks().postLoad( entity );
 
 		final var session = event.getSession();
 		final var entry = session.getPersistenceContextInternal().getEntry( entity );

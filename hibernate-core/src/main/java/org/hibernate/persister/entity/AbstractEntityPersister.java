@@ -58,6 +58,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jpa.internal.EntityCallbacksFactory;
+import org.hibernate.event.jpa.spi.EntityCallbacks;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -326,6 +328,8 @@ public abstract class AbstractEntityPersister
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
 
+	private final EntityCallbacks jpaCallbacks;
+
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
 	private NaturalIdLoader<?> naturalIdLoader;
@@ -459,10 +463,17 @@ public abstract class AbstractEntityPersister
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext)
-				throws HibernateException {
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( persistentClass, creationContext );
-		jpaEntityName = persistentClass.getJpaEntityName();
+
+		final var factoryOptions = creationContext.getSessionFactoryOptions();
+
+		this.jpaEntityName = persistentClass.getJpaEntityName();
+		this.jpaCallbacks = EntityCallbacksFactory.buildCallbacks(
+				persistentClass,
+				factoryOptions,
+				creationContext.getServiceRegistry()
+		);
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -470,8 +481,6 @@ public abstract class AbstractEntityPersister
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
 		navigableRole = new NavigableRole( persistentClass.getEntityName() );
-
-		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		if ( factoryOptions.isSecondLevelCacheEnabled() ) {
 			this.cacheAccessStrategy = cacheAccessStrategy;
@@ -572,7 +581,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			sqlWhereStringTableExpression =
-					determineTableName( getCountainingClass( persistentClass ).getTable() );
+					determineTableName( getContainingClass( persistentClass ).getTable() );
 			sqlWhereStringTemplate =
 					renderSqlWhereStringTemplate( persistentClass, dialect, typeConfiguration );
 		}
@@ -769,6 +778,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
+	public EntityCallbacks getEntityCallbacks() {
+		return jpaCallbacks;
+	}
+
 	private static String renderSqlWhereStringTemplate(
 			PersistentClass persistentClass, Dialect dialect, TypeConfiguration typeConfiguration) {
 		return Template.renderWhereStringTemplate(
@@ -778,7 +792,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private static PersistentClass getCountainingClass(PersistentClass persistentClass) {
+	private static PersistentClass getContainingClass(PersistentClass persistentClass) {
 		var containingClass = persistentClass;
 		while ( containingClass.getSuperclass() != null ) {
 			final var superclass = containingClass.getSuperclass();

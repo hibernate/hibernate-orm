@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
@@ -267,6 +268,10 @@ public interface CommonQueryContract {
 	 * {@link Type}.
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, Type<P> type);
+
+	<P> CommonQueryContract setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	<P> CommonQueryContract setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * Bind an {@link Instant} to the named query parameter using just the

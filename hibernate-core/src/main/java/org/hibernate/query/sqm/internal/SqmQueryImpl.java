@@ -15,7 +15,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -1079,8 +1078,9 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
-	public <P> TypedQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public <P> SqmQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( name, value, converter );
+		return this;
 	}
 
 	@Override @Deprecated
@@ -1108,8 +1108,9 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
-	public <P> TypedQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public <P> SqmQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( position, value, converter );
+		return this;
 	}
 
 	@Override @Deprecated

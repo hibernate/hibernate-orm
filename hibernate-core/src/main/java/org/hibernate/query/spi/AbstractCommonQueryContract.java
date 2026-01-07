@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -43,6 +44,8 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.type.BindableType;
+import org.hibernate.type.descriptor.converter.internal.ConverterHelper;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -908,6 +911,48 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Override
 	public <P> CommonQueryContract setParameter(int position, P value, Type<P> type) {
 		locateBinding( position ).setBindValue( value, (BindableType<P>) type );
+		return this;
+	}
+
+	@Override
+	public <P> CommonQueryContract setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+		//noinspection unchecked,rawtypes
+		final JpaAttributeConverter<P,Object> converter = ConverterHelper.createJpaAttributeConverter(
+				(Class) converterClass,
+				session.getFactory().getServiceRegistry(),
+				session.getFactory().getTypeConfiguration()
+		);
+
+		var bindValue = converter.getConverterBean().getBeanInstance().convertToDatabaseColumn( value );
+
+		var bindValueJavaType = converter.getRelationalJavaType();
+		var bindValueClass = bindValueJavaType.getJavaTypeClass();
+		var bindValueModelType = getParamType( bindValueClass );
+
+		//noinspection unchecked,rawtypes
+		locateBinding( name, bindValueClass, bindValue ).setBindValue( bindValue, (BindableType) bindValueModelType );
+
+		return this;
+	}
+
+	@Override
+	public <P> CommonQueryContract setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+		//noinspection unchecked,rawtypes
+		final JpaAttributeConverter<P,Object> converter = ConverterHelper.createJpaAttributeConverter(
+				(Class) converterClass,
+				session.getFactory().getServiceRegistry(),
+				session.getFactory().getTypeConfiguration()
+		);
+
+		var bindValue = converter.getConverterBean().getBeanInstance().convertToDatabaseColumn( value );
+
+		var bindValueJavaType = converter.getRelationalJavaType();
+		var bindValueClass = bindValueJavaType.getJavaTypeClass();
+		var bindValueModelType = getParamType( bindValueClass );
+
+		//noinspection unchecked,rawtypes
+		locateBinding( position, bindValueClass, bindValue ).setBindValue( bindValue, (BindableType) bindValueModelType );
+
 		return this;
 	}
 

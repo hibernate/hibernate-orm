@@ -69,6 +69,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
@@ -390,13 +391,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <E> EntityListenerRegistration addListener(
-			Class<E> entityType,
+			Class<E> entityClass,
 			Class<? extends Annotation> callbackType,
 			Consumer<? super E> callback) {
-		// todo (jpa4) : implement this.
-		//		the idea would be to register this with the `CallbackRegistry`, but
-		//		need some changes to `CallbackRegistry` and `Callback` for that to work.
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		//noinspection unchecked
+		return getMappingMetamodel()
+				.getEntityDescriptor( entityClass )
+				.getEntityCallbacks()
+				.addListener( CallbackType.fromCallbackAnnotation( callbackType ), callback );
 	}
 
 	@Override

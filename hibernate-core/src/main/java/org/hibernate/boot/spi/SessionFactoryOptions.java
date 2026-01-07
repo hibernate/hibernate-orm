@@ -605,11 +605,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	int getQueryStatisticsMaxSize();
 
 	/**
-	 * Should JPA entity lifecycle callbacks be processed by
-	 * the {@link org.hibernate.event.spi.EventEngine} and
-	 * {@link org.hibernate.jpa.event.spi.CallbackRegistry}?
+	 * Whether to process Jakarta Persistence entity lifecycle callbacks.
 	 *
 	 * @see org.hibernate.cfg.PersistenceSettings#JPA_CALLBACKS_ENABLED
+	 * @see org.hibernate.event.jpa.spi.EntityCallbacks
+	 * @see org.hibernate.metamodel.mapping.EntityMappingType#getEntityCallbacks
 	 */
 	boolean areJPACallbacksEnabled();
 

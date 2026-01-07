@@ -4,8 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.Map;
-
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -20,17 +18,17 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import java.util.Map;
+
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
@@ -45,14 +43,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener<C> implements CallbackRegistryConsumer {
-
-	private CallbackRegistry callbackRegistry;
-
-	@Override
-	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
-		this.callbackRegistry = callbackRegistry;
-	}
+public abstract class AbstractSaveEventListener<C> {
 
 	/**
 	 * Prepares the persist call using the given requested id.
@@ -192,7 +183,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 		// call this after generation of an id,
 		// but before we retrieve an assigned id
-		callbackRegistry.preCreate( entity );
+		persister.getEntityCallbacks().preCreate( entity );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );

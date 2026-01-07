@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.jpa.event.spi;
+package org.hibernate.event.jpa.spi;
+
+import org.hibernate.jpa.event.spi.CallbackType;
 
 import java.io.Serializable;
 
@@ -20,7 +22,7 @@ import java.io.Serializable;
  * @author Kabir Khan
  * @author Steve Ebersole
  */
-public interface Callback extends Serializable {
+public interface Callback<E> extends Serializable {
 	/**
 	 * The type of callback (pre-update, pre-persist, etc) handled
 	 */
@@ -31,5 +33,5 @@ public interface Callback extends Serializable {
 	 *
 	 * @param entity Reference to the entity for which the callback is triggered.
 	 */
-	void performCallback(Object entity);
+	<S extends E> void performCallback(S entity);
 }

@@ -707,7 +707,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preCreate( entity );
+		persister.getEntityCallbacks().preCreate( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
@@ -724,7 +724,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preUpdate( entity );
+		persister.getEntityCallbacks().preUpdate( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
@@ -756,7 +756,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preRemove( entity );
+		persister.getEntityCallbacks().preRemove( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;

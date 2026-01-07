@@ -39,7 +39,6 @@ import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.build.AllowReflection;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static java.util.Comparator.comparing;
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
@@ -200,14 +199,12 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	// Builder
 
 	public static class Builder {
-		private final CallbackRegistry callbackRegistry;
 		private final boolean jpaBootstrap;
 
 		private final Map<EventType<?>,EventListenerGroup<?>> listenerGroupMap =
 				new TreeMap<>( comparing( EventType::ordinal ) );
 
-		public Builder(CallbackRegistry callbackRegistry, boolean jpaBootstrap) {
-			this.callbackRegistry = callbackRegistry;
+		public Builder(boolean jpaBootstrap) {
 			this.jpaBootstrap = jpaBootstrap;
 
 			applyStandardListeners();
@@ -330,8 +327,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 					t -> type == EventType.POST_COMMIT_DELETE
 					||   type == EventType.POST_COMMIT_INSERT
 					||   type == EventType.POST_COMMIT_UPDATE
-							? new PostCommitEventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap )
-							: new EventListenerGroupImpl<>( type, callbackRegistry, jpaBootstrap )
+							? new PostCommitEventListenerGroupImpl<>( type, jpaBootstrap )
+							: new EventListenerGroupImpl<>( type, jpaBootstrap )
 			);
 		}
 

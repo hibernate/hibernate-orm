@@ -431,6 +431,18 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
+	@Override
+	public <P> QueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( name, value, converter );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+		super.setConvertedParameter( position, value, converter );
+		return this;
+	}
+
 	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
@@ -484,16 +496,6 @@ public abstract class AbstractQuery<R>
 	public <P> QueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

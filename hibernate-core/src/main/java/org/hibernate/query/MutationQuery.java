@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 
@@ -98,6 +99,12 @@ public interface MutationQuery extends CommonQueryContract {
 
 	@Override
 	MutationQuery setHint(String hintName, Object value);
+
+	@Override
+	<P> MutationQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> MutationQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	MutationQuery setParameter(String name, Object value);

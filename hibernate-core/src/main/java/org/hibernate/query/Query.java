@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
@@ -428,6 +429,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 */
 	@Deprecated(since = "7.4", forRemoval = true)
 	QueryOptions getQueryOptions();
+
+	@Override
+	<P> Query<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> Query<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * Bind the given argument to a named query parameter.

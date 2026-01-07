@@ -504,8 +504,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> EntityGraph<T> getEntityGraph(Class<T> aClass, String s) {
-		return null;
+	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+		return this.lazySession.get().getEntityGraph( entityClass, name );
 	}
 
 	@Override
@@ -746,8 +746,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> TypedQuery<T> createNativeQuery(String s, ResultSetMapping<T> resultSetMapping) {
-		return null;
+	public <T> TypedQuery<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+		return this.lazySession.get().createNativeQuery( sql, resultSetMapping );
 	}
 
 	@Override

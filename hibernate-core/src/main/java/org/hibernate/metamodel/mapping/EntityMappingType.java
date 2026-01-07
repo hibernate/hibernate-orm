@@ -16,6 +16,7 @@ import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jpa.spi.EntityCallbacks;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -102,6 +103,13 @@ public interface EntityMappingType
 	 * @see #forEachTableDetails
 	 */
 	TableDetails getIdentifierTableDetails();
+
+	/**
+	 * Access to the Jakarta Persistence style callbacks for this entity.
+	 */
+	default EntityCallbacks getEntityCallbacks() {
+		return getEntityPersister().getEntityCallbacks();
+	}
 
 	/**
 	 * Visit details for each table associated with the entity.

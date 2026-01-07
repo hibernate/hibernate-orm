@@ -29,8 +29,6 @@ import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.EmptyInterceptor;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -51,14 +49,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Steve Ebersole
  */
-public class DefaultDeleteEventListener implements DeleteEventListener,	CallbackRegistryConsumer {
-
-	private CallbackRegistry callbackRegistry;
-
-	@Override
-	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
-		this.callbackRegistry = callbackRegistry;
-	}
+public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	/**
 	 * Handle the given delete event.
@@ -273,7 +264,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			Object id,
 			Object version,
 			EntityEntry entityEntry) {
-		callbackRegistry.preRemove( entity );
+		persister.getEntityCallbacks().preRemove( entity );
 		deleteEntity(
 				source,
 				entity,
@@ -314,9 +305,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private boolean hasRegisteredRemoveCallbacks(EntityPersister persister) {
-		final Class<?> mappedClass = persister.getMappedClass();
-		return callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.PRE_REMOVE )
-			|| callbackRegistry.hasRegisteredCallbacks( mappedClass, CallbackType.POST_REMOVE );
+		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.PRE_REMOVE )
+			|| persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_REMOVE );
 	}
 
 	/**

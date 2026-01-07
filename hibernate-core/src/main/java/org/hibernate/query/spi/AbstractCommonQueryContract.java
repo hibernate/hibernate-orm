@@ -944,7 +944,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		var bindValueModelType = getParamType( bindValueClass );
 
 		//noinspection unchecked,rawtypes
-		locateBinding( name, bindValueClass, bindValue ).setBindValue( bindValue, (BindableType) bindValueModelType );
+		locateBinding( name ).setBindValue( bindValue, (BindableType) bindValueModelType );
 
 		return this;
 	}
@@ -965,7 +965,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		var bindValueModelType = getParamType( bindValueClass );
 
 		//noinspection unchecked,rawtypes
-		locateBinding( position, bindValueClass, bindValue ).setBindValue( bindValue, (BindableType) bindValueModelType );
+		locateBinding( position ).setBindValue( bindValue, (BindableType) bindValueModelType );
 
 		return this;
 	}

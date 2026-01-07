@@ -54,7 +54,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	}
 
 	public List<T> performFind(
-			List<Object> keys,
+			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
 		// todo (natural-id-class) : these impls are temporary
@@ -67,7 +67,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 		}
 	}
 
-	private List<T> findByNaturalIds(List<Object> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
 		final NaturalIdMapping naturalIdMapping = getEntityDescriptor().requireNaturalIdMapping();
 		final SessionImplementor session = loadAccessContext.getSession();
 
@@ -137,7 +137,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
 	}
 
-	private List<T> findByIds(List<Object> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
 		final Object[] ids = keys.toArray( new Object[0] );
 		//noinspection unchecked
 		return withOptions( loadAccessContext, graphSemantic, rootGraph,

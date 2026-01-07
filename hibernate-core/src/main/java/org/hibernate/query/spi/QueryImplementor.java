@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -52,6 +53,12 @@ public interface QueryImplementor<R> extends Query<R> {
 		//noinspection unchecked
 		return (QueryImplementor<T>) this;
 	}
+
+	@Override
+	<P> QueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> QueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	QueryImplementor<R> setParameter(String name, Object value);

@@ -7701,7 +7701,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					renderExpressionsAsValuesSubquery( lhsTuple.getExpressionType().getJdbcTypeCount(), listExpressions );
 					appendSql( CLOSE_PARENTHESIS );
 				}
-				else if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				else if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll()
+						&& preferUnionQueryForTupleInListPredicate() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
@@ -7795,6 +7796,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected boolean preferUnionQueryForTupleInListPredicate() {
+		return true;
 	}
 
 	protected void renderExpressionsAsValuesSubquery(int tupleSize, List<Expression> listExpressions) {

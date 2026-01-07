@@ -84,6 +84,12 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	}
 
 	@Override
+	protected boolean preferUnionQueryForTupleInListPredicate() {
+		// DB2 z/OS can't use an index when rendering a union query
+		return false;
+	}
+
+	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION;
 	}

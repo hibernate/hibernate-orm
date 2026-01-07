@@ -1005,12 +1005,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			BasicType<?> idType) {
 		final var identifier = persistentClass.getIdentifier();
 		final String columnDefinition;
+		final String sqlTypeName;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		if ( identifier == null ) {
 			columnDefinition = null;
+			sqlTypeName = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -1018,11 +1020,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			columnDefinition = column.getSqlType();
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			final var columnSize = column.getColumnSize(
+					creationProcess.getCreationContext().getDialect(),
+					creationProcess.getCreationContext().getMetadata()
+			);
+			columnDefinition = column.getColumnDefinition();
+			sqlTypeName = column.getSqlType();
+			length = columnSize.getLength();
+			arrayLength = columnSize.getArrayLength();
+			precision = columnSize.getPrecision();
+			scale = columnSize.getScale();
 		}
 		final var identifierProperty = persistentClass.getIdentifierProperty();
 		final var value = identifierProperty.getValue();
@@ -1033,6 +1040,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				getTableName(),
 				tableKeyColumns[0][0],
 				columnDefinition,
+				sqlTypeName,
 				length,
 				arrayLength,
 				precision,

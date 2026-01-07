@@ -24,9 +24,11 @@ import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
  */
 
 public class NativeOrdinalEnumDdlTypeImpl implements DdlType {
+	private final String castTypeName;
 	private final Dialect dialect;
 
-	public NativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
+	public NativeOrdinalEnumDdlTypeImpl(String castTypeName, Dialect dialect) {
+		this.castTypeName = castTypeName;
 		this.dialect = dialect;
 	}
 
@@ -56,11 +58,11 @@ public class NativeOrdinalEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return "int";
+		return castTypeName;
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return getTypeName( length, precision, scale );
+		return castTypeName;
 	}
 }

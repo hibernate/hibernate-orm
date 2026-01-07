@@ -322,6 +322,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final var role = navigableRole.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
+				final String sqlTypeName;
 				final Long length;
 				final Integer arrayLength;
 				final Integer precision;
@@ -330,11 +331,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					columnDefinition = column.getSqlType();
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
-					scale = column.getScale();
+					final var columnSize =
+							column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
+					columnDefinition = column.getColumnDefinition();
+					sqlTypeName = column.getSqlType();
+					length = columnSize.getLength();
+					arrayLength = columnSize.getArrayLength();
+					precision = columnSize.getPrecision();
+					scale = columnSize.getScale();
 					temporalPrecision = column.getTemporalPrecision();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
@@ -343,6 +347,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				}
 				else {
 					columnDefinition = null;
+					sqlTypeName = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -372,6 +377,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 								creationContext.getBootModel()
 						),
 						columnDefinition,
+						sqlTypeName,
 						length,
 						arrayLength,
 						precision,

@@ -76,6 +76,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: null;
 
 		final var metaType = (MetaType) anyType.getDiscriminatorType();
+		final var metaColumnSize =
+				metaColumn.getColumnSize( dialect, creationProcess.getCreationContext().getMetadata() );
 		final var discriminatorPart = new AnyDiscriminatorPart(
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME ),
 				declaringModelPart,
@@ -86,11 +88,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( metaColumn.getQuotedName( dialect ) ),
 				metaColumn.getCustomReadExpression(),
 				metaColumn.getCustomWriteExpression(),
+				metaColumn.getColumnDefinition(),
 				metaColumn.getSqlType(),
-				metaColumn.getLength(),
-				metaColumn.getArrayLength(),
-				metaColumn.getPrecision(),
-				metaColumn.getScale(),
+				metaColumnSize.getLength(),
+				metaColumnSize.getArrayLength(),
+				metaColumnSize.getPrecision(),
+				metaColumnSize.getScale(),
 				bootValueMapping.isColumnInsertable( 0 ),
 				bootValueMapping.isColumnUpdateable( 0 ),
 				bootValueMapping.isPartitionKey(),
@@ -102,6 +105,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 
 		final var keyType = (BasicType<?>) anyType.getIdentifierType();
+		final var keyColumnSize =
+				metaColumn.getColumnSize( dialect, creationProcess.getCreationContext().getMetadata() );
 		final var keyPart = new AnyKeyPart(
 				containerRole.append( AnyKeyPart.KEY_NAME ),
 				declaringModelPart,
@@ -112,11 +117,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( keyColumn.getQuotedName( dialect ) ),
 				keyColumn.getCustomReadExpression(),
 				keyColumn.getCustomWriteExpression(),
+				keyColumn.getColumnDefinition(),
 				keyColumn.getSqlType(),
-				keyColumn.getLength(),
-				keyColumn.getArrayLength(),
-				keyColumn.getPrecision(),
-				keyColumn.getScale(),
+				keyColumnSize.getLength(),
+				keyColumnSize.getArrayLength(),
+				keyColumnSize.getPrecision(),
+				keyColumnSize.getScale(),
 				bootValueMapping.isNullable(),
 				bootValueMapping.isColumnInsertable( 1 ),
 				bootValueMapping.isColumnUpdateable( 1 ),

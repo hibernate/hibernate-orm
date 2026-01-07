@@ -91,6 +91,11 @@ public class TemporaryTableColumn implements SqlTypedMapping {
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return size.getLength();
 	}

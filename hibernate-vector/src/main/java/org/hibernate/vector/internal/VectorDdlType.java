@@ -15,10 +15,18 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
  */
 public class VectorDdlType extends DdlTypeImpl {
 
+	/**
+	 * @deprecated Use {@link #VectorDdlType(int, boolean, String, String, Dialect)} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "7.3")
 	public VectorDdlType(int sqlTypeCode, boolean isLob, String typeNamePattern, String castTypeNamePattern, String castTypeName, Dialect dialect) {
 		super( sqlTypeCode, isLob, typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
+	/**
+	 * @deprecated Use {@link #VectorDdlType(int, String, String, Dialect)} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "7.3")
 	public VectorDdlType(int sqlTypeCode, String typeNamePattern, String castTypeNamePattern, String castTypeName, Dialect dialect) {
 		super( sqlTypeCode, typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}

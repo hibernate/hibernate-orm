@@ -31,12 +31,14 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final boolean isPhysical;
 	private final boolean isUpdateable;
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable String customReadExpression;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
 	private final @Nullable Integer scale;
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public ExplicitColumnDiscriminatorMappingImpl(
 			ManagedMappingType mappingType,
 			String name,
@@ -65,9 +67,11 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 				null,
 				precision,
 				scale,
-				discriminatorType );
+				discriminatorType
+		);
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public ExplicitColumnDiscriminatorMappingImpl(
 			ManagedMappingType mappingType,
 			String name,
@@ -83,6 +87,41 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			DiscriminatorType<?> discriminatorType) {
+		this(
+				mappingType,
+				name,
+				tableExpression,
+				columnExpression,
+				isFormula,
+				isPhysical,
+				isUpdateable,
+				columnDefinition,
+				columnDefinition,
+				customReadExpression,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				discriminatorType
+		);
+	}
+
+	public ExplicitColumnDiscriminatorMappingImpl(
+			ManagedMappingType mappingType,
+			String name,
+			String tableExpression,
+			String columnExpression,
+			boolean isFormula,
+			boolean isPhysical,
+			boolean isUpdateable,
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable String customReadExpression,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			DiscriminatorType<?> discriminatorType) {
 		//noinspection unchecked
 		super( mappingType,
 				(DiscriminatorType<Object>) discriminatorType,
@@ -91,6 +130,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
 		this.columnDefinition = columnDefinition;
+		this.sqlTypeName = sqlTypeName;
 		this.customReadExpression = customReadExpression;
 		this.length = length;
 		this.arrayLength = arrayLength;
@@ -161,6 +201,11 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

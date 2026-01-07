@@ -262,16 +262,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	protected String castType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
-			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
-			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
-			default -> super.castType( sqlTypeCode );
-		};
-	}
-
-	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -943,11 +933,16 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
-		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-		final var jdbcMapping = sqlType.getJdbcMapping();
-		final String castTypeName =
-				ddlTypeRegistry.getDescriptor( jdbcMapping.getJdbcType().getDdlTypeCode() )
-						.getCastTypeName( sqlType.toSize(), (SqlExpressible) jdbcMapping, ddlTypeRegistry );
+		final String castTypeName;
+		if ( sqlType.getSqlTypeName() != null ) {
+			castTypeName = sqlType.getSqlTypeName();
+		}
+		else {
+			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			castTypeName = ddlTypeRegistry
+					.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+					.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		}
 		// PostgreSQL assumes a plain null literal in the select statement to be of type text,
 		// which can lead to issues in, for example, the union subclass strategy, so do a cast.
 		return "cast(null as " + castTypeName + ")";

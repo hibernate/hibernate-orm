@@ -122,6 +122,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return null;
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}

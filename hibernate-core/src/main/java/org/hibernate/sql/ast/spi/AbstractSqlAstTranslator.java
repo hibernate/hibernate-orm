@@ -5667,7 +5667,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final SqlTypedMapping sqlTypedMapping = sqlTypedExpression.getSqlTypedMapping();
 			castTarget = new CastTarget(
 					sqlTypedMapping.getJdbcMapping(),
-					sqlTypedMapping.getColumnDefinition(),
+					// Only use the computed SQL type name if it is sourced from a column definition,
+					// otherwise let the default DDL type handling do its thing
+					sqlTypedMapping.getColumnDefinition() != null ? sqlTypedMapping.getSqlTypeName() : null,
 					sqlTypedMapping.getLength(),
 					sqlTypedMapping.getArrayLength(),
 					sqlTypedMapping.getTemporalPrecision() != null
@@ -6924,12 +6926,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
+		appendSql( getCastTypeName( castTarget, dialect, sessionFactory.getTypeConfiguration() ) );
 	}
 
 	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
+		if ( castTarget.getSqlTypeName() != null ) {
+			return castTarget.getSqlTypeName();
 		}
 		else {
 			final Size castTargetSize = castTarget.toSize();
@@ -6946,9 +6948,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
+		final SessionFactoryImplementor sessionFactory = typeConfiguration.getSessionFactory();
+		assert sessionFactory != null;
+		return getCastTypeName( castTarget, sessionFactory.getJdbcServices().getDialect(), typeConfiguration );
+	}
+
+	public static String getCastTypeName(SqlTypedMapping castTarget, Dialect dialect, TypeConfiguration typeConfiguration) {
+		final String sqlTypeName = castTarget.getSqlTypeName();
+		if ( sqlTypeName != null ) {
+			return dialect.castTypeFromSqlType( sqlTypeName );
 		}
 		else {
 			final Size castTargetSize = castTarget.toSize();

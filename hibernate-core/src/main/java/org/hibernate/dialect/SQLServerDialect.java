@@ -117,7 +117,6 @@ import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.TIME;
@@ -125,8 +124,6 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -271,9 +268,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case VARCHAR, LONG32VARCHAR, CLOB -> "varchar(max)";
-			case NVARCHAR, LONG32NVARCHAR, NCLOB -> "nvarchar(max)";
-			case VARBINARY, LONG32VARBINARY, BLOB -> "varbinary(max)";
+			case LONG32VARCHAR, CLOB -> "varchar(max)";
+			case LONG32NVARCHAR, NCLOB -> "nvarchar(max)";
+			case LONG32VARBINARY, BLOB -> "varbinary(max)";
 			default -> super.castType( sqlTypeCode );
 		};
 	}

@@ -66,11 +66,11 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"" ), column.getColumnDefinition() )
+								hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"" ), column.getSqlTypeName() )
 						);
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
-						final String elementTypeName = getElementTypeName( column.getColumnDefinition() );
+						final String elementTypeName = getElementTypeName( column.getSqlTypeName() );
 						switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
 							case BINARY:
 							case VARBINARY:
@@ -89,7 +89,7 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								columnExpression( aggregateParentReadExpression, columnExpression, column.getColumnDefinition() )
+								columnExpression( aggregateParentReadExpression, columnExpression, column.getSqlTypeName() )
 						);
 				}
 		}

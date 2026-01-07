@@ -136,9 +136,9 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 	}
 
 	protected static String determineColumnType(CastTarget castTarget, TypeConfiguration typeConfiguration) {
-		final String columnDefinition = castTarget.getColumnDefinition();
-		if ( columnDefinition != null ) {
-			return columnDefinition;
+		final String sqlTypeName = castTarget.getSqlTypeName();
+		if ( sqlTypeName != null ) {
+			return sqlTypeName;
 		}
 		else {
 			final String typeName = DdlTypeHelper.getTypeName(

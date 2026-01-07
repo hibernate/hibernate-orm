@@ -654,6 +654,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public @Nullable String getSqlTypeName() {
+		return keySide.getModelPart().getSqlTypeName();
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return keySide.getModelPart().getLength();
 	}

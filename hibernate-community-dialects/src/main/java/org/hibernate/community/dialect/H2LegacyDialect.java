@@ -96,12 +96,12 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
@@ -115,7 +115,6 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
@@ -239,16 +238,9 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-				return "char";
-			case VARCHAR:
-			case NVARCHAR:
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "varchar";
-			case BINARY:
-			case VARBINARY:
 			case LONG32VARBINARY:
 				return "varbinary";
 		}
@@ -273,8 +265,8 @@ public class H2LegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( castType( VARCHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( castType( INTEGER ), this ) );
 	}
 
 	@Override

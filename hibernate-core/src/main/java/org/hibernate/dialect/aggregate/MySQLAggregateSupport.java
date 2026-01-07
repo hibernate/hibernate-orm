@@ -148,14 +148,14 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 			case DOUBLE -> "double";
 			case FLOAT -> jsonType
 					// In newer versions of MySQL, casting to float/double is supported
-					? column.getColumnDefinition()
+					? column.getSqlTypeName()
 					: column.getPrecision() == null || column.getPrecision() == 53 ? "double" : "float";
 			// MySQL doesn't let you cast to TEXT/LONGTEXT
 			case CHAR, VARCHAR, LONG32VARCHAR, CLOB, ENUM -> "char";
 			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
 			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
 			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "binary";
-			default -> column.getColumnDefinition();
+			default -> column.getSqlTypeName();
 		};
 	}
 

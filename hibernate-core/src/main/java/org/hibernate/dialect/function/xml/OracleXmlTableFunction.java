@@ -59,6 +59,7 @@ public class OracleXmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"decode(" + Template.TEMPLATE + "." + name + ",'true'," + trueFragment + ",'false'," + falseFragment + ")",
 						null,
+						null,
 						"varchar2(5)",
 						null,
 						null,

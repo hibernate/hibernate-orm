@@ -62,6 +62,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final String rootTable;
 	private final String pkColumnName;
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -106,6 +107,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		);
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
 			Supplier<?> instanceCreator,
@@ -121,7 +123,43 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean updateable,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
+		this(
+				entityPersister,
+				instanceCreator,
+				attributeName,
+				rootTable,
+				pkColumnName,
+				columnDefinition,
+				columnDefinition,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				insertable,
+				updateable,
+				idType,
+				creationProcess
+		);
+	}
+
+	public BasicEntityIdentifierMappingImpl(
+			EntityPersister entityPersister,
+			Supplier<?> instanceCreator,
+			String attributeName,
+			String rootTable,
+			String pkColumnName,
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean insertable,
+			boolean updateable,
+			BasicType<?> idType,
+			MappingModelCreationProcess creationProcess) {
 		this.columnDefinition = columnDefinition;
+		this.sqlTypeName = sqlTypeName;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -365,6 +403,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

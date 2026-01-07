@@ -50,6 +50,7 @@ public class BasicAttributeMapping
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -120,7 +121,69 @@ public class BasicAttributeMapping
 				partitioned,
 				jdbcMapping,
 				declaringType,
-				propertyAccess );
+				propertyAccess
+		);
+	}
+
+	@Deprecated(forRemoval = true, since = "7.3")
+	public BasicAttributeMapping(
+			String attributeName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			AttributeMetadata attributeMetadata,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
+			String tableExpression,
+			String mappedColumnExpression,
+			SelectablePath selectablePath,
+			boolean isFormula,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			JdbcMapping jdbcMapping,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess) {
+		this(
+				attributeName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				attributeMetadata,
+				mappedFetchTiming,
+				mappedFetchStyle,
+				tableExpression,
+				mappedColumnExpression,
+				selectablePath,
+				isFormula,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				columnDefinition,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				jdbcMapping,
+				declaringType,
+				propertyAccess
+		);
 	}
 
 	public BasicAttributeMapping(
@@ -138,6 +201,7 @@ public class BasicAttributeMapping
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
 			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -171,6 +235,7 @@ public class BasicAttributeMapping
 						: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;
+		this.sqlTypeName = sqlTypeName;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -238,6 +303,7 @@ public class BasicAttributeMapping
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
 				selectableMapping.getColumnDefinition(),
+				selectableMapping.getSqlTypeName(),
 				selectableMapping.getLength(),
 				selectableMapping.getArrayLength(),
 				selectableMapping.getPrecision(),
@@ -336,6 +402,11 @@ public class BasicAttributeMapping
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

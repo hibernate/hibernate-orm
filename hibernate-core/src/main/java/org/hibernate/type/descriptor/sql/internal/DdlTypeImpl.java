@@ -29,7 +29,7 @@ public class DdlTypeImpl implements DdlType {
 	final Dialect dialect;
 
 	public DdlTypeImpl(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
-		this( sqlTypeCode, typeNamePattern, typeNamePattern, typeNamePattern, dialect );
+		this( sqlTypeCode, typeNamePattern, null, typeNamePattern, dialect );
 	}
 
 	public DdlTypeImpl(
@@ -49,6 +49,10 @@ public class DdlTypeImpl implements DdlType {
 		this( sqlTypeCode, isLob, typeNamePattern, null, castTypeName, dialect );
 	}
 
+	/**
+	 * @deprecated Use {@link #DdlTypeImpl(int, String, String, Dialect)} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "7.3")
 	public DdlTypeImpl(
 			int sqlTypeCode,
 			String typeNamePattern,
@@ -58,6 +62,10 @@ public class DdlTypeImpl implements DdlType {
 		this( sqlTypeCode, JdbcType.isLob( sqlTypeCode ), typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
+	/**
+	 * @deprecated Use {@link #DdlTypeImpl(int, boolean, String, String, Dialect)} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "7.3")
 	public DdlTypeImpl(
 			int sqlTypeCode,
 			boolean isLob,
@@ -77,6 +85,14 @@ public class DdlTypeImpl implements DdlType {
 		this.dialect = dialect;
 	}
 
+	protected boolean isCastTypeNameStatic() {
+		return castTypeNameIsStatic;
+	}
+
+	protected String getCastTypeName() {
+		return castTypeName;
+	}
+
 	@Override
 	public int getSqlTypeCode() {
 		return sqlTypeCode;
@@ -84,10 +100,14 @@ public class DdlTypeImpl implements DdlType {
 
 	@Override
 	public String getRawTypeName() {
+		return getRawTypeName( typeNamePattern );
+	}
+
+	public static String getRawTypeName(String typeNamePattern) {
 		//trim off the length/precision/scale
 		final int paren = typeNamePattern.indexOf( '(' );
 		if ( paren > 0 ) {
-			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
+			final int parenEnd = typeNamePattern.indexOf( ')', paren + 1 );
 			return parenEnd + 1 == typeNamePattern.length()
 					? typeNamePattern.substring( 0, paren )
 					: typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 );
@@ -110,6 +130,9 @@ public class DdlTypeImpl implements DdlType {
 		if ( length == null && precision == null ) {
 			return getCastTypeName( jdbcType, javaType );
 		}
+		else if ( castTypeNameIsStatic ) {
+			return castTypeName;
+		}
 		else {
 			//use the given length/precision/scale
 			final Size size = dialect.getSizeStrategy().resolveSize( jdbcType, javaType, precision, scale, length );
@@ -117,9 +140,7 @@ public class DdlTypeImpl implements DdlType {
 				//needed for cast(x as BigInteger(p))
 				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );
 			}
-			return castTypeNamePattern == null
-					? getTypeName( size.getLength(), size.getPrecision(), size.getScale() )
-					: replace( castTypeNamePattern, size.getLength(), size.getPrecision(), size.getScale() );
+			return replace( castTypeName, size.getLength(), size.getPrecision(), size.getScale() );
 		}
 	}
 

@@ -6,9 +6,6 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.engine.jdbc.Size;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -47,11 +44,9 @@ public class PostgreSQLArrayConcatElementFunction extends ArrayConcatElementFunc
 		}
 		final String elementCastType;
 		if ( needsElementCasting( elementArgument ) ) {
-			final JdbcMappingContainer arrayType = arrayArgument.getExpressionType();
-			final Size size = arrayType instanceof SqlTypedMapping sqlTypedMapping ? sqlTypedMapping.toSize() : null;
 			elementCastType = DdlTypeHelper.getCastTypeName(
 					( (BasicPluralType<?, ?>) returnType ).getElementType(),
-					size,
+					walker.getSessionFactory().getJdbcServices().getDialect(),
 					walker.getSessionFactory().getTypeConfiguration()
 			);
 		}

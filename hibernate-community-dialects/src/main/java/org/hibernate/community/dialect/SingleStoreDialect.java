@@ -119,6 +119,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -462,7 +463,6 @@ public class SingleStoreDialect extends Dialect {
 				VARCHAR,
 				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 				columnType( CLOB ),
-				columnType( CHAR ),
 				castType( CHAR ),
 				this
 		).withTypeCapacity( getMaxVarcharLength(), "varchar($l)" ).withTypeCapacity( maxMediumLobLen, "mediumtext" );
@@ -476,7 +476,6 @@ public class SingleStoreDialect extends Dialect {
 				NVARCHAR,
 				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 				columnType( NCLOB ),
-				columnType( NCHAR ),
 				castType( NCHAR ),
 				this
 		).withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" ).withTypeCapacity(
@@ -492,7 +491,6 @@ public class SingleStoreDialect extends Dialect {
 				VARBINARY,
 				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 				columnType( BLOB ),
-				columnType( BINARY ),
 				castType( BINARY ),
 				this
 		).withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" ).withTypeCapacity(
@@ -549,8 +547,8 @@ public class SingleStoreDialect extends Dialect {
 				.withTypeCapacity( maxLobLen, "text character set utf8" )
 				.build() );
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( castType( VARCHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( castType( INTEGER ), this ) );
 	}
 
 	@Override
@@ -726,10 +724,45 @@ public class SingleStoreDialect extends Dialect {
 			//special case for casting to Boolean
 			case BOOLEAN, BIT -> "unsigned";
 			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
-			case CHAR, VARCHAR, LONG32VARCHAR -> "char";
-			case NCHAR, NVARCHAR, LONG32NVARCHAR -> "char character set utf8";
-			case BINARY, VARBINARY, LONG32VARBINARY ->  "binary";
+			case CHAR, VARCHAR -> "char($l)";
+			case LONG32VARCHAR -> "char";
+			case NCHAR, NVARCHAR -> "char($l) character set utf8";
+			case LONG32NVARCHAR -> "char character set utf8";
+			case BINARY, VARBINARY ->  "binary($l)";
+			case LONG32VARBINARY ->  "binary";
 			default -> super.castType( sqlTypeCode );
+		};
+	}
+
+	@Override
+	public String castTypeFromSqlType(String sqlType) {
+		final String castType = super.castTypeFromSqlType( sqlType );
+		final String lowerCastType = castType.toLowerCase( Locale.ROOT );
+		final int parenthesisIndex = lowerCastType.indexOf( '(' );
+		final String castMappingSource = parenthesisIndex == -1
+				? lowerCastType.trim()
+				: lowerCastType.substring( 0, parenthesisIndex ).trim();
+		return switch ( castMappingSource ) {
+			case "bit" -> "unsigned";
+
+			case "tinyint", "smallint", "integer", "bigint" -> "signed";
+
+			case "char", "varchar" -> {
+				final String baseType = "char" + (parenthesisIndex == -1 ? ""
+						: castType.substring( parenthesisIndex, castType.indexOf( ')', parenthesisIndex ) + 1 ));
+				yield baseType + (lowerCastType.contains( "utf8" ) ? " character set utf8" : "");
+			}
+			case "mediumtext", "text", "longtext" ->
+					lowerCastType.contains( "utf8" ) ? "char character set utf8" : "char";
+
+			case "enum" -> "char";
+
+			case "binary", "varbinary" -> "binary" + (parenthesisIndex == -1 ? ""
+					: castType.substring( parenthesisIndex, castType.indexOf( ')', parenthesisIndex ) + 1 ));
+
+			case "tinyblob", "mediumblob", "blob", "longblob" -> "binary";
+
+			default -> castType;
 		};
 	}
 

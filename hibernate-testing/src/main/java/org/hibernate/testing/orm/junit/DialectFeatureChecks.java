@@ -710,6 +710,7 @@ abstract public class DialectFeatureChecks {
 						"",
 						SqlTypes.STRUCT,
 						new SqlTypedMappingImpl(
+								null,
 								"varchar",
 								null,
 								null,
@@ -738,6 +739,7 @@ abstract public class DialectFeatureChecks {
 						"",
 						SqlTypes.JSON,
 						new SqlTypedMappingImpl(
+								null,
 								"varchar",
 								null,
 								null,
@@ -766,6 +768,7 @@ abstract public class DialectFeatureChecks {
 						"",
 						SqlTypes.SQLXML,
 						new SqlTypedMappingImpl(
+								null,
 								"varchar",
 								null,
 								null,

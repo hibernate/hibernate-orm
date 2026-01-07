@@ -150,6 +150,10 @@ public class CockroachLegacyDialect extends Dialect {
 
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
+
+	private static final String CHAR_KEYWORD = "char";
+	private static final String VARCHAR_KEYWORD = "varchar";
+
 	protected static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 19, 2 );
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -237,10 +241,28 @@ public class CockroachLegacyDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "string";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
 			default -> super.castType( sqlTypeCode );
 		};
+	}
+
+	@Override
+	public String castTypeFromSqlType(String sqlType) {
+		final String castType = super.castTypeFromSqlType( sqlType );
+		if ( castType.regionMatches( true, 0, CHAR_KEYWORD, 0, CHAR_KEYWORD.length() )
+			&& (castType.length() == CHAR_KEYWORD.length()
+				|| !Character.isLetterOrDigit( castType.charAt( CHAR_KEYWORD.length() ) )) ) {
+			return "string";
+		}
+		else if ( castType.regionMatches( true, 0, VARCHAR_KEYWORD, 0, VARCHAR_KEYWORD.length() )
+				&& (castType.length() == VARCHAR_KEYWORD.length()
+					|| !Character.isLetterOrDigit( castType.charAt( VARCHAR_KEYWORD.length() ) )) ) {
+			return "string";
+		}
+		else {
+			return castType;
+		}
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface SqlTypedMapping {
 	@Nullable String getColumnDefinition();
+	@Nullable String getSqlTypeName();
 	@Nullable Long getLength();
 	@Nullable Integer getArrayLength();
 	@Nullable Integer getPrecision();

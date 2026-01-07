@@ -71,6 +71,7 @@ public class GaussDBArrayContainsOperatorFunction extends ArrayContainsUnnestFun
 					sqlAppender.append( "] as " );
 					sqlAppender.append( DdlTypeHelper.getCastTypeName(
 							haystackExpression.getExpressionType(),
+							walker.getSessionFactory().getJdbcServices().getDialect(),
 							walker.getSessionFactory().getTypeConfiguration()
 					) );
 					sqlAppender.append( ')' );

@@ -113,6 +113,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 				null,
 				null,
 				null,
+				null,
 				false,
 				false,
 				false,

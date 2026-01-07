@@ -66,9 +66,9 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 	}
 
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
-		final String columnDefinition = sqlTypedMapping.getColumnDefinition();
-		if ( columnDefinition != null ) {
-			return columnDefinition;
+		final String sqlTypeName = sqlTypedMapping.getSqlTypeName();
+		if ( sqlTypeName != null ) {
+			return sqlTypeName;
 		}
 		return translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry().getTypeName(
 				sqlTypedMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(),

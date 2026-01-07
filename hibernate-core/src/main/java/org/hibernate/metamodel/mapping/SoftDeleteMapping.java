@@ -140,6 +140,11 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	}
 
 	@Override
+	default @Nullable String getSqlTypeName() {
+		return null;
+	}
+
+	@Override
 	default @Nullable Long getLength() {
 		return null;
 	}

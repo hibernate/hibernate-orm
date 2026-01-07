@@ -4993,6 +4993,7 @@ public abstract class AbstractEntityPersister
 		else {
 			final String discriminatorColumnExpression;
 			final String columnDefinition;
+			final String sqlTypeName;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -5007,22 +5008,27 @@ public abstract class AbstractEntityPersister
 				discriminatorColumnExpression = getDiscriminatorColumnReaders();
 				if ( column == null ) {
 					columnDefinition = null;
+					sqlTypeName = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
 					scale = null;
 				}
 				else {
-					columnDefinition = column.getSqlType();
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
-					scale = column.getScale();
+					final var columnSize =
+							column.getColumnSize( getDialect(), column.getValue().getBuildingContext().getMetadataCollector() );
+					columnDefinition = column.getColumnDefinition();
+					sqlTypeName = column.getSqlType();
+					length = columnSize.getLength();
+					arrayLength = columnSize.getArrayLength();
+					precision = columnSize.getPrecision();
+					scale = columnSize.getScale();
 				}
 			}
 			else {
 				discriminatorColumnExpression = discriminatorFormulaTemplate;
 				columnDefinition = null;
+				sqlTypeName = null;
 				length = null;
 				arrayLength = null;
 				precision = null;
@@ -5037,6 +5043,7 @@ public abstract class AbstractEntityPersister
 					isPhysicalDiscriminator(),
 					false,
 					columnDefinition,
+					sqlTypeName,
 					null,
 					length,
 					arrayLength,
@@ -5187,6 +5194,7 @@ public abstract class AbstractEntityPersister
 			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
 		final String columnDefinition;
+		final String sqlTypeName;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
@@ -5194,6 +5202,7 @@ public abstract class AbstractEntityPersister
 		final var identifier = bootEntityDescriptor.getIdentifier();
 		if ( identifier == null ) {
 			columnDefinition = null;
+			sqlTypeName = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -5201,11 +5210,14 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			columnDefinition = column.getSqlType();
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			final var columnSize =
+					column.getColumnSize( getDialect(), creationProcess.getCreationContext().getMetadata() );
+			columnDefinition = column.getColumnDefinition();
+			sqlTypeName = column.getSqlType();
+			length = columnSize.getLength();
+			arrayLength = columnSize.getArrayLength();
+			precision = columnSize.getPrecision();
+			scale = columnSize.getScale();
 		}
 
 		final var identifierProperty = bootEntityDescriptor.getIdentifierProperty();
@@ -5217,6 +5229,7 @@ public abstract class AbstractEntityPersister
 				getTableName(),
 				rootTableKeyColumnNames[0],
 				columnDefinition,
+				sqlTypeName,
 				length,
 				arrayLength,
 				precision,
@@ -5256,6 +5269,8 @@ public abstract class AbstractEntityPersister
 
 		final var column = (Column) bootModelVersionValue.getColumn();
 		final var dialect = creationProcess.getCreationContext().getDialect();
+		final var columnSize =
+				column.getColumnSize( dialect, creationProcess.getCreationContext().getMetadata() );
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getRootClass(),
@@ -5263,11 +5278,12 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
+				column.getColumnDefinition(),
 				column.getSqlType(),
-				column.getLength(),
-				column.getArrayLength(),
-				column.getPrecision(),
-				column.getScale(),
+				columnSize.getLength(),
+				columnSize.getArrayLength(),
+				columnSize.getPrecision(),
+				columnSize.getScale(),
 				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister
@@ -5317,6 +5333,8 @@ public abstract class AbstractEntityPersister
 		final var value = bootProperty.getValue();
 		if ( propertyIndex == getVersionPropertyIndex() ) {
 			final var column = value.getColumns().get( 0 );
+			final var columnSize =
+					column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 			return buildBasicAttributeMapping(
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
@@ -5331,11 +5349,12 @@ public abstract class AbstractEntityPersister
 					false,
 					null,
 					"?",
+					column.getColumnDefinition(),
 					column.getSqlType(),
-					column.getLength(),
-					column.getArrayLength(),
-					column.getPrecision(),
-					column.getScale(),
+					columnSize.getLength(),
+					columnSize.getArrayLength(),
+					columnSize.getPrecision(),
+					columnSize.getScale(),
 					column.getTemporalPrecision(),
 					column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() ),
 					column.isNullable(),
@@ -5354,6 +5373,7 @@ public abstract class AbstractEntityPersister
 			final String customReadExpr;
 			final String customWriteExpr;
 			final String columnDefinition;
+			final String sqlTypeName;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -5368,10 +5388,13 @@ public abstract class AbstractEntityPersister
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
-				columnDefinition = column.getSqlType();
-				length = column.getLength();
-				arrayLength = column.getArrayLength();
-				precision = column.getPrecision();
+				final var columnSize =
+						column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
+				columnDefinition = column.getColumnDefinition();
+				sqlTypeName = column.getSqlType();
+				length = columnSize.getLength();
+				arrayLength = columnSize.getArrayLength();
+				precision = columnSize.getPrecision();
 				temporalPrecision = column.getTemporalPrecision();
 				scale = column.getScale();
 				isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
@@ -5402,12 +5425,15 @@ public abstract class AbstractEntityPersister
 							creationContext.getBootModel()
 					);
 					final var column = value.getColumns().get( 0 );
-					columnDefinition = column.getSqlType();
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
+					final var columnSize =
+							column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
+					columnDefinition = column.getColumnDefinition();
+					sqlTypeName = column.getSqlType();
+					length = columnSize.getLength();
+					arrayLength = columnSize.getArrayLength();
+					precision = columnSize.getPrecision();
 					temporalPrecision = column.getTemporalPrecision();
-					scale = column.getScale();
+					scale = columnSize.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					resolveAggregateColumnBasicType( creationProcess, role, column );
@@ -5418,6 +5444,7 @@ public abstract class AbstractEntityPersister
 					customReadExpr = null;
 					customWriteExpr = null;
 					columnDefinition = null;
+					sqlTypeName = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -5443,6 +5470,7 @@ public abstract class AbstractEntityPersister
 					customReadExpr,
 					customWriteExpr,
 					columnDefinition,
+					sqlTypeName,
 					length,
 					arrayLength,
 					precision,

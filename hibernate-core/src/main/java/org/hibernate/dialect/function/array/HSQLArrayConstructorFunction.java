@@ -29,6 +29,7 @@ public class HSQLArrayConstructorFunction extends ArrayConstructorFunction {
 		if ( returnType != null && hasOnlyBottomArguments( arguments ) ) {
 			castTypeName = DdlTypeHelper.getCastTypeName(
 					returnType,
+					walker.getSessionFactory().getJdbcServices().getDialect(),
 					walker.getSessionFactory().getTypeConfiguration()
 			);
 			sqlAppender.append( "cast(" );

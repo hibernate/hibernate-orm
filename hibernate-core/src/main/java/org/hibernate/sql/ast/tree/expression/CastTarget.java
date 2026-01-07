@@ -26,14 +26,17 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 		this( type, null, null, null, null, null );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
 		this( type, null, length, precision, scale );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
 		this( type, null, length, arrayLength, precision, scale );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public CastTarget(JdbcMapping type, @Nullable String sqlType, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
 		this( type, sqlType, length, null, precision, scale );
 	}
@@ -53,6 +56,11 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 
 	@Override
 	public @Nullable String getColumnDefinition() {
+		return null;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
 		return sqlType;
 	}
 

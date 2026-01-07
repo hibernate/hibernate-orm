@@ -472,6 +472,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
+				final String sqlTypeName;
 				final Long length;
 				final Integer arrayLength;
 				final Integer precision;
@@ -480,11 +481,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					columnDefinition = column.getSqlType();
-					length = column.getLength();
-					arrayLength = column.getArrayLength();
-					precision = column.getPrecision();
-					scale = column.getScale();
+					final var columnSize =
+							column.getColumnSize( dialect, creationProcess.getCreationContext().getMetadata() );
+					columnDefinition = column.getColumnDefinition();
+					sqlTypeName = column.getSqlType();
+					length = columnSize.getLength();
+					arrayLength = columnSize.getArrayLength();
+					precision = columnSize.getPrecision();
+					scale = columnSize.getScale();
 					temporalPrecision = column.getTemporalPrecision();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
@@ -493,6 +497,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 				else {
 					columnDefinition = null;
+					sqlTypeName = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -521,6 +526,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								creationContext.getBootModel()
 						),
 						columnDefinition,
+						sqlTypeName,
 						length,
 						arrayLength,
 						precision,
@@ -714,6 +720,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final var selectable = discriminator.getSelectables().get( 0 );
 		final String discriminatorColumnExpression;
 		final String columnDefinition;
+		final String sqlTypeName;
 		final String name;
 		final Long length;
 		final Integer arrayLength;
@@ -727,6 +734,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					creationContext.getTypeConfiguration()
 			);
 			columnDefinition = null;
+			sqlTypeName = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -735,13 +743,16 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			final var column = discriminator.getColumns().get( 0 );
 			assert column != null : "Embeddable discriminators require a column";
+			final var columnSize =
+					column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 			discriminatorColumnExpression = column.getReadExpr( creationContext.getDialect() );
-			columnDefinition = column.getSqlType();
+			columnDefinition = column.getColumnDefinition();
+			sqlTypeName = column.getSqlType();
 			name = column.getName();
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			length = columnSize.getLength();
+			arrayLength = columnSize.getArrayLength();
+			precision = columnSize.getPrecision();
+			scale = columnSize.getScale();
 		}
 
 		return new ExplicitColumnDiscriminatorMappingImpl(
@@ -754,6 +765,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				!isFormula,
 				!isFormula,
 				columnDefinition,
+				sqlTypeName,
 				selectable.getCustomReadExpression(),
 				length,
 				arrayLength,

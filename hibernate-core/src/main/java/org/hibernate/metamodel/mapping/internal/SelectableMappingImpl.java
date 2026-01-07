@@ -34,6 +34,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	private final boolean partitioned;
 	private final boolean isFormula;
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public SelectableMappingImpl(
 			String containingTableExpression,
 			String selectionExpression,
@@ -74,6 +75,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		);
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public SelectableMappingImpl(
 			String containingTableExpression,
 			String selectionExpression,
@@ -93,7 +95,50 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean partitioned,
 			boolean isFormula,
 			JdbcMapping jdbcMapping) {
-		super( columnDefinition, length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
+		this(
+				containingTableExpression,
+				selectionExpression,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				columnDefinition,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				temporalPrecision,
+				isLob,
+				nullable,
+				insertable,
+				updateable,
+				partitioned,
+				isFormula,
+				jdbcMapping
+		);
+	}
+
+	public SelectableMappingImpl(
+			String containingTableExpression,
+			String selectionExpression,
+			@Nullable SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
+			boolean isLob,
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			boolean isFormula,
+			JdbcMapping jdbcMapping) {
+		super( columnDefinition, sqlTypeName, length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
 		assert selectionExpression != null;
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.containingTableExpression = containingTableExpression.intern();
@@ -206,6 +251,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			RuntimeModelCreationContext creationContext) {
 		final String columnExpression;
 		final String columnDefinition;
+		final String sqlTypeName;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
@@ -217,6 +263,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		if ( selectable.isFormula() ) {
 			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
 			columnDefinition = null;
+			sqlTypeName = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -228,12 +275,15 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		}
 		else {
 			var column = (Column) selectable;
+			final var columnSize =
+					column.getColumnSize( creationContext.getDialect(), creationContext.getMetadata() );
 			columnExpression = selectable.getText( dialect );
-			columnDefinition = column.getSqlType();
-			length = column.getLength();
-			arrayLength = column.getArrayLength();
-			precision = column.getPrecision();
-			scale = column.getScale();
+			columnDefinition = column.getColumnDefinition();
+			sqlTypeName = column.getSqlType();
+			length = columnSize.getLength();
+			arrayLength = columnSize.getArrayLength();
+			precision = columnSize.getPrecision();
+			scale = columnSize.getScale();
 			temporalPrecision = column.getTemporalPrecision();
 
 			isNullable = !forceNotNullable && column.isNullable();
@@ -249,6 +299,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				selectable.getCustomReadExpression(),
 				selectable.getWriteExpr( jdbcMapping, dialect, creationContext.getBootModel() ),
 				columnDefinition,
+				sqlTypeName,
 				length,
 				arrayLength,
 				precision,

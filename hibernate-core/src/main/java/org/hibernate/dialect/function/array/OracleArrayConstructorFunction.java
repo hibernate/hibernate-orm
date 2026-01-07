@@ -37,6 +37,7 @@ public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 		}
 		final String arrayTypeName = DdlTypeHelper.getCastTypeName(
 				pluralType,
+				walker.getSessionFactory().getJdbcServices().getDialect(),
 				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.appendSql( arrayTypeName );

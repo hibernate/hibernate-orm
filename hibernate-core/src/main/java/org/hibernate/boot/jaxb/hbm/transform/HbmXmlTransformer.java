@@ -1198,7 +1198,7 @@ public class HbmXmlTransformer {
 		}
 		target.setDefault( source.getDefaultValue() );
 
-		target.setColumnDefinition( source.getSqlType() );
+		target.setColumnDefinition( source.getColumnDefinition() );
 
 		target.setRead( source.getCustomRead() );
 		target.setWrite( source.getCustomWrite() );

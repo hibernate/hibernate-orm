@@ -57,6 +57,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
 	private final @Nullable String columnDefinition;
+	private final @Nullable String sqlTypeName;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -112,6 +113,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		);
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,
@@ -132,6 +134,51 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			Map<Object,String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
+		this(
+				partRole,
+				declaringType,
+				table,
+				column,
+				selectablePath,
+				customReadExpression,
+				customWriteExpression,
+				columnDefinition,
+				columnDefinition,
+				length,
+				arrayLength,
+				precision,
+				scale,
+				insertable,
+				updateable,
+				partitioned,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public AnyDiscriminatorPart(
+			NavigableRole partRole,
+			DiscriminatedAssociationModelPart declaringType,
+			String table,
+			String column,
+			SelectablePath selectablePath,
+			@Nullable String customReadExpression,
+			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
+			@Nullable String sqlTypeName,
+			@Nullable Long length,
+			@Nullable Integer arrayLength,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object,String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
 		this.table = table;
@@ -140,6 +187,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
+		this.sqlTypeName = sqlTypeName;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -240,6 +288,11 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
+	}
+
+	@Override
+	public @Nullable String getSqlTypeName() {
+		return sqlTypeName;
 	}
 
 	@Override

@@ -84,7 +84,7 @@ public class CockroachDBAggregateSupport extends AggregateSupportImpl {
 								// because casting a jsonb[] to text[] will not omit the quotes of the jsonb text values
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
+										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getSqlTypeName() + ')'
 								);
 							case BINARY:
 							case VARBINARY:
@@ -97,13 +97,13 @@ public class CockroachDBAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
+										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getSqlTypeName() + ')'
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getColumnDefinition() + ')'
+								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getSqlTypeName() + ')'
 						);
 				}
 		}

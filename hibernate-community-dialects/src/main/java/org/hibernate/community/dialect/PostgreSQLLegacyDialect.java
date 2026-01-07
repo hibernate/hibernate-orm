@@ -259,16 +259,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	protected String castType(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
-			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
-			case BINARY, VARBINARY, LONG32VARBINARY ->"bytea";
-			default -> super.castType( sqlTypeCode );
-		};
-	}
-
-	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -962,9 +952,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
-		final String castTypeName = typeConfiguration.getDdlTypeRegistry()
-				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
-				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), typeConfiguration.getDdlTypeRegistry() );
+		final String castTypeName;
+		if ( sqlType.getSqlTypeName() != null ) {
+			castTypeName = sqlType.getSqlTypeName();
+		}
+		else {
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			castTypeName = ddlTypeRegistry
+					.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+					.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		}
 		return "cast(null as " + castTypeName + ")";
 	}
 

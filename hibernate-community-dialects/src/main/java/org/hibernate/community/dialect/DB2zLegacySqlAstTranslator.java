@@ -91,6 +91,12 @@ public class DB2zLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 	}
 
 	@Override
+	protected boolean preferUnionQueryForTupleInListPredicate() {
+		// DB2 z/OS can't use an index when rendering a union query
+		return false;
+	}
+
+	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION9;
 	}

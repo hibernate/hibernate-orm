@@ -803,6 +803,11 @@ public abstract class AbstractEntityPersister
 		return jpaCallbacks;
 	}
 
+	@Override
+	public EntityCallbacks getEntityCallbacks() {
+		return jpaCallbacks;
+	}
+
 	private static String renderSqlWhereStringTemplate(
 			PersistentClass persistentClass, Dialect dialect, TypeConfiguration typeConfiguration) {
 		return Template.renderWhereStringTemplate(

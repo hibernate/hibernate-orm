@@ -69,7 +69,7 @@ public class FirstLevelCacheTest {
 			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-native-evict-example[]
 			Session session = entityManager.unwrap(Session.class);
-			for(Person person : (List<Person>) session.createSelectionQuery("select p from Person p").list()) {
+			for(Person person : session.createSelectionQuery("select p from Person p",Person.class).list()) {
 				dtos.add(toDTO(person));
 				session.evict(person);
 			}

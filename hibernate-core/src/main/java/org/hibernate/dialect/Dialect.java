@@ -6522,4 +6522,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
 		return supportsRowValueConstructorSyntaxInInList();
 	}
+
+	/*
+	 * @return True if database supports {@code UNIQUE} constraint
+	 * definitions in the {@code create table} and {@code alter table} statements.
+	 * If this is not supported then Hibernate will create a unique index instead.
+	 */
+	public boolean supportsUniqueConstraints() {
+		return true;
+	}
 }

@@ -25,6 +25,8 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * <li>SQL Server <em>does</em> allow unique constraints on nullable columns, but the semantics
  *     are that two null values are non-unique. So here we need to jump through hoops with the
  *     {@code create unique nonclustered index ... where ...} command.
+ * <li>Spanner does not allow unique column definition, but it does allow the creation of unique
+ * 	   indexes instead, using {@code create unique index ...}
  * </ul>
  *
  * @author Brett Meyer
@@ -37,8 +39,8 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	@Override
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( uniqueKey.hasNullableColumn() ) {
-			final Dialect dialect = context.getDialect();
+		final var dialect = context.getDialect();
+		if ( needsUniqueIndex(uniqueKey, dialect) ) {
 			final String name = uniqueKey.getName();
 			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 			final List<Column> columns = uniqueKey.getColumns();
@@ -75,13 +77,17 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( uniqueKey.hasNullableColumn() ) {
+		if ( needsUniqueIndex( uniqueKey, context.getDialect() ) ) {
 			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 			return "drop index " + qualify( tableName, uniqueKey.getName() );
 		}
 		else {
 			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
+	}
+
+	private boolean needsUniqueIndex(UniqueKey uniqueKey, Dialect dialect) {
+		return uniqueKey.hasNullableColumn() || !dialect.supportsUniqueConstraints();
 	}
 
 }

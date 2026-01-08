@@ -68,10 +68,6 @@ public class NoCallbacks implements EntityCallbacks {
 		return RegistrationImpl.NO_REG;
 	}
 
-	@Override
-	public void release() {
-	}
-
 	public static class RegistrationImpl implements EntityListenerRegistration {
 		public static RegistrationImpl NO_REG = new RegistrationImpl();
 

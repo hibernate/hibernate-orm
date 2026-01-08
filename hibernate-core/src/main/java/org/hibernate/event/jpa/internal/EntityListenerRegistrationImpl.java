@@ -14,12 +14,12 @@ import org.hibernate.jpa.event.spi.CallbackType;
 public class EntityListenerRegistrationImpl<E> implements EntityListenerRegistration {
 	private final EntityCallbacksImpl<E> entityCallbacks;
 	private final CallbackType registeredCallbackType;
-	private final Callback<E> registeredCallback;
+	private final Callback<? super E> registeredCallback;
 
 	public EntityListenerRegistrationImpl(
 			EntityCallbacksImpl<E> entityCallbacks,
 			CallbackType registeredCallbackType,
-			Callback<E> registeredCallback) {
+			Callback<? super E> registeredCallback) {
 		this.entityCallbacks = entityCallbacks;
 		this.registeredCallbackType = registeredCallbackType;
 		this.registeredCallback = registeredCallback;

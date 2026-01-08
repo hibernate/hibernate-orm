@@ -39,7 +39,7 @@ import org.hibernate.testing.orm.junit.Setting;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascade.hbm.xml"
+				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascade.orm.xml"
 		}
 )
 @ServiceRegistry(

@@ -69,6 +69,9 @@ stage('Configure') {
 		if ( pullRequest.labels.contains( 'tidb' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ) )
 		}
+		if ( pullRequest.labels.contains( 'informix' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'informix' ) )
+		}
 	}
 
 	helper.configure {
@@ -166,6 +169,13 @@ stage('Build') {
 									docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
+									break;
+								case "informix":
+									sh "./docker_db.sh informix"
+									state[buildEnv.tag]['containerName'] = "informix"
+									// Disable parallel testing
+									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+											" -Ptest.threads=1"
 									break;
 							}
 						}

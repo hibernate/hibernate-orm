@@ -6,6 +6,9 @@ package org.hibernate.query.internal;
 
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.MappingElement;
+import jakarta.persistence.sql.ResultSetMapping;
+import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoCollection;
@@ -53,5 +56,20 @@ public class ResultMementoCollectionStandard implements ModelPartResultMementoCo
 				navigablePath,
 				pluralAttributeDescriptor
 		);
+	}
+
+	@Override
+	public <R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory) {
+		return false;
+	}
+
+	@Override
+	public <R> ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <R> MappingElement<R> toJpaMappingElement(SessionFactory sessionFactory) {
+		throw new UnsupportedOperationException();
 	}
 }

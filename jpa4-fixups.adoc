@@ -1,5 +1,7 @@
 = Things to Fix
 
+Things to fix after JPA 4.0 gets a named release
+
 == JPA Dependency
 
 === settings.gradle
@@ -11,3 +13,7 @@
 === JpaVersion (local-build-plugins)
 
 Changed `DEFAULT_VERSION` to 4.0
+
+=== Maven plugin integration testing
+
+Re-enable `:hibernate-maven-plugin:integrationTest`

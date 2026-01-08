@@ -960,13 +960,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
 		final var result = new HashMap<String, ResultSetMapping<R>>();
 		queryEngine.getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
-			if ( memento.getResultMementos().size() != 1 ) {
-				return;
-			}
-
-			var resultMemento = memento.getResultMementos().get( 0 );
-			if ( resultType.isAssignableFrom( resultMemento.getResultJavaType() ) ) {
-				result.put( memento.getName(), memento.toJpaMapping() );
+			if ( memento.canBeTreatedAsResultSetMapping( resultType, this ) ) {
+				result.put( memento.getName(), memento.toJpaMapping( this ) );
 			}
 		} );
 		return result;

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0" >
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+    </persistence-unit-metadata>
+    <package>org.hibernate.orm.test.cascade.circle</package>
+
+    <entity class="Route">
+        <table name="HB_Route"/>
+        <attributes>
+            <id name="routeID">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+                <type value="String"/>
+            </basic>
+            <one-to-many name="nodes" target-entity="Node" mapped-by="route">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+
+            <transient name="vehicles"/>
+            <transient name="transientField"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="Tour">
+        <table name="HB_Tour"/>
+        <attributes>
+            <id name="tourID">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+                <type value="String"/>
+            </basic>
+            <one-to-many name="nodes" target-entity="Node" mapped-by="tour" fetch="LAZY">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="Transport">
+        <table name="HB_Transport"/>
+        <attributes>
+            <id name="transportID">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+                <type value="String"/>
+            </basic>
+            <many-to-one name="pickupNode" target-entity="Node" fetch="EAGER">
+                <join-column name="pickupNodeID" nullable="false" unique="true"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <many-to-one name="deliveryNode" target-entity="Node" fetch="EAGER">
+                <join-column name="deliveryNodeID" nullable="false" unique="true"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <transient name="vehicle"/>
+            <transient name="transientField"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="Node">
+        <table name="HB_Node"/>
+        <attributes>
+            <id name="nodeID">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+                <type value="String"/>
+            </basic>
+            <many-to-one name="route" target-entity="Route" fetch="EAGER">
+                <join-column name="routeID" nullable="false"/>
+            </many-to-one>
+            <many-to-one name="tour" target-entity="Tour" fetch="EAGER">
+                <join-column name="tourID" nullable="true"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <one-to-many name="deliveryTransports" target-entity="Transport" mapped-by="deliveryNode" fetch="LAZY">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="pickupTransports" target-entity="Transport" mapped-by="pickupNode" fetch="LAZY">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+
+
+            <transient name="transientField"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+</entity-mappings>

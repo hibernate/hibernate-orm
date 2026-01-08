@@ -6,6 +6,9 @@ package org.hibernate.query.internal;
 
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.MemberMapping;
+import jakarta.persistence.sql.ResultSetMapping;
+import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
@@ -51,5 +54,15 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		return new CompleteFetchBuilderBasicPart( navigablePath, fetchedAttribute, columnAlias );
+	}
+
+	@Override
+	public MemberMapping<?> toJpaMemberMapping(Parent container, SessionFactory sessionFactory) {
+		return ResultSetMapping.field(
+				container.getResultJavaType(),
+				fetchedAttribute.getJavaType().getJavaTypeClass(),
+				fetchedAttribute.getFetchableName(),
+				fetchedAttribute.getSelectableName()
+		);
 	}
 }

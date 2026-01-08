@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -125,6 +124,14 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		if ( !visitedTypes.add( this ) ) {
 			return false;
 		}
+
+		return areAttributesAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
+	}
+
+	default boolean areAttributesAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
 		// we still need to verify collection fields to be eagerly loaded by join
 		final AttributeMappingsList attributeMappings = getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -145,9 +152,6 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 					}
 				}
 			}
-		}
-		if ( onlyApplyForLoadByKey && this instanceof SingleTableEntityPersister persister ) {
-			return persister.getFactory().hasLoadByKeyFilter();
 		}
 		return false;
 	}

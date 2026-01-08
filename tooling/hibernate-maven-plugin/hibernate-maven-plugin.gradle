@@ -52,6 +52,8 @@ tasks.register('integrationTest', Test) {
 
     useJUnitPlatform()
 
+    // for now because JPA 4.0 is still snapshot which is a problem
+    enabled = false
 }
 
 tasks.forbiddenApisIntTest {

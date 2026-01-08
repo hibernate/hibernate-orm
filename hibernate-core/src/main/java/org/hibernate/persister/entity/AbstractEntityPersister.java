@@ -4911,10 +4911,11 @@ public abstract class AbstractEntityPersister
 
 	private boolean generatorNeedsMultiTableInsert() {
 		final Generator generator = getGenerator();
-		if ( generator instanceof BulkInsertionCapableIdentifierGenerator
+		if ( generator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator
 				&& generator instanceof OptimizableGenerator optimizableGenerator ) {
 			final Optimizer optimizer = optimizableGenerator.getOptimizer();
-			return optimizer != null && optimizer.getIncrementSize() > 1;
+			return optimizer != null && optimizer.getIncrementSize() > 1
+				|| !bulkInsertionCapableGenerator.supportsBulkInsertionIdentifierGeneration();
 		}
 		else {
 			return false;

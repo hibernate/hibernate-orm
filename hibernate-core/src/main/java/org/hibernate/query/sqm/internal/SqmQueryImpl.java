@@ -622,10 +622,11 @@ public class SqmQueryImpl<R>
 		boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final Generator identifierGenerator = persister.getGenerator();
-			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
+			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator
 					&& identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
 				final Optimizer optimizer = optimizableGenerator.getOptimizer();
-				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+				if ( optimizer != null && optimizer.getIncrementSize() > 1
+					|| !bulkInsertionCapableGenerator.supportsBulkInsertionIdentifierGeneration() ) {
 					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, persister );
 				}
 			}

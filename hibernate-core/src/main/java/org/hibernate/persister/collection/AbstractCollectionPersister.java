@@ -1491,7 +1491,8 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-		if ( isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( influencers.hasEnabledFilters()
+			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}
@@ -1574,7 +1575,7 @@ public abstract class AbstractCollectionPersister
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
 					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-					|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
+					|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters );
 		}
 		else {
 			return false;
@@ -1586,15 +1587,12 @@ public abstract class AbstractCollectionPersister
 			Set<ManagedMappingType> visitedTypes,
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
-		if ( influencers.hasEnabledFilters() ) {
-			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+		assert influencers.hasEnabledFilters();
+		final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
 					|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
 					|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
-		}
-		else {
-			return false;
-		}
+
 	}
 
 	private boolean isKeyOrElementAffectedByFilters(

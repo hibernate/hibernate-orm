@@ -727,8 +727,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public EntityAgent createEntityAgent(Map<?, ?> map) {
-		// todo (jpa4) : for now...
-		return createEntityAgent();
+		assert map != null;
+		var agent = createEntityAgent();
+		map.forEach( (key,val) -> {
+			if ( key instanceof String prop ) {
+				agent.setProperty( prop, val );
+			}
+		} );
+		return agent;
 	}
 
 	@Override

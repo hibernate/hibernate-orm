@@ -19,25 +19,25 @@ import java.util.function.Consumer;
 ///
 /// @author Steve Ebersole
 public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable {
-	private final List<Callback<E>> preCreateCallbacks;
-	private final List<Callback<E>> postCreateCallbacks;
+	private final List<Callback<? super E>> preCreateCallbacks;
+	private final List<Callback<? super E>> postCreateCallbacks;
 
-	private final List<Callback<E>> preUpdateCallbacks;
-	private final List<Callback<E>> postUpdateCallbacks;
+	private final List<Callback<? super E>> preUpdateCallbacks;
+	private final List<Callback<? super E>> postUpdateCallbacks;
 
-	private final List<Callback<E>> preRemoveCallbacks;
-	private final List<Callback<E>> postRemoveCallbacks;
+	private final List<Callback<? super E>> preRemoveCallbacks;
+	private final List<Callback<? super E>> postRemoveCallbacks;
 
-	private final List<Callback<E>> postLoadCallbacks;
+	private final List<Callback<? super E>> postLoadCallbacks;
 
 	private EntityCallbacksImpl(
-			List<Callback<E>> preCreateCallbacks,
-			List<Callback<E>> postCreateCallbacks,
-			List<Callback<E>> preUpdateCallbacks,
-			List<Callback<E>> postUpdateCallbacks,
-			List<Callback<E>> preRemoveCallbacks,
-			List<Callback<E>> postRemoveCallbacks,
-			List<Callback<E>> postLoadCallbacks) {
+			List<Callback<? super E>> preCreateCallbacks,
+			List<Callback<? super E>> postCreateCallbacks,
+			List<Callback<? super E>> preUpdateCallbacks,
+			List<Callback<? super E>> postUpdateCallbacks,
+			List<Callback<? super E>> preRemoveCallbacks,
+			List<Callback<? super E>> postRemoveCallbacks,
+			List<Callback<? super E>> postLoadCallbacks) {
 		this.preCreateCallbacks = preCreateCallbacks;
 		this.postCreateCallbacks = postCreateCallbacks;
 		this.preUpdateCallbacks = preUpdateCallbacks;
@@ -47,7 +47,7 @@ public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable 
 		this.postLoadCallbacks = postLoadCallbacks;
 	}
 
-	private List<Callback<E>> getCallbacks(CallbackType callbackType) {
+	private List<Callback<? super E>> getCallbacks(CallbackType callbackType) {
 		return switch ( callbackType ) {
 			case PRE_PERSIST -> preCreateCallbacks;
 			case POST_PERSIST -> postCreateCallbacks;
@@ -65,43 +65,43 @@ public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable 
 	}
 
 	@Override
-	public boolean preCreate(E entity) {
+	public <S extends E> boolean preCreate(S entity) {
 		return callback( preCreateCallbacks, entity );
 	}
 
 	@Override
-	public boolean postCreate(E entity) {
+	public <S extends E> boolean postCreate(S entity) {
 		return callback( postCreateCallbacks, entity );
 	}
 
 	@Override
-	public boolean preUpdate(E entity) {
+	public <S extends E> boolean preUpdate(S entity) {
 		return callback( preUpdateCallbacks, entity );
 	}
 
 	@Override
-	public boolean postUpdate(E entity) {
+	public <S extends E> boolean postUpdate(S entity) {
 		return callback( postUpdateCallbacks, entity );
 	}
 
 	@Override
-	public boolean preRemove(E entity) {
+	public <S extends E> boolean preRemove(S entity) {
 		return callback( preRemoveCallbacks, entity );
 	}
 
 	@Override
-	public boolean postRemove(E entity) {
+	public <S extends E> boolean postRemove(S entity) {
 		return callback( postRemoveCallbacks, entity );
 	}
 
 	@Override
-	public boolean postLoad(E entity) {
+	public <S extends E> boolean postLoad(S entity) {
 		return callback( postLoadCallbacks, entity );
 	}
 
-	private boolean callback(List<Callback<E>> callbacks, E entity) {
+	private boolean callback(List<Callback<? super E>> callbacks, E entity) {
 		if ( CollectionHelper.isNotEmpty( callbacks ) ) {
-			for ( Callback<E> callback : callbacks ) {
+			for ( Callback<? super E> callback : callbacks ) {
 				callback.performCallback( entity );
 			}
 			return true;
@@ -112,49 +112,44 @@ public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable 
 	}
 
 	/// @see jakarta.persistence.EntityManagerFactory#addListener
-	public EntityListenerRegistration addListener(CallbackType type, Consumer<E> listener) {
-		final List<Callback<E>> callbacks = getCallbacks( type );
+	public EntityListenerRegistration addListener(CallbackType type, Consumer<? super E> listener) {
+		final List<Callback<? super E>> callbacks = getCallbacks( type );
 		var callback = new AddedCallbackImpl<>( type, listener );
 		callbacks.add( callback );
 		return new EntityListenerRegistrationImpl<>( this, type, callback );
 	}
 
 	/// @see jakarta.persistence.EntityManagerFactory#addListener
-	public EntityListenerRegistration addListener(CallbackType type, Callback<E> callback) {
-		final List<Callback<E>> callbacks = getCallbacks( type );
+	public EntityListenerRegistration addListener(CallbackType type, Callback<? super E> callback) {
+		final List<Callback<? super E>> callbacks = getCallbacks( type );
 		callbacks.add( callback );
 		return new EntityListenerRegistrationImpl<>( this, type, callback );
 	}
 
 	/// package-protected access to remove a callback used to support
 	/// JPA's [jakarta.persistence.EntityListenerRegistration].
-	void remove(CallbackType type, Callback<E> callback) {
-		final List<Callback<E>> callbacks = getCallbacks( type );
+	void remove(CallbackType type, Callback<? super E> callback) {
+		final List<Callback<? super E>> callbacks = getCallbacks( type );
 		callbacks.remove( callback );
 	}
 
-	@Override
-	public void release() {
-		// todo (jpa4) : needed?
-	}
-
 	public static class Builder<E> {
-		private final List<Callback<E>> preCreateCallbacks = new ArrayList<>();
-		private final List<Callback<E>> postCreateCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> preCreateCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> postCreateCallbacks = new ArrayList<>();
 
-		private final List<Callback<E>> preUpdateCallbacks = new ArrayList<>();
-		private final List<Callback<E>> postUpdateCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> preUpdateCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> postUpdateCallbacks = new ArrayList<>();
 
-		private final List<Callback<E>> preRemoveCallbacks = new ArrayList<>();
-		private final List<Callback<E>> postRemoveCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> preRemoveCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> postRemoveCallbacks = new ArrayList<>();
 
-		private final List<Callback<E>> postLoadCallbacks = new ArrayList<>();
+		private final List<Callback<? super E>> postLoadCallbacks = new ArrayList<>();
 
-		public void registerCallback(Callback<E> callback) {
+		public void registerCallback(Callback<? super E> callback) {
 			getCallbacks( callback.getCallbackType() ).add( callback );
 		}
 
-		private List<Callback<E>> getCallbacks(CallbackType callbackType) {
+		private List<Callback<? super E>> getCallbacks(CallbackType callbackType) {
 			return switch ( callbackType ) {
 				case PRE_PERSIST -> preCreateCallbacks;
 				case POST_PERSIST -> postCreateCallbacks;

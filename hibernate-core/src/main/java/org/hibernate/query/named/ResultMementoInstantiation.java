@@ -6,6 +6,8 @@ package org.hibernate.query.named;
 
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.MappingElement;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultBuilder;
 
@@ -22,6 +24,10 @@ public interface ResultMementoInstantiation extends ResultMemento {
 
 		public ResultBuilder resolve(Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext context) {
 			return argumentMemento.resolve( querySpaceConsumer, context );
+		}
+
+		public MappingElement<?> toJpaMapping(SessionFactory sessionFactory) {
+			return argumentMemento.toJpaMappingElement( sessionFactory );
 		}
 	}
 }

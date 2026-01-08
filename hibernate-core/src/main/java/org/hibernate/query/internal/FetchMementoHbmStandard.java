@@ -71,6 +71,11 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	}
 
 	@Override
+	public Class<?> getResultJavaType() {
+		return fetchable.getJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public FetchBuilder resolve(
 			Parent parent,
 			Consumer<String> querySpaceConsumer,

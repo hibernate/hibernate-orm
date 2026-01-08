@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.spi.NavigablePath;
@@ -22,9 +24,13 @@ import org.hibernate.sql.results.graph.Fetchable;
 
 import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
-/**
- * @author Steve Ebersole
- */
+/// ResultMementoEntity implementation from Hibernate's historical result-set mapping support.
+///
+/// @see org.hibernate.query.NativeQuery#addEntity
+/// @see org.hibernate.query.NativeQuery#addRoot
+/// @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType
+///
+/// @author Steve Ebersole
 public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMemento.Parent {
 	private final String tableAlias;
 	private final NavigablePath navigablePath;
@@ -83,5 +89,15 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 								discriminatorMemento.resolve( this, querySpaceConsumer, context ),
 				fetchBuilderMap
 		);
+	}
+
+	@Override
+	public <R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory) {
+		return false;
+	}
+
+	@Override
+	public <R> ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory) {
+		throw new UnsupportedOperationException( "Unsupported" );
 	}
 }

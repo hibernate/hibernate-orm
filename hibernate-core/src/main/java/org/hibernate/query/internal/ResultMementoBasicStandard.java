@@ -7,6 +7,8 @@ package org.hibernate.query.internal;
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.ColumnMapping;
+import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
@@ -170,6 +172,17 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		return builder;
+	}
+
+	@Override
+	public <R> ColumnMapping<R> toJpaMapping(SessionFactory sessionFactory) {
+		return toJpaMappingElement( sessionFactory );
+	}
+
+	@Override
+	public <R> ColumnMapping<R> toJpaMappingElement(SessionFactory sessionFactory) {
+		//noinspection unchecked
+		return ColumnMapping.of( explicitColumnName, (Class<R>) getResultJavaType() );
 	}
 
 	@Override

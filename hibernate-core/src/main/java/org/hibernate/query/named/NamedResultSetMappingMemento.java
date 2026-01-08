@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultSetMapping;
 
@@ -48,9 +49,20 @@ public interface NamedResultSetMappingMemento {
 			ResultSetMappingResolutionContext context);
 
 	/**
-	 * Converts this named mapping into a {@linkplain jakarta.persistence.sql.ResultSetMapping}.
+	 * Whether the "inferred result type is assignable to the given Java type".
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getResultSetMappings
 	 *
 	 * @since 8.0
 	 */
-	<R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping();
+	<R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory);
+
+	/**
+	 * Converts this named mapping into a {@linkplain jakarta.persistence.sql.ResultSetMapping}.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getResultSetMappings
+	 *
+	 * @since 8.0
+	 */
+	<R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory);
 }

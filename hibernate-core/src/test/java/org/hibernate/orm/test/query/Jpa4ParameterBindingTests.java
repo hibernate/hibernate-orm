@@ -43,19 +43,19 @@ public class Jpa4ParameterBindingTests {
 	@Test
 	void testNativeQuery(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createNativeQuery( "select * from book where id = :id", Book.class )
+			session.createNativeQuery( "select * from books where id = :id", Book.class )
 					.setConvertedParameter( "id", "123", StringToIntConverter.class )
 					.list();
 
-			session.createNativeQuery( "select * from book where id = ?1", Book.class )
+			session.createNativeQuery( "select * from books where id = ?1", Book.class )
 					.setConvertedParameter( 1, "123", StringToIntConverter.class )
 					.list();
 
-			session.createNativeQuery( "select * from book where id = :id", Book.class )
+			session.createNativeQuery( "select * from books where id = :id", Book.class )
 					.setParameter( "id", 1, Integer.class )
 					.list();
 
-			session.createNativeQuery( "select * from book where id = ?1", Book.class )
+			session.createNativeQuery( "select * from books where id = ?1", Book.class )
 					.setParameter( 1, 1, Integer.class )
 					.list();
 		} );

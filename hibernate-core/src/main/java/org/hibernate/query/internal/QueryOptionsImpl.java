@@ -68,8 +68,10 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		setTimeout( Timeout.seconds( timeout ) );
 	}
 
+	@Override
 	public void setTimeout(Timeout timeout) {
 		this.timeout = timeout;
+		lockOptions.setTimeout( timeout );
 	}
 
 	@Override

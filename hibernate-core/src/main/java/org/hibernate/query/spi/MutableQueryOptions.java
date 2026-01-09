@@ -7,6 +7,7 @@ package org.hibernate.query.spi;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
@@ -62,6 +63,11 @@ public interface MutableQueryOptions extends QueryOptions {
 	 * Corollary to {@link #getQueryPlanCachingEnabled()}
 	 */
 	void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled);
+
+	/**
+	 * Corollary to {@link #getTimeout()}
+	 */
+	void setTimeout(Timeout timeout);
 
 	/**
 	 * Corollary to {@link #getTimeout()}

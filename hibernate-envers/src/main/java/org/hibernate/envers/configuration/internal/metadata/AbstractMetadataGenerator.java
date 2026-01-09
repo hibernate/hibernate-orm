@@ -193,7 +193,7 @@ public abstract class AbstractMetadataGenerator {
 		);
 	}
 
-	private boolean isRelationNotAudited(PropertyAuditingData propertyAuditingData) {
+	protected boolean isRelationNotAudited(PropertyAuditingData propertyAuditingData) {
 		return RelationTargetAuditMode.NOT_AUDITED.equals( propertyAuditingData.getRelationTargetAuditMode() );
 	}
 }

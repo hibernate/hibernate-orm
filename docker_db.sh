@@ -1456,7 +1456,36 @@ tidb_5_4() {
 }
 
 informix() {
-  informix_14_10
+  informix_15
+}
+
+informix_15() {
+    temp_dir=$(mktemp -d)
+    echo "ALLOW_NEWLINE 1" >$temp_dir/onconfig.mod
+    chmod 777 -R $temp_dir
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_15:-icr.io/informix/informix-developer-edition-database:15.0.0.0}
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"Server Started"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
 }
 
 informix_14_10() {

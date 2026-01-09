@@ -13,13 +13,21 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
+import static java.util.Collections.singletonList;
 
 /**
  * @author Steve Ebersole
@@ -142,41 +150,50 @@ public class SqmMutationStrategyHelper {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final String separateCollectionTable = attributeMapping.getSeparateCollectionTable();
-
+		// Skip deleting rows in collection tables if cascade delete is enabled
+		if ( separateCollectionTable == null ) {
+			return;
+		}
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		// element-collection or many-to-many - delete the collection-table row
+		final NamedTableReference tableReference = new NamedTableReference(
+			separateCollectionTable,
+			DeleteStatement.DEFAULT_ALIAS,
+			true
+		);
 
-		if ( separateCollectionTable == null ) {
-			// one-to-many - update the matching rows in the associated table setting the fk column(s) to null
-			// not yet implemented - do nothing
+		final SoftDeleteMapping softDeleteMapping = attributeMapping.getSoftDeleteMapping();
+		final AbstractUpdateOrDeleteStatement sqlAst;
+		if ( softDeleteMapping != null ) {
+			final var columnReference = new ColumnReference( tableReference, softDeleteMapping );
+			final var valueExpression =
+					new JdbcLiteral<>( softDeleteMapping.getDeletedLiteralValue(), softDeleteMapping.getJdbcMapping() );
+			sqlAst = new UpdateStatement(
+				tableReference,
+				singletonList( new Assignment( columnReference, valueExpression ) ),
+				restrictionProducer.apply( tableReference, attributeMapping )
+			);
 		}
 		else {
-			// element-collection or many-to-many - delete the collection-table row
-
-			final NamedTableReference tableReference = new NamedTableReference(
-					separateCollectionTable,
-					DeleteStatement.DEFAULT_ALIAS,
-					true
-			);
-
-			final DeleteStatement sqlAstDelete = new DeleteStatement(
+			sqlAst = new DeleteStatement(
 					tableReference,
 					restrictionProducer.apply( tableReference, attributeMapping )
 			);
-
-			jdbcServices.getJdbcMutationExecutor().execute(
-					jdbcServices.getJdbcEnvironment()
-							.getSqlAstTranslatorFactory()
-							.buildMutationTranslator( sessionFactory, sqlAstDelete )
-							.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
-					jdbcParameterBindings,
-					sql -> executionContext.getSession()
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql ),
-					(integer, preparedStatement) -> {},
-					executionContext
-			);
 		}
+
+		jdbcServices.getJdbcMutationExecutor().execute(
+				jdbcServices.getJdbcEnvironment()
+						.getSqlAstTranslatorFactory()
+						.buildMutationTranslator( sessionFactory, sqlAst )
+						.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
+				jdbcParameterBindings,
+				sql -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql ),
+				(integer, preparedStatement) -> {},
+				executionContext
+		);
 	}
 }

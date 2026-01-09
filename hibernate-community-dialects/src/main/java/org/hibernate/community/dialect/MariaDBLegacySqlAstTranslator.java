@@ -403,4 +403,65 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 						? determineColumnReferenceQualifier( column )
 						: null );
 	}
+
+	private boolean needsDmlSubqueryWrapper() {
+		final Statement statement = getStatement();
+		// As of MariaDB 11.1, the self-join rewrite optimization can handle this: https://jira.mariadb.org/browse/MDEV-7487
+		return getDialect().getVersion().isBefore( 11, 1 )
+			&& (statement instanceof DeleteStatement || statement instanceof UpdateStatement);
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		final boolean needsParenthesis = !statement.getQueryPart().isRoot();
+		if ( needsParenthesis && needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.visitSelectStatement( statement );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitSelectStatement( statement );
+		}
+	}
+
+	@Override
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderFetchFirstRow() {
+		appendSql( " limit 1" );
+	}
 }

@@ -231,7 +231,7 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith( "Google Cloud Spanner" );
+			return databaseName.equals( "Google Cloud Spanner" );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {

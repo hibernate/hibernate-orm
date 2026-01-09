@@ -23,7 +23,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
-import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -769,7 +768,7 @@ public class SqmQueryImpl<R>
 	public SqmQueryImplementor<R> setTimeout(Timeout timeout) {
 		assert timeout != null;
 		getSession().checkOpen( false );
-		getQueryOptions().setTimeout( Timeouts.getTimeoutInSeconds( timeout ) );
+		getQueryOptions().setTimeout( timeout );
 		return this;
 	}
 

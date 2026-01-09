@@ -7,11 +7,13 @@ package org.hibernate.testing.orm.domain.library;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Basic;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table(name="persons")
 public class Person {
 	@Id
 	private Integer id;

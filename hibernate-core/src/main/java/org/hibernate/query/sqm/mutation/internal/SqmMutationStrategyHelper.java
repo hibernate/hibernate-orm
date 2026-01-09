@@ -43,12 +43,17 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
+import static java.util.Collections.singletonList;
 
 /**
  * @author Steve Ebersole
@@ -171,34 +176,42 @@ public class SqmMutationStrategyHelper {
 			QueryOptions queryOptions,
 			Consumer<JdbcOperationQueryMutation> jdbcOperationConsumer) {
 		final String separateCollectionTable = attributeMapping.getSeparateCollectionTable();
+		// Skip deleting rows in collection tables if cascade delete is enabled
+		if ( separateCollectionTable == null ) {
+			return;
+		}
 		final SessionFactoryImplementor sessionFactory = attributeMapping.getCollectionDescriptor().getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		// element-collection or many-to-many - delete the collection-table row
+		final NamedTableReference tableReference = new NamedTableReference(
+			separateCollectionTable,
+			DeleteStatement.DEFAULT_ALIAS,
+			true
+		);
 
-		if ( separateCollectionTable == null ) {
-			// one-to-many - update the matching rows in the associated table setting the fk column(s) to null
-			// not yet implemented - do nothing
+		final AbstractUpdateOrDeleteStatement sqlAst;
+		if ( attributeMapping.getSoftDeleteMapping() != null ) {
+			final Assignment softDeleteAssignment = attributeMapping
+				.getSoftDeleteMapping()
+				.createSoftDeleteAssignment( tableReference );
+			sqlAst = new UpdateStatement(
+				tableReference,
+				singletonList( softDeleteAssignment ),
+				restrictionProducer.apply( tableReference, attributeMapping )
+			);
 		}
 		else {
-			// element-collection or many-to-many - delete the collection-table row
-
-			final NamedTableReference tableReference = new NamedTableReference(
-					separateCollectionTable,
-					DeleteStatement.DEFAULT_ALIAS,
-					true
-			);
-
-			final DeleteStatement sqlAstDelete = new DeleteStatement(
-					tableReference,
-					restrictionProducer.apply( tableReference, attributeMapping )
-			);
-
-			jdbcOperationConsumer.accept(
-					jdbcServices.getJdbcEnvironment()
-							.getSqlAstTranslatorFactory()
-							.buildMutationTranslator( sessionFactory, sqlAstDelete )
-							.translate( jdbcParameterBindings, queryOptions )
+			sqlAst = new DeleteStatement(
+				tableReference,
+				restrictionProducer.apply( tableReference, attributeMapping )
 			);
 		}
+		jdbcOperationConsumer.accept(
+			jdbcServices.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( sessionFactory, sqlAst )
+				.translate( jdbcParameterBindings, queryOptions )
+		);
 	}
 
 	public static boolean isId(JdbcMappingContainer type) {

@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
@@ -150,7 +151,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
-				if ( isIgnoreNotFound( enversService, referencedEntity, data, primaryKey ) ) {
+				final RelationDescription relationDescription = getRelationDescription( enversService, data, primaryKey );
+				if ( isIgnoreNotFound( relationDescription ) ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.
 					value = ToOneEntityLoader.loadImmediate(
@@ -160,7 +162,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							entityId,
 							revision,
 							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
-							enversService
+							enversService,
+							isTargetNotAudited( relationDescription )
 					);
 				}
 				else {
@@ -171,7 +174,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							entityId,
 							revision,
 							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
-							enversService
+							enversService,
+							isTargetNotAudited( relationDescription )
 					);
 				}
 			}
@@ -188,24 +192,35 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		delegate.addNullableIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
 	}
 
-	// todo: is referenced entity needed any longer?
-	private boolean isIgnoreNotFound(
+	private boolean isIgnoreNotFound(RelationDescription relationDescription) {
+		if ( relationDescription == null ) {
+			// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+			// an embeddable in an element-collection
+			// todo: perhaps the mapper should account for this instead?
+			return true;
+		}
+		return relationDescription.isIgnoreNotFound();
+	}
+
+	private boolean isTargetNotAudited(RelationDescription relationDescription) {
+		if ( relationDescription == null ) {
+			return false;
+		}
+		return relationDescription.isTargetNotAudited();
+	}
+
+	private RelationDescription getRelationDescription(
 			EnversService enversService,
-			EntityInfo referencedEntity,
 			Map data,
 			Object primaryKey) {
 		final String referencingEntityName = enversService.getEntitiesConfigurations()
 				.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
 
 		if ( referencingEntityName == null && primaryKey == null ) {
-			// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
-			// an embeddable in an element-collection
-			// todo: perhaps the mapper should account for this instead?
-			return true;
+			return null;
 		}
 
 		return enversService.getEntitiesConfigurations()
-				.getRelationDescription( referencingEntityName, getPropertyData().getName() )
-				.isIgnoreNotFound();
+				.getRelationDescription( referencingEntityName, getPropertyData().getName() );
 	}
 }

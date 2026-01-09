@@ -66,7 +66,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -140,7 +141,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				owningReferencePropertyName,
 				referencedEntityName,
 				ownedIdMapper,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// Adding mapper for the id
@@ -208,7 +210,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// Adding mapper for the id

@@ -61,7 +61,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 		final var jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
 		final var transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
-			throw new HibernateException( "No TransactionManagerLookup specified" );
+			throw new HibernateException( "Could not obtain TransactionManager from JtaPlatform" );
 		}
 
 		final var txn = getTransaction( transactionManager );

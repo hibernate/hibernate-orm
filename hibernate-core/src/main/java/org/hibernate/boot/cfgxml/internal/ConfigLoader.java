@@ -70,9 +70,9 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {
-		try {
+		try(FileInputStream cfgFileStream = new FileInputStream( cfgXmlFile )) {
 			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
-					new FileInputStream( cfgXmlFile ),
+					cfgFileStream,
 					new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() )
 			);
 
@@ -83,6 +83,11 @@ public class ConfigLoader {
 					"Specified cfg.xml file [" + cfgXmlFile.getAbsolutePath() + "] does not exist"
 			);
 		}
+		catch (IOException e) {
+			log.debug( "Unable to close cfg.xml URL stream", e );
+		}
+
+		return null;
 	}
 
 	public LoadedConfig loadConfigXmlUrl(URL url) {

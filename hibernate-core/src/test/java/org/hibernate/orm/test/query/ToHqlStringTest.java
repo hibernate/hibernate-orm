@@ -8,7 +8,6 @@ import org.hibernate.query.spi.SqmQuery;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
@@ -131,6 +130,20 @@ public class ToHqlStringTest {
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
 					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "where myFunction(0, 10)" ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-19075")
+	public void testTrimWithThreeArgumentsToHqlString(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Query query = entityManager.createQuery(
+							"select trim(trailing '_' from t.name) from TestEntity t"
+					);
+					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					assertThat( hqlString, containsString( "trim(TRAILING '_' from t.name)" ) );
 				}
 		);
 	}

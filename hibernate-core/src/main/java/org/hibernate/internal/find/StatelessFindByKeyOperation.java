@@ -4,28 +4,19 @@
  */
 package org.hibernate.internal.find;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.EntityFilterException;
-import org.hibernate.FetchNotFoundException;
-import org.hibernate.JDBCException;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.ObjectDeletedException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -38,7 +29,6 @@ import java.util.function.Supplier;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
-import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -64,6 +54,11 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 	}
 
 	@Override
+	protected SharedSessionContractImplementor getEntityHandler() {
+		return loadAccessContext.getStatelessSession();
+	}
+
+	@Override
 	public T performFind(Object key) {
 		if ( needsTransaction( getLockMode() ) ) {
 			if ( !loadAccessContext.getStatelessSession().isTransactionInProgress() ) {
@@ -76,69 +71,14 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 			}
 		}
 
-		try {
+		return withExceptionHandling( key, makeLockOptions(), () -> {
 			if ( getKeyType() == KeyType.NATURAL ) {
 				return findByNaturalId( key );
 			}
 			else {
 				return findById( key );
 			}
-		}
-		catch ( FetchNotFoundException e ) {
-			// This may happen if the entity has an association mapped with
-			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
-			// entity is not found
-			throw e;
-		}
-		catch ( EntityFilterException e ) {
-			// This may happen if the entity has an association which is
-			// filtered by a FilterDef and this associated entity is not found
-			throw e;
-		}
-		catch ( EntityNotFoundException e ) {
-			// We swallow other sorts of EntityNotFoundException and return null
-			// For example, DefaultLoadEventListener.proxyImplementation() throws
-			// EntityNotFoundException if there's an existing proxy in the session,
-			// but the underlying database row has been deleted (see HHH-7861)
-			logIgnoringEntityNotFound( key );
-			return null;
-		}
-		catch ( ObjectDeletedException e ) {
-			// the spec is silent about people doing remove() find() on the same PC
-			return null;
-		}
-		catch ( ObjectNotFoundException e ) {
-			// should not happen on the entity itself with get
-			// TODO: in fact this will occur instead of EntityNotFoundException
-			//       when using StandardEntityNotFoundDelegate, so probably we
-			//       should return null here, as we do above
-			throw new IllegalArgumentException( e.getMessage(), e );
-		}
-		catch (MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( JDBCException e ) {
-			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume situation HHH-12472 running on WildFly
-				// Just log the exception and return null
-				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
-				return null;
-			}
-			else {
-				throw getExceptionConverter().convert( e, makeLockOptions() );
-			}
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e, makeLockOptions() );
-		}
-	}
-
-	protected EntityTransaction accessTransaction() {
-		return loadAccessContext.getStatelessSession().accessTransaction();
-	}
-
-	protected ExceptionConverter getExceptionConverter() {
-		return loadAccessContext.getStatelessSession().getExceptionConverter();
+		} );
 	}
 
 	private T findByNaturalId(Object key) {

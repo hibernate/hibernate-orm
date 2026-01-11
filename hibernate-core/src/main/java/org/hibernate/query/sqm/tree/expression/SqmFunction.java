@@ -128,7 +128,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 						hql.append( ' ' );
 						arguments.get( 1 ).appendHqlString( hql, context );
 						hql.append( " from " );
-						arguments.get( 3 ).appendHqlString( hql, context );
+						arguments.get( 2 ).appendHqlString( hql, context );
 						break;
 				}
 				hql.append( ')' );

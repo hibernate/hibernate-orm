@@ -50,14 +50,14 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 		// where JPA was later clarified to prefer {EntityName}_{ReferencedColumnName}.
 		//
 		// The spec-compliant one implements the clarified {EntityName}_{ReferencedColumnName}
-		// naming.  Here we implement the older {TableName}_{ReferencedColumnName} naming
+		// naming. Here we implement the older {TableName}_{ReferencedColumnName} naming
 //		final String name;
 //		if ( source.getNature() == Nature.ENTITY && source.getAttributePath() != null ) {
-//			// many-to-one /  one-to-one
+//			// many-to-one / one-to-one
 //			//
 //			// legacy naming used the attribute name here, following suit with legacy hbm naming
 //			//
-//			// NOTE : attribute path being null here would be an error, so for now don't bother checking
+//			// NOTE: attribute path being null here would be an error, so for now don't bother checking
 //			name = transformAttributePath( source.getAttributePath() );
 //		}
 //		else if ( source.getNature() == Nature.ELEMENT_COLLECTION

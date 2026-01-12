@@ -80,7 +80,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
@@ -182,9 +181,9 @@ public class EntityBinder {
 	// todo : we should defer to InFlightMetadataCollector.EntityTableXref for secondary table tracking;
 	//		atm we use both from here; HBM binding solely uses InFlightMetadataCollector.EntityTableXref
 	private final java.util.Map<String, Join> secondaryTables = new HashMap<>();
-	private final java.util.Map<String, Object> secondaryTableJoins = new HashMap<>();
+	private final java.util.Map<String, Annotation[]> secondaryTableJoins = new HashMap<>();
 	private final java.util.Map<String, Join> secondaryTablesFromAnnotation = new HashMap<>();
-	private final java.util.Map<String, Object> secondaryTableFromAnnotationJoins = new HashMap<>();
+	private final java.util.Map<String, Annotation[]> secondaryTableFromAnnotationJoins = new HashMap<>();
 
 	private final List<Filter> filters = new ArrayList<>();
 	private boolean ignoreIdAnnotations;
@@ -492,7 +491,7 @@ public class EntityBinder {
 		final var accessType = getPropertyAccessType();
 		final var inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
 		final var baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
-		final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
+		final var propertyAccessor = getPropertyAccessor( compositeClass );
 
 		// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
 		// it ought to be treated as an embedded and not a real IdClass (at least in our internal language)
@@ -1132,7 +1131,7 @@ public class EntityBinder {
 		if ( persistentClass.isAbstract() == null || !persistentClass.isAbstract() ) {
 			var superclass = persistentClass.getSuperPersistentClass();
 			while ( superclass != null ) {
-				for ( Property declaredProperty : superclass.getDeclaredProperties() ) {
+				for ( var declaredProperty : superclass.getDeclaredProperties() ) {
 					if ( declaredProperty.isGeneric() ) {
 						final var memberDetails = getMemberDetails( inheritanceState, inheritanceStates, declaredProperty, superclass );
 						final var typeDetails = resolveRelativeType( memberDetails.getType(), inheritanceState.getClassDetails() );
@@ -1146,29 +1145,25 @@ public class EntityBinder {
 						actualProperty.setValue( value );
 						persistentClass.addProperty( actualProperty );
 						if ( value instanceof BasicValue basicValue ) {
-							final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
-							final BasicValue originalBasicValue = (BasicValue) declaredProperty.getValue();
-							metadataCollector.addSecondPass( new SecondPass() {
-								@Override
-								public void doSecondPass(Map<String, PersistentClass> persistentClasses)
-										throws MappingException {
-									basicValue.setExplicitTypeParams( originalBasicValue.getExplicitTypeParams() );
-									basicValue.setTypeParameters( originalBasicValue.getTypeParameters() );
-									basicValue.setJpaAttributeConverterDescriptor( originalBasicValue.getJpaAttributeConverterDescriptor() );
-									// Don't copy over the implicit java type access, since we figure that out in ClassPropertyHolder#setType
+							final var metadataCollector = context.getMetadataCollector();
+							final var originalBasicValue = (BasicValue) declaredProperty.getValue();
+							metadataCollector.addSecondPass( persistentClasses -> {
+								basicValue.setExplicitTypeParams( originalBasicValue.getExplicitTypeParams() );
+								basicValue.setTypeParameters( originalBasicValue.getTypeParameters() );
+								basicValue.setJpaAttributeConverterDescriptor( originalBasicValue.getJpaAttributeConverterDescriptor() );
+								// Don't copy over the implicit java type access, since we figure that out in ClassPropertyHolder#setType
 //									basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
-									basicValue.setExplicitJavaTypeAccess( originalBasicValue.getExplicitJavaTypeAccess() );
-									basicValue.setExplicitJdbcTypeAccess( originalBasicValue.getExplicitJdbcTypeAccess() );
-									basicValue.setExplicitMutabilityPlanAccess( originalBasicValue.getExplicitMutabilityPlanAccess() );
-									basicValue.setEnumerationStyle( originalBasicValue.getEnumeratedType() );
-									basicValue.setTimeZoneStorageType( originalBasicValue.getTimeZoneStorageType() );
-									basicValue.setTemporalPrecision( originalBasicValue.getTemporalPrecision() );
-									if ( originalBasicValue.isLob() ) {
-										basicValue.makeLob();
-									}
-									if ( originalBasicValue.isNationalized() ) {
-										basicValue.makeNationalized();
-									}
+								basicValue.setExplicitJavaTypeAccess( originalBasicValue.getExplicitJavaTypeAccess() );
+								basicValue.setExplicitJdbcTypeAccess( originalBasicValue.getExplicitJdbcTypeAccess() );
+								basicValue.setExplicitMutabilityPlanAccess( originalBasicValue.getExplicitMutabilityPlanAccess() );
+								basicValue.setEnumerationStyle( originalBasicValue.getEnumeratedType() );
+								basicValue.setTimeZoneStorageType( originalBasicValue.getTimeZoneStorageType() );
+								basicValue.setTemporalPrecision( originalBasicValue.getTemporalPrecision() );
+								if ( originalBasicValue.isLob() ) {
+									basicValue.makeLob();
+								}
+								if ( originalBasicValue.isNationalized() ) {
+									basicValue.makeNationalized();
 								}
 							} );
 							metadataCollector.registerValueMappingResolver( basicValue::resolve );
@@ -1181,19 +1176,24 @@ public class EntityBinder {
 		}
 	}
 
-	private static MemberDetails getMemberDetails(InheritanceState inheritanceState, Map<ClassDetails, InheritanceState> inheritanceStates, Property declaredProperty, PersistentClass superclass) {
+	private static MemberDetails getMemberDetails(
+			InheritanceState inheritanceState,
+			Map<ClassDetails, InheritanceState> inheritanceStates,
+			Property declaredProperty,
+			PersistentClass superclass) {
 		var superclassDetails = inheritanceState.getClassDetails().getSuperClass();
 		while ( !superclass.getClassName().equals( superclassDetails.getClassName()) ) {
 			superclassDetails = superclassDetails.getSuperClass();
 		}
 		final var superclassInheritanceState = inheritanceStates.get( superclassDetails );
 		final var elementsToProcess = superclassInheritanceState.getElementsToProcess();
-		for ( PropertyData element : elementsToProcess.getElements() ) {
+		for ( var element : elementsToProcess.getElements() ) {
 			if ( declaredProperty.getName().equals( element.getPropertyName() ) ) {
 				return element.getAttributeMember();
 			}
 		}
-		throw new IllegalArgumentException("Couldn't find PropertyData for [" + declaredProperty.getName() + "] in class: " + declaredProperty.getPersistentClass().getClassName() );
+		throw new IllegalArgumentException( "Couldn't find PropertyData for [" + declaredProperty.getName()
+						+ "] in class: " + declaredProperty.getPersistentClass().getClassName() );
 	}
 
 	private static String getMissingPropertiesString(Set<String> propertyNames) {
@@ -1716,11 +1716,10 @@ public class EntityBinder {
 			if ( ann.value() == void.class ) {
 				throw new IllegalStateException( "NaturalIdClass#value must not be void.class" );
 			}
-			naturalIdClass = context
-					.getBootstrapContext()
-					.getModelsContext()
-					.getClassDetailsRegistry()
-					.resolveClassDetails( ann.value().getName() );
+			naturalIdClass =
+					context.getBootstrapContext().getModelsContext()
+							.getClassDetailsRegistry()
+							.resolveClassDetails( ann.value().getName() );
 		}
 	}
 
@@ -1976,11 +1975,10 @@ public class EntityBinder {
 	}
 
 	private void createPrimaryColumnsToSecondaryTable(
-			Object incoming,
+			Annotation[] joinColumnSource,
 			PropertyHolder propertyHolder,
 			Join join) {
 		// `incoming` will be an array of some sort of annotation
-		final var joinColumnSource = (Annotation[]) incoming;
 		final var annotatedJoinColumns = secondaryTableJoinColumns( propertyHolder, joinColumnSource );
 		for ( var joinColumn : annotatedJoinColumns.getJoinColumns() ) {
 			joinColumn.forceNotNull();
@@ -2187,7 +2185,7 @@ public class EntityBinder {
 			String name,
 			String schema,
 			String catalog,
-			Object joinColumns,
+			Annotation[] joinColumns,
 			UniqueConstraint[] uniqueConstraints) {
 		final var logicalName = logicalTableName( name, schema, catalog );
 		return createJoin(
@@ -2219,10 +2217,10 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			boolean noDelayInPkColumnCreation,
 			boolean secondaryTable,
-			Object joinColumns,
+			Annotation[] joinColumns,
 			QualifiedTableName logicalName,
 			Table table) {
-		final Join join = new Join();
+		final var join = new Join();
 		persistentClass.addJoin( join );
 
 		final String entityName = persistentClass.getEntityName();
@@ -2365,7 +2363,7 @@ public class EntityBinder {
 
 		ClassDetails classToProcess = annotatedClass.getSuperClass();
 		while ( classToProcess != null ) {
-			final AnnotatedClassType classType = getMetadataCollector().getClassType( classToProcess );
+			final var classType = getMetadataCollector().getClassType( classToProcess );
 			if ( classType == MAPPED_SUPERCLASS ) {
 				bindFilters( classToProcess );
 			}

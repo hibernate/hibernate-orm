@@ -1598,7 +1598,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				fragment.append( ')' );
 				separator = ',';
 			}
-			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
+			for ( String falseStringValue : FALSE_STRING_VALUES ) {
 				fragment.append( ",('" );
 				fragment.append( falseStringValue );
 				fragment.append( "'," );
@@ -1609,19 +1609,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 		else {
 			fragment.append( "select '" );
-			fragment.append( Dialect.TRUE_STRING_VALUES[0] );
+			fragment.append( TRUE_STRING_VALUES[0] );
 			fragment.append( "' k," );
 			fragment.append( trueValue );
 			fragment.append( " v" );
 			fragment.append( getFromDualForSelectOnly() );
-			for ( int i = 1; i < Dialect.TRUE_STRING_VALUES.length; i++ ) {
+			for ( int i = 1; i < TRUE_STRING_VALUES.length; i++ ) {
 				fragment.append( " union all select '" );
-				fragment.append( Dialect.TRUE_STRING_VALUES[i] );
+				fragment.append( TRUE_STRING_VALUES[i] );
 				fragment.append( "'," );
 				fragment.append( trueValue );
 				fragment.append( getFromDualForSelectOnly() );
 			}
-			for ( String falseStringValue : Dialect.FALSE_STRING_VALUES ) {
+			for ( String falseStringValue : FALSE_STRING_VALUES ) {
 				fragment.append( " union all select '" );
 				fragment.append( falseStringValue );
 				fragment.append( "'," );
@@ -1752,7 +1752,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampdiffPattern" );
+		throw new UnsupportedOperationException( "'" + getClass().getName() + "' does not support 'timestampdiff()'" );
 	}
 
 	/**
@@ -1767,7 +1767,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampaddPattern" );
+		throw new UnsupportedOperationException( "'" + getClass().getName() + "' does not yet support 'timestampadd()'" );
 	}
 
 	/**
@@ -2244,7 +2244,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsForUpdate() {
-		return getLockingSupport().getMetadata().supportsForUpdate();
+		return getLockingMetadata().supportsForUpdate();
 	}
 
 	/**
@@ -2256,7 +2256,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsSkipLocked() {
-		return getLockingSupport().getMetadata().supportsSkipLocked();
+		return getLockingMetadata().supportsSkipLocked();
 	}
 
 	/**
@@ -2268,7 +2268,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsNoWait() {
-		return getLockingSupport().getMetadata().supportsNoWait();
+		return getLockingMetadata().supportsNoWait();
 	}
 
 	/**
@@ -2280,7 +2280,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsWait() {
-		return getLockingSupport().getMetadata().supportsWait();
+		return getLockingMetadata().supportsWait();
 	}
 
 	/**
@@ -2306,13 +2306,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	private LockingSupport.Metadata getLockingMetadata() {
+		return getLockingSupport().getMetadata();
+	}
+
 	/**
 	 * @deprecated Use {@linkplain LockingSupport.Metadata#getPessimisticLockStyle()} instead.
 	 * Here, fwiw, we use {@linkplain Timeouts#ONE_SECOND 1-second} to make the determination.
 	 */
 	@Deprecated
 	public PessimisticLockStyle getPessimisticLockStyle() {
-		return getLockingSupport().getMetadata().getPessimisticLockStyle();
+		return getLockingMetadata().getPessimisticLockStyle();
 	}
 
 	/**
@@ -2324,7 +2328,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getLockingSupport().getMetadata().getWriteRowLockStrategy();
+		return getLockingMetadata().getWriteRowLockStrategy();
 	}
 
 	/**
@@ -2336,7 +2340,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public RowLockStrategy getReadRowLockStrategy() {
-		return getLockingSupport().getMetadata().getReadRowLockStrategy();
+		return getLockingMetadata().getReadRowLockStrategy();
 	}
 
 	/**
@@ -2348,18 +2352,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			return NON_CLAUSE_STRATEGY;
 		}
 
-		final var lockMode = lockOptions.getLockMode();
-		final var lockKind = PessimisticLockKind.interpret( lockMode );
+		final var lockKind = PessimisticLockKind.interpret( lockOptions.getLockMode() );
 		if ( lockKind == PessimisticLockKind.NONE ) {
 			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 		}
 
-		final RowLockStrategy rowLockStrategy;
-		switch ( lockKind ) {
-			case SHARE -> rowLockStrategy = getReadRowLockStrategy();
-			case UPDATE -> rowLockStrategy = getWriteRowLockStrategy();
-			default -> throw new IllegalStateException( "Should never happen due to checks above" );
-		}
+		final var rowLockStrategy = switch ( lockKind ) {
+			case SHARE -> getReadRowLockStrategy();
+			case UPDATE -> getWriteRowLockStrategy();
+			case NONE -> throw new IllegalStateException( "Should never happen due to checks above" );
+		};
 
 		return buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions, querySpec.getRootPathsForLocking() );
 	}
@@ -2457,7 +2459,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code for update} fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode, Timeout timeout) {
-		return switch (lockMode) {
+		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString();
@@ -2479,7 +2481,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(since = "7.0")
 	public String getForUpdateString(LockMode lockMode, int timeout) {
-		return switch (lockMode) {
+		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString();
@@ -2682,14 +2684,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Get the {@code FOR UPDATE OF column_list} fragment appropriate
-	 * for this dialect, given the aliases of the columns to be write
-	 * locked.
+	 * for this dialect, given the aliases of the columns that are to
+	 * be write-locked.
 	 *
-	 * @param aliases The columns to be write locked.
+	 * @param aliases The columns to be write-locked.
 	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases) {
-		// by default we simply return the getForUpdateString() result since
+		// by default, we simply return the getForUpdateString() result since
 		// the default is to say no support for "FOR UPDATE OF ..."
 		return getForUpdateString();
 	}
@@ -2751,9 +2753,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Get the {@code FOR UPDATE OF column_list SKIP LOCKED} fragment appropriate
-	 * for this dialect, given the aliases of the columns to be write locked.
+	 * for this dialect, given the aliases of the columns to be write-locked.
 	 *
-	 * @param aliases The columns to be write locked.
+	 * @param aliases The columns to be write-locked.
 	 * @return The appropriate {@code FOR UPDATE colunm_list SKIP LOCKED} clause string.
 	 */
 	public String getForUpdateSkipLockedString(String aliases) {
@@ -2800,7 +2802,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsOuterJoinForUpdate() {
-		return switch ( getLockingSupport().getMetadata().getOuterJoinLockingType() ) {
+		return switch ( getLockingMetadata().getOuterJoinLockingType() ) {
 			case FULL, IDENTIFIED -> true;
 			default -> false;
 		};
@@ -2819,7 +2821,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated
 	public boolean supportsLockTimeouts() {
-		return getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) == LockTimeoutType.QUERY;
+		return getLockingMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) == LockTimeoutType.QUERY;
 	}
 
 	/**
@@ -3653,9 +3655,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate SQL literal.
 	 */
 	public String toBooleanValueString(boolean bool) {
-		final var sb = new StringBuilder();
-		appendBooleanValueString( new StringBuilderSqlAppender( sb ), bool );
-		return sb.toString();
+		final var stringValue = new StringBuilder();
+		appendBooleanValueString( new StringBuilderSqlAppender( stringValue ), bool );
+		return stringValue.toString();
 	}
 
 	/**
@@ -3763,11 +3765,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see #closeQuote()
 	 */
 	public String toQuotedIdentifier(String name) {
-		if ( name == null ) {
-			return null;
-		}
-
-		return openQuote() + name + closeQuote();
+		return name == null ? null : openQuote() + name + closeQuote();
 	}
 
 	/**
@@ -3919,7 +3917,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @since 7.1
 	 */
 	public @Nullable TemporaryTableStrategy getLocalTemporaryTableStrategy() {
-		return getSupportedTemporaryTableKind() == TemporaryTableKind.LOCAL ? new LegacyTemporaryTableStrategy( this )
+		return getSupportedTemporaryTableKind() == TemporaryTableKind.LOCAL
+				? new LegacyTemporaryTableStrategy( this )
 				: null;
 	}
 
@@ -3929,7 +3928,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @since 7.1
 	 */
 	public @Nullable TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
-		return getSupportedTemporaryTableKind() == TemporaryTableKind.GLOBAL ? new LegacyTemporaryTableStrategy( this )
+		return getSupportedTemporaryTableKind() == TemporaryTableKind.GLOBAL
+				? new LegacyTemporaryTableStrategy( this )
 				: null;
 	}
 
@@ -4374,8 +4374,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @implNote Part of the trickiness here is the fact that this is largely
 	 *           driver-dependent. For example, Oracle (which is notoriously
 	 *           bad with LOB support in their drivers historically) actually
-	 *           does a pretty good job with LOB support as of the 10.2.x v
-	 *           ersions of their driver.
+	 *           does a pretty good job with LOB support as of the 10.2.x
+	 *           versions of their driver.
 	 *
 	 * @return True if normal LOB usage patterns can be used with this driver;
 	 *         false if driver-specific hookiness needs to be applied.
@@ -5798,13 +5798,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				Integer scale,
 				Long length) {
 			final var size = new Size();
-			final int ddlTypeCode = jdbcType.getDdlTypeCode();
 			// Set the explicit length to null if we encounter the JPA default of 255
 			if ( length != null && length == Size.DEFAULT_LENGTH ) {
 				length = null;
 			}
 
-			switch ( ddlTypeCode ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case SqlTypes.ARRAY:
 					break;
 				case SqlTypes.BIT:

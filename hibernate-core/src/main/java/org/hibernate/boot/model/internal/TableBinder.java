@@ -13,7 +13,6 @@ import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -25,7 +24,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -148,7 +146,7 @@ public class TableBinder {
 		final var namingStrategyHelper = new NamingStrategyHelper() {
 			@Override
 			public Identifier determineImplicitName(final MetadataBuildingContext buildingContext) {
-				final ImplicitNamingStrategy namingStrategy = buildingContext.getBuildingOptions().getImplicitNamingStrategy();
+				final var namingStrategy = buildingContext.getBuildingOptions().getImplicitNamingStrategy();
 
 				Identifier name;
 				if ( isJPA2ElementCollection ) {
@@ -314,9 +312,12 @@ public class TableBinder {
 			return new AssociationTableNameSource( name, null );
 		}
 
+		final var implicitNamingStrategy =
+				buildingContext.getBuildingOptions()
+						.getImplicitNamingStrategy();
 		final Identifier logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
+			logicalName = implicitNamingStrategy.determineCollectionTableName(
 					new ImplicitCollectionTableNameSource() {
 						private final EntityNaming owningEntityNaming = new EntityNaming() {
 							@Override
@@ -359,7 +360,7 @@ public class TableBinder {
 			);
 		}
 		else {
-			logicalName = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineJoinTableName(
+			logicalName = implicitNamingStrategy.determineJoinTableName(
 					new ImplicitJoinTableNameSource() {
 						private final EntityNaming owningEntityNaming = new EntityNaming() {
 							@Override
@@ -488,7 +489,7 @@ public class TableBinder {
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		final var metadataCollector = buildingContext.getMetadataCollector();
 
-		final Table table = addTable(
+		final var table = addTable(
 				nullIfBlank( schema ),
 				nullIfBlank( catalog ),
 				logicalName,
@@ -643,13 +644,13 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext) {
 		// ensure the composite key is sorted so that we can simply
 		// set sorted to true on the ToOne (below)
-		final KeyValue key = referencedEntity.getKey();
+		final var key = referencedEntity.getKey();
 		if ( key instanceof Component component ) {
 			component.sortProperties();
 		}
 		// works because the pk has to be on the primary table
 		final var metadataCollector = buildingContext.getMetadataCollector();
-		final Dialect dialect = metadataCollector.getDatabase().getJdbcEnvironment().getDialect();
+		final var dialect = metadataCollector.getDatabase().getJdbcEnvironment().getDialect();
 		for ( int j = 0; j < key.getColumnSpan(); j++ ) {
 			if ( !matchUpJoinColumnsWithKeyColumns( referencedEntity, joinColumns, value, metadataCollector, dialect, j ) ) {
 				// we can only get here if there's a dupe PK column in the @JoinColumns
@@ -682,19 +683,19 @@ public class TableBinder {
 			Dialect dialect,
 			int index) {
 		// for each PK column, find the associated FK column.
-		for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
+		for ( var joinColumn : joinColumns.getJoinColumns() ) {
 			final String referencedNamed = joinColumn.getReferencedColumn();
 			String referencedColumn = null;
 			List<Column> columns = null;
 			try {
-				final Table referencedTable = referencedEntity.getTable();
+				final var referencedTable = referencedEntity.getTable();
 				referencedColumn = metadataCollector.getPhysicalColumnName( referencedTable, referencedNamed );
 				columns = referencedEntity.getKey().getColumns();
 			}
 			catch ( MappingException me ) {
-				for ( Join join : referencedEntity.getJoins() ) {
+				for ( var join : referencedEntity.getJoins() ) {
 					try {
-						final Table referencedTable = join.getTable();
+						final var referencedTable = join.getTable();
 						referencedColumn = metadataCollector.getPhysicalColumnName( referencedTable, referencedNamed );
 						columns = referencedTable.getPrimaryKey().getColumns();
 						break;
@@ -706,7 +707,7 @@ public class TableBinder {
 					throw me;
 				}
 			}
-			final Column column = columns.get( index );
+			final var column = columns.get( index );
 			final String quotedName = column.getQuotedName( dialect );
 			// in JPA 2 referencedColumnName is case-insensitive
 			if ( referencedColumn.equalsIgnoreCase( quotedName ) ) {
@@ -735,7 +736,9 @@ public class TableBinder {
 		else if ( value instanceof DependantValue ) {
 			final String propertyName = joinColumns.getPropertyName();
 			if ( propertyName != null ) {
-				final var collection = (Collection) referencedEntity.getRecursiveProperty( propertyName ).getValue();
+				final var collection = (Collection)
+						referencedEntity.getRecursiveProperty( propertyName )
+								.getValue();
 				referencedPropertyName = collection.getReferencedPropertyName();
 			}
 			else {
@@ -749,7 +752,7 @@ public class TableBinder {
 			throw new AssertionFailure( "No property ref found" );
 		}
 
-		final Property synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
+		final var synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
 		if ( synthProp == null ) {
 			throw new AssertionFailure( "Cannot find synthetic property: "
 					+ referencedEntity.getEntityName() + "." + referencedPropertyName );
@@ -762,10 +765,10 @@ public class TableBinder {
 	// This code is good but unnecessary, because BinderHelper.referencedProperty()
 	// automatically marks the referenced property unique (but is this actually good?)
 	private static void checkReferenceToUniqueKey(SimpleValue value, Property synthProp) {
-		final Table table = synthProp.getValue().getTable();
-		final List<Column> columns = synthProp.getValue().getConstraintColumns();
+		final var table = synthProp.getValue().getTable();
+		final var columns = synthProp.getValue().getConstraintColumns();
 		if ( columns.size() == 1 ) {
-			final Column column = columns.get( 0 );
+			final var column = columns.get( 0 );
 			assert column.isUnique();
 //			if ( !column.isUnique() ) {
 //				throw new MappingException( "Referenced column '" + column.getName()
@@ -774,8 +777,8 @@ public class TableBinder {
 //			}
 		}
 		else {
-			final UniqueKey uniqueKey = new UniqueKey( table );
-			for ( Column column : columns ) {
+			final var uniqueKey = new UniqueKey( table );
+			for ( var column : columns ) {
 				uniqueKey.addColumn( column );
 			}
 			assert table.isRedundantUniqueKey( uniqueKey );
@@ -796,16 +799,16 @@ public class TableBinder {
 						: referencedEntity.getIdentifier();
 		final List<Column> referencedKeyColumns = keyValue.getColumns();
 		for ( int i = 0; i < referencedKeyColumns.size(); i++ ) {
-			final Column column = referencedKeyColumns.get(i);
-			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+			final var column = referencedKeyColumns.get(i);
+			final var firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
-			final Column createdColumn = firstColumn.getMappingColumn();
+			final var createdColumn = firstColumn.getMappingColumn();
 			if ( createdColumn != null ) {
 				final String logicalColumnName = createdColumn.getQuotedName();
 				if ( logicalColumnName != null && joinColumns.hasMapsId() ) {
-					final Value idValue = joinColumns.resolveMapsId().getValue();
-					final Column idColumn = idValue.getColumns().get(i);
+					final var idValue = joinColumns.resolveMapsId().getValue();
+					final var idColumn = idValue.getColumns().get(i);
 					// infer the names of the primary key column
 					// from the join column of the association
 					// as (sorta) required by the JPA spec
@@ -828,17 +831,17 @@ public class TableBinder {
 			SimpleValue value,
 			PersistentClass associatedClass,
 			String mappedByProperty) {
-		final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
-		for ( Column column: mappedByColumns( associatedClass, mappedByProperty ) ) {
+		final var firstColumn = joinColumns.getJoinColumns().get(0);
+		for ( var column: mappedByColumns( associatedClass, mappedByProperty ) ) {
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 			firstColumn.linkValueUsingAColumnCopy( column, value);
 		}
 	}
 
 	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
-		final Value value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
+		final var value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
 		if ( value instanceof Collection collection ) {
-			final Value element = collection.getElement();
+			final var element = collection.getElement();
 			if ( element == null ) {
 				throw new AnnotationException( "Both sides of the bidirectional association '"
 						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
@@ -858,24 +861,24 @@ public class TableBinder {
 			Value value,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue simpleValue) {
-		final List<Column> valueColumns = value.getColumns();
-		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+		final var valueColumns = value.getColumns();
+		final var columns = joinColumns.getJoinColumns();
 		final boolean mapsId = joinColumns.hasMapsId();
-		final List<Column> idColumns = mapsId ? joinColumns.resolveMapsId().getColumns() : null;
+		final var idColumns = mapsId ? joinColumns.resolveMapsId().getColumns() : null;
 		for ( int i = 0; i < columns.size(); i++ ) {
-			final AnnotatedJoinColumn joinColumn = columns.get(i);
+			final var joinColumn = columns.get(i);
 			if ( mapsId ) {
 				// infer the names of the primary key column
 				// from the join column of the association
 				// as (sorta) required by the JPA spec
-				final Column column = idColumns.get(i);
+				final var column = idColumns.get(i);
 				final String logicalColumnName = joinColumn.getLogicalColumnName();
 				if ( logicalColumnName != null ) {
 					column.setName( logicalColumnName );
 					simpleValue.getTable().columnRenamed( column);
 				}
 			}
-			final Column synthCol = valueColumns.get(i);
+			final var synthCol = valueColumns.get(i);
 			if ( joinColumn.isNameDeferred() ) {
 				//this has to be the default value
 				joinColumn.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, simpleValue );
@@ -895,7 +898,7 @@ public class TableBinder {
 			Table table,
 			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
 		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
-			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+			for ( var checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
 								nullIfEmpty( checkConstraintAnnotationUsage.name() ),

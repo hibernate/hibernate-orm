@@ -90,7 +90,7 @@ jobs:
             ~/.m2/wrapper/
             ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
           # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
@@ -99,7 +99,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        # if it a pull request, we restore the cache but we don't save it
+        # if it is a pull request, we restore the cache, but we don't save it
         if: github.event_name == 'pull_request'
         with:
           path: |
@@ -154,10 +154,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- rdbms: autonomous-transaction-processing-serverless
+          #- rdbms: autonomous-transaction-processing-serverless-26ai
+          #- rdbms: autonomous-transaction-processing-serverless-19c
           - rdbms: base-database-service-19c
           - rdbms: base-database-service-21c
-          - rdbms: base-database-service-23ai
+          - rdbms: base-database-service-26ai
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -188,7 +189,7 @@ jobs:
             ~/.m2/wrapper/
             ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
           # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
@@ -197,7 +198,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        # if it is a pull request, we restore the cache but we don't save it
+        # if it is a pull request, we restore the cache, but we don't save it
         if: github.event_name == 'pull_request'
         with:
           path: |
@@ -211,7 +212,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
+        uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
@@ -232,7 +233,7 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
 
-      - uses: loiclefevre/test@ce2f5049188a384c17ffcfcb8c8d04cf118e2cd7 # v1.0.20
+      - uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}
@@ -298,7 +299,7 @@ jobs:
             ~/.m2/wrapper/
             ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
           # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
@@ -307,7 +308,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        # if it a pull request, we restore the cache but we don't save it
+        # if it is a pull request, we restore the cache, but we don't save it
         if: github.event_name == 'pull_request'
         with:
           path: |

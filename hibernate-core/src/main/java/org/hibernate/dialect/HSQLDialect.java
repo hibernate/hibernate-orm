@@ -198,6 +198,31 @@ public class HSQLDialect extends Dialect {
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		functionFactory.rownum();
 		functionFactory.listagg_groupConcat();
+
+		registerArrayFunctions( functionFactory );
+
+		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
+			functionFactory.jsonObject_hsqldb();
+			functionFactory.jsonArray_hsqldb();
+			functionFactory.jsonArrayAgg_hsqldb();
+			functionFactory.jsonObjectAgg_h2();
+		}
+
+		functionFactory.unnest( "c1", "c2" );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+
+		//trim() requires parameters to be cast when used as trim character
+		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
+				this,
+				functionContributions.getTypeConfiguration(),
+				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
+		) );
+
+		functionFactory.hex( "hex(?1)" );
+		functionFactory.regexpLike_hsql();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.array_hsql();
 		functionFactory.arrayAggregate();
 		functionFactory.arrayPosition_hsql();
@@ -219,26 +244,6 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arraySort_hsql();
 		functionFactory.arrayFill_hsql();
 		functionFactory.arrayToString_hsql();
-
-		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
-			functionFactory.jsonObject_hsqldb();
-			functionFactory.jsonArray_hsqldb();
-			functionFactory.jsonArrayAgg_hsqldb();
-			functionFactory.jsonObjectAgg_h2();
-		}
-
-		functionFactory.unnest( "c1", "c2" );
-		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
-
-		//trim() requires parameters to be cast when used as trim character
-		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
-				this,
-				functionContributions.getTypeConfiguration(),
-				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
-		) );
-
-		functionFactory.hex( "hex(?1)" );
-		functionFactory.regexpLike_hsql();
 	}
 
 	/**

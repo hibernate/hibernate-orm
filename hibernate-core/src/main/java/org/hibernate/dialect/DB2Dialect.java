@@ -452,24 +452,8 @@ public class DB2Dialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
 
-		functionFactory.jsonValue_db2();
-		functionFactory.jsonQuery_no_passing();
-		functionFactory.jsonExists_no_passing();
-		functionFactory.jsonObject_db2();
-		functionFactory.jsonArray_db2();
-		functionFactory.jsonArrayAgg_db2();
-		functionFactory.jsonObjectAgg_db2();
-		functionFactory.jsonTable_db2( getMaximumSeriesSize() );
-
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_db2();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable_db2();
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
 
 		functionFactory.unnest_db2( getMaximumSeriesSize() );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
@@ -479,6 +463,29 @@ public class DB2Dialect extends Dialect {
 		functionFactory.md5( "hash(?1, 0)" );
 
 		functionFactory.regexpLike();
+	}
+
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_db2();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+	}
+
+	protected void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_db2();
+		functionFactory.jsonQuery_no_passing();
+		functionFactory.jsonExists_no_passing();
+		functionFactory.jsonObject_db2();
+		functionFactory.jsonArray_db2();
+		functionFactory.jsonArrayAgg_db2();
+		functionFactory.jsonObjectAgg_db2();
+		functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 	}
 
 	/**

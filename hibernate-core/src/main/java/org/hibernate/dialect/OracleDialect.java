@@ -380,6 +380,55 @@ public class OracleDialect extends Dialect {
 		);
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 
+		registerArrayFunctions( functionFactory );
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
+
+		functionFactory.unnest_oracle();
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
+		functionFactory.md5( "standard_hash(?1, 'MD5')" );
+
+		functionRegistry.register(
+				"extract",
+				new OracleExtractFunction( this, typeConfiguration )
+		);
+		functionFactory.regexpLike_predicateFunction();
+	}
+
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_oracle();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable_oracle();
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_oracle();
+		functionFactory.jsonQuery_oracle();
+		functionFactory.jsonExists_oracle();
+		functionFactory.jsonObject_oracle( true );
+		functionFactory.jsonArray_oracle();
+		functionFactory.jsonArrayAgg_oracle();
+		functionFactory.jsonObjectAgg_oracle();
+		functionFactory.jsonSet_oracle();
+		functionFactory.jsonRemove_oracle();
+		functionFactory.jsonReplace_oracle();
+		functionFactory.jsonInsert_oracle();
+		functionFactory.jsonMergepatch_oracle();
+		functionFactory.jsonArrayAppend_oracle();
+		functionFactory.jsonArrayInsert_oracle();
+		functionFactory.jsonTable_oracle();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.array_oracle();
 		functionFactory.arrayAggregate_jsonArrayagg();
 		functionFactory.arrayPosition_oracle();
@@ -401,45 +450,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.arraySort_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
-
-		functionFactory.jsonValue_oracle();
-		functionFactory.jsonQuery_oracle();
-		functionFactory.jsonExists_oracle();
-		functionFactory.jsonObject_oracle( true );
-		functionFactory.jsonArray_oracle();
-		functionFactory.jsonArrayAgg_oracle();
-		functionFactory.jsonObjectAgg_oracle();
-		functionFactory.jsonSet_oracle();
-		functionFactory.jsonRemove_oracle();
-		functionFactory.jsonReplace_oracle();
-		functionFactory.jsonInsert_oracle();
-		functionFactory.jsonMergepatch_oracle();
-		functionFactory.jsonArrayAppend_oracle();
-		functionFactory.jsonArrayInsert_oracle();
-
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_oracle();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable_oracle();
-
-		functionFactory.unnest_oracle();
-		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
-		functionFactory.jsonTable_oracle();
-
-		functionFactory.hex( "rawtohex(?1)" );
-		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
-		functionFactory.md5( "standard_hash(?1, 'MD5')" );
-
-		functionRegistry.register(
-				"extract",
-				new OracleExtractFunction( this, typeConfiguration )
-		);
-		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**

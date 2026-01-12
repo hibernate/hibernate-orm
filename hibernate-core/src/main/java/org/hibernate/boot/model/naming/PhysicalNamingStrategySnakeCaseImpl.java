@@ -29,6 +29,8 @@ import static java.lang.Character.isUpperCase;
  *
  * @author Phillip Webb
  * @author Madhura Bhave
+ *
+ * @since 7.0
  */
 // Originally copied from Spring's SpringPhysicalNamingStrategy as this strategy is popular there.
 public class PhysicalNamingStrategySnakeCaseImpl implements PhysicalNamingStrategy {

@@ -93,7 +93,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
-		final MetadataBuildingContext context = source.getBuildingContext();
+		final var context = source.getBuildingContext();
 		return toIdentifier(
 				context.getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
 				context
@@ -102,7 +102,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source) {
-		final MetadataBuildingContext context = source.getBuildingContext();
+		final var context = source.getBuildingContext();
 		return toIdentifier(
 				context.getEffectiveDefaults().getDefaultTenantIdColumnName(),
 				context
@@ -274,7 +274,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * @return The name as a string
 	 */
 	protected String generateConstraintNameString(ImplicitConstraintNameSource source) {
-		final NamingHelper namingHelper = namingHelper( source.getBuildingContext() );
+		final var namingHelper = namingHelper( source.getBuildingContext() );
 		final String prefix = constraintNamePrefix( source.kind() );
 		return source instanceof ImplicitForeignKeyNameSource foreignKeySource
 				? namingHelper.generateHashedFkName(

@@ -31,23 +31,19 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 
 	@Override
 	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
-		if ( source.getAttributePath() != null ) {
-			return toIdentifier(
-					transformAttributePath( source.getAttributePath() ),
-					source.getBuildingContext()
-			);
-		}
-		else {
-			return super.determineJoinColumnName( source );
-		}
+		final var attributePath = source.getAttributePath();
+		return attributePath != null
+				? toIdentifier( transformAttributePath( attributePath ), source.getBuildingContext() )
+				: super.determineJoinColumnName( source );
 	}
 
 	@Override
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
-		if ( source.getAssociationOwningAttributePath() != null ) {
+		final var associationOwningAttributePath = source.getAssociationOwningAttributePath();
+		if ( associationOwningAttributePath != null ) {
 			final String name = source.getOwningPhysicalTableName()
 					+ '_'
-					+ transformAttributePath( source.getAssociationOwningAttributePath() );
+					+ transformAttributePath( associationOwningAttributePath );
 			return toIdentifier( name, source.getBuildingContext() );
 		}
 		else {

@@ -2228,22 +2228,16 @@ public class SessionImpl
 	}
 
 	private void applyTimeout(List<FindOption> options, Map<String, Object> properties) {
-		final Object lockTimeoutRef = properties.get( HINT_SPEC_LOCK_TIMEOUT );
-		if ( lockTimeoutRef != null ) {
-			final Timeout lockTimeout = Timeouts.fromHintTimeout( lockTimeoutRef );
-			if ( Timeouts.isRealTimeout( lockTimeout ) ) {
-				options.add( lockTimeout );
-				return;
-			}
+		var lockTimeout = Timeouts.lockTimeoutFromHints( properties );
+		if ( lockTimeout != null ) {
+			options.add( lockTimeout );
 		}
-
-		final Object queryTimeoutRef = properties.get( HINT_SPEC_QUERY_TIMEOUT );
-		if ( queryTimeoutRef != null ) {
-			final Timeout queryTimeout = Timeouts.fromHintTimeout( queryTimeoutRef );
-			if ( Timeouts.isRealTimeout( queryTimeout ) ) {
-				options.add( queryTimeout );
-			}
-		}
+//		else {
+//			var timeout = Timeouts.statementTimeoutFromHints( properties );
+//			if ( timeout != null ) {
+//				options.add( timeout );
+//			}
+//		}
 	}
 
 	private void applyFollowOnLocking(List<FindOption> options, Map<String, Object> properties) {

@@ -10,6 +10,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -19,12 +20,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * Test case for HHH-11810
  */
+@JiraKey("HHH-11810")
 @DomainModel(annotatedClasses = OptimisticForceIncrementNotIncrementedOnFlushTest.MyEntity.class)
 @SessionFactory
 public class OptimisticForceIncrementNotIncrementedOnFlushTest {
 
 	@Test
-	public void hhh123Test(SessionFactoryScope scope) {
+	public void hhh11810Test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			MyEntity toPersist = new MyEntity( 0 );
 			toPersist.setData( "sample v1" );

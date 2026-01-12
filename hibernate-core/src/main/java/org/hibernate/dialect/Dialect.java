@@ -368,14 +368,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected void checkVersion() {
-		final DatabaseVersion version = getVersion();
-		final DatabaseVersion minimumVersion = getMinimumSupportedVersion();
-		if ( version != null && version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
-			CORE_LOGGER.unsupportedDatabaseVersion(
-					getClass().getName(),
-					version.getMajor() + "." + version.getMinor() + "." + version.getMicro(),
-					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()
-			);
+		final var version = getVersion();
+		if ( version != null ) {
+			final var minimumVersion = getMinimumSupportedVersion();
+			if ( version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
+				CORE_LOGGER.unsupportedDatabaseVersion(
+						getClass().getName(),
+						version.getMajor() + "." + version.getMinor() + "." + version.getMicro(),
+						minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()
+				);
+			}
 		}
 	}
 

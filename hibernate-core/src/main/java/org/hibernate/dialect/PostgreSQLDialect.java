@@ -607,39 +607,60 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
-		functionFactory.array_postgresql();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_postgresql();
-		functionFactory.arrayPositions_postgresql();
-		functionFactory.arrayLength_cardinality();
-		functionFactory.arrayConcat_postgresql();
-		functionFactory.arrayPrepend_postgresql();
-		functionFactory.arrayAppend_postgresql();
-		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayIntersects_postgresql();
-		functionFactory.arrayGet_bracket();
-		functionFactory.arraySet_unnest();
-		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_unnest( true );
-		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace();
-		if ( getVersion().isSameOrAfter( 14 ) ) {
-			functionFactory.arrayTrim_trim_array();
-		}
-		else {
-			functionFactory.arrayTrim_unnest();
-		}
-		if ( getVersion().isSameOrAfter( 18 ) ) {
-			functionFactory.arrayReverse();
-			functionFactory.arraySort();
-		}
-		else {
-			functionFactory.arrayReverse_unnest();
-			functionFactory.arraySort_unnest();
-		}
-		functionFactory.arrayFill_postgresql();
-		functionFactory.arrayToString_postgresql();
 
+		registerArrayFunctions( functionFactory );
+		registerJsonFunction( functionFactory );
+		registerXmlFunctions( functionFactory );
+
+		functionFactory.makeDateTimeTimestamp();
+		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+
+		if ( !supportsMinMaxOnUuid() ) {
+			functionRegistry.register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			functionRegistry.register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+		}
+
+		// Postgres uses # instead of ^ for XOR
+		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		functionRegistry.register(
+				"round", new PostgreSQLTruncRoundFunction( "round", true )
+		);
+		functionRegistry.register(
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
+
+		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
+		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "sha256(?1)" );
+		functionFactory.md5( "decode(md5(?1), 'hex')" );
+
+		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
+	}
+
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_postgresql();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable( true );
+	}
+
+	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
 		if ( getVersion().isSameOrAfter( 17 ) ) {
 			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
@@ -676,51 +697,41 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_postgresql();
 		functionFactory.jsonArrayAppend_postgresql( true );
 		functionFactory.jsonArrayInsert_postgresql();
+	}
 
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_postgresql();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable( true );
-
-		functionFactory.makeDateTimeTimestamp();
-		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
-
-		if ( !supportsMinMaxOnUuid() ) {
-			functionRegistry.register( "min", new PostgreSQLMinMaxFunction( "min" ) );
-			functionRegistry.register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+	protected void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
 		}
-
-		// Postgres uses # instead of ^ for XOR
-		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1#?2)" )
-				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-				.register();
-
-		functionRegistry.register(
-				"round", new PostgreSQLTruncRoundFunction( "round", true )
-		);
-		functionRegistry.register(
-				"trunc",
-				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
-		);
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
-		functionFactory.dateTrunc();
-
-		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
-		functionFactory.generateSeries( null, "ordinality", false );
-
-		functionFactory.hex( "encode(?1, 'hex')" );
-		functionFactory.sha( "sha256(?1)" );
-		functionFactory.md5( "decode(md5(?1), 'hex')" );
-
-		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			functionFactory.arrayReverse();
+			functionFactory.arraySort();
+		}
+		else {
+			functionFactory.arrayReverse_unnest();
+			functionFactory.arraySort_unnest();
+		}
+		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override

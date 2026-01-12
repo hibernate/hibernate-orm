@@ -667,6 +667,24 @@ public class MySQLDialect extends Dialect {
 
 		functionFactory.listagg_groupConcat();
 
+		registerJsonFunctions( functionFactory );
+
+		functionFactory.unnest_emulated();
+
+		// TODO: which one is correct??
+		functionFactory.regexpLike_regexp();
+		functionFactory.regexpLike();
+
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+		}
+
+		functionFactory.hex( "hex(?1)" );
+		functionFactory.sha( "unhex(sha2(?1, 256))" );
+		functionFactory.md5( "unhex(md5(?1))" );
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.jsonValue_mysql();
 		functionFactory.jsonQuery_mysql();
 		functionFactory.jsonExists_mysql();
@@ -681,19 +699,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_mysql();
 		functionFactory.jsonArrayAppend_mysql();
 		functionFactory.jsonArrayInsert_mysql();
-		functionFactory.regexpLike_regexp();
-
-		functionFactory.unnest_emulated();
 		functionFactory.jsonTable_mysql();
-		functionFactory.regexpLike();
-
-		if ( supportsRecursiveCTE() ) {
-			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
-		}
-
-		functionFactory.hex( "hex(?1)" );
-		functionFactory.sha( "unhex(sha2(?1, 256))" );
-		functionFactory.md5( "unhex(md5(?1))" );
 	}
 
 	/**

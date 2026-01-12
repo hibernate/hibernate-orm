@@ -461,43 +461,9 @@ public class CockroachDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		functionFactory.array_postgresql();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_postgresql();
-		functionFactory.arrayPositions_postgresql();
-		functionFactory.arrayLength_cardinality();
-		functionFactory.arrayConcat_postgresql();
-		functionFactory.arrayPrepend_postgresql();
-		functionFactory.arrayAppend_postgresql();
-		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayIntersects_postgresql();
-		functionFactory.arrayGet_bracket();
-		functionFactory.arraySet_unnest();
-		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_unnest( true );
-		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace();
-		functionFactory.arrayTrim_unnest();
-		functionFactory.arrayReverse_unnest();
-		functionFactory.arraySort_unnest();
-		functionFactory.arrayFill_cockroachdb();
-		functionFactory.arrayToString_postgresql();
 
-		functionFactory.jsonValue_cockroachdb();
-		functionFactory.jsonQuery_cockroachdb();
-		functionFactory.jsonExists_cockroachdb();
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
-		functionFactory.jsonArrayAgg_postgresql( false );
-		functionFactory.jsonObjectAgg_postgresql( false );
-		functionFactory.jsonSet_postgresql();
-		functionFactory.jsonRemove_cockroachdb();
-		functionFactory.jsonReplace_postgresql();
-		functionFactory.jsonInsert_postgresql();
-		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
-//		functionFactory.jsonMergepatch_postgresql();
-		functionFactory.jsonArrayAppend_postgresql( false );
-		functionFactory.jsonArrayInsert_postgresql();
+		registerArrayFunctions( functionFactory );
+		registerJsonFunctions( functionFactory );
 
 		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
@@ -519,6 +485,48 @@ public class CockroachDialect extends Dialect {
 		functionFactory.sha( "digest(?1, 'sha256')" );
 		functionFactory.md5( "digest(?1, 'md5')" );
 		functionFactory.regexpLike_postgresql( false );
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonQuery_cockroachdb();
+		functionFactory.jsonExists_cockroachdb();
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonArrayAgg_postgresql( false );
+		functionFactory.jsonObjectAgg_postgresql( false );
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_cockroachdb();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
+		functionFactory.jsonArrayInsert_postgresql();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_unnest();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_unnest();
+		functionFactory.arrayFill_cockroachdb();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override

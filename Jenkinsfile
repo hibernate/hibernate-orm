@@ -98,17 +98,17 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
+// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
+if ( !env.CHANGE_ID ) {
+    print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
+    currentBuild.result = 'NOT_BUILT'
+    return
+}
 
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
-		// Don't build environments for newer JDKs when this is a PR, unless the PR is labelled with 'jdk' or 'jdk-<version>'
-		if ( helper.scmSource.pullRequest &&
-				buildEnv.testJdkVersion && buildEnv.testJdkVersion.toInteger() > DEFAULT_JDK_VERSION.toInteger() &&
-				!pullRequest.labels.contains( 'jdk' ) && !pullRequest.labels.contains( "jdk-${buildEnv.testJdkVersion}" ) ) {
-			return
-		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
@@ -209,6 +209,9 @@ stage('Build') {
 			}
 		})
 	}
+    executions.put('Hibernate Search Update Dependency', {
+        build job: '/hibernate-search-dependency-update/8.2', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm7.2'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
+    })
 	parallel(executions)
 }
 

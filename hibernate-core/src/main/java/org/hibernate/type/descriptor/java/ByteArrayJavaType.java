@@ -38,7 +38,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 
 	@Override
 	public boolean isInstance(Object value) {
-		return value instanceof byte[];
+		return value instanceof Byte[];
 	}
 
 	@Override

@@ -140,11 +140,6 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	protected boolean supportsForShare() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsAliasLocks() {
 		return false;
 	}

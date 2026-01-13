@@ -1417,7 +1417,15 @@ tidb_8_5() {
       databases+=("hibernate_orm_test_${n}")
     done
     create_cmd=
+
+    # Since v7.2
+    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_check_constraint-new-in-v720
     create_cmd+="SET GLOBAL tidb_enable_check_constraint=ON;"
+
+    # Since v8.3
+    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_shared_lock_promotion-new-in-v830
+    create_cmd+="SET GLOBAL tidb_enable_shared_lock_promotion=ON;"
+
     create_cmd+="CREATE DATABASE IF NOT EXISTS hibernate_orm_test;"
     create_cmd+="CREATE USER IF NOT EXISTS 'hibernate_orm_test'@'%' IDENTIFIED BY 'hibernate_orm_test';"
     create_cmd+="GRANT ALL ON hibernate_orm_test.* TO 'hibernate_orm_test'@'%';"

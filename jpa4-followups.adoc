@@ -1,8 +1,19 @@
-= Things to Fix
+= Follow Up to JPA 4 Work
+:toc:
 
-Things to fix after JPA 4.0 gets a named release
+Things to do after JPA 4.0 work...
 
-== JPA Dependency
+== TCK Tests
+
+For tests to add to the TCK, see -
+
+* `org.hibernate.orm.test.query.resultmapping.dynamic`
+* `org.hibernate.orm.test.event.AddListenerTests`
+
+
+== Build Items
+
+Things to fix in the build after JPA 4.0 gets a named release
 
 === settings.gradle
 

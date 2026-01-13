@@ -2384,11 +2384,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType) {
-		refresh( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
-	}
-
-	@Override
 	public void refresh(Object entity, Map<String, Object> properties) {
 		refresh( entity, null, properties );
 	}

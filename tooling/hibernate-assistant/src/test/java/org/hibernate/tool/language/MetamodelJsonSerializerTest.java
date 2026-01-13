@@ -221,11 +221,6 @@ public class MetamodelJsonSerializerTest {
 	}
 
 	static void assertType(String actual, Class<?> expected) {
-		// some types are implicitly converted when mapping to the database
-		if ( expected == java.util.Date.class ) {
-			expected = java.sql.Date.class;
-		}
-
 		// using startsWith as plural attributes also contain the element name in brackets
 		assertThat( actual ).startsWith( expected.getTypeName() );
 	}

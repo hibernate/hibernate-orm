@@ -12,7 +12,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -20,6 +19,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.sql.EntityMapping;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
@@ -436,15 +436,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object id, LockModeType lockModeType) {
-		checkOpen();
-
-		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
-		//noinspection unchecked
-		return (T) byKey( persister, lockModeType ).performFind( id );
-	}
-
-	@Override
 	public <T> T find(Class<T> entityClass, Object key, FindOption... findOptions) {
 		checkOpen();
 
@@ -483,11 +474,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			throw notFound( entityClass.getName(), id );
 		}
 		return result;
-	}
-
-	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockModeType lockModeType) {
-		return get( entityClass, id, LockMode.fromJpaLockMode( lockModeType ) );
 	}
 
 	@Override
@@ -571,18 +557,29 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(String hql, EntityGraph<T> entityGraph) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		// by definition this HQL must be a selection query
+		return (QueryImplementor<T>) createSelectionQuery( hql, entityGraph );
 	}
 
 	@Override
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		final var query = new NativeQueryImpl<>( sql, resultSetMapping, this );
+		if ( isEmpty( query.getComment() ) ) {
+			query.setComment( "dynamic native SQL query" );
+		}
+		if ( resultSetMapping instanceof EntityMapping<?> entityMapping ) {
+			var lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
+			if ( lockMode.greaterThan( LockMode.READ ) ) {
+				query.setHibernateLockMode( lockMode );
+			}
+		}
+		return query;
 	}
 
 	@Override
 	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
-		// this one and EntityType
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		//noinspection unchecked
+		return (EntityGraph<T>) factory.getNamedEntityGraphs( entityClass ).get( name );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -11,7 +11,6 @@ import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -71,6 +70,7 @@ import java.util.UUID;
  *
  * @author Gavin King
  */
+@SuppressWarnings("resource")
 public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImplementor {
 
 	protected final SharedSessionContractImplementor delegate;
@@ -147,11 +147,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockModeType lockModeType) {
-		return delegate().get( entityClass, id, lockModeType );
-	}
-
-	@Override
 	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
 		return delegate().get( entityClass, key, findOptions );
 	}
@@ -174,11 +169,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <T> T find(Class<T> entityClass, Object id) {
 		return delegate().find( entityClass, id );
-	}
-
-	@Override
-	public <T> T find(Class<T> entityClass, Object id, LockModeType lockModeType) {
-		return delegate().find( entityClass, id, lockModeType );
 	}
 
 	@Override

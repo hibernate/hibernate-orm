@@ -6,10 +6,14 @@ package org.hibernate.query.internal;
 
 import java.util.function.Consumer;
 
+import jakarta.persistence.sql.FieldMapping;
 import jakarta.persistence.sql.MemberMapping;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
@@ -33,6 +37,15 @@ public class FetchMementoBasicStandard implements FetchMementoBasic {
 		this.navigablePath = navigablePath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.columnAlias = columnAlias;
+	}
+
+	public static FetchMementoBasicStandard from(
+			FieldMapping<?, ?> basicMapping,
+			NavigablePath attributePath,
+			EntityPersister entityDescriptor,
+			BasicAttributeMapping attributeMapping,
+			SessionFactoryImplementor factory) {
+		return null;
 	}
 
 	@Override

@@ -163,3 +163,21 @@ In any case:
 
 * Reset the migration guide on the `main` branch if you forgot about it when preparing the release.
 * Create a maintenance branch for the previous series, if necessary; see [branching](branching.adoc).
+
+
+### Setting up the maintenance branch
+
+Once the release series (e.g. 7.2) is branched out and goes into maintenance mode make sure to:
+* Enable automated releases (for that branch)
+  - Update [Jenkinsfile](ci/release/Jenkinsfile) and switch `RELEASE_ON_SCHEDULE` to `true`
+* Remove the nightly Jenkins job from that branch ([nightly.Jenkinsfile](nightly.Jenkinsfile))
+* Update GitHub workflows:
+  - For [ci.yml](.github/workflows/ci.yml) / [codeql.yml](.github/workflows/codeql.yml) 
+    + remove the branch push triggers (`on.pushbranches`)
+    + update branch in the pull request triggers
+* Enable Quarkus testing job (in necessary)
+  - In [quarkus.Jenkinsfile](ci/quarkus.Jenkinsfile) switch `ENABLE_QUARKUS_BUILDS` to true and update `QUARKUS_BRANCH_TO_TEST` as necessary.
+* Update main build [Jenkinsfile](Jenkinsfile) (for the branch)
+  - Enable JDK testing in the build by removing the conditions under `Don't build environments for newer JDKs`
+  - Stop running this build for pushes to the branch
+* Update TCK job [jpa-3.2-tck.Jenkinsfile](ci/jpa-3.2-tck.Jenkinsfile) to always run for PRs and not for the pushes to the branch

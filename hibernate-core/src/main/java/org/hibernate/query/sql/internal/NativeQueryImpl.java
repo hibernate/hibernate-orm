@@ -56,6 +56,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
+import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -276,6 +277,30 @@ public class NativeQueryImpl<R>
 		handleExplicitResultSetMapping();
 
 		applyOptions( memento );
+	}
+
+	/**
+	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String, jakarta.persistence.sql.ResultSetMapping)
+	 */
+	public NativeQueryImpl(
+			String sql,
+			jakarta.persistence.sql.ResultSetMapping<R> resultSetMapping,
+			SharedSessionContractImplementor session) {
+		super( session );
+		originalSqlString = sql;
+		querySpaces = new HashSet<>();
+
+		final var parameterInterpretation = resolveParameterInterpretation( sql, session );
+		sqlString = parameterInterpretation.getAdjustedSqlString();
+		parameterMetadata = parameterInterpretation.toParameterMetadata( session );
+		parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
+		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+
+		final var resultSetMappingMemento = NamedResultSetMappingMementoImpl.from( resultSetMapping, session.getFactory() );
+		this.resultSetMapping = buildResultSetMapping( null, true, session );
+		resultSetMappingMemento.resolve( this.resultSetMapping, this::addSynchronizedQuerySpace, this );
+		resultMappingSuppliedToCtor = true;
+		resultType = resultSetMapping.type();
 	}
 
 	public NativeQueryImpl(

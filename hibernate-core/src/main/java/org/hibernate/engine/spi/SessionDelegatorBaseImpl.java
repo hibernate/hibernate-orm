@@ -502,12 +502,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockModeType lockModeType) {
-		//noinspection resource
-		return delegate().get( entityClass, id, lockModeType );
-	}
-
-	@Override
 	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
 		//noinspection resource
 		return delegate().get( entityClass, key, findOptions );
@@ -957,11 +951,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, properties );
-	}
-
-	@Override
-	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-		return delegate.find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override

@@ -15,7 +15,7 @@ import org.hibernate.jenkins.pipeline.helpers.version.Version
 // Global build configuration
 env.PROJECT = "orm"
 env.JIRA_KEY = "HHH"
-def RELEASE_ON_SCHEDULE = false // Set to `true` *only* on branches where you want a scheduled release.
+def RELEASE_ON_SCHEDULE = true // Set to `true` *only* on branches where you want a scheduled release.
 
 print "INFO: env.PROJECT = ${env.PROJECT}"
 print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"

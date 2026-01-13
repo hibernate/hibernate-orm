@@ -284,11 +284,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object id, LockModeType lockModeType) {
-		return this.lazySession.get().get( entityType, id, lockModeType );
-	}
-
-	@Override
 	public <T> T get(Class<T> entityType, Object key, FindOption... findOptions) {
 		return this.lazySession.get().get( entityType, key, findOptions );
 	}
@@ -813,11 +808,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return this.lazySession.get().find( entityClass, primaryKey, properties );
-	}
-
-	@Override
-	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-		return this.lazySession.get().find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override

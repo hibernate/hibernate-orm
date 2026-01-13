@@ -6,6 +6,8 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * A custom type that may function as an identifier or discriminator type
  * 
@@ -13,10 +15,19 @@ package org.hibernate.usertype;
  */
 public interface EnhancedUserType extends UserType {
 	/**
-	 * Return an SQL literal representation of the value
+	 * Return an SQL literal representation of the value, as it should appear in a query.
+	 * If the value is quoted, the returned string should be escaped appropriately.
 	 */
 	String objectToSQLString(Object value);
-	
+
+	/**
+	 * Return an SQL literal representation of the value, as it should appear in a query.
+	 * If the value is quoted, the returned string should be escaped appropriately.
+	 */
+	default String objectToSQLString(Object value, Dialect dialect) {
+		return objectToSQLString( value );
+	}
+
 	/**
 	 * Return a string representation of this value, as it should appear in an XML document
 	 *

@@ -27,10 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cid/Customer.hbm.xml",
-				"org/hibernate/orm/test/cid/Order.hbm.xml",
-				"org/hibernate/orm/test/cid/LineItem.hbm.xml",
-				"org/hibernate/orm/test/cid/Product.hbm.xml"
+				"org/hibernate/orm/test/cid/Customer.orm.xml",
+				"org/hibernate/orm/test/cid/Order.orm.xml",
+				"org/hibernate/orm/test/cid/LineItem.orm.xml",
+				"org/hibernate/orm/test/cid/Product.orm.xml"
 		}
 )
 @SessionFactory(useCollectingStatementInspector = true)

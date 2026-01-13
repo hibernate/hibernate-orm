@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0" >
+	<package>org.hibernate.orm.test.cid</package>
+	<!--
+
+  This mapping demonstrates
+
+     (1) use of a derived property which performs a
+         subselect against an associated table
+
+     (2) use of <synchronize/> to ensure that auto-flush
+         works correctly for an entity with a property
+         derived from another table
+
+
+-->
+	<entity class="Product">
+		<synchronize table="LineItem"/>
+		<attributes>
+			<id name="productId">
+				<column length="10"/>
+				<generated-value generator="assigned"/>
+			</id>
+			<basic name="description">
+				<column nullable="false" length="200"/>
+			</basic>
+			<basic name="price">
+				<column name="cost" length="3"/>
+			</basic>
+			<basic name="numberAvailable"/>
+			<basic name="numberOrdered">
+				<formula>( select sum(li.quantity) from LineItem li where li.productId = productId )</formula>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

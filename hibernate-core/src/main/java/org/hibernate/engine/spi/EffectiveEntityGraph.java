@@ -6,6 +6,7 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.GraphSemantic;
@@ -133,5 +134,31 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	public void clear() {
 		semantic = null;
 		graph = null;
+	}
+
+	public void withAppliedGraph(GraphSemantic semantic, RootGraphImplementor<?> graph, Runnable action) {
+		var currentSemantic = this.semantic;
+		var currentGraph = this.graph;
+
+		try {
+			action.run();
+		}
+		finally {
+			this.semantic = currentSemantic;
+			this.graph = currentGraph;
+		}
+	}
+
+	public <T> T fromAppliedGraph(GraphSemantic semantic, RootGraphImplementor<?> graph, Supplier<T> action) {
+		var currentSemantic = this.semantic;
+		var currentGraph = this.graph;
+
+		try {
+			return action.get();
+		}
+		finally {
+			this.semantic = currentSemantic;
+			this.graph = currentGraph;
+		}
 	}
 }

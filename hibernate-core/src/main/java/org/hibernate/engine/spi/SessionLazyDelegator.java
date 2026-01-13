@@ -851,11 +851,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockMode) {
-		this.lazySession.get().refresh( entity, lockMode );
-	}
-
-	@Override
 	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		this.lazySession.get().refresh( entity, lockMode, properties );
 	}

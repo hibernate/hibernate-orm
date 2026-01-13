@@ -1024,11 +1024,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockMode) {
-		delegate.refresh( entity, lockMode );
-	}
-
-	@Override
 	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		delegate.refresh( entity, lockMode, properties );
 	}

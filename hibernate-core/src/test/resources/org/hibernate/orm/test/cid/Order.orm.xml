@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0" >
+	<package>org.hibernate.orm.test.cid</package>
+	<!--
+
+  This mapping demonstrates
+
+     (1) composite keys and one-to-many associations on
+         composite keys
+
+     (2) use of insert="false" update="false" on an
+         association mapping, when the foreign key is
+         also part of the primary key
+
+     (3) use of a derived property which performs a
+         subselect against associated tables
+
+     (4) use of <synchronize/> to ensure that auto-flush
+         works correctly for an entity with a property
+         derived from other tables
+
+
+-->
+
+	<entity class="Order">
+		<table name="CustomerOrder"/>
+		<synchronize table="LineItem"/>
+		<synchronize table="Product"/>
+		<attributes>
+			<embedded-id name="id" />
+			<basic name="orderDate" >
+				<column nullable="false" />
+				<temporal>DATE</temporal>
+			</basic>
+			<basic name="total">
+				<formula>( select sum(li.quantity*p.cost) from LineItem li, Product p where li.productId = p.productId and li.customerId = customerId and li.orderNumber = orderNumber )</formula>
+			</basic>
+			<many-to-one name="customer" target-entity="Customer" fetch="LAZY">
+				<join-column name="customerId" insertable="false" updatable="false" nullable="false" />
+			</many-to-one>
+			<one-to-many name="lineItems" target-entity="LineItem" mapped-by="order" fetch="EAGER" fetch-mode="JOIN" >
+				<cascade>
+					<cascade-persist/>
+					<cascade-merge/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<embeddable class="Order$Id">
+		<attributes>
+			<basic name="customerId">
+				<column length="10"/>
+			</basic>
+			<basic name="orderNumber"/>
+		</attributes>
+	</embeddable>
+</entity-mappings>

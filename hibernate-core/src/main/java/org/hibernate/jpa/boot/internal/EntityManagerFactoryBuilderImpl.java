@@ -300,6 +300,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void setupEnhancement(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
+		if ( persistenceUnit.isClassTransformerRegistrationDisabled() ) {
+			return;
+		}
+
 		final boolean dirtyTrackingEnabled =
 				readBooleanConfigurationValueDefaultTrue( ENHANCER_ENABLE_DIRTY_TRACKING );
 		final boolean lazyInitializationEnabled =
@@ -321,8 +325,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 							associationManagementEnabled );
 			// push back class transformation to the environment; for the time being this only has any effect in EE
 			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-			persistenceUnit.pushClassTransformer( enhancementContext );
-			final var classTransformer = persistenceUnit.getClassTransformer();
+			final var classTransformer = persistenceUnit.pushClassTransformer( enhancementContext );
 			if ( classTransformer != null ) {
 				final var classLoader = persistenceUnit.getTempClassLoader();
 				if ( classLoader == null ) {

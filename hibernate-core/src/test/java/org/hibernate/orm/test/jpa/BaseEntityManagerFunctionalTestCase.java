@@ -189,11 +189,12 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
-		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		public boolean isClassTransformerRegistrationDisabled() {
+			return true;
 		}
 
 		@Override
-		public ClassTransformer getClassTransformer() {
+		public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
 			return null;
 		}
 	}

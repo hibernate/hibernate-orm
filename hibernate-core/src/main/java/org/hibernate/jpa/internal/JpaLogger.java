@@ -182,4 +182,16 @@ public interface JpaLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 8549, value = "Attempting to interpret external setting [%s] as FlushModeType name")
 	void attemptingToInterpretExternalSettingAsFlushModeTypeName(String externalName);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 8550, value = "PersistenceProvider#getClassTransformer called for PU named '%s' on classloader %s")
+	void requestForClassTransformer(String persistenceUnitName, String loadingClassLoader);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 8551, value = "PersistenceProvider#getClassTransformer called multiple times for PU named '%s' on classloader %s")
+	void duplicatedRequestForClassTransformer(String persistenceUnitName, String loadingClassLoader);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 8552, value = "Pushing class transformers not supported for PU named '%s'")
+	void pushingClassTransformerUnsupported(String persistenceUnitName);
 }

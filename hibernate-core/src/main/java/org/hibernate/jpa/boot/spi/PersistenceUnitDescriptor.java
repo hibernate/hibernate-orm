@@ -16,98 +16,96 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 
-/**
- * Abstraction for dealing with {@code <persistence-unit/>} information
- * specified in the {@code persistence.xml} file, which might be:
- * <ul>
- * <li>passed by the Jakarta EE container as an instance of
- *     {@link jakarta.persistence.spi.PersistenceUnitInfo}, or,
- * <li>in an SE environment, parsed by Hibernate itself.
- * </ul>
- *
- * @see jakarta.persistence.spi.PersistenceUnitInfo
- *
- * @author Steve Ebersole
- */
+/// Abstraction for dealing with `<persistence-unit/>` information
+/// specified in the `persistence.xml` file.  This information can
+/// come from either:
+///
+///   - from the Jakarta EE container as an instance of
+///     [jakarta.persistence.spi.PersistenceUnitInfo]
+///   - in an SE environment, parsed by Hibernate itself
+///
+/// @see jakarta.persistence.spi.PersistenceUnitInfo
+/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl
+///
+/// @author Steve Ebersole
 public interface PersistenceUnitDescriptor {
-	/**
-	 * Get the root url for the persistence unit.  Intended to describe the base for scanning.
-	 *
-	 * @return The root url
-	 */
+	/// The root url for the persistence unit.
+	///
+	/// @implNote When Hibernate performs scanning, this URL is used as the base for scanning.
 	URL getPersistenceUnitRootUrl();
 
-	/**
-	 * Get the persistence unit name,
-	 *
-	 * @return The persistence unit name,
-	 */
+	/// The persistence unit name.
+	///
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getName
 	String getName();
 
-	/**
-	 * Get the explicitly specified provider class name, or {@code null} if not specified.
-	 *
-	 * @return The specified provider class name
-	 */
+	/// The explicitly specified provider class name, or `null` if not specified.
+	///
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceProviderClassName
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getProvider
 	String getProviderClassName();
 
-	/**
-	 * Is the use of quoted identifiers in effect for this whole persistence unit?
-	 *
-	 * @return {@code true} is quoted identifiers should be used throughout the unit.
-	 */
+	/// Whether the use of identifier quoting is in effect for this whole persistence unit.
 	boolean isUseQuotedIdentifiers();
 
-	/**
-	 * Essentially should scanning for classes be performed?  If not, the list of classes available is limited to:<ul>
-	 *     <li>classes listed in {@link #getManagedClassNames()}</li>
-	 *     <li>classes named in all {@link #getMappingFileNames}</li>
-	 *     <li>classes discovered in {@link #getJarFileUrls}</li>
-	 * </ul>
-	 *
-	 * @return {@code true} if the root url should not be scanned for classes.
-	 */
+	/// Whether scanning for classes should be performed.  If not, the list of classes available is limited to:
+	///   - classes listed in [#getManagedClassNames()]
+	///   - classes named in all [#getMappingFileNames]
+	///   - classes discovered in [#getJarFileUrls]
+	///
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#excludeUnlistedClasses
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#isExcludeUnlistedClasses
 	boolean isExcludeUnlistedClasses();
 
-	/**
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getDefaultToOneFetchType()
-	 *
-	 * @since 8.0
-	 */
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getDefaultToOneFetchType()
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getDefaultToOneFetchType
+	///
+	/// @since 8.0
 	FetchType getDefaultToOneFetchType();
 
-	/**
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getTransactionType()
-	 */
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getTransactionType()
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getTransactionType
 	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
 
-	/**
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getValidationMode
-	 */
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getValidationMode
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getValidationMode
 	ValidationMode getValidationMode();
 
-	/**
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getSharedCacheMode
-	 */
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getSharedCacheMode
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getSharedCacheMode
 	SharedCacheMode getSharedCacheMode();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getManagedClassNames
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getClasses
 	List<String> getManagedClassNames();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getMappingFileNames
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getMappingFiles
 	List<String> getMappingFileNames();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getJarFiles
 	List<URL> getJarFileUrls();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getNonJtaDataSource
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getNonJtaDataSource
 	Object getNonJtaDataSource();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getJtaDataSource
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getJtaDataSource
 	Object getJtaDataSource();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getProperties
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getPropertyContainer
 	Properties getProperties();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getClassLoader
 	ClassLoader getClassLoader();
 
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader
 	ClassLoader getTempClassLoader();
 
-	void pushClassTransformer(EnhancementContext enhancementContext);
+	boolean isClassTransformerRegistrationDisabled();
 
-	ClassTransformer getClassTransformer();
+	ClassTransformer pushClassTransformer(EnhancementContext enhancementContext);
 }

@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.sql.MappingElement;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 
 /**
  * @author Steve Ebersole

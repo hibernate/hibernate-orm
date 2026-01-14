@@ -6,6 +6,7 @@ package org.hibernate.query.results.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
@@ -15,7 +16,7 @@ import java.util.Map;
 
 /**
  * JdbcValuesMapping implementation used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  *
  * @author Steve Ebersole
  */

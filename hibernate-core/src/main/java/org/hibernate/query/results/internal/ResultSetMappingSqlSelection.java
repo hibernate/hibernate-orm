@@ -7,6 +7,7 @@ package org.hibernate.query.results.internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
@@ -17,7 +18,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
  * SqlSelection implementation used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  * Doubles as its own {@link Expression} as well.
  *
  * @author Steve Ebersole

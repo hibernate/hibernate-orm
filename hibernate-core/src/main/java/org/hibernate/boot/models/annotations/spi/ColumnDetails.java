@@ -7,10 +7,14 @@ package org.hibernate.boot.models.annotations.spi;
 /**
  * @author Steve Ebersole
  */
-public interface ColumnDetails {
+public interface ColumnDetails extends Commentable, Optionable {
 	String name();
 
 	void name(String value);
+
+	String columnDefinition();
+
+	void columnDefinition(String value);
 
 	interface AlternateTableCapable {
 		String table();
@@ -59,15 +63,5 @@ public interface ColumnDetails {
 		boolean unique();
 
 		void unique(boolean value);
-	}
-
-	interface Definable extends ColumnDetails {
-		String columnDefinition();
-
-		void columnDefinition(String value);
-
-		String options();
-
-		void options(String value);
 	}
 }

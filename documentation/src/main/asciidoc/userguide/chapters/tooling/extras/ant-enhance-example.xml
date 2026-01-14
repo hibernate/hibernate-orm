@@ -3,7 +3,7 @@
     <ivy:cachepath
             organisation="org.hibernate.orm"
             module="hibernate-ant"
-            revision="${hibernate.version}"
+            revision="{fullVersion}}"
             pathid="hibernate-ant.path"
             inline="true"/>
     [...]

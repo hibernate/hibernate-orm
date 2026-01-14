@@ -25,7 +25,7 @@ of the enhancement task.
 [[enhance-task-example]]
 .Enhance Task Example
 ====
-[source, xml]]
+[source, xml,subs="attributes+"]
 ----
 include::extras/ant-enhance-example.xml[]
 ----
@@ -176,7 +176,7 @@ Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
 [[javac-task-example]]
 .Javac task configuration
 ====
-[source, xml]
+[source,xml,subs="attributes+"]
 ----
 <javac srcdir="${src.dir}"
         destdir="${target.dir}"
@@ -184,7 +184,7 @@ Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
         fork="true"
         classpath="${classpath}">
     <compilerarg value="-processorpath" />
-    <compilerarg value="/path/to/hibernate-processor-${hibernate-version}.jar"/>
+    <compilerarg value="/path/to/hibernate-processor-{fullVersion}.jar"/>
     <compilerarg value="-proc:only"/>
 </javac>
 ----

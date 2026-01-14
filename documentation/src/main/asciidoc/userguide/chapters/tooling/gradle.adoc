@@ -64,9 +64,9 @@ annotation processor provided by the `org.hibernate.orm:hibernate-processor` art
 an annotation processor in Gradle is as easy as:
 
 
-[source,gradle]
+[source,gradle,subs="attributes+"]
 ----
 dependencies {
-    annotationProcessor "org.hibernate.orm:hibernate-processor:${hibernateVersion}"
+    annotationProcessor "org.hibernate.orm:hibernate-processor:{fullVersion}"
 }
 ----

@@ -10,7 +10,7 @@
                     <path>
                         <groupId>org.hibernate.orm</groupId>
                         <artifactId>hibernate-processor</artifactId>
-                        <version>$currentHibernateVersion</version>
+                        <version>{fullVersion}</version>
                     </path>
                 </annotationProcessorPaths>
                 <!-- This setting is required for the hibernate-processor dependencies to

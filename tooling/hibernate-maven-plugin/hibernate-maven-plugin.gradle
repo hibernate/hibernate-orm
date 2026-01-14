@@ -25,8 +25,10 @@ configurations {
 dependencies {
     implementation project( ":hibernate-core" )
 
-    implementation "org.apache.maven:maven-plugin-api:3.9.11"
-    implementation "org.apache.maven:maven-core:3.9.11"
+    implementation "org.apache.maven:maven-plugin-api:3.9.12"
+    implementation ("org.apache.maven:maven-core:3.9.12") {
+        exclude group: 'com.google.guava', module: 'guava'
+    }
     implementation "org.apache.maven.shared:file-management:3.1.0"
 
     compileOnly "org.apache.maven.plugin-tools:maven-plugin-tools-annotations:3.15.1"

@@ -27,12 +27,17 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 ///
 /// @author Steve Ebersole
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
-
 	private final PersistenceUnitInfo persistenceUnitInfo;
+	private final boolean disableClassTransformerRegistration;
 	private ClassTransformer classTransformer;
 
 	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo) {
+		this( persistenceUnitInfo, false );
+	}
+
+	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo, boolean disableClassTransformerRegistration) {
 		this.persistenceUnitInfo = persistenceUnitInfo;
+		this.disableClassTransformerRegistration = disableClassTransformerRegistration;
 	}
 
 	@Override
@@ -121,7 +126,12 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
+	public boolean isClassTransformerRegistrationDisabled() {
+		return disableClassTransformerRegistration;
+	}
+
+	@Override
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
 		if ( this.classTransformer != null ) {
 			throw new PersistenceException( "Persistence unit ["
 					+ persistenceUnitInfo.getPersistenceUnitName()
@@ -138,10 +148,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );
 		}
-	}
 
-	@Override
-	public ClassTransformer getClassTransformer() {
 		return classTransformer;
 	}
 }

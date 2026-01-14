@@ -21,6 +21,8 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
+
 /**
  * PersistenceUnitDescriptor wrapper around {@linkplain PersistenceConfiguration}
  *
@@ -116,12 +118,15 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
-
+	public boolean isClassTransformerRegistrationDisabled() {
+		return true;
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer() {
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+		if ( JPA_LOGGER.isDebugEnabled() ) {
+			JPA_LOGGER.pushingClassTransformerUnsupported( getName() );
+		}
 		return null;
 	}
 

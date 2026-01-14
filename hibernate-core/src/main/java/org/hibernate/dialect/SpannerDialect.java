@@ -12,6 +12,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -26,6 +27,7 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
 import org.hibernate.dialect.temptable.SpannerTemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableExporter;
+import org.hibernate.dialect.type.SpannerArrayJdbcTypeConstructor;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -44,6 +46,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
@@ -202,6 +205,14 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		return "ARRAY<" + elementTypeName + ">";
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		typeContributions.getTypeConfiguration()
+				.getJdbcTypeRegistry()
+				.addTypeConstructor( SpannerArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override

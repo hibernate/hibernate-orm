@@ -6,8 +6,8 @@ package org.hibernate.query.results.internal.complete;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 
 /**
  * A {@link ResultBuilder} or {@link FetchBuilder} that refers to some part

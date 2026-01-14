@@ -17,8 +17,9 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.LegacyFetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
+import org.hibernate.query.results.spi.LegacyFetchBuilder;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -54,7 +55,7 @@ import static org.hibernate.sql.results.ResultsLogger.RESULTS_LOGGER;
  * Central implementation of {@linkplain DomainResultCreationState},
  * {@linkplain SqlAstCreationState}, {@linkplain SqlAstProcessingState} and
  * {@linkplain SqlExpressionResolver} used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  *
  * @author Steve Ebersole
  */

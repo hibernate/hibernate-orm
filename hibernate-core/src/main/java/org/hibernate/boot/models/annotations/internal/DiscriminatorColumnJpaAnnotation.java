@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
+import org.hibernate.boot.models.annotations.spi.Commentable;
+import org.hibernate.boot.models.annotations.spi.Optionable;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
@@ -17,7 +19,7 @@ import jakarta.persistence.DiscriminatorColumn;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, ColumnDetails {
+public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, ColumnDetails, Commentable, Optionable {
 
 	private String name;
 	private jakarta.persistence.DiscriminatorType discriminatorType;

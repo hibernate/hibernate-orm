@@ -23,7 +23,7 @@ import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collect
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, ColumnDetails, ColumnDetails.Definable {
+public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, ColumnDetails {
 	private String name;
 	private String referencedColumnName;
 	private String comment;

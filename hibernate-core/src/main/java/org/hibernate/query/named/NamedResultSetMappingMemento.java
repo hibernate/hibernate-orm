@@ -10,7 +10,8 @@ import java.util.function.Consumer;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultBuilder;
+import org.hibernate.query.results.spi.ResultSetMapping;
 
 /**
  * Used to keep information about named result mappings defined by the
@@ -39,7 +40,7 @@ public interface NamedResultSetMappingMemento {
 	List<ResultMemento> getResultMementos();
 
 	/**
-	 * Resolve this memento. This involves building {@link org.hibernate.query.results.ResultBuilder}
+	 * Resolve this memento. This involves building {@link ResultBuilder}
 	 * instances for each defined result and registering them with the passed {@code resultSetMapping}.
 	 * Any known query spaces should be passed to the {@code querySpaceConsumer}.
 	 */

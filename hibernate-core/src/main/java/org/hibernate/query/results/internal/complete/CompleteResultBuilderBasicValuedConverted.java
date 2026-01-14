@@ -6,7 +6,7 @@ package org.hibernate.query.results.internal.complete;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.resource.beans.spi.ManagedBean;

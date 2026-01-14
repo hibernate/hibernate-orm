@@ -9,7 +9,8 @@ package org.hibernate.boot.models.annotations.spi;
  *
  * @author Steve Ebersole
  */
-public interface CommonTableDetails extends DatabaseObjectDetails, UniqueConstraintCollector, IndexCollector {
+public interface CommonTableDetails
+		extends DatabaseObjectDetails, UniqueConstraintCollector, IndexCollector, Commentable, Optionable {
 	/**
 	 * The table name
 	 */

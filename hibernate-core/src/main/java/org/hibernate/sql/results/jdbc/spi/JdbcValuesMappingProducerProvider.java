@@ -6,7 +6,7 @@ package org.hibernate.sql.results.jdbc.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.service.Service;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 

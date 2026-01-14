@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.named.FetchMemento;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilderEmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 

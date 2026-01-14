@@ -2,22 +2,20 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.spi;
 
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
- * ResultBuilder specialization for cases involving scalar results.
- *
- * @see jakarta.persistence.ColumnResult
+ * ResultBuilder specialization for cases involving embeddable results.
  *
  * @author Steve Ebersole
  */
-public interface ResultBuilderBasicValued extends ResultBuilder {
+public interface ResultBuilderEmbeddable extends ResultBuilder {
 	@Override
-	BasicResult<?> buildResult(
+	EmbeddableResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState);

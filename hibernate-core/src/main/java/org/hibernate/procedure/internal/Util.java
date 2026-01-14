@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 

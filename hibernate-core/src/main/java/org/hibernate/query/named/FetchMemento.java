@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.sql.MemberMapping;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 
 /**
  * @author Steve Ebersole

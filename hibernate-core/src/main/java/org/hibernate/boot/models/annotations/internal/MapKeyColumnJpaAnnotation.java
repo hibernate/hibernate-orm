@@ -24,7 +24,6 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 		ColumnDetails.Mutable,
 		ColumnDetails.Sizable,
 		ColumnDetails.Uniqueable,
-		ColumnDetails.Definable,
 		ColumnDetails.AlternateTableCapable {
 	private String name;
 	private boolean unique;

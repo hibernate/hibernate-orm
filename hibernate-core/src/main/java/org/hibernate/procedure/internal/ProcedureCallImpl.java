@@ -48,7 +48,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.procedure.ProcedureParameter;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
@@ -94,7 +94,7 @@ import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.Par
 import static org.hibernate.procedure.internal.Util.resolveResultSetMappingClasses;
 import static org.hibernate.procedure.internal.Util.resolveResultSetMappingNames;
 import static org.hibernate.procedure.internal.Util.resolveResultSetMappings;
-import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
+import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
 
 /**
  * Standard implementation of {@link ProcedureCall}

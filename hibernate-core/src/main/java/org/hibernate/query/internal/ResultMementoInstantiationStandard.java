@@ -7,16 +7,12 @@ package org.hibernate.query.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import jakarta.persistence.sql.ColumnMapping;
 import jakarta.persistence.sql.ConstructorMapping;
 import jakarta.persistence.sql.MappingElement;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -36,30 +32,6 @@ public class ResultMementoInstantiationStandard implements ResultMementoInstanti
 			List<ArgumentMemento> argumentMementos) {
 		this.instantiatedJtd = instantiatedJtd;
 		this.argumentMementos = argumentMementos;
-	}
-
-	public static <T> ResultMementoInstantiationStandard from(
-			ConstructorMapping<T> constructorMapping,
-			SessionFactoryImplementor factory) {
-		final JavaType<T> targetType = factory.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.resolveDescriptor( constructorMapping.targetClass() );
-		final List<ArgumentMemento> args = CollectionHelper.arrayList( constructorMapping.arguments().length );
-		for ( int i = 0; i < constructorMapping.arguments().length; i++ ) {
-			final MappingElement<?> argument = constructorMapping.arguments()[i];
-			final ResultMemento conversion;
-			if ( argument instanceof ColumnMapping<?> columnMapping ) {
-				conversion = ResultMementoBasicStandard.from( columnMapping, factory );
-			}
-			else if ( argument instanceof ConstructorMapping<?> constructorMapping1 ) {
-				conversion = from( constructorMapping1, factory );
-			}
-			else {
-				throw new IllegalArgumentException( "Unsupported jakarta.persistence.sql.MappingElement type : " + argument.getClass().getName() );
-			}
-			args.add( new ArgumentMemento( conversion ) );
-		}
-		return new ResultMementoInstantiationStandard( targetType, args );
 	}
 
 	public JavaType<?> getInstantiatedJavaType() {

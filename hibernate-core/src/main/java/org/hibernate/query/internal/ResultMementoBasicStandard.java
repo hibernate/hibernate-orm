@@ -8,12 +8,11 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.sql.ColumnMapping;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.ResultMementoBasic;
-import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedConverted;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedStandard;
+import org.hibernate.query.results.spi.ResultBuilderBasicValued;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
@@ -83,6 +82,12 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			builder = resolveBuilder( explicitColumnName, definedType, typeConfiguration, managedBeanRegistry );
 		}
 	}
+
+	public String getColumnName() {
+		return explicitColumnName;
+	}
+
+
 
 	private static <T> ResultBuilderBasicValued resolveBuilder(
 			String columnName,
@@ -164,18 +169,6 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	private ResultMementoBasicStandard(String explicitColumnName, ResultBuilderBasicValued builder) {
 		this.explicitColumnName = explicitColumnName;
 		this.builder = builder;
-	}
-
-	public static ResultMementoBasicStandard from(ColumnMapping<?> columnMapping, SessionFactoryImplementor factory) {
-		return new ResultMementoBasicStandard(
-				columnMapping.columnName(),
-				resolveBuilder(
-						columnMapping.columnName(),
-						columnMapping.getJavaType(),
-						factory.getTypeConfiguration(),
-						factory.getServiceRegistry().requireService( ManagedBeanRegistry.class )
-				)
-		);
 	}
 
 	public ResultMementoBasicStandard(

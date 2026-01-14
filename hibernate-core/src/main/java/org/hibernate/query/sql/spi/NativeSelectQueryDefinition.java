@@ -7,7 +7,7 @@ package org.hibernate.query.sql.spi;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 
 /**
  * Access the values defining a native select query

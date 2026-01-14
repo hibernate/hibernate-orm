@@ -5,7 +5,7 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.select.QueryGroup;

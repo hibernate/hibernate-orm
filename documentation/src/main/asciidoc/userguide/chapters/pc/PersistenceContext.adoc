@@ -135,49 +135,49 @@ Unless the entity class is declared `final`, the proxy extends the entity class.
 === Obtain an entity with its data initialized
 
 It is also quite common to want to obtain an entity along with its data (e.g. like when we need to display it in the UI).
+Hibernate offers two flavors of this operation:
 
-[[pc-find-jpa-example]]
-.Obtaining an entity reference with its data initialized with Jakarta Persistence
+find():: Performs the requested lookup, returning `null` if no matching row was found.
+get():: Performs the requested lookup, throwing an exception if no matching row was found.
+
+[[pc-find-example]]
+.Finding an initialized entity reference
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-example]
 ----
 ====
 
-[[pc-find-native-example]]
-.Obtaining an entity reference with its data initialized with Hibernate API
+[[pc-get-example]]
+.Getting an initialized entity reference
 ====
-
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-example]
 ----
 ====
 
-[[pc-find-by-id-native-example]]
-.Obtaining an entity reference with its data initialized using the `byId()` Hibernate API
-====
+Hibernate also offers a consistent way to `find()` and `get()` an entity by its <<naturalid>>.
 
+[[pc-find-by-natual-id-example]]
+.Finding an entity by natural-id
+====
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-id-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
 ----
 ====
 
-In both cases null is returned if no matching database row was found.
-
-It's possible to return a Java 8 `Optional` as well:
-
-[[tag::pc-find-optional-by-id-native-example]]
-.Obtaining an Optional entity reference with its data initialized using the `byId()` Hibernate API
+[[pc-get-by-natual-id-example]]
+.Getting an entity by natural-id
 ====
-
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-optional-by-id-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-by-natural-id-example]
 ----
 ====
+
 
 [[pc-by-multiple-ids]]
 === Obtain multiple entities by their identifiers
@@ -202,8 +202,8 @@ Hibernate offers this functionality via the `Session#findMultiple` methods which
 Now, assuming we have 3 `Person` entities in the database, we can load all of them with a single call
 as illustrated by the following example:
 
-[[tag::pc-by-multiple-ids-example]]
-.Loading multiple entities using the `findMultiple()` Hibernate API
+[[tag::pc-find-multiple-example]]
+.Loading multiple entities using `findMultiple()`
 ====
 
 [source, java, indent=0]
@@ -212,63 +212,30 @@ include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-exampl
 ----
 ====
 
-[[pc-find-natural-id]]
-=== Obtain an entity by natural-id
+There is also `getMultiple()` which behaves in a similar manner to `get()` in that an exception is thrown if any of the identifiers could not be located.
 
-In addition to allowing to load the entity by its identifier, Hibernate allows applications to load entities by the declared natural identifier.
-
-[[pc-find-by-natural-id-entity-example]]
-.Natural-id mapping
+[[tag::pc-get-multiple-example]]
+.Loading multiple entities using `getMultiple()`
 ====
+
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-natural-id-entity-example]
+include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-example]
 ----
 ====
 
-We can also opt to fetch the entity or just retrieve a reference to it when using the natural identifier loading methods.
+Note that `findMultiple()` and `getMultiple()` both support loading by natural-id as well with the same semantics.
 
-[[pc-find-by-simple-natural-id-example]]
-.Get entity reference by simple natural-id
+[[tag::pc-get-multiple-example]]
+.Loading multiple entities using `getMultiple()`
 ====
+
 [source, java, indent=0]
 ----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-id-example]
+include::{example-dir-pc}/FindMultipleDocTests.java[tags=pc-find-multiple-natural-id-example]
 ----
 ====
 
-[[pc-find-by-natural-id-example]]
-.Load entity by natural-id
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
-----
-====
-
-We can also use a Java 8 `Optional` to load an entity by its natural id:
-
-[[pc-find-optional-by-simple-natural-id-example]]
-.Load an Optional entity by natural-id
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-optional-by-simple-natural-id-example]
-----
-====
-
-Hibernate offers a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
-
-getReference::
-	Should be used in cases where the identifier is assumed to exist, where non-existence would be an actual error.
-	Should never be used to test existence.
-	That is because this method will prefer to create and return a proxy if the data is not already associated with the Session rather than hit the database.
-	The quintessential use-case for using this method is to create foreign key based associations.
-load::
-	Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
-
-Each of these two methods defines an overloading variant accepting a `org.hibernate.LockOptions` argument.
-Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapter>>.
 
 [[pc-filtering]]
 === Filtering entities and associations

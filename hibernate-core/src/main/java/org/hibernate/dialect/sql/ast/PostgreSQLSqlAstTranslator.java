@@ -316,8 +316,12 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 			likePredicate.getEscapeCharacter().accept( this );
 		}
 		else {
-			appendSql( " escape ''" );
+			appendSql( " escape " + defaultEscapeCharacter() );
 		}
+	}
+
+	protected String defaultEscapeCharacter() {
+		return "''";
 	}
 
 	@Override

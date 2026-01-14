@@ -5,6 +5,7 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
+import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
@@ -12,8 +13,14 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 
 public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
@@ -36,6 +43,16 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return SimpleDatabaseVersion.ZERO_VERSION;
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new SpannerPostgreSQLSqlAstTranslator<T>( sessionFactory, statement );
+			}
+		};
 	}
 
 	@Override

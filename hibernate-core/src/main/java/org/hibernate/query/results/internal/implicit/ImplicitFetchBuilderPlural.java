@@ -7,7 +7,7 @@ package org.hibernate.query.results.internal.implicit;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;

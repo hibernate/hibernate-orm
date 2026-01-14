@@ -8,7 +8,7 @@ import jakarta.persistence.sql.ColumnMapping;
 import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.named.ModelPartResultMementoBasic;
-import org.hibernate.query.results.ResultBuilderBasicValued;
+import org.hibernate.query.results.spi.ResultBuilderBasicValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicModelPart;
 import org.hibernate.spi.NavigablePath;
 

@@ -21,6 +21,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import static org.hibernate.boot.archive.internal.ArchiveHelper.getURLFromPath;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /**
  * Describes the information gleaned from a {@code <persistence-unit/>}
@@ -215,12 +216,15 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
-		// todo : log a message that this is currently not supported...
+	public boolean isClassTransformerRegistrationDisabled() {
+		return true;
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer() {
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+		if ( JPA_LOGGER.isDebugEnabled() ) {
+			JPA_LOGGER.pushingClassTransformerUnsupported( getName() );
+		}
 		return null;
 	}
 }

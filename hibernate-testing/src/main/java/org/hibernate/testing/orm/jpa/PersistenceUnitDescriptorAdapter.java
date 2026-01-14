@@ -4,21 +4,20 @@
  */
 package org.hibernate.testing.orm.jpa;
 
-import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-
 import jakarta.persistence.FetchType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import jakarta.persistence.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
-
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
+import javax.sql.DataSource;
+import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * @author Steve Ebersole
@@ -116,11 +115,12 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
+	public boolean isClassTransformerRegistrationDisabled() {
+		return true;
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer() {
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
 		return null;
 	}
 }

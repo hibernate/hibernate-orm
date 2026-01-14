@@ -35,6 +35,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -113,6 +115,14 @@ public class ByteArrayMappingTests {
 		scope.inTransaction(
 				(session) -> session.get(EntityOfByteArrays.class, 1)
 		);
+	}
+
+	@Test
+	public void testIsInstance() {
+		final ByteArrayJavaType javaType = ByteArrayJavaType.INSTANCE;
+
+		assertTrue( javaType.isInstance(new Byte[0]) );
+		assertFalse( javaType.isInstance(new byte[0]) );
 	}
 
 	@AfterEach

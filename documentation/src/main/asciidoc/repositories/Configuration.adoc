@@ -54,13 +54,13 @@ You'll need to configure the annotation processor to run when your project is co
 
 * In Gradle, you'll need to use `annotationProcessor`.
 +
-[source,groovy]
+[source,groovy,subs="attributes+"]
 ----
-annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
+annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 ----
 * In Maven, you will need to configure the `maven-compiler-plugin`.
 +
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 include::../userguide/chapters/tooling/extras/maven-example-metamodel.pom[]
 ----

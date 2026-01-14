@@ -20,7 +20,7 @@ for more details on the available parameters.
 
 .Apply the Bytecode Enhancement plugin
 ====
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 include::extras/maven-example.pom[]
 ----
@@ -166,7 +166,7 @@ paths of the maven compiler plugin.
 
 .Integrate the metamodel generator
 ====
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 include::extras/maven-example-metamodel.pom[]
 ----

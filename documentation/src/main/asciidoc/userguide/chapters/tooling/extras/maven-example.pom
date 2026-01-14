@@ -4,7 +4,7 @@
         <plugin>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-maven-plugin</artifactId>
-            <version>$currentHibernateVersion</version>
+            <version>{fullVersion}</version>
             <executions>
                 <execution>
                     <goals>

@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import org.hibernate.query.results.ResultBuilderBasicValued;
+import org.hibernate.query.results.spi.ResultBuilderBasicValued;
 
 /**
  * @author Steve Ebersole

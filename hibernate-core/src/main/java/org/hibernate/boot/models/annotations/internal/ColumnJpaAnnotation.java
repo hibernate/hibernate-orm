@@ -4,20 +4,18 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Map;
-
+import jakarta.persistence.Column;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CheckConstraintCollector;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
-import org.hibernate.boot.models.annotations.spi.Commentable;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 
-import jakarta.persistence.Column;
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -28,9 +26,7 @@ public class ColumnJpaAnnotation implements Column,
 		ColumnDetails.Mutable,
 		ColumnDetails.Sizable,
 		ColumnDetails.Uniqueable,
-		ColumnDetails.Definable,
 		ColumnDetails.AlternateTableCapable,
-		Commentable,
 		CheckConstraintCollector {
 
 	private String name;

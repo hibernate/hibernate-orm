@@ -65,7 +65,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	//			representations) be what is used and handed to the
 	//			NamedResultSetMappingMemento directly.  They simply need
 	//			to be capable of resolving themselves into ResultBuilders
-	//			(`org.hibernate.query.results.ResultBuilder`) as part of the
+	//			(`org.hibernate.query.results.spi.ResultBuilder`) as part of the
 	//			memento for its resolution
 
 	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation, String name) {

@@ -9,8 +9,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.ResultBuilderBasicValued;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultBuilderBasicValued;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.spi.QueryEngine;
 

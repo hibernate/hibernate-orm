@@ -98,7 +98,17 @@ public final class Bootstrap {
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map<String,Object> integration) {
-		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration );
+		return getEntityManagerFactoryBuilder( persistenceUnitInfo, false, integration );
+	}
+
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo persistenceUnitInfo,
+			boolean classTransformerRegistrationDisabled,
+			Map<String,Object> integration) {
+		return getEntityManagerFactoryBuilder(
+				new PersistenceUnitInfoDescriptor( persistenceUnitInfo, classTransformerRegistrationDisabled ),
+				integration
+		);
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(

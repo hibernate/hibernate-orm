@@ -4,18 +4,12 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceUnitTransactionType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -27,15 +21,19 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
-
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -276,11 +274,12 @@ public class EntityManagerFactoryBasedFunctionalTest
 		}
 
 		@Override
-		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		public boolean isClassTransformerRegistrationDisabled() {
+			return true;
 		}
 
 		@Override
-		public ClassTransformer getClassTransformer() {
+		public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
 			return null;
 		}
 	}

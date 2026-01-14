@@ -24,10 +24,15 @@ import static java.lang.Integer.toHexString;
 
 /**
  * Descriptor for {@code Byte[]} handling, which disallows {@code null} elements.
- * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and wants to map to {@link SqlTypes#VARBINARY}.
+ * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and
+ * wants to map to {@link SqlTypes#VARBINARY}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This kind of mapping is no longer required by the JPA specification.
+ * It makes more sense to use {@code byte[]} to represent {@code VARBINARY}.
  */
+@Deprecated(since = "7.3")
 public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public static final ByteArrayJavaType INSTANCE = new ByteArrayJavaType();
 
@@ -65,8 +70,8 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
 		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
-		return descriptor instanceof AdjustableJdbcType adjustableJdbcType
-				? adjustableJdbcType.resolveIndicatedType( indicators, this )
+		return descriptor instanceof AdjustableJdbcType jdbcType
+				? jdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;
 	}
 
@@ -90,7 +95,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( string.length() % 2 != 0 ) {
 			throw new IllegalArgumentException( "The string is not a valid string representation of a binary content." );
 		}
-		Byte[] bytes = new Byte[string.length() / 2];
+		final var bytes = new Byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			final String hexStr = string.subSequence( i * 2, (i + 1) * 2 ).toString();
 			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
@@ -151,7 +156,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( bytes == null ) {
 			return null;
 		}
-		final Byte[] result = new Byte[bytes.length];
+		final var result = new Byte[bytes.length];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			result[i] = bytes[i];
 		}
@@ -162,7 +167,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( bytes == null ) {
 			return null;
 		}
-		final byte[] result = new byte[bytes.length];
+		final var result = new byte[bytes.length];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			result[i] = bytes[i];
 		}

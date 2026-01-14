@@ -73,7 +73,8 @@ public class JsonJdbcType implements AggregateJdbcType {
 		return embeddableMappingType;
 	}
 
-	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options)
+			throws SQLException {
 		if ( string == null ) {
 			return null;
 		}
@@ -89,9 +90,10 @@ public class JsonJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
+	public Object createJdbcValue(Object domainValue, WrapperOptions options)
+			throws SQLException {
 		assert embeddableMappingType != null;
-		final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+		final var writer = new StringJsonDocumentWriter();
 		try {
 			JsonGeneratingVisitor.INSTANCE.visit( embeddableMappingType, domainValue, options, writer );
 			return writer.getJson();
@@ -102,15 +104,17 @@ public class JsonJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
+	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options)
+			throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.deserialize( embeddableMappingType, new StringJsonDocumentReader( (String) rawJdbcValue ), false, options );
+		return JsonHelper.deserialize( embeddableMappingType,
+				new StringJsonDocumentReader( (String) rawJdbcValue ), false, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( embeddableMappingType != null ) {
 			try {
-				final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+				final var writer = new StringJsonDocumentWriter();
 				JsonGeneratingVisitor.INSTANCE.visit( embeddableMappingType, value, options, writer );
 				return writer.getJson();
 			}
@@ -127,15 +131,13 @@ public class JsonJdbcType implements AggregateJdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String json = ( (JsonJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-				st.setString( index, json );
+				st.setString( index, JsonJdbcType.this.toString( value, getJavaType(), options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String json = ( (JsonJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-				st.setString( name, json );
+				st.setString( name, JsonJdbcType.this.toString( value, getJavaType(), options ) );
 			}
 		};
 	}
@@ -144,17 +146,20 @@ public class JsonJdbcType implements AggregateJdbcType {
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options)
+					throws SQLException {
 				return fromString( rs.getString( paramIndex ), getJavaType(), options );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+					throws SQLException {
 				return fromString( statement.getString( index ), getJavaType(), options );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
 				return fromString( statement.getString( name ), getJavaType(), options );
 			}
 

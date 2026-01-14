@@ -194,8 +194,9 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	/**
 	 * Option to suppress creation of a filesystem-based index of entity
-	 * types and enums for use by the query validator. By default, and
-	 * index is created.
+	 * types and enums for use by the query validator. By default, the
+	 * index is created. The index is used to speed up query validation
+	 * for faster compilation times.
 	 */
 	public static final String INDEX = "index";
 

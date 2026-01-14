@@ -77,10 +77,9 @@ public class XmlJdbcType implements AggregateJdbcType {
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
-		if ( embeddableMappingType != null ) {
-			return XmlHelper.toString( embeddableMappingType, value, options );
-		}
-		return options.getXmlFormatMapper().toString( value, javaType, options );
+		return embeddableMappingType != null
+				? XmlHelper.toString( embeddableMappingType, value, options )
+				: options.getXmlFormatMapper().toString( value, javaType, options );
 	}
 
 	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
@@ -112,44 +111,42 @@ public class XmlJdbcType implements AggregateJdbcType {
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options)
+					throws SQLException {
 				return getObject( rs.getSQLXML( paramIndex ), options );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+					throws SQLException {
 				return getObject( statement.getSQLXML( index ), options );
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
 				return getObject( statement.getSQLXML( name ), options );
 			}
 
 			private X getObject(SQLXML sqlxml, WrapperOptions options) throws SQLException {
 				return sqlxml == null ? null
-						: getXmlJdbcType().fromString( sqlxml.getString(), getJavaType(), options );
-			}
-
-			private XmlJdbcType getXmlJdbcType() {
-				return (XmlJdbcType) getJdbcType();
+						: XmlJdbcType.this.fromString( sqlxml.getString(), getJavaType(), options );
 			}
 		};
 	}
 
 	protected static class XmlValueBinder<X> extends BasicBinder<X> {
-		public XmlValueBinder(JavaType<X> javaType, JdbcType jdbcType) {
+		private final XmlJdbcType jdbcType;
+
+		public XmlValueBinder(JavaType<X> javaType, XmlJdbcType jdbcType) {
 			super( javaType, jdbcType );
+			this.jdbcType = jdbcType;
 		}
 
-		private XmlJdbcType getXmlJdbcType() {
-			return (XmlJdbcType) getJdbcType();
-		}
-
-		private SQLXML getSqlxml(PreparedStatement st, X value, WrapperOptions options) throws SQLException {
-			final String xml = getXmlJdbcType().toString( value, getJavaType(), options );
-			SQLXML sqlxml = st.getConnection().createSQLXML();
-			sqlxml.setString( xml );
+		private SQLXML getSqlxml(PreparedStatement st, X value, WrapperOptions options)
+				throws SQLException {
+			final SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( jdbcType.toString( value, getJavaType(), options ) );
 			return sqlxml;
 		}
 

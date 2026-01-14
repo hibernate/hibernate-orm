@@ -9,7 +9,9 @@ For tests to add to the TCK, see -
 
 * `org.hibernate.orm.test.query.resultmapping.dynamic`
 * `org.hibernate.orm.test.event.AddListenerTests`
+* `org.hibernate.orm.test.query.graph.QueryWithGraphTests`[1]
 
+[1] Though this test needs https://github.com/jakartaee/persistence/pull/842
 
 == Build Items
 

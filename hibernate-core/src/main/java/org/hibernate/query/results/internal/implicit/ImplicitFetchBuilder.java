@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 
 /**
  * @author Steve Ebersole

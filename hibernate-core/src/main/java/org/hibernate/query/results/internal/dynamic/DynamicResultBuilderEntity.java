@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import org.hibernate.query.results.ResultBuilderEntityValued;
+import org.hibernate.query.results.spi.ResultBuilderEntityValued;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.spi;
 
 import org.hibernate.sql.results.graph.Fetchable;
 

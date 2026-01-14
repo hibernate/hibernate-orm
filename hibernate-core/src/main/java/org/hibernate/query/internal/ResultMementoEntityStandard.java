@@ -12,13 +12,13 @@ import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.results.FetchBuilderBasicValued;
+import org.hibernate.query.results.spi.FetchBuilderBasicValued;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilderEntityValued;
+import org.hibernate.query.results.spi.FetchBuilder;
+import org.hibernate.query.results.spi.ResultBuilderEntityValued;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityStandard;
 import org.hibernate.sql.results.graph.Fetchable;
 

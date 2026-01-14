@@ -168,8 +168,10 @@ dependencies {
 	javadocClasspath jdbcLibs.postgresql
 	javadocClasspath jdbcLibs.edb
 	javadocClasspath libs.jackson
+	javadocClasspath libs.jackson3
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
+	javadocClasspath libs.jackson3Xml
 	javadocClasspath jdbcLibs.oracle
 	javadocClasspath jdbcLibs.oracleJdbcJacksonOsonExtension
 }

@@ -4,10 +4,12 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.community.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
 import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
+import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -51,6 +53,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return SpannerPostgreSQLSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SpannerPostgreSQLAggregateSupport.INSTANCE;
 	}
 
 	@Override

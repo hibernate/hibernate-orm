@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
 public class JdbcDateJavaTypeDescriptorTest {
@@ -31,8 +32,8 @@ public class JdbcDateJavaTypeDescriptorTest {
 	public void testIsInstance() {
 		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 
-		javaType.isInstance( new java.sql.Date( 0 ) );
-		javaType.isInstance( new java.util.Date( 0 ) );
+		assertTrue( javaType.isInstance(new java.sql.Date(0)) );
+		assertTrue( javaType.isInstance(new java.util.Date(0)) );
 	}
 
 	@Test

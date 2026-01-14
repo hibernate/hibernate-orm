@@ -19,7 +19,6 @@ import jakarta.persistence.OrderColumn;
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class OrderColumnJpaAnnotation implements OrderColumn,
 		ColumnDetails,
-		ColumnDetails.Definable,
 		ColumnDetails.Nullable,
 		ColumnDetails.Mutable {
 	private String name;

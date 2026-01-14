@@ -6,8 +6,8 @@ package org.hibernate.query.results.internal.complete;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.FetchBuilderBasicValued;
+import org.hibernate.query.results.spi.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilderBasicValued;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;

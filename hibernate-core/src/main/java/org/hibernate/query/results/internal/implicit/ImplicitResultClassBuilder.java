@@ -6,7 +6,7 @@ package org.hibernate.query.results.internal.implicit;
 
 import jakarta.persistence.NamedNativeQuery;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;

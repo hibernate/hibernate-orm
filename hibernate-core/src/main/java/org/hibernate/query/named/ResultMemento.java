@@ -11,7 +11,7 @@ import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 
 /**
  * Models a SQL ResultSet mapping generally defined via {@linkplain jakarta.persistence.SqlResultSetMapping annotations}.

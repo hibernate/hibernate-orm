@@ -5,11 +5,14 @@
 package org.hibernate.orm.test.pc;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.KeyType;
 import org.hibernate.RemovalsMode;
 import org.hibernate.OrderingMode;
 import org.hibernate.SessionCheckMode;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -48,7 +51,7 @@ public class FindMultipleDocTests {
 	}
 
 	@Test
-	void testBasicUsage(SessionFactoryScope factoryScope) {
+	void testBasicFindMultiple(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			//tag::pc-find-multiple-example[]
 			List<Person> persons = session.findMultiple(
@@ -58,6 +61,40 @@ public class FindMultipleDocTests {
 					ORDERED
 			);
 			//end::pc-find-multiple-example[]
+		} );
+	}
+
+	@Test
+	void testBasicGetMultiple(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			//tag::pc-get-multiple-example[]
+			try {
+				List<Person> persons = session.getMultiple(
+						Person.class,
+						List.of( 1, 2, 3 ),
+						PESSIMISTIC_WRITE,
+						ORDERED
+				);
+			}
+			catch (EntityNotFoundException e) {
+				// handle it
+			}
+			//end::pc-get-multiple-example[]
+		} );
+	}
+
+	@Test
+	void testFindMultipleByNaturalId(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			//tag::pc-find-multiple-natural-id-example[]
+			List<Person> persons = session.findMultiple(
+					Person.class,
+					List.of(1,2,3),
+					KeyType.NATURAL,
+					PESSIMISTIC_WRITE,
+					ORDERED
+			);
+			//end::pc-find-multiple-natural-id-example[]
 		} );
 	}
 
@@ -237,6 +274,7 @@ public class FindMultipleDocTests {
 	public static class Person {
 		@Id
 		private Integer id;
+		@NaturalId
 		private String name;
 
 		public Person() {

@@ -184,7 +184,7 @@ Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
         fork="true"
         classpath="${classpath}">
     <compilerarg value="-processorpath" />
-    <compilerarg value="/path/to/metamodel-generator.jar"/>
+    <compilerarg value="/path/to/hibernate-processor-${hibernate-version}.jar"/>
     <compilerarg value="-proc:only"/>
 </javac>
 ----

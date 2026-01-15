@@ -46,7 +46,7 @@ public class CharacterType
 	}
 
 	public String objectToSQLString(Character value, Dialect dialect) {
-		return '\'' + toString( value ) + '\'';
+		return dialect.inlineLiteral( toString( value ) );
 	}
 
 	public Character stringToObject(String xml) {

@@ -122,6 +122,9 @@ public abstract class IdsClauseBuilder {
 				throw new IllegalArgumentException( e );
 			}
 		}
-		return String.valueOf( value );
+
+		throw new IllegalStateException(
+				"Cannot quote identifier value of non LiteralType: " + type.getName()
+		);
 	}
 }

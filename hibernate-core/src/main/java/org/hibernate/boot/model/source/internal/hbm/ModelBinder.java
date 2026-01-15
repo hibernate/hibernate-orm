@@ -284,8 +284,8 @@ public class ModelBinder {
 		entityDescriptor.setEntityName( entityName );
 		entityDescriptor.setJpaEntityName( entityNamingSource.getJpaEntityName() );
 		entityDescriptor.setClassName( entityNamingSource.getClassName() );
-		String jpaEntityName = entityDescriptor.getJpaEntityName();
-		String className = entityDescriptor.getClassName();
+		final String jpaEntityName = entityDescriptor.getJpaEntityName();
+		final String className = entityDescriptor.getClassName();
 		if ( jpaEntityName != null && className != null ) {
 			metadataBuildingContext.getMetadataCollector().addImport( jpaEntityName, className );
 		}
@@ -2590,7 +2590,8 @@ public class ModelBinder {
 
 	private Identifier logicalTableName(
 			MappingDocument mappingDocument, EntitySource entitySource, TableSource tableSource) {
-		if ( isNotEmpty( tableSource.getExplicitTableName() ) ) {
+		final String explicitTableName = tableSource.getExplicitTableName();
+		if ( isNotEmpty( explicitTableName ) ) {
 			return database.toIdentifier( tableSource.getExplicitTableName() );
 		}
 		else {
@@ -2690,41 +2691,46 @@ public class ModelBinder {
 	}
 
 	private Identifier determineCatalogName(TableSpecificationSource tableSpecSource) {
-		return isNotEmpty( tableSpecSource.getExplicitCatalogName() )
-				? database.toIdentifier( tableSpecSource.getExplicitCatalogName() )
+		final String explicitCatalogName = tableSpecSource.getExplicitCatalogName();
+		return isNotEmpty( explicitCatalogName )
+				? database.toIdentifier( explicitCatalogName )
 				: null;
 	}
 
 	private Identifier determineSchemaName(TableSpecificationSource tableSpecSource) {
-		return isNotEmpty( tableSpecSource.getExplicitSchemaName() )
-				? database.toIdentifier( tableSpecSource.getExplicitSchemaName() )
+		final String explicitSchemaName = tableSpecSource.getExplicitSchemaName();
+		return isNotEmpty( explicitSchemaName )
+				? database.toIdentifier( explicitSchemaName )
 				: null;
 	}
 
 	private static void bindCustomSql(
 			EntitySource entitySource,
 			PersistentClass entityDescriptor) {
-		if ( entitySource.getCustomSqlInsert() != null ) {
+		final var customSqlInsert = entitySource.getCustomSqlInsert();
+		if ( customSqlInsert != null ) {
 			entityDescriptor.setCustomSQLInsert(
-					entitySource.getCustomSqlInsert().sql(),
-					entitySource.getCustomSqlInsert().callable(),
-					entitySource.getCustomSqlInsert().checkStyle()
+					customSqlInsert.sql(),
+					customSqlInsert.callable(),
+					customSqlInsert.checkStyle()
 			);
 		}
 
-		if ( entitySource.getCustomSqlUpdate() != null ) {
+		final var customSqlUpdate = entitySource.getCustomSqlUpdate();
+		if ( customSqlUpdate != null ) {
 			entityDescriptor.setCustomSQLUpdate(
-					entitySource.getCustomSqlUpdate().sql(),
-					entitySource.getCustomSqlUpdate().callable(),
-					entitySource.getCustomSqlUpdate().checkStyle()
+					customSqlUpdate.sql(),
+					customSqlUpdate.callable(),
+					customSqlUpdate.checkStyle()
 			);
 		}
 
-		if ( entitySource.getCustomSqlDelete() != null ) {
+		final var customSqlDelete = entitySource.getCustomSqlDelete();
+		if ( customSqlDelete != null ) {
 			entityDescriptor.setCustomSQLDelete(
-					entitySource.getCustomSqlDelete().sql(),
-					entitySource.getCustomSqlDelete().callable(),
-					entitySource.getCustomSqlDelete().checkStyle()
+					customSqlDelete.sql(),
+					customSqlDelete.callable(),
+					customSqlDelete.checkStyle()
 			);
 		}
 
@@ -2734,27 +2740,30 @@ public class ModelBinder {
 	private static void bindCustomSql(
 			SecondaryTableSource secondaryTableSource,
 			Join secondaryTable) {
-		if ( secondaryTableSource.getCustomSqlInsert() != null ) {
+		final var customSqlInsert = secondaryTableSource.getCustomSqlInsert();
+		if ( customSqlInsert != null ) {
 			secondaryTable.setCustomSQLInsert(
-					secondaryTableSource.getCustomSqlInsert().sql(),
-					secondaryTableSource.getCustomSqlInsert().callable(),
-					secondaryTableSource.getCustomSqlInsert().checkStyle()
+					customSqlInsert.sql(),
+					customSqlInsert.callable(),
+					customSqlInsert.checkStyle()
 			);
 		}
 
-		if ( secondaryTableSource.getCustomSqlUpdate() != null ) {
+		final var customSqlUpdate = secondaryTableSource.getCustomSqlUpdate();
+		if ( customSqlUpdate != null ) {
 			secondaryTable.setCustomSQLUpdate(
-					secondaryTableSource.getCustomSqlUpdate().sql(),
-					secondaryTableSource.getCustomSqlUpdate().callable(),
-					secondaryTableSource.getCustomSqlUpdate().checkStyle()
+					customSqlUpdate.sql(),
+					customSqlUpdate.callable(),
+					customSqlUpdate.checkStyle()
 			);
 		}
 
-		if ( secondaryTableSource.getCustomSqlDelete() != null ) {
+		final var customSqlDelete = secondaryTableSource.getCustomSqlDelete();
+		if ( customSqlDelete != null ) {
 			secondaryTable.setCustomSQLDelete(
-					secondaryTableSource.getCustomSqlDelete().sql(),
-					secondaryTableSource.getCustomSqlDelete().callable(),
-					secondaryTableSource.getCustomSqlDelete().checkStyle()
+					customSqlDelete.sql(),
+					customSqlDelete.callable(),
+					customSqlDelete.checkStyle()
 			);
 		}
 	}
@@ -3056,10 +3065,9 @@ public class ModelBinder {
 			final var idSource = getPluralAttributeSource().getCollectionIdSource();
 			if ( idSource != null ) {
 				final var idBagBinding = (IdentifierCollection) getCollectionBinding();
-				final var idBinding = new BasicValue(
-						mappingDocument,
-						idBagBinding.getCollectionTable()
-				);
+				final var idBinding =
+						new BasicValue( mappingDocument,
+								idBagBinding.getCollectionTable() );
 
 				bindSimpleValueType(
 						mappingDocument,

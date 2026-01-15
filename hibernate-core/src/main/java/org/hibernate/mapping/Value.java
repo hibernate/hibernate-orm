@@ -113,7 +113,7 @@ public interface Value extends Serializable {
 	}
 
 	private Type getIdType(EntityType entityType) {
-		final PersistentClass entityBinding =
+		final var entityBinding =
 				getBuildingContext().getMetadataCollector()
 						.getEntityBinding( entityType.getAssociatedEntityName() );
 		return entityType.isReferenceToPrimaryKey()
@@ -189,27 +189,26 @@ public interface Value extends Serializable {
 	@Internal
 	default void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
 		for ( int i = 0; i < getSelectables().size(); i++ ) {
-			final Selectable selectable = getSelectables().get( i );
-			if ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) {
-				final Column col = (Column) selectable;
-
+			if ( getSelectables().get( i ) instanceof Column column
+					&& ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) ) {
 				final var primaryTable = getTable();
-
-				Identifier catalog = null;
-				Identifier schema = null;
-				Identifier table = null;
-
+				final Identifier catalog;
+				final Identifier schema;
+				final Identifier table;
 				if ( primaryTable != null ) {
 					catalog = primaryTable.getCatalogIdentifier();
 					schema = primaryTable.getSchemaIdentifier();
 					table = primaryTable.getNameIdentifier();
 				}
-
-				Identifier columnName = col.getNameIdentifier( getBuildingContext() );
-
+				else {
+					catalog = null;
+					schema = null;
+					table = null;
+				}
+				final var columnName = column.getNameIdentifier( getBuildingContext() );
 				if ( !distinctColumns.add( new QualifiedColumnName( catalog, schema, table, columnName ) ) ){
 					throw new MappingException(
-							"Column '" + col.getName()
+							"Column '" + column.getName()
 									+ "' is duplicated in mapping for " + owner
 									+ " (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
 					);

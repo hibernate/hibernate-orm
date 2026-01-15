@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.LongNVarcharTypeDescriptor;
 
@@ -16,7 +17,7 @@ import org.hibernate.type.descriptor.sql.LongNVarcharTypeDescriptor;
  * @author Bertrand Renuart
  * @author Steve Ebersole
  */
-public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
+public class NTextType extends AbstractSingleColumnStandardBasicType<String> implements LiteralType<String> {
 	public static final NTextType INSTANCE = new NTextType();
 
 	public NTextType() {
@@ -27,4 +28,8 @@ public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
 		return "ntext";
 	}
 
+	@Override
+	public String objectToSQLString(String value, Dialect dialect) throws Exception {
+		return StringNVarcharType.INSTANCE.objectToSQLString( value, dialect );
+	}
 }

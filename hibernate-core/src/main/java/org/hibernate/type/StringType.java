@@ -35,7 +35,7 @@ public class StringType
 	}
 
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return '\'' + value + '\'';
+		return dialect.inlineLiteral( value );
 	}
 
 	public String stringToObject(String xml) throws Exception {

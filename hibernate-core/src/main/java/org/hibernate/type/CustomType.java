@@ -202,7 +202,7 @@ public class CustomType
 
 	@Override
 	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( (EnhancedUserType) getUserType() ).objectToSQLString( value);
+		return ( (EnhancedUserType) getUserType() ).objectToSQLString( value, dialect );
 	}
 
 	@Override

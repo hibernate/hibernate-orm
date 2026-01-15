@@ -204,9 +204,9 @@ public interface JdbcType extends Serializable {
 	 */
 	@Deprecated(forRemoval = true, since = "7.2")
 	default String wrapWriteExpression(String writeExpression, Dialect dialect) {
-		final StringBuilder sb = new StringBuilder( writeExpression.length() );
-		appendWriteExpression( writeExpression, new StringBuilderSqlAppender( sb ), dialect );
-		return sb.toString();
+		final var wrapped = new StringBuilder( writeExpression.length() );
+		appendWriteExpression( writeExpression, new StringBuilderSqlAppender( wrapped ), dialect );
+		return wrapped.toString();
 	}
 
 	/**
@@ -225,9 +225,9 @@ public interface JdbcType extends Serializable {
 	 */
 	@Incubating
 	default String wrapWriteExpression(String writeExpression, @Nullable Size size, Dialect dialect) {
-		final StringBuilder sb = new StringBuilder( writeExpression.length() );
-		appendWriteExpression( writeExpression, size, new StringBuilderSqlAppender( sb ), dialect );
-		return sb.toString();
+		final var wrapped = new StringBuilder( writeExpression.length() );
+		appendWriteExpression( writeExpression, size, new StringBuilderSqlAppender( wrapped ), dialect );
+		return wrapped.toString();
 	}
 
 	/**
@@ -250,7 +250,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInteger() {
-		int typeCode = getDdlTypeCode();
+		final int typeCode = getDdlTypeCode();
 		return isIntegral(typeCode)
 			|| typeCode == BIT; //HIGHLY DUBIOUS!
 	}
@@ -276,7 +276,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isStringLike() {
-		int ddlTypeCode = getDdlTypeCode();
+		final int ddlTypeCode = getDdlTypeCode();
 		return isCharacterOrClobType( ddlTypeCode )
 			|| isEnumType( ddlTypeCode );
 	}

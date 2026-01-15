@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.quote;
 
-import java.util.Iterator;
-
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -48,11 +46,11 @@ public class QuoteGlobalTest {
 	@Test
 	@JiraKey(value = "HHH-7890")
 	public void testQuotedUniqueConstraint(SessionFactoryScope scope) {
-		Iterator<UniqueKey> itr = scope.getMetadataImplementor().getEntityBinding(Person.class.getName())
-				.getTable().getUniqueKeys().values().iterator();
-		while ( itr.hasNext() ) {
-			UniqueKey uk = itr.next();
+		for ( UniqueKey uk :
+				scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
+						.getTable().getUniqueKeys().values() ) {
 			assertEquals( 1, uk.getColumns().size() );
+			assertTrue(  uk.getColumn( 0 ).isQuoted() );
 			assertEquals( "name", uk.getColumn( 0 ).getName() );
 			return;
 		}
@@ -60,7 +58,7 @@ public class QuoteGlobalTest {
 	}
 
 	@Test
-	public void testQuoteManytoMany(SessionFactoryScope scope) {
+	public void testQuoteManyToMany(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
 					try {
@@ -96,17 +94,15 @@ public class QuoteGlobalTest {
 	@Test
 	@JiraKey(value = "HHH-8520")
 	public void testHbmQuoting(SessionFactoryScope scope) {
-		final MetadataImplementor metadataImplementor = scope.getMetadataImplementor();
+		final var metadataImplementor = scope.getMetadataImplementor();
 		doTestHbmQuoting( DataPoint.class, metadataImplementor );
 		doTestHbmQuoting( AssociatedDataPoint.class, metadataImplementor );
 	}
 
-	private void doTestHbmQuoting(Class clazz, MetadataImplementor metadataImplementor) {
+	private void doTestHbmQuoting(Class<?> clazz, MetadataImplementor metadataImplementor) {
 		Table table = metadataImplementor.getEntityBinding( clazz.getName() ).getTable();
 		assertTrue( table.isQuoted() );
-		Iterator itr = table.getColumns().iterator();
-		while ( itr.hasNext() ) {
-			Column column = (Column) itr.next();
+		for ( Column column : table.getColumns() ) {
 			assertTrue( column.isQuoted() );
 		}
 	}

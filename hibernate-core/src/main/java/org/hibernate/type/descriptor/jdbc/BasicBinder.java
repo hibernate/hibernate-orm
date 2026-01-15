@@ -38,7 +38,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	}
 
 	@Override
-	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options)
+			throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
@@ -61,7 +62,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	}
 
 	@Override
-	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
+	public final void bind(CallableStatement st, J value, String name, WrapperOptions options)
+			throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
@@ -85,8 +87,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 
 	@Override
 	public Object getBindValue(J value, WrapperOptions options) throws SQLException {
-		final Class<?> preferredJavaTypeClass = jdbcType.getPreferredJavaTypeClass( options );
-		return preferredJavaTypeClass == null ? value : getJavaType().unwrap( value, preferredJavaTypeClass, options );
+		final var preferredClass = jdbcType.getPreferredJavaTypeClass( options );
+		return preferredClass == null ? value : getJavaType().unwrap( value, preferredClass, options );
 	}
 
 	/**
@@ -98,7 +100,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 *
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
-	protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+	protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
+			throws SQLException {
 		st.setNull( index, jdbcType.getJdbcTypeCode() );
 	}
 
@@ -111,7 +114,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 *
 	 * @throws SQLException Indicates a problem binding to the callable statement.
 	 */
-	protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+	protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+			throws SQLException {
 		st.setNull( name, jdbcType.getJdbcTypeCode() );
 	}
 

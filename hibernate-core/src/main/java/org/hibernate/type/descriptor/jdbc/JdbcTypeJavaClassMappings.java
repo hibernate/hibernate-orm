@@ -44,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 //TODO: Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
 //      {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
-public class JdbcTypeJavaClassMappings {
+public final class JdbcTypeJavaClassMappings {
 	private static final Logger LOG = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
@@ -64,17 +64,18 @@ public class JdbcTypeJavaClassMappings {
 	 * and <em>TABLE B-4: Java Object Types Mapped to JDBC Types</em>, as well as some additional
 	 * "common sense" mappings.
 	 */
-	public int determineJdbcTypeCodeForJavaClass(Class<?> cls) {
-		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
+	public int determineJdbcTypeCodeForJavaClass(Class<?> type) {
+		final Integer typeCode = javaClassToJdbcTypeCodeMap.get( type );
 		if ( typeCode != null ) {
 			return typeCode;
 		}
-
-		int specialCode = cls.hashCode();
-		LOG.debug(
-				"JDBC type code mapping not known for class [" + cls.getName() + "]; using custom code [" + specialCode + "]"
-		);
-		return specialCode;
+		else {
+			final int specialCode = type.hashCode();
+			LOG.debug(
+					"JDBC type code mapping not known for class [" + type.getName() + "]; using custom code [" + specialCode + "]"
+			);
+			return specialCode;
+		}
 	}
 
 	/**
@@ -83,25 +84,18 @@ public class JdbcTypeJavaClassMappings {
 	 * These mappings are defined by <em>TABLE B-1: JDBC Types Mapped to Java Types</em>.
 	 */
 	public Class<?> determineJavaClassForJdbcTypeCode(Integer typeCode) {
-		Class<?> cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
+		final var cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
 		if ( cls != null ) {
 			return cls;
 		}
-
-		LOG.debugf(
-				"Java Class mapping not known for JDBC type code [%s]; using java.lang.Object",
-				typeCode
-		);
-		return Object.class;
+		else {
+			LOG.debugf(
+					"Java Class mapping not known for JDBC type code [%s]; using java.lang.Object",
+					typeCode
+			);
+			return Object.class;
+		}
 	}
-
-	/**
-	 * @see #determineJavaClassForJdbcTypeCode(Integer)
-	 */
-	public Class<?> determineJavaClassForJdbcTypeCode(int typeCode) {
-		return determineJavaClassForJdbcTypeCode( Integer.valueOf( typeCode ) );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

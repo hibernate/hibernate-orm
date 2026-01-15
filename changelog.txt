@@ -1,6 +1,33 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.1.Final (January 15, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36872
+
+
+** Bug
+    * HHH-20048 ByteArrayJavaType#isInstance wrongly considers byte[] instead of Byte[] to be an instance
+    * HHH-20041 DB2 for z IN tuple list predicate performs badly
+    * HHH-20037 MappedSuperClasses can be enhanced more than once resulting in Duplicate annotation interface org...EnhancementInfo Exception
+    * HHH-20032 SubSequence.subSequence violates CharSequence contract for start == end == length()
+    * HHH-20027 Fix failing parsing of PostgreSQL canonical lock_timeout formats (0, ms, s, min, h)
+    * HHH-20015 Hibernate Maven Plugin 7.x does not include maven project dependencies in the enhancement classpath
+    * HHH-20008 Bad performance of MEMBER OF translation
+    * HHH-20005 SchemaUpdateGeneratingOnlyScriptFileTest fails if executed after PrimaryKeyColumnOrderTest
+    * HHH-19985 Subquery embedded value selection uses wrong nested attribute type for extraction
+    * HHH-19976 AdjustableBasicType wrongly creates derived type with existing name causing trouble for Envers
+    * HHH-19964 ClassCastException in AbstractJsonFormatMapper
+    * HHH-19962 Wrong Values used with Subquery and same name Attributes
+    * HHH-19935 UuidVersion7Strategy can generate cosecutive UUIDs that are equal
+    * HHH-19929 DB2iDialect problem with supportsRowValueConstructorSyntaxInInSubQuery
+    * HHH-19855 <convert> at entity level is ignored in orm.xml
+    * HHH-19075 SqmFunction.appendHqlString(…) fails with IndexOutOfBoundsException for trim rendering
+
+** Improvement
+    * HHH-3192 SchemaValidator nullability check
+
 Changes in 7.2.0.Final (December 12, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

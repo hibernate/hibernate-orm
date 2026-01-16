@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
+import org.hibernate.orm.test.where.hbm.Category;
+import org.hibernate.orm.test.where.hbm.Product;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/EagerToManyWhere.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/EagerToManyWhere.orm.xml")
 @SessionFactory
 public class EagerToManyWhereTest {
 	@AfterEach

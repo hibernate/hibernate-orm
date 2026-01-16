@@ -2443,8 +2443,11 @@ public class HbmXmlTransformer {
 			target.getFilters().add( convert( hbmFilter ) );
 		}
 
+		if ( isNotEmpty( manyToMany.getWhere() ) ) {
+			target.setSqlRestriction( manyToMany.getWhere() );
+		}
 		if ( isNotEmpty( hbmCollection.getWhere() ) ) {
-			target.setSqlRestriction( hbmCollection.getWhere() );
+			target.setSqlJoinTableRestriction( hbmCollection.getWhere() );
 		}
 		if ( hbmCollection.getSqlInsert() != null ) {
 			final var jaxbCustomSql = new JaxbCustomSqlImpl();

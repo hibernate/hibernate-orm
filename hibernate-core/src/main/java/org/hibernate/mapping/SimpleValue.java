@@ -321,7 +321,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void makeVersion() {
-		this.isVersion = true;
+		isVersion = true;
 	}
 
 	public boolean isVersion() {
@@ -603,12 +603,11 @@ public abstract class SimpleValue implements KeyValue {
 				// considered nullable
 				return true;
 			}
-			else if ( selectable instanceof Column column ) {
-				if ( !column.isNullable() ) {
-					// if there is a single non-nullable column, the Value
-					// overall is considered non-nullable.
-					return false;
-				}
+			else if ( selectable instanceof Column column
+						&& !column.isNullable() ) {
+				// if there is a single non-nullable column, the Value
+				// overall is considered non-nullable.
+				return false;
 			}
 		}
 		// nullable by default

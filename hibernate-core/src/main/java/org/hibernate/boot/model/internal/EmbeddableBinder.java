@@ -237,6 +237,11 @@ public class EmbeddableBinder {
 		}
 	}
 
+	static boolean isEmbedded(MemberDetails memberDetails) {
+		final var elementType = memberDetails.getElementType();
+		return elementType != null && isEmbedded( memberDetails, elementType );
+	}
+
 	private static Component bindOverriddenEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,

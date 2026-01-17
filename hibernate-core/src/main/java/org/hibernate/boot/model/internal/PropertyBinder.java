@@ -51,7 +51,6 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -280,7 +279,7 @@ public class PropertyBinder {
 		basicValueBinder.setAccessType( accessType );
 
 		if ( holder instanceof ComponentPropertyHolder embeddableTypedContainer ) {
-			final Component component = embeddableTypedContainer.getComponent();
+			final var component = embeddableTypedContainer.getComponent();
 			if ( component.wasTableExplicitlyDefined() ) {
 				basicValueBinder.setTable( component.getTable() );
 			}
@@ -479,7 +478,7 @@ public class PropertyBinder {
 					// Defer determining whether a property and its columns are nullable,
 					// as handleOptional might be called when the value is not yet fully initialized
 					if ( property.getPersistentClass() != null ) {
-						for ( Join join : property.getPersistentClass().getJoins() ) {
+						for ( var join : property.getPersistentClass().getJoins() ) {
 							if ( join.getProperties().contains( property ) ) {
 								// If this property is part of a join it is inherently optional
 								return;
@@ -961,7 +960,8 @@ public class PropertyBinder {
 		//If version is on a mapped superclass, update the mapping
 		final var declaringClass = inferredData.getDeclaringClass();
 		final var mappedSuperclass =
-				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
+				getMappedSuperclassOrNull( declaringClass,
+						inheritanceStatePerClass, buildingContext );
 		if ( mappedSuperclass != null ) {
 			// Don't overwrite an existing version property
 			if ( mappedSuperclass.getDeclaredVersion() == null ) {
@@ -1010,7 +1010,7 @@ public class PropertyBinder {
 		}
 
 		// overrides from @MapsId or @IdClass if needed
-		final PropertyData overridingProperty =
+		final var overridingProperty =
 				overridingProperty( propertyHolder, isIdentifierMapper, memberDetails );
 		final AnnotatedColumns actualColumns;
 		final boolean isComposite;
@@ -1085,8 +1085,7 @@ public class PropertyBinder {
 
 		final var memberDetails = inferredData.getAttributeMember();
 		if ( isComposite || compositeUserType != null ) {
-			if ( memberDetails.isArray() && memberDetails.getElementType() != null
-					&& isEmbedded( memberDetails, memberDetails.getElementType() ) ) {
+			if ( memberDetails.isArray() && isEmbedded( memberDetails ) ) {
 				// This is a special kind of basic aggregate component array type
 				aggregateBinder(
 						propertyHolder,
@@ -1120,8 +1119,7 @@ public class PropertyBinder {
 				);
 			}
 		}
-		else if ( memberDetails.isPlural() && memberDetails.getElementType() != null
-					&& isEmbedded( memberDetails, memberDetails.getElementType() ) ) {
+		else if ( memberDetails.isPlural() && isEmbedded( memberDetails ) ) {
 			// This is a special kind of basic aggregate component array type
 			aggregateBinder(
 					propertyHolder,

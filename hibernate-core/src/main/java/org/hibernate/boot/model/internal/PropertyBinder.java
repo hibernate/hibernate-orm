@@ -783,6 +783,9 @@ public class PropertyBinder {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
+		if ( isVersion( memberDetails ) ) {
+			nullability = Nullability.FORCED_NOT_NULL;
+		}
 		final var columnsBuilder =
 				new ColumnsBuilder( propertyHolder, nullability, memberDetails, inferredData, entityBinder, context )
 						.extractMetadata();
@@ -952,6 +955,7 @@ public class PropertyBinder {
 		setColumns( columns );
 		final var property = makePropertyValueAndBind();
 		getBasicValueBinder().setVersion( true );
+		property.setOptional( false );
 		rootClass.setVersion( property );
 
 		//If version is on a mapped superclass, update the mapping

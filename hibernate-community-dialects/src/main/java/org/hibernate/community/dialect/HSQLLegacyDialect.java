@@ -50,7 +50,6 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -83,6 +82,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DOUBLE;
@@ -520,53 +520,41 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_18 =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case -8:
-						return extractUsingTemplate(
-								"Integrity constraint violation ", " table:",
-								sqle.getMessage()
-						);
-					case -9:
-						return extractUsingTemplate(
-								"Violation of unique index: ", " in statement [",
-								sqle.getMessage()
-						);
-					case -104:
-						return extractUsingTemplate(
-								"Unique constraint violation: ", " in statement [",
-								sqle.getMessage()
-						);
-					case -177:
-						return extractUsingTemplate(
-								"Integrity constraint violation - no parent ", " table:",
-								sqle.getMessage()
-						);
-				}
-				return null;
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( extractErrorCode( sqle ) ) {
+				case -8 -> extractUsingTemplate(
+						"Integrity constraint violation ", " table:",
+						sqle.getMessage()
+				);
+				case -9 -> extractUsingTemplate(
+						"Violation of unique index: ", " in statement [",
+						sqle.getMessage()
+				);
+				case -104 -> extractUsingTemplate(
+						"Unique constraint violation: ", " in statement [",
+						sqle.getMessage()
+				);
+				case -177 -> extractUsingTemplate(
+						"Integrity constraint violation - no parent ", " table:",
+						sqle.getMessage()
+				);
+				default -> null;
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			final String constraintName;
-
-			switch ( errorCode ) {
-				case -104:
-					// Unique constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-			}
-
-			return null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -104 -> // Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor()
+											.extractConstraintName(sqlException)
+							);
+					default -> null;
+				};
 	}
 
 	/**
@@ -574,19 +562,16 @@ public class HSQLLegacyDialect extends Dialect {
 	 * messages may be localized - therefore use the common, non-locale element " table: "
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_20 =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case -8:
-					case -9:
-					case -104:
-					case -177:
-						return extractUsingTemplate(
-								"; ", " table: ",
-								sqle.getMessage()
-						);
-				}
-				return null;
-			} );
+			new TemplatedViolatedConstraintNameExtractor( sqle ->
+					switch ( extractErrorCode( sqle ) ) {
+						case -8, -9, -104, -177 ->
+								extractUsingTemplate(
+										"; ", " table: ",
+										sqle.getMessage()
+								);
+						default -> null;
+					}
+			);
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {

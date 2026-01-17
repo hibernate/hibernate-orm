@@ -62,7 +62,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PrimaryKey;
@@ -715,7 +714,7 @@ public class InformixDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String constraintName =
-						switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						switch ( extractErrorCode( sqle ) ) {
 							case -239, -268 ->
 									extractUsingTemplate(
 											"Unique constraint (",

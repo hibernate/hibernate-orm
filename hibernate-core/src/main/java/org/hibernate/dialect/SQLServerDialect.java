@@ -824,7 +824,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			if ( "HY008".equals( extractSqlState( sqlException ) ) ) {
 				return new QueryTimeoutException( message, sqlException, sql );
 			}
-
 			return switch ( extractErrorCode( sqlException ) ) {
 				case 1222 ->
 						new LockTimeoutException( message, sqlException, sql );

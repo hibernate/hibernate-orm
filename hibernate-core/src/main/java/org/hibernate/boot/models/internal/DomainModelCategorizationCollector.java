@@ -6,13 +6,7 @@ package org.hibernate.boot.models.internal;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.MappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
@@ -22,6 +16,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbeddable;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 
 /**
  * In-flight holder for various things as we process metadata sources
@@ -60,23 +58,24 @@ public class DomainModelCategorizationCollector {
 	}
 
 	public void apply(JaxbEntityMappingsImpl jaxbRoot, XmlDocumentContext xmlDocumentContext) {
-		getGlobalRegistrations().collectJavaTypeRegistrations( jaxbRoot.getJavaTypeRegistrations() );
-		getGlobalRegistrations().collectJdbcTypeRegistrations( jaxbRoot.getJdbcTypeRegistrations() );
-		getGlobalRegistrations().collectConverterRegistrations( jaxbRoot.getConverterRegistrations() );
-		getGlobalRegistrations().collectConverters( jaxbRoot.getConverters() );
-		getGlobalRegistrations().collectUserTypeRegistrations( jaxbRoot.getUserTypeRegistrations() );
-		getGlobalRegistrations().collectCompositeUserTypeRegistrations( jaxbRoot.getCompositeUserTypeRegistrations() );
-		getGlobalRegistrations().collectCollectionTypeRegistrations( jaxbRoot.getCollectionUserTypeRegistrations() );
-		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( jaxbRoot.getEmbeddableInstantiatorRegistrations() );
-		getGlobalRegistrations().collectFilterDefinitions( jaxbRoot.getFilterDefinitions() );
+		globalRegistrations.collectJavaTypeRegistrations( jaxbRoot.getJavaTypeRegistrations() );
+		globalRegistrations.collectJdbcTypeRegistrations( jaxbRoot.getJdbcTypeRegistrations() );
+		globalRegistrations.collectConverterRegistrations( jaxbRoot.getConverterRegistrations() );
+		globalRegistrations.collectConverters( jaxbRoot.getConverters() );
+		globalRegistrations.collectUserTypeRegistrations( jaxbRoot.getUserTypeRegistrations() );
+		globalRegistrations.collectCompositeUserTypeRegistrations( jaxbRoot.getCompositeUserTypeRegistrations() );
+		globalRegistrations.collectCollectionTypeRegistrations( jaxbRoot.getCollectionUserTypeRegistrations() );
+		globalRegistrations.collectEmbeddableInstantiatorRegistrations( jaxbRoot.getEmbeddableInstantiatorRegistrations() );
+		globalRegistrations.collectFilterDefinitions( jaxbRoot.getFilterDefinitions() );
 
-		final JaxbPersistenceUnitMetadataImpl persistenceUnitMetadata = jaxbRoot.getPersistenceUnitMetadata();
+		final var persistenceUnitMetadata = jaxbRoot.getPersistenceUnitMetadata();
 		if ( persistenceUnitMetadata != null ) {
-			final JaxbPersistenceUnitDefaultsImpl persistenceUnitDefaults = persistenceUnitMetadata.getPersistenceUnitDefaults();
+			final var persistenceUnitDefaults = persistenceUnitMetadata.getPersistenceUnitDefaults();
 			if ( persistenceUnitDefaults != null ) {
-				final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
+				final var listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
 				if ( listenerContainer != null ) {
-					getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners(), modelsContext );
+					getGlobalRegistrations()
+							.collectEntityListenerRegistrations( listenerContainer.getEntityListeners(), modelsContext );
 				}
 			}
 		}
@@ -90,42 +89,46 @@ public class DomainModelCategorizationCollector {
 	}
 
 	public void apply(ClassDetails classDetails) {
-		getGlobalRegistrations().collectJavaTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectJdbcTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectConverterRegistrations( classDetails );
-		getGlobalRegistrations().collectUserTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectCompositeUserTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectCollectionTypeRegistrations( classDetails );
-		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( classDetails );
-		getGlobalRegistrations().collectFilterDefinitions( classDetails );
+		globalRegistrations.collectJavaTypeRegistrations( classDetails );
+		globalRegistrations.collectJdbcTypeRegistrations( classDetails );
+		globalRegistrations.collectConverterRegistrations( classDetails );
+		globalRegistrations.collectUserTypeRegistrations( classDetails );
+		globalRegistrations.collectCompositeUserTypeRegistrations( classDetails );
+		globalRegistrations.collectCollectionTypeRegistrations( classDetails );
+		globalRegistrations.collectEmbeddableInstantiatorRegistrations( classDetails );
+		globalRegistrations.collectFilterDefinitions( classDetails );
 
-		getGlobalRegistrations().collectIdGenerators( classDetails );
+		globalRegistrations.collectIdGenerators( classDetails );
 
-		getGlobalRegistrations().collectImportRename( classDetails );
+		globalRegistrations.collectImportRename( classDetails );
 
 		// todo : named queries
 		// todo : named graphs
 
-		if ( classDetails.getDirectAnnotationUsage( MappedSuperclass.class ) != null ) {
+		if ( isMappedSuperclass( classDetails ) ) {
 			if ( classDetails.getClassName() != null ) {
 				mappedSuperclasses.put( classDetails.getClassName(), classDetails );
 			}
 		}
-		else if ( classDetails.getDirectAnnotationUsage( Entity.class ) != null ) {
+		else if ( isEntity( classDetails ) ) {
 			if ( isRootEntity( classDetails ) ) {
 				rootEntities.add( classDetails );
 			}
 		}
-		else if ( classDetails.getDirectAnnotationUsage( Embeddable.class ) != null ) {
+		else if ( isEmbeddable( classDetails ) ) {
 			if ( classDetails.getClassName() != null ) {
 				embeddables.put( classDetails.getClassName(), classDetails );
 			}
 		}
 
-		if ( ( classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class ) )
-				|| classDetails.getDirectAnnotationUsage( Converter.class ) != null ) {
+		if ( isConverter( classDetails ) ) {
 			globalRegistrations.collectConverter( classDetails );
 		}
+	}
+
+	private static boolean isConverter(ClassDetails classDetails) {
+		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
+			|| classDetails.getDirectAnnotationUsage( Converter.class ) != null;
 	}
 
 	public static boolean isRootEntity(ClassDetails classInfo) {
@@ -135,13 +138,9 @@ public class DomainModelCategorizationCollector {
 		// 		1) it has no super-types
 		//		2) its super types contain no entities (MappedSuperclasses are allowed)
 
-		if ( classInfo.getSuperClass() == null ) {
-			return true;
-		}
-
-		ClassDetails current = classInfo.getSuperClass();
-		while (  current != null ) {
-			if ( current.hasDirectAnnotationUsage( Entity.class ) && !current.isAbstract() ) {
+		var current = classInfo.getSuperClass();
+		while ( current != null ) {
+			if ( isEntity( current ) && !current.isAbstract() ) {
 				// a non-abstract super type has `@Entity` -> classInfo cannot be a root entity
 				return false;
 			}

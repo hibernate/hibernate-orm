@@ -11,10 +11,12 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-9035")
+@SkipForDialect(dialectClass = MariaDBDialect.class)
 public class ReferencedColumnQuotingTest3 {
 
 	@Test

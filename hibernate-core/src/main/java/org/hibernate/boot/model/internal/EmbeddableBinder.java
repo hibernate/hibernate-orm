@@ -24,6 +24,7 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -1171,8 +1172,7 @@ public class EmbeddableBinder {
 			final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
 			for ( var joinColumn : columns ) {
 				if ( !joinColumn.isReferenceImplicit() ) {
-					//JPA 2 requires referencedColumnNames to be case-insensitive
-					columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase( Locale.ROOT), joinColumn );
+					columnByReferencedName.put( normalizedColumnName( joinColumn ), joinColumn );
 				}
 			}
 			//try default column orientation
@@ -1185,25 +1185,38 @@ public class EmbeddableBinder {
 
 			final var index = new MutableInteger();
 			for ( var referencedProperty : referencedComponent.getProperties() ) {
-				final Property property;
-				if ( referencedProperty.isComposite() ) {
-					property = createComponentProperty(
-							isExplicitReference,
-							columnByReferencedName,
-							index,
-							referencedProperty
-					);
-				}
-				else {
-					property = createSimpleProperty(
-							referencedPersistentClass,
-							isExplicitReference,
-							columnByReferencedName,
-							index,
-							referencedProperty
-					);
-				}
-				embeddable.addProperty( property );
+				embeddable.addProperty( createProperty(
+						referencedProperty,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedPersistentClass
+				) );
+			}
+		}
+
+		private Property createProperty(
+				Property referencedProperty,
+				boolean isExplicitReference,
+				Map<String, AnnotatedJoinColumn> columnByReferencedName,
+				MutableInteger index,
+				PersistentClass referencedPersistentClass) {
+			if ( referencedProperty.isComposite() ) {
+				return createComponentProperty(
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
+			}
+			else {
+				return createSimpleProperty(
+						referencedPersistentClass,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
 			}
 		}
 
@@ -1310,8 +1323,7 @@ public class EmbeddableBinder {
 						final String logicalColumnName;
 						if ( isExplicitReference ) {
 							logicalColumnName = column.getName();
-							//JPA 2 requires referencedColumnNames to be case-insensitive
-							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase( Locale.ROOT ) );
+							joinColumn = columnByReferencedName.get( normalizedColumnName( column ) );
 						}
 						else {
 							logicalColumnName = null;
@@ -1359,5 +1371,27 @@ public class EmbeddableBinder {
 			mappingColumn.setScale( column.getScale() );
 			mappingColumn.setArrayLength( column.getArrayLength() );
 		}
+	}
+
+	private static String normalizedColumnName(AnnotatedJoinColumn joinColumn) {
+		final Identifier referencedColumn =
+				joinColumn.getBuildingContext().getObjectNameNormalizer()
+						.normalizeIdentifierQuoting( joinColumn.getReferencedColumn() );
+		return referencedColumn.isQuoted()
+				? referencedColumn.getText()
+				//CLAIM: "JPA 2 requires referencedColumnNames to be case-insensitive"
+				//FACT: In fact, the spec doesn't say anything of the sort anywhere!
+				//      But changing this would not be backward compatible (2026)
+				: referencedColumn.getText().toLowerCase( Locale.ROOT );
+	}
+
+	private static String normalizedColumnName(org.hibernate.mapping.Column column) {
+		final String logicalColumnName = column.getName();
+		return column.isQuoted()
+				? logicalColumnName
+				//CLAIM: "JPA 2 requires referencedColumnNames to be case-insensitive"
+				//FACT: In fact, the spec doesn't say anything of the sort anywhere!
+				//      But changing this would not be backward compatible (2026)
+				: logicalColumnName.toLowerCase( Locale.ROOT );
 	}
 }

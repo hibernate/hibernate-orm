@@ -2361,6 +2361,14 @@ public class EntityBinder {
 		return null;
 	}
 
+	public static boolean isEntity(ClassDetails type) {
+		return type.hasDirectAnnotationUsage( Entity.class );
+	}
+
+	public static boolean isMappedSuperclass(ClassDetails type) {
+		return type.hasDirectAnnotationUsage( MappedSuperclass.class );
+	}
+
 	/**
 	 * Process the filters defined on the given class, as well as all filters
 	 * defined on the MappedSuperclass(es) in the inheritance hierarchy

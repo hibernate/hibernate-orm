@@ -65,7 +65,6 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -107,6 +106,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
@@ -2498,7 +2498,7 @@ public abstract class CollectionBinder {
 
 	static String targetEntityMessage(TypeDetails elementType) {
 		final String problem =
-				elementType.determineRawClass().hasDirectAnnotationUsage( Entity.class )
+				isEntity( elementType.determineRawClass() )
 						? " which does not belong to the same persistence unit"
 						: " which is not an '@Entity' type";
 		return " targets the type '" + elementType.getName() + "'" + problem;

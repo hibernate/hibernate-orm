@@ -323,7 +323,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public List<ClassDetails> getEmbeddableSubclasses(ClassDetails superclass) {
-		final List<ClassDetails> subclasses = embeddableSubtypes.get( superclass );
+		final var subclasses = embeddableSubtypes.get( superclass );
 		return subclasses != null ? subclasses : emptyList();
 	}
 
@@ -797,7 +797,7 @@ public class InFlightMetadataCollectorImpl
 		else {
 			final String name = definition.getRegistrationName();
 			if ( !defaultNamedProcedureNames.contains( name ) ) {
-				final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
+				final var previous = namedProcedureCallMap.put( name, definition );
 				if ( previous != null ) {
 					throw new DuplicateMappingException( DuplicateMappingException.Type.PROCEDURE, name );
 				}
@@ -898,19 +898,17 @@ public class InFlightMetadataCollectorImpl
 			boolean isAbstract,
 			MetadataBuildingContext buildingContext,
 			boolean isExplicit) {
-		final Namespace namespace = getDatabase().locateNamespace(
-				getDatabase().toIdentifier( catalogName ),
-				getDatabase().toIdentifier( schemaName )
-		);
+		final var database = getDatabase();
+		final var namespace = locateNamespace( schemaName, catalogName, database );
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName = name != null ? getDatabase().toIdentifier( name, isExplicit ) : null;
+		final Identifier logicalName = name != null ? database.toIdentifier( name, isExplicit ) : null;
 		if ( subselectFragment != null ) {
 			return new Table( buildingContext.getCurrentContributorName(),
 					namespace, logicalName, subselectFragment, isAbstract );
 		}
 		else {
-			final Table existing = namespace.locateTable( logicalName );
+			final var existing = namespace.locateTable( logicalName );
 			if ( existing != null ) {
 				if ( !isAbstract ) {
 					existing.setAbstract( false );
@@ -920,12 +918,16 @@ public class InFlightMetadataCollectorImpl
 			else {
 				return namespace.createTable(
 						logicalName,
-						(physicalName) ->
+						physicalName ->
 								new Table( buildingContext.getCurrentContributorName(),
 										namespace, physicalName, isAbstract )
 				);
 			}
 		}
+	}
+
+	private static Namespace locateNamespace(String schemaName, String catalogName, Database database) {
+		return database.locateNamespace( database.toIdentifier( catalogName ), database.toIdentifier( schemaName ) );
 	}
 
 	@Override
@@ -938,15 +940,14 @@ public class InFlightMetadataCollectorImpl
 			Table includedTable,
 			MetadataBuildingContext buildingContext) throws DuplicateMappingException {
 		final var database = getDatabase();
-		final Namespace namespace =
-				database.locateNamespace( database.toIdentifier( catalogName ), database.toIdentifier( schemaName ) );
+		final var namespace = locateNamespace( schemaName, catalogName, database );
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
 		final Identifier logicalName = name != null ? database.toIdentifier( name ) : null;
 		if ( subselectFragment != null ) {
 			return namespace.createDenormalizedTable(
 					logicalName,
-					(physicalName) -> new DenormalizedTable(
+					physicalName -> new DenormalizedTable(
 							buildingContext.getCurrentContributorName(),
 							namespace,
 							logicalName,
@@ -964,7 +965,7 @@ public class InFlightMetadataCollectorImpl
 			else {
 				return namespace.createDenormalizedTable(
 						logicalName,
-						(physicalTableName) -> new DenormalizedTable(
+						physicalTableName -> new DenormalizedTable(
 								buildingContext.getCurrentContributorName(),
 								namespace,
 								physicalTableName,
@@ -1006,11 +1007,11 @@ public class InFlightMetadataCollectorImpl
 		if ( persistentClass == null ) {
 			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		final var prop = persistentClass.getReferencedProperty( propertyName );
-		if ( prop == null ) {
+		final var referencedProperty = persistentClass.getReferencedProperty( propertyName );
+		if ( referencedProperty == null ) {
 			throw new MappingException( "Property not known: " + entityName + '.' + propertyName );
 		}
-		return prop.getType();
+		return referencedProperty.getType();
 	}
 
 
@@ -1414,7 +1415,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public Map<String, Join> getJoins(String entityName) {
-		final EntityTableXrefImpl xrefEntry = entityTableXrefMap.get( entityName );
+		final var xrefEntry = entityTableXrefMap.get( entityName );
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
@@ -1806,7 +1807,7 @@ public class InFlightMetadataCollectorImpl
 			}
 
 			// process the ordered FkSecondPasses
-			for ( FkSecondPass sp : orderedFkSecondPasses ) {
+			for ( var sp : orderedFkSecondPasses ) {
 				sp.doSecondPass( getEntityBindingMap() );
 			}
 
@@ -1860,7 +1861,7 @@ public class InFlightMetadataCollectorImpl
 		RuntimeException originalException = null;
 		while ( !stopProcess ) {
 			List<FkSecondPass> failingSecondPasses = new ArrayList<>();
-			for ( FkSecondPass pass : endOfQueueFkSecondPasses ) {
+			for ( var pass : endOfQueueFkSecondPasses ) {
 				try {
 					pass.doSecondPass( getEntityBindingMap() );
 				}
@@ -1884,7 +1885,7 @@ public class InFlightMetadataCollectorImpl
 	private void secondPassCompileForeignKeys(MetadataBuildingContext buildingContext) {
 		int uniqueInteger = 0;
 		final Set<ForeignKey> done = new HashSet<>();
-		for ( Table table : collectTableMappings() ) {
+		for ( var table : collectTableMappings() ) {
 			table.setUniqueInteger( uniqueInteger++ );
 			secondPassCompileForeignKeys( table, done, buildingContext );
 		}
@@ -1899,7 +1900,7 @@ public class InFlightMetadataCollectorImpl
 				done.add( foreignKey );
 				final var referencedClass = foreignKey.resolveReferencedClass(this);
 				if ( referencedClass.isJoinedSubclass() ) {
-					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext);
+					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext );
 				}
 				// the ForeignKeys created in the first pass did not have their referenced table initialized
 				if ( foreignKey.getReferencedTable() == null ) {

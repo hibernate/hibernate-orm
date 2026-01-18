@@ -567,15 +567,15 @@ public class PropertyBinder {
 
 	private void validateOptimisticLock(boolean excluded) {
 		if ( excluded ) {
-			if ( memberDetails.hasDirectAnnotationUsage( Version.class ) ) {
+			if ( isVersion( memberDetails ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Version'" );
 			}
-			if ( memberDetails.hasDirectAnnotationUsage( Id.class ) ) {
+			if ( isSimpleId( memberDetails ) ) {
 				throw new AnnotationException("Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@Id'" );
 			}
-			if ( memberDetails.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+			if ( isEmbeddedId( memberDetails ) ) {
 				throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}
@@ -684,8 +684,7 @@ public class PropertyBinder {
 	}
 
 	static boolean hasIdAnnotation(MemberDetails element) {
-		return element.hasDirectAnnotationUsage( Id.class )
-			|| element.hasDirectAnnotationUsage( EmbeddedId.class );
+		return isSimpleId( element ) || isEmbeddedId( element );
 	}
 
 	/**
@@ -757,14 +756,14 @@ public class PropertyBinder {
 		final var memberDetails = inferredData.getAttributeMember();
 
 		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
-				&& memberDetails.hasDirectAnnotationUsage( Id.class ) ) {
+				&& isSimpleId( memberDetails ) ) {
 			throw new AnnotationException("Member '" + memberDetails.getName()
 					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
 		}
 
 		final var attributeTypeDetails =
-				inferredData.getAttributeMember().isPlural()
-						? inferredData.getAttributeMember().getType()
+				memberDetails.isPlural()
+						? memberDetails.getType()
 						: inferredData.getClassOrElementType();
 
 		final var propertyBinder = propertyBinder(
@@ -782,9 +781,6 @@ public class PropertyBinder {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
-		if ( isVersion( memberDetails ) ) {
-			nullability = Nullability.FORCED_NOT_NULL;
-		}
 		final var columnsBuilder =
 				new ColumnsBuilder( propertyHolder, nullability, memberDetails, inferredData, entityBinder, context )
 						.extractMetadata();
@@ -921,7 +917,15 @@ public class PropertyBinder {
 		return columnsBuilder.getColumns();
 	}
 
-	private static boolean isVersion(MemberDetails property) {
+	static boolean isEmbeddedId(MemberDetails property) {
+		return property.hasDirectAnnotationUsage( EmbeddedId.class );
+	}
+
+	static boolean isSimpleId(MemberDetails property) {
+		return property.hasDirectAnnotationUsage( Id.class );
+	}
+
+	static boolean isVersion(MemberDetails property) {
 		return property.hasDirectAnnotationUsage( Version.class );
 	}
 

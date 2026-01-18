@@ -59,11 +59,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
 						.append( foreignKey.getKeyDefinition() != null
 								? dialect.getAddForeignKeyConstraintString(
-										foreignKey.getName(),
+										quotedConstraintName( foreignKey, metadata ),
 										foreignKey.getKeyDefinition()
 								)
 								: dialect.getAddForeignKeyConstraintString(
-										foreignKey.getName(),
+										quotedConstraintName( foreignKey, metadata ),
 										columnNames,
 										targetTableName,
 										targetColumnNames,
@@ -82,6 +82,11 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		}
 
 		return new String[] { buffer.toString() };
+	}
+
+	private String quotedConstraintName(ForeignKey foreignKey, Metadata metadata) {
+		return metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper()
+				.toIdentifier( foreignKey.getName() ).render( dialect );
 	}
 
 	private static List<Column> getTargetColumns(ForeignKey foreignKey, int numberOfColumns) {

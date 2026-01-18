@@ -23,7 +23,7 @@ public class XmlPreProcessor {
 	public static XmlPreProcessingResult preProcessXmlResources(
 			ManagedResources managedResources,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
-		final XmlPreProcessingResultImpl collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
+		final var collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
 		for ( var mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
 			// skip hbm.xml
 			if ( mappingXmlBinding.getRoot() instanceof JaxbEntityMappingsImpl ) {

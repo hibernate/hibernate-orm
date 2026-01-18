@@ -140,6 +140,7 @@ import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
+import static org.hibernate.boot.model.internal.PropertyBinder.isVersion;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
@@ -1084,18 +1085,13 @@ public class EntityBinder {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
-					final boolean subclassAndSingleTableStrategy =
-							inheritanceState.getType() == SINGLE_TABLE
-									&& inheritanceState.hasParents();
 					if ( !hasIdAnnotation && memberDetails.hasAnnotationUsage( GeneratedValue.class, modelsContext() ) ) {
 						throw new AnnotationException( "Property '" + getPath( propertyHolder, propertyAnnotatedElement )
 												+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
 					}
 					processElementAnnotations(
 							propertyHolder,
-							subclassAndSingleTableStrategy
-									? Nullability.FORCED_NULL
-									: Nullability.NO_CONSTRAINT,
+							getNullability( inheritanceState, memberDetails ),
 							propertyAnnotatedElement,
 							this,
 							false,
@@ -1121,6 +1117,18 @@ public class EntityBinder {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
 					+ "' has '@Id' annotated properties " + getMissingPropertiesString( missingEntityProperties )
 					+ " which do not match properties of the specified '@IdClass'" );
+		}
+	}
+
+	private static Nullability getNullability(InheritanceState inheritanceState, MemberDetails memberDetails) {
+		if ( isVersion( memberDetails ) ) {
+			return Nullability.FORCED_NOT_NULL;
+		}
+		else {
+			return inheritanceState.getType() == SINGLE_TABLE
+				&& inheritanceState.hasParents()
+					? Nullability.FORCED_NULL
+					: Nullability.NO_CONSTRAINT;
 		}
 	}
 

@@ -21,9 +21,7 @@ import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
 
 import jakarta.persistence.Access;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -33,6 +31,7 @@ import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
+import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
 import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
@@ -188,7 +187,7 @@ public class InheritanceState {
 		else {
 			final long count =
 					Stream.concat( classDetails.getFields().stream(), classDetails.getMethods().stream() )
-							.filter( member -> member.hasDirectAnnotationUsage( Id.class ) )
+							.filter( PropertyBinder::isSimpleId )
 							.count();
 			if ( count > 1 ) {
 				return classDetails;
@@ -207,8 +206,8 @@ public class InheritanceState {
 				hasIdClassOrEmbeddedId = true;
 			}
 			else {
-				for ( PropertyData property : getElementsToProcess().getElements() ) {
-					if ( property.getAttributeMember().hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+				for ( var property : getElementsToProcess().getElements() ) {
+					if ( isEmbeddedId( property.getAttributeMember() ) ) {
 						hasIdClassOrEmbeddedId = true;
 						break;
 					}

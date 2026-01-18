@@ -69,6 +69,7 @@ import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExp
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -1096,7 +1097,7 @@ public class EmbeddableBinder {
 			MemberDetails property,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
-		if ( property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+		if ( isEmbeddedId( property ) ) {
 			// we don't allow custom instantiators for composite ids
 			return null;
 		}

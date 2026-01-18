@@ -15,7 +15,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
@@ -67,6 +66,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
@@ -241,6 +241,10 @@ public class EmbeddableBinder {
 	static boolean isEmbedded(MemberDetails memberDetails) {
 		final var elementType = memberDetails.getElementType();
 		return elementType != null && isEmbedded( memberDetails, elementType );
+	}
+
+	public static boolean isEmbeddable(ClassDetails type) {
+		return type.hasDirectAnnotationUsage( Embeddable.class );
 	}
 
 	private static Component bindOverriddenEmbeddable(
@@ -818,7 +822,7 @@ public class EmbeddableBinder {
 		if ( superClass == null ) {
 			return false;
 		}
-		else if ( superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+		else if ( isMappedSuperclass( superClass ) ) {
 			return true;
 		}
 		else if ( isIdClass ) {

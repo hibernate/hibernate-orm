@@ -30,7 +30,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -51,6 +50,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -277,8 +277,11 @@ public class ToOneBinder {
 	}
 
 	static boolean isTargetAnnotatedEntity(ClassDetails targetEntity, MemberDetails property) {
-		final var target = isDefault( targetEntity ) ? property.getType().determineRawClass() : targetEntity;
-		return target.hasDirectAnnotationUsage( Entity.class );
+		final var target =
+				isDefault( targetEntity )
+						? property.getType().determineRawClass()
+						: targetEntity;
+		return isEntity( target );
 	}
 
 	private static void processManyToOneProperty(

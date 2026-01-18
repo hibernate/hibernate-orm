@@ -5,8 +5,6 @@
 package org.hibernate.boot.internal;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -112,6 +110,9 @@ import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.internal.AnnotationBinder.extractParameters;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbeddable;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
@@ -1237,22 +1238,22 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private static AnnotatedClassType getAnnotatedClassType(ClassDetails clazz) {
-		if ( clazz.hasDirectAnnotationUsage( Entity.class ) ) {
-			if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
+		if ( isEntity( clazz) ) {
+			if ( isEmbeddable( clazz ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@Embeddable': '" + clazz.getName() + "'" );
 			}
-			else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+			else if ( isMappedSuperclass( clazz ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Entity' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.ENTITY;
 		}
-		else if ( clazz.hasDirectAnnotationUsage( Embeddable.class ) ) {
-			if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( isEmbeddable( clazz ) ) {
+			if ( isMappedSuperclass( clazz ) ) {
 				throw new AnnotationException( "Invalid class annotated both '@Embeddable' and '@MappedSuperclass': '" + clazz.getName() + "'" );
 			}
 			return AnnotatedClassType.EMBEDDABLE;
 		}
-		else if ( clazz.hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+		else if ( isMappedSuperclass( clazz ) ) {
 			return AnnotatedClassType.MAPPED_SUPERCLASS;
 		}
 		else if ( clazz.hasDirectAnnotationUsage( Imported.class ) ) {

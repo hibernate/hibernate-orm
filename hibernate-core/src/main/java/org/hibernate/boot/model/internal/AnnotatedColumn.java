@@ -33,7 +33,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -352,9 +351,9 @@ public class AnnotatedColumn {
 	 */
 	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
 		if ( isNotEmpty( columnName ) || isNotEmpty( propertyName ) ) {
-			final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
 			mappingColumn.setName(
-					processColumnName( logicalColumnName, applyNamingStrategy, isNotEmpty( columnName ) ) );
+					processColumnName( resolveLogicalColumnName( columnName, propertyName ),
+							applyNamingStrategy, isNotEmpty( columnName ) ) );
 			return true;
 		}
 		else {
@@ -364,9 +363,10 @@ public class AnnotatedColumn {
 
 	private String resolveLogicalColumnName(String columnName, String propertyName) {
 		final String baseColumnName = isNotEmpty( columnName ) ? columnName : inferColumnName( propertyName );
-		return parent.getPropertyHolder() != null && parent.getPropertyHolder().isComponent()
+		final var propertyHolder = parent.getPropertyHolder();
+		return propertyHolder != null && propertyHolder.isComponent()
 				// see if we need to apply one-or-more @EmbeddedColumnNaming patterns
-				? applyEmbeddedColumnNaming( baseColumnName, (ComponentPropertyHolder) parent.getPropertyHolder() )
+				? applyEmbeddedColumnNaming( baseColumnName, (ComponentPropertyHolder) propertyHolder )
 				: baseColumnName;
 	}
 
@@ -508,7 +508,7 @@ public class AnnotatedColumn {
 			value.addFormula( formula );
 		}
 		else {
-			final Table table = value.getTable();
+			final var table = value.getTable();
 			parent.setTable( table );
 			mappingColumn.setValue( value );
 			value.addColumn( mappingColumn, insertable, updatable );

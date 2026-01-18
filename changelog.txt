@@ -1,6 +1,17 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.41.Final (January 18, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37040
+
+
+** Bug
+    * HHH-20041 DB2 for z IN tuple list predicate performs badly
+    * HHH-20040 DB2iSqlAstTranslator using future versions for feature activation
+    * HHH-19929 DB2iDialect problem with supportsRowValueConstructorSyntaxInInSubQuery
+
 Changes in 6.6.40.Final (December 21, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

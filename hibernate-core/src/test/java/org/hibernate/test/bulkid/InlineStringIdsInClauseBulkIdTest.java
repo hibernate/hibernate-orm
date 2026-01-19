@@ -54,17 +54,16 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 					session.doWork( connection -> {
 						final Statement statement = connection.createStatement();
 						statement.execute(
-								"insert into Person (employed, name, id) values(true, null," +
-										"'d0''')"
+								"insert into Person (employed, name, id) values (0, null, 'd0''')"
 						);
 						statement.execute(
-								"insert into Doctor (specialization,id) values ('spec_0','d0''')"
+								"insert into Doctor (specialization, id) values ('spec_0', 'd0''')"
 						);
 						statement.close();
 						for ( int i = 1; i < 10; i++ ) {
 							Doctor doctor = new Doctor();
 							doctor.setId( "d" + i );
-							doctor.setEmployed( ( i % 2 ) == 0 );
+							doctor.setEmployed( i % 2 );
 							doctor.setSpecialization( "spec_" + i );
 							session.persist( doctor );
 						}
@@ -76,8 +75,8 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 					for ( int i = 0; i < 10; i++ ) {
 						Engineer engineer = new Engineer();
 						engineer.setId( "i" + i );
-						engineer.setEmployed( ( i % 2 ) == 0 );
-						engineer.setFellow( ( i % 2 ) == 1 );
+						engineer.setEmployed( i % 2 );
+						engineer.setFellow( i % 2 );
 						session.persist( engineer );
 					}
 				}
@@ -86,7 +85,7 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 		doInHibernate(
 				this::sessionFactory, session -> {
 					final Long count = session.createQuery(
-									"select count(p) from Person p where employed = true",
+									"select count(p) from Person p where employed = 1",
 									Long.class
 							)
 							.getSingleResult();
@@ -101,13 +100,13 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 				this::sessionFactory, session -> {
 					session.createQuery(
 									"update Person set fellow = :fellow, name = :name where employed = :employed"
-							).setParameter( "fellow", false )
+							).setParameter( "fellow", 0 )
 							.setParameter( "name", "John Doe" )
-							.setParameter( "employed", true )
+							.setParameter( "employed", 0 )
 							.executeUpdate();
-					// 5 employed engineers updated to fellow = false
+					// 5 employed engineers updated to fellow = 0
 					long fellows = session.createQuery(
-							"select count(e) from Engineer e where fellow = false",
+							"select count(e) from Engineer e where fellow = 0",
 							Long.class
 					).getSingleResult();
 					assertEquals( 5L, fellows );
@@ -126,7 +125,7 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 		doInHibernate(
 				this::sessionFactory, session -> {
 					session.createQuery( "delete from Person where employed = :employed" )
-							.setParameter( "employed", true )
+							.setParameter( "employed", 1 )
 							.executeUpdate();
 					long persons = session.createQuery( "select count (p) from Person p", Long.class ).getSingleResult();
 					assertEquals( 10L, persons );
@@ -151,7 +150,7 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 		@Id
 		private String id;
 		private String name;
-		private boolean employed;
+		private int employed;
 
 		public String getId() {
 			return id;
@@ -169,11 +168,11 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 			this.name = name;
 		}
 
-		public boolean isEmployed() {
+		public int getEmployed() {
 			return employed;
 		}
 
-		public void setEmployed(boolean employed) {
+		public void setEmployed(int employed) {
 			this.employed = employed;
 		}
 	}
@@ -193,13 +192,13 @@ public class InlineStringIdsInClauseBulkIdTest extends BaseCoreFunctionalTestCas
 
 	@Entity(name = "Engineer")
 	public static class Engineer extends Person {
-		private boolean fellow;
+		private int fellow;
 
-		public boolean isFellow() {
+		public int getFellow() {
 			return fellow;
 		}
 
-		public void setFellow(boolean fellow) {
+		public void setFellow(int fellow) {
 			this.fellow = fellow;
 		}
 	}

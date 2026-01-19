@@ -15,13 +15,10 @@ import jakarta.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
 
-import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SettingProvider;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,8 +72,6 @@ public class ManyToManyBidirectionalTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB do not support FK violation checking")
-	@FailureExpected(jiraKey = "HHH-12239")
 	public void testRemoveMappedBySide(EntityManagerFactoryScope scope) {
 		Address _address1 = scope.fromTransaction( entityManager -> {
 			Person person1 = new Person( "ABC-123" );
@@ -98,7 +93,7 @@ public class ManyToManyBidirectionalTest {
 
 		scope.inTransaction( entityManager -> {
 			Address address1 = entityManager.find( Address.class, _address1.id );
-
+			address1.owners.forEach(owner -> owner.addresses.remove( address1));
 			entityManager.remove( address1 );
 		} );
 	}

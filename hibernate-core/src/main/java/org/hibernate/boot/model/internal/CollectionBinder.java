@@ -90,7 +90,6 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
-import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
@@ -530,18 +529,6 @@ public abstract class CollectionBinder {
 		else if ( property.hasDirectAnnotationUsage( Formula.class ) ) {
 			return buildFormulaFromAnnotation(
 					getOverridableAnnotation(property, Formula.class, context),
-//					comment,
-					nullability,
-					propertyHolder,
-					virtualProperty,
-					entityBinder.getSecondaryTables(),
-					context
-			);
-		}
-		else if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
-			return buildColumnsFromAnnotations(
-					property.getDirectAnnotationUsage( Columns.class ).columns(),
-					null,
 //					comment,
 					nullability,
 					propertyHolder,

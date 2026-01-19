@@ -159,10 +159,6 @@ public interface HibernateAnnotations {
 			ColumnDefault.class,
 			ColumnDefaultAnnotation.class
 	);
-	OrmAnnotationDescriptor<Columns,ColumnsAnnotation> COLUMNS = new OrmAnnotationDescriptor<>(
-			Columns.class,
-			ColumnsAnnotation.class
-	);
 	OrmAnnotationDescriptor<ColumnTransformers,ColumnTransformersAnnotation> COLUMN_TRANSFORMERS = new OrmAnnotationDescriptor<>(
 			ColumnTransformers.class,
 			ColumnTransformersAnnotation.class

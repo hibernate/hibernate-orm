@@ -1,6 +1,18 @@
 Hibernate 5 Changelog
 =======================
 
+Changes in 5.3.38.Final (January 19, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32376
+
+
+** Bug
+    * HHH-20080 "Inline" bulk_id_strategy may produce invalid SQL
+
+** Task
+    * HHH-19800 Migrate to release scripts for documentation publishing
+
 Note: Please refer to JIRA to learn more about each issue.
 
 Changes in 5.3.36.Final (February 08, 2024)

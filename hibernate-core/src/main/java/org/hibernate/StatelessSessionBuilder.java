@@ -23,10 +23,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 public interface StatelessSessionBuilder extends CommonBuilder {
 	/**
 	 * Opens a session with the specified options.
-	 *
-	 * @return The session
+	 * @see #open()
 	 */
 	StatelessSession openStatelessSession();
+
+	@Override
+	StatelessSession open();
 
 	@Override
 	StatelessSessionBuilder connection(Connection connection);

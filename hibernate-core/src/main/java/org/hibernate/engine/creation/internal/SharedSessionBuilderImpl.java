@@ -81,7 +81,7 @@ public abstract class SharedSessionBuilderImpl
 	// SharedSessionBuilder
 
 	@Override
-	public SessionImplementor openSession() {
+	public SessionImplementor open() {
 		CORE_LOGGER.openingSession( tenantIdentifier );
 		if ( original.getFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 			if ( shareTransactionContext ) {
@@ -96,6 +96,11 @@ public abstract class SharedSessionBuilderImpl
 			}
 		}
 		return createSession();
+	}
+
+	@Override
+	public SessionImplementor openSession() {
+		return open();
 	}
 
 	@Override

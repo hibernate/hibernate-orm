@@ -10,7 +10,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.LazyGroup;
@@ -77,8 +76,7 @@ public class ToOneBinder {
 		final var manyToOne = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
 
 		//check validity
-		if ( memberDetails.hasDirectAnnotationUsage( Column.class )
-				|| memberDetails.hasDirectAnnotationUsage( Columns.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Column.class ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@ManyToOne' association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
@@ -429,8 +427,7 @@ public class ToOneBinder {
 		final var oneToOne = memberDetails.getDirectAnnotationUsage( OneToOne.class );
 
 		//check validity
-		if ( memberDetails.hasDirectAnnotationUsage( Column.class )
-				|| memberDetails.hasDirectAnnotationUsage( Columns.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( Column.class ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@OneToOne' association and may not use '@Column' to specify column mappings"

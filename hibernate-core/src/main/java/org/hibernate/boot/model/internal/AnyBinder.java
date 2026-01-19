@@ -5,13 +5,10 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.EnumSet;
-import java.util.Locale;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -39,18 +36,6 @@ public class AnyBinder {
 			MetadataBuildingContext context,
 			AnnotatedJoinColumns joinColumns) {
 		final var memberDetails = inferredData.getAttributeMember();
-
-		//check validity
-		if ( memberDetails.hasDirectAnnotationUsage( Columns.class ) ) {
-			throw new AnnotationException(
-					String.format(
-							Locale.ROOT,
-							"Property '%s' is annotated '@Any' and may not have a '@Columns' annotation "
-									+ "(a single '@Column' or '@Formula' must be used to map the discriminator, and '@JoinColumn's must be used to map the foreign key) ",
-							getPath( propertyHolder, inferredData )
-					)
-			);
-		}
 
 		final var onDeleteAnn = memberDetails.getDirectAnnotationUsage( OnDelete.class );
 		final var assocTable = propertyHolder.getJoinTable( memberDetails );

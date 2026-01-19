@@ -6,7 +6,6 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JoinColumnOrFormula;
@@ -29,7 +28,6 @@ import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
-import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
@@ -95,17 +93,6 @@ class ColumnsBuilder {
 		else if ( property.hasDirectAnnotationUsage( Formula.class) ) {
 			columns = buildFormulaFromAnnotation(
 					getOverridableAnnotation( property, Formula.class, buildingContext ),
-					nullability,
-					propertyHolder,
-					inferredData,
-					entityBinder.getSecondaryTables(),
-					buildingContext
-			);
-		}
-		else if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
-			columns = buildColumnsFromAnnotations(
-					property.getDirectAnnotationUsage( Columns.class ).columns(),
-					null,
 					nullability,
 					propertyHolder,
 					inferredData,

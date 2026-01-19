@@ -4,8 +4,6 @@
  */
 package org.hibernate.annotations;
 
-import java.util.Locale;
-
 /**
  * Enumeration of defines styles of soft-delete
  *
@@ -42,19 +40,16 @@ public enum SoftDeleteType {
 	 *     <dd>indicates that the row is deleted, at the given timestamp</dd>
 	 * </dl>
 	 */
-	TIMESTAMP( "deleted" );
+	TIMESTAMP;
 
-	private final String defaultColumnName;
-
-	SoftDeleteType() {
-		this.defaultColumnName = name().toLowerCase( Locale.ROOT );
-	}
-
-	SoftDeleteType(String defaultColumnName) {
-		this.defaultColumnName = defaultColumnName;
-	}
-
+	/**
+	 * The default column name used with this strategy.
+	 * @see SoftDelete#columnName
+	 */
 	public String getDefaultColumnName() {
-		return defaultColumnName;
+		return switch ( this ) {
+			case ACTIVE -> "active";
+			case DELETED, TIMESTAMP -> "deleted";
+		};
 	}
 }

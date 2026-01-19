@@ -1168,7 +1168,7 @@ public class EmbeddableBinder {
 
 			//prepare column name structure
 			boolean isExplicitReference = true;
-			final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+			final var columns = joinColumns.getJoinColumns();
 			final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
 			for ( var joinColumn : columns ) {
 				if ( !joinColumn.isReferenceImplicit() ) {
@@ -1321,15 +1321,17 @@ public class EmbeddableBinder {
 					if ( selectable instanceof org.hibernate.mapping.Column column ) {
 						final AnnotatedJoinColumn joinColumn;
 						final String logicalColumnName;
+						final String referenceName;
 						if ( isExplicitReference ) {
 							logicalColumnName = column.getName();
-							joinColumn = columnByReferencedName.get( normalizedColumnName( column ) );
+							referenceName = normalizedColumnName( column );
 						}
 						else {
 							logicalColumnName = null;
-							joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
+							referenceName = String.valueOf( index.get() );
 							index.getAndIncrement();
 						}
+						joinColumn = columnByReferencedName.get( referenceName );
 						if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
 							throw new AnnotationException(
 									"Property '" + propertyName

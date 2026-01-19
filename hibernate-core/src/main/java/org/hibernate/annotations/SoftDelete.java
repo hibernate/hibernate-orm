@@ -116,7 +116,7 @@ public @interface SoftDelete {
 	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
 
 	/**
-	 * Used as the default for {@linkplain SoftDelete#converter()}, indicating that
+	 * Used as the default for {@linkplain SoftDelete#converter}, indicating that
 	 * {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect} and
 	 * {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
 	 * resolution should be used.

@@ -50,6 +50,7 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 	/**
 	 * Open the stateless session.
 	 */
+	@Override
 	StatelessSession open();
 
 	@Override

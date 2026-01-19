@@ -48,6 +48,11 @@ import java.util.function.UnaryOperator;
  * @see SessionBuilder
  */
 public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
+	/**
+	 * Open the session.
+	 */
+	@Override
+	Session open();
 
 	@Override
 	SharedSessionBuilder connection();

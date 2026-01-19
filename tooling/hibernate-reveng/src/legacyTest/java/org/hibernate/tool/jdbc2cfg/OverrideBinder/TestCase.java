@@ -17,10 +17,29 @@
  */
 package org.hibernate.tool.jdbc2cfg.OverrideBinder;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.*;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
@@ -34,15 +53,7 @@ import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author max
@@ -441,13 +452,11 @@ public class TestCase {
 			
 	}
 		
-	// TODO: HBX-2052: investigate the use of hibernate-type=SomeUserType
-	@Disabled
 	@Test
 	public void testTypes() {		
 		PersistentClass classMapping = metadata.getEntityBinding("MiscTypes");
 		assertEquals(
-				"SomeUserType", 
+				"org.hibernate.tool.jdbc2cfg.OverrideBinder.SomeUserType", 
 				((SimpleValue)classMapping.getProperty("name").getValue()).getTypeName());
 		assertEquals(
 				"string", 

@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import java.math.BigDecimal;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
@@ -17,7 +18,7 @@ import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDecimal> {
+public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDecimal> implements LiteralType<BigDecimal> {
 	public static final BigDecimalType INSTANCE = new BigDecimalType();
 
 	public BigDecimalType() {
@@ -32,5 +33,10 @@ public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDec
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
+	}
+
+	@Override
+	public String objectToSQLString(BigDecimal value, Dialect dialect) throws Exception {
+		return toString( value );
 	}
 }

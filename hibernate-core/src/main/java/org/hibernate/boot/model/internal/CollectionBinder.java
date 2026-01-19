@@ -243,8 +243,6 @@ public abstract class CollectionBinder {
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
-		final var hibernateCascade = memberDetails.getAnnotationUsage( Cascade.class, modelsContext );
-
 		collectionBinder.setElementColumns( elementColumns(
 				propertyHolder,
 				nullability,
@@ -287,8 +285,7 @@ public abstract class CollectionBinder {
 						oneToManyAnn,
 						manyToManyAnn,
 						elementCollectionAnn,
-						collectionBinder,
-						hibernateCascade
+						collectionBinder
 				)
 		);
 
@@ -302,26 +299,27 @@ public abstract class CollectionBinder {
 			final HashMap<String, IdentifierGeneratorDefinition> availableGenerators = new HashMap<>();
 			visitIdGeneratorDefinitions(
 					memberDetails.getDeclaringType(),
-					definition -> {
-						if ( !definition.getName().isEmpty() ) {
-							availableGenerators.put( definition.getName(), definition );
-						}
-					},
+					definition -> addDefinition( definition, availableGenerators ),
 					context
 			);
 			visitIdGeneratorDefinitions(
 					memberDetails,
-					definition -> {
-						if ( !definition.getName().isEmpty() ) {
-							availableGenerators.put( definition.getName(), definition );
-						}
-					},
+					definition -> addDefinition( definition, availableGenerators ),
 					context
 			);
 			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
 		collectionBinder.bind();
+	}
+
+	private static void addDefinition(
+			IdentifierGeneratorDefinition definition,
+			Map<String, IdentifierGeneratorDefinition> availableGenerators) {
+		final String definitionName = definition.getName();
+		if ( !definitionName.isEmpty() ) {
+			availableGenerators.put( definitionName, definition );
+		}
 	}
 
 	private static NotFoundAction notFoundAction(
@@ -443,8 +441,7 @@ public abstract class CollectionBinder {
 			OneToMany oneToManyAnn,
 			ManyToMany manyToManyAnn,
 			ElementCollection elementCollectionAnn,
-			CollectionBinder collectionBinder,
-			Cascade hibernateCascade) {
+			CollectionBinder collectionBinder) {
 
 		//TODO enhance exception with @ManyToAny and @CollectionOfElements
 		if ( oneToManyAnn != null && manyToManyAnn != null ) {
@@ -461,7 +458,7 @@ public abstract class CollectionBinder {
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( oneToManyAnn.targetEntity() );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( oneToManyAnn.cascade(), hibernateCascade,
+					aggregateCascadeTypes( oneToManyAnn.cascade(), property,
 							oneToManyAnn.orphanRemoval(), context ) );
 			collectionBinder.setOneToMany( true );
 		}
@@ -479,14 +476,14 @@ public abstract class CollectionBinder {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( manyToManyAnn.targetEntity() );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( manyToManyAnn.cascade(), hibernateCascade, false, context ) );
+					aggregateCascadeTypes( manyToManyAnn.cascade(), property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else if ( property.hasDirectAnnotationUsage( ManyToAny.class ) ) {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( null, hibernateCascade, false, context ) );
+					aggregateCascadeTypes( null, property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {
@@ -1387,14 +1384,14 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleFetchProfileOverrides() {
-		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext(), (usage) -> {
-			getMetadataCollector().addSecondPass( new FetchSecondPass(
-					usage,
-					propertyHolder,
-					propertyName,
-					buildingContext
-			) );
-		} );
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext(),
+				usage -> getMetadataCollector()
+						.addSecondPass( new FetchSecondPass(
+								usage,
+								propertyHolder,
+								propertyName,
+								buildingContext
+						) ) );
 	}
 
 	private void handleFetch() {
@@ -1602,11 +1599,8 @@ public abstract class CollectionBinder {
 		// for non-inverse one-to-many, with a not-null fk, add a backref!
 		final String entityName = oneToMany.getReferencedEntityName();
 		final var referencedEntity = collector.getEntityBinding( entityName );
-		final Backref backref = new Backref();
-		final String backrefName = '_' + foreignJoinColumns.getPropertyName()
-				+ '_' + foreignJoinColumns.getColumns().get(0).getLogicalColumnName()
-				+ "Backref";
-		backref.setName( backrefName );
+		final var backref = new Backref();
+		backref.setName( backrefName() );
 		backref.setOptional( true );
 		backref.setUpdatable( false);
 		backref.setSelectable( false );
@@ -1614,6 +1608,12 @@ public abstract class CollectionBinder {
 		backref.setEntityName( collection.getOwner().getEntityName() );
 		backref.setValue( collection.getKey() );
 		referencedEntity.addProperty( backref );
+	}
+
+	private String backrefName() {
+		return '_' + foreignJoinColumns.getPropertyName()
+			+ '_' + foreignJoinColumns.getColumns().get( 0 ).getLogicalColumnName()
+			+ "Backref";
 	}
 
 	private void handleJpaOrderBy(Collection collection, PersistentClass associatedClass) {

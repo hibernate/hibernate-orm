@@ -9,7 +9,6 @@ import java.util.EnumSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
@@ -21,9 +20,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
@@ -97,9 +93,8 @@ public class ToOneBinder {
 			);
 		}
 
-		final var hibernateCascade = memberDetails.getDirectAnnotationUsage( Cascade.class );
 		bindManyToOne(
-				aggregateCascadeTypes( manyToOne.cascade(), hibernateCascade, false, context ),
+				aggregateCascadeTypes( manyToOne.cascade(), memberDetails, false, context ),
 				joinColumns,
 				propertyHolder,
 				nullability,
@@ -175,19 +170,12 @@ public class ToOneBinder {
 		manyToOne.setOnDeleteAction( onDeleteAction );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional && nullability != Nullability.FORCED_NULL ) {
-			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
+			for ( var column : joinColumns.getJoinColumns() ) {
 				column.setNullable( false );
 			}
 		}
 
-		if ( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ) {
-			// read-only
-			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
-				column.setInsertable( false );
-				column.setUpdatable( false );
-			}
-			joinColumns.setMapsId( memberDetails.getDirectAnnotationUsage( MapsId.class ).value() );
-		}
+		handleMapsId( joinColumns, memberDetails );
 
 		manyToOne.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
@@ -197,7 +185,7 @@ public class ToOneBinder {
 
 		bindForeignKeyNameAndDefinition( manyToOne, memberDetails, propertyHolder.getOverriddenForeignKey( fullPath ), context );
 
-		final FkSecondPass secondPass = new ToOneFkSecondPass(
+		final var secondPass = new ToOneFkSecondPass(
 				manyToOne,
 				joinColumns,
 				unique,
@@ -226,6 +214,17 @@ public class ToOneBinder {
 		);
 	}
 
+	private static void handleMapsId(AnnotatedJoinColumns joinColumns, MemberDetails memberDetails) {
+		if ( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ) {
+			// read-only
+			for ( var column : joinColumns.getJoinColumns() ) {
+				column.setInsertable( false );
+				column.setUpdatable( false );
+			}
+			joinColumns.setMapsId( memberDetails.getDirectAnnotationUsage( MapsId.class ).value() );
+		}
+	}
+
 	private static OnDeleteAction onDeleteAction(MemberDetails property) {
 		final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
 		return onDelete == null ? null : onDelete.action();
@@ -233,7 +232,7 @@ public class ToOneBinder {
 
 	private static NotFoundAction notFoundAction(PropertyHolder propertyHolder, MemberDetails property, FetchType fetchType) {
 		final var notFound = property.getDirectAnnotationUsage( NotFound.class );
-		final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
+		final var notFoundAction = notFound == null ? null : notFound.action();
 		if ( notFoundAction != null && fetchType == LAZY ) {
 			BOOT_LOGGER.ignoreNotFoundWithFetchTypeLazy( propertyHolder.getEntityName(), property.getName() );
 		}
@@ -264,7 +263,7 @@ public class ToOneBinder {
 			return value;
 		}
 		else {
-			final Join join = propertyHolder.addJoin( joinTable, false );
+			final var join = propertyHolder.addJoin( joinTable, false );
 			for ( var joinColumn : joinColumns.getJoinColumns() ) {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
@@ -366,11 +365,12 @@ public class ToOneBinder {
 		final var collector = context.getMetadataCollector();
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext,
-				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
+				usage -> collector.addSecondPass( new FetchSecondPass( usage,
+						propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
 	private static void handleFetch(ToOne toOne, MemberDetails property) {
-		final Fetch fetchAnnotationUsage = property.getDirectAnnotationUsage( Fetch.class );
+		final var fetchAnnotationUsage = property.getDirectAnnotationUsage( Fetch.class );
 		if ( fetchAnnotationUsage != null ) {
 			// Hibernate @Fetch annotation takes precedence
 			setHibernateFetchMode( toOne, property, fetchAnnotationUsage.value() );
@@ -448,9 +448,8 @@ public class ToOneBinder {
 		//FIXME support a proper PKJCs
 		final boolean trueOneToOne = memberDetails.hasDirectAnnotationUsage( PrimaryKeyJoinColumn.class )
 				|| memberDetails.hasDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
-		final var hibernateCascade = memberDetails.getDirectAnnotationUsage( Cascade.class );
 		bindOneToOne(
-				aggregateCascadeTypes( oneToOne.cascade(), hibernateCascade, oneToOne.orphanRemoval(), context ),
+				aggregateCascadeTypes( oneToOne.cascade(), memberDetails, oneToOne.orphanRemoval(), context ),
 				joinColumns,
 				oneToOne.optional(),
 				oneToOne.fetch(),
@@ -561,7 +560,7 @@ public class ToOneBinder {
 			binder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
-		final Property property = binder.makeProperty();
+		final var property = binder.makeProperty();
 		property.setOptional( optional );
 		propertyHolder.addProperty( property, inferredData.getAttributeMember(), inferredData.getDeclaringClass() );
 
@@ -595,7 +594,7 @@ public class ToOneBinder {
 		}
 		else {
 			// Try to find a hidden true one-to-one (FK == PK columns)
-			final KeyValue identifier = propertyHolder.getIdentifier();
+			final var identifier = propertyHolder.getIdentifier();
 			if ( identifier == null ) {
 				// This is a @OneToOne in an @EmbeddedId
 				// (the persistentClass.identifier is not yet set, it's being built)

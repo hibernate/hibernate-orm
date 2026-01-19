@@ -2995,8 +2995,7 @@ public class ModelBinder {
 				final var referenced =
 						getReferencedEntityBinding( oneToMany.getReferencedEntityName() );
 				final var backref = new Backref();
-				backref.setName( '_' + collectionBinding.getOwnerEntityName()
-								+ "." + pluralAttributeSource.getName() + "Backref" );
+				backref.setName( backrefName() );
 				backref.setOptional( true );
 				backref.setUpdatable( false );
 				backref.setSelectable( false );
@@ -3013,6 +3012,12 @@ public class ModelBinder {
 					);
 				}
 			}
+		}
+
+		private String backrefName() {
+			return '_' + collectionBinding.getOwnerEntityName()
+				+ "." + pluralAttributeSource.getName()
+				+ "Backref";
 		}
 
 		protected void bindCollectionKey() {

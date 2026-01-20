@@ -14,6 +14,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
@@ -68,9 +69,10 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 						.matching( task -> task.getName().equals( languageCompileTaskName ) )
 						.configureEach( task -> {
 							FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
-							FileCollection dependencyFiles = project
+							Provider<FileCollection> dependencyFiles = project
 									.getConfigurations()
-									.getByName( sourceSet.getCompileClasspathConfigurationName() );
+									.named( sourceSet.getCompileClasspathConfigurationName() )
+									.map(FileCollection.class::cast);
 							//noinspection Convert2Lambda
 							task.doLast(new Action<>() {
 								@Override
@@ -78,7 +80,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 									try {
 										final Method getDestinationDirectory = task.getClass().getMethod("getDestinationDirectory");
 										final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(task);
-										final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.getFiles());
+										final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.get().getFiles());
 										EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
 									}
 									catch (Exception e) {

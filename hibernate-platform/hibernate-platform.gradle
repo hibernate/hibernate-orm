@@ -32,6 +32,9 @@ dependencies {
         api project( ":hibernate-maven-plugin" )
         api project( ":hibernate-ant" )
 
+        api project( ":hibernate-assistant" )
+        api project( ":hibernate-jfr" )
+
         api libs.hibernateModels
 
         api jakartaLibs.jpa

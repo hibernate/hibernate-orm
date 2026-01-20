@@ -10,7 +10,7 @@ import org.gradle.api.provider.Property;
 import java.util.ArrayList;
 
 /**
- * DSL extension for configuring bytecode enhancement - available as `project.hibernateOrm.enhancement`
+ * DSL extension for configuring bytecode enhancement - available as `project.hibernate.enhancement { ... }`
  */
 abstract public class EnhancementSpec {
 
@@ -25,21 +25,25 @@ abstract public class EnhancementSpec {
 	/**
 	 * Whether lazy-initialization handling should be incorporated into the enhanced bytecode
 	 */
+	@Deprecated(forRemoval = true)
 	abstract public Property<Boolean> getEnableLazyInitialization();
 
 	/**
 	 * Whether dirty-tracking should be incorporated into the enhanced bytecode
 	 */
+	@Deprecated(forRemoval = true)
 	abstract public Property<Boolean> getEnableDirtyTracking();
 
 	/**
 	 * Whether bidirectional association-management handling should be incorporated into the enhanced bytecode
 	 */
+	@Deprecated(forRemoval = true)
 	abstract public Property<Boolean> getEnableAssociationManagement();
 
 	/**
 	 * Whether extended enhancement should be performed.
 	 */
+	@Deprecated(forRemoval = true)
 	abstract public Property<Boolean> getEnableExtendedEnhancement();
 
 	/**

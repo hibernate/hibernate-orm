@@ -8,7 +8,7 @@ A Gradle plugin for introducing Hibernate tasks and capabilities into a build.
 [source,groovy]
 ----
 plugins {
-  id 'org.hibernate.orm'
+  id("org.hibernate.orm") version "<version-to-use>"
 }
 
 // HibernateOrmSpec
@@ -53,23 +53,26 @@ To enable enhancement, reference the DSL extension:
 [source,groovy]
 ----
 hibernate {
-    enhancement
+    enhancement {
+    }
 }
 ----
 
-Enhancement has a few options to control what enhancements take place.  All the options default to `false`:
+Enhancement has a few options to control what enhancements take place. These are the defaults:
 
 [source,groovy]
 ----
 hibernate {
-  enhancement {
-    lazyInitialization = true
-    dirtyTracking = true
-    associationManagement = true
-    extendedEnhancement = false
-  }
+    enhancement {
+        enableLazyInitialization = true
+        enableDirtyTracking = true
+        enableAssociationManagement = false
+        enableExtendedEnhancement = false
+    }
 }
 ----
+
+All options are deprecated for removal.
 
 [[hbm-xml]]
 == Legacy `hbm.xml` Transformation

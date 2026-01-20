@@ -85,6 +85,22 @@ query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
 which collapses duplicate results according to value equality.
 
+=== Envers association not-audited target mode
+
+Previously, if an association of an Envers `@Audited` entity pointing to another
+`@Audited` entity was defined as:
+
+[source,java]
+@ManyToOne
+@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+private OtherEntity otherEntity;
+
+the `targetAuditMode = RelationTargetAuditMode.NOT_AUDITED` setting was ignored,
+and when reading a historic version of the owning entity, the associated `OtherEntity`
+was also read from its historic audit table (at the relevant revision).
+As of Hibernate 7.3, the `NOT_AUDITED` setting is now respected: the associated
+`OtherEntity` is read from its current state, not from its historic audit table.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

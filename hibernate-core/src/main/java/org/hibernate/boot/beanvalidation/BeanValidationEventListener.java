@@ -13,7 +13,6 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
@@ -116,23 +115,9 @@ public class BeanValidationEventListener
 		final Object entity = castNonNull( event.getCollection().getOwner() );
 		validate(
 				entity,
-				getEntityPersister( event.getSession(), event.getAffectedOwnerEntityName(), entity ),
+				event.getCollectionPersister().getOwnerEntityPersister(),
 				GroupsPerOperation.Operation.UPDATE
 		);
-	}
-
-	private EntityPersister getEntityPersister(
-			SharedSessionContractImplementor session, String entityName, Object entity) {
-		if ( session != null ) {
-			return session.getEntityPersister( entityName, entity );
-		}
-		else {
-			final var metamodel = sessionFactory.getMappingMetamodel();
-			return entityName == null
-					? metamodel.getEntityDescriptor( entity.getClass().getName() )
-					: metamodel.getEntityDescriptor( entityName )
-							.getSubclassEntityPersister( entity, sessionFactory );
-		}
 	}
 
 	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {

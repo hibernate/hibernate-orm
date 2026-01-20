@@ -33,11 +33,11 @@ public abstract class AbstractSessionEvent implements Serializable {
 	 * @return The session event source.
 	 */
 	public final EventSource getSession() {
-		return getEventSource();
+		return source;
 	}
 
 	public final EventSource getEventSource() {
-		return source.asEventSource();
+		return source;
 	}
 
 	public SessionFactoryImplementor getFactory() {

@@ -14,8 +14,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,10 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Yoobin Yoon
  */
 @JiraKey("HHH-18040")
-@RequiresDialect(MySQLDialect.class)
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
+@RequiresDialect(MySQLDialect.class)
+@RequiresDialect(MariaDBDialect.class)
 @SessionFactory
-public class MySQLDmlSubqueryTest {
+public class DmlSelfReferencingSubqueryTest {
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
@@ -64,7 +63,6 @@ public class MySQLDmlSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class, versionMatchMode = VersionMatchMode.OLDER, majorVersion = 11, minorVersion = 1, reason = "MDEV-7487 introduces self-join rewrites in 11.1 which makes this possible, but double nesting makes correlations impossible")
 	void testDeleteWithExistsSubqueryReferencingSameTable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			int deleted = session.createMutationQuery(
@@ -82,7 +80,6 @@ public class MySQLDmlSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class, versionMatchMode = VersionMatchMode.OLDER, majorVersion = 11, minorVersion = 1, reason = "MDEV-7487 introduces self-join rewrites in 11.1 which makes this possible, but double nesting makes correlations impossible")
 	void testDeleteWithNotExistsSubqueryReferencingSameTable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			int deleted = session.createMutationQuery(
@@ -100,7 +97,6 @@ public class MySQLDmlSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class, versionMatchMode = VersionMatchMode.OLDER, majorVersion = 11, minorVersion = 1, reason = "MDEV-7487 introduces self-join rewrites in 11.1 which makes this possible, but double nesting makes correlations impossible")
 	void testUpdateWithExistsSubqueryReferencingSameTable(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			int updated = session.createMutationQuery(
@@ -227,7 +223,6 @@ public class MySQLDmlSubqueryTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class, versionMatchMode = VersionMatchMode.OLDER, majorVersion = 11, minorVersion = 1, reason = "MDEV-7487 introduces self-join rewrites in 11.1 which makes this possible, but double nesting makes correlations impossible")
 	void testDeleteWithCorrelatedSubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			int deleted = session.createMutationQuery(
@@ -241,6 +236,25 @@ public class MySQLDmlSubqueryTest {
 			long count = session.createSelectionQuery( "select count(*) from EntityOfBasics", Long.class )
 					.getSingleResult();
 			assertEquals( 0, count );
+		} );
+	}
+
+	@Test
+	void testUpdateWithNestedCorrelatedSubqueryInSetClause(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			int updated = session.createMutationQuery(
+					"update EntityOfBasics e1 " +
+							"set e1.theInteger = (" +
+							"  select coalesce(max(e2.theInteger), 0) from EntityOfBasics e2 " +
+							"  where e2.theInteger < (" +
+							"    select avg(e3.theInteger) from EntityOfBasics e3 " +
+							"    where e3.theString = e2.theString" +
+							"  )" +
+							") " +
+							"where e1.id = 1"
+			).executeUpdate();
+
+			assertEquals( 1, updated );
 		} );
 	}
 

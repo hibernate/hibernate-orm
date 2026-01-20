@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class CollectionActionsValidationStatelessTest {
 
 	@Test
-	void smoke(SessionFactoryScope scope) {
+	void resultsInViolationConstraint(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( session -> {
 			final ConstraintViolationException e = assertThrows( ConstraintViolationException.class, () -> {
 				ArrayList<Book> books = new ArrayList<>();
@@ -49,6 +49,20 @@ public class CollectionActionsValidationStatelessTest {
 				session.upsertMultiple( List.of( author ) );
 			} );
 			assertThat( e.getConstraintViolations() ).hasSize( 1 );
+		} );
+	}
+
+	@Test
+	void noConstraintViolations(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			ArrayList<Book> books = new ArrayList<>();
+			Author author = new Author( 1L, "first", "last", books );
+			for ( int i = 0; i < 10; i++ ) {
+				Book book = new Book( 10L + i, "title #" + i, author );
+				books.add( book );
+			}
+
+			session.upsertMultiple( List.of( author ) );
 		} );
 	}
 

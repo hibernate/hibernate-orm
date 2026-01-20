@@ -61,30 +61,29 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			for ( String language : languages ) {
 				final String languageCompileTaskName = sourceSet.getCompileTaskName( language );
-				final Task languageCompileTask = project.getTasks().findByName( languageCompileTaskName );
-				if ( languageCompileTask == null ) {
-					continue;
-				}
-
-				FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
-				FileCollection dependencyFiles = project
-						.getConfigurations()
-						.getByName( sourceSet.getCompileClasspathConfigurationName() );
-				//noinspection Convert2Lambda
-				languageCompileTask.doLast(new Action<>() {
-					@Override
-					public void execute(Task t) {
-						try {
-							final Method getDestinationDirectory = languageCompileTask.getClass().getMethod("getDestinationDirectory");
-							final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(languageCompileTask);
-							final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.getFiles());
-							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
-						}
-						catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					}
-				});
+				project.getTasks()
+						.matching( task -> task.getName().equals( languageCompileTaskName ) )
+						.configureEach( task -> {
+							FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
+							FileCollection dependencyFiles = project
+									.getConfigurations()
+									.getByName( sourceSet.getCompileClasspathConfigurationName() );
+							//noinspection Convert2Lambda
+							task.doLast(new Action<>() {
+								@Override
+								public void execute(Task t) {
+									try {
+										final Method getDestinationDirectory = task.getClass().getMethod("getDestinationDirectory");
+										final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(task);
+										final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.getFiles());
+										EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
+									}
+									catch (Exception e) {
+										throw new RuntimeException(e);
+									}
+								}
+							});
+						});
 			}
 		} );
 	}

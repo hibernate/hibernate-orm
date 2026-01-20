@@ -217,12 +217,12 @@ public class JdkVersionConfig {
 	}
 
 	public static JavaLanguageVersion extractVersion(Project project, String propertyName) {
-		final Object projectProp = project.getProperties().get( propertyName );
+		final Object projectProp = project.findProperty( propertyName );
 		if ( projectProp != null ) {
 			return JavaLanguageVersion.of( projectProp.toString() );
 		}
 
-		final Object sysProp = System.getProperties().get( propertyName );
+		final Object sysProp = System.getProperty( propertyName );
 		if ( sysProp != null ) {
 			return JavaLanguageVersion.of( sysProp.toString() );
 		}

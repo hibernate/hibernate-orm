@@ -215,7 +215,7 @@ tasks.withType( Test.class ).each { test ->
     test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
-    test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+    test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
 
     test.enableAssertions = true
 

@@ -123,7 +123,7 @@ public class JavaModulePlugin implements Plugin<Project> {
 				if ( project.hasProperty( "test.jdk.launcher.args" ) ) {
 					testTask.jvmArgs(
 							Arrays.asList(
-								project.getProperties().get( "test.jdk.launcher.args" ).toString().split( " " )
+								project.property( "test.jdk.launcher.args" ).toString().split( " " )
 							)
 					);
 				}

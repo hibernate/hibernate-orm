@@ -62,7 +62,12 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	private static final AggregateFunctionChecker INSTANCE = new AggregateFunctionChecker();
 
-	private static class AggregateFunctionException extends RuntimeException {}
+	private static class AggregateFunctionException extends RuntimeException {
+		@Override
+		public Throwable fillInStackTrace() {
+			return this;
+		}
+	}
 
 	public static boolean hasAggregateFunctions(Expression expression) {
 		try {

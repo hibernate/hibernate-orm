@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -12,7 +11,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginExtension;
@@ -69,10 +67,9 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 				}
 
 				FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
-				Configuration compileConfig = project
+				FileCollection dependencyFiles = project
 						.getConfigurations()
 						.getByName( sourceSet.getCompileClasspathConfigurationName() );
-				Set<File> dependencyFiles = compileConfig.getFiles();
 				//noinspection Convert2Lambda
 				languageCompileTask.doLast(new Action<>() {
 					@Override
@@ -80,7 +77,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 						try {
 							final Method getDestinationDirectory = languageCompileTask.getClass().getMethod("getDestinationDirectory");
 							final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(languageCompileTask);
-							final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles);
+							final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.getFiles());
 							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
 						}
 						catch (Exception e) {

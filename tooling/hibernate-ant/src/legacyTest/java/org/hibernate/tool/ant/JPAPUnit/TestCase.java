@@ -41,9 +41,9 @@ public class TestCase {
 	@BeforeEach
 	public void setUp() {
 		destinationDir = new File(outputFolder, "destination");
-		destinationDir.mkdir();
+		assertTrue(destinationDir.mkdir());
 		resourcesDir = new File(outputFolder, "resources");
-		resourcesDir.mkdir();
+		assertTrue(resourcesDir.mkdir());
 		JdbcUtil.createDatabase(this);
 	}
 	

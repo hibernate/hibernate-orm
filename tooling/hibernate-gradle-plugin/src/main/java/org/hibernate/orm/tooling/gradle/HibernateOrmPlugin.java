@@ -35,15 +35,18 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			prepareEnhancement( ormDsl, project );
 			prepareHbmTransformation( ormDsl, project );
 
-
-			//noinspection ConstantConditions
-			project.getDependencies().add(
-					"implementation",
-					ormDsl.getUseSameVersion().map( (use) -> use
-							? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
-							: null
-					)
-			);
+			project
+					.getExtensions()
+					.getByType( JavaPluginExtension.class )
+					.getSourceSets()
+					.configureEach( sourceSet -> project.getDependencies().add(
+							sourceSet.getImplementationConfigurationName(),
+							ormDsl.getUseSameVersion().zip(ormDsl.getSourceSet(), (use, sourceSetName) ->
+									(use && sourceSetName.equals( sourceSet.getName() ))
+											? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
+											: null
+							)
+					) );
 		} );
 	}
 

@@ -293,23 +293,11 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicate(LikePredicate likePredicate) {
 		// We need a custom implementation here because PostgreSQL
 		// uses the backslash character as default escape character
 		// According to the documentation, we can overcome this by specifying an empty escape character
 		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
-		likePredicate.getMatchExpression().accept( this );
-		if ( likePredicate.isNegated() ) {
-			appendSql( " not" );
-		}
-		if ( likePredicate.isCaseSensitive() ) {
-			appendSql( " like " );
-		}
-		else {
-			appendSql( WHITESPACE );
-			appendSql( getDialect().getCaseInsensitiveLike() );
-			appendSql( WHITESPACE );
-		}
 		likePredicate.getPattern().accept( this );
 		if ( likePredicate.getEscapeCharacter() != null ) {
 			appendSql( " escape " );

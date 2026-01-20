@@ -6178,6 +6178,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			&& !selectStatement.getQueryPart().isRoot();
 	}
 
+	protected boolean hasCorrelatedSubquery(Statement statement, String targetAlias) {
+		return CorrelationChecker.hasCorrelation( statement, targetAlias );
+	}
+
+	protected boolean hasNestedCorrelation(Statement statement) {
+		return NestedCorrelationChecker.hasNestedCorrelation( statement );
+	}
+
+	protected boolean hasTargetTableCorrelation(MutationStatement statement) {
+		final String targetAlias = statement.getTargetTable().getIdentificationVariable();
+		return statement instanceof AbstractUpdateOrDeleteStatement
+				&& targetAlias != null
+				&& CorrelationChecker.hasCorrelation( statement, targetAlias );
+	}
+
 	protected boolean renderNamedTableReference(
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );

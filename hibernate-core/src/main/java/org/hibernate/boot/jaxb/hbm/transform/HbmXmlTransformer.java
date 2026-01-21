@@ -1838,7 +1838,7 @@ public class HbmXmlTransformer {
 	private void transferCollectionCommonInfo(PluralAttributeInfo source, JaxbPluralAttribute target) {
 		target.setName( source.getName() );
 		target.setAttributeAccessor( source.getAccess() );
-		target.setFetchMode( convert( source.getFetch() ) );
+		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
 		target.setFetch( convert( source.getLazy() ) );
 
 		if ( isNotEmpty( source.getCollectionType() ) ) {
@@ -2000,8 +2000,11 @@ public class HbmXmlTransformer {
 		return value == null ? null : !value;
 	}
 
-	private JaxbPluralFetchModeImpl convert(JaxbHbmFetchStyleWithSubselectEnum fetch) {
+	private JaxbPluralFetchModeImpl convert(JaxbHbmFetchStyleWithSubselectEnum fetch,JaxbHbmOuterJoinEnum outerJoin) {
 		if ( fetch == null ) {
+			if ( outerJoin == JaxbHbmOuterJoinEnum.TRUE ) {
+				return JaxbPluralFetchModeImpl.JOIN;
+			}
 			return null;
 		}
 		else {

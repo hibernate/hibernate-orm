@@ -3988,7 +3988,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( "exists (select " );
 					renderCommaSeparatedSelectExpression( lhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
-					appendSql( " intersect select " );
+					appendSql( " " );
+					appendSql( getDialect().getSetOperatorSqlString( SetOperator.INTERSECT ) );
+					appendSql( " select " );
 					renderCommaSeparatedSelectExpression( rhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
 					appendSql( CLOSE_PARENTHESIS );
@@ -4290,7 +4292,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				clauseStack.push( Clause.SELECT );
 				visitSqlSelectExpression( lhs );
 				appendSql( getFromDualForSelectOnly() );
-				appendSql( " intersect select " );
+				appendSql( " " );
+				appendSql( dialect.getSetOperatorSqlString( SetOperator.INTERSECT ) );
+				appendSql( " select " );
 				visitSqlSelectExpression( rhs );
 				appendSql( getFromDualForSelectOnly() );
 				clauseStack.pop();

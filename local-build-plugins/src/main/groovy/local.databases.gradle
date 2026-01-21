@@ -301,7 +301,7 @@ ext {
             hana_cloud : [
                     'db.dialect' : 'org.hibernate.dialect.HANADialect',
                     'jdbc.driver': 'com.sap.db.jdbc.Driver',
-                    'jdbc.user'  : 'HIBERNATE_TEST',
+                    'jdbc.user'  : 'hibernate_orm_test_$worker',
                     'jdbc.pass'  : 'H1bernate_test',
                     // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
                     'jdbc.url'   : 'jdbc:sap://' + dbHost + ':443/?encrypt=true&validateCertificate=false&statementCacheSize=0',
@@ -312,7 +312,7 @@ ext {
             hana_ci : [
                     'db.dialect' : 'org.hibernate.dialect.HANADialect',
                     'jdbc.driver': 'com.sap.db.jdbc.Driver',
-                    'jdbc.user'  : 'SYSTEM',
+                    'jdbc.user'  : 'hibernate_orm_test_$worker',
                     'jdbc.pass'  : 'H1bernate_test',
                     // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
                     'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0',

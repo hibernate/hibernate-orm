@@ -1157,7 +1157,29 @@ hana() {
         sleep 10
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs hana 2>&1)
     done
+    hana_setup
     echo "HANA successfully started"
+}
+
+hana_setup() {
+  databases=()
+  for n in $(seq 1 $DB_COUNT)
+  do
+    databases+=("hibernate_orm_test_${n}")
+  done
+  create_cmd=
+  for i in "${!databases[@]}";do
+    create_cmd+="
+create user ${databases[i]} password H1bernate_test NO FORCE_FIRST_PASSWORD_CHANGE;
+grant create schema to ${databases[i]};"
+  done
+  # The first command seems to be ignored?! So let's just run something useless
+  $CONTAINER_CLI exec hana bash -c "cat <<EOF | /usr/sap/HXE/HDB90/exe/hdbsql -n localhost:39017 -u SYSTEM -p H1bernate_test -stdin
+select 1;
+$create_cmd
+\q
+EOF
+"
 }
 
 cockroachdb() {

@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,7 +39,7 @@ public class CustomAfterCompletionTest {
 	public void success(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerCallback(
+			session.unwrap( EventSource.class ).getActionQueue().registerCallback(
 					(success, session1) -> called.set(true) );
 			Assertions.assertFalse( called.get() );
 			scope.inTransaction( session, theSession -> theSession.persist(new SimpleEntity("jack")) );
@@ -57,7 +58,7 @@ public class CustomAfterCompletionTest {
 	public void failure(SessionFactoryScope scope) {
 		try {
 			scope.inSession( session -> {
-				session.getActionQueue().registerCallback(
+				session.unwrap( EventSource.class ).getActionQueue().registerCallback(
 						(success, session1) -> {throw new RuntimeException( "My exception" );} );
 				scope.inTransaction( session, theSession -> theSession.persist(new SimpleEntity("jack")) );
 			} );

@@ -70,18 +70,11 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	/**
 	 * Get the {@link ActionQueue} associated with this session.
+	 * @deprecated This was only used in tests and can be quite safely removed.
+	 *             Use {@link org.hibernate.event.spi.EventSource#getActionQueue()}.
 	 */
+	@Deprecated(since = "7.3", forRemoval = true)
 	ActionQueue getActionQueue();
-
-	@Override
-	default TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
-		return getActionQueue();
-	}
-
-	@Override
-	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
-		return getActionQueue().getTransactionCompletionCallbacks();
-	}
 
 	/**
 	 * Should this session be automatically closed after the current

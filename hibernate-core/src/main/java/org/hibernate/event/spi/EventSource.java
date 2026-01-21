@@ -9,6 +9,8 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.TransactionCompletionCallbacks;
+import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -68,4 +70,13 @@ public interface EventSource extends SessionImplementor {
 	//       This should be removed once action/task ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
+	@Override
+	default TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
+		return getActionQueue();
+	}
+
+	@Override
+	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
+		return getActionQueue().getTransactionCompletionCallbacks();
+	}
 }

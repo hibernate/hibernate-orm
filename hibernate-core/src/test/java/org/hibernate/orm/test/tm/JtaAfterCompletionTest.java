@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -77,7 +78,7 @@ public class JtaAfterCompletionTest {
 				// Register before and after callback handlers
 				// The before causes the original thread to wait until Reaper aborts the transaction
 				// The after tracks whether it is invoked since this test is to guarantee it is called
-				final ActionQueue actionQueue = session.getActionQueue();
+				final ActionQueue actionQueue = session.unwrap( EventSource.class ).getActionQueue();
 				actionQueue.registerCallback( new AfterCallbackCompletionHandler() );
 				actionQueue.registerCallback( new BeforeCallbackCompletionHandler() );
 

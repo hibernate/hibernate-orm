@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author max
@@ -123,9 +122,6 @@ public class DefaultStrategyTest {
 		assertEquals("ProductImpl", custom.tableToClassName( productTable ));
     	
         assertEquals("productImpls", custom.foreignKeyToCollectionName("something", productTable, null, TableIdentifier.create(null, null, "order"), null, true ) );
-        /*assertEquals("willies", custom.foreignKeyToCollectionName("something", new TableIdentifier("willy"), null, new TableIdentifier("order"), null, true ) );
-		assertEquals("boxes", custom.foreignKeyToCollectionName("something", new TableIdentifier("box"), null, new TableIdentifier("order"), null, true ) );
-        assertEquals("order", custom.foreignKeyToEntityName("something", productTable, null, new TableIdentifier("order"), null, true ) );*/
     }
     
 	@Test
@@ -133,10 +129,10 @@ public class DefaultStrategyTest {
     	
     	String fkName = "something";
 		TableIdentifier fromTable = TableIdentifier.create(null, null, "company");
-		List<Column> fromColumns = new ArrayList<Column>();
+		List<Column> fromColumns = new ArrayList<>();
 		
 		TableIdentifier toTable = TableIdentifier.create(null, null, "address");
-		List<Column> toColumns = new ArrayList<Column>();
+		List<Column> toColumns = new ArrayList<>();
 		
 		assertEquals("address", rns.foreignKeyToEntityName(fkName, fromTable, fromColumns, toTable, toColumns, true) );
 		assertEquals("companies", rns.foreignKeyToCollectionName(fkName, fromTable, fromColumns, toTable, toColumns, true) );

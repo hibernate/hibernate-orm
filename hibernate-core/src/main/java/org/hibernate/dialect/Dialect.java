@@ -6532,4 +6532,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsUniqueConstraints() {
 		return true;
 	}
+
+	/**
+	 * Does this dialect support defining the column list in the CTE header?
+	 * <p>
+	 * Standard syntax: {@code WITH cte (col1, col2) AS ...}
+	 * <p>
+	 * If false, Hibernate will generate: {@code WITH cte AS (SELECT ... AS col1, ... AS col2)}
+	 *
+	 * @return {@code true} if the dialect supports the column list in the CTE header; {@code false} otherwise.
+	 */
+	public boolean supportsCteHeaderColumnList() {
+		return true;
+	}
 }

@@ -2233,17 +2233,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void visitCteStatement(CteStatement cte) {
 		appendSql( cte.getCteTable().getTableExpression() );
-
-		appendSql( " (" );
-
-		renderCteColumns( cte );
-
-		appendSql( ") as " );
-
+		if ( dialect.supportsCteHeaderColumnList() ) {
+			appendSql( " (" );
+			renderCteColumns( cte );
+			appendSql( ")" );
+		}
+		appendSql( " as " );
 		if ( cte.getMaterialization() != CteMaterialization.UNDEFINED ) {
 			renderMaterializationHint( cte.getMaterialization() );
 		}
-
 		final boolean needsParenthesis = !( cte.getCteDefinition() instanceof SelectStatement )
 				|| ( (SelectStatement) cte.getCteDefinition() ).getQueryPart().isRoot();
 		if ( needsParenthesis ) {
@@ -2253,7 +2251,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( needsParenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-
 		renderSearchClause( cte );
 		renderCycleClause( cte );
 	}
@@ -2276,52 +2273,51 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	protected void renderCteColumns(CteStatement cte) {
-		String separator = "";
+	private List<String> determineCteColumnNames(CteStatement cte) {
+		final List<String> columnNames = new ArrayList<>();
 		if ( cte.getCteTable().getCteColumns() == null ) {
-			final List<String> columnExpressions = new ArrayList<>();
 			cte.getCteTable().getTableGroupProducer().visitSubParts(
 					modelPart -> modelPart.forEachSelectable(
 							0,
-							(index, mapping) -> columnExpressions.add( mapping.getSelectionExpression() )
+							(index, mapping) -> columnNames.add( mapping.getSelectionExpression() )
 					),
 					null
 			);
-			for ( String columnExpression : columnExpressions ) {
-				appendSql( separator );
-				appendSql( columnExpression );
-				separator = COMMA_SEPARATOR;
-			}
 		}
 		else {
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
-				appendSql( separator );
-				appendSql( cteColumn.getColumnExpression() );
-				separator = COMMA_SEPARATOR;
+				columnNames.add( cteColumn.getColumnExpression() );
 			}
 		}
 		if ( cte.isRecursive() ) {
-			if ( !dialect.supportsRecursiveSearchClause() ) {
-				if ( cte.getSearchColumn() != null ) {
-					appendSql( COMMA_SEPARATOR );
-					if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
-						appendSql( determineDepthColumnName( cte ) );
-						appendSql( COMMA_SEPARATOR );
-					}
-					appendSql( cte.getSearchColumn().getColumnExpression() );
+			if ( !dialect.supportsRecursiveSearchClause() && cte.getSearchColumn() != null ) {
+				if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
+					columnNames.add( determineDepthColumnName( cte ) );
 				}
+				columnNames.add( cte.getSearchColumn().getColumnExpression() );
 			}
-			if ( !dialect.supportsRecursiveCycleClause() ) {
-				if ( cte.getCycleMarkColumn() != null ) {
-					appendSql( COMMA_SEPARATOR );
-					appendSql( cte.getCycleMarkColumn().getColumnExpression() );
-				}
+			if ( !dialect.supportsRecursiveCycleClause() && cte.getCycleMarkColumn() != null ) {
+				columnNames.add( cte.getCycleMarkColumn().getColumnExpression() );
 			}
-			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
-					|| cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
+			if ( (cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause())
+				|| (cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause()) ) {
+				columnNames.add( determineCyclePathColumnName( cte ) );
+			}
+		}
+		return columnNames;
+	}
+
+	protected void renderCteColumns(CteStatement cte) {
+		final List<String> columnNames = determineCteColumnNames( cte );
+		boolean first = true;
+		for ( String columnName : columnNames ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
 				appendSql( COMMA_SEPARATOR );
-				appendSql( determineCyclePathColumnName( cte ) );
 			}
+			appendSql( columnName );
 		}
 	}
 
@@ -2394,9 +2390,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		currentCteStatement = cte;
 		final Limit oldLimit = limit;
 		limit = null;
-		cte.getCteDefinition().accept( this );
-		currentCteStatement = oldCteStatement;
-		limit = oldLimit;
+		final boolean oldNeedsSelectAliases = needsSelectAliases;
+		final List<String> oldColumnAliases = columnAliases;
+		if ( !dialect.supportsCteHeaderColumnList() ) {
+			needsSelectAliases = true;
+			columnAliases = determineCteColumnNames( cte );
+		}
+		try {
+			cte.getCteDefinition().accept( this );
+		}
+		finally {
+			currentCteStatement = oldCteStatement;
+			limit = oldLimit;
+			needsSelectAliases = oldNeedsSelectAliases;
+			columnAliases = oldColumnAliases;
+		}
 	}
 
 	/**

@@ -998,6 +998,16 @@ public class SpannerDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsCteHeaderColumnList() {
+		return false;
+	}
+
 	/* Type conversion and casting */
 
 	/**

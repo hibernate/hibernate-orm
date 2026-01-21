@@ -10,8 +10,8 @@ import jakarta.persistence.Id;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -54,7 +54,7 @@ public class JtaCustomAfterCompletionTest {
 		try {
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 			scope.inEntityManager( session -> {
-				session.unwrap( SessionImplementor.class ).getActionQueue()
+				session.unwrap( EventSource.class ).getActionQueue()
 						.registerCallback( new AfterTransactionCompletionProcess() {
 							@Override
 							public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
@@ -91,7 +91,7 @@ public class JtaCustomAfterCompletionTest {
 			AtomicBoolean called = new AtomicBoolean( false );
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 			scope.inEntityManager( session -> {
-				session.unwrap( SessionImplementor.class ).getActionQueue()
+				session.unwrap( EventSource.class ).getActionQueue()
 						.registerCallback( new AfterTransactionCompletionProcess() {
 							@Override
 							public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {

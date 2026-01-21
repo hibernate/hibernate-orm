@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -193,6 +194,21 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			throw new UnsupportedOperationException( "Escape character is not supported by Spanner" );
 		}
 		super.visitLikePredicate( likePredicate );
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			// Spanner uses functional syntax: DIV(numerator, denominator)
+			appendSql( "div(" );
+			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			appendSql( "," );
+			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			appendSql( ")" );
+		}
+		else {
+			super.visitBinaryArithmeticExpression( arithmeticExpression );
+		}
 	}
 
 }

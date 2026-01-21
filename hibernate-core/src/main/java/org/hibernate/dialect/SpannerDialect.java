@@ -983,6 +983,21 @@ public class SpannerDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsLobValueChangePropagation() {
+		return false;
+	}
+
+	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean supportsNullPrecedence() {
+		return false;
+	}
+
 	/* Type conversion and casting */
 
 	/**

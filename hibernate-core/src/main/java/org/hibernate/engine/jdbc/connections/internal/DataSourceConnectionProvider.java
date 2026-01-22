@@ -150,6 +150,14 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
+	public Connection getConnection(String user, String password) throws SQLException {
+		if ( !available ) {
+			throw new HibernateException( "Provider is closed" );
+		}
+		return dataSource.getConnection( user, password );
+	}
+
+	@Override
 	public void closeConnection(Connection connection) throws SQLException {
 		connection.close();
 	}

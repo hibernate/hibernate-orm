@@ -57,7 +57,10 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection.
 	 */
 	default Connection getConnection(String user, String password) throws SQLException {
-		return getConnection();
+		throw new UnsupportedOperationException(
+				"ConnectionProvider does not support contextual credentials: "
+						+ getClass().getTypeName()
+						+ " (use a different ConnectionProvider for credentials-based multitenancy)" );
 	}
 
 	/**

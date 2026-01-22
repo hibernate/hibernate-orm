@@ -146,6 +146,14 @@ Two new methods were added to `SchemaManager`:
 
 In addition, `truncate()` now automatically resets all primary key sequences and tables backing table generators.
 
+== New Specification APIs for projections and assignments
+
+The `QuerySpecification` APIs have been enhanced with:
+
+- `ProjectionSpecification` and `SimpleProjectionSpecification`,
+- `UpdateSpecification` and `DeleteSpecification`, along with
+- support for ``Assignment``s in ``UpdateSpecification``s.
+
 == Regular expression support in HQL
 
 The operators `like regexp` and `ilike regexp` were added to HQL, allowing {versionDocBase}/querylanguage/html_single/#like-predicate[patterns to be written as regular expressions].

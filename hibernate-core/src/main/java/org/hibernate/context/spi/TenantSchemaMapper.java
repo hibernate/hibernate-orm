@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Incubating;
 
 /**
- * Obtains the name of a database schema for a given tenant identifier when
+ * Supplies the name of a database schema for a given tenant identifier when
  * {@linkplain org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
  * schema-based multitenancy} is enabled.
  *

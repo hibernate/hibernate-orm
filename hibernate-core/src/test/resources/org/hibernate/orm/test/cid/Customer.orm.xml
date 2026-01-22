@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!--
+          ~ SPDX-License-Identifier: Apache-2.0
+          ~ Copyright Red Hat Inc. and Hibernate Authors
+          -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0" >
+	<package>org.hibernate.orm.test.cid</package>
+
+	<!--
+
+  This mapping demonstrates how to map a collection
+  <key> to one of the primary key columns of an
+  associated child class with a composite key. This
+  is very useful for legacy data!
+
+-->
+	<entity class="Customer">
+		<table name="Customer"/>
+		<attributes>
+			<id name="customerId">
+				<column length="10"/>
+				<generated-value generator="assigned"/>
+			</id>
+			<basic name="name">
+				<column nullable="false" length="100"/>
+			</basic>
+			<basic name="address">
+				<column nullable="false" length="200"/>
+			</basic>
+			<one-to-many name="orders" target-entity="Order" mapped-by="customer">
+				<order-column name="orderNumber"/>
+				<cascade>
+					<cascade-persist/>
+					<cascade-merge/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+</entity-mappings>

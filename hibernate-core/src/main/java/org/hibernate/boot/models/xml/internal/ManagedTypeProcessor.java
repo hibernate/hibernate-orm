@@ -297,6 +297,12 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext
 		);
 
+		XmlAnnotationHelper.applySyncronizedTables(
+				jaxbEntity.getSynchronizeTables(),
+				classDetails,
+				xmlDocumentContext
+		);
+
 		renderClass( classDetails, xmlDocumentContext );
 	}
 

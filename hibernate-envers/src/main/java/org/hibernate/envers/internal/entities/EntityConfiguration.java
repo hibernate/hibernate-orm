@@ -54,7 +54,8 @@ public class EntityConfiguration {
 			String toEntityName,
 			IdMapper idMapper,
 			boolean insertable,
-			boolean ignoreNotFound) {
+			boolean ignoreNotFound,
+			boolean targetNotAudited) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
@@ -66,7 +67,8 @@ public class EntityConfiguration {
 						null,
 						null,
 						insertable,
-						ignoreNotFound
+						ignoreNotFound,
+						targetNotAudited
 				)
 		);
 	}
@@ -76,7 +78,8 @@ public class EntityConfiguration {
 			String mappedByPropertyName,
 			String toEntityName,
 			IdMapper idMapper,
-			boolean ignoreNotFound) {
+			boolean ignoreNotFound,
+			boolean targetNotAudited) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
@@ -88,7 +91,8 @@ public class EntityConfiguration {
 						null,
 						null,
 						true,
-						ignoreNotFound
+						ignoreNotFound,
+						targetNotAudited
 				)
 		);
 	}

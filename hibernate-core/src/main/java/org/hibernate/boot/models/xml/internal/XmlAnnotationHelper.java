@@ -71,6 +71,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
@@ -1779,5 +1780,23 @@ public class XmlAnnotationHelper {
 				XmlAnnotationHelper.applyColumnTransformation( version.getColumn(), memberDetails, xmlDocumentContext );
 			}
 		}
+	}
+
+	public static void applySyncronizedTables(List<JaxbSynchronizedTableImpl> synchronizedTables, MutableClassDetails classDetails, XmlDocumentContext xmlDocumentContext) {
+		if ( isEmpty( synchronizedTables ) ) {
+			return;
+		}
+
+		final SynchronizeAnnotation synchronizeAnnotation = (SynchronizeAnnotation) classDetails.replaceAnnotationUsage(
+				HibernateAnnotations.SYNCHRONIZE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+
+		final String[] synchronizeTableNames = new String[synchronizedTables.size()];
+		for ( int i = 0; i < synchronizedTables.size(); i++ ) {
+			JaxbSynchronizedTableImpl jaxbSynchronizedTable = synchronizedTables.get( i );
+			synchronizeTableNames[i] = jaxbSynchronizedTable.getTable();
+		}
+		synchronizeAnnotation.value( synchronizeTableNames );
 	}
 }

@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -372,7 +371,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
 						firePreRemove( descriptor, collection, id, entityName, entity );
-						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
+						final var event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
 							descriptor.remove( id, this );
@@ -460,7 +459,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
 						firePreUpdate( descriptor, collection, id, entityName, entity );
-						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
+						final var event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
 							// TODO: can we do better here?

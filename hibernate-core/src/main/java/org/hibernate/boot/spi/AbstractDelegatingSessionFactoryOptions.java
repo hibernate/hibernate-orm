@@ -17,6 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -240,6 +241,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return delegate.getTenantSchemaMapper();
+	}
+
+	@Override
+	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
+		return delegate.getTenantCredentialsMapper();
 	}
 
 	@Override

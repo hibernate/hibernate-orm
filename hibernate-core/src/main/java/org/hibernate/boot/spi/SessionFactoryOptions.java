@@ -20,6 +20,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -325,6 +326,17 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 7.1
 	 */
 	TenantSchemaMapper<Object> getTenantSchemaMapper();
+
+	/**
+	 * Obtain a reference to the current {@linkplain TenantCredentialsMapper tenant credentials mapper},
+	 * which is used to obtain the database user and password for the current tenant
+	 * each time a connection is obtained.
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CREDENTIALS_MAPPER
+	 *
+	 * @since 7.3
+	 */
+	TenantCredentialsMapper<Object> getTenantCredentialsMapper();
 
 	/**
 	 * @see org.hibernate.cfg.TransactionSettings#JTA_TRACK_BY_THREAD

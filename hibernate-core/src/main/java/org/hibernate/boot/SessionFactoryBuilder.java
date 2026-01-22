@@ -15,6 +15,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -399,6 +400,20 @@ public interface SessionFactoryBuilder {
 	 * @since 7.1
 	 */
 	SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper);
+
+	/**
+	 * Specifies a {@link TenantCredentialsMapper} that is responsible for
+	 * mapping the current tenant identifier to the database user and password.
+	 *
+	 * @param mapper The mapping strategy to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CREDENTIALS_MAPPER
+	 *
+	 * @since 7.3
+	 */
+	SessionFactoryBuilder applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper);
 
 	/**
 	 * If using the built-in JTA-based

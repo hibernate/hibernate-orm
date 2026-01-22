@@ -14,6 +14,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import java.util.Map;
 
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
 
@@ -84,5 +85,28 @@ public class MultiTenancy {
 			);
 		}
 		return tenantSchemaMapper;
+	}
+
+	/**
+	 * Obtain the configured {@link TenantCredentialsMapper}.
+	 */
+	@SuppressWarnings("unchecked")
+	@Nullable
+	public static TenantCredentialsMapper<Object> getTenantCredentialsMapper(
+			Map<String,Object> settings, StandardServiceRegistry registry) {
+		final var tenantCredentialsMapper =
+				registry.requireService( StrategySelector.class )
+						.resolveStrategy( TenantCredentialsMapper.class,
+								settings.get( MULTI_TENANT_CREDENTIALS_MAPPER ) );
+		if ( tenantCredentialsMapper == null ) {
+			return Helper.getBean(
+					Helper.getBeanContainer( registry ),
+					TenantCredentialsMapper.class,
+					true,
+					false,
+					null
+			);
+		}
+		return tenantCredentialsMapper;
 	}
 }

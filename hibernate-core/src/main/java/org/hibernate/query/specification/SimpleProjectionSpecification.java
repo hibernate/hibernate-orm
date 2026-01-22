@@ -15,6 +15,8 @@ import org.hibernate.StatelessSession;
 
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.restriction.Path;
+import org.hibernate.query.specification.internal.CountProjectionSpecificationImpl;
+import org.hibernate.query.specification.internal.ExistsProjectionSpecificationImpl;
 import org.hibernate.query.specification.internal.SimpleProjectionSpecificationImpl;
 
 /**
@@ -27,6 +29,16 @@ import org.hibernate.query.specification.internal.SimpleProjectionSpecificationI
  *                 .sort(Order.desc(Book_.title));
  * var projection = SimpleProjectionSpecification.create(specification, Book_.isbn);
  * var isbns = projection.createQuery(session).getResultList();
+ * </pre>
+ * Alternatively, {@link #count} and {@link #exists} allow the number of results to be
+ * determined.
+ * <pre>
+ * var specification =
+ *         SelectionSpecification.create(Book.class)
+ *                 .restrict(Restriction.contains(Book_.title, "hibernate", false))
+ *                 .sort(Order.desc(Book_.title));
+ * var projection = SimpleProjectionSpecification.count(specification);
+ * var resultCount = projection.createQuery(session).getSingleResult();
  * </pre>
  * <p>
  * Use of a {@link Path} allows joining to associated entities.
@@ -73,6 +85,24 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 			SelectionSpecification<T> selectionSpecification,
 			SingularAttribute<? super T,X> projectedAttribute) {
 		return new SimpleProjectionSpecificationImpl<>( selectionSpecification, projectedAttribute );
+	}
+
+	/**
+	 * Create a new {@code ProjectionSpecification} which augments the given
+	 * {@link SelectionSpecification} with a {@code count(*)}.
+	 */
+	static <T> SimpleProjectionSpecification<T,Long> count(
+			SelectionSpecification<T> selectionSpecification) {
+		return new CountProjectionSpecificationImpl<>( selectionSpecification );
+	}
+
+	/**
+	 * Create a new {@code ProjectionSpecification} which augments the given
+	 * {@link SelectionSpecification} with an {@code exists()}.
+	 */
+	static <T> SimpleProjectionSpecification<T,Boolean> exists(
+			SelectionSpecification<T> selectionSpecification) {
+		return new ExistsProjectionSpecificationImpl<>( selectionSpecification );
 	}
 
 	@Override

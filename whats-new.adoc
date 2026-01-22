@@ -40,3 +40,9 @@ Additionally, we've added `org.hibernate.Timeouts` to help deal with some standa
 == Interceptor and merge
 
 Support for intercepting `Session#merge` events has been added to Hibernate's `Interceptor`.
+
+[[exists-queries]]
+== Exists queries
+
+The new method `createExistsQuery()` of `JpaCriteriaQuery` is similar to the older `createCountQuery()`, but it transforms a criteria query into a query that returns `true` if the original query has at least one result.
+The resulting SQL uses an `exists()` quantifier.

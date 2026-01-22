@@ -186,6 +186,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				insert( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -326,6 +327,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				delete( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -404,6 +406,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				update( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -491,6 +494,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				upsert( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );

@@ -22,6 +22,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
+import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
@@ -70,6 +72,7 @@ public final class EnhancerImplConstants {
 	final Implementation implementationSetOwner;
 	final Implementation implementationClearOwner;
 	final Implementation implementationSetPersistenceInfo;
+	final Implementation implementationDefaultConstructor;
 
 	//Frequently used Modifiers:
 	final int modifierPUBLIC = ModifierContributor.Resolver.of( List.of( Visibility.PUBLIC ) ).resolve();
@@ -212,6 +215,17 @@ public final class EnhancerImplConstants {
 				.wrap( StubMethod.INSTANCE );
 		implementationSetPersistenceInfo = Advice.to( CodeTemplates.SetPersistenceInfo.class, adviceLocator )
 				.wrap( StubMethod.INSTANCE );
+		implementationDefaultConstructor = new Implementation.Simple(
+				(methodVisitor, implementationContext, instrumentedMethod) -> {
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+					methodVisitor.visitMethodInsn( Opcodes.INVOKESPECIAL,
+							instrumentedMethod.getDeclaringType().getSuperClass().asErasure().getInternalName(),
+							"<init>",
+							"()V",
+							false );
+					methodVisitor.visitInsn( Opcodes.RETURN );
+					return new ByteCodeAppender.Size( 1, 1 );
+				} );
 	}
 
 	public ElementMatcher<? super MethodDescription> defaultFinalizer() {

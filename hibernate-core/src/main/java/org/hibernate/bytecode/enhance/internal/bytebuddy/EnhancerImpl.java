@@ -60,11 +60,13 @@ import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.emptyList;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.ASSOCIATION_MANAGEMENT;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.DIRTY_CHECK;
@@ -222,7 +224,7 @@ public class EnhancerImpl implements Enhancer {
 			}
 			else {
 				return createTransformer( managedCtClass )
-						.applyTo( enhanceEntity( builderSupplier.get(), managedCtClass ) );
+						.applyTo( enhanceEntity( addDefaultConstructor( builderSupplier.get(), managedCtClass ), managedCtClass ) );
 			}
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
@@ -232,7 +234,7 @@ public class EnhancerImpl implements Enhancer {
 			}
 			else {
 				return createTransformer( managedCtClass )
-						.applyTo( enhanceEmbeddable( builderSupplier.get(), managedCtClass ) );
+						.applyTo( enhanceEmbeddable( addDefaultConstructor( builderSupplier.get(), managedCtClass ), managedCtClass ) );
 			}
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
@@ -242,7 +244,7 @@ public class EnhancerImpl implements Enhancer {
 			}
 			else {
 				ENHANCEMENT_LOGGER.enhancingAsMappedSuperclass( managedCtClass.getName() );
-				final var builder = builderSupplier.get()
+				final var builder = addDefaultConstructor( builderSupplier.get(), managedCtClass )
 						.implement( constants.INTERFACES_for_ManagedMappedSuperclass );
 				return createTransformer( managedCtClass ).applyTo( builder );
 			}
@@ -255,6 +257,20 @@ public class EnhancerImpl implements Enhancer {
 			ENHANCEMENT_LOGGER.skippingNotEntityOrComposite( managedCtClass.getName() );
 			return null;
 		}
+	}
+
+	private boolean hasDefaultConstructor(TypeDescription typeDescription) {
+		return !typeDescription.getDeclaredMethods()
+				.filter( isConstructor().and( takesArguments( 0 ) ) )
+				.isEmpty();
+	}
+
+	private DynamicType.Builder<?> addDefaultConstructor(DynamicType.Builder<?> builder, TypeDescription typeDescription) {
+		if ( !hasDefaultConstructor( typeDescription ) ) {
+			return builder.defineConstructor( constants.modifierPUBLIC )
+					.intercept( constants.implementationDefaultConstructor );
+		}
+		return builder;
 	}
 
 	private DynamicType.Builder<?> enhanceEmbeddable(

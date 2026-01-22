@@ -100,13 +100,24 @@ public class C3P0ConnectionProvider
 	@Override
 	public Connection getConnection() throws SQLException {
 		final var connection = dataSource.getConnection();
+		prepareConnection( connection );
+		return connection;
+	}
+
+	@Override
+	public Connection getConnection(String user, String password) throws SQLException {
+		final var connection = dataSource.getConnection( user, password );
+		prepareConnection( connection );
+		return connection;
+	}
+
+	private void prepareConnection(Connection connection) throws SQLException {
 		if ( isolation != null && isolation != connection.getTransactionIsolation() ) {
 			connection.setTransactionIsolation( isolation );
 		}
 		if ( connection.getAutoCommit() != autocommit ) {
 			connection.setAutoCommit( autocommit );
 		}
-		return connection;
 	}
 
 	@Override

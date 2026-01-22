@@ -80,6 +80,13 @@ session.find( Order.class,
         KeyType.NATURAL );
 ----
 
+[[credentials-multitenancy]]
+== Tenant-specific credentials
+
+The new interface `TenantCredentialsMapper` allows an application to supply tenant-specific credentials to use for connecting to the database.
+This feature may be used on its own or in conjunction with schema-based or discriminator-based multitenancy.
+It requires a JDBC `DataSource` which correctly implements the method `getConnection(String,String)`.
+
 [[annotation-based-user-type]]
 == AnnotationBasedUserType and UserTypeCreationContext
 

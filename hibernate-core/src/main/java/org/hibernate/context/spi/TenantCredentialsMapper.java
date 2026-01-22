@@ -4,6 +4,8 @@
  */
 package org.hibernate.context.spi;
 
+import org.hibernate.Incubating;
+
 /**
  * Obtains the tenant-specific credential to use when obtaining a JDBC connection
  * from the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
@@ -15,10 +17,11 @@ package org.hibernate.context.spi;
  *
  * @param <T> The type of the tenant id
  *
- * @since 7.1
+ * @since 7.3
  *
  * @author Gavin King
  */
+@Incubating
 public interface TenantCredentialsMapper<T> {
 	/**
 	 * The name of the database user for data belonging to the tenant

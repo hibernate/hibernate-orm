@@ -55,7 +55,10 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem obtaining a connection.
+	 *
+	 * @since 7.3
 	 */
+	@Incubating
 	default Connection getConnection(String user, String password) throws SQLException {
 		throw new UnsupportedOperationException(
 				"ConnectionProvider does not support contextual credentials: "

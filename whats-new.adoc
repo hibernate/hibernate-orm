@@ -87,6 +87,12 @@ The new interface `TenantCredentialsMapper` allows an application to supply tena
 This feature may be used on its own or in conjunction with schema-based or discriminator-based multitenancy.
 It requires a JDBC `DataSource` which correctly implements the method `getConnection(String,String)`.
 
+[[no-default-constructor]]
+== Entities and embeddables with no default constructor
+
+JPA requires that entity cand embeddable classes have a default constructor (a constructor with no parameters).
+The bytecode enhancer now automatically adds a default constructor to any `@Entity`, `@MappedSuperclass`, or `@Embeddable` class which does not come equipped with one.
+
 [[annotation-based-user-type]]
 == AnnotationBasedUserType and UserTypeCreationContext
 

@@ -118,7 +118,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		final var idType = getLoadable().getIdentifierMapping().getJavaType();
+		final var loadable = getLoadable();
+		final var persister = loadable.getEntityPersister();
+		final var idType = loadable.getIdentifierMapping().getJavaType();
 
 		final int maxBatchSize = maxBatchSize( ids, loadOptions );
 
@@ -131,8 +133,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = coerce( idType, ids[i] );
-			final var entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
-			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
+			final var entityKey = new EntityKey( id, persister );
+			if ( !loadFromEnabledCaches( loadOptions, session, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
 				idsInBatch.add( id );
@@ -181,18 +183,16 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			// the element value at this position in the results List
 			// should be the EntityKey for that entity - reuse it
 			final var entityKey = (EntityKey) results.get( position );
-			session.getPersistenceContextInternal().getBatchFetchQueue().removeBatchLoadableEntityKey( entityKey );
+			session.getPersistenceContextInternal().getBatchFetchQueue()
+					.removeBatchLoadableEntityKey( entityKey );
 			final Object entity = persistenceContext.getEntity( entityKey );
-			final Object result;
-			if ( entity == null
-				// the entity is locally deleted, and the options ask that we not return such entities
-				|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
-					&& persistenceContext.getEntry( entity ).getStatus().isDeletedOrGone() ) {
-				result = null;
-			}
-			else {
-				result = persistenceContext.proxyFor( entity );
-			}
+			final Object result =
+					entity == null
+						// the entity is locally deleted, and the options ask that we not return such entities
+						|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
+								&& persistenceContext.getEntry( entity ).getStatus().isDeletedOrGone()
+							? null
+							: persistenceContext.proxyFor( entity );
 			results.set( position, result );
 		}
 	}
@@ -207,7 +207,6 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	private boolean loadFromEnabledCaches(
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session,
-			Object id,
 			LockOptions lockOptions,
 			EntityKey entityKey,
 			List<Object> result,
@@ -234,14 +233,11 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			final Object entity = entry.entity();
 			if ( entity != null ) {
 				// put a null in the results
-				final Object result;
-				if ( removalsMode == RemovalsMode.INCLUDE
-					|| entry.isManaged() ) {
-					result = entity;
-				}
-				else {
-					result = null;
-				}
+				final Object result =
+						loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
+							|| entry.isManaged()
+								? entity
+								: null;
 				results.add( i, result );
 				return true;
 			}
@@ -305,7 +301,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			@NonNull LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		return loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED || loadOptions.isSecondLevelCacheCheckingEnabled()
+		return loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
+			|| loadOptions.isSecondLevelCacheCheckingEnabled()
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
 				// incoming id values and see whether it corresponds to an existing
@@ -343,7 +340,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		final var idType = getLoadable().getIdentifierMapping().getJavaType();
+		final var loadable = getLoadable();
+		final var persister = loadable.getEntityPersister();
+		final var idType = loadable.getIdentifierMapping().getJavaType();
 		List<Object> unresolvedIds = null;
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = coerce( idType, ids[i] );
@@ -353,7 +352,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 							lockOptions,
 							resolutionConsumer,
 							id,
-							new EntityKey( id, getLoadable().getEntityPersister() ),
+							new EntityKey( id, persister ),
 							unresolvedIds,
 							i,
 							session
@@ -398,7 +397,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 
 		final Object cachedEntity =
-				sessionEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled()
+				sessionEntity == null
+					&& loadOptions.isSecondLevelCacheCheckingEnabled()
 						? loadFromSecondLevelCache( entityKey, lockOptions, session )
 						: sessionEntity;
 
@@ -415,8 +415,11 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return unresolvedIds;
 	}
 
-	private Object loadFromSecondLevelCache(EntityKey entityKey, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		final var persister = getLoadable().getEntityPersister();
-		return session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
+	private Object loadFromSecondLevelCache(
+			EntityKey entityKey,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		return session.loadFromSecondLevelCache( getLoadable().getEntityPersister(),
+				entityKey, null, lockOptions.getLockMode() );
 	}
 }

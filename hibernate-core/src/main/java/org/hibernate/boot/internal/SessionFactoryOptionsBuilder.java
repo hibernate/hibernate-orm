@@ -30,6 +30,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -178,6 +179,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean multiTenancyEnabled;
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
 	private TenantSchemaMapper<Object> tenantSchemaMapper;
+	private TenantCredentialsMapper<Object> tenantCredentialsMapper;
 
 	// Queries
 	private SqmFunctionRegistry sqmFunctionRegistry;
@@ -361,6 +363,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
 		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
+		tenantCredentialsMapper = MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
 
 		delayBatchFetchLoaderCreations =
 				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -1152,6 +1155,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
+		return tenantCredentialsMapper;
+	}
+
+	@Override
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
@@ -1606,6 +1614,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public void applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
 		//noinspection unchecked
 		this.tenantSchemaMapper = (TenantSchemaMapper<Object>) mapper;
+	}
+
+	public void applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
+		//noinspection unchecked
+		this.tenantCredentialsMapper = (TenantCredentialsMapper<Object>) mapper;
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

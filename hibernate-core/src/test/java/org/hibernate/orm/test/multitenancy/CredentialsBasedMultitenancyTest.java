@@ -77,12 +77,12 @@ public class CredentialsBasedMultitenancyTest {
 
 	public static class MyMapper implements TenantCredentialsMapper<String> {
 		@Override
-		public String user(String tenantIdentifier) {
+		public @NonNull String user(@NonNull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 
 		@Override
-		public String password(String tenantIdentifier) {
+		public @NonNull String password(@NonNull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 	}

@@ -89,24 +89,19 @@ pullRequestTasks:
     # or for those with Jira ID but that don't have a specific configuration for a corresponding issue type:
     default:
       - Add test **OR** check there is no need for a test
-      - Add migration guide entry **OR** check there are no breaking changes
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"
     # Tasks specific to the bug issue type:
     bug:
       - Add test reproducing the bug
-      - Add migration guide entry **OR** check there are no breaking changes
+      - "Add entries as relevant to `migration-guide.adoc` **OR** check there are no breaking changes"
     # Tasks specific to the improvement issue type:
     improvement:
       - Add tests for feature/improvement
-      - Add javadoc to API **OR** check there is no change to API
-      - Add migration guide entry **OR** check there are no breaking changes
-      - Document feature/improvement in user guide
-      - Document feature/improvement in introduction guide **OR** check the feature is too advanced
-      - Add links to the new documentation from relevant pre-existing sections of the documentation **OR** check there are no such pre-existing sections
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"
     # Tasks specific to the "new feature" issue type (same as improvement):
     new feature:
       - Add tests for feature/improvement
-      - Add javadoc to API **OR** check there is no change to API
-      - Add migration guide entry **OR** check there are no breaking changes
-      - Document feature/improvement in user guide
-      - Document feature/improvement in introduction guide **OR** check the feature is too advanced
-      - Add links to the new documentation from relevant pre-existing sections of the documentation **OR** check there are no such pre-existing sections
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"

@@ -30,6 +30,8 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -1464,10 +1466,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitQueryPartTableReference( inlineView );
 		clauseStack.pop();
 		appendSql( " on " );
+		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+		final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );
-		if ( rowIdExpression == null ) {
-			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
-			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+		if ( rowIdMapping != null ) {
+			appendSql( "t." );
+			appendSql( rowIdMapping.getSelectionExpression() );
+			appendSql( "=s.c" );
+			appendSql( inlineView.getColumnNames().size() - 1 );
+		}
+		else if ( rowIdExpression == null ) {
 			createRowMatchingPredicate( dmlTargetTableGroup, "t", "s" ).accept( this );
 		}
 		else {
@@ -1517,13 +1527,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		if ( !correlated ) {
+			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+			final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+			final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
 			final String rowIdExpression = dialect.rowId( null );
-			if ( rowIdExpression == null ) {
-				final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
-				assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
-				final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
-						.asEntityMappingType()
-						.getIdentifierMapping();
+			if ( rowIdMapping != null ) {
+				selectClause.addSqlSelection( new SqlSelectionImpl(
+						new ColumnReference( statement.getTargetTable(), rowIdMapping )
+				) );
+				columnNames.add( "c" + columnNames.size() );
+			}
+			else if ( rowIdExpression == null ) {
+				final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 				identifierMapping.forEachSelectable(
 						0,
 						(selectionIndex, selectableMapping) -> {
@@ -5786,10 +5802,30 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
+		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
+		final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );
-		if ( rowIdExpression == null ) {
-			final EntityIdentifierMapping identifierMapping =
-					dmlTargetTableGroup.getModelPart().asEntityMappingType().getIdentifierMapping();
+		if ( rowIdMapping != null ) {
+			return new ComparisonPredicate(
+					new ColumnReference(
+							lhsAlias,
+							rowIdMapping.getSelectionExpression(),
+							rowIdMapping.isFormula(),
+							rowIdMapping.getCustomReadExpression(),
+							rowIdMapping.getJdbcMapping()
+					),
+					ComparisonOperator.EQUAL,
+					new ColumnReference(
+							rhsAlias,
+							rowIdMapping.getSelectionExpression(),
+							rowIdMapping.isFormula(),
+							rowIdMapping.getCustomReadExpression(),
+							rowIdMapping.getJdbcMapping()
+					)
+			);
+		}
+		else if ( rowIdExpression == null ) {
+			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
 			final List<ColumnReference> targetExpressions = new ArrayList<>( jdbcTypeCount );
 			final List<ColumnReference> sourceExpressions = new ArrayList<>( jdbcTypeCount );

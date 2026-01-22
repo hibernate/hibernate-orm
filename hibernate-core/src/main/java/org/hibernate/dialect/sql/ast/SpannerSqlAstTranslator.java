@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -23,6 +24,8 @@ import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -211,4 +214,39 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
+	@Override
+	protected void renderInsertCommand(InsertSelectStatement statement) {
+		final ConflictClause conflictClause = statement.getConflictClause();
+		if ( conflictClause == null ) {
+			appendSql( "insert into " );
+			return;
+		}
+		// Spanner does not support the standard SQL 'ON CONFLICT' suffix.
+		// Instead, it uses 'INSERT OR IGNORE' and 'INSERT OR UPDATE'
+		if ( conflictClause.isDoUpdate() ) {
+			// Spanner does not support the SET clause in 'INSERT OR UPDATE'
+			// it overwrites all values from the INSERT values, so it's not easy to implement this safely.
+			throw new IllegalQueryOperationException(
+					"Insert conflict do update clause is not supported"
+			);
+		}
+		if ( conflictClause.getConstraintName() != null ) {
+			throw new IllegalQueryOperationException(
+					"Spanner does not support named constraints in conflict clauses" );
+		}
+		if ( conflictClause.getConstraintColumnNames() != null && !conflictClause.getConstraintColumnNames()
+				.isEmpty() ) {
+			throw new IllegalQueryOperationException(
+					"Spanner conflict handling implicitly targets the Primary Key. " +
+					"Specifying explicit conflict columns (e.g. 'ON CONFLICT (id)') is not supported"
+			);
+		}
+		appendSql( "insert or ignore into " );
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		// No-op: Spanner handles conflict logic via the insert prefix ('INSERT OR IGNORE').
+		// We suppress the standard 'ON CONFLICT' suffix generation here.
+	}
 }

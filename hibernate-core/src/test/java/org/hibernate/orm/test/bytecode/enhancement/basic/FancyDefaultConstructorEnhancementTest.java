@@ -17,8 +17,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
-
 @BytecodeEnhanced
 @SessionFactory
 @DomainModel(annotatedClasses = { FancyDefaultConstructorEnhancementTest.Person.class,
@@ -30,8 +28,7 @@ public class FancyDefaultConstructorEnhancementTest {
 	public void testDefaultConstructorAdded() {
 		// Check if the default constructor exists for Person
 		try {
-			Constructor<Person> constructor = Person.class.getConstructor();
-			Assertions.assertNotNull( constructor );
+			Assertions.assertNotNull( Person.class.getConstructor() );
 		}
 		catch (NoSuchMethodException e) {
 			Assertions.fail( "Default constructor should have been added to Person by bytecode enhancement" );
@@ -39,8 +36,7 @@ public class FancyDefaultConstructorEnhancementTest {
 
 		// Check if the default constructor exists for Address
 		try {
-			Constructor<Address> constructor = Address.class.getConstructor();
-			Assertions.assertNotNull( constructor );
+			Assertions.assertNotNull( Address.class.getConstructor() );
 		}
 		catch (NoSuchMethodException e) {
 			Assertions.fail( "Default constructor should have been added to Address by bytecode enhancement" );
@@ -48,8 +44,7 @@ public class FancyDefaultConstructorEnhancementTest {
 
 		// Check if the default constructor exists for BaseEntity
 		try {
-			Constructor<BaseEntity> constructor = BaseEntity.class.getConstructor();
-			Assertions.assertNotNull( constructor );
+			Assertions.assertNotNull( BaseEntity.class.getConstructor() );
 		}
 		catch (NoSuchMethodException e) {
 			Assertions.fail( "Default constructor should have been added to BaseEntity by bytecode enhancement" );
@@ -58,9 +53,8 @@ public class FancyDefaultConstructorEnhancementTest {
 
 	@Test
 	public void testPersistAndLoad(SessionFactoryScope scope) {
-		Person person = new Person( "Gavin" );
+		Person person = new Person( "Gavin", "Main St", "12345" );
 		person.id = 1L;
-		person.address = new Address( "Main St", "12345" );
 		person.version = 1;
 
 		scope.inTransaction( session -> {
@@ -68,7 +62,7 @@ public class FancyDefaultConstructorEnhancementTest {
 		} );
 
 		scope.inTransaction( session -> {
-			Person loadedPerson = session.get( Person.class, 1L );
+			Person loadedPerson = session.find( Person.class, 1L );
 			Assertions.assertNotNull( loadedPerson );
 			Assertions.assertEquals( "Gavin", loadedPerson.name );
 			Assertions.assertNotNull( loadedPerson.address );
@@ -94,22 +88,23 @@ public class FancyDefaultConstructorEnhancementTest {
 		@Id
 		Long id;
 
-		String name;
+		final String name;
 
 		@Embedded
-		Address address;
+		final Address address;
 
 		// No default constructor
-		public Person(String name) {
+		public Person(String name, String street, String zip) {
 			super(0);
 			this.name = name;
+			this.address = new Address(street, zip);
 		}
 	}
 
 	@Embeddable
 	public static class Address {
-		String street;
-		String zip;
+		final String street;
+		final String zip;
 
 		// No default constructor
 		public Address(String street, String zip) {

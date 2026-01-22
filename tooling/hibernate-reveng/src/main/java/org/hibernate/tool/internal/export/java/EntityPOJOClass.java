@@ -790,6 +790,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
             else if(isFormula(field)) {
                 continue;
             }
+            else if(!isToBeGenerated(field)) {
+            	continue;
+            }
             else {
                 result.add( field );
             }

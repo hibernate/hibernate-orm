@@ -13,8 +13,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Constructor;
-
 @BytecodeEnhanced
 @SessionFactory
 @DomainModel(annotatedClasses = DefaultConstructorEnhancementTest.Person.class )
@@ -24,8 +22,7 @@ public class DefaultConstructorEnhancementTest {
 	public void testDefaultConstructorAdded() {
 		// Check if the default constructor exists for Person
 		try {
-			Constructor<Person> constructor = Person.class.getConstructor();
-			Assertions.assertNotNull( constructor );
+			Assertions.assertNotNull( Person.class.getConstructor() );
 		}
 		catch (NoSuchMethodException e) {
 			Assertions.fail( "Default constructor should have been added to Person by bytecode enhancement" );
@@ -41,7 +38,7 @@ public class DefaultConstructorEnhancementTest {
 		} );
 
 		scope.inTransaction( session -> {
-			Person loadedPerson = session.get( Person.class, 1L );
+			Person loadedPerson = session.find( Person.class, 1L );
 			Assertions.assertNotNull( loadedPerson );
 			Assertions.assertEquals( "Gavin", loadedPerson.name );
 		} );
@@ -52,7 +49,7 @@ public class DefaultConstructorEnhancementTest {
 		@Id
 		Long id;
 
-		String name;
+		final String name;
 
 		// No default constructor
 		public Person(String name) {

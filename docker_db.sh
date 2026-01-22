@@ -33,7 +33,7 @@ else
 fi
 
 mysql() {
-    mysql_9_4
+    mysql_9_6
 }
 
 mysql_8_0() {
@@ -59,6 +59,16 @@ mysql_9_2() {
 mysql_9_4() {
     local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
     mysql_setup "9.4" "$init_connect"
+}
+
+mysql_9_5() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.5" "$init_connect"
+}
+
+mysql_9_6() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.6" "$init_connect"
 }
 
 # Generic MySQL function that handles all versions
@@ -129,6 +139,10 @@ mysql_setup() {
     else
         echo "MySQL is ready"
     fi
+
+    # Install components
+    # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.6: SHA1 and MD5.
+    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null
 
     databases=()
     for n in $(seq 1 $DB_COUNT)
@@ -1611,6 +1625,8 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_6"
+    echo -e "\tmysql_9_5"
     echo -e "\tmysql_9_4"
     echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_2"

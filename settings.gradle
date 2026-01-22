@@ -226,7 +226,7 @@ dependencyResolutionManagement {
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.17.1.0" )
             def firebirdVersion = version "firebird", "6.0.3"
             def hanaVersion = version "hana", "2.26.11"
-            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.3" )
+            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.4" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.4" )
             def informixVersion = version "informix", "15.0.0.2"
             def mariadbVersion = version "mariadb", "3.5.5"

@@ -276,6 +276,37 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	}
 
 	/**
+	 * Create a {@link SimpleProjectionSpecification} which projects
+	 * the number of results which match the specified restrictions.
+	 * The returned projection holds a reference to this specification,
+	 * and so mutation of this object also affects the projection.
+	 *
+	 * @return a new {@link SimpleProjectionSpecification}
+	 *
+	 * @since 7.3
+	 */
+	@Incubating
+	default SimpleProjectionSpecification<T,Long> createCountProjection() {
+		return SimpleProjectionSpecification.count( this );
+	}
+
+	/**
+	 * Create a {@link SimpleProjectionSpecification} which projects a
+	 * boolean value indicating whether any results match the specified
+	 * restrictions.
+	 * The returned projection holds a reference to this specification,
+	 * and so mutation of this object also affects the projection.
+	 *
+	 * @return a new {@link SimpleProjectionSpecification}
+	 *
+	 * @since 7.3
+	 */
+	@Incubating
+	default SimpleProjectionSpecification<T,Boolean> createExistsProjection() {
+		return SimpleProjectionSpecification.exists( this );
+	}
+
+	/**
 	 * Create a {@link SimpleProjectionSpecification} for the given
 	 * {@linkplain ProjectionSpecification#select(Path) compound path}.
 	 * The returned projection holds a reference to this specification,

@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -51,7 +52,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	private final Class<T> resultType;
 	private final String hql;
 	private final CriteriaQuery<T> criteriaQuery;
-	private final List<BiConsumer<SqmSelectStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
+	private final List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<T>>> specifications = new ArrayList<>();
 
 	public SelectionSpecificationImpl(Class<T> resultType) {
 		this.resultType = resultType;
@@ -91,7 +92,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
-	public List<BiConsumer<SqmSelectStatement<T>, SqmRoot<T>>> getSpecifications() {
+	public List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<T>>> getSpecifications() {
 		return specifications;
 	}
 
@@ -106,8 +107,12 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 	@Override
 	public SelectionSpecification<T> augment(Augmentation<T> augmentation) {
-		specifications.add( (sqmStatement, root) ->
-				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, root ) );
+		specifications.add( (sqmStatement, root) -> {
+			if ( !( sqmStatement instanceof SqmSelectStatement<T> selectStatement ) ) {
+				throw new IllegalStateException( "Cannot augment a subquery" );
+			}
+			augmentation.augment( sqmStatement.nodeBuilder(), selectStatement, root );
+		} );
 		return this;
 	}
 
@@ -143,7 +148,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
-	private static <T> void addOrder(Order<? super T> order, SqmSelectStatement<T> sqmStatement) {
+	private static <T> void addOrder(Order<? super T> order, AbstractSqmSelectQuery<T> sqmStatement) {
 		final var sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
 		final var querySpec = sqmStatement.getQuerySpec();
 		if ( querySpec.getOrderByClause() == null ) {

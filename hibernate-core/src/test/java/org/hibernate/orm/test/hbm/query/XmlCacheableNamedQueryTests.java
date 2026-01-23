@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.hbm.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedSelectionMemento;
 
@@ -31,7 +32,8 @@ public class XmlCacheableNamedQueryTests {
 		final NamedObjectRepository namedObjectRepository = sessionFactory.getQueryEngine().getNamedObjectRepository();
 		final NamedSelectionMemento<?> queryMemento = namedObjectRepository.getSelectionQueryMemento( SimpleEntity.FIND_ALL );
 		assertThat( queryMemento ).isNotNull();
-		assertThat( queryMemento.getCacheable() ).isNotNull();
-		assertThat( queryMemento.getCacheable() ).isTrue();
+		assertThat( queryMemento.getHints() ).hasSize( 1 );
+		assertThat( queryMemento.getHints() ).containsKey( HibernateHints.HINT_CACHEABLE );
+		assertThat( queryMemento.getHints().get( HibernateHints.HINT_CACHEABLE ) ).isEqualTo( Boolean.TRUE.toString() );
 	}
 }

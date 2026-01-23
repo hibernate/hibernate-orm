@@ -499,7 +499,10 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public boolean isQueryPlanCacheable() {
-		return queryOptions.getQueryPlanCachingEnabled() == TRUE;
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: getQueryOptions().getQueryPlanCachingEnabled() != Boolean.FALSE;
 	}
 
 	@Override
@@ -790,13 +793,10 @@ public class SelectionQueryImpl<R>
 
 	protected List<R> doList() {
 		final var statement = getSqmStatement();
-		final boolean containsCollectionFetches =
-				//TODO: why is this different from QuerySqmImpl.doList()?
-				statement.containsCollectionFetches();
+		final boolean containsCollectionFetches = statement.containsCollectionFetches();
 		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
-		final var list = resolveQueryPlan()
-				.performList( executionContext( hasLimit, containsCollectionFetches ) );
+		final var list = resolveQueryPlan().performList( executionContext( hasLimit, containsCollectionFetches ) );
 		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
 	}
 
@@ -978,11 +978,17 @@ public class SelectionQueryImpl<R>
 	}
 
 	private SelectQueryPlan<R> resolveQueryPlan() {
-		final var cacheKey = createInterpretationsKey( this );
-		return cacheKey == null
-				? buildSelectQueryPlan()
-				: getInterpretationCache()
-						.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );
+		final var queryCache = getInterpretationCache();
+		if ( queryCache.isEnabled() ) {
+			final var cacheKey = createInterpretationsKey( this );
+			return cacheKey == null
+					? buildSelectQueryPlan()
+					: queryCache.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );
+		}
+		else {
+			return buildSelectQueryPlan();
+		}
+
 	}
 
 	protected SelectQueryPlan<R> buildSelectQueryPlan() {

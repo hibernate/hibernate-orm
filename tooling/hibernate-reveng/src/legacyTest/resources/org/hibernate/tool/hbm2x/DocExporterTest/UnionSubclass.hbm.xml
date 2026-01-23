@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping is a test mapping for hbm2java
+     
+-->
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x"> 
+    <class name="UPerson" abstract="true"> 
+        <cache usage="read-write" /> 
+        <id name="id" type="long"> 
+            <column name="PERSON_ID"> 
+                <comment>the primary key for hibernate</comment> 
+            </column> 
+            <generator class="sequence"> 
+                <param name="sequence">PERSON_SEQ</param> 
+            </generator> 
+        </id> 
+         
+        <property name="firstName" type="string"> 
+            <column name="FIRST_NAME" length="50" not-null="true"> 
+                <comment>the first name</comment> 
+            </column> 
+        </property> 
+
+        <union-subclass name="UUser" table="CROWN_USERS" schema="CROWN" lazy="false"> 
+            <comment>Table of crown users</comment> 
+            <property name="userName" type="string"> 
+                <column name="USER_NAME" length="15" not-null="true" unique="true"> 
+                    <comment>the unique user id</comment> 
+                </column> 
+            </property> 
+        </union-subclass> 
+     </class>
+</hibernate-mapping>
+

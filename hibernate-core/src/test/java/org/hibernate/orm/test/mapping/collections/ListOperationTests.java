@@ -6,8 +6,7 @@ package org.hibernate.orm.test.mapping.collections;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.query.Query;
-
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -65,7 +64,7 @@ public class ListOperationTests {
 	public void listBaselineTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<EntityOfLists> query = session.createQuery(
+					final SelectionQuery<EntityOfLists> query = session.createQuery(
 							"select e from EntityOfLists e",
 							EntityOfLists.class
 					);
@@ -82,7 +81,7 @@ public class ListOperationTests {
 	public void listEagerBasicTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<EntityOfLists> query = session.createQuery(
+					final SelectionQuery<EntityOfLists> query = session.createQuery(
 							"select e from EntityOfLists e join fetch e.listOfBasics",
 							EntityOfLists.class
 					);

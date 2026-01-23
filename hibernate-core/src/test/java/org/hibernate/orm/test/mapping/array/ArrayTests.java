@@ -4,16 +4,13 @@
  */
 package org.hibernate.orm.test.mapping.array;
 
-import java.util.List;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.stat.spi.StatisticsImplementor;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -21,6 +18,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -39,7 +38,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final Query<Employee> query = session.createQuery(
+					final SelectionQuery<Employee> query = session.createQuery(
 							"select e from Employee e",
 							Employee.class
 					);
@@ -69,7 +68,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final Query<Employee> query = session.createQuery(
+					final SelectionQuery<Employee> query = session.createQuery(
 							"select e from Employee e where e.id = :id",
 							Employee.class
 					);
@@ -86,7 +85,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final Query<Employee> query = session.createQuery(
+					final SelectionQuery<Employee> query = session.createQuery(
 							"select e from Employee e ",
 							Employee.class
 					);

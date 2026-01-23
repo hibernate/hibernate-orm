@@ -4,19 +4,18 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.joined;
 
-import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.Hibernate;
-import org.hibernate.query.Query;
-
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -114,7 +113,7 @@ public class JoinedSubclassTest {
 			in.value( joe.getAddress() );
 
 			criteria.where( in );
-			Query<Person> query = s.createQuery( criteria );
+			SelectionQuery<Person> query = s.createQuery( criteria );
 			query.list();
 //		s.createCriteria( Person.class ).add(
 //                Restrictions.in( "address", mark.getAddress(), joe.getAddress() ) ).list();

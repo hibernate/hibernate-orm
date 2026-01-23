@@ -15,12 +15,12 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.sql.ResultSetMapping;
@@ -519,21 +519,20 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <R> Query<R> createQuery(String queryString, Class<R> resultClass) {
+	public <R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass) {
 		return this.lazySession.get().createQuery( queryString, resultClass );
 	}
 
 	@Override
-	public <T> Query<T> createQuery(String query, EntityGraph<T> entityGraph) {
+	public <T> SelectionQuery<T> createQuery(String query, EntityGraph<T> entityGraph) {
 		return this.lazySession.get().createQuery( query, entityGraph );
 	}
 
 	@Override
-	public <R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+	public <R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference) {
 		return this.lazySession.get().createQuery( typedQueryReference );
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
 	public Query createQuery(String queryString) {
@@ -541,8 +540,13 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <R> Query<R> createNamedQuery(String name, Class<R> resultClass) {
+	public <R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass) {
 		return this.lazySession.get().createNamedQuery( name, resultClass );
+	}
+
+	@Override
+	public MutationQuery createNamedStatement(String name) {
+		return null;
 	}
 
 	@Override
@@ -555,7 +559,11 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createNamedQuery( name, resultSetMappingName, resultClass );
 	}
 
-	@SuppressWarnings("rawtypes")
+	@Override
+	public MutationQuery createNativeStatement(String sql) {
+		return null;
+	}
+
 	@Override
 	@Deprecated
 	public Query createNamedQuery(String name) {
@@ -563,7 +571,7 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery) {
+	public <R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery) {
 		return this.lazySession.get().createQuery( criteriaQuery );
 	}
 
@@ -573,22 +581,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> Query<T> createQuery(CriteriaSelect<T> selectQuery) {
+	public <T> SelectionQuery<T> createQuery(CriteriaSelect<T> selectQuery) {
 		return this.lazySession.get().createQuery( selectQuery );
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	@Deprecated
-	public Query createQuery(CriteriaDelete deleteQuery) {
-		return this.lazySession.get().createQuery( deleteQuery );
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	@Deprecated
-	public Query createQuery(CriteriaUpdate updateQuery) {
-		return this.lazySession.get().createQuery( updateQuery );
 	}
 
 	@Override
@@ -771,13 +765,28 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
-		return this.lazySession.get().createMutationQuery( updateQuery );
+	public MutationQuery createStatement(String hqlString) {
+		return this.lazySession.get().createStatement( hqlString );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
-		return this.lazySession.get().createMutationQuery( deleteQuery );
+	public MutationQuery createStatement(StatementReference statementReference) {
+		return this.lazySession.get().createStatement( statementReference );
+	}
+
+	@Override
+	public MutationQuery createStatement(CriteriaStatement<?> criteriaStatement) {
+		return this.lazySession.get().createStatement( criteriaStatement );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(CriteriaStatement<?> criteriaStatement) {
+		return this.lazySession.get().createMutationQuery( criteriaStatement );
+	}
+
+	@Override
+	public MutationQuery createQuery(CriteriaStatement<?> criteriaStatement) {
+		return createMutationQuery( criteriaStatement );
 	}
 
 	@Override

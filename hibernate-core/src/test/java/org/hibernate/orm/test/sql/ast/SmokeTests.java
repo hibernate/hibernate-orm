@@ -8,10 +8,10 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
-import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.Query;
+import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -30,7 +30,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -107,13 +106,13 @@ public class SmokeTests {
 		scope.inTransaction(
 				session -> {
 					final Query<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
-					final SqmQueryImplementor<Gender> hqlQuery = (SqmQueryImplementor<Gender>) query;
+					final SelectionQueryImpl<Gender> hqlQuery = (SelectionQueryImpl<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 							sqmStatement,
 							hqlQuery.getQueryOptions(),
-							( (SqmQueryImpl<?>) hqlQuery ).getDomainParameterXref(),
+							hqlQuery.unwrap( DomainParameterXref.class ),
 							hqlQuery.getParameterBindings(),
 							session.getLoadQueryInfluencers(),
 							scope.getSessionFactory().getSqlTranslationEngine(),

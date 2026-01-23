@@ -6,6 +6,7 @@ package org.hibernate.internal.find;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -81,7 +82,7 @@ public class Helper {
 		return factory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
-	public static LockOptions makeLockOptions(LockMode lockMode, Locking.Scope lockScope, Timeout lockTimeout, Locking.FollowOn lockFollowOn) {
+	public static LockOptions makeLockOptions(LockMode lockMode, PessimisticLockScope lockScope, Timeout lockTimeout, Locking.FollowOn lockFollowOn) {
 		if ( lockMode == null || lockMode == LockMode.NONE ) {
 			return LockOptions.NONE;
 		}
@@ -90,7 +91,7 @@ public class Helper {
 		}
 
 		final var lockOptions = new LockOptions( lockMode );
-		lockOptions.setScope( lockScope != null ? lockScope : Locking.Scope.ROOT_ONLY );
+		lockOptions.setScope( lockScope != null ? lockScope : PessimisticLockScope.NORMAL );
 		lockOptions.setTimeout( lockTimeout != null ? lockTimeout : Timeouts.WAIT_FOREVER );
 		lockOptions.setFollowOnStrategy( lockFollowOn != null ? lockFollowOn : Locking.FollowOn.ALLOW );
 		return lockOptions;

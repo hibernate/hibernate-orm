@@ -57,7 +57,7 @@ public abstract class AbstractFindMultipleByKeyOperation implements MultiIdLoadO
 	private CacheRetrieveMode cacheRetrieveMode;
 
 	private LockMode lockMode;
-	private Locking.Scope lockScope;
+	private PessimisticLockScope lockScope;
 	private Locking.FollowOn lockFollowOn;
 	private Timeout lockTimeout = WAIT_FOREVER;
 
@@ -130,11 +130,8 @@ public abstract class AbstractFindMultipleByKeyOperation implements MultiIdLoadO
 			else if ( option instanceof LockMode lockMode ) {
 				this.lockMode = lockMode;
 			}
-			else if ( option instanceof Locking.Scope lockScope ) {
-				this.lockScope = lockScope;
-			}
 			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				this.lockScope = Locking.Scope.fromJpaScope( pessimisticLockScope );
+				this.lockScope = pessimisticLockScope;
 			}
 			else if ( option instanceof Locking.FollowOn followOn ) {
 				this.lockFollowOn = followOn;
@@ -181,7 +178,7 @@ public abstract class AbstractFindMultipleByKeyOperation implements MultiIdLoadO
 		return lockMode;
 	}
 
-	public Locking.Scope getLockScope() {
+	public PessimisticLockScope getLockScope() {
 		return lockScope;
 	}
 

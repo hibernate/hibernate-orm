@@ -7,6 +7,7 @@ package org.hibernate.orm.test.locking.jpa;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.Locking;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -79,7 +80,7 @@ public class FollowOnLockingTest {
 								Employee.class
 						);
 						if ( followOnLocking ) {
-							query.setFollowOnLocking( true );
+							query.setFollowOnLockingStrategy( Locking.FollowOn.FORCE );
 						}
 						query.setLockMode( LockModeType.PESSIMISTIC_READ );
 						final List<Employee> employees = query.list();

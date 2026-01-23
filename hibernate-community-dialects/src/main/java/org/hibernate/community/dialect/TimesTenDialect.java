@@ -6,9 +6,9 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
-import org.hibernate.Locking;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
@@ -455,13 +455,13 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
 	}

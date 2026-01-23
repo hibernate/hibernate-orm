@@ -9,17 +9,20 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.TypedTupleTransformer;
 
 /**
- * {@link ResultTransformer} implementation which builds a map for each "row",
+ * {@link TypedTupleTransformer} implementation which builds a map for each "row",
  * made up of each aliased value where the alias is the map key.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @deprecated since {@link ResultTransformer} is deprecated
+ * @deprecated Defines a {@linkplain jakarta.persistence.Tuple} mapping
+ * and there are many well-defined ways to use that approach.
  */
 @Deprecated
-public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>>, TypedTupleTransformer<Map<String,Object>> {
-
+public class AliasToEntityMapResultTransformer implements TypedTupleTransformer<Map<String,Object>> {
+	/**
+	 * Singleton instance.
+	 */
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();
 
 	/**

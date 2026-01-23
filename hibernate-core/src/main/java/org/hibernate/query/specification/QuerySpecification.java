@@ -5,10 +5,10 @@
 package org.hibernate.query.specification;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Reference;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
-
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -94,5 +94,5 @@ public interface QuerySpecification<T> {
 	 * to this specification which may be passed along to
 	 * {@link EntityManager#createQuery(TypedQueryReference)}.
 	 */
-	TypedQueryReference<?> reference();
+	Reference reference();
 }

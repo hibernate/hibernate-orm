@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.ScrollMode;
 import org.hibernate.community.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
 import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
 import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
@@ -75,6 +76,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				return new SpannerPostgreSQLSqlAstTranslator<T>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public ScrollMode defaultScrollMode() {
+		return ScrollMode.FORWARD_ONLY;
 	}
 
 	@Override

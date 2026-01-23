@@ -6,6 +6,7 @@ package org.hibernate.orm.test.annotations.query;
 
 import java.util.List;
 
+import jakarta.persistence.NamedStatement;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -17,9 +18,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 
@@ -94,11 +93,9 @@ public class NamedQueryTest {
 	}
 
 	@Entity(name = "Game")
-	@NamedQueries({
-			@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"),
-			@NamedQuery(name = "NamedUpdate", query = "update Game set title = ?1 where title = ?2")
-	})
-	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
+	@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1")
+	@NamedStatement(name = "NamedUpdate", statement = "update Game set title = ?1 where title = ?2")
+	@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?")
 	public static class Game {
 		private Long id;
 		private String title;

@@ -11,10 +11,11 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -549,8 +550,8 @@ public class OrderByTest {
 			final RootGraph<Order> graph = session.createEntityGraph( Order.class );
 			graph.addAttributeNodes( "itemList" );
 
-			Query<Order> query = session.createQuery( "from Order", Order.class );
-			query.applyFetchGraph( graph );
+			SelectionQuery<Order> query = session.createQuery( "from Order", Order.class );
+			query.setEntityGraph( graph, GraphSemantic.FETCH );
 			query.getResultList(); // before HHH-14148 is fixed, incorrect SQL would be generated ending with " nulls last nulls last"
 		} );
 	}

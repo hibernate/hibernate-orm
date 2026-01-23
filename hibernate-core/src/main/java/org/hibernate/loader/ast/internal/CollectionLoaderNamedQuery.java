@@ -4,17 +4,16 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import org.hibernate.FlushMode;
+import jakarta.persistence.Parameter;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.named.NamedQueryMemento;
-
-import jakarta.persistence.Parameter;
 
 import java.util.List;
 
@@ -37,10 +36,10 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		final var query = namedQueryMemento.toQuery( session );
+		final var query = namedQueryMemento.toSelectionQuery( session );
 		//noinspection unchecked
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), key );
-		query.setHibernateFlushMode( FlushMode.MANUAL );
+		query.setQueryFlushMode( QueryFlushMode.NO_FLUSH );
 		final List<?> resultList = query.getResultList();
 		// TODO: we need a good way to inspect the query itself to see what it returns
 		if ( !resultList.isEmpty() && resultList.get(0) instanceof PersistentCollection<?> persistentCollection ) {

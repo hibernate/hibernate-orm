@@ -4,11 +4,6 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Timeout;
@@ -25,6 +20,11 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static java.util.Collections.emptyList;
 import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
@@ -32,23 +32,29 @@ import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
  * @author Steve Ebersole
  */
 public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
-	private Timeout timeout;
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Valid for all query types
 	private FlushMode flushMode;
+	private Timeout timeout;
 	private String comment;
 	private List<String> databaseHints;
 
-	// only valid for (non-native) select queries
-	private final Limit limit = new Limit();
-	private final LockOptions lockOptions = new LockOptions();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Valid for select query types
 	private Integer fetchSize;
+	private Boolean readOnlyEnabled;
+
+	private Boolean resultCachingEnabled;
 	private CacheRetrieveMode cacheRetrieveMode;
 	private CacheStoreMode cacheStoreMode;
-	private boolean refreshSession;
-	private Boolean resultCachingEnabled;
 	private String resultCacheRegionName;
-	private Boolean readOnlyEnabled;
+	private boolean refreshSession;
+
 	private Boolean queryPlanCachingEnabled;
 	private Boolean limitInMemoryEnabled;
+
+	private final Limit limit;
+	private final LockOptions lockOptions;
 
 	private TupleTransformer<?> tupleTransformer;
 	private ResultListTransformer<?> resultListTransformer;
@@ -57,6 +63,44 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private GraphSemantic graphSemantic;
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
+
+	public QueryOptionsImpl() {
+		this.limit = new Limit();
+		this.lockOptions = new LockOptions();
+	}
+
+	/**
+	 * Copy constructor.
+	 * @see #makeCopy()
+	 */
+	public QueryOptionsImpl(QueryOptionsImpl original) {
+		this.flushMode = original.flushMode;
+		this.timeout = original.timeout;
+		this.comment = original.comment;
+		this.databaseHints = new ArrayList<>( original.databaseHints );
+		this.fetchSize = original.fetchSize;
+		this.readOnlyEnabled = original.readOnlyEnabled;
+		this.resultCachingEnabled = original.resultCachingEnabled;
+		this.cacheRetrieveMode = original.cacheRetrieveMode;
+		this.cacheStoreMode = original.cacheStoreMode;
+		this.resultCacheRegionName = original.resultCacheRegionName;
+		this.queryPlanCachingEnabled = original.queryPlanCachingEnabled;
+		this.limit = original.limit.makeCopy();
+		this.lockOptions = original.lockOptions.makeCopy();
+		this.tupleTransformer = original.tupleTransformer;
+		this.resultListTransformer = original.resultListTransformer;
+		this.rootGraph = original.rootGraph;
+		this.graphSemantic = original.graphSemantic;
+		this.enabledFetchProfiles = copy( original.enabledFetchProfiles );
+		this.disabledFetchProfiles = copy( original.disabledFetchProfiles );
+	}
+
+	private <E> Set<E> copy(Set<E> original) {
+		if ( original == null ) {
+			return null;
+		}
+		return new HashSet<>( original );
+	}
 
 	@Override
 	public Timeout getTimeout() {
@@ -75,7 +119,6 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void setTimeout(Timeout timeout) {
 		this.timeout = timeout;
-		lockOptions.setTimeout( timeout );
 	}
 
 	@Override
@@ -298,5 +341,10 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public @Nullable GraphSemantic getSemantic() {
 		return graphSemantic;
+	}
+
+	@Override
+	public MutableQueryOptions makeCopy() {
+		return new QueryOptionsImpl( this );
 	}
 }

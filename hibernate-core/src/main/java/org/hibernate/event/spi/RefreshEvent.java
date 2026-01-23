@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -24,7 +25,7 @@ public class RefreshEvent extends AbstractSessionEvent {
 	private LockOptions lockOptions = new LockOptions(
 			LockMode.READ,
 			Timeouts.WAIT_FOREVER_MILLI,
-			Locking.Scope.ROOT_ONLY,
+			PessimisticLockScope.NORMAL,
 			Locking.FollowOn.ALLOW
 	);
 
@@ -103,6 +104,6 @@ public class RefreshEvent extends AbstractSessionEvent {
 	 */
 	@Deprecated(since = "7.1")
 	public boolean getLockScope() {
-		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+		return lockOptions.getLockScope() != PessimisticLockScope.NORMAL;
 	}
 }

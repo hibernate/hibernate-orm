@@ -76,7 +76,7 @@ public class LoadAndFetchGraphCollectionsNotExplicitlySpecifiedTest {
 
 			var graph = session.createEntityGraph( RootEntity.class );
 			graph.addAttributeNode( "lazyContainedEntities" );
-			query.applyGraph( graph, GraphSemantic.FETCH );
+			query.setEntityGraph( graph, GraphSemantic.FETCH );
 
 			var resultList = query.list();
 			assertThat( resultList ).isNotEmpty();
@@ -98,7 +98,7 @@ public class LoadAndFetchGraphCollectionsNotExplicitlySpecifiedTest {
 
 			var graph = session.createEntityGraph( RootEntity.class );
 			graph.addAttributeNode( "lazyContainedEntities" );
-			query.applyGraph( graph, GraphSemantic.LOAD );
+			query.setEntityGraph( graph, GraphSemantic.LOAD );
 
 			var resultList = query.list();
 			assertThat( resultList ).isNotEmpty();

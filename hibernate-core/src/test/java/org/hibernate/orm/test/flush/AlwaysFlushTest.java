@@ -11,8 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.FlushMode;
 import org.hibernate.Session;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +52,7 @@ public class AlwaysFlushTest {
 			Session session = entityManager.unwrap(Session.class);
 			assertEquals( 1, session
 					.createNativeQuery( "select count(*) from Person", Integer.class )
-					.setHibernateFlushMode( FlushMode.ALWAYS )
+					.setQueryFlushMode( QueryFlushMode.FLUSH )
 					.uniqueResult().intValue() );
 			//end::flushing-always-flush-sql-example[]
 		});

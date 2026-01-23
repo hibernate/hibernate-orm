@@ -4,12 +4,12 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.Map;
-
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.Timeout;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -21,10 +21,9 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
+import org.hibernate.query.QueryFlushMode;
 
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.QueryHint;
+import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -131,12 +130,12 @@ public class QueryHintDefinition {
 		}
 	}
 
-	public FlushMode getFlushMode() {
+	public QueryFlushMode getFlushMode() {
 		final String value = getString( HibernateHints.HINT_FLUSH_MODE );
 		try {
 			return value == null
 					? null
-					: FlushMode.interpretExternalSetting( value );
+					: QueryFlushMode.fromHint( value );
 		}
 		catch (MappingException e) {
 			throw new AnnotationException( "Unable to interpret FlushMode in named query hint: " + queryName, e );

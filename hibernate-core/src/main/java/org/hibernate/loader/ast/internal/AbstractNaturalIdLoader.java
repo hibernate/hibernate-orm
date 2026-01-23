@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -103,7 +104,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		}
 
 		final var lockOptions = new LockOptions( options.getLockMode() );
-		lockOptions.setScope( options.getLockScope() != null ? options.getLockScope() : Locking.Scope.ROOT_ONLY );
+		lockOptions.setScope( options.getLockScope() != null ? options.getLockScope() : PessimisticLockScope.NORMAL );
 		lockOptions.setTimeout( options.getLockTimeout() != null ? options.getLockTimeout() : Timeouts.WAIT_FOREVER );
 		lockOptions.setFollowOnStrategy( options.getLockFollowOn() != null ? options.getLockFollowOn() : Locking.FollowOn.ALLOW );
 		return lockOptions;

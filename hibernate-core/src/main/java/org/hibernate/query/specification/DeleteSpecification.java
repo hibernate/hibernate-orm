@@ -7,6 +7,9 @@ package org.hibernate.query.specification;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import org.hibernate.Incubating;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.internal.DeleteSpecificationImpl;
 
@@ -57,4 +60,10 @@ public interface DeleteSpecification<T> extends MutationSpecification<T> {
 	static <T> DeleteSpecification<T> create(CriteriaDelete<T> criteriaDelete) {
 		return new DeleteSpecificationImpl<>( criteriaDelete );
 	}
+
+	@Override
+	MutationQuery createQuery(Session session);
+
+	@Override
+	MutationQuery createQuery(StatelessSession session);
 }

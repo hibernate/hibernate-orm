@@ -12,7 +12,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.OrderingMode;
@@ -64,7 +63,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 		return this;
 	}
 
-	public void with(Locking.Scope scope) {
+	public void with(PessimisticLockScope scope) {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
 		}

@@ -1545,6 +1545,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	public LockOptions getDefaultLockOptions() {
+		return LockOptions.NONE;
+	}
+
+	@Override
 	public PersistenceContext getPersistenceContextInternal() {
 		//In this case implemented the same as #getPersistenceContext
 		return temporaryPersistenceContext;

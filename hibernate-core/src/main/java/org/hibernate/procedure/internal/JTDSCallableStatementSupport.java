@@ -27,7 +27,7 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 	public static final JTDSCallableStatementSupport INSTANCE = new JTDSCallableStatementSupport();
 
 	@Override
-	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();

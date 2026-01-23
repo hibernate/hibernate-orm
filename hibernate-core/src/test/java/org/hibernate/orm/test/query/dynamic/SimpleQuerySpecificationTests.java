@@ -222,7 +222,7 @@ public class SimpleQuerySpecificationTests {
 				.reference();
 		factoryScope.inTransaction( session -> {
 			sqlCollector.clear();
-			session.createQuery( deleteBasicEntity ).executeUpdate();
+			session.createStatement( deleteBasicEntity ).executeUpdate();
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
@@ -241,7 +241,7 @@ public class SimpleQuerySpecificationTests {
 				.reference();
 		factoryScope.inStatelessTransaction( statelessSession -> {
 			sqlCollector.clear();
-			statelessSession.createQuery( deleteBasicEntity ).executeUpdate();
+			statelessSession.createStatement( deleteBasicEntity ).executeUpdate();
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );

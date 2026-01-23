@@ -114,4 +114,6 @@ public interface PropertyHolder {
 	 * @return The ConverterDescriptor
 	 */
 	ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails property, boolean autoApply);
+
+	boolean isModifiable();
 }

@@ -365,5 +365,14 @@ ext {
                     'jdbc.url'        : 'jdbc:cloudspanner:/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db?autoConfigEmulator=true;lenient=true',
                     'jdbc.datasource' : 'com.google.cloud.spanner.jdbc.JdbcDriver'
             ],
+            spannerpgsql : [
+                    'db.dialect' : 'org.hibernate.community.dialect.SpannerPostgreSQLDialect',
+                    'jdbc.driver': 'com.google.cloud.spanner.jdbc.JdbcDriver',
+                    'jdbc.user'  : 'root',
+                    'jdbc.pass'  : '',
+                    'jdbc.url'   : 'jdbc:cloudspanner://' + dbHost + ':9010/projects/orm-test-project/orm-test-instance/inst/databases/orm-test-db?lenient=true;autoconfigemulator=true;dialect=postgresql;defaultsequencekind=bit_reversed_positive;unknownLength=255;',
+                    'jdbc.datasource': 'com.google.cloud.spanner.jdbc.JdbcDriver',
+                    'connection.init_sql' : '',
+            ],
     ]
 }

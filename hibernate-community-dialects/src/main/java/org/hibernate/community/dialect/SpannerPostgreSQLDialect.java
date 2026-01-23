@@ -176,11 +176,10 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 			String referencedTable,
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
-		if ( !referencesPrimaryKey ) {
-			throw new UnsupportedOperationException(
-					"Cannot add foreign keys without reference table's primary key" );
-		}
-		return super.getAddForeignKeyConstraintString( constraintName, foreignKey, referencedTable, primaryKey, referencesPrimaryKey );
+		// Cloud Spanner requires the referenced columns to specified in all cases, including
+		// if the foreign key is referencing the primary key of the referenced table. Setting referencesPrimaryKey to
+		// false will add all the referenced columns.
+		return super.getAddForeignKeyConstraintString( constraintName, foreignKey, referencedTable, primaryKey, false );
 	}
 
 	@Override

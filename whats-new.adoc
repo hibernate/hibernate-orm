@@ -101,4 +101,4 @@ As an alternative to and eventual replacement for `ParameterizedType`, the new i
 [[order-column-check]]
 == Check constraints on List order columns
 
-The schema export tooling now automatically generates check constraints on `@OrderColumn`s.
+The schema export tooling now automatically generates check constraints on ``@OrderColumn``s.

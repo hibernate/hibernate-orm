@@ -1054,6 +1054,9 @@ Hibernate's {enhancer}[bytecode enhancer] enables the following features:
 - _attribute-level lazy fetching_ for basic attributes annotated `@Basic(fetch=LAZY)` and for lazy non-polymorphic associations,
 - _interception-based_—instead of the usual _snapshot-based_—detection of modifications.
 
+In addition, use of the bytecode enhancer relaxes the usual requirement that entity and embeddable classes have default constructors.
+If a class annotated `@Entity`, `@MappedSuperclass`, or `@Embeddable` has no default constructor, the bytecode enhancer will add it.
+
 To use the bytecode enhancer, we must add the Hibernate plugin to our gradle build:
 
 [source,groovy,subs="attributes+"]

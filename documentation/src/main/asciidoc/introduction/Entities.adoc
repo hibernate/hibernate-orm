@@ -39,6 +39,11 @@ On the other hand, the entity class may be either concrete or `abstract`, and it
 An entity class may be a `static` inner class.
 ====
 
+[TIP]
+====
+The requirement for a default constructor is relaxed when the <<bytecode-enhancer,bytecode enhancer>> is used.
+====
+
 Every entity class must be annotated `@Entity`.
 
 [source,java]

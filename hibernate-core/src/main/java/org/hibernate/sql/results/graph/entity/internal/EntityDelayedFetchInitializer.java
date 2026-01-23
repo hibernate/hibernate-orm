@@ -219,7 +219,7 @@ public class EntityDelayedFetchInitializer
 								ManagedTypeHelper.asPersistentAttributeInterceptableOrNull( resolvedInstance );
 					}
 
-					if ( persistentAttributeInterceptable != null ) {
+					if ( persistentAttributeInterceptable != null && persistentAttributeInterceptable.$$_hibernate_getInterceptor() instanceof LazyAttributeLoadingInterceptor) {
 						final LazyAttributeLoadingInterceptor persistentAttributeInterceptor = (LazyAttributeLoadingInterceptor) persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 						persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
 						instance = UNFETCHED_PROPERTY;

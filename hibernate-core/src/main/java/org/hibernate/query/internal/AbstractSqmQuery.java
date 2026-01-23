@@ -5,8 +5,11 @@
 package org.hibernate.query.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.named.NamedSelectionMemento;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -69,7 +72,7 @@ public abstract class AbstractSqmQuery<R>
 			}
 
 			if ( selectionMemento.getMaxResults() != null ) {
-				queryOptions.getLimit().setMaxRows( selectionMemento.getFirstResult() );
+				queryOptions.getLimit().setMaxRows( selectionMemento.getMaxResults() );
 			}
 		}
 
@@ -81,6 +84,34 @@ public abstract class AbstractSqmQuery<R>
 							.applyAnticipatedType( basicTypeRegistry.getRegisteredType( value ) ) );
 		}
 	}
+
+	@Override
+	public Class<?> getResultType() {
+		return null;
+	}
+
+	@Override
+	protected FlushMode interpretQueryFlushMode(QueryFlushMode queryFlushMode) {
+		return FlushModeTypeHelper.interpretFlushMode(queryFlushMode);
+	}
+
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return queryOptions.getQueryPlanCachingEnabled() == TRUE;
+	}
+
+	@Override
+	public QueryImplementor<R> setQueryPlanCacheable(boolean cachePlans) {
+		queryOptions.setQueryPlanCachingEnabled( cachePlans );
+		return this;
+	}
+
+	@Override
+	protected void applyQueryPlanCachingHint(String hintName, Object value) {
+		super.applyQueryPlanCachingHint( hintName, value );
+	}
+
+	public abstract DomainParameterXref getDomainParameterXref();
 
 	protected static void bindValueBindCriteriaParameters(
 			DomainParameterXref domainParameterXref,
@@ -104,29 +135,6 @@ public abstract class AbstractSqmQuery<R>
 								criteriaParameter.getAnticipatedType() );
 			}
 		}
-	}
-
-	@Override
-	public Class<?> getResultType() {
-		return null;
-	}
-
-	public abstract DomainParameterXref getDomainParameterXref();
-
-	@Override
-	public boolean isQueryPlanCacheable() {
-		return queryOptions.getQueryPlanCachingEnabled() == TRUE;
-	}
-
-	@Override
-	public QueryImplementor<R> setQueryPlanCacheable(boolean cachePlans) {
-		queryOptions.setQueryPlanCachingEnabled( cachePlans );
-		return this;
-	}
-
-	@Override
-	protected void applyQueryPlanCachingHint(String hintName, Object value) {
-		super.applyQueryPlanCachingHint( hintName, value );
 	}
 
 	@Override

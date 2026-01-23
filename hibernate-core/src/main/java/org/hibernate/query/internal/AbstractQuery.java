@@ -306,8 +306,12 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	public QueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
+		getQueryOptions().setFlushMode( interpretQueryFlushMode(queryFlushMode) );
 		return this;
+	}
+
+	protected FlushMode interpretQueryFlushMode(QueryFlushMode queryFlushMode) {
+		return FlushModeTypeHelper.getFlushMode(queryFlushMode);
 	}
 
 	@Override @SuppressWarnings("deprecation")

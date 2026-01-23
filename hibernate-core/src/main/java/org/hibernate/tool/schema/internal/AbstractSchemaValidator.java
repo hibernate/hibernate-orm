@@ -4,7 +4,6 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Namespace;
@@ -12,10 +11,13 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
@@ -27,7 +29,12 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
 
+import java.util.Objects;
+
+import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.cfg.SchemaToolingSettings.INDEX_VALIDATION;
+import static org.hibernate.cfg.SchemaToolingSettings.UNIQUE_KEY_VALIDATION;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
 import static org.hibernate.tool.schema.internal.Helper.buildDatabaseInformation;
 
@@ -141,6 +148,9 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			validateColumnType( table, column, existingColumn, metadata, dialect );
 			validateColumnNullability( table, column, existingColumn );
 		}
+
+		validateIndexes( table, tableInformation, metadata, options, dialect );
+		validateUniqueKeys( table, tableInformation, metadata, options, dialect );
 	}
 
 	protected void validateColumnType(
@@ -156,9 +166,9 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 									"table [%s]; found [%s (Types#%s)], but expecting [%s (Types#%s)]",
 							column.getName(),
 							table.getQualifiedTableName(),
-							columnInformation.getTypeName().toLowerCase(Locale.ROOT),
+							columnInformation.getTypeName().toLowerCase( ROOT),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
-							column.getSqlType( metadata ).toLowerCase(Locale.ROOT),
+							column.getSqlType( metadata ).toLowerCase( ROOT),
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeCode( metadata ) )
 					)
 			);
@@ -179,6 +189,138 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 				);
 			}
 		}
+	}
+
+	private void validateIndexes(
+			Table table,
+			TableInformation tableInformation,
+			Metadata metadata,
+			ExecutionOptions options,
+			Dialect dialect) {
+		var validationType = ConstraintValidationType.interpret( INDEX_VALIDATION, options.getConfigurationValues() );
+
+		table.getIndexes().forEach((rawName,index) -> {
+			assert StringHelper.isNotEmpty( rawName );
+			assert Objects.equals( rawName, index.getName() );
+			if ( validationType == ConstraintValidationType.NONE ) {
+				return;
+			}
+			else if ( validationType == ConstraintValidationType.NAMED ) {
+				if ( rawName.startsWith( "IDX" ) ) {
+					// this is not a great check as the user could very well
+					// have explicitly chosen a name that starts with this as well,
+					// but...
+					return;
+				}
+			}
+
+			var name = metadata.getDatabase().toIdentifier( rawName );
+			final IndexInformation indexInformation = tableInformation.getIndex( name );
+
+			if ( indexInformation == null ) {
+				throw new SchemaManagementException(
+						String.format(
+								ROOT,
+								"Missing index named `%s` on table `%s`",
+								name.render( dialect ),
+								tableInformation.getName().render()
+						)
+				);
+			}
+
+			var indicesMatch = true;
+			assert index.getSelectables().size() == index.getColumnSpan();
+			if ( index.getColumnSpan() != indexInformation.getIndexedColumns().size() ) {
+				indicesMatch = false;
+			}
+			else {
+				for ( int i = 0; i < index.getSelectables().size(); i++ ) {
+					final Selectable column = index.getSelectables().get( i );
+					final ColumnInformation columnInfo = indexInformation.getIndexedColumns().get( i );
+					if ( !column.getText().equals( columnInfo.getColumnIdentifier().getText() ) ) {
+						indicesMatch = false;
+						break;
+					}
+				}
+			}
+
+			if ( !indicesMatch ) {
+				throw new SchemaManagementException(
+						String.format(
+								ROOT,
+								"Index mismatch - `%s` on table `%s`",
+								name.render( dialect ),
+								tableInformation.getName().render()
+						)
+				);
+			}
+		} );
+	}
+
+	private void validateUniqueKeys(
+			Table table,
+			TableInformation tableInformation,
+			Metadata metadata,
+			ExecutionOptions options,
+			Dialect dialect) {
+		var validationType = ConstraintValidationType.interpret( UNIQUE_KEY_VALIDATION, options.getConfigurationValues() );
+
+		table.getUniqueKeys().forEach( (rawName, uk) -> {
+			assert StringHelper.isNotEmpty( rawName );
+			assert Objects.equals( rawName, uk.getName() );
+			if ( validationType == ConstraintValidationType.NONE ) {
+				return;
+			}
+			else if ( validationType == ConstraintValidationType.NAMED ) {
+				if ( rawName.startsWith( "UK" ) ) {
+					// this is not a great check as the user could very well
+					// have explicitly chosen a name that starts with this as well,
+					// but...
+					return;
+				}
+			}
+
+			var name = metadata.getDatabase().toIdentifier( rawName );
+			final IndexInformation ukInfo = tableInformation.getIndex( name );
+
+			if ( ukInfo == null ) {
+				throw new SchemaManagementException(
+						String.format(
+								ROOT,
+								"Missing unique constraint named `%s` on table `%s`",
+								name.render( dialect ),
+								tableInformation.getName().render()
+						)
+				);
+			}
+
+			var matches = true;
+			assert uk.getColumns().size() == uk.getColumnSpan();
+			if ( uk.getColumnSpan() != ukInfo.getIndexedColumns().size() ) {
+				matches = false;
+			}
+			else {
+				for ( int i = 0; i < uk.getColumns().size(); i++ ) {
+					final Column column = uk.getColumns().get( i );
+					final ColumnInformation columnInfo = ukInfo.getIndexedColumns().get( i );
+					if ( !column.getName().equals( columnInfo.getColumnIdentifier().getText() ) ) {
+						matches = false;
+						break;
+					}
+				}
+			}
+
+			if ( !matches ) {
+				throw new SchemaManagementException(
+						String.format(
+								ROOT,
+								"Unique-key mismatch - `%s` on table `%s`",
+								name.render( dialect ),
+								tableInformation.getName().render()
+						)
+				);
+			}
+		} );
 	}
 
 	protected void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {

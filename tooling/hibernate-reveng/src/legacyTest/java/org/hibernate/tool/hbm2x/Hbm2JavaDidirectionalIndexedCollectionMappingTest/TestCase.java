@@ -31,7 +31,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author max
@@ -47,14 +46,13 @@ public class TestCase {
 	public File outputFolder = new File("output");
 	
 	private File srcDir = null;
-	private File resourcesDir = null;
 
-	@BeforeEach
+    @BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
-		srcDir.mkdir();
-		resourcesDir = new File(outputFolder, "resources");
-		resourcesDir.mkdir();
+		assertTrue(srcDir.mkdir());
+        File resourcesDir = new File(outputFolder, "resources");
+		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
@@ -64,7 +62,7 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testReflection() throws Exception {
+	public void testReflection() {
 		assertTrue(new File(srcDir, "GenericObject.java").exists());
 		assertTrue(new File(srcDir, "GenericValue.java").exists());
 	}

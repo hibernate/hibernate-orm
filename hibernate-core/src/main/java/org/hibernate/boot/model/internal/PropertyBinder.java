@@ -535,6 +535,33 @@ public class PropertyBinder {
 		return memberDetails.hasDirectAnnotationUsage( Immutable.class );
 	}
 
+	/**
+	 * Is this property explicitly annotated {@link Immutable},
+	 * or can it be inferred immutable because it is final and
+	 * has an immutable type (based on {@code MutabilityPlan}).
+	 */
+	private boolean isEffectivelyImmutable() {
+		if ( isAnnotatedImmutable() ) {
+			return true;
+		}
+		else if ( isFinalField() && !holder.isModifiable()
+				&& value instanceof SimpleValue simpleValue ) {
+			final var type = simpleValue.getType();
+			return type != null && !type.isMutable();
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean isFinalField() {
+		return memberDetails.isField() && memberDetails.isFinal();
+	}
+
+	private boolean isAnnotatedImmutable() {
+		return memberDetails.hasDirectAnnotationUsage( Immutable.class );
+	}
+
 	private void handleOptional(Property property) {
 		if ( memberDetails != null ) {
 			property.setOptional( !isId && isOptional( memberDetails, holder ) );

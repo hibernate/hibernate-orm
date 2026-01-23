@@ -533,6 +533,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public boolean isModifiable() {
+		return false; //TODO: is this correct?
+	}
+
+	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(" + getEntityName() + ")";
 	}

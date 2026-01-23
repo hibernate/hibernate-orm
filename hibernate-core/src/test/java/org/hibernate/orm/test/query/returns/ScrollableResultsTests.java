@@ -4,15 +4,12 @@
  */
 package org.hibernate.orm.test.query.returns;
 
-import java.util.function.Consumer;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
-
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
-
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,6 +19,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.function.Consumer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -61,7 +60,7 @@ public class ScrollableResultsTests {
 
 		scope.inTransaction(
 				session -> {
-					final Query<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
+					final SelectionQuery<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
 					try (ScrollableResults<String> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
 
 						// try to initially read in reverse - should be false
@@ -118,7 +117,7 @@ public class ScrollableResultsTests {
 	public void testScrollSelectionTuple(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Tuple> query = session.createQuery( SINGLE_SELECTION_QUERY, Tuple.class );
+					final SelectionQuery<Tuple> query = session.createQuery( SINGLE_SELECTION_QUERY, Tuple.class );
 					verifyScroll(
 							query,
 							(tuple) -> {
@@ -149,7 +148,7 @@ public class ScrollableResultsTests {
 	public void testScrollAliasedSelectionTuple(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Tuple> query = session.createQuery( SINGLE_ALIASED_SELECTION_QUERY, Tuple.class );
+					final SelectionQuery<Tuple> query = session.createQuery( SINGLE_ALIASED_SELECTION_QUERY, Tuple.class );
 					verifyScroll(
 							query,
 							(tuple) -> {
@@ -175,7 +174,7 @@ public class ScrollableResultsTests {
 	public void testScrollSelectionsTuple(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Tuple> query = session.createQuery( MULTI_SELECTION_QUERY, Tuple.class );
+					final SelectionQuery<Tuple> query = session.createQuery( MULTI_SELECTION_QUERY, Tuple.class );
 					verifyScroll(
 							query,
 							(tuple) -> {
@@ -230,7 +229,7 @@ public class ScrollableResultsTests {
 	public void testScrollSelection(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
+					final SelectionQuery<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
 					verifyScroll(
 							query,
 							(data) -> assertThat( data, is( "value" ) )
@@ -243,7 +242,7 @@ public class ScrollableResultsTests {
 	public void testScrollSelections(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Object[]> query = session.createQuery( MULTI_SELECTION_QUERY, Object[].class );
+					final SelectionQuery<Object[]> query = session.createQuery( MULTI_SELECTION_QUERY, Object[].class );
 					verifyScroll(
 							query,
 							(values) -> {
@@ -255,7 +254,7 @@ public class ScrollableResultsTests {
 		);
 	}
 
-	private static <R> void verifyScroll(Query<R> query, Consumer<R> validator) {
+	private static <R> void verifyScroll(SelectionQuery<R> query, Consumer<R> validator) {
 		try (final ScrollableResults<R> results = query.scroll( ScrollMode.FORWARD_ONLY ) ) {
 			assertThat( results.next(), is( true ) );
 			validator.accept( results.get() );

@@ -12,6 +12,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
+import jakarta.persistence.Statement;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
@@ -259,6 +261,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public Map<String, StatementReference> getNamedStatements() {
+		return delegate.getNamedStatements();
+	}
+
+	@Override
 	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
 		return delegate.getNamedEntityGraphs( entityType );
 	}
@@ -459,6 +466,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
 		return delegate.addNamedQuery( name, query );
+	}
+
+	@Override
+	public StatementReference addNamedStatement(String s, Statement statement) {
+		return delegate.addNamedStatement( s, statement );
 	}
 
 	@Override

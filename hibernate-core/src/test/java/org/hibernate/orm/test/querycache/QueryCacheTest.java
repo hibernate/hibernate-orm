@@ -446,7 +446,7 @@ public class QueryCacheTest {
 				session -> {
 					List result = session.createQuery( queryString )
 							.setCacheable( true )
-							.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP )
+							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
 					assertEquals( 1, result.size() );
 					Map m = (Map) result.get( 0 );
@@ -467,7 +467,7 @@ public class QueryCacheTest {
 				session -> {
 					List result = session.createQuery( queryString )
 							.setCacheable( true )
-							.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP )
+							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
 					assertEquals( 1, result.size() );
 					Map m = (Map) result.get( 0 );

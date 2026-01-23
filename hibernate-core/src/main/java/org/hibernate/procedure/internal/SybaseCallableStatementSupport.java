@@ -34,7 +34,7 @@ public class SybaseCallableStatementSupport extends AbstractStandardCallableStat
 	private static final String CALL_SYNTAX_END = ")}";
 
 	@Override
-	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();

@@ -4,7 +4,11 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Timeout;
+import org.hibernate.FlushMode;
 import org.hibernate.Locking;
+import org.hibernate.query.QueryFlushMode;
 
 /**
  * List of Hibernate-specific (extension) hints available to query,
@@ -22,21 +26,83 @@ import org.hibernate.Locking;
  */
 public interface HibernateHints {
 	/**
-	 * Hint for specifying the {@link org.hibernate.FlushMode} to
-	 * apply to an {@link jakarta.persistence.EntityManager} or
-	 * {@link jakarta.persistence.Query}.
+	 * Hint for applying a Hibernate-specific flush mode to either a
+	 * {@linkplain jakarta.persistence.Query} or
+	 * {@linkplain jakarta.persistence.EntityManager}.
+	 * <p/>
+	 * The allowed values depend on the context -<ul>
+	 *     <li>
+	 *         For a query, the value will ultimately get resolved to a
+	 *         {@linkplain QueryFlushMode} via .  The hint value may be any of the following:<ul>
+	 *             <li>
+	 *                 A {@linkplain QueryFlushMode}.
+	 *             </li>
+	 *             <li>
+	 *                 A Hibernate {@linkplain org.hibernate.FlushMode}, converted
+	 *                 via {@linkplain QueryFlushMode#fromHibernateMode(FlushMode)}.
+	 *             </li>
+	 *             <li>
+	 *                 A string, converted via {@linkplain QueryFlushMode#interpretHint(String)}.
+	 *             </li>
+	 *             <li>
+	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides
+	 *                 a method for this - {@linkplain jakarta.persistence.Query#setFlushMode(FlushModeType)}
+	 *                 which should be used instead.  If a {@linkplain FlushModeType} is used,
+	 *                 it is converted using {@linkplain QueryFlushMode#fromJpaMode(FlushModeType)}
+	 *             </li>
+	 *         </ul>
+	 *     </li>
+	 *     <li>
+	 *         For sessions, the value will ultimately get resolved to a Hibernate
+	 *         {@linkplain FlushMode}.  The hint value may be any of the following:<ul>
+	 *             <li>
+	 *                 A {@linkplain org.hibernate.FlushMode}.
+	 *             </li>
+	 *             <li>
+	 *                 A string, converted via {@linkplain FlushMode#interpretExternalSetting(String)}.
+	 *             </li>
+	 *             <li>
+	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides
+	 *                 a method for this - {@linkplain jakarta.persistence.EntityManager#setFlushMode(FlushModeType)}
+	 *                 which should be used instead.  If a {@linkplain FlushModeType} is used,
+	 *                 it is converted using {@linkplain FlushMode#fromJpaFlushMode(FlushModeType)}
+	 *             </li>
+	 *         </ul>
+	 *     </li>
+	 * </ul>
 	 *
-	 * @see org.hibernate.query.Query#setHibernateFlushMode
+	 * @see org.hibernate.query.Query#setQueryFlushMode(QueryFlushMode)
+	 * @see org.hibernate.query.Query#setFlushMode(FlushModeType)
 	 * @see org.hibernate.Session#setHibernateFlushMode
+	 * @see org.hibernate.Session#setFlushMode
 	 */
 	String HINT_FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
-	 * Hint for specifying a
-	 * {@linkplain org.hibernate.query.CommonQueryContract#setTimeout
-	 * query timeout}, in seconds.
+	 * Hint for specifying a timeout <em>in seconds</em>.
+	 * Ultimately this value gets resolved to {@linkplain jakarta.persistence.Timeout}.
+	 * The value may be any of these types -<ul>
+	 *     <li>
+	 *         a {@linkplain jakarta.persistence.Timeout}
+	 *     </li>
+	 *     <li>
+	 *         an integer representing the number of seconds
+	 *     </li>
+	 *     <li>
+	 *         anything else resolvable to an integer representing the number of seconds
+	 *     </li>
+	 * </ul>
 	 *
-	 * @see org.hibernate.query.CommonQueryContract#setTimeout
+	 * @apiNote Note that JPA already defines a proper
+	 * {@linkplain jakarta.persistence.Query#setTimeout(Timeout) method} for this, which should
+	 * be preferred (hints == no bueno).
+	 * There is also a {@linkplain jakarta.persistence.Query#setTimeout(Timeout) form}, however,
+	 * be aware that JPA defines that timeouts should be in <em>milliseconds</em> rather than seconds;
+	 * be sure to perform necessary conversion if using this method.
+	 *
+	 * @see jakarta.persistence.Query#setTimeout(Timeout)
+	 * @see jakarta.persistence.Query#setTimeout(Integer)
+	 * @see org.hibernate.query.Query#setTimeout(int)
 	 * @see java.sql.Statement#setQueryTimeout
 	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */

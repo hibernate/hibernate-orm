@@ -9,7 +9,7 @@ import jakarta.persistence.FlushModeType;
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.query.named.NamedSelectionMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,10 +32,10 @@ public class SimpleNamedQueryTests {
 				.getQueryEngine()
 				.getNamedObjectRepository();
 
-		final NamedSqmQueryMemento<?> simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
+		final NamedSelectionMemento<?> simpleMemento = namedObjectRepository.getSelectionQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedSqmQueryMemento<?> restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
+		final NamedSelectionMemento<?> restrictedMemento = namedObjectRepository.getSelectionQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 
@@ -51,10 +51,10 @@ public class SimpleNamedQueryTests {
 				.getQueryEngine()
 				.getNamedObjectRepository();
 
-		final NamedSqmQueryMemento<?> simpleMemento = namedObjectRepository.getSqmQueryMemento( "simple" );
+		final NamedSelectionMemento<?> simpleMemento = namedObjectRepository.getSelectionQueryMemento( "simple" );
 		assertThat( simpleMemento, notNullValue() );
 
-		final NamedSqmQueryMemento<?> restrictedMemento = namedObjectRepository.getSqmQueryMemento( "restricted" );
+		final NamedSelectionMemento<?> restrictedMemento = namedObjectRepository.getSelectionQueryMemento( "restricted" );
 		assertThat( restrictedMemento, notNullValue() );
 	}
 

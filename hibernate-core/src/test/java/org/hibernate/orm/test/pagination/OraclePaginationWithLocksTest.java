@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.Locking;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.common.FetchClauseType;
@@ -128,7 +129,7 @@ public class OraclePaginationWithLocksTest {
 					final List<Person> people = session.createQuery( query )
 							.setMaxResults( 10 )
 							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setFollowOnLocking( false )
+							.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertSqlContainsFetch( session );
@@ -172,7 +173,7 @@ public class OraclePaginationWithLocksTest {
 								"select p from Person p", Person.class )
 						.setMaxResults( 10 )
 						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-						.setFollowOnLocking( false )
+						.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 						.getResultList();
 				assertEquals( 10, people.size() );
 				assertSqlContainsFetch( session );
@@ -186,7 +187,7 @@ public class OraclePaginationWithLocksTest {
 								"select p from Person p where p.name = 'for update'", Person.class )
 						.setMaxResults( 10 )
 						.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-						.setFollowOnLocking( false )
+						.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 						.getResultList();
 				assertEquals( 1, people.size() );
 				assertSqlContainsFetch( session );
@@ -205,7 +206,7 @@ public class OraclePaginationWithLocksTest {
 							"select p from Person p", Person.class )
 							.setMaxResults( 10 )
 							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setFollowOnLocking( false )
+							.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertSqlContainsFetch( session );
@@ -242,7 +243,7 @@ public class OraclePaginationWithLocksTest {
 							"select p from Person p where p.name = 'for update'", Person.class )
 							.setMaxResults( 10 )
 							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setFollowOnLocking( false )
+							.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 							.getResultList();
 					assertEquals( 1, people.size() );
 					assertSqlContainsFetch( session );

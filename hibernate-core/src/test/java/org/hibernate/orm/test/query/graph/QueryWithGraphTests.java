@@ -14,7 +14,6 @@ import org.hibernate.annotations.NamedEntityGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.orm.test.query.resultmapping.dynamic.Book;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel(annotatedClasses = {Book.class, QueryWithGraphTests.Publisher.class})
 @SessionFactory
-@FailureExpected(reason = "Need https://github.com/jakartaee/persistence/pull/842")
 public class QueryWithGraphTests {
 	@BeforeEach
 	void setUp(SessionFactoryScope factoryScope) {

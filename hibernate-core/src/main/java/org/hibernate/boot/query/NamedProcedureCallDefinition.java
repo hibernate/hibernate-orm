@@ -22,10 +22,5 @@ public interface NamedProcedureCallDefinition extends NamedQueryDefinition<Objec
 	String getProcedureName();
 
 	@Override
-	default Class<Object> getResultType() {
-		return Object.class;
-	}
-
-	@Override
 	NamedCallableQueryMemento resolve(SessionFactoryImplementor factory);
 }

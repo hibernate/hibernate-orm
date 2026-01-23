@@ -4,11 +4,11 @@
  */
 package org.hibernate.community.dialect;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
@@ -744,7 +744,7 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return getVersion().isBefore( 2 )
 				? new ReadUncommittedLockingStrategy( lockable, lockMode )
 				: new SelectLockingStrategy( lockable, lockMode );

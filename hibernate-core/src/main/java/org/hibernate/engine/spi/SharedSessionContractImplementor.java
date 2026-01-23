@@ -5,12 +5,12 @@
 package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.FlushMode;
@@ -33,8 +33,11 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -470,6 +473,21 @@ public interface SharedSessionContractImplementor
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	/**
+	 * The default lock options associated with this session.
+	 */
+	LockOptions getDefaultLockOptions();
+
+	/**
+	 * Lock timeout specified on the SessionFactory via hint.
+	 */
+	Timeout getDefaultLockTimeout();
+
+	/**
+	 * Query timeout specified on the SessionFactory via hint.
+	 */
+	Timeout getDefaultTimeout();
+
+	/**
 	 * Obtain an {@link ExceptionConverter} for reporting an error.
 	 * <p>
 	 * The converter associated to a session might be lazily initialized,
@@ -648,13 +666,13 @@ public interface SharedSessionContractImplementor
 	QueryImplementor createQuery(String queryString);
 
 	@Override
-	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
+	<R> SelectionQueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
 
 	@Override
-	<R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	<R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	@Override
-	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	<R> SelectionQueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
@@ -666,7 +684,7 @@ public interface SharedSessionContractImplementor
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
 
 	@Override
-	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
+	<R> SelectionQueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName);
@@ -675,18 +693,20 @@ public interface SharedSessionContractImplementor
 	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
 
 	@Override
-	<T> QueryImplementor<T> createQuery(CriteriaSelect<T> criteriaSelect);
+	<T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaSelect);
+
+	@Override
+	MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaStatement);
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaUpdate<?> criteriaUpdate);
+	MutationQueryImplementor createStatement(CriteriaStatement<?> criteriaStatement);
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaDelete<?> criteriaDelete);
+	MutationQueryImplementor<?> createMutationQuery(JpaCriteriaInsert<?> insert);
 
 	@Override
-	<T> QueryImplementor<T> createQuery(String queryString, EntityGraph<T> entityGraph);
+	<T> SelectionQueryImplementor<T> createQuery(String queryString, EntityGraph<T> entityGraph);
 
 	@Override
 	@SuppressWarnings("rawtypes")

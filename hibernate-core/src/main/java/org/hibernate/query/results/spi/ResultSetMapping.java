@@ -18,6 +18,7 @@ import java.util.function.Consumer;
  * JdbcValuesMappingProducer implementation based on a graph of {@linkplain ResultBuilder}
  * and {@linkplain FetchBuilder} reference. Used to model result-set mappings from:<ul>
  *    <li>{@link jakarta.persistence.SqlResultSetMapping}</li>
+ *    <li>{@link jakarta.persistence.sql.ResultSetMapping}</li>
  *    <li>{@code orm.xml}</li>
  *    <li>{@code mapping.xml}</li>
  *    <li>{@code hbm.xml}</li>

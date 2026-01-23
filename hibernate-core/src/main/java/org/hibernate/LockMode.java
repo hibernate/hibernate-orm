@@ -6,6 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -336,8 +337,8 @@ public enum LockMode implements FindOption, RefreshOption {
 			case READ -> new LockOptions( READ );
 			case OPTIMISTIC -> new LockOptions( OPTIMISTIC );
 			case OPTIMISTIC_FORCE_INCREMENT -> new LockOptions( OPTIMISTIC_FORCE_INCREMENT );
-			case UPGRADE_NOWAIT -> new LockOptions( PESSIMISTIC_WRITE, NO_WAIT_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
-			case UPGRADE_SKIPLOCKED -> new LockOptions( PESSIMISTIC_WRITE, SKIP_LOCKED_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
+			case UPGRADE_NOWAIT -> new LockOptions( PESSIMISTIC_WRITE, NO_WAIT_MILLI, PessimisticLockScope.NORMAL, Locking.FollowOn.ALLOW );
+			case UPGRADE_SKIPLOCKED -> new LockOptions( PESSIMISTIC_WRITE, SKIP_LOCKED_MILLI, PessimisticLockScope.NORMAL, Locking.FollowOn.ALLOW );
 			case PESSIMISTIC_READ -> new LockOptions( PESSIMISTIC_READ );
 			case PESSIMISTIC_WRITE -> new LockOptions( PESSIMISTIC_WRITE );
 			case PESSIMISTIC_FORCE_INCREMENT -> new LockOptions( PESSIMISTIC_FORCE_INCREMENT );

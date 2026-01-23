@@ -45,7 +45,6 @@ import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.SpecHints;
-import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -58,8 +57,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.Query;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -91,7 +88,6 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
 import static org.hibernate.CacheMode.fromJpaModes;
-import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
@@ -118,10 +114,6 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
@@ -263,6 +255,11 @@ public class SessionImpl
 		return new ActionQueue( this );
 	}
 
+	@Override
+	public LockOptions getDefaultLockOptions() {
+		return getLockOptionsForRead();
+	}
+
 	private LockOptions getLockOptionsForRead() {
 		return lockOptions == null
 				? getSessionFactoryOptions().getDefaultLockOptions()
@@ -276,61 +273,25 @@ public class SessionImpl
 		return lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
-		applyLockOptionsHint( query );
-	}
-
-	protected void applyLockOptionsHint(SelectionQuery<?> query) {
-		final var lockOptionsForRead = getLockOptionsForRead();
-		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
-		}
-
-		final Object specQueryTimeout = getHintedQueryTimeout();
-		if ( specQueryTimeout != null ) {
-			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
-		}
-	}
-
-	private Object getHintedQueryTimeout() {
-		return LegacySpecHelper.getInteger(
-				HINT_SPEC_QUERY_TIMEOUT,
-				HINT_JAVAEE_QUERY_TIMEOUT,
-				this::getSessionProperty
-		);
-	}
-
-	protected void applyQuerySettingsAndHints(Query<?> query) {
-		applyQuerySettingsAndHints( (SelectionQuery<?>) query );
-		applyLockTimeoutHint( query );
-	}
-
-	private void applyLockTimeoutHint(Query<?> query) {
-		final Integer specLockTimeout = getHintedLockTimeout();
-		if ( specLockTimeout != null ) {
-			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
-		}
-	}
-
-	private Integer getHintedLockTimeout() {
-		return LegacySpecHelper.getInteger(
-				HINT_SPEC_LOCK_TIMEOUT,
-				HINT_JAVAEE_LOCK_TIMEOUT,
-				this::getSessionProperty,
-				// treat WAIT_FOREVER the same as null
-				value -> !Integer.valueOf( WAIT_FOREVER_MILLI ).equals( value )
-		);
-	}
-
-	private Object getSessionProperty(String propertyName) {
-		return properties() == null
-				? getDefaultProperties().get( propertyName )
-				: properties().get( propertyName );
-	}
-
-	private Map<String, Object> getDefaultProperties() {
-		return getSessionFactoryOptions().getDefaultSessionProperties();
-	}
+//	protected void applyQuerySettingsAndHints(Query query) {
+//		final Object queryTimeout = getHintedQueryTimeout();
+//		if ( queryTimeout != null ) {
+//			query.setTimeout( Timeouts.fromHintTimeout( queryTimeout ) );
+//		}
+//
+//		if ( query instanceof SelectionQuery<?> selectionQuery ) {
+//			final var lockOptionsForRead = getLockOptionsForRead();
+//			if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
+//				selectionQuery.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
+//			}
+//
+//			final Object lockTimeout = getHintedLockTimeout();
+//			if ( lockTimeout != null ) {
+//				selectionQuery.setLockTimeout( Timeouts.fromHintTimeout( lockTimeout ) );
+//
+//			}
+//		}
+//	}
 
 	@Override
 	public void clear() {
@@ -2223,7 +2184,7 @@ public class SessionImpl
 	private void applyLockScope(List<FindOption> options, Map<String, Object> properties) {
 		final Object scopeRef = properties.get( SpecHints.HINT_SPEC_LOCK_SCOPE );
 		if ( scopeRef != null ) {
-			options.add( Locking.Scope.fromHint( scopeRef ) );
+			options.add( Locking.scopeFromHint( scopeRef ) );
 		}
 	}
 

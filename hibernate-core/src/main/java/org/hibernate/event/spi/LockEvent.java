@@ -4,9 +4,9 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.Timeouts;
 
 /**
@@ -104,6 +104,6 @@ public class LockEvent extends AbstractSessionEvent {
 	 */
 	@Deprecated(since = "7.1")
 	public boolean getLockScope() {
-		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+		return lockOptions.getLockScope() != PessimisticLockScope.NORMAL;
 	}
 }

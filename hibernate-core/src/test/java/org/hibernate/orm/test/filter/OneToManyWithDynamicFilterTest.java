@@ -21,7 +21,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -82,9 +82,9 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 			enableFilter.setParameter( "deleted", true );
 			enableFilter.validate();
 
-			final Query<Long> query = session.createQuery( "select a.id from ArticleRevision as a " +
-															"left join a.articleTradings as t " +
-															"with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
+			final SelectionQuery<Long> query = session.createQuery( "select a.id from ArticleRevision as a " +
+																	"left join a.articleTradings as t " +
+																	"with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
 			query.setParameter( "p_0", 1L );
 			query.setParameter( "p_1", "no_classification" );
 			final List<Long> list = query.getResultList();

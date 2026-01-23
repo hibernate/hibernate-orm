@@ -25,17 +25,17 @@ import jakarta.persistence.ParameterMode;
  */
 class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
-	private final ProcedureCallImplementor<T> procedureCall;
+	private final ProcedureCallImplementor procedureCall;
 	private final int sqlTypeCode;
 
 	private OutputableType<T> ormType;
 
-	FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int sqlTypeCode) {
+	FunctionReturnImpl(ProcedureCallImplementor procedureCall, int sqlTypeCode) {
 		this.procedureCall = procedureCall;
 		this.sqlTypeCode = sqlTypeCode;
 	}
 
-	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, OutputableType<T> ormType) {
+	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
 		this.sqlTypeCode = ormType.getJdbcType().getDefaultSqlTypeCode();
 		this.ormType = ormType;

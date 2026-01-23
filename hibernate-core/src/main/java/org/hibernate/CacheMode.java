@@ -91,6 +91,18 @@ public enum CacheMode implements FindOption {
 		this.retrieveMode = retrieveMode;
 	}
 
+	public static CacheMode resolve(
+			CacheMode cacheMode,
+			CacheRetrieveMode cacheRetrieveMode,
+			CacheStoreMode cacheStoreMode) {
+		if ( cacheMode != null ) {
+			return cacheMode;
+		}
+		else {
+			return CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
+		}
+	}
+
 	/**
 	 * @return the JPA-defined {@link CacheStoreMode} implied by this cache mode
 	 */

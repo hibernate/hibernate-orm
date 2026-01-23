@@ -4,21 +4,16 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
@@ -34,6 +29,11 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.hibernate.internal.TransactionManagement.manageTransaction;
 
@@ -292,13 +292,13 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
 	 */
 	@Override
-	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
 
 	/**
 	 * @see jakarta.persistence.EntityHandler#createQuery(String,EntityGraph)
 	 */
 	@Override
-	<T> Query<T> createQuery(String s, EntityGraph<T> entityGraph);
+	<T> SelectionQuery<T> createQuery(String s, EntityGraph<T> entityGraph);
 
 	/**
 	 * Create a {@link SelectionQuery} instance for the given HQL query
@@ -403,6 +403,12 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 */
 	MutationQuery createMutationQuery(String hqlString);
 
+	@Override
+	MutationQuery createStatement(String hqlString);
+
+	@Override
+	MutationQuery createStatement(StatementReference statementReference);
+
 	/**
 	 * Create a typed {@link Query} instance for the given typed query reference.
 	 *
@@ -418,31 +424,31 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createQuery(TypedQueryReference)
 	 */
 	@Override
-	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	/**
 	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}.
 	 */
 	@Override
-	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	<R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @see #createSelectionQuery(CriteriaSelect)
 	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaSelect)
 	 */
 	@Override
-	<T> Query<T> createQuery(CriteriaSelect<T> criteriaSelect);
+	<T> SelectionQuery<T> createQuery(CriteriaSelect<T> criteriaSelect);
 
 	/**
-	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaUpdate)
+	 * {@inheritDoc}
+	 *
+	 * @see #createMutationQuery(CriteriaStatement)
+	 * @see jakarta.persistence.EntityHandler#createStatement(CriteriaStatement)
 	 */
 	@Override
-	Query<?> createQuery(CriteriaUpdate<?> criteriaUpdate);
-
-	/**
-	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaDelete)
-	 */
-	@Override
-	Query<?> createQuery(CriteriaDelete<?> criteriaDelete);
+	MutationQuery createStatement(CriteriaStatement<?> criteriaStatement);
 
 	/**
 	 * Create a {@link SelectionQuery} reference for the given
@@ -463,17 +469,12 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	/**
 	 * Create a {@link MutationQuery} from the given update criteria tree
 	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
-
-	/**
-	 * Create a {@link MutationQuery} from the given delete criteria tree
-	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+	MutationQuery createMutationQuery(CriteriaStatement<?> criteriaStatement);
 
 	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert);
+	MutationQuery createMutationQuery(JpaCriteriaInsert<?> insert);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query.
@@ -574,13 +575,19 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
 	 */
 	@Override
-	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
 
 	@Override
-	Query<?> createNamedQuery(String s);
+	MutationQuery createNamedStatement(String name);
+
+	@Override
+	Query createNamedQuery(String s);
 
 	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName);
 	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
+
+	@Override
+	MutationQuery createNativeStatement(String sql);
 
 	@Override
 	NativeQuery<?> createNativeQuery(String sql, String resultSetMapping);

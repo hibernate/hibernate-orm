@@ -72,6 +72,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private final boolean isUpdatable;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -96,10 +97,14 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		if ( embeddedMemberDetails != null ) {
 			embeddedAttributeName = embeddedMemberDetails.getName();
 			attributeConversionInfoMap = processAttributeConversions( embeddedMemberDetails );
+			isUpdatable = parent.isModifiable()
+						|| !embeddedMemberDetails.isField()
+						|| !embeddedMemberDetails.isFinal();
 		}
 		else {
 			embeddedAttributeName = "";
 			attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
+			isUpdatable = true; //TODO: should this be false?
 		}
 	}
 
@@ -434,5 +439,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	public String toString() {
 		return getClass().getSimpleName()
 			+ "(" + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ")";
+	}
+
+	@Override
+	public boolean isModifiable() {
+		return isUpdatable;
 	}
 }

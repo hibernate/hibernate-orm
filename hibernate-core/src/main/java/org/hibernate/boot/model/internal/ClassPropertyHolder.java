@@ -58,7 +58,6 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		this.persistentClass = persistentClass;
 		this.joins = joins;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
-
 		this.attributeConversionInfoMap = buildAttributeConversionInfoMap( entityXClass );
 	}
 
@@ -523,6 +522,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	public boolean isWithinElementCollection() {
 		return false;
+	}
+
+	@Override
+	public boolean isModifiable() {
+		return false; //TODO: is this correct?
 	}
 
 	@Override

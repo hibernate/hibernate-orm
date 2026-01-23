@@ -252,7 +252,7 @@ public class EntityDelayedFetchInitializer
 				// field to the interceptor. If we don't get one, we load the entity by unique key.
 				final var persistentAttributeInterceptable =
 						getPersistentAttributeInterceptable( rowProcessingState );
-				if ( persistentAttributeInterceptable != null ) {
+				if ( persistentAttributeInterceptable != null && persistentAttributeInterceptable.$$_hibernate_getInterceptor() instanceof LazyAttributeLoadingInterceptor) {
 					final var persistentAttributeInterceptor =
 							(LazyAttributeLoadingInterceptor)
 									persistentAttributeInterceptable.$$_hibernate_getInterceptor();

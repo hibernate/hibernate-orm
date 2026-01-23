@@ -7,6 +7,7 @@ package org.hibernate.testing.orm.junit;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -318,6 +319,13 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect.getLockingSupport().getConnectionLockTimeoutStrategy().getSupportedLevel()
 				!= ConnectionLockTimeoutStrategy.Level.NONE;
+		}
+	}
+
+	public static class SupportsBackwardsScrollableResultSets implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.defaultScrollMode() != ScrollMode.FORWARD_ONLY;
 		}
 	}
 

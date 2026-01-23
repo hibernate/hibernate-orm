@@ -64,7 +64,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-selection-query[]
 			// can be validated while creating the SelectionQuery
-			SelectionQuery<?> badQuery = session.createNamedQuery( "delete_Person" );
+			SelectionQuery<?> badQuery = session.createNamedQuery( "delete_Person" ).asSelectionQuery();
 			//end::example-hql-named-selection-query[]
 		} );
 	}

@@ -5,7 +5,7 @@
 package org.hibernate.query;
 
 /**
- * Indicates an attempt to call {@link QueryProducer#createSelectionQuery(String)}
+ * Indicates an attempt to create a {@linkplain SelectionQuery} instance
  * with a non-selection query (generally a mutation query)
  *
  * @author Steve Ebersole

@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.Locking;
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
@@ -15,7 +15,7 @@ import java.util.Set;
 /// @author Steve Ebersole
 public class TransactSQLLockingClauseStrategy extends AbstractLockingClauseStrategy {
 
-	public TransactSQLLockingClauseStrategy(Locking.Scope lockingScope, Set<NavigablePath> rootsForLocking) {
+	public TransactSQLLockingClauseStrategy(PessimisticLockScope lockingScope, Set<NavigablePath> rootsForLocking) {
 		super( lockingScope, rootsForLocking );
 	}
 

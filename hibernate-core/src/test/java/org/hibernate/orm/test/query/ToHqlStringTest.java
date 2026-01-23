@@ -4,8 +4,7 @@
  */
 package org.hibernate.orm.test.query;
 
-import org.hibernate.query.spi.SqmQuery;
-
+import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -47,7 +46,7 @@ public class ToHqlStringTest {
 					criteriaQuery = criteriaQuery.select( countDistinct );
 
 					TypedQuery<Long> query = entityManager.createQuery( criteriaQuery );
-					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -57,7 +56,7 @@ public class ToHqlStringTest {
 		scope.inTransaction(
 				entityManager -> {
 					Query query = entityManager.createQuery( "select count (distinct t) from TestEntity t" );
-					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -68,7 +67,7 @@ public class ToHqlStringTest {
 				entityManager -> {
 					Query query = entityManager.createQuery( "select new org.hibernate.orm.test.query.ToHqlStringTest$TestDto("
 					+ " t.id, t.name ) from TestEntity t" );
-					( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 				}
 		);
 	}
@@ -86,7 +85,7 @@ public class ToHqlStringTest {
 					criteriaQuery = criteriaQuery.select( entity );
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					String hqlString = query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 					final int fromIndex = hqlString.indexOf( " from " );
 					final String alias = hqlString.substring( "select ".length(), fromIndex );
 					assertThat( hqlString.substring( fromIndex ), containsString( alias ) );
@@ -108,7 +107,7 @@ public class ToHqlStringTest {
 					);
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					String hqlString = query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "where lower('Foo') = 'foo'" ) );
 				}
 		);
@@ -128,7 +127,7 @@ public class ToHqlStringTest {
 					) );
 
 					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
-					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					String hqlString = query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "where myFunction(0, 10)" ) );
 				}
 		);
@@ -142,7 +141,7 @@ public class ToHqlStringTest {
 					Query query = entityManager.createQuery(
 							"select trim(trailing '_' from t.name) from TestEntity t"
 					);
-					String hqlString = ( (SqmQuery<?>) query ).getSqmStatement().toHqlString();
+					String hqlString = query.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString();
 					assertThat( hqlString, containsString( "trim(TRAILING '_' from t.name)" ) );
 				}
 		);

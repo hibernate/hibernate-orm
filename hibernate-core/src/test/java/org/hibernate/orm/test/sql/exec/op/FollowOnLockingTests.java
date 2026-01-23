@@ -19,7 +19,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -36,9 +35,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
+import static jakarta.persistence.PessimisticLockScope.EXTENDED;
+import static jakarta.persistence.PessimisticLockScope.FETCHED;
+import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.Locking.FollowOn.FORCE;
-import static org.hibernate.Locking.Scope.ROOT_ONLY;
 
 /**
  * @author Steve Ebersole
@@ -70,7 +71,7 @@ public class FollowOnLockingTests {
 		// 	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Person.class, 1, PESSIMISTIC_WRITE, ROOT_ONLY, FORCE );
+			session.find( Person.class, 1, PESSIMISTIC_WRITE, NORMAL, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -83,7 +84,7 @@ public class FollowOnLockingTests {
 		// 	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Person.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_COLLECTIONS, FORCE );
+			session.find( Person.class, 1, PESSIMISTIC_WRITE, EXTENDED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -96,7 +97,7 @@ public class FollowOnLockingTests {
 		// 	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Person.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_FETCHES, FORCE );
+			session.find( Person.class, 1, PESSIMISTIC_WRITE, FETCHED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -114,8 +115,9 @@ public class FollowOnLockingTests {
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
 			session.createQuery( "from Person" )
+					.asSelectionQuery(Person.class)
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( ROOT_ONLY )
+					.setLockScope( NORMAL )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -130,9 +132,9 @@ public class FollowOnLockingTests {
 		// 	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Person" )
+			session.createQuery( "from Person", Person.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_COLLECTIONS )
+					.setLockScope( EXTENDED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -147,9 +149,9 @@ public class FollowOnLockingTests {
 		// 	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Person" )
+			session.createQuery( "from Person", Person.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_FETCHES )
+					.setLockScope( FETCHED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -181,7 +183,7 @@ public class FollowOnLockingTests {
 		//	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Team.class, 1, PESSIMISTIC_WRITE, ROOT_ONLY, FORCE );
+			session.find( Team.class, 1, PESSIMISTIC_WRITE, NORMAL, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -194,7 +196,7 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Team.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_COLLECTIONS, FORCE );
+			session.find( Team.class, 1, PESSIMISTIC_WRITE, EXTENDED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				// the initial query (w/ lock teams), lock persons
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
@@ -208,7 +210,7 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Team.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_FETCHES, FORCE );
+			session.find( Team.class, 1, PESSIMISTIC_WRITE, FETCHED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -225,9 +227,9 @@ public class FollowOnLockingTests {
 		//	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Team" )
+			session.createQuery( "from Team", Team.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( ROOT_ONLY )
+					.setLockScope( NORMAL )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -242,9 +244,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Team" )
+			session.createQuery( "from Team", Team.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_COLLECTIONS )
+					.setLockScope( EXTENDED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -260,9 +262,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Team" )
+			session.createQuery( "from Team", Team.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_FETCHES )
+					.setLockScope( FETCHED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -277,9 +279,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Team join fetch members" )
+			session.createQuery( "from Team join fetch members", Team.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_FETCHES )
+					.setLockScope( FETCHED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -307,7 +309,7 @@ public class FollowOnLockingTests {
 		//	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Post.class, 1, PESSIMISTIC_WRITE, ROOT_ONLY, FORCE );
+			session.find( Post.class, 1, PESSIMISTIC_WRITE, NORMAL, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -320,7 +322,7 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Post.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_COLLECTIONS, FORCE );
+			session.find( Post.class, 1, PESSIMISTIC_WRITE, EXTENDED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				// the initial query (w/ lock posts), lock tags
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
@@ -334,7 +336,7 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Post.class, 1, PESSIMISTIC_WRITE, Locking.Scope.INCLUDE_FETCHES, FORCE );
+			session.find( Post.class, 1, PESSIMISTIC_WRITE, FETCHED, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}
@@ -350,9 +352,9 @@ public class FollowOnLockingTests {
 		//	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Post" )
+			session.createQuery( "from Post", Post.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( ROOT_ONLY )
+					.setLockScope( NORMAL )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -367,9 +369,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_COLLECTIONS
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Post" )
+			session.createQuery( "from Post", Post.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_COLLECTIONS )
+					.setLockScope( EXTENDED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -385,9 +387,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Post" )
+			session.createQuery( "from Post", Post.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_FETCHES )
+					.setLockScope( FETCHED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -402,9 +404,9 @@ public class FollowOnLockingTests {
 		//	with INCLUDE_FETCHES (with fetch)
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Post join fetch author" )
+			session.createQuery( "from Post join fetch author", Post.class )
 					.setLockMode( PESSIMISTIC_WRITE )
-					.setLockScope( Locking.Scope.INCLUDE_FETCHES )
+					.setLockScope( FETCHED )
 					.setFollowOnStrategy( FORCE )
 					.list();
 			if ( usesTableHints( session.getDialect() ) ) {
@@ -431,7 +433,7 @@ public class FollowOnLockingTests {
 		//	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.find( Customer.class, 1, PESSIMISTIC_WRITE, ROOT_ONLY, FORCE );
+			session.find( Customer.class, 1, PESSIMISTIC_WRITE, NORMAL, FORCE );
 			if ( usesTableHints( session.getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			}

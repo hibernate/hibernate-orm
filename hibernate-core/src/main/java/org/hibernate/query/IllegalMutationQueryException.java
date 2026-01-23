@@ -5,10 +5,8 @@
 package org.hibernate.query;
 
 /**
- * Indicates an attempt to call {@link QueryProducer#createMutationQuery(String)},
- * {@link QueryProducer#createNamedMutationQuery(String)} or
- * {@link QueryProducer#createNativeMutationQuery(String)} with a non-mutation
- * query (generally a select query)
+ * Indicates an attempt to create a {@linkplain MutationQuery} with a non-mutation
+ * query (generally a select query).
  *
  * @author Steve Ebersole
  */

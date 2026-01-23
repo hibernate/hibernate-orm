@@ -23,16 +23,16 @@ import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.QuerySpecification;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.specification.SimpleProjectionSpecification;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author Gavin King
  */
-public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionSpecification<T,X>, TypedQueryReference<X> {
+public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionSpecification<T,X>, JpaTypedQueryReference<X> {
 
 	private final SelectionSpecification<T> selectionSpecification;
 	private final Path<T, X> path;
@@ -154,20 +154,5 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 	@Override
 	public String getEntityGraphName() {
 		return "";
-	}
-
-	@Override
-	public List<Class<?>> getParameterTypes() {
-		return null;
-	}
-
-	@Override
-	public List<String> getParameterNames() {
-		return null;
-	}
-
-	@Override
-	public List<Object> getArguments() {
-		return null;
 	}
 }

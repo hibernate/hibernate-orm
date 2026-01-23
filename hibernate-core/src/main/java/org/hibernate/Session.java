@@ -14,13 +14,14 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.stat.SessionStatistics;
 
 import java.util.Collection;
@@ -392,7 +393,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// entity is loaded in read-only mode.
 	///
 	/// @see #setReadOnly(Object,boolean)
-	/// @see Query#setReadOnly(boolean)
+	/// @see SelectionQuery#setReadOnly(boolean)
 	///
 	/// @param readOnly `true`, the default for loaded entities/proxies is read-only;
 	///				 `false`, the default for loaded entities/proxies is modifiable
@@ -1131,9 +1132,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// not be set to modifiable.
 	///
 	/// @see #setDefaultReadOnly(boolean)
-	/// @see Query#setReadOnly(boolean)
-	/// @see IdentifierLoadAccess#withReadOnly(boolean)
+	/// @see SelectionQuery#setReadOnly(boolean)
 	/// @see org.hibernate.annotations.Immutable
+	/// @see ReadOnlyMode
 	///
 	/// @param entityOrProxy an entity or proxy
 	/// @param readOnly `true` if the entity or proxy should be made read-only;
@@ -1291,42 +1292,57 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
-	// The following overrides should not be necessary
-	// and are only needed to work around a bug in IntelliJ
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQuery createNativeQuery(String queryString);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	<R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	/// Create a [Query] for the given JPA [CriteriaDelete].
-	///
-	/// @deprecated use [#createMutationQuery(CriteriaDelete)]
-	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaDelete deleteQuery);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override @Deprecated
+	MutationQuery createQuery(CriteriaStatement<?> criteriaStatement);
 
-	/// Create a [Query] for the given JPA [CriteriaUpdate].
-	///
-	/// @deprecated use [#createMutationQuery(CriteriaUpdate)]
-	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaUpdate updateQuery);
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	default <T> T unwrap(Class<T> type) {
 		return SharedSessionContract.super.unwrap(type);
@@ -1337,4 +1353,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// move to using [jakarta.persistence.sql.ResultSetMapping].
 	@Deprecated @SuppressWarnings("rawtypes")
 	NativeQuery getNamedNativeQuery(String name);
+
+
 }

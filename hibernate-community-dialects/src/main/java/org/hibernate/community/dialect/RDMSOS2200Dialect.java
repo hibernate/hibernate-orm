@@ -4,10 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -350,13 +350,13 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
 		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
 		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
 	}

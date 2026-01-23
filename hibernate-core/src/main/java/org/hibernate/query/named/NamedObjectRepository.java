@@ -5,19 +5,23 @@
 package org.hibernate.query.named;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import jakarta.persistence.Query;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Statement;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import jakarta.persistence.TypedQueryReference;
 
@@ -33,30 +37,83 @@ import jakarta.persistence.TypedQueryReference;
 @Incubating
 public interface NamedObjectRepository {
 
+	/**
+	 * Returns all selection-query references keyed by registration name.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getNamedQueries(Class)
+	 * @see jakarta.persistence.NamedQuery
+	 * @see jakarta.persistence.NamedNativeQuery
+	 * @see #registerNamedQuery
+	 * @see org.hibernate.SessionFactory#addNamedQuery(String, TypedQuery)
+	 * @see org.hibernate.query.SelectionQuery
+	 */
 	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
 
-	void registerNamedQuery(String name, Query query);
+	/**
+	 * Perform an action for all registered selection-query references.
+	 */
+	void forEachNamedQuery(BiConsumer<String,? super TypedQueryReference<?>> action);
 
+	/**
+	 * Registers the given selection-query using the given name,
+	 * returning a {@linkplain TypedQueryReference registration reference},
+	 * which can be used later to create a {@linkplain org.hibernate.query.SelectionQuery query}
+	 * instance.
+	 *
+	 * @see #getNamedQueries(Class)
+	 * @see org.hibernate.SessionFactory#addNamedQuery(String, TypedQuery)
+	 * @see org.hibernate.Session#createQuery(TypedQueryReference)
+	 */
 	<R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Named SQM Memento
+	/**
+	 * Returns all mutation-query references keyed by registration name.
+	 *
+	 * @see EntityManagerFactory#getNamedStatements()
+	 * @see jakarta.persistence.NamedStatement
+	 * @see jakarta.persistence.NamedNativeStatement
+	 * @see #registerNamedMutation
+	 * @see org.hibernate.SessionFactory#addNamedStatement(String, Statement)
+	 * @see org.hibernate.query.MutationQuery
+	 */
+	Map<String, StatementReference> getNamedMutations();
 
-	NamedSqmQueryMemento<?> getSqmQueryMemento(String queryName);
-	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento<?>> action);
-	void registerSqmQueryMemento(String name, NamedSqmQueryMemento<?> descriptor);
+	/**
+	 * Perform an action for all registered mutation-query references.
+	 */
+	void forEachNamedMutation(BiConsumer<String,? super StatementReference> action);
 
+	/**
+	 * Registers the given mutation-query using the given name, returning
+	 * a {@linkplain StatementReference registration reference}, which can
+	 * be used later to create a {@linkplain org.hibernate.query.MutationQuery query}
+	 * instance.
+	 *
+	 * @see #getNamedMutations
+	 * @see org.hibernate.SessionFactory#addNamedStatement(String, Statement)
+	 * @see org.hibernate.Session#createStatement(StatementReference)
+	 */
+	@NonNull StatementReference registerNamedMutation(String name, Statement statement);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Named NativeQuery Memento
+	/**
+	 * Find a query registration by name, regardless of query type.
+	 *
+	 * @return The query registration, or {@code null} if one could not be found
+	 */
+	<R> @Nullable NamedQueryMemento<R> findQueryMementoByName(String name, boolean includeProcedureCalls);
 
-	NamedNativeQueryMemento<?> getNativeQueryMemento(String queryName);
-	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento<?>> action);
-	void registerNativeQueryMemento(String name, NamedNativeQueryMemento<?> descriptor);
+	/**
+	 * Find a query registration by name, regardless of query type, throwing
+	 * an exception if one could not be found.
+	 *
+	 * @return The query registration.
+	 *
+	 * @throws UnknownNamedQueryException If one could not be found under that name.
+	 */
+	<R> @NonNull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls);
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Named CallableQuery Memento
+	<R> NamedSelectionMemento<R> getSelectionQueryMemento(String name);
+	<R> NamedMutationMemento<R> getMutationQueryMemento(String name);
 
 	NamedCallableQueryMemento getCallableQueryMemento(String name);
 	void visitCallableQueryMementos(Consumer<NamedCallableQueryMemento> action);
@@ -106,5 +163,4 @@ public interface NamedObjectRepository {
 	 * Release any held resources
 	 */
 	void close();
-
 }

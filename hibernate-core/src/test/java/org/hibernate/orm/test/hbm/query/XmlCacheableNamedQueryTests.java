@@ -6,7 +6,7 @@ package org.hibernate.orm.test.hbm.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.query.named.NamedSelectionMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ public class XmlCacheableNamedQueryTests {
 	void testCacheableQueryOverride(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final NamedObjectRepository namedObjectRepository = sessionFactory.getQueryEngine().getNamedObjectRepository();
-		final NamedSqmQueryMemento<?> queryMemento = namedObjectRepository.getSqmQueryMemento( SimpleEntity.FIND_ALL );
+		final NamedSelectionMemento<?> queryMemento = namedObjectRepository.getSelectionQueryMemento( SimpleEntity.FIND_ALL );
 		assertThat( queryMemento ).isNotNull();
 		assertThat( queryMemento.getCacheable() ).isNotNull();
 		assertThat( queryMemento.getCacheable() ).isTrue();

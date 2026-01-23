@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.language.internal;
 
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Selection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -12,8 +14,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.spi.SqmQuery;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -25,8 +27,6 @@ import org.hibernate.tool.language.spi.ResultsSerializer;
 import org.hibernate.type.descriptor.jdbc.spi.DescriptiveJsonGeneratingVisitor;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.Selection;
 import java.io.IOException;
 import java.util.List;
 
@@ -57,14 +57,14 @@ public class ResultsJsonSerializerImpl implements ResultsSerializer {
 		for ( final T value : values ) {
 			sb.append( separator );
 			//noinspection unchecked
-			renderValue( value, (SqmQuery<? super T>) query, writer );
+			renderValue( value, (SqmStatementAccess<? super T>) query, writer );
 			separator = ',';
 		}
 		sb.append( ']' );
 		return sb.toString();
 	}
 
-	private <T> void renderValue(T value, SqmQuery<? super T> query, StringJsonDocumentWriter writer)
+	private <T> void renderValue(T value, SqmStatementAccess<? super T> query, StringJsonDocumentWriter writer)
 			throws IOException {
 		final SqmStatement<?> sqm = query.getSqmStatement();
 		if ( !( sqm instanceof SqmSelectStatement<?> sqmSelect ) ) {

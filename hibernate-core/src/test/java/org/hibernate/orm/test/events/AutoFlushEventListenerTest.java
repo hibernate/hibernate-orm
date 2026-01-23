@@ -7,7 +7,6 @@ package org.hibernate.orm.test.events;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -17,6 +16,7 @@ import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -59,7 +59,7 @@ public class AutoFlushEventListenerTest {
 
 						// An entity of this type was persisted; a flush is required
 						session.createQuery( "select i from Entity1 i", Entity1.class )
-								.setHibernateFlushMode( FlushMode.AUTO )
+								.setQueryFlushMode( QueryFlushMode.FLUSH )
 								.getResultList();
 						assertThat( LISTENER.events.size() ).isEqualTo( 1 );
 						assertTrue( LISTENER.events.get( 0 ).isFlushRequired() );
@@ -89,7 +89,7 @@ public class AutoFlushEventListenerTest {
 
 						// No entity of this type was persisted; no flush is required
 						session.createQuery( "select i from Entity1 i", Entity1.class )
-								.setHibernateFlushMode( FlushMode.AUTO )
+								.setQueryFlushMode( QueryFlushMode.FLUSH )
 								.getResultList();
 						assertThat( LISTENER.events.size() ).isEqualTo( 1 );
 						assertFalse( LISTENER.events.get( 0 ).isFlushRequired() );

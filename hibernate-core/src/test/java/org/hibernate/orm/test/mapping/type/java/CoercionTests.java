@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.CoercionHelper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -220,7 +220,7 @@ public class CoercionTests {
 		final String qry = "select e from TheEntity e where e.longId = :id";
 
 		scope.inTransaction( (session) -> {
-			final Query<TheEntity> query = session.createQuery( qry, TheEntity.class );
+			final SelectionQuery<TheEntity> query = session.createQuery( qry, TheEntity.class );
 
 			query.setParameter( "id", 1L ).list();
 
@@ -233,7 +233,7 @@ public class CoercionTests {
 		final String qry = "select e from TheEntity e where e.intValue = ?1";
 
 		scope.inTransaction( (session) -> {
-			final Query<TheEntity> query = session.createQuery( qry, TheEntity.class );
+			final SelectionQuery<TheEntity> query = session.createQuery( qry, TheEntity.class );
 
 			query.setParameter( 1, 1 ).list();
 
@@ -246,7 +246,7 @@ public class CoercionTests {
 		final String qry = "select e from TheEntity e where e.floatValue = :p";
 
 		scope.inTransaction( (session) -> {
-			final Query<TheEntity> query = session.createQuery( qry, TheEntity.class );
+			final SelectionQuery<TheEntity> query = session.createQuery( qry, TheEntity.class );
 
 			query.setParameter( "p", 0.5f ).list();
 
@@ -259,7 +259,7 @@ public class CoercionTests {
 		final String qry = "select e from TheEntity e where e.doubleValue = :p";
 
 		scope.inTransaction( (session) -> {
-			final Query<TheEntity> query = session.createQuery( qry, TheEntity.class );
+			final SelectionQuery<TheEntity> query = session.createQuery( qry, TheEntity.class );
 
 			query.setParameter( "p", 0.5 ).list();
 

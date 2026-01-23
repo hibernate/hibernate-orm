@@ -587,7 +587,7 @@ The `@Pattern` annotation may be applied to a parameter of type `String`, indica
 List<Book> getBooksByTitle(@Pattern String title, Type type);
 ----
 
-Even better, a parameter may be of type `Range<T>`, where `T` is the type of the matching field.
+Even better, a parameter may be of type `Range<T>`, where `P` is the type of the matching field.
 
 [source,java]
 ----
@@ -647,9 +647,9 @@ Optionally, a query method--or a finder method which returns multiple results--m
 | Parameter type | Purpose | Example argument
 
 | `Page` | Specifies a page of query results | Page.first(20)
-| `Order<? super E>` | Specifies an entity attribute to order by, if `E` is the entity type returned by the query | Order.asc(Book_.title)
+| `Order<? super E>` | Specifies an entity attribute to order by, if `R` is the entity type returned by the query | Order.asc(Book_.title)
 | `List<Order? super E>` +
-(or varargs) | Specifies entity attributes to order by, if `E` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
+(or varargs) | Specifies entity attributes to order by, if `R` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
 | `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
 | `List<Object[]>` +
 (or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))

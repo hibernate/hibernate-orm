@@ -4,9 +4,9 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
-import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -505,12 +505,12 @@ public static void lockCollectionTable(
 
 	public static void segmentLoadedCollections(
 			List<LoadedValuesCollector.LoadedCollectionRegistration> registrations,
-			Locking.Scope lockScope,
+			PessimisticLockScope lockScope,
 			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map) {
 		if ( registrations != null ) {
 			registrations.forEach( (registration) -> {
 				final var pluralAttributeMapping = registration.collectionDescriptor();
-				if ( lockScope == Locking.Scope.INCLUDE_FETCHES
+				if ( lockScope == PessimisticLockScope.FETCHED
 					|| pluralAttributeMapping.getSeparateCollectionTable() != null ) {
 					final var attributeKeys = map.computeIfAbsent(
 							pluralAttributeMapping.findContainingEntityMapping(),

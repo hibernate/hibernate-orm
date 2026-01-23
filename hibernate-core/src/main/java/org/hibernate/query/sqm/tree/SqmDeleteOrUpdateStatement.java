@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
 
 /**
@@ -12,5 +13,5 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
  *
  * @author Steve Ebersole
  */
-public interface SqmDeleteOrUpdateStatement<T> extends SqmDmlStatement<T>, SqmWhereClauseContainer {
+public interface SqmDeleteOrUpdateStatement<T> extends SqmDmlStatement<T>, CriteriaStatement<T>, SqmWhereClauseContainer {
 }

@@ -14,7 +14,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Fetch;
 
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -71,7 +71,7 @@ public class SimpleNestedSubSelectFetchTests {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final Query<Customer> query = session.createQuery( "from Customer c where c.name = 'John' or c.name = 'Sally' order by c.id", Customer.class );
+			final SelectionQuery<Customer> query = session.createQuery( "from Customer c where c.name = 'John' or c.name = 'Sally' order by c.id", Customer.class );
 			final List<Customer> customers = query.list();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );

@@ -16,7 +16,7 @@ public interface FunctionReturnImplementor<T> extends FunctionReturn<T>, Procedu
 	@Override
 	default JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
-			ProcedureCallImplementor<?> procedureCall) {
+			ProcedureCallImplementor procedureCall) {
 		return toJdbcFunctionReturn( procedureCall.getSession() );
 	}
 

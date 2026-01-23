@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -47,7 +48,7 @@ public class CriteriaPrimitiveIdTest {
 		} );
 	}
 
-	private <E, I> Query<I> createQueryForIdentifierListing(
+	private <E, I> SelectionQuery<I> createQueryForIdentifierListing(
 			Session session,
 			EntityType<E> type, SingularAttribute<? super E, I> idAttribute) {
 		CriteriaBuilder criteriaBuilder = session.getSessionFactory().getCriteriaBuilder();

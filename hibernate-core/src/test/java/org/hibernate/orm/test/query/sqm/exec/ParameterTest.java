@@ -7,8 +7,6 @@ package org.hibernate.orm.test.query.sqm.exec;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
-
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,7 +48,7 @@ public class ParameterTest {
 		scope.inTransaction(
 				session -> {
 					Query q = session.createQuery( query );
-					DomainParameterXref xref = q.unwrap( SqmQueryImpl.class ).getDomainParameterXref();
+					DomainParameterXref xref = q.unwrap( DomainParameterXref.class );
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
 					}
@@ -59,7 +57,7 @@ public class ParameterTest {
 		scope.inTransaction(
 				session -> {
 					Query q = session.createQuery( query );
-					DomainParameterXref xref = q.unwrap( SqmQueryImpl.class ).getDomainParameterXref();
+					DomainParameterXref xref = q.unwrap( DomainParameterXref.class );
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
 					}

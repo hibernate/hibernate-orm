@@ -7,6 +7,7 @@ package org.hibernate.orm.test.entitygraph;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.TypedQuery;
 import org.hibernate.graph.GraphSemantic;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -86,24 +87,19 @@ public class EntityGraphNativeQueryTest {
 					EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
 					fooGraph.addAttributeNodes( "bar", "baz" );
 
+
+					final TypedQuery<Foo> query = em.createNativeQuery(
+							"select " +
+							"	f.id as id, " +
+							"	f.bar_id as bar_id, " +
+							"	f.baz_id as baz_id " +
+							"from Foo f", Foo.class );
 					try {
-						em.createNativeQuery(
-								"select " +
-										"	f.id as id, " +
-										"	f.bar_id as bar_id, " +
-										"	f.baz_id as baz_id " +
-										"from Foo f", Foo.class )
-								.setHint( GraphSemantic.LOAD.getJpaHintName(), fooGraph )
-								.getSingleResult();
+						query.setHint( GraphSemantic.LOAD.getJpaHintName(), fooGraph );
 						fail("Should throw exception");
 					}
-					catch (Exception e) {
-						if ( e.getMessage().equals( "A native SQL query cannot use EntityGraphs" ) ) {
-							// success
-						}
-						else {
-							throw new RuntimeException( "Unexpected exception", e );
-						}
+					catch (IllegalArgumentException expected) {
+						// this is the type JPA says we should throw
 					}
 				}
 		);
@@ -117,24 +113,19 @@ public class EntityGraphNativeQueryTest {
 					EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
 					fooGraph.addAttributeNodes( "bar", "baz" );
 
+
+					final TypedQuery<Foo> query = em.createNativeQuery(
+							"select " +
+							"	f.id as id, " +
+							"	f.bar_id as bar_id, " +
+							"	f.baz_id as baz_id " +
+							"from Foo f", Foo.class );
 					try {
-						em.createNativeQuery(
-								"select " +
-										"	f.id as id, " +
-										"	f.bar_id as bar_id, " +
-										"	f.baz_id as baz_id " +
-										"from Foo f", Foo.class )
-								.setHint( GraphSemantic.FETCH.getJpaHintName(), fooGraph )
-								.getSingleResult();
+						query.setHint( GraphSemantic.FETCH.getJpaHintName(), fooGraph );
 						fail( "Should throw exception" );
 					}
-					catch (Exception e) {
-						if ( e.getMessage().equals( "A native SQL query cannot use EntityGraphs" ) ) {
-							// success
-						}
-						else {
-							throw new RuntimeException( "Unexpected exception", e );
-						}
+					catch (IllegalArgumentException expected) {
+						// this is the type JPA says we should throw
 					}
 				}
 		);

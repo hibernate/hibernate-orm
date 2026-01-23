@@ -4,11 +4,6 @@
  */
 package org.hibernate.graph;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -16,7 +11,6 @@ import jakarta.persistence.Graph;
 import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.TypedQuery;
-
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -25,6 +19,11 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SelectionQuery;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * A collection of {@link EntityGraph} utilities.
@@ -141,7 +140,7 @@ public final class EntityGraphs {
 	 * @since 7.0
 	 */
 	public static <R> void setGraph(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
-		((org.hibernate.query.Query<R>) query).setEntityGraph( graph, semantic );
+		((org.hibernate.query.SelectionQuery<R>) query).setEntityGraph( graph, semantic );
 	}
 
 	/**
@@ -152,7 +151,11 @@ public final class EntityGraphs {
 	 * @param graph The JPA {@link EntityGraph} to apply
 	 *
 	 * @since 7.0
+	 *
+	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
+	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static <R> void setLoadGraph(TypedQuery<R> query, EntityGraph<R> graph) {
 		setGraph( query, graph, GraphSemantic.LOAD );
 	}
@@ -165,7 +168,11 @@ public final class EntityGraphs {
 	 * @param graph The JPA {@link EntityGraph} to apply
 	 *
 	 * @since 7.0
+	 *
+	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
+	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static <R> void setFetchGraph(TypedQuery<R> query, EntityGraph<R> graph) {
 		setGraph( query, graph, GraphSemantic.FETCH );
 	}
@@ -179,7 +186,11 @@ public final class EntityGraphs {
 	 * @param subtype the treated (narrowed) type
 	 *
 	 * @since 7.0
+	 *
+	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
+	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public <S> Subgraph<S> addTreatedSubgraph(Graph<? super S> graph, Class<S> subtype) {
 		return ((org.hibernate.graph.Graph<? super S>) graph).addTreatedSubgraph( subtype );
 	}
@@ -196,9 +207,7 @@ public final class EntityGraphs {
 	 */
 	@Deprecated(since = "7.0")
 	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, GraphSemantic semantic) {
-		return query.unwrap( org.hibernate.query.Query.class )
-				.applyGraph( (RootGraph<?>) graph, semantic )
-				.getResultList();
+		return query.unwrap( org.hibernate.query.Query.class ).asSelectionQuery( graph, semantic ).getResultList();
 	}
 
 	/**
@@ -217,9 +226,8 @@ public final class EntityGraphs {
 	 */
 	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
-		@SuppressWarnings("unchecked")
-		org.hibernate.query.Query<R> unwrapped = query.unwrap( org.hibernate.query.Query.class );
-		return unwrapped.setEntityGraph( graph, semantic ).getResultList();
+		org.hibernate.query.SelectionQuery<R> unwrapped = query.unwrap( org.hibernate.query.SelectionQuery.class );
+		return unwrapped.asSelectionQuery( graph, semantic ).getResultList();
 	}
 
 	/**

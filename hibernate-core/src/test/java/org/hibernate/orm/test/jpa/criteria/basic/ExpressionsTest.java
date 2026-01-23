@@ -424,7 +424,7 @@ public class ExpressionsTest {
 		);
 	}
 
-	private int countGeneratedParameters(Query<?> query) {
+	private int countGeneratedParameters(Query query) {
 		return query.getParameterMetadata().getParameterCount();
 	}
 

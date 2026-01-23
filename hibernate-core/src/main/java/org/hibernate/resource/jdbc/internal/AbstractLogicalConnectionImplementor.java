@@ -154,4 +154,11 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
 		return false;
 	}
+
+	@Override
+	public void markRollbackOnly() {
+		if ( status == TransactionStatus.ACTIVE ) {
+			status = TransactionStatus.MARKED_ROLLBACK;
+		}
+	}
 }

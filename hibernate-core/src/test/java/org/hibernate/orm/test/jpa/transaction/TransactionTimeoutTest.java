@@ -6,6 +6,7 @@ package org.hibernate.orm.test.jpa.transaction;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -28,12 +29,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.QueryTimeoutException;
 import jakarta.transaction.Status;
-import jakarta.transaction.TransactionManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -119,13 +118,13 @@ public class TransactionTimeoutTest {
 	}
 
 	private void test(EntityManagerFactoryScope scope, ThrowingConsumer<EntityManager> consumer) throws Throwable {
-		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-		EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
+		var transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		var entityManagerFactory = scope.getEntityManagerFactory();
 
 		transactionManager.setTransactionTimeout( 2 );
 		transactionManager.begin();
 
-		try (EntityManager entityManager = entityManagerFactory.createEntityManager()) {
+		try (var entityManager = entityManagerFactory.createEntityManager()) {
 			entityManager.joinTransaction();
 			consumer.accept( entityManager );
 		}
@@ -135,8 +134,14 @@ public class TransactionTimeoutTest {
 		catch (HibernateException ex) {
 			assertThat( ex.getMessage() ).isEqualTo( "Transaction was rolled back in a different thread" );
 		}
+		catch (PersistenceException pe) {
+			// PostgreSQL, Cockroach
+			assertThat( pe.getCause() ).isInstanceOf( org.hibernate.QueryTimeoutException.class );
+
+		}
 		finally {
-			assertThat( transactionManager.getStatus() ).isIn( Status.STATUS_ROLLEDBACK, Status.STATUS_ROLLING_BACK, Status.STATUS_MARKED_ROLLBACK );
+			assertThat( transactionManager.getStatus() )
+					.isIn( Status.STATUS_ROLLEDBACK, Status.STATUS_ROLLING_BACK, Status.STATUS_MARKED_ROLLBACK );
 			transactionManager.rollback();
 		}
 	}

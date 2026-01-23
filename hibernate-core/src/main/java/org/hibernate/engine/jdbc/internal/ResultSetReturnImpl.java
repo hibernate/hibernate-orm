@@ -55,12 +55,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			finally {
 				eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
-				endSlowQueryLogging(sql, executeStartNanos);
+				endSlowQueryLogging( sql, executeStartNanos );
 			}
 			postExtract( resultSet, statement );
 			return resultSet;
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not extract ResultSet", sql );
 		}
 	}
@@ -106,6 +107,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return resultSet;
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not extract ResultSet", sql );
 		}
 	}
@@ -136,6 +138,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return resultSet;
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 	}
@@ -166,6 +169,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return resultSet;
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 	}
@@ -181,6 +185,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return statement.executeUpdate();
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
@@ -201,6 +206,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			return statement.executeUpdate( sql );
 		}
 		catch (SQLException e) {
+			jdbcCoordinator.afterFailedStatementExecution( e );
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {

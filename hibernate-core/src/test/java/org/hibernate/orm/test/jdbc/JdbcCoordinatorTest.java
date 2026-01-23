@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.jdbc;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.service.ServiceRegistry;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -24,6 +23,8 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,36 +46,34 @@ public class JdbcCoordinatorTest {
 
 		JdbcSessionOwner sessionOwner = Mockito.mock( JdbcSessionOwner.class );
 
-		JdbcConnectionAccess jdbcConnectionAccess = Mockito.mock(
-				JdbcConnectionAccess.class );
+		JdbcConnectionAccess jdbcConnectionAccess = Mockito.mock( JdbcConnectionAccess.class );
 		when( jdbcConnectionAccess.obtainConnection() ).thenReturn( connection );
-		when( jdbcConnectionAccess.supportsAggressiveRelease() ).thenReturn(
-				false );
+		when( jdbcConnectionAccess.supportsAggressiveRelease() ).thenReturn( false );
 
 		JdbcSessionContext sessionContext = Mockito.mock( JdbcSessionContext.class );
 		when( sessionOwner.getJdbcSessionContext() ).thenReturn( sessionContext );
-		when( sessionOwner.getJdbcConnectionAccess() ).thenReturn(
-				jdbcConnectionAccess );
+		when( sessionOwner.getJdbcConnectionAccess() ).thenReturn( jdbcConnectionAccess );
 
 		ServiceRegistry serviceRegistry = Mockito.mock( ServiceRegistry.class );
-		when( sessionContext.getPhysicalConnectionHandlingMode() ).thenReturn(
-				PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD );
+		when( sessionContext.getPhysicalConnectionHandlingMode() )
+				.thenReturn( IMMEDIATE_ACQUISITION_AND_HOLD );
 
 		JdbcEventHandler jdbcEventHandler = Mockito.mock( JdbcEventHandler.class );
 		when( sessionContext.getEventHandler() ).thenReturn( jdbcEventHandler );
 
 		JdbcServices jdbcServices = Mockito.mock( JdbcServices.class );
+		when( jdbcServices.getDialect() ).thenReturn( new GenericDialect() );
+		when ( sessionContext.getJdbcServices() ).thenReturn( jdbcServices );
 
 		ConfigurationService configurationService = Mockito.mock( ConfigurationService.class );
-		when( serviceRegistry.getService( eq( ConfigurationService.class ) ) ).thenReturn(
-				configurationService );
-		when( configurationService.getSetting( eq( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT ), same( StandardConverters.BOOLEAN), eq( false )) )
+		when( serviceRegistry.getService( eq( ConfigurationService.class ) ) )
+				.thenReturn( configurationService );
+		when( configurationService.getSetting( eq( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT ), same( StandardConverters.BOOLEAN), eq( false )) )
 				.thenReturn( false );
 
 		SqlExceptionHelper sqlExceptionHelper = Mockito.mock( SqlExceptionHelper.class );
-		when( jdbcServices.getSqlExceptionHelper() ).thenReturn(
-				sqlExceptionHelper );
-		when(sessionOwner.getSqlExceptionHelper()).thenReturn( sqlExceptionHelper );
+		when( jdbcServices.getSqlExceptionHelper() ).thenReturn( sqlExceptionHelper );
+		when( sessionOwner.getSqlExceptionHelper() ).thenReturn( sqlExceptionHelper );
 		JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl(
 				null,
 				sessionOwner,
@@ -82,8 +81,7 @@ public class JdbcCoordinatorTest {
 		);
 
 		Batch currentBatch = Mockito.mock( Batch.class );
-		Field currentBatchField = JdbcCoordinatorImpl.class.getDeclaredField(
-				"currentBatch" );
+		Field currentBatchField = JdbcCoordinatorImpl.class.getDeclaredField( "currentBatch" );
 		currentBatchField.setAccessible( true );
 		currentBatchField.set( jdbcCoordinator, currentBatch );
 
@@ -96,7 +94,8 @@ public class JdbcCoordinatorTest {
 		catch (Exception expected) {
 			assertEquals( IllegalStateException.class, expected.getClass() );
 		}
-		verify( jdbcConnectionAccess, times( 1 ) ).releaseConnection( same(
-				connection ) );
+		verify( jdbcConnectionAccess,
+				times( 1 ) )
+				.releaseConnection( same( connection ) );
 	}
 }

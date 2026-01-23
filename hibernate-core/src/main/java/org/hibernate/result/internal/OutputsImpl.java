@@ -72,6 +72,7 @@ public class OutputsImpl implements Outputs {
 			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
+			session.getJdbcCoordinator().afterFailedStatementExecution( e );
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 		finally {

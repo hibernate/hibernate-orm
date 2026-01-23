@@ -14,7 +14,6 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.mutation.spi.Binding;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -87,7 +86,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			JdbcValueBindings jdbcValueBindings,
 			ValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session) {
-		final UpdateValuesAnalysis analysis = (UpdateValuesAnalysis) valuesAnalysis;
+		final var analysis = (UpdateValuesAnalysis) valuesAnalysis;
 
 		if ( analysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
 			performUpsert( jdbcValueBindings, session );
@@ -101,7 +100,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.performingDelete( tableMapping.getTableName() );
 
-		final TableDeleteStandard upsertDeleteAst = new TableDeleteStandard(
+		final var upsertDeleteAst = new TableDeleteStandard(
 				optionalTableUpdate.getMutatingTable(),
 				mutationTarget,
 				"upsert delete",
@@ -110,7 +109,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 				emptyList()
 		);
 
-		final JdbcServices jdbcServices = session.getJdbcServices();
+		final var jdbcServices = session.getJdbcServices();
 		final var upsertDelete =
 				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildModelMutationTranslator( upsertDeleteAst, session.getFactory() )
@@ -118,7 +117,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final var statementGroup = new PreparedStatementGroupSingleTable( upsertDelete, session );
 		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
-			final PreparedStatement upsertDeleteStatement = statementDetails.resolveStatement();
+			final var upsertDeleteStatement = statementDetails.resolveStatement();
 			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 			bindDeleteKeyValues( jdbcValueBindings, statementDetails, session );
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
@@ -144,9 +143,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			JdbcValueBindings jdbcValueBindings,
 			PreparedStatementDetails statementDetails,
 			SharedSessionContractImplementor session) {
-		final PreparedStatement statement = statementDetails.resolveStatement();
+		final var statement = statementDetails.resolveStatement();
 		int jdbcBindingPosition = 1;
-		for ( Binding binding : jdbcValueBindings.getBindingGroup( tableMapping.getTableName() ).getBindings() ) {
+		for ( var binding : jdbcValueBindings.getBindingGroup( tableMapping.getTableName() ).getBindings() ) {
 			if ( binding.getValueDescriptor().getUsage() == ParameterUsage.RESTRICT ) {
 				bindKeyValue(
 						jdbcBindingPosition++,
@@ -192,8 +191,8 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final var statementGroup = new PreparedStatementGroupSingleTable( upsertOperation, session );
 		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
-			final PreparedStatement updateStatement = statementDetails.resolveStatement();
-			final JdbcServices jdbcServices = session.getJdbcServices();
+			final var updateStatement = statementDetails.resolveStatement();
+			final var jdbcServices = session.getJdbcServices();
 			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 			jdbcValueBindings.beforeStatement( statementDetails );
 			final int rowCount =

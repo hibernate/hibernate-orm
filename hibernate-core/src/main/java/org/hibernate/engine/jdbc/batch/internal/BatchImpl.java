@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
@@ -38,6 +39,7 @@ public class BatchImpl implements Batch {
 	private final JdbcCoordinator jdbcCoordinator;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
+	private final JdbcServices jdbcServices;
 
 	private final LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
@@ -58,7 +60,7 @@ public class BatchImpl implements Batch {
 		this.jdbcCoordinator = jdbcCoordinator;
 		this.statementGroup = statementGroup;
 
-		final var jdbcServices =
+		this.jdbcServices =
 				jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
 		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
@@ -254,6 +256,10 @@ public class BatchImpl implements Batch {
 							try {
 								eventHandler.jdbcExecuteBatchStart();
 								rowCounts = statement.executeBatch();
+							}
+							catch (SQLException sqle) {
+								jdbcCoordinator.afterFailedStatementExecution( sqle );
+								throw sqle;
 							}
 							finally {
 								eventMonitor.completeJdbcBatchExecutionEvent( executionEvent, sql );

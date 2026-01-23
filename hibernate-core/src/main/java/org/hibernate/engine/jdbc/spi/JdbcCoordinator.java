@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.function.Supplier;
 
@@ -114,11 +115,18 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	void afterTransaction();
 
 	/**
-	 * Used to signify that a statement has completed execution which may
-	 * indicate that this logical connection need to perform an
+	 * Notification that a statement has completed execution, which
+	 * might indicate that the logical connection should perform an
 	 * aggressive release of its physical connection.
 	 */
 	void afterStatementExecution();
+
+	/**
+	 * Notification that execution of a statement has failed, which
+	 * might mean that the database has marked the transaction for
+	 * rollback.
+	 */
+	void afterFailedStatementExecution(SQLException sqlException);
 
 	/**
 	 * Perform the requested work handling exceptions, coordinating and handling return processing.

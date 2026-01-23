@@ -209,38 +209,41 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {
 		private final JdbcResourceTransaction jdbcResourceTransaction;
-		private boolean invalid;
-		private boolean rollbackOnly = false;
+//		private boolean invalid;
 
 		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
 			this.jdbcResourceTransaction = jdbcResourceTransaction;
 		}
 
-		protected void invalidate() {
-			invalid = true;
-		}
+//		protected void invalidate() {
+//			invalid = true;
+//		}
 
 		@Override
 		public void begin() {
-			errorIfInvalid();
+//			errorIfInvalid();
 			jdbcResourceTransaction.begin();
 			JdbcResourceLocalTransactionCoordinatorImpl.this.afterBeginCallback();
 		}
 
-		protected void errorIfInvalid() {
-			if ( invalid ) {
-				throw new IllegalStateException( "Physical transaction delegate is no longer valid" );
-			}
-		}
+//		protected void errorIfInvalid() {
+//			if ( invalid ) {
+//				throw new IllegalStateException( "Physical transaction delegate is no longer valid" );
+//			}
+//		}
 
 		@Override
 		public void commit() {
-			if ( rollbackOnly ) {
+			if ( isRollbackOnly() ) {
 				commitRollbackOnly();
 			}
 			else {
 				commitNoRollbackOnly();
 			}
+		}
+
+		private boolean isRollbackOnly() {
+			return jdbcResourceTransaction.getStatus() == TransactionStatus.MARKED_ROLLBACK;
 		}
 
 		private void commitNoRollbackOnly() {
@@ -277,23 +280,15 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void rollback() {
-			try {
-				if ( rollbackOnly || jdbcResourceTransaction.getStatus() == TransactionStatus.ACTIVE ) {
-					jdbcResourceTransaction.rollback();
-					afterCompletionCallback( false );
-				}
-			}
-			finally {
-				rollbackOnly = false;
+			if ( isActive() ) {
+				jdbcResourceTransaction.rollback();
+				afterCompletionCallback( false );
 			}
 		}
 
 		@Override
 		public TransactionStatus getStatus() {
-			final var status = jdbcResourceTransaction.getStatus();
-			return rollbackOnly && status == TransactionStatus.ACTIVE
-					? TransactionStatus.MARKED_ROLLBACK
-					: status;
+			return jdbcResourceTransaction.getStatus();
 		}
 
 		@Override
@@ -303,7 +298,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 					JDBC_LOGGER.jdbcTransactionMarkedForRollbackOnly(
 							new Exception( "exception just for purpose of providing stack trace" ) );
 				}
-				rollbackOnly = true;
+				jdbcResourceTransaction.markRollbackOnly();
 			}
 		}
 	}

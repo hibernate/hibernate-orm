@@ -304,6 +304,21 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 	}
 
+	/**
+	 * Notification that a {@link SQLException} has occurred
+	 * while executing a JDBC {@linkplain java.sql.Statement}
+	 * or {@link java.sql.PreparedStatement}. This gives us a
+	 * chance to mark the current transaction as rollback-only
+	 * on those databases where exceptions always cause the
+	 * transaction to be marked for rollback (PostgreSQL).
+	 */
+	@Override
+	public void afterFailedStatementExecution(SQLException sqlException) {
+		if ( jdbcServices.getDialect().causesRollback( sqlException ) ) {
+			getLogicalConnection().markRollbackOnly();
+		}
+	}
+
 	@Override
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
@@ -332,6 +347,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			return result;
 		}
 		catch ( SQLException e ) {
+			afterFailedStatementExecution( e );
 			throw sqlExceptionHelper().convert( e, "Error executing work" );
 		}
 	}

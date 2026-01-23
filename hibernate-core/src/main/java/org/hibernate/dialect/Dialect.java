@@ -5760,6 +5760,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does the given exception cause the whole transaction to be
+	 * marked for rollback on this database?
+	 */
+	public boolean causesRollback(SQLException sqlException) {
+		return false;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>

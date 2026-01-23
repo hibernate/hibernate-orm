@@ -6,7 +6,6 @@ package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -29,17 +28,17 @@ public class Helper {
 			TimeoutExtractor extractor,
 			Connection connection,
 			SessionFactoryImplementor factory) {
-		try (final java.sql.Statement statement = connection.createStatement()) {
+		try ( final var statement = connection.createStatement() ) {
 			factory.getJdbcServices().getSqlStatementLogger().logStatement( sql );
-			final ResultSet results = statement.executeQuery( sql );
+			final var results = statement.executeQuery( sql );
 			if ( !results.next() ) {
 				throw new HibernateException( "Unable to query JDBC Connection for current lock-timeout setting (no result)" );
 			}
 			return extractor.extractFrom( results );
 		}
 		catch (SQLException sqle) {
-			final SqlExceptionHelper sqlExceptionHelper = factory.getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper();
-			throw sqlExceptionHelper.convert( sqle, "Unable to query JDBC Connection for current lock-timeout setting" );
+			throw factory.getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( sqle, "Unable to query JDBC Connection for current lock-timeout setting" );
 		}
 	}
 
@@ -50,13 +49,13 @@ public class Helper {
 			String sql,
 			Connection connection,
 			SessionFactoryImplementor factory) {
-		try (final java.sql.Statement statement = connection.createStatement()) {
+		try ( final var statement = connection.createStatement() ) {
 			factory.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 			statement.execute( sql );
 		}
 		catch (SQLException sqle) {
-			final SqlExceptionHelper sqlExceptionHelper = factory.getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper();
-			throw sqlExceptionHelper.convert( sqle, "Unable to set lock-timeout setting on JDBC connection" );
+			throw factory.getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( sqle, "Unable to set lock-timeout setting on JDBC connection" );
 		}
 	}
 

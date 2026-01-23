@@ -13,6 +13,7 @@ import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
  */
 public class LogicalConnectionTestingImpl extends LogicalConnectionProvidedImpl {
 	public LogicalConnectionTestingImpl() throws Exception {
-		super( DatabaseConnectionInfo.INSTANCE.makeConnection(), new ResourceRegistryStandardImpl() );
+		super( DatabaseConnectionInfo.INSTANCE.makeConnection(),
+				new ResourceRegistryStandardImpl() );
 	}
 }

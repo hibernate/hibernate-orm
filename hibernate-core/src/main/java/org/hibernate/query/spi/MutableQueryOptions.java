@@ -18,6 +18,10 @@ import org.hibernate.query.TupleTransformer;
 import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
 /**
+ * Extension to QueryOptions providing ability to mutate the values.
+ * Generally used by the query instances to collect the options set
+ * by the various API methods.
+ *
  * @author Steve Ebersole
  */
 public interface MutableQueryOptions extends QueryOptions {
@@ -103,4 +107,6 @@ public interface MutableQueryOptions extends QueryOptions {
 	void enableFetchProfile(String profileName);
 
 	void disableFetchProfile(String profileName);
+
+	MutableQueryOptions makeCopy();
 }

@@ -57,7 +57,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 			RowLockStrategy rowLockStrategy,
 			LockOptions lockOptions,
 			Set<NavigablePath> rootsForLocking) {
-		super( lockOptions.getScope(), rootsForLocking );
+		super( lockOptions.getLockScope(), rootsForLocking );
 
 		assert lockKind != PessimisticLockKind.NONE;
 

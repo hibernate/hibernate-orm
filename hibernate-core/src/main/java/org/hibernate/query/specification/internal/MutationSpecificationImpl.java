@@ -4,32 +4,27 @@
  */
 package org.hibernate.query.specification.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.CommonAbstractCriteria;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
-import org.hibernate.query.MutationQuery;
+import org.hibernate.query.internal.MutationQueryImpl;
 import org.hibernate.query.restriction.Restriction;
-import org.hibernate.query.spi.JpaTypedQueryReference;
+import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.spi.JpaStatementReference;
+import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
@@ -53,7 +48,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
  *
  * @author Steve Ebersole
  */
-public class MutationSpecificationImpl<T> implements MutationSpecification<T>, JpaTypedQueryReference<Void> {
+public class MutationSpecificationImpl<T> implements MutationSpecification<T>, JpaStatementReference<T> {
 
 	public enum MutationType {
 //		INSERT,
@@ -102,33 +97,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
-	public Class<Void> getResultType() {
-		return null;
-	}
-
-	@Override
 	public Map<String,Object> getHints() {
 		return Collections.emptyMap();
-	}
-
-	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	@Override
-	public LockModeType getLockMode() {
-		return null;
-	}
-
-	@Override
-	public PessimisticLockScope getPessimisticLockScope() {
-		return null;
 	}
 
 	@Override
@@ -137,12 +107,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
-	public String getEntityGraphName() {
-		return "";
-	}
-
-	@Override
-	public TypedQueryReference<Void> reference() {
+	public StatementReference reference() {
 		return this;
 	}
 
@@ -165,19 +130,19 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
-	public MutationQuery createQuery(Session session) {
+	public MutationQueryImplementor<T> createQuery(Session session) {
 		return createQuery( (SharedSessionContract) session );
 	}
 
 	@Override
-	public MutationQuery createQuery(StatelessSession session) {
+	public MutationQueryImplementor<T> createQuery(StatelessSession session) {
 		return createQuery( (SharedSessionContract) session );
 	}
 
-	public MutationQuery createQuery(SharedSessionContract session) {
+	public MutationQueryImplementor<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new SqmQueryImpl<>( sqmStatement, false, null, sessionImpl );
+		return new MutationQueryImpl<>( sqmStatement, false, sessionImpl );
 	}
 
 	private SqmDeleteOrUpdateStatement<T> build(QueryEngine queryEngine) {
@@ -209,12 +174,12 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
-	public MutationQuery createQuery(EntityManager entityManager) {
+	public MutationQueryImplementor<T> createQuery(EntityManager entityManager) {
 		return createQuery( (SharedSessionContract) entityManager );
 	}
 
 	@Override
-	public CommonAbstractCriteria buildCriteria(CriteriaBuilder builder) {
+	public CriteriaStatement<T> buildCriteria(CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
 	}

@@ -7,7 +7,7 @@ package org.hibernate.orm.test.flush;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.Table;
 import jakarta.persistence.TransactionRequiredException;
 
@@ -132,7 +132,7 @@ public class NonTransactionalDataAccessTest {
 
 	@Entity(name = "MyEntity")
 	@Table(name = "MY_ENTITY")
-	@NamedQuery(name = "deleteByName", query = "delete from MyEntity where name = :name")
+	@NamedStatement(name = "deleteByName", statement = "delete from MyEntity where name = :name")
 	public static class MyEntity {
 		@Id
 		@GeneratedValue

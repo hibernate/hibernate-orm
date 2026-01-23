@@ -10,12 +10,21 @@ import org.hibernate.InstantiationException;
 import org.hibernate.query.TypedTupleTransformer;
 
 /**
- * Wraps the tuples in a constructor call.
+ * TupleTransformer which wraps the tuples in calls to a class constructor.
  *
- * @deprecated since {@link ResultTransformer} is deprecated
+ * @see AliasToBeanResultTransformer
+ * @see jakarta.persistence.sql.ConstructorMapping
+ * @see jakarta.persistence.ConstructorResult
+ *
+ * @deprecated Use dynamic instantiation instead, either
+ * directly in HQL/JPQL ({@code select new MyClass(...) ...}) or
+ * using a {@linkplain jakarta.persistence.ConstructorResult}
  */
 @Deprecated
-public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
+public class AliasToBeanConstructorResultTransformer<T> implements TypedTupleTransformer<T> {
+	public static <T> TypedTupleTransformer<T> forConstructor(Constructor<T> constructor) {
+		return new AliasToBeanConstructorResultTransformer<>( constructor );
+	}
 
 	private final Constructor<T> constructor;
 

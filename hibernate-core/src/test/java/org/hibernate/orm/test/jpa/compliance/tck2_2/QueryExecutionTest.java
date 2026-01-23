@@ -17,7 +17,6 @@ import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.transform.ResultTransformer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,12 +46,8 @@ public class QueryExecutionTest {
 					assertThat( distinctResult.size(), CoreMatchers.is( 1 ) );
 
 					final List distinctViaTransformerResult = session.createQuery( "select c from Customer c join fetch c.orders" )
-							.setResultTransformer(new ResultTransformer() {
-								@Override
-								public Object transformTuple(Object[] tuple, String[] aliases) {
-									return tuple[0];
-								}
-							}).list();
+							.setTupleTransformer((tuple, aliases) -> tuple[0])
+							.list();
 					assertThat( distinctResult.size(), CoreMatchers.is( 1 ) );
 				}
 		);

@@ -5,6 +5,7 @@
 package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -14,7 +15,6 @@ import org.hibernate.Internal;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -2386,7 +2386,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 7
 	 */
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return switch (lockMode) {
 			case PESSIMISTIC_FORCE_INCREMENT -> buildPessimisticForceIncrementStrategy( lockable, lockMode, lockScope );
 			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE -> buildPessimisticWriteStrategy( lockable, lockMode, lockScope );
@@ -2408,22 +2408,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 3.2
 	 *
-	 * @deprecated Use {@linkplain #getLockingStrategy(EntityPersister, LockMode, Locking.Scope)} instead.
+	 * @deprecated Use {@linkplain #getLockingStrategy(EntityPersister, LockMode, PessimisticLockScope)} instead.
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		return getLockingStrategy( lockable, lockMode, Locking.Scope.ROOT_ONLY );
+		return getLockingStrategy( lockable, lockMode, PessimisticLockScope.NORMAL );
 	}
 
-	protected LockingStrategy buildPessimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
 	}
 
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
 	}
 
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
 	}
 
@@ -2435,7 +2435,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return new OptimisticLockingStrategy( lockable, lockMode );
 	}
 
-	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		return new SelectLockingStrategy( lockable, lockMode );
 	}
 
@@ -2708,8 +2708,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		final var lockMode = lockOptions.getLockMode();
-		lockOptions.setLockMode( lockMode );
 		return getForUpdateString( lockOptions );
 	}
 

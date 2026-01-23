@@ -8,8 +8,6 @@ package org.hibernate.orm.test.resulttransformer;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
-import org.hibernate.transform.ResultTransformer;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -51,12 +49,7 @@ public class ResultTransformerTest {
 		scope.inSession( (session) -> {
 			Query q = session.createNamedQuery(Contract.class.getName() + ".testQuery");
 			q.setFetchSize(100);
-			q.setResultTransformer(
-					(ResultTransformer) (arg0, arg1) -> {
-						// return only the PartnerA object from the query
-						return ( (Contract) arg0[0] ).getA();
-					}
-			);
+			q.setTupleTransformer( (tuple, aliases) -> ( (Contract) tuple[0] ).getA() );
 
 			try (ScrollableResults sr = q.scroll()) {
 				// HANA supports only ResultSet.TYPE_FORWARD_ONLY and

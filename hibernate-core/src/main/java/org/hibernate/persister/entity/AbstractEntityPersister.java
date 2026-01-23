@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -14,7 +15,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
@@ -2206,13 +2206,13 @@ public abstract class AbstractEntityPersister
 		return getIdentifierMapping().getJdbcMapping( index );
 	}
 
-	protected LockingStrategy generateLocker(LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy generateLocker(LockMode lockMode, PessimisticLockScope lockScope) {
 		return getDialect().getLockingStrategy( this, lockMode, lockScope );
 	}
 
 	// Used by Hibernate Reactive
-	protected LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
-		return lockScope != Locking.Scope.ROOT_ONLY
+	protected LockingStrategy getLocker(LockMode lockMode, PessimisticLockScope lockScope) {
+		return lockScope != PessimisticLockScope.NORMAL
 				// be sure to not use the cached form if any form of extended locking is requested
 				? generateLocker( lockMode, lockScope )
 				: lockers.computeIfAbsent( lockMode, (l) -> generateLocker( lockMode, lockScope ) );
@@ -2226,7 +2226,7 @@ public abstract class AbstractEntityPersister
 			LockMode lockMode,
 			SharedSessionContractImplementor session)
 					throws HibernateException {
-		getLocker( lockMode, Locking.Scope.ROOT_ONLY )
+		getLocker( lockMode, PessimisticLockScope.NORMAL )
 				.lock( id, version, object, Timeouts.WAIT_FOREVER, session );
 	}
 

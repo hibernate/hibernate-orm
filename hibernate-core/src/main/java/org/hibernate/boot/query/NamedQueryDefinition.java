@@ -4,40 +4,49 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.spi.JpaTypedQueryReference;
+import org.hibernate.query.spi.JpaReference;
 
+import java.util.Map;
 
 /**
- * Common attributes shared across the mapping of named HQL, native
- * and "callable" queries defined in annotations, orm.xml and hbm.xml
+ * Boot-model representation of named queries.
+ * <p>
+ * Ultimately this is used to {@linkplain #resolve make} a
+ * named query memento.
+ *
+ * @see org.hibernate.annotations.NamedQuery
+ * @see org.hibernate.annotations.NamedNativeQuery
+ * @see jakarta.persistence.NamedQuery
+ * @see jakarta.persistence.NamedNativeQuery
+ * @see jakarta.persistence.NamedStoredProcedureQuery
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedQueryDefinition<E> extends JpaTypedQueryReference<E> {
-	@Override
-	default String getName() {
-		return getRegistrationName();
-	}
-
+public interface NamedQueryDefinition<T> extends JpaReference {
 	/**
 	 * The name under which the query is to be registered.
 	 */
 	String getRegistrationName();
 
-	/**
-	 * The expected result type of the query, or {@code null}.
-	 */
-	@Nullable
-	Class<E> getResultType();
+	@Override
+	default String getName() {
+		return getRegistrationName();
+	}
 
-	/**
-	 * Resolve the mapping definition into its run-time memento form.
-	 */
-	NamedQueryMemento<E> resolve(SessionFactoryImplementor factory);
+	FlushMode getQueryFlushMode();
+
+	Timeout getTimeout();
+
+	String getComment();
+
+	@Override
+	Map<String, Object> getHints();
 
 	/**
 	 * The location at which the defining named query annotation occurs,
@@ -45,4 +54,9 @@ public interface NamedQueryDefinition<E> extends JpaTypedQueryReference<E> {
 	 * in XML.
 	 */
 	@Nullable String getLocation();
+
+	/**
+	 * Resolve the mapping definition into its run-time memento form.
+	 */
+	NamedQueryMemento<T> resolve(SessionFactoryImplementor factory);
 }

@@ -4,13 +4,16 @@
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -23,8 +26,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
-import org.hibernate.query.hql.spi.SqmQueryImplementor;
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
+import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -44,9 +46,8 @@ import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
@@ -55,16 +56,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.platform.commons.util.CollectionUtils;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -397,15 +394,15 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		criteriaQuery.select( criteriaQuery.from( entityType ) );
 
 		final Query<T> query = session.createQuery( criteriaQuery );
-		final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
-		hqlQuery.applyGraph( entityGraph, mode );
+		final SelectionQueryImpl<T> hqlQuery = (SelectionQueryImpl<T>) query;
+		hqlQuery.setEntityGraph( entityGraph, mode );
 
-		final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
+		final SqmSelectStatement<T> sqmStatement = hqlQuery.getSqmStatement();
 
 		final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 				sqmStatement,
 				hqlQuery.getQueryOptions(),
-				( (SqmQueryImpl<?>) hqlQuery ).getDomainParameterXref(),
+				hqlQuery.getDomainParameterXref(),
 				hqlQuery.getParameterBindings(),
 				loadQueryInfluencers,
 				session.getSessionFactory().getSqlTranslationEngine(),

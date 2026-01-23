@@ -57,10 +57,8 @@ import static java.util.Collections.emptySet;
  * {@link org.hibernate.query.CommonQueryContract#setTimeout(Timeout)}
  * <li>The {@code PessimisticLockScope} may be set using
  * {@link org.hibernate.query.SelectionQuery#setLockScope(PessimisticLockScope)}
- * <li>Alias-specific lock modes may be specified using
- * {@link org.hibernate.query.SelectionQuery#setLockMode(String, LockMode)}
  * <li>Use of follow-on locking may be enabled via
- * {@link org.hibernate.query.SelectionQuery#setFollowOnLocking(boolean)}
+ * {@link org.hibernate.query.SelectionQuery#setFollowOnStrategy(Locking.FollowOn)}
  * </ul>
  * The interface {@link Timeouts} provides several operations to simplify
  * migration.
@@ -79,7 +77,7 @@ public class LockOptions implements Serializable {
 	private final boolean immutable;
 	private LockMode lockMode;
 	private int timeout;
-	private Locking.Scope scope;
+	private PessimisticLockScope scope;
 	private Locking.FollowOn followOnStrategy;
 
 	/**
@@ -88,14 +86,14 @@ public class LockOptions implements Serializable {
 	 *
 	 * @see LockMode#NONE
 	 * @see Timeouts#WAIT_FOREVER
-	 * @see Locking.Scope#ROOT_ONLY
+	 * @see PessimisticLockScope#NORMAL
 	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions() {
 		immutable = false;
 		lockMode = LockMode.NONE;
 		timeout = Timeouts.WAIT_FOREVER_MILLI;
-		scope = Locking.Scope.ROOT_ONLY;
+		scope = PessimisticLockScope.NORMAL;
 		followOnStrategy = Locking.FollowOn.ALLOW;
 	}
 
@@ -106,14 +104,14 @@ public class LockOptions implements Serializable {
 	 * @param lockMode The initial lock mode
 	 *
 	 * @see Timeouts#WAIT_FOREVER
-	 * @see Locking.Scope#ROOT_ONLY
+	 * @see PessimisticLockScope#NORMAL
 	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
 		this.lockMode = lockMode;
 		timeout = Timeouts.WAIT_FOREVER_MILLI;
-		this.scope = Locking.Scope.ROOT_ONLY;
+		this.scope = PessimisticLockScope.NORMAL;
 		followOnStrategy = Locking.FollowOn.ALLOW;
 	}
 
@@ -124,14 +122,14 @@ public class LockOptions implements Serializable {
 	 * @param lockMode The initial lock mode
 	 * @param timeout  The initial timeout, in milliseconds
 	 *
-	 * @see Locking.Scope#ROOT_ONLY
+	 * @see PessimisticLockScope#NORMAL
 	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions(LockMode lockMode, Timeout timeout) {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout.milliseconds();
-		this.scope = Locking.Scope.ROOT_ONLY;
+		this.scope = PessimisticLockScope.NORMAL;
 		followOnStrategy = Locking.FollowOn.ALLOW;
 	}
 
@@ -149,7 +147,7 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout.milliseconds();
-		this.scope = Locking.Scope.fromJpaScope( jpaScope );
+		this.scope = jpaScope;
 		followOnStrategy = Locking.FollowOn.ALLOW;
 	}
 
@@ -157,21 +155,21 @@ public class LockOptions implements Serializable {
 	 * Internal operation used to create immutable global instances.
 	 *
 	 * @see Timeouts#WAIT_FOREVER
-	 * @see Locking.Scope#ROOT_ONLY
+	 * @see PessimisticLockScope#NORMAL
 	 * @see Locking.FollowOn#ALLOW
 	 */
 	protected LockOptions(boolean immutable, LockMode lockMode) {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
 		timeout = Timeouts.WAIT_FOREVER_MILLI;
-		this.scope = Locking.Scope.ROOT_ONLY;
+		this.scope = PessimisticLockScope.NORMAL;
 		followOnStrategy = Locking.FollowOn.ALLOW;
 	}
 
 	public LockOptions(
 			LockMode lockMode,
 			int timeout,
-			Locking.Scope scope,
+			PessimisticLockScope scope,
 			Locking.FollowOn followOnStrategy) {
 		this.immutable = false;
 		this.lockMode = lockMode;
@@ -271,14 +269,14 @@ public class LockOptions implements Serializable {
 	/**
 	 * Associated lock scope
 	 */
-	public Locking.Scope getScope() {
+	public PessimisticLockScope getScope() {
 		return scope;
 	}
 
 	/**
 	 * Set the associated lock scope
 	 */
-	public LockOptions setScope(Locking.Scope scope) {
+	public LockOptions setScope(PessimisticLockScope scope) {
 		this.scope = scope;
 		return this;
 	}
@@ -308,7 +306,7 @@ public class LockOptions implements Serializable {
 
 	public boolean hasNonDefaultOptions() {
 		return timeout != Timeouts.WAIT_FOREVER_MILLI
-			|| scope != Locking.Scope.ROOT_ONLY
+			|| scope != PessimisticLockScope.NORMAL
 			|| followOnStrategy != Locking.FollowOn.ALLOW;
 	}
 
@@ -386,7 +384,7 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	public PessimisticLockScope getLockScope() {
-		return scope.getCorrespondingJpaScope();
+		return scope;
 	}
 
 	/**
@@ -405,7 +403,7 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions setLockScope(PessimisticLockScope jpaScope) {
-		return setScope( Locking.Scope.fromJpaScope( jpaScope ) );
+		return setScope( jpaScope );
 	}
 
 	/**
@@ -465,8 +463,6 @@ public class LockOptions implements Serializable {
 	 * @param alias the query alias to which the lock mode applies
 	 * @param lockMode the lock mode to apply to the given alias
 	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
 	 *
 	 * @deprecated Alias-specific locks are no longer supported, roughly
 	 * replaced with {@linkplain #getScope() locking scope}.

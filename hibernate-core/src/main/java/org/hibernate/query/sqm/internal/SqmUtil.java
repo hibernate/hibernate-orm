@@ -133,6 +133,24 @@ public class SqmUtil {
 		return sqmStatement instanceof SqmDeleteOrUpdateStatement;
 	}
 
+	public static <R> SqmSelectStatement<R> asSelectStatement(SqmStatement<?> sqm, String hqlString) {
+		if ( sqm instanceof SqmSelectStatement<?> selectAst ) {
+			//noinspection unchecked
+			return (SqmSelectStatement<R>) selectAst;
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					String.format(
+							Locale.ROOT,
+							"Expecting a SELECT Query [%s], but found %s",
+							SqmSelectStatement.class.getName(),
+							sqm.getClass().getName()
+					),
+					hqlString
+			);
+		}
+	}
+
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( ! isSelect( sqm ) ) {
 			throw new IllegalSelectQueryException(
@@ -144,6 +162,15 @@ public class SqmUtil {
 					),
 					hqlString
 			);
+		}
+	}
+
+	public static <T> SqmDmlStatement<T> asDmlStatement(SqmStatement<T> sqm, String hqlString) {
+		if ( sqm instanceof SqmDmlStatement<T> dml ) {
+			return dml;
+		}
+		else {
+			throw expectingNonSelect( sqm, hqlString );
 		}
 	}
 

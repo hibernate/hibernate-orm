@@ -142,7 +142,7 @@ dependencyResolutionManagement {
         }
         jakartaLibs {
             // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
-            def jpaVersion = version "jpa", "4.0.0-SNAPSHOT"
+            def jpaVersion = version "jpa", "4.0.0-M1"
 
             def annotationVersion = version "annotation", "3.0.0"
             def cdiVersion = version "cdi", "4.1.0"

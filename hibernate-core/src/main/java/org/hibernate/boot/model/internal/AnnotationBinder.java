@@ -54,8 +54,10 @@ import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassIn
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNamedStoredProcedureQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
+import static org.hibernate.boot.model.internal.QueryBinder.bindNativeStatement;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindSqlResultSetMapping;
+import static org.hibernate.boot.model.internal.QueryBinder.bindStatement;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -207,6 +209,18 @@ public final class AnnotationBinder {
 				JpaAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
 				usage -> bindNativeQuery( usage, context, annotationTarget, false )
+		);
+
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.NAMED_STATEMENT,
+				sourceModelContext,
+				usage -> bindStatement( usage, context, annotationTarget )
+		);
+
+		annotationTarget.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.NAMED_NATIVE_STATEMENT,
+				sourceModelContext,
+				usage -> bindNativeStatement( usage, context, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(

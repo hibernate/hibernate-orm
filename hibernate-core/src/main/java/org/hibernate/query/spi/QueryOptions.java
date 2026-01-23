@@ -4,15 +4,10 @@
  */
 package org.hibernate.query.spi;
 
-import java.sql.Statement;
-import java.util.List;
-import java.util.Set;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
@@ -21,8 +16,14 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import java.sql.Statement;
+import java.util.List;
+import java.util.Set;
+
 /**
- * Encapsulates options for the execution of a HQL/Criteria/native query
+ * Encapsulates options for the execution of query.
+ *
+ * @apiNote Note that not all options are relevant for every type of query.
  *
  * @author Steve Ebersole
  */

@@ -6,6 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import java.util.Map;
 
@@ -194,5 +195,50 @@ public interface Timeouts {
 			return Timeout.milliseconds( number );
 		}
 		return Timeout.milliseconds( Integer.parseInt( factoryHint.toString() ) );
+	}
+
+	/**
+	 * @see org.hibernate.jpa.HibernateHints#HINT_TIMEOUT
+	 */
+	static Timeout fromHibernateHint(Object value) {
+		// note: Hibernate defines timeout precision in seconds...
+		if ( value == null ) {
+			return null;
+		}
+		else if ( value instanceof Timeout ref ) {
+			return ref;
+		}
+		else if ( value instanceof Number num ) {
+			return Timeout.seconds( num.intValue() );
+		}
+		else {
+			// try to convert it to an integer
+			return Timeout.seconds( ConfigurationHelper.getInteger( value ) );
+		}
+	}
+
+	/**
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_LOCK_TIMEOUT
+	 */
+	static Timeout fromJpaHint(Object value) {
+		// note: JPA defines timeout precision in milliseconds...
+		if ( value == null ) {
+			return null;
+		}
+		else if ( value instanceof Timeout ref ) {
+			return ref;
+		}
+		else if ( value instanceof Number num ) {
+			return Timeout.milliseconds( num.intValue() );
+		}
+		else {
+			// try to convert it to an integer
+			return Timeout.milliseconds( ConfigurationHelper.getInteger( value ) );
+		}
+	}
+
+	static Timeout inSeconds(int timeout) {
+		return null;
 	}
 }

@@ -13,6 +13,8 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
+import jakarta.persistence.Statement;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
@@ -129,6 +131,7 @@ import java.util.function.Function;
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Locale.ROOT;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
@@ -901,14 +904,62 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public Map<String, StatementReference> getNamedStatements() {
+		return getNamedObjectRepository().getNamedMutations();
+	}
+
+	@Override
 	public void addNamedQuery(String name, Query query) {
-		getNamedObjectRepository().registerNamedQuery( name, query );
+		if ( query instanceof TypedQuery<?> typedQuery ) {
+			addNamedQuery( name, typedQuery );
+		}
+		else if ( query instanceof Statement statement ) {
+			addNamedStatement( name, statement );
+		}
+		else {
+			throw new HibernateException( String.format( ROOT,
+					"Unknown query type for registering as named query (%s) : %s",
+					name,
+					query
+			) );
+		}
 	}
 
 	@Override
 	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
 		return getNamedObjectRepository().registerNamedQuery( name, query );
 	}
+
+	@Override
+	public StatementReference addNamedStatement(String name, Statement statement) {
+		return getNamedObjectRepository().registerNamedMutation( name, statement );
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+	}
+
+	@Override
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
+	}
+	@Override
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+		return getJpaMetamodel().getNamedEntityGraphs( entityType );
+	}
+
+	@Override
+	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
+		final var result = new HashMap<String, ResultSetMapping<R>>();
+		getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
+			if ( memento.canBeTreatedAsResultSetMapping( resultType, this ) ) {
+				result.put( memento.getName(), memento.toJpaMapping( this ) );
+			}
+		} );
+		return result;
+	}
+
 
 	@Override
 	public <T> T unwrap(Class<T> type) {
@@ -945,32 +996,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as '" + type.getName() + "'" );
-	}
-
-	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
-	}
-
-	@Override
-	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
-		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
-	}
-
-	@Override
-	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
-		return getJpaMetamodel().getNamedEntityGraphs( entityType );
-	}
-
-	@Override
-	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
-		final var result = new HashMap<String, ResultSetMapping<R>>();
-		queryEngine.getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
-			if ( memento.canBeTreatedAsResultSetMapping( resultType, this ) ) {
-				result.put( memento.getName(), memento.toJpaMapping( this ) );
-			}
-		} );
-		return result;
 	}
 
 	@Override

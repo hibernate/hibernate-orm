@@ -23,12 +23,12 @@ earlier versions, see any other pertinent migration guides as well.
 See the link:{releaseSeriesBase}[website] for the list of requirements for the {version} series.
 
 
-[[jpa4]
+[[jpa4]]
 === Jakarta Persistence 4.0
 
 One specific requirement change that is important to call out is the move to from Jakarta Persistence version 3.2 to 4.0 which has a number of impacts, many of which are discussed below.
 
-
+See https://hibernate.atlassian.net/browse/HHH-20028[this issue] for more details.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // New Features
@@ -50,7 +50,7 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
 
-[[stateless]
+[[stateless]]
 === StatelessSession
 
 Jakarta Persistence now defines a contract for "stateless" processing, named `EntityAgent`, similar to Hibernate's `StatelessSession`.
@@ -63,7 +63,7 @@ Hibernate's `StatelessSession` now implements `EntityAgent`.
 In both cases, `StatelessSession` has been changed to match the `EntityAgent` signatures.
 
 
-[[timeout]
+[[timeout]]
 === Query and Transaction Timeouts
 
 Historically, both Hibernate and Jakarta Persistence have defined timeouts as integer values.
@@ -74,7 +74,31 @@ However, this has changed a bit in 4.0 where `Timeout` *is* now exposed on certa
 This causes a signature conflict with a few of Hibernate API methods; as part of fixing those conflicts, it was decided to change all exposures of timeout in Hibernate APIs to use `Timeout` as this helps clarify these confusions.
 
 
-[[graph-attr-node]
+[[query-api]]
+=== Query API
+
+One of the biggest changes in Jakarta Persistence 4.0 is the better modeling of "queries" into selections (`TypedQuery`) and mutations (its new `Statement` contract),
+aligning closely with Hibernate's already existing `SelectionQuery` and `MutationQuery` contracts.
+At the same time, it deprecated all "operation methods" from its "raw" `Query` contract.
+
+Hibernate's Query contracts implement the Jakarta Persistence ones, so changes were needed here.
+
+:fn_selectionquery: footnote:[Unfortunately that means `SelectionQuery` now inherits the `executeUpdate()` method from JPA's `Query`, but as mentioned that method is deprecated.]
+:fn_mutationquery: footnote:[Unfortunately that means `MutationQuery` now inherits `getResultList()`, and other such methods from JPA's `Query`, but as mentioned these methods are all deprecated.]
+
+* Hibernate's `Query` interface is still typed, but it now extends from JPA's `Query` rather than `TypedQuery`.
+* Hibernate's `SelectionQuery` now implements `TypedQuery`{fn_selectionquery}.
+* Hibernate's `MutationQuery` now implements the new `Statement` contract{fn_mutationquery}.
+
+Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hibernate's variants) may no longer be used to define mutation queries -
+
+* `@NamedQuery` - A `SelectionQuery` defined using HQL/JPQL
+* `@NamedStatement` - A `MutationQuery` defined using HQL/JPQL
+* `@NamedNativeQuery` - A `SelectionQuery` defined using native SQL
+* `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
+
+
+[[graph-attr-node]]
 === AttributeNode Subgraphs
 
 As part of its support for "entity graphs", Hibernate's `org.hibernate.graph.AttributeNode` contract extends fropm the Jakarta Persistence `jakarta.persistence.AttributeNode`.
@@ -82,7 +106,7 @@ Starting in version 4.0, Jakarta Persistence has "fixed" the use of raw types fo
 Hibernate has therefore needed to do the same in its `org.hibernate.graph.AttributeNode`.
 
 
-[[criteria-join-fetch]
+[[criteria-join-fetch]]
 === Join and Fetch in Criteria
 
 Jakarta Persistence has changed/fixed the type signature of methods in the Criteria API which return Join and Fetch based on the String name of attributes.  This can lead to compilation issues if an application uses these methods in certain ways.
@@ -108,7 +132,7 @@ In particular, `ClassmateContext` was completely removed.
 Raw `Map` types were eliminated from the signatures of methods of the class
 `org.hibernate.jpa.boot.spi.Bootstrap`.
 
-[[query-memento]
+[[query-memento]]
 === Query Memento
 
 Hibernate uses a number of implementations of its `NamedQueryMemento` contract to
@@ -147,7 +171,7 @@ query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
 which collapses duplicate results according to value equality.
 
-[[session-get]
+[[session-get]]
 === Session.get
 
 Jakarta Persistence now defines a series of overloaded `EntityHandler.get()` methods as corollaries to `EntityHandler.find()`.

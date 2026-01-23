@@ -1216,4 +1216,9 @@ public class CockroachDialect extends Dialect {
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorPostgreSQLImpl( extractionContext );
 	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		return true;
+	}
 }

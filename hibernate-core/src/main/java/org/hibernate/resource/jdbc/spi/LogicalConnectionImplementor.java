@@ -83,4 +83,9 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @throws IOException Problem accessing stream
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException;
+
+	/**
+	 * Mark the associated transaction as rollback-only.
+	 */
+	void markRollbackOnly();
 }

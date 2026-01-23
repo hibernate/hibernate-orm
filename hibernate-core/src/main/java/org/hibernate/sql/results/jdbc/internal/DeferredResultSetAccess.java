@@ -4,14 +4,12 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -258,7 +256,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 			bindParameters( preparedStatement );
 
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final var eventListenerManager = session.getEventListenerManager();
 			long executeStartNanos = 0;
 			if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 				executeStartNanos = System.nanoTime();
@@ -269,6 +267,10 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = wrapResultSet( preparedStatement.executeQuery() );
+			}
+			catch (SQLException exception) {
+				session.getJdbcCoordinator().afterFailedStatementExecution( exception );
+				throw exception;
 			}
 			finally {
 				eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
@@ -327,10 +329,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	protected ResultSet wrapResultSet(ResultSet resultSet) throws SQLException {
 		return resultSet;
-	}
-
-	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {
-		return lockOptions.getLockMode();
 	}
 
 	@Override

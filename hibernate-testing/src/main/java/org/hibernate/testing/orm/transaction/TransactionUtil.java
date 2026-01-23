@@ -64,7 +64,7 @@ public abstract class TransactionUtil {
 	}
 
 	private static <T> void wrapInTransaction(SharedSessionContract session, T actionInput, Consumer<T> action) {
-		final Transaction txn = session.beginTransaction();
+		final var txn = session.beginTransaction();
 		log.trace( "Started transaction" );
 
 		try {

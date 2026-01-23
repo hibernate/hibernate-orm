@@ -435,4 +435,9 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler();
 	}
+
+	@Override
+	public boolean isModifiable() {
+		return true; //TODO: is this correct?
+	}
 }

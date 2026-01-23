@@ -65,7 +65,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
@@ -1444,118 +1443,94 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return (Type<T>) type;
 	}
 
+
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
-	@Override
-	public List<?> getResultList() {
-		return withContext( this::doList );
-	}
-
-	protected abstract <X> List<X> doList();
-
 	private FlushMode sessionFlushMode;
+	private CacheMode sessionCacheMode;
+
+	protected abstract QueryOptions getQueryOptions();
 
 	/// hook for subtypes
 	protected abstract void prepareForExecution();
 
-	protected void setUpExecutionContext() {
+	protected abstract <X> List<X> doList();
+
+	protected abstract int doExecuteUpdate();
+
+	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
+		beforeQuery();
+		final var options = getQueryOptions();
+		return getSession().getLoadQueryInfluencers()
+				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
+	}
+
+	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
+		final var session = getSession();
+		final var options = getQueryOptions();
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
+		prepareForExecution();
+		prepareSessionFlushMode( session );
+		prepareSessionCacheMode( session );
+	}
+
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionFlushMode(SharedSessionContractImplementor session) {
+		assert sessionFlushMode == null;
+		sessionFlushMode = adjustFlushMode( getEffectiveFlushMode() );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionCacheMode(SharedSessionContractImplementor session) {
+		assert sessionCacheMode == null;
+		sessionCacheMode = adjustCacheMode( getQueryOptions().getCacheMode() );
+	}
+
+	protected void afterQueryHandlingFetchProfiles(boolean success, HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery( success );
+	}
+
+	protected void afterQueryHandlingFetchProfiles(HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery();
+	}
+
+	private void resetFetchProfiles(HashSet<String> fetchProfiles) {
+		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+	}
+
+	protected void afterQuery(boolean success) {
+		afterQuery();
 
 		final var session = getSession();
-		session.prepareForQueryExecution( requiresTxn( queryOptions.getLockOptions().getLockMode() ) );
-
-		prepareForExecution();
+		if ( !session.isTransactionInProgress() ) {
+			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		}
+		session.afterOperation( success );
 	}
 
-	protected <T> T withContext(Supplier<T> action) {
-		setUpExecutionContext();
-
-		var success = false;
-		try {
-			// Fetch profile handling
-			final var profileSnapshot = session.getLoadQueryInfluencers().adjustFetchProfiles(
-					queryOptions.getDisabledFetchProfiles(),
-					queryOptions.getEnabledFetchProfiles()
-			);
-
-			try {
-				// FlushMode
-				final FlushMode adjustedFlushMode = adjustFlushMode( getEffectiveFlushMode() );
-
-				try {
-					// CacheMode
-					final CacheMode adjustedCacheMode = adjustCacheMode( queryOptions.getCacheMode() );
-
-					try {
-						try {
-							T result = action.get();
-							success = true;
-							return result;
-						}
-						catch (IllegalQueryOperationException e) {
-							throw new IllegalStateException( e );
-						}
-						catch (HibernateException he) {
-							throw getExceptionConverter().convert( he, queryOptions.getLockOptions() );
-						}
-					}
-					finally {
-						// CacheMode
-						if ( adjustedCacheMode != null ) {
-							session.setCacheMode( adjustedCacheMode );
-						}
-					}
-				}
-				finally {
-					// FlushMode
-					if ( adjustedFlushMode != null ) {
-						( (SessionImplementor) session ).setHibernateFlushMode( adjustedFlushMode );
-					}
-				}
-			}
-			finally {
-				// Fetch profile handling
-				resetFetchProfiles( profileSnapshot );
-			}
+	protected void afterQuery() {
+		if ( sessionFlushMode != null
+			&& getSession() instanceof SessionImplementor statefulSession ) {
+			statefulSession.setHibernateFlushMode( sessionFlushMode );
+			sessionFlushMode = null;
 		}
-		finally {
-			// "tear down" the execution context
-			if ( !session.isTransactionInProgress() ) {
-				session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
-			}
-			session.afterOperation( success );
+		if ( sessionCacheMode != null ) {
+			getSession().setCacheMode( sessionCacheMode );
+			sessionCacheMode = null;
 		}
 	}
 
-	protected Integer withMutationContext(Supplier<Integer> action) {
-		setUpExecutionContext();
-
-		// FlushMode
-		final FlushMode adjustedFlushMode = adjustFlushMode( getEffectiveFlushMode() );
-		try {
-			var success = false;
-			try {
-				int result = action.get();
-				success = true;
-				return result;
-			}
-			finally {
-				// "tear down" the execution context
-				if ( !session.isTransactionInProgress() ) {
-					session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
-				}
-				session.afterOperation( success );
-			}
-		}
-		finally {
-			// FlushMode
-			if ( adjustedFlushMode != null ) {
-				( (SessionImplementor) session ).setHibernateFlushMode( adjustedFlushMode );
-			}
-		}
-
-	}
 
 	protected CacheMode adjustCacheMode(CacheMode queryCacheMode) {
 		if ( queryCacheMode != null && this.session instanceof SessionImplementor session ) {
@@ -1587,20 +1562,53 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return null;
 	}
 
-	private void resetFetchProfiles(HashSet<String> fetchProfiles) {
-		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+
+	@Override
+	public List<?> getResultList() {
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
+		boolean success = false;
+		try {
+			final List<?> result = doList();
+			success = true;
+			return result;
+		}
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
+		}
+		catch (HibernateException he) {
+			throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
+		}
+		finally {
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
+		}
 	}
+
 
 	protected boolean requiresTxn(LockMode lockMode) {
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}
 
 	@Override
-	public int executeUpdate() {
+	public int executeUpdate() throws HibernateException {
+		//TODO: refactor copy/paste of QuerySqmImpl.executeUpdate()
 		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
-		return withMutationContext( this::doExecuteUpdate );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
+		boolean success = false;
+		try {
+			final int result = doExecuteUpdate();
+			success = true;
+			return result;
+		}
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
+		}
+		catch (HibernateException e) {
+			throw getExceptionConverter().convert( e );
+		}
+		finally {
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
+		}
 	}
 
-	protected abstract int doExecuteUpdate();
 
 }

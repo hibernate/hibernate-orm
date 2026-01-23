@@ -30,7 +30,9 @@ import static java.lang.annotation.ElementType.*;
  *
  * <h3>Immutable basic-valued attributes</h3>
  * <p>
- * A mutable entity may have an immutable field or property.
+ * A mutable entity may have an immutable field or property. Every {@code final} field of
+ * an entity whose type is an immutable type is inferred immutable, and so in this case
+ * the explicit use of this annotation is redundant.
  * <p>
  * An immutable attribute is ignored by the dirty-checking process, and so the persistence
  * context does not need to keep track of its state. This may help reduce memory allocation.

@@ -205,8 +205,15 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	public ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode) {
-		return withContext( () -> doScroll( scrollMode ) );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
+		try {
+			return doScroll( scrollMode );
+		}
+		finally {
+			afterQueryHandlingFetchProfiles( fetchProfiles );
+		}
 	}
+
 
 	protected abstract ScrollableResultsImplementor<T> doScroll(ScrollMode scrollMode);
 

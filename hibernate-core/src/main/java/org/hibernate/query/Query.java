@@ -154,6 +154,10 @@ public interface Query<T> extends CommonQueryContract {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
+
+	@Override
+	Query setQueryFlushMode(QueryFlushMode queryFlushMode);
+
 	/**
 	 * {@inheritDoc}
 	 */

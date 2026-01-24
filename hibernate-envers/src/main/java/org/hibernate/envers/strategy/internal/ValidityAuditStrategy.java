@@ -5,7 +5,6 @@
 package org.hibernate.envers.strategy.internal;
 
 import jakarta.persistence.LockModeType;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -34,6 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.Update;
 import org.hibernate.type.BasicType;
@@ -258,7 +258,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		addEndRevisionNullRestriction( configuration, qb.getRootParameters() );
 
 		final List<Object> l = qb.toQuery( session )
-				.setHibernateFlushMode(FlushMode.MANUAL)
+				.setQueryFlushMode( QueryFlushMode.NO_FLUSH)
 				.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 				.list();
 

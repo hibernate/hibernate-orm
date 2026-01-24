@@ -24,4 +24,9 @@ public class PessimisticEntityLockException extends LockingStrategyException {
 	public PessimisticEntityLockException(Object entity, String message, JDBCException cause) {
 		super( entity, message, cause );
 	}
+
+	@Override
+	public JDBCException getCause() {
+		return (JDBCException) super.getCause();
+	}
 }

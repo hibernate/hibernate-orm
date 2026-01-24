@@ -48,6 +48,7 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -80,7 +81,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		this.optimisticLockBindings = upsert.getOptimisticLockBindings();
 		this.parameters = upsert.getParameters();
 
-		this.jdbcValueDescriptors = CollectionHelper.arrayList( parameters.size() );
+		this.jdbcValueDescriptors = arrayList( parameters.size() );
 		for ( int i = 0; i < parameters.size(); i++ ) {
 			jdbcValueDescriptors.add( new JdbcValueDescriptorImpl( parameters.get( i ), i + 1 ) );
 		}
@@ -139,51 +140,54 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		if ( valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
 				|| valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
 			try {
-				final var tablesWithNonNullValues = valuesAnalysis.getTablesWithNonNullValues();
-				if ( !tablesWithNonNullValues.contains( tableMapping ) ) {
-					// all the new values for this table were null - possibly delete the row
-					if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
-						performDelete( jdbcValueBindings, session );
-					}
+				if ( valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
+					performUpdateOrInsert( jdbcValueBindings, session, valuesAnalysis );
 				}
-				else {
-					// there are some non-null values for the table - we need to update or insert the values.
-
-					// first, try the update and see if any row was affected
-					final boolean wasUpdated;
-					if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
-						// either
-						// 		1) not know if the values for this table were previously all null (because old values are not known)
-						//		2) the values for this table were previously had at least one non-null
-						wasUpdated = performUpdate( jdbcValueBindings, session );
-					}
-					else {
-						wasUpdated = false;
-					}
-
-					if ( !wasUpdated ) {
-						MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
-						try {
-							performInsert( jdbcValueBindings, session );
-						}
-						catch (ConstraintViolationException cve) {
-							if ( cve.getKind() == UNIQUE ) {
-								// Ignore primary key violation if the insert is composed of just the primary key
-								if ( !valueBindings.isEmpty() ) {
-									// assume it was the primary key constraint which was violated,
-									// due to a new version of the row existing in the database
-									throw new StaleStateException( mutationTarget.getRolePath(), cve );
-								}
-							}
-							else {
-								throw cve;
-							}
-						}
-					}
+				// all the new values for this table were null - possibly delete the row
+				else if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
+					performDelete( jdbcValueBindings, session );
 				}
 			}
 			finally {
 				jdbcValueBindings.afterStatement( tableMapping );
+			}
+		}
+	}
+
+	private void performUpdateOrInsert(
+			JdbcValueBindings jdbcValueBindings,
+			SharedSessionContractImplementor session,
+			UpdateValuesAnalysis valuesAnalysis) {
+		// there are some non-null values for the table - we need to update or insert the values.
+		// first, try the update and see if any row was affected
+		final boolean wasUpdated;
+		if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
+			// either
+			// 		1) not know if the values for this table were previously all null (because old values are not known)
+			//		2) the values for this table were previously had at least one non-null
+			wasUpdated = performUpdate( jdbcValueBindings, session );
+		}
+		else {
+			wasUpdated = false;
+		}
+
+		if ( !wasUpdated ) {
+			MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
+			try {
+				performInsert( jdbcValueBindings, session );
+			}
+			catch (ConstraintViolationException cve) {
+				if ( cve.getKind() == UNIQUE ) {
+					// Ignore primary key violation if the insert is composed of just the primary key
+					if ( !valueBindings.isEmpty() ) {
+						// assume it was the primary key constraint which was violated,
+						// due to a new version of the row existing in the database
+						throw new StaleStateException( mutationTarget.getRolePath(), cve );
+					}
+				}
+				else {
+					throw cve;
+				}
 			}
 		}
 	}
@@ -320,15 +324,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		MODEL_MUTATION_LOGGER.performingUpdate( tableMapping.getTableName() );
 
 		final var jdbcServices = session.getJdbcServices();
-		final var statementGroup = new PreparedStatementGroupSingleTable( createJdbcUpdate( session ), session );
-		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
+		final var statementDetails =
+				new PreparedStatementGroupSingleTable( createJdbcUpdate( session ), session )
+						.resolvePreparedStatementDetails( tableMapping.getTableName() );
+		final String sql = statementDetails.getSqlString();
 		try {
 			final var updateStatement = statementDetails.resolveStatement();
-			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			jdbcValueBindings.beforeStatement( statementDetails );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
-							.executeUpdate( updateStatement, statementDetails.getSqlString() );
+							.executeUpdate( updateStatement, sql );
 			if ( rowCount == 0 ) {
 				return false;
 			}
@@ -337,7 +343,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 						rowCount,
 						updateStatement,
 						-1,
-						statementDetails.getSqlString()
+						sql
 				);
 				return true;
 			}
@@ -345,8 +351,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
-					"Unable to execute mutation PreparedStatement against table `" + tableMapping.getTableName() + "`",
-					statementDetails.getSqlString()
+					"Unable to execute mutation PreparedStatement against table '" + tableMapping.getTableName() + "'",
+					sql
 			);
 		}
 		finally {
@@ -393,8 +399,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var jdbcServices = session.getJdbcServices();
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
+		final String sql = jdbcInsert.getSqlString();
 		try {
-			jdbcServices.getSqlStatementLogger().logStatement( jdbcInsert.getSqlString() );
+			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			final var bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
 			if ( bindingGroup != null ) {
 				bindingGroup.forEachBinding( binding -> {
@@ -412,14 +419,14 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 							throw jdbcServices.getSqlExceptionHelper().convert(
 									e,
 									"Unable to bind parameter for upsert insert",
-									jdbcInsert.getSqlString()
+									sql
 							);
 						}
 					}
 				} );
 			}
 			jdbcCoordinator.getResultSetReturn()
-					.executeUpdate( insertStatement, jdbcInsert.getSqlString() );
+					.executeUpdate( insertStatement, sql );
 		}
 		finally {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );
@@ -458,7 +465,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			);
 		}
 
-		final SessionFactoryImplementor factory = session.getSessionFactory();
+		final var factory = session.getSessionFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildModelMutationTranslator( tableInsert, factory )
 				.translate( null, MutationQueryOptions.INSTANCE );

@@ -87,7 +87,6 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			ValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final var analysis = (UpdateValuesAnalysis) valuesAnalysis;
-
 		if ( analysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
 			performUpsert( jdbcValueBindings, session );
 		}
@@ -118,19 +117,21 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final var upsertDeleteStatement = statementDetails.resolveStatement();
-			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+			final String sql = statementDetails.getSqlString();
+			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			bindDeleteKeyValues( jdbcValueBindings, statementDetails, session );
-			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
-					.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
+			final int rowCount =
+					session.getJdbcCoordinator().getResultSetReturn()
+							.executeUpdate( upsertDeleteStatement, sql );
 			MODEL_MUTATION_LOGGER.upsertDeletedRowCount( rowCount, tableMapping.getTableName() );
 			try {
-				getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, statementDetails.getSqlString() );
+				getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, sql );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
 						e,
 						"Unable to verify outcome for upsert delete",
-						statementDetails.getSqlString()
+						sql
 				);
 			}
 		}
@@ -146,11 +147,12 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final var statement = statementDetails.resolveStatement();
 		int jdbcBindingPosition = 1;
 		for ( var binding : jdbcValueBindings.getBindingGroup( tableMapping.getTableName() ).getBindings() ) {
-			if ( binding.getValueDescriptor().getUsage() == ParameterUsage.RESTRICT ) {
+			final var valueDescriptor = binding.getValueDescriptor();
+			if ( valueDescriptor.getUsage() == ParameterUsage.RESTRICT ) {
 				bindKeyValue(
 						jdbcBindingPosition++,
 						binding,
-						binding.getValueDescriptor(),
+						valueDescriptor,
 						statement,
 						statementDetails.getSqlString(),
 						tableMapping,

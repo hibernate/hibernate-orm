@@ -16,6 +16,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -144,6 +145,11 @@ public abstract class StatelessSessionBuilderImpl
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
+	}
+
+	@Override
+	public Instant getTemporalInstant() {
+		return temporalInstant;
 	}
 
 	@Override

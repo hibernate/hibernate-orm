@@ -9,6 +9,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -97,6 +98,9 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	 * @return {@code this}, for method chaining
 	 */
 	SharedSessionBuilder autoClose();
+
+	@Override
+	SharedSessionBuilder instant(Instant instant);
 
 	@Override @Deprecated
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);

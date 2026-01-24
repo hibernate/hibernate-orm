@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -75,4 +76,12 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 */
 	@Deprecated(since = "7.0")
 	StatelessSessionBuilder statementInspector(StatementInspector statementInspector);
+
+	/**
+	 * Specify the instant for reading
+	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
+	 * Instances of temporal entities retrieved in the session will represent
+	 * the revisions effective at the given instant.
+	 */
+	StatelessSessionBuilder instant(Instant instant);
 }

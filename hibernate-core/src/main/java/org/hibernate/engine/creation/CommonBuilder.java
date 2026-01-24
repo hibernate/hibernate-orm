@@ -14,6 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -170,4 +171,12 @@ public interface CommonBuilder {
 	///
 	/// @return `this`, for method chaining
 	CommonBuilder jdbcTimeZone(TimeZone timeZone);
+
+	/**
+	 * Specify the instant for reading
+	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
+	 * Instances of temporal entities retrieved in the session will represent
+	 * the revisions effective at the given instant.
+	 */
+	CommonBuilder instant(Instant instant);
 }

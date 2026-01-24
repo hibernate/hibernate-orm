@@ -59,6 +59,7 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
@@ -258,6 +259,7 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
+			bindTemporal( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -351,6 +353,41 @@ public class EntityBinder {
 		}
 
 		return extractFromPackage( SoftDelete.class, classDetails, context );
+	}
+
+	private static void bindTemporal(
+			ClassDetails classDetails,
+			RootClass rootClass,
+			MetadataBuildingContext context) {
+		final var temporal = extractTemporal( classDetails, context );
+		if ( temporal != null ) {
+			TemporalHelper.bindTemporalColumns(
+					temporal,
+					rootClass,
+					rootClass.getRootTable(),
+					context
+			);
+		}
+	}
+
+	private static Temporal extractTemporal(ClassDetails classDetails, MetadataBuildingContext context) {
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var fromClass = classDetails.getAnnotationUsage( Temporal.class, modelsContext );
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+
+		ClassDetails classToCheck = classDetails.getSuperClass();
+		while ( classToCheck != null ) {
+			final var fromSuper = classToCheck.getAnnotationUsage( Temporal.class, modelsContext );
+			if ( fromSuper != null
+					&& classToCheck.hasAnnotationUsage( MappedSuperclass.class, modelsContext ) ) {
+				return fromSuper;
+			}
+			classToCheck = classToCheck.getSuperClass();
+		}
+
+		return extractFromPackage( Temporal.class, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {

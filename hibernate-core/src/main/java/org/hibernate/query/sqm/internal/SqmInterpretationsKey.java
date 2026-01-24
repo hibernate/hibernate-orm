@@ -65,6 +65,8 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 		return keySource.isQueryPlanCacheable()
 				// At the moment we cannot cache query plan if there is filter enabled.
 			&& !keySource.getLoadQueryInfluencers().hasEnabledFilters()
+				// Temporal instants are bound as parameters and vary per-session
+			&& keySource.getLoadQueryInfluencers().getTemporalInstant() == null
 				// At the moment we cannot cache query plan if it has an entity graph
 			&& keySource.getQueryOptions().getAppliedGraph().getSemantic() == null
 				// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling

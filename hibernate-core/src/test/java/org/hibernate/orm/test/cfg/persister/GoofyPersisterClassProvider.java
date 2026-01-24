@@ -1124,6 +1124,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public boolean hasPreUpdateGeneratedProperties() {
 			return false;
 		}
+
+		@Override
+		public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {

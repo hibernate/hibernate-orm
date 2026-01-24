@@ -18,6 +18,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -149,5 +150,10 @@ public record SessionCreationOptionsAdaptor(
 	@Override
 	public void registerParentSessionObserver(ParentSessionObserver observer) {
 		registerParentSessionObserver( observer, originalSession );
+	}
+
+	@Override
+	public Instant getTemporalInstant() {
+		return null;
 	}
 }

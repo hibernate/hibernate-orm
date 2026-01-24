@@ -2231,6 +2231,26 @@ public class ToOneAttributeMapping
 								creationState.getSqlExpressionResolver()
 						) );
 					}
+
+					final var temporalMapping = associatedEntityMappingType.getTemporalMapping();
+					if ( temporalMapping != null ) {
+						final var tableReference =
+								lazyTableGroup.resolveTableReference( navigablePath,
+										associatedEntityMappingType.getTemporalTableDetails().getTableName() );
+						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+						final var temporalPredicate =
+								temporalInstant == null
+										? temporalMapping.createCurrentRestriction(
+												tableReference,
+												creationState.getSqlExpressionResolver()
+										)
+										: temporalMapping.createRestriction(
+												tableReference,
+												creationState.getSqlExpressionResolver(),
+												temporalInstant
+										);
+						join.applyPredicate( temporalPredicate );
+					}
 				}
 		);
 
@@ -2350,6 +2370,28 @@ public class ToOneAttributeMapping
 								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName() );
 				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction( tableReference,
 						creationState.getSqlExpressionResolver() ) );
+			}
+
+			if ( fetched ) {
+				final var temporalMapping = getAssociatedEntityMappingType().getTemporalMapping();
+				if ( temporalMapping != null ) {
+					final var tableReference =
+							lazyTableGroup.resolveTableReference( navigablePath,
+									getAssociatedEntityMappingType().getTemporalTableDetails().getTableName() );
+					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+					final var temporalPredicate =
+							temporalInstant == null
+									? temporalMapping.createCurrentRestriction(
+											tableReference,
+											creationState.getSqlExpressionResolver()
+									)
+									: temporalMapping.createRestriction(
+											tableReference,
+											creationState.getSqlExpressionResolver(),
+											temporalInstant
+									);
+					predicateConsumer.accept( temporalPredicate );
+				}
 			}
 		}
 

@@ -25,7 +25,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
+public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, TemporalEntity {
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -51,6 +51,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private Property declaredVersion;
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
+	private Column temporalStartingColumn;
+	private Column temporalEndingColumn;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -426,8 +428,35 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
+	public void enableTemporal(Column startingColumn, Column endingColumn) {
+		temporalStartingColumn = startingColumn;
+		temporalEndingColumn = endingColumn;
+	}
+
+	@Override
+	public Column getTemporalStartingColumn() {
+		return temporalStartingColumn;
+	}
+
+	@Override
+	public Column getTemporalEndingColumn() {
+		return temporalEndingColumn;
+	}
+
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
+	}
+
+	@Override
+	public void createPrimaryKey() {
+		super.createPrimaryKey();
+		if ( temporalStartingColumn != null ) {
+			final var primaryKey = getTable().getPrimaryKey();
+			if ( primaryKey != null && !primaryKey.containsColumn( temporalStartingColumn ) ) {
+				primaryKey.addColumn( temporalStartingColumn );
+			}
+		}
 	}
 
 }

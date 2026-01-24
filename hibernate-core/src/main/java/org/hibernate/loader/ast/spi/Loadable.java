@@ -36,9 +36,9 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 
 	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return isAffectedByEntityGraph( influencers )
-				|| isAffectedByEnabledFetchProfiles( influencers )
-				|| isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters )
-				|| isAffectedByBatchSize( influencers );
+			|| isAffectedByEnabledFetchProfiles( influencers )
+			|| isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters )
+			|| isAffectedByBatchSize( influencers );
 	}
 
 	default boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
@@ -49,7 +49,7 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			&& influencers.getEnabledCascadingFetchProfile() == null;
 	}
 
-	private boolean isAffectedByBatchSize(LoadQueryInfluencers influencers) {
+	default boolean isAffectedByBatchSize(LoadQueryInfluencers influencers) {
 		return influencers.getBatchSize() > 0
 			&& influencers.getBatchSize() != getBatchSize();
 	}

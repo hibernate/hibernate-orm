@@ -4,15 +4,9 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.criteria.JoinType;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -32,6 +26,12 @@ import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryFlushMode;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 
@@ -298,7 +298,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setComment( comment );
 		}
 		if ( flushMode != null ) {
-			query.setHibernateFlushMode( flushMode );
+			query.setQueryFlushMode( QueryFlushMode.fromHibernateMode( flushMode ) );
 		}
 		if ( cacheMode != null ) {
 			query.setCacheMode( cacheMode );

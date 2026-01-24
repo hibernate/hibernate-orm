@@ -570,6 +570,31 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public void applyTemporalRestrictions(
+			TableGroup tableGroup,
+			PredicateConsumer predicateConsumer,
+			LoadQueryInfluencers influencers) {
+		final var temporalInstant = influencers.getTemporalInstant();
+		final var descriptor = getCollectionDescriptor();
+		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+			final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+			final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
+			if ( temporalMapping != null ) {
+				final String primaryTableName =
+						associatedEntityDescriptor.getTemporalTableDetails().getTableName();
+				final var primaryTableReference =
+						tableGroup.resolveTableReference( primaryTableName );
+				final var temporalRestriction =
+						temporalInstant == null
+								? temporalMapping.createCurrentRestriction( primaryTableReference )
+								: temporalMapping.createRestriction( primaryTableReference, temporalInstant );
+				predicateConsumer.applyPredicate( temporalRestriction );
+			}
+		}
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -873,6 +898,11 @@ public class PluralAttributeMappingImpl
 				predicateCollector::applyPredicate,
 				tableGroup,
 				creationState
+		);
+		applyTemporalRestrictions(
+				tableGroup,
+				predicateCollector::applyPredicate,
+				creationState.getLoadQueryInfluencers()
 		);
 
 		if ( fetched ) {
@@ -1219,6 +1249,23 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
+			|| isAffectedByTemporal( influencers );
+	}
+
+	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
+		if ( influencers.getTemporalInstant() != null ) {
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				return elementDescriptor.getAssociatedEntityMappingType().getTemporalMapping() != null;
+			}
+		}
+		return false;
 	}
 
 	@Override

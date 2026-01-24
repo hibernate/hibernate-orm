@@ -125,6 +125,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -159,6 +160,7 @@ import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
+import org.hibernate.persister.entity.mutation.TemporalUpdateCoordinator;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -250,6 +252,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
+import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -420,6 +423,7 @@ public abstract class AbstractEntityPersister
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 	private SoftDeleteMapping softDeleteMapping;
+	private TemporalMapping temporalMapping;
 
 	private AttributeMappingsList attributeMappings;
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
@@ -2885,6 +2889,23 @@ public abstract class AbstractEntityPersister
 					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
 				}
 			}
+
+			if ( temporalMapping != null ) {
+				final var tableReference =
+						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
+				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+				final var temporalPredicate =
+						temporalInstant == null
+								? temporalMapping.createCurrentRestriction( tableReference,
+										creationState.getSqlExpressionResolver() )
+								: temporalMapping.createRestriction( tableReference,
+										creationState.getSqlExpressionResolver(),
+										temporalInstant );
+				additionalPredicateCollectorAccess.get().accept( temporalPredicate );
+				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
+				}
+			}
 		}
 
 		return tableGroup;
@@ -3458,6 +3479,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
+		if ( temporalMapping != null ) {
+			return new TemporalUpdateCoordinator( this, factory );
+		}
 		// we only have updates to issue for entities with one or more singular attributes
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
@@ -3490,6 +3514,20 @@ public abstract class AbstractEntityPersister
 			final var columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
 			final var nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
 			insertBuilder.addValueColumn( nonDeletedValueBinding );
+		}
+	}
+
+	@Override
+	public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+		if ( temporalMapping != null ) {
+			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
+			final var mutatingTable = insertBuilder.getMutatingTable();
+
+			final var startingColumn = new ColumnReference( mutatingTable, temporalMapping.getStartingColumnMapping() );
+			insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumn ) );
+
+			final var endingColumn = new ColumnReference( mutatingTable, temporalMapping.getEndingColumnMapping() );
+			insertBuilder.addValueColumn( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 		}
 	}
 
@@ -3681,6 +3719,19 @@ public abstract class AbstractEntityPersister
 		else {
 			return false;
 		}
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKeyFilters) {
+		return EntityPersister.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
+			|| isAffectedByTemporal( influencers );
+	}
+
+	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
+		return temporalMapping != null
+			&& influencers.getTemporalInstant() != null;
 	}
 
 	/**
@@ -4693,6 +4744,7 @@ public abstract class AbstractEntityPersister
 		versionMapping = superMappingType.getVersionMapping();
 		rowIdMapping = superMappingType.getRowIdMapping();
 		softDeleteMapping = superMappingType.getSoftDeleteMapping();
+		temporalMapping = superMappingType.getTemporalMapping();
 	}
 
 	private void buildDeclaredAttributeMappings
@@ -4870,6 +4922,8 @@ public abstract class AbstractEntityPersister
 		final var rootClass = bootEntityDescriptor.getRootClass();
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, rootClass, getIdentifierTableName(), creationProcess );
+		temporalMapping =
+				resolveTemporalMapping( rootClass, getIdentifierTableName(), creationProcess );
 		if ( softDeleteMapping != null && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}
@@ -5665,6 +5719,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
 		return softDeleteMapping;
+	}
+
+	@Override
+	public TemporalMapping getTemporalMapping() {
+		return temporalMapping;
 	}
 
 	@Override

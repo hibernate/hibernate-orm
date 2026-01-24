@@ -3622,6 +3622,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			tableGroupJoin.applyPredicate( softDeleteRestriction );
 		}
+		final var temporalMapping = entityDescriptor.getTemporalMapping();
+		if ( temporalMapping != null ) {
+			final var temporalInstant = getLoadQueryInfluencers().getTemporalInstant();
+			final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
+			tableGroupJoin.applyPredicate( temporalInstant == null
+					? temporalMapping.createCurrentRestriction( tableReference )
+					: temporalMapping.createRestriction( tableReference, temporalInstant ) );
+		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;

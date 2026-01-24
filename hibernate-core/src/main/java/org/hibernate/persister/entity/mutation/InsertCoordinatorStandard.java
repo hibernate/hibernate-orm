@@ -559,6 +559,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		// add the discriminator
 		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
 		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
+		entityPersister().addTemporalToInsertGroup( insertGroupBuilder );
 
 		// add the keys
 		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {

@@ -16,6 +16,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -99,4 +100,7 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 
 	@Override
 	SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
+
+	@Override
+	SessionBuilderImplementor instant(Instant instant);
 }

@@ -546,7 +546,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public MutationQuery createNamedStatement(String name) {
-		return null;
+		return this.lazySession.get().createNamedStatement( name );
 	}
 
 	@Override
@@ -561,7 +561,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public MutationQuery createNativeStatement(String sql) {
-		return null;
+		return this.lazySession.get().createNativeStatement( sql );
 	}
 
 	@Override

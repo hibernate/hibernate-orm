@@ -38,6 +38,6 @@ public interface JdbcValueDescriptor {
 
 	default boolean matches(String columnName, ParameterUsage usage) {
 		return getColumnName().equals( columnName )
-				&& getUsage() == usage;
+			&& getUsage() == usage;
 	}
 }

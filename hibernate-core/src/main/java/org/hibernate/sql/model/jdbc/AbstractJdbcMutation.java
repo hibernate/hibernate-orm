@@ -45,10 +45,9 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 
 		this.jdbcValueDescriptors = arrayList( parameterBinders.size() );
 		for ( int i = 0; i < parameterBinders.size(); i++ ) {
-			final JdbcValueDescriptorImpl parameterDescriptor = new JdbcValueDescriptorImpl(
-					parameterBinders.get( i ),
-					expectation.getNumberOfParametersUsed() + i + 1
-			);
+			final var parameterDescriptor =
+					new JdbcValueDescriptorImpl( parameterBinders.get( i ),
+							expectation.getNumberOfParametersUsed() + i + 1 );
 			this.jdbcValueDescriptors.add( parameterDescriptor );
 		}
 	}
@@ -82,7 +81,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	@Override
 	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
 		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
-			final JdbcValueDescriptor descriptor = jdbcValueDescriptors.get( i );
+			final var descriptor = jdbcValueDescriptors.get( i );
 			if ( descriptor.getColumnName().equals( columnName )
 					&& descriptor.getUsage() == usage ) {
 				return descriptor;

@@ -1155,6 +1155,11 @@ public class PersisterClassProviderTest {
 		public boolean hasPreUpdateGeneratedProperties() {
 			return false;
 		}
+
+		@Override
+		public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
 	}
 
 	public static class GoofyException extends RuntimeException {

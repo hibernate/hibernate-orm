@@ -1213,4 +1213,9 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	public boolean hasPreUpdateGeneratedProperties() {
 		return false;
 	}
+
+	@Override
+	public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+	}
 }

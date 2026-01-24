@@ -390,8 +390,19 @@ public interface EntityMappingType
 		return null;
 	}
 
+	/**
+	 * Mapping for temporal entity support, or {@code null} if not defined.
+	 */
+	default TemporalMapping getTemporalMapping() {
+		return null;
+	}
+
 	@Override
 	default TableDetails getSoftDeleteTableDetails() {
+		return getIdentifierTableDetails();
+	}
+
+	default TableDetails getTemporalTableDetails() {
 		return getIdentifierTableDetails();
 	}
 

@@ -21,6 +21,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
@@ -45,6 +46,7 @@ public abstract class SharedSessionBuilderImpl
 	private FlushMode flushMode;
 	private int defaultBatchFetchSize;
 	private boolean subselectFetchEnabled;
+	private Instant temporalInstant;
 
 	private boolean tenantIdChanged;
 	private boolean readOnlyChanged;
@@ -68,6 +70,7 @@ public abstract class SharedSessionBuilderImpl
 		identifierRollback = original.isIdentifierRollbackEnabled();
 		// good idea to inherit this
 		jdbcTimeZone = original.getJdbcTimeZone();
+		temporalInstant = original.getLoadQueryInfluencers().getTemporalInstant();
 	}
 
 	protected abstract SessionImplementor createSession();
@@ -384,6 +387,11 @@ public abstract class SharedSessionBuilderImpl
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
+	}
+
+	@Override
+	public Instant getTemporalInstant() {
+		return temporalInstant;
 	}
 
 	@Override

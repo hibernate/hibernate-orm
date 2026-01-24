@@ -63,6 +63,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+		attributeMapping.applyTemporalRestrictions( tableGroup, querySpec::applyPredicate, influencers );
 
 		jdbcParameters = jdbcParametersBuilder.build();
 		jdbcSelect =

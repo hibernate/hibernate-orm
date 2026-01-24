@@ -5,7 +5,6 @@
 package org.hibernate.id.insert;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +40,9 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	private final List<ColumnReference> generatedColumns;
 
 	public InsertReturningDelegate(EntityPersister persister, EventType timing) {
-		super(
-				persister,
-				timing,
-				true,
+		super( persister, timing, true,
 				persister.getFactory().getJdbcServices().getDialect()
-						.supportsInsertReturningRowId()
-		);
+						.supportsInsertReturningRowId() );
 		tableReference = new MutatingTableReference( persister.getIdentifierTableMapping() );
 		final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
 		generatedColumns = new ArrayList<>( resultBuilders.size() );
@@ -71,7 +66,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
-		final ResultSet resultSet =
+		final var resultSet =
 				session.getJdbcCoordinator().getResultSetReturn()
 						.execute( preparedStatement, sql );
 		try {
@@ -80,7 +75,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 		catch (SQLException sqle) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
-					"Unable to extract generated key(s) from generated-keys ResultSet",
+					"Unable to extract generated keys from ResultSet",
 					sql
 			);
 		}

@@ -30,7 +30,6 @@ import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -38,7 +37,6 @@ import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.jdbc.internal.DirectResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
-import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
@@ -133,7 +131,7 @@ public class GeneratedValuesHelper {
 		final var directResultSetAccess =
 				new DirectResultSetAccess( session, statement, resultSet );
 		final var influencers = session.getLoadQueryInfluencers();
-		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
+		final var jdbcValues = new JdbcValuesResultSetImpl(
 				directResultSetAccess,
 				null,
 				null,
@@ -190,7 +188,7 @@ public class GeneratedValuesHelper {
 			List<? extends ModelPart> generatedProperties) {
 		final var parentNavigablePath = new NavigablePath( persister.getEntityName() );
 		// This is just a mock table group needed to correctly resolve expressions
-		final TableGroup tableGroup = new TableGroupImpl(
+		final var tableGroup = new TableGroupImpl(
 				parentNavigablePath,
 				null,
 				new NamedTableReference( "t", "t" ),
@@ -277,7 +275,7 @@ public class GeneratedValuesHelper {
 		final boolean hasRowId =
 				timing == EventType.INSERT
 						&& persister.getRowIdMapping() != null;
-		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final var dialect = factory.getJdbcServices().getDialect();
 		if ( hasRowId
 				&& dialect.supportsInsertReturning()
 				&& dialect.supportsInsertReturningRowId()

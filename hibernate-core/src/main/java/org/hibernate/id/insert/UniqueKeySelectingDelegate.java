@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
@@ -46,7 +45,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 			uniqueKeyTypes[i] = persister.getPropertyType( uniqueKeyPropertyNames[i] );
 		}
 
-		final EntityRowIdMapping rowIdMapping = persister.getRowIdMapping();
+		final var rowIdMapping = persister.getRowIdMapping();
 		if ( !persister.isIdentifierAssignedByInsert()
 				|| persister.getInsertGeneratedProperties().size() > 1
 				|| rowIdMapping != null ) {

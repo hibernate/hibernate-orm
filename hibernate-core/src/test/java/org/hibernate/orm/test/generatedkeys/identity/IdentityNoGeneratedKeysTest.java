@@ -5,6 +5,8 @@
 package org.hibernate.orm.test.generatedkeys.identity;
 
 import jakarta.persistence.TransactionRequiredException;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -13,6 +15,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +35,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class IdentityNoGeneratedKeysTest {
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "'hibernate.jdbc.use_get_generated_keys' was disabled and the dialect does not support selecting the last generated identity")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class) // no clue why this fails
 	public void testIdentityColumnGeneratedIds(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

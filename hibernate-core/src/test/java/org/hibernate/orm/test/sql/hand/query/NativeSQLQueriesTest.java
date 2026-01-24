@@ -36,7 +36,7 @@ import org.hibernate.orm.test.sql.hand.Speech;
 import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.transform.ResultTransformer;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -317,11 +317,13 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.getNamedQuery( "orgNamesOnly" ).list();
+					List result = session.createNamedQuery( "orgNamesOnly" ).list();
 					assertTrue( result.contains( "IFA" ) );
 					assertTrue( result.contains( "JBoss" ) );
 
-					result = session.getNamedQuery( "orgNamesOnly" ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
+					result = session.createNamedQuery( "orgNamesOnly" )
+							.setTupleTransformer(Transformers.mapTransformer())
+							.list();
 					Map m = (Map) result.get(0);
 					assertEquals( 2, result.size() );
 					assertEquals( 1, m.size() );
@@ -331,7 +333,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator iter = session.getNamedQuery( "orgNamesAndOrgs" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgNamesAndOrgs" ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
 					assertEquals( 2, o.length, "expecting 2 values" );
 					assertEquals( "IFA", o[0] );
@@ -345,7 +347,7 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					// test that the ordering of the results is truly based on the order in which they were defined
-					Iterator iter = session.getNamedQuery( "orgsAndOrgNames" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgsAndOrgNames" ).list().iterator();
 					Object[] row = ( Object[] ) iter.next();
 					assertEquals( 2, row.length, "expecting 2 values" );
 					assertEquals( Organization.class, row[0].getClass(), "expecting non-scalar result first" );
@@ -363,7 +365,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator iter = session.getNamedQuery( "orgIdsAndOrgNames" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgIdsAndOrgNames" ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
 					assertEquals( "IFA", o[1] );
 					assertEquals( o[0], idIfa );
@@ -395,7 +397,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query namedQuery = session.getNamedQuery("AllEmploymentAsMapped");
+					Query namedQuery = session.createNamedQuery("AllEmploymentAsMapped");
 					List list = namedQuery.list();
 					assertEquals(1,list.size());
 					Employment emp2 = (Employment) list.get(0);
@@ -407,8 +409,8 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query sqlQuery = session.getNamedQuery("EmploymentAndPerson");
-					sqlQuery.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+					Query sqlQuery = session.createNamedQuery("EmploymentAndPerson")
+							.setTupleTransformer(Transformers.mapTransformer());
 					List list = sqlQuery.list();
 					assertEquals(1,list.size() );
 					Object res = list.get(0);
@@ -420,8 +422,8 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query sqlQuery = session.getNamedQuery( "organizationreturnproperty" );
-					sqlQuery.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+					Query sqlQuery = session.createNamedQuery( "organizationreturnproperty" )
+							.setTupleTransformer(Transformers.mapTransformer());
 					List list = sqlQuery.list();
 					assertEquals( 2,list.size() );
 					Map m = (Map) list.get(0);
@@ -443,7 +445,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query namedQuery = session.getNamedQuery("EmploymentAndPerson");
+					Query namedQuery = session.createNamedQuery("EmploymentAndPerson");
 					List list = namedQuery.list();
 					assertEquals(1,list.size() );
 					Object[] objs = (Object[]) list.get(0);
@@ -562,7 +564,7 @@ public class NativeSQLQueriesTest {
 
 					List list = session.createNativeQuery( getEmploymentSQL() )
 							.addEntity( Employment.class.getName() )
-							.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP)
+							.setTupleTransformer(Transformers.mapTransformer())
 							.list();
 					assertEquals( 1,list.size() );
 					Map m = (Map) list.get(0);
@@ -574,7 +576,9 @@ public class NativeSQLQueriesTest {
 					Object[] o = (Object[]) list.get(0);
 					assertEquals(8, o.length);
 
-					list = session.createNativeQuery( getEmploymentSQL() ).setResultTransformer( new UpperCasedAliasToEntityMapResultTransformer() ).list();
+					list = session.createNativeQuery( getEmploymentSQL() )
+							.setTupleTransformer(Transformers.mapTransformer())
+							.list();
 					assertEquals(1, list.size());
 					m = (Map) list.get(0);
 					assertTrue(m.containsKey("EMPID"));
@@ -591,7 +595,7 @@ public class NativeSQLQueriesTest {
 
 
 
-					Query queryWithCollection = session.getNamedQuery("organizationEmploymentsExplicitAliases");
+					Query queryWithCollection = session.createNamedQuery("organizationEmploymentsExplicitAliases");
 					queryWithCollection.setParameter("id",  jboss.getId() );
 					list = queryWithCollection.list();
 					assertEquals( 1, list.size() );
@@ -615,13 +619,13 @@ public class NativeSQLQueriesTest {
 					session.clear();
 
 					// TODO : why twice?
-					session.getNamedQuery( "organizationreturnproperty" ).list();
-					list = session.getNamedQuery( "organizationreturnproperty" ).list();
+					session.createNamedQuery( "organizationreturnproperty" ).list();
+					list = session.createNamedQuery( "organizationreturnproperty" ).list();
 					assertEquals( 2,list.size() );
 
 					session.clear();
 
-					list = session.getNamedQuery( "organizationautodetect" ).list();
+					list = session.createNamedQuery( "organizationautodetect" ).list();
 					assertEquals( 2,list.size() );
 				}
 		);
@@ -655,7 +659,7 @@ public class NativeSQLQueriesTest {
 					enterprise.setDimensions( d );
 					session.persist( enterprise );
 					session.flush();
-					Object[] result = (Object[]) session.getNamedQuery( "spaceship" ).uniqueResult();
+					Object[] result = (Object[]) session.createNamedQuery( "spaceship" ).uniqueResult();
 					assertEquals( 3, result.length, "expecting 3 result values" );
 					enterprise = ( SpaceShip ) result[0];
 					assertEquals( 50d, enterprise.getSpeed() );
@@ -810,7 +814,7 @@ public class NativeSQLQueriesTest {
 //				.addEntity("groupp", Group.class)
 //				.addJoin("gp","groupp.persons")
 //				.list();
-					List l = session.getNamedQuery( "manyToManyFetch" ).list();
+					List l = session.createNamedQuery( "manyToManyFetch" ).list();
 					//assertEquals( 2, l.size() );
 				}
 		);
@@ -926,7 +930,7 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON" )
-							.setResultTransformer( Transformers.aliasToBean( HashMap.class ) )
+							.setTupleTransformer(Transformers.beanTransformer( HashMap.class ))
 							.uniqueResult();
 					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
 					session.remove( gavin );
@@ -956,7 +960,8 @@ public class NativeSQLQueriesTest {
 		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
-	private static class UpperCasedAliasToEntityMapResultTransformer implements ResultTransformer<Object> {
+	private static class UpperCasedAliasToEntityMapResultTransformer implements TupleTransformer<Object> {
+		@Override
 		public Object transformTuple(Object[] tuple, String[] aliases) {
 			Map<String,Object> result = new HashMap<>( tuple.length );
 			for ( int i = 0; i < tuple.length; i++ ) {

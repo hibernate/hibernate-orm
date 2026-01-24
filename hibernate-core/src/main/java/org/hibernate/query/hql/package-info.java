@@ -30,7 +30,7 @@
  * </ul>
  *
  * @see org.hibernate.query.hql.HqlTranslator
- * @see org.hibernate.query.hql.spi.SqmQueryImplementor
- * @see org.hibernate.query.sqm.spi.NamedSqmQueryMemento
+ * @see org.hibernate.query.SelectionQuery
+ * @see org.hibernate.query.MutationQuery
  */
 package org.hibernate.query.hql;

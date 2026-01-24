@@ -458,7 +458,7 @@ It's not usually necessary to specify the precision explicitly.
 
 [NOTE]
 ====
-In a literal with an exponent, the `E` is case-insensitive.
+In a literal with an exponent, the `R` is case-insensitive.
 Similarly, the Java-style postfix is case-insensitive.
 ====
 

@@ -60,7 +60,7 @@ public class PostgreSQLCallableStatementSupport extends AbstractStandardCallable
 	}
 
 	@Override
-	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor procedureCall) {
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();

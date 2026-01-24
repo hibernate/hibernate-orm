@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -14,7 +15,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
@@ -58,6 +58,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jpa.internal.EntityCallbacksFactory;
+import org.hibernate.event.jpa.spi.EntityCallbacks;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -326,6 +328,8 @@ public abstract class AbstractEntityPersister
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
 
+	private final EntityCallbacks jpaCallbacks;
+
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
 	private NaturalIdLoader<?> naturalIdLoader;
@@ -459,10 +463,17 @@ public abstract class AbstractEntityPersister
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext)
-				throws HibernateException {
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( persistentClass, creationContext );
-		jpaEntityName = persistentClass.getJpaEntityName();
+
+		final var factoryOptions = creationContext.getSessionFactoryOptions();
+
+		this.jpaEntityName = persistentClass.getJpaEntityName();
+		this.jpaCallbacks = EntityCallbacksFactory.buildCallbacks(
+				persistentClass,
+				factoryOptions,
+				creationContext.getServiceRegistry()
+		);
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -470,8 +481,6 @@ public abstract class AbstractEntityPersister
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
 		navigableRole = new NavigableRole( persistentClass.getEntityName() );
-
-		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		if ( factoryOptions.isSecondLevelCacheEnabled() ) {
 			this.cacheAccessStrategy = cacheAccessStrategy;
@@ -572,7 +581,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			sqlWhereStringTableExpression =
-					determineTableName( getCountainingClass( persistentClass ).getTable() );
+					determineTableName( getContainingClass( persistentClass ).getTable() );
 			sqlWhereStringTemplate =
 					renderSqlWhereStringTemplate( persistentClass, dialect, typeConfiguration );
 		}
@@ -769,6 +778,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
+	public EntityCallbacks getEntityCallbacks() {
+		return jpaCallbacks;
+	}
+
 	private static String renderSqlWhereStringTemplate(
 			PersistentClass persistentClass, Dialect dialect, TypeConfiguration typeConfiguration) {
 		return Template.renderWhereStringTemplate(
@@ -778,7 +792,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private static PersistentClass getCountainingClass(PersistentClass persistentClass) {
+	private static PersistentClass getContainingClass(PersistentClass persistentClass) {
 		var containingClass = persistentClass;
 		while ( containingClass.getSuperclass() != null ) {
 			final var superclass = containingClass.getSuperclass();
@@ -2192,13 +2206,13 @@ public abstract class AbstractEntityPersister
 		return getIdentifierMapping().getJdbcMapping( index );
 	}
 
-	protected LockingStrategy generateLocker(LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy generateLocker(LockMode lockMode, PessimisticLockScope lockScope) {
 		return getDialect().getLockingStrategy( this, lockMode, lockScope );
 	}
 
 	// Used by Hibernate Reactive
-	protected LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
-		return lockScope != Locking.Scope.ROOT_ONLY
+	protected LockingStrategy getLocker(LockMode lockMode, PessimisticLockScope lockScope) {
+		return lockScope != PessimisticLockScope.NORMAL
 				// be sure to not use the cached form if any form of extended locking is requested
 				? generateLocker( lockMode, lockScope )
 				: lockers.computeIfAbsent( lockMode, (l) -> generateLocker( lockMode, lockScope ) );
@@ -2212,7 +2226,7 @@ public abstract class AbstractEntityPersister
 			LockMode lockMode,
 			SharedSessionContractImplementor session)
 					throws HibernateException {
-		getLocker( lockMode, Locking.Scope.ROOT_ONLY )
+		getLocker( lockMode, PessimisticLockScope.NORMAL )
 				.lock( id, version, object, Timeouts.WAIT_FOREVER, session );
 	}
 

@@ -26,7 +26,6 @@ import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
@@ -194,6 +193,7 @@ public final class PersistenceXmlParser {
 		setTransactionType( jaxbPersistenceUnit, persistenceUnitDescriptor );
 
 		persistenceUnitDescriptor.setProviderClassName( jaxbPersistenceUnit.getProvider() );
+		persistenceUnitDescriptor.setDefaultToOneFetchType( jaxbPersistenceUnit.getDefaultToOneFetchType() );
 		persistenceUnitDescriptor.setNonJtaDataSource( jaxbPersistenceUnit.getNonJtaDataSource() );
 		persistenceUnitDescriptor.setJtaDataSource( jaxbPersistenceUnit.getJtaDataSource() );
 		persistenceUnitDescriptor.setSharedCacheMode( jaxbPersistenceUnit.getSharedCacheMode() );
@@ -217,8 +217,7 @@ public final class PersistenceXmlParser {
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final var transactionType = jaxbPersistenceUnit.getTransactionType();
 		if ( transactionType != null ) {
-			persistenceUnitDescriptor.setTransactionType(
-					PersistenceUnitTransactionTypeHelper.toNewForm( transactionType ) );
+			persistenceUnitDescriptor.setTransactionType( transactionType );
 		}
 	}
 

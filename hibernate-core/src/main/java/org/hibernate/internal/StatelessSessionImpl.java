@@ -4,17 +4,19 @@
  */
 package org.hibernate.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.OrderingMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
@@ -28,7 +30,6 @@ import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
@@ -62,19 +63,32 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.internal.find.FindByKeyOperation;
+import org.hibernate.internal.find.StatelessFindByKeyOperation;
+import org.hibernate.internal.find.StatelessFindMultipleByKeyOperation;
+import org.hibernate.internal.find.StatelessLoadAccessContext;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
-import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
+import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.QuerySettings.CRITERIA_COPY_TREE;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
@@ -86,6 +100,8 @@ import static org.hibernate.event.internal.DefaultInitializeCollectionEventListe
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
+import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -116,9 +132,9 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  */
 // Extended by Hibernate Reactive
-public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSessionImplementor {
-
-	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
+public class StatelessSessionImpl
+		extends AbstractSharedSessionContract
+		implements StatelessSessionImplementor, StatelessLoadAccessContext {
 
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
@@ -127,6 +143,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private final FlushMode flushMode;
 	private final EventListenerGroups eventListenerGroups;
+
+	// Defaults to null, meaning the properties
+	// are the default properties of the factory.
+	private Map<String, Object> properties;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -157,6 +177,64 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public StatelessSessionImplementor getStatelessSession() {
+		return this;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// After the "un seal" PR is applied, this should all be consolidated
+	// with the Session forms on SharedSessionContract
+
+	@Override
+	protected Map<String, Object> getInitialProperties() {
+		return new HashMap<>();
+	}
+
+	/**
+	 * NOTE : this one should be abstract on AbstractSharedSessionContract
+	 * and implemented here and SessionImpl...
+	 */
+	@SuppressWarnings("deprecation")
+	protected void interpretProperty(String propertyName, Object value) {
+		switch ( propertyName ) {
+			case JPA_SHARED_CACHE_RETRIEVE_MODE:
+			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
+				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				setCacheMode(
+						interpretCacheMode(
+								determineCacheStoreMode( properties ),
+								(CacheRetrieveMode) value
+						)
+				);
+				break;
+			case JPA_SHARED_CACHE_STORE_MODE:
+			case JAKARTA_SHARED_CACHE_STORE_MODE:
+				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				setCacheMode(
+						interpretCacheMode(
+								(CacheStoreMode) value,
+								determineCacheRetrieveMode( properties )
+						)
+				);
+				break;
+			case CRITERIA_COPY_TREE:
+				setCriteriaCopyTreeEnabled( parseBoolean( value.toString() ) );
+				break;
+			case STATEMENT_BATCH_SIZE:
+			case HINT_JDBC_BATCH_SIZE:
+				setJdbcBatchSize( parseInt( value.toString() ) );
+				break;
+			default:
+				SESSION_LOGGER.tracef( "Unsupported property : %s", propertyName  );
+				break;
+		}
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return true;
 	}
@@ -171,11 +249,38 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return getFactory().getStatistics();
 	}
 
+	private CacheMode getCacheModeSafely() {
+		var mode = getCacheMode();
+		return mode == null ? CacheMode.NORMAL : mode;
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		var currentMode = getCacheModeSafely();
+		setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, currentMode.getJpaStoreMode() ) );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		var currentMode = getCacheModeSafely();
+		setCacheMode( CacheMode.fromJpaModes( currentMode.getJpaRetrieveMode(), cacheStoreMode ) );
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return getCacheModeSafely().getJpaRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return getCacheModeSafely().getJpaStoreMode();
+	}
+
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object insert(Object entity) {
-		return insert( null, entity );
+	public void insert(Object entity) {
+		insert( null, entity );
 	}
 
 	@Override
@@ -574,7 +679,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preCreate( entity );
+		persister.getEntityCallbacks().preCreate( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
@@ -591,7 +696,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preUpdate( entity );
+		persister.getEntityCallbacks().preUpdate( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
@@ -623,7 +728,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
-		getFactory().getEventEngine().getCallbackRegistry().preRemove( entity );
+		persister.getEntityCallbacks().preRemove( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;
@@ -787,51 +892,70 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return wrapped;
 	}
 
-	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// loading
 
-	@Override @SuppressWarnings("unchecked")
-	public <T> T get(Class<T> entityClass, Object id) {
-		return (T) get( entityClass.getName(), id );
+	@Override
+	protected <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityDescriptor, null, null, options );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
+	protected <T> FindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options) {
+		return new StatelessFindByKeyOperation<>(
+				entityDescriptor,
+				this,
+				graphSemantic,
+				rootGraph,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+	}
+
+	@Override
 	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
-		return (T) get( entityClass.getName(), id, lockMode );
+		return get( entityClass, id, (FindOption) lockMode );
 	}
 
 	@Override
-	public Object get(String entityName, Object id) {
-		return get( entityName, id, LockMode.NONE );
-	}
-
-	@Override
-	public Object get(String entityName, Object id, LockMode lockMode) {
-		checkOpen();
-
-		final var persister = requireEntityPersister( entityName );
-		if ( persister.canReadFromCache() ) {
-			final Object cachedEntity =
-					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
-			if ( cachedEntity != null ) {
-				temporaryPersistenceContext.clear();
-				return cachedEntity;
-			}
-		}
-		final Object result = persister.load( id, null, getNullSafeLockMode( lockMode ), this );
-		if ( temporaryPersistenceContext.isLoadFinished() ) {
-			temporaryPersistenceContext.clear();
+	public Object get(String entityName, Object key, FindOption... findOptions) {
+		var result = find( entityName, key, findOptions );
+		if ( result == null ) {
+			throw notFound( entityName, key );
 		}
 		return result;
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> graph, Object id) {
-		return get( graph, GraphSemantic.LOAD , id);
+	public Object get(String entityName, Object id, LockMode lockMode) {
+		return get( entityName, id, (FindOption) lockMode );
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> graph, Object id, LockMode lockMode) {
-		return get( graph, GraphSemantic.LOAD, id, lockMode);
+	public <T> T get(EntityGraph<T> entityGraph, Object id) {
+		var result = find( entityGraph, id );
+		if ( result == null ) {
+			final var graph = (RootGraphImplementor<T>) entityGraph;
+			throw notFound( graph.getGraphedType().getTypeName(), id );
+		}
+		return result;
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> entityGraph, Object id, LockMode lockMode) {
+		var result = find( entityGraph, id, lockMode );
+		if ( result == null ) {
+			final var graph = (RootGraphImplementor<T>) entityGraph;
+			throw notFound( graph.getGraphedType().getTypeName(), id );
+		}
+		return result;
 	}
 
 	@Override
@@ -858,18 +982,62 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public <T> List<T> findMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+		checkOpen();
+
+		final var entityDescriptor = requireEntityPersister( entityClass.getName() );
+		var operation = new StatelessFindMultipleByKeyOperation<T>(
+				entityDescriptor,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				findOptions
+		);
+		return operation.performFind( keys, null, null );
+	}
+
+	@Override
+	public <T> List<T> findMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		checkOpen();
+
+		final var graph = (RootGraphImplementor<T>) entityGraph;
+		final var type = graph.getGraphedType();
+
+		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+		var operation = new StatelessFindMultipleByKeyOperation<T>(
+				entityDescriptor,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				findOptions
+		);
+		return operation.performFind( keys, GraphSemantic.LOAD, graph );
+	}
+
+	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode) {
-		for ( Object id : ids ) {
-			if ( id == null ) {
-				throw new IllegalArgumentException( "Null id" );
-			}
-		}
+		checkOpen();
 
 		final var persister = requireEntityPersister( entityClass.getName() );
-		final var results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
-		//noinspection unchecked
-		return (List<T>) results;
+		var operation = new StatelessFindMultipleByKeyOperation<T>(
+				persister,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				lockMode
+		);
+		return operation.performFind( ids, null, null );
 	}
+
 	@Override
 	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> ids) {
 		return getMultiple( entityGraph, GraphSemantic.LOAD, ids );
@@ -877,78 +1045,31 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids) {
-		for ( Object id : ids ) {
-			if ( id == null ) {
-				throw new IllegalArgumentException( "Null id" );
-			}
-		}
-
 		final var rootGraph = (RootGraphImplementor<T>) entityGraph;
-
-		final var effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
-		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
-
-		try {
-			final var persister = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
-			final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
-			//noinspection unchecked
-			return (List<T>) results;
-		}
-		finally {
-			effectiveEntityGraph.clear();
-		}
+		final var entityDescriptor = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
+		var operation = new StatelessFindMultipleByKeyOperation<T>(
+				entityDescriptor,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory()
+		);
+		return operation.performFind( ids, GraphSemantic.LOAD, rootGraph );
 	}
 
 	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
-		for ( Object id : ids ) {
-			if ( id == null ) {
-				throw new IllegalArgumentException("Null id");
-			}
-		}
-
-		final var persister = requireEntityPersister( entityClass.getName() );
-		final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
-		//noinspection unchecked
-		return (List<T>) results;
-
-//		final List<Object> uncachedIds;
-//		final List<T> list = new ArrayList<>( ids.size() );
-//		if ( persister.canReadFromCache() ) {
-//			uncachedIds = new ArrayList<>( ids.size() );
-//			for (Object id : ids) {
-//				final Object cachedEntity =
-//						loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, LockMode.NONE );
-//				if ( cachedEntity == null ) {
-//					uncachedIds.add( id );
-//					list.add( null );
-//				}
-//				else {
-//					//noinspection unchecked
-//					list.add( (T) cachedEntity );
-//				}
-//			}
-//		}
-//		else {
-//			uncachedIds = unmodifiableList(ids);
-//			for (int i = 0; i < ids.size(); i++) {
-//				list.add( null );
-//			}
-//		}
-//
-//		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
-//		final JpaRoot<T> from = query.from(entityClass);
-//		query.where( from.get( persister.getIdentifierPropertyName() ).in(uncachedIds) );
-//		final List<T> resultList = createSelectionQuery(query).getResultList();
-//		for (int i = 0; i < ids.size(); i++) {
-//			if ( list.get(i) == null ) {
-//				final Object id = ids.get(i);
-//				list.set( i, resultList.stream()
-//						.filter( entity -> entity != null && persister.getIdentifier( entity, this ).equals(id) )
-//						.findFirst().orElse( null ) );
-//			}
-//		}
-//		return list;
+		final var entityDescriptor = requireEntityPersister( entityClass.getName() );
+		var operation = new StatelessFindMultipleByKeyOperation<T>(
+				entityDescriptor,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory()
+		);
+		return operation.performFind( ids, null, null );
 	}
 
 	@Override
@@ -998,6 +1119,24 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
+	}
+
+	@Override
+	public void refresh(Object entity, LockModeType lockModeType) {
+		refresh( bestGuessEntityName( entity ), entity, LockMode.fromJpaLockMode( lockModeType ) );
+	}
+
+	@Override
+	public void refreshMultiple(List<?> entities) {
+		checkOpen();
+
+		// NOTE: the incoming list of entities can be heterogeneous - the elements
+		// need not be all the same type.
+
+		// for now, a simple implementation -
+		// todo (jpa4) : we will definitely want to improve this.
+
+		entities.forEach( this::refresh );
 	}
 
 	@Override
@@ -1145,7 +1284,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void fetch(Object association) {
+	public <T> T fetch(T association) {
 		checkOpen();
 		final var persistenceContext = getPersistenceContext();
 		final var initializer = extractLazyInitializer( association );
@@ -1219,6 +1358,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
+
+		// per JPA, always just returns the argument
+		return association;
 	}
 
 	@Override
@@ -1375,6 +1517,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public LockOptions getDefaultLockOptions() {
+		return LockOptions.NONE;
+	}
+
+	@Override
 	public PersistenceContext getPersistenceContextInternal() {
 		//In this case implemented the same as #getPersistenceContext
 		return temporaryPersistenceContext;
@@ -1525,53 +1672,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		throw new PersistenceException( "Hibernate cannot unwrap '" + getClass().getName()
 										+ "' as '" + type.getName() + "'" );
-	}
-
-	private static final class MultiLoadOptions implements MultiIdLoadOptions {
-		private final  LockOptions lockOptions;
-
-		private MultiLoadOptions() {
-			this.lockOptions = null;
-		}
-
-		private MultiLoadOptions(LockMode lockMode) {
-			this.lockOptions = new LockOptions( lockMode );
-		}
-
-		@Override
-		public SessionCheckMode getSessionCheckMode() {
-			return SessionCheckMode.DISABLED;
-		}
-
-		@Override
-		public boolean isSecondLevelCacheCheckingEnabled() {
-			return true;
-		}
-
-		@Override
-		public Boolean getReadOnly(SessionImplementor session) {
-			return null;
-		}
-
-		@Override
-		public RemovalsMode getRemovalsMode() {
-			return RemovalsMode.REPLACE;
-		}
-
-		@Override
-		public OrderingMode getOrderingMode() {
-			return OrderingMode.ORDERED;
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
-		@Override
-		public Integer getBatchSize() {
-			return null;
-		}
 	}
 
 }

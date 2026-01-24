@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -19,7 +20,8 @@ import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
+
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /**
  * PersistenceUnitDescriptor wrapper around {@linkplain PersistenceConfiguration}
@@ -65,9 +67,9 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 			|| configuration.rootUrl() == null && configuration.jarFileUrls().isEmpty();
 	}
 
-	@Override @SuppressWarnings("removal")
-	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
-		return PersistenceUnitTransactionTypeHelper.toDeprecatedForm( getPersistenceUnitTransactionType() );
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return persistenceConfiguration.defaultToOneFetchType();
 	}
 
 	@Override
@@ -116,12 +118,15 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
-
+	public boolean isClassTransformerRegistrationDisabled() {
+		return true;
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer() {
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+		if ( JPA_LOGGER.isDebugEnabled() ) {
+			JPA_LOGGER.pushingClassTransformerUnsupported( getName() );
+		}
 		return null;
 	}
 

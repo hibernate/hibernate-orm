@@ -5,7 +5,7 @@
 package org.hibernate.query.results.internal.implicit;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;

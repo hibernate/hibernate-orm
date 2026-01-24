@@ -20,8 +20,10 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -82,7 +84,7 @@ public class ConstraintInterpretationTest2 {
 				assertEquals( ConstraintViolationException.ConstraintKind.UNIQUE, cve.getKind() );
 				// DB2 error message doesn't contain unique constraint name
 				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
-					assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
+					assertThat( cve.getConstraintName() ).containsIgnoringCase( "ssnuk" );
 				}
 			}
 		} );
@@ -118,6 +120,12 @@ public class ConstraintInterpretationTest2 {
 			}
 		} );
 	}
+
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope scope) {
+		scope.dropData();
+	}
+
 	@Entity @Table(name = "table_1",
 			uniqueConstraints = @UniqueConstraint(name = "ssnuk", columnNames = "ssn"),
 			check = @CheckConstraint(name = "namecheck", constraint = "name <> ' '"))

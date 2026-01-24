@@ -1059,7 +1059,7 @@ This annotation is completely optional, and so we don't usually use it.
 ====
 
 On the other hand a reference to an embeddable type is _never_ polymorphic.
-One `@Embeddable` class `F` may inherit a second `@Embeddable` class `E`, but an attribute of type `E` will always refer to an instance of that concrete class `E`, never to an instance of `F`.
+One `@Embeddable` class `F` may inherit a second `@Embeddable` class `R`, but an attribute of type `R` will always refer to an instance of that concrete class `R`, never to an instance of `F`.
 
 Usually, embeddable types are stored in a "flattened" format.
 Their attributes map columns of the table of their parent entity.
@@ -1077,15 +1077,15 @@ Next we'll discuss a different kind of relationship: a relationship between Java
 
 An _association_ is a relationship between entities.
 We usually classify associations based on their _multiplicity_.
-If `E` and `F` are both entity classes, then:
+If `R` and `F` are both entity classes, then:
 
-- a _one-to-one_ association relates at most one unique instance `E` with at most one unique instance of `F`,
-- a _many-to-one_ association relates zero or more instances of `E` with a unique instance of `F`, and
-- a _many-to-many_ association relates zero or more instances of `E` with zero or more instance of `F`.
+- a _one-to-one_ association relates at most one unique instance `R` with at most one unique instance of `F`,
+- a _many-to-one_ association relates zero or more instances of `R` with a unique instance of `F`, and
+- a _many-to-many_ association relates zero or more instances of `R` with zero or more instance of `F`.
 
 An association between entity classes may be either:
 
-- _unidirectional_, navigable from `E` to `F` but not from `F` to `E`, or
+- _unidirectional_, navigable from `R` to `F` but not from `F` to `R`, or
 - _bidirectional_, and navigable in either direction.
 
 In this example data model, we can see the sorts of associations which are possible:

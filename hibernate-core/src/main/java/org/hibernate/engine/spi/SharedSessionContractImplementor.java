@@ -4,39 +4,50 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.Set;
-import java.util.UUID;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaStatement;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.StatelessSession;
-import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.spi.MutationQueryImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryProducerImplementor;
+import org.hibernate.query.spi.SelectionQueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -71,7 +82,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface SharedSessionContractImplementor
 		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions,
-					QueryProducerImplementor, JavaType.CoercionContext {
+					JavaType.CoercionContext {
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
@@ -406,7 +417,6 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The flush mode
 	 */
-	@Override
 	FlushMode getHibernateFlushMode();
 
 	/**
@@ -461,6 +471,21 @@ public interface SharedSessionContractImplementor
 	 *         should never be null.
 	 */
 	LoadQueryInfluencers getLoadQueryInfluencers();
+
+	/**
+	 * The default lock options associated with this session.
+	 */
+	LockOptions getDefaultLockOptions();
+
+	/**
+	 * Lock timeout specified on the SessionFactory via hint.
+	 */
+	Timeout getDefaultLockTimeout();
+
+	/**
+	 * Query timeout specified on the SessionFactory via hint.
+	 */
+	Timeout getDefaultTimeout();
 
 	/**
 	 * Obtain an {@link ExceptionConverter} for reporting an error.
@@ -631,4 +656,70 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Query-related covariance
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(String queryString);
+
+	@Override
+	<R> SelectionQueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
+
+	@Override
+	<R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
+
+	@Override
+	<R> SelectionQueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	@Override
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
+
+	@Override
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
+
+	@Override
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
+
+	@Override
+	<R> SelectionQueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
+
+	@Override
+	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName);
+
+	@Override
+	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
+
+	@Override
+	<T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaSelect);
+
+	@Override
+	MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaStatement);
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	MutationQueryImplementor createStatement(CriteriaStatement<?> criteriaStatement);
+
+	@Override
+	MutationQueryImplementor<?> createMutationQuery(JpaCriteriaInsert<?> insert);
+
+	@Override
+	<T> SelectionQueryImplementor<T> createQuery(String queryString, EntityGraph<T> entityGraph);
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	QueryImplementor createNamedQuery(String name);
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	NativeQueryImplementor createNativeQuery(String sql);
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	NativeQueryImplementor createNativeQuery(String sql, String resultSetMappingName);
+
+	@Override
+	<T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping);
 }

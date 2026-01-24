@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.FetchType;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
@@ -18,9 +19,9 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static org.hibernate.boot.archive.internal.ArchiveHelper.getURLFromPath;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /**
  * Describes the information gleaned from a {@code <persistence-unit/>}
@@ -44,6 +45,7 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	private boolean useQuotedIdentifiers;
 	private boolean excludeUnlistedClasses;
 	private ValidationMode validationMode;
+	private FetchType defaultToOneFetchType;
 	private SharedCacheMode sharedCacheMode;
 
 	private final Properties properties = new Properties();
@@ -68,6 +70,15 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return defaultToOneFetchType;
+	}
+
+	public void setDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+		this.defaultToOneFetchType = defaultToOneFetchType;
 	}
 
 	@Override
@@ -100,11 +111,6 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	@Override
 	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
 		return transactionType;
-	}
-
-	@Override @SuppressWarnings("removal")
-	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
-		return PersistenceUnitTransactionTypeHelper.toDeprecatedForm( transactionType );
 	}
 
 	public void setTransactionType(PersistenceUnitTransactionType transactionType) {
@@ -210,12 +216,15 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
-		// todo : log a message that this is currently not supported...
+	public boolean isClassTransformerRegistrationDisabled() {
+		return true;
 	}
 
 	@Override
-	public ClassTransformer getClassTransformer() {
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
+		if ( JPA_LOGGER.isDebugEnabled() ) {
+			JPA_LOGGER.pushingClassTransformerUnsupported( getName() );
+		}
 		return null;
 	}
 }

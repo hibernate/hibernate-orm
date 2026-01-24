@@ -4,10 +4,9 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -16,8 +15,9 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -26,7 +26,7 @@ public class MutationQueryOptions implements QueryOptions {
 	public static final MutationQueryOptions INSTANCE = new MutationQueryOptions();
 
 	@Override
-	public Integer getTimeout() {
+	public Timeout getTimeout() {
 		return null;
 	}
 

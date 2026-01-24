@@ -4,21 +4,26 @@
  */
 package org.hibernate.procedure;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
-
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
-import org.hibernate.query.SynchronizeableQuery;
 import org.hibernate.query.CommonQueryContract;
+import org.hibernate.query.QueryFlushMode;
+import org.hibernate.query.SynchronizeableQuery;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Defines support for executing database stored procedures and functions using the
@@ -78,6 +83,32 @@ public interface ProcedureCall
 	 * @return The procedure name.
 	 */
 	String getProcedureName();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Options
+
+	@Override
+	ProcedureCall setComment(String comment);
+
+	@Override
+	ProcedureCall addQueryHint(String hint);
+
+	@Override
+	ProcedureCall setMaxResults(int maxResults);
+
+	@Override
+	ProcedureCall setFirstResult(int startPosition);
+
+	@Override
+	ProcedureCall setLockMode(LockModeType lockMode);
+
+	@Override
+	ProcedureCall setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Parameter handling
 
 	/**
 	 * Does this {@code ProcedureCall} represent a call to a database {@code FUNCTION},
@@ -255,6 +286,15 @@ public interface ProcedureCall
 	/* Covariant overrides */
 
 	@Override
+	ProcedureCall setTimeout(Integer integer);
+
+	@Override
+	ProcedureCall setTimeout(int timeout);
+
+	@Override
+	ProcedureCall setTimeout(Timeout timeout);
+
+	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
 	@Override
@@ -285,7 +325,25 @@ public interface ProcedureCall
 	ProcedureCall setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
+	<P> ProcedureCall setParameter(String name, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCall setParameter(String name, P value, Type<P> type);
+
+	@Override
+	<P> ProcedureCall setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
 	ProcedureCall setParameter(int position, Object value);
+
+	@Override
+	<P> ProcedureCall setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> ProcedureCall setParameter(int position, P value, Class<P> type);
+
+	@Override
+	<P> ProcedureCall setParameter(int position, P value, Type<P> type);
 
 	@Override @Deprecated
 	ProcedureCall setParameter(int position, Calendar value, TemporalType temporalType);
@@ -301,6 +359,12 @@ public interface ProcedureCall
 
 	@Override
 	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCall setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	ProcedureCall setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * The hint key indicating the return {@linkplain java.sql.Types JDBC type code} of a function.

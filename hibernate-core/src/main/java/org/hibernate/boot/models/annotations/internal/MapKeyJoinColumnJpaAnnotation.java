@@ -7,6 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.CheckConstraint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
@@ -17,6 +18,7 @@ import org.hibernate.models.spi.ModelsContext;
 import jakarta.persistence.MapKeyJoinColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -27,10 +29,12 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 	private boolean nullable;
 	private boolean insertable;
 	private boolean updatable;
+	private String comment;
 	private String columnDefinition;
 	private String options;
 	private String table;
 	private jakarta.persistence.ForeignKey foreignKey;
+	private CheckConstraint[] check;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -146,6 +150,16 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 
 
 	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
+	}
+
+
+	@Override
 	public String columnDefinition() {
 		return columnDefinition;
 	}
@@ -184,6 +198,15 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 		this.foreignKey = value;
 	}
 
+
+	@Override
+	public CheckConstraint[] check() {
+		return check;
+	}
+
+	public void check(CheckConstraint[] check) {
+		this.check = check;
+	}
 
 	public void apply(JaxbMapKeyJoinColumnImpl jaxbColumn, XmlDocumentContext xmlDocumentContext) {
 		if ( StringHelper.isNotEmpty( jaxbColumn.getName() ) ) {
@@ -226,5 +249,7 @@ public class MapKeyJoinColumnJpaAnnotation implements MapKeyJoinColumn {
 					xmlDocumentContext
 			) );
 		}
+
+		check( collectCheckConstraints( jaxbColumn.getCheckConstraints(), xmlDocumentContext ) );
 	}
 }

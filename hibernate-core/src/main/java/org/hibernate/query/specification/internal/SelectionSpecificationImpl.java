@@ -4,11 +4,15 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
-
+import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
@@ -17,13 +21,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.specification.SelectionSpecification;
+import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
+import org.hibernate.query.specification.SelectionSpecification;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
@@ -48,7 +53,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
  *
  * @author Steve Ebersole
  */
-public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>, TypedQueryReference<T> {
+public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>, JpaTypedQueryReference<T> {
 	private final Class<T> resultType;
 	private final String hql;
 	private final CriteriaQuery<T> criteriaQuery;
@@ -170,7 +175,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new SqmSelectionQueryImpl<>( sqmStatement, false, resultType, sessionImpl );
+		return new SelectionQueryImpl<>( sqmStatement, false, resultType, sessionImpl );
 	}
 
 	private SqmSelectStatement<T> build(QueryEngine queryEngine) {
@@ -337,5 +342,35 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 				),
 				hql
 		);
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return null;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		return null;
+	}
+
+	@Override
+	public PessimisticLockScope getPessimisticLockScope() {
+		return null;
+	}
+
+	@Override
+	public Timeout getTimeout() {
+		return null;
+	}
+
+	@Override
+	public String getEntityGraphName() {
+		return "";
 	}
 }

@@ -28,7 +28,7 @@ public class Software {
 	}
 
 	@OneToMany(mappedBy = "software")
-	@MapKey(name = "codeName")
+	@MapKey("codeName")
 	public Map<String, Version> getVersions() {
 		return versions;
 	}

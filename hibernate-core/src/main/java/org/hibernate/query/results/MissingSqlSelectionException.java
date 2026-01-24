@@ -5,6 +5,7 @@
 package org.hibernate.query.results;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.results.spi.ResultSetMapping;
 
 /**
  * Indicates that a column defined as part of a {@linkplain ResultSetMapping SQL ResultSet mapping} was not part

@@ -383,6 +383,12 @@
 			<jaxb:property name="formulaAttribute"/>
 		</jaxb:bindings>
 
+		<jaxb:bindings node="//xsd:simpleType[@name='TimeoutType']">
+			<jaxb:javaType name="jakarta.persistence.Timeout"
+					  parseMethod="org.hibernate.boot.jaxb.mapping.internal.TimeoutMarshalling.fromXml"
+					  printMethod="org.hibernate.boot.jaxb.mapping.internal.TimeoutMarshalling.toXml" />
+		</jaxb:bindings>
+
 	</jaxb:bindings>
 
 

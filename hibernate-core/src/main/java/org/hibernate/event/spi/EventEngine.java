@@ -4,11 +4,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -17,13 +12,16 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.internal.EventListenerRegistryImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.jpa.event.internal.CallbacksFactory.buildCallbackRegistry;
 
 /**
  * Composite for the things related to Hibernate's event system.
@@ -35,8 +33,6 @@ public class EventEngine {
 	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
-	private final CallbackRegistry callbackRegistry;
-
 	public EventEngine(MetadataImplementor mappings, SessionFactoryImplementor sessionFactory) {
 
 		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
@@ -45,13 +41,10 @@ public class EventEngine {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve (JPA) callback handlers
 
-		callbackRegistry = buildCallbackRegistry( sessionFactoryOptions, serviceRegistry, mappings.getEntityBindings() );
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve event types and listeners
 
-		final var listenerRegistryBuilder =
-				new EventListenerRegistryImpl.Builder( callbackRegistry, sessionFactoryOptions.isJpaBootstrap() );
+		final var listenerRegistryBuilder = new EventListenerRegistryImpl.Builder( sessionFactoryOptions.isJpaBootstrap() );
 
 		final Map<String,EventType<?>> eventTypes = new HashMap<>();
 		EventType.registerStandardTypes( eventTypes );
@@ -87,15 +80,10 @@ public class EventEngine {
 		return listenerRegistry;
 	}
 
-	public CallbackRegistry getCallbackRegistry() {
-		return callbackRegistry;
-	}
-
 	public void stop() {
 		if ( listenerRegistry instanceof Stoppable stoppable ) {
 			stoppable.stop();
 		}
-		callbackRegistry.release();
 	}
 
 	private static class ContributionManager implements EventEngineContributions {

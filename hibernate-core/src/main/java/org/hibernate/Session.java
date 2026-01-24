@@ -14,13 +14,14 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.stat.SessionStatistics;
 
 import java.util.Collection;
@@ -392,7 +393,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// entity is loaded in read-only mode.
 	///
 	/// @see #setReadOnly(Object,boolean)
-	/// @see Query#setReadOnly(boolean)
+	/// @see SelectionQuery#setReadOnly(boolean)
 	///
 	/// @param readOnly `true`, the default for loaded entities/proxies is read-only;
 	///				 `false`, the default for loaded entities/proxies is modifiable
@@ -485,24 +486,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param options options controlling the behavior of the operation
 	@Override
 	<T> T find(Class<T> entityType, Object id, FindOption... options);
-
-	/// Return the persistent instance of the named entity type with the given identifier,
-	/// or null if there is no such persistent instance.
-	///
-	/// Differs from {@linkplain #find(Class, Object)} in that this form accepts
-	/// the entity name of a [dynamic entity][org.hibernate.metamodel.RepresentationMode#MAP].
-	///
-	/// @see #find(Class, Object)
-	Object find(String entityName, Object primaryKey);
-
-	/// Return the persistent instance of the named entity type with the given identifier
-	/// using the specified options, or null if there is no such persistent instance.
-	///
-	/// Differs from [#find(Class, Object, FindOption...)] in that this form accepts
-	/// the entity name of a [dynamic entity][org.hibernate.metamodel.RepresentationMode#MAP].
-	///
-	/// @see #find(Class, Object, FindOption...)
-	Object find(String entityName, Object primaryKey, FindOption... options);
 
 	/// Return the persistent instances of the given entity class with the given identifiers
 	/// as a list. The position of an instance in the returned list matches the position of its
@@ -804,39 +787,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
 	/// with the session, return that instance. This method never returns an uninitialized
-	/// instance.
-	///
-	/// The object returned by `get()` or `find()` is either an unproxied instance
-	/// of the given entity class, or a fully-fetched proxy object.
-	///
-	/// This operation requests [LockMode#NONE], that is, no lock, allowing the object
-	/// to be retrieved from the cache without the cost of database access. However, if it is
-	/// necessary to read the state from the database, the object will be returned with the
-	/// lock mode [LockMode#READ].
-	///
-	/// To bypass the second-level cache, and ensure that the state is read from the database,
-	/// either:
-	///
-	///   - call [#get(Class,Object,LockMode)] with the explicit lock mode
-	///     [LockMode#READ], or
-	///   - {@linkplain #setCacheMode set the cache mode} to [CacheMode#IGNORE]
-	///     before calling this method.
-	///
-	/// @apiNote This operation is very similar to [#find(Class,Object)].
-	///
-	/// @param entityType the entity type
-	/// @param id an identifier
-	///
-	/// @return a persistent instance or null
-	///
-	/// @deprecated Because the semantics of this method may change in a future release.
-	///             Use [#find(Class,Object)] instead.
-	@Deprecated(since = "7.0", forRemoval = true)
-	<T> T get(Class<T> entityType, Object id);
-
-	/// Return the persistent instance of the given entity class with the given identifier,
-	/// or null if there is no such persistent instance. If the instance is already associated
-	/// with the session, return that instance. This method never returns an uninitialized
 	/// instance. Obtain the specified lock mode if the instance exists.
 	///
 	/// @apiNote This operation is very similar to [#find(Class,Object,LockModeType)].
@@ -850,26 +800,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated Use [#find(Class,Object,FindOption...)] instead.
 	@Deprecated(since = "7.0", forRemoval = true)
 	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
-
-	/// Return the persistent instance of the given named entity with the given identifier,
-	/// or null if there is no such persistent instance. If the instance is already associated
-	/// with the session, return that instance. This method never returns an uninitialized
-	/// instance.
-	///
-	/// @param entityName the entity name
-	/// @param id an identifier
-	///
-	/// @return a persistent instance or null
-	///
-	/// @deprecated The semantics of this method may change in a future release.
-	///             Use [SessionFactory#createGraphForDynamicEntity(String)]
-	///             together with [#find(EntityGraph,Object,FindOption...)]
-	///             to load [dynamic entities][org.hibernate.metamodel.RepresentationMode#MAP].
-	///
-	/// @see SessionFactory#createGraphForDynamicEntity(String)
-	/// @see #find(EntityGraph, Object, FindOption...)
-	@Deprecated(since = "7", forRemoval = true)
-	Object get(String entityName, Object id);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
@@ -1202,9 +1132,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// not be set to modifiable.
 	///
 	/// @see #setDefaultReadOnly(boolean)
-	/// @see Query#setReadOnly(boolean)
-	/// @see IdentifierLoadAccess#withReadOnly(boolean)
+	/// @see SelectionQuery#setReadOnly(boolean)
 	/// @see org.hibernate.annotations.Immutable
+	/// @see ReadOnlyMode
 	///
 	/// @param entityOrProxy an entity or proxy
 	/// @param readOnly `true` if the entity or proxy should be made read-only;
@@ -1362,44 +1292,67 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
-	// The following overrides should not be necessary
-	// and are only needed to work around a bug in IntelliJ
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQuery createNativeQuery(String queryString);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	<R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	/// Create a [Query] for the given JPA [CriteriaDelete].
-	///
-	/// @deprecated use [#createMutationQuery(CriteriaDelete)]
-	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaDelete deleteQuery);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override @Deprecated
+	MutationQuery createQuery(CriteriaStatement<?> criteriaStatement);
 
-	/// Create a [Query] for the given JPA [CriteriaUpdate].
-	///
-	/// @deprecated use [#createMutationQuery(CriteriaUpdate)]
-	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaUpdate updateQuery);
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	default <T> T unwrap(Class<T> type) {
 		return SharedSessionContract.super.unwrap(type);
 	}
+
+	/// @deprecated (since 8.0) Use #createNamedQuery instead.  Still here to allow for
+	/// forms using Hibernate's legacy result-set building, though such usages should
+	/// move to using [jakarta.persistence.sql.ResultSetMapping].
+	@Deprecated @SuppressWarnings("rawtypes")
+	NativeQuery getNamedNativeQuery(String name);
+
+
 }

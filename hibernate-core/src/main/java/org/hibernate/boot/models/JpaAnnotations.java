@@ -7,6 +7,10 @@ package org.hibernate.boot.models;
 import java.lang.annotation.Annotation;
 import java.util.function.Consumer;
 
+import jakarta.persistence.NamedNativeStatement;
+import jakarta.persistence.NamedNativeStatements;
+import jakarta.persistence.NamedStatement;
+import jakarta.persistence.NamedStatements;
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
@@ -62,8 +66,12 @@ import org.hibernate.boot.models.annotations.internal.NamedEntityGraphJpaAnnotat
 import org.hibernate.boot.models.annotations.internal.NamedEntityGraphsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeStatementJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeStatementsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStatementJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStatementsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedSubgraphJpaAnnotation;
@@ -430,6 +438,24 @@ public interface JpaAnnotations {
 			NamedQuery.class,
 			NamedQueryJpaAnnotation.class,
 			NAMED_QUERIES
+	);
+	OrmAnnotationDescriptor<NamedStatements, NamedStatementsJpaAnnotation> NAMED_STATEMENTS = new OrmAnnotationDescriptor<>(
+			NamedStatements.class,
+			NamedStatementsJpaAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedStatement, NamedStatementJpaAnnotation> NAMED_STATEMENT = new OrmAnnotationDescriptor<>(
+			NamedStatement.class,
+			NamedStatementJpaAnnotation.class,
+			NAMED_STATEMENTS
+	);
+	OrmAnnotationDescriptor<NamedNativeStatements, NamedNativeStatementsJpaAnnotation> NAMED_NATIVE_STATEMENTS = new OrmAnnotationDescriptor<>(
+			NamedNativeStatements.class,
+			NamedNativeStatementsJpaAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedNativeStatement, NamedNativeStatementJpaAnnotation> NAMED_NATIVE_STATEMENT = new OrmAnnotationDescriptor<>(
+			NamedNativeStatement.class,
+			NamedNativeStatementJpaAnnotation.class,
+			NAMED_NATIVE_STATEMENTS
 	);
 	OrmAnnotationDescriptor<NamedStoredProcedureQueries,NamedStoredProcedureQueriesJpaAnnotation> NAMED_STORED_PROCEDURE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedStoredProcedureQueries.class,

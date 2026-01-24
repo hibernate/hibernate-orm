@@ -7,6 +7,7 @@ package org.hibernate.orm.test.entitygraph;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.Hibernate;
 import org.hibernate.graph.GraphSemantic;
 
@@ -92,7 +93,7 @@ public class IncludeAllOrNoneGraphTest {
 			boolean expectContainedEagerInitialized, boolean expectContainedLazyInitialized) {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery( "select e from RootEntity e where id in (:ids)", RootEntity.class )
-								.applyGraph( session.getEntityGraph( graphName ), graphSemantic )
+								.setEntityGraph( (EntityGraph<RootEntity>) session.getEntityGraph( graphName ), graphSemantic )
 								.setFetchSize( 100 )
 								.setParameter( "ids", List.of( 0L, 100L, 200L ) )
 								.list() )

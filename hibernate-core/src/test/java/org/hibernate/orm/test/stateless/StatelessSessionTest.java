@@ -117,15 +117,15 @@ public class StatelessSessionTest {
 	}
 
 	@Test
-	public void testGetNull(SessionFactoryScope scope) {
+	public void testFindNull(SessionFactoryScope scope) {
 		scope.inStatelessSession(
 				statelessSession -> {
-					assertNull( statelessSession.get( Document.class, "Blank" ) );
+					assertNull( statelessSession.find( Document.class, "Blank" ) );
 				}
 		);
 		scope.inStatelessTransaction(
 				statelessSession -> {
-					assertNull( statelessSession.get( Document.class, "Blank", LockMode.PESSIMISTIC_WRITE ) );
+					assertNull( statelessSession.find( Document.class, "Blank", LockMode.PESSIMISTIC_WRITE ) );
 				}
 		);
 	}

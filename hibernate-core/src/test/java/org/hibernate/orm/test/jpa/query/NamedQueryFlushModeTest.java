@@ -16,6 +16,7 @@ import org.hibernate.annotations.NamedQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
+import org.hibernate.query.spi.CommonQueryContractImplementor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -39,8 +40,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					Query<?> query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					Query<?> query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.MANUAL, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					// JPA flush mode is an approximation
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 				}
@@ -53,8 +54,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					Query<?> query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					Query<?> query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.COMMIT, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 				}
 		);
@@ -66,8 +67,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					Query<?> query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
+					Query<?> query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.AUTO, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 				}
 		);
@@ -79,8 +80,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					Query<?> query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
+					Query<?> query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.ALWAYS, query.getEffectiveFlushMode() );
 					// JPA flush mode is an approximation
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 				}
@@ -99,23 +100,23 @@ public class NamedQueryFlushModeTest {
 					// JPA doesn't allow null flush modes, so we expect some approximation of the flush mode to be returned
 
 					s.setHibernateFlushMode( FlushMode.MANUAL );
-					query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.MANUAL, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.COMMIT );
-					query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.COMMIT, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.AUTO );
-					query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
+					query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.AUTO, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.ALWAYS );
-					query = s.getNamedQuery( queryName );
-					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
+					query = s.createNamedQuery( queryName );
+					assertEquals( FlushMode.ALWAYS, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 				}
 		);
@@ -127,8 +128,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					NativeQuery<?> query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.MANUAL, query.getEffectiveFlushMode() );
 				}
 		);
 	}
@@ -139,8 +140,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					NativeQuery<?> query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.COMMIT, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 				}
 		);
 	}
@@ -151,8 +152,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
+					NativeQuery<?> query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.AUTO, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 				}
 		);
 	}
@@ -163,8 +164,8 @@ public class NamedQueryFlushModeTest {
 		scope.inEntityManager(
 				entityManager -> {
 					Session s = entityManager.unwrap( Session.class );
-					NativeQuery<?> query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
+					NativeQuery<?> query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.ALWAYS, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 				}
 		);
 	}
@@ -181,23 +182,23 @@ public class NamedQueryFlushModeTest {
 					// JPA doesn't allow null flush modes, so we expect some approximation of the flush mode to be returned
 
 					s.setHibernateFlushMode( FlushMode.MANUAL );
-					query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.MANUAL, query.getHibernateFlushMode() );
+					query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.MANUAL, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.COMMIT );
-					query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.COMMIT, query.getHibernateFlushMode() );
+					query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.COMMIT, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.COMMIT, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.AUTO );
-					query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.AUTO, query.getHibernateFlushMode() );
+					query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.AUTO, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 
 					s.setHibernateFlushMode( FlushMode.ALWAYS );
-					query = s.getNamedNativeQuery( queryName );
-					assertEquals( FlushMode.ALWAYS, query.getHibernateFlushMode() );
+					query = (NativeQuery<?>) s.createNamedQuery( queryName );
+					assertEquals( FlushMode.ALWAYS, query.unwrap( CommonQueryContractImplementor.class ).getEffectiveFlushMode() );
 					assertEquals( jakarta.persistence.FlushModeType.AUTO, query.getFlushMode() );
 				}
 		);

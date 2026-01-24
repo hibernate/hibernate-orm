@@ -4,19 +4,21 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Statement;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.Type;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Incubating;
+
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-
-import org.hibernate.FlushMode;
-import org.hibernate.Incubating;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Type;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -27,14 +29,14 @@ import jakarta.persistence.metamodel.Type;
  * A {@code MutationQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link QueryProducer#createMutationQuery(String)}, passing the HQL as a
+ * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(String)}, passing the HQL as a
  *     string,
- * <li>{@link QueryProducer#createNativeMutationQuery(String)}, passing native
+ * <li>{@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)}, passing native
  *     SQL as a string,
- * <li>{@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
- *     {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
+ * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
+ *     {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
  *     passing a criteria update or delete object, or
- * <li>{@link QueryProducer#createNamedMutationQuery(String)}, passing the
+ * <li>{@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)}, passing the
  *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
  *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
@@ -56,28 +58,39 @@ import jakarta.persistence.metamodel.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public interface MutationQuery extends CommonQueryContract {
+public interface MutationQuery extends CommonQueryContract, Statement {
+	/**
+	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.
+	 */
+	String getMutationString();
+
+	/**
+	 * The Java type of the thing being mutated, if known.
+	 */
+	@Nullable
+	Class<?> getTargetType();
 
 	/**
 	 * Execute an insert, update, or delete statement, and return the
 	 * number of affected entities.
 	 * <p>
 	 * For use with instances of {@code MutationQuery} created using
-	 * {@link QueryProducer#createMutationQuery(String)},
-	 * {@link QueryProducer#createNamedMutationQuery(String)},
-	 * {@link QueryProducer#createNativeMutationQuery(String)},
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)},
+	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
 	 *
-	 * @see QueryProducer#createMutationQuery(String)
-	 * @see QueryProducer#createNamedMutationQuery(String)
-	 * @see QueryProducer#createNativeMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createNamedMutationQuery(String)
+	 * @see org.hibernate.SharedSessionContract#createNativeMutationQuery(String)
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 */
+	@Override
 	int executeUpdate();
 
 
@@ -87,17 +100,26 @@ public interface MutationQuery extends CommonQueryContract {
 	@Override @Deprecated(since = "7")
 	MutationQuery setFlushMode(FlushModeType flushMode);
 
-	@Override @Deprecated(since = "7")
-	MutationQuery setHibernateFlushMode(FlushMode flushMode);
-
 	@Override
 	MutationQuery setTimeout(int timeout);
+
+	@Override
+	MutationQuery setTimeout(Integer timeout);
+
+	@Override
+	MutationQuery setTimeout(Timeout timeout);
 
 	@Override
 	MutationQuery setComment(String comment);
 
 	@Override
 	MutationQuery setHint(String hintName, Object value);
+
+	@Override
+	<P> MutationQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> MutationQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	MutationQuery setParameter(String name, Object value);
@@ -136,7 +158,7 @@ public interface MutationQuery extends CommonQueryContract {
 	MutationQuery setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	<T> MutationQuery setParameter(QueryParameter<T> parameter, T value);
+	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value);
 
 	@Override
 	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
@@ -145,7 +167,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
-	<T> MutationQuery setParameter(Parameter<T> param, T value);
+	<P> MutationQuery setParameter(Parameter<P> param, P value);
 
 	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);

@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
+import org.hibernate.boot.models.annotations.spi.Commentable;
+import org.hibernate.boot.models.annotations.spi.Optionable;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
@@ -17,10 +19,11 @@ import jakarta.persistence.DiscriminatorColumn;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, ColumnDetails {
+public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, ColumnDetails, Commentable, Optionable {
 
 	private String name;
 	private jakarta.persistence.DiscriminatorType discriminatorType;
+	private String comment;
 	private String columnDefinition;
 	private String options;
 	private int length;
@@ -31,6 +34,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	public DiscriminatorColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "DTYPE";
 		this.discriminatorType = jakarta.persistence.DiscriminatorType.STRING;
+		this.comment = "";
 		this.columnDefinition = "";
 		this.options = "";
 		this.length = 31;
@@ -42,6 +46,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	public DiscriminatorColumnJpaAnnotation(DiscriminatorColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.discriminatorType = annotation.discriminatorType();
+		this.comment = annotation.comment();
 		this.columnDefinition = annotation.columnDefinition();
 		this.options = annotation.options();
 		this.length = annotation.length();
@@ -55,6 +60,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.discriminatorType = (jakarta.persistence.DiscriminatorType) attributeValues.get( "discriminatorType" );
+		this.comment = (String) attributeValues.get( "comment" );
 		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
 		this.options = (String) attributeValues.get( "options" );
 		this.length = (int) attributeValues.get( "length" );
@@ -82,6 +88,16 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 
 	public void discriminatorType(jakarta.persistence.DiscriminatorType value) {
 		this.discriminatorType = value;
+	}
+
+
+	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
 	}
 
 
@@ -122,6 +138,10 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 
 		if ( jaxbColumn.getDiscriminatorType() != null ) {
 			discriminatorType( jaxbColumn.getDiscriminatorType() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbColumn.getComment() ) ) {
+			comment( jaxbColumn.getComment() );
 		}
 
 		if ( jaxbColumn.getLength() != null ) {

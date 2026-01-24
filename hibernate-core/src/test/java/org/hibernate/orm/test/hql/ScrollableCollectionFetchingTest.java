@@ -51,7 +51,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					session.createMutationQuery("insert Mammal (description, bodyWeight, pregnant) values ('Human', 80.0, false)").executeUpdate();
-					assertEquals( 1L, session.createSelectionQuery("select count(*) from Mammal").getSingleResult() );
+					assertEquals( 1L, session.createSelectionQuery("select count(*) from Mammal", Long.class).getSingleResult() );
 					try (ScrollableResults results = session.createQuery("select a, a.bodyWeight from Animal a left join fetch a.offspring").scroll()) {
 						assertTrue( results.next() );
 						Object[] result = (Object[]) results.get();

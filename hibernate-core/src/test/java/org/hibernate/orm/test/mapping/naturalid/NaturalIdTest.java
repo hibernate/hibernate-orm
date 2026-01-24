@@ -16,7 +16,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -300,7 +300,7 @@ public class NaturalIdTest {
 		Root<State> root = criteria.from( State.class );
 		criteria.select( root ).where( criteriaBuilder.equal( root.get( "name" ), name ) );
 
-		Query<State> query = s.createQuery( criteria );
+		SelectionQuery<State> query = s.createQuery( criteria );
 		query.setCacheable( true );
 		return query.list().get( 0 );
 	}

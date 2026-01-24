@@ -17,6 +17,6 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 @Incubating
 public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, QueryParameterImplementor<T> {
 
-	JdbcCallParameterRegistration toJdbcParameterRegistration(int startIndex, ProcedureCallImplementor<?> procedureCall);
+	JdbcCallParameterRegistration toJdbcParameterRegistration(int startIndex, ProcedureCallImplementor procedureCall);
 
 }

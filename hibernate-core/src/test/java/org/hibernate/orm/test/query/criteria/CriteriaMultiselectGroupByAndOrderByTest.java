@@ -152,7 +152,7 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 
 			final JpaSubQuery<Tuple> subquery = query.subquery( Tuple.class );
 			final Root<Primary> sqRoot = subquery.from( Primary.class );
-			final Join<Object, Object> secondaryJoin = sqRoot.join( "secondary" );
+			final Join<Primary, Object> secondaryJoin = sqRoot.join( "secondary" );
 			final Path<String> entityName = secondaryJoin.get( "entityName" );
 			final Expression<Number> sum = cb.sum( sqRoot.get( "amount" ) );
 			subquery.multiselect(

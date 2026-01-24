@@ -159,7 +159,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		} );
 
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer check = session.get( Customer.class, steve.getId() );
+			Customer check = session.find( Customer.class, steve.getId() );
 			assertThat( check )
 					.describedAs( "tenancy not properly isolated" )
 					.isNull();

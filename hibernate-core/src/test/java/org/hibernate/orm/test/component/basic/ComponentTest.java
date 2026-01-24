@@ -204,7 +204,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
 					Root<User> root = criteria.from( User.class );
-					Join<Object, Object> person = root.join( "person", JoinType.INNER );
+					Join<User, Object> person = root.join( "person", JoinType.INNER );
 					criteria.where( criteriaBuilder.between( person.get( "yob" ), new Integer(1999), new Integer(2002) ) );
 					s.createQuery( criteria ).list();
 
@@ -247,7 +247,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
 					Root<User> root = criteria.from( User.class );
-					Join<Object, Object> person = root.join( "person", JoinType.INNER );
+					Join<User, Object> person = root.join( "person", JoinType.INNER );
 					criteria.where( criteriaBuilder.between( person.get( "heightInches" ), HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d) );
 					u = s.createQuery( criteria ).uniqueResult();
 //		u = (User)s.createCriteria(User.class)
@@ -277,7 +277,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testNamedQuery() {
 		inTransaction(
-				s -> s.getNamedQuery( "userNameIn")
+				s -> s.createNamedQuery( "userNameIn")
 						.setParameterList( "nameList", new Object[] {"1ovthafew", "turin", "xam"} )
 						.list()
 		);

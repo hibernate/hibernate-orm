@@ -44,7 +44,12 @@ public class NativeQueryLockingTests {
 				fail( "Expecting failure per JPA" );
 			}
 			catch (IllegalStateException e) {
-				assertThat( e ).hasMessageContaining( "lock mode" );
+				// note : we previously expected "lock mode" here, but that is a misnomer -
+				//		we actually go waaaaaayyyyyy out of our way to support locking
+				//		with native SQL.  JPA is the thing that says it is not supported
+				//		and just for this method.  So I'd argue that "LockModeType" is much
+				//		more accurate here.
+				assertThat( e ).hasMessageContaining( "LockModeType" );
 			}
 		} );
 	}

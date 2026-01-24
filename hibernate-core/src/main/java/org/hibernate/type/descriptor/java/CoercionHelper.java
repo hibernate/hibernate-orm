@@ -381,6 +381,12 @@ public class CoercionHelper {
 		return floatValue == ( (float) (long) floatValue );
 	}
 
+	public static CoercionException coercionException(Exception e) {
+		var ce = new CoercionException( e.getMessage() );
+		ce.addSuppressed( e );
+		return ce;
+	}
+
 	@FunctionalInterface
 	public interface Coercer<T> {
 		T doCoercion();

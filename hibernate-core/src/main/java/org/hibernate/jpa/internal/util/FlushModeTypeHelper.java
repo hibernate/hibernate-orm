@@ -76,12 +76,27 @@ public class FlushModeTypeHelper {
 		};
 	}
 
+	public static FlushMode interpretFlushMode(QueryFlushMode queryFlushMode) {
+		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
+			return null;
+		}
+		else if ( queryFlushMode == QueryFlushMode.NO_FLUSH ) {
+			return FlushMode.MANUAL;
+		}
+		else {
+			return FlushMode.AUTO;
+		}
+	}
+
 	public static FlushMode interpretFlushMode(Object value) {
 		if ( value == null ) {
 			return FlushMode.AUTO;
 		}
 		if ( value instanceof FlushMode flushMode ) {
 			return flushMode;
+		}
+		if ( value instanceof QueryFlushMode queryFlushMode ) {
+			return interpretFlushMode( queryFlushMode );
 		}
 		else if ( value instanceof FlushModeType flushModeType ) {
 			return getFlushMode( flushModeType );

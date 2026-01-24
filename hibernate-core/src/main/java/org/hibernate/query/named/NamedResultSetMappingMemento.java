@@ -4,11 +4,14 @@
  */
 package org.hibernate.query.named;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.SessionFactory;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultBuilder;
+import org.hibernate.query.results.spi.ResultSetMapping;
 
 /**
  * Used to keep information about named result mappings defined by the
@@ -32,7 +35,12 @@ public interface NamedResultSetMappingMemento {
 	String getName();
 
 	/**
-	 * Resolve this memento. This involves building {@link org.hibernate.query.results.ResultBuilder}
+	 * Obtain the memento for each result in the mapping.
+	 */
+	List<ResultMemento> getResultMementos();
+
+	/**
+	 * Resolve this memento. This involves building {@link ResultBuilder}
 	 * instances for each defined result and registering them with the passed {@code resultSetMapping}.
 	 * Any known query spaces should be passed to the {@code querySpaceConsumer}.
 	 */
@@ -40,4 +48,22 @@ public interface NamedResultSetMappingMemento {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context);
+
+	/**
+	 * Whether the "inferred result type is assignable to the given Java type".
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getResultSetMappings
+	 *
+	 * @since 8.0
+	 */
+	<R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory);
+
+	/**
+	 * Converts this named mapping into a {@linkplain jakarta.persistence.sql.ResultSetMapping}.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getResultSetMappings
+	 *
+	 * @since 8.0
+	 */
+	<R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory);
 }

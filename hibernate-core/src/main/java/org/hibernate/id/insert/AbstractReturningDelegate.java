@@ -9,13 +9,13 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Abstract {@link org.hibernate.generator.values.GeneratedValuesMutationDelegate} implementation where
@@ -42,14 +42,11 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 			JdbcValueBindings valueBindings,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+		final String sql = statementDetails.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 		try {
 			valueBindings.beforeStatement( statementDetails );
-			return executeAndExtractReturning(
-					statementDetails.getSqlString(),
-					statementDetails.getStatement(),
-					session
-			);
+			return executeAndExtractReturning( sql, statementDetails.getStatement(), session );
 		}
 		finally {
 			if ( statementDetails.getStatement() != null ) {
@@ -63,24 +60,23 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 	@Override
 	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
-
+		// prepare and execute the insert
+		final var insert = prepareStatement( sql, session );
 		try {
-			// prepare and execute the insert
-			final var insert = prepareStatement( sql, session );
-			try {
-				binder.bindValues( insert );
-				return executeAndExtractReturning( sql, insert, session );
-			}
-			finally {
-				releaseStatement( insert, session );
-			}
+			binder.bindValues( insert );
+			return executeAndExtractReturning( sql, insert, session );
 		}
 		catch (SQLException sqle) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
-					"could not insert: " + MessageHelper.infoString( persister ),
+					"Could not insert: " + infoString( persister ),
 					sql
 			);
+		}
+		finally {
+			final var jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 
@@ -88,10 +84,4 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session);
-
-	protected void releaseStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
-		jdbcCoordinator.afterStatementExecution();
-	}
 }

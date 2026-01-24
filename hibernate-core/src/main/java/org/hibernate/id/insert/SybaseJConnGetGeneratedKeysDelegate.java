@@ -5,7 +5,6 @@
 package org.hibernate.id.insert;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -43,17 +42,16 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
-		final var jdbcCoordinator = session.getJdbcCoordinator();
-		final var jdbcServices = session.getJdbcServices();
-
-		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
+		final var resultSet =
+				session.getJdbcCoordinator().getResultSetReturn()
+						.execute( preparedStatement, sql );
 		try {
 			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
-					"Unable to extract generated-keys ResultSet",
+					"Unable to extract generated keys from ResultSet",
 					sql
 			);
 		}

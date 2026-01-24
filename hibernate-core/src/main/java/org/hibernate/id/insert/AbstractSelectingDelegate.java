@@ -70,14 +70,12 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 			Object entity,
 			SharedSessionContractImplementor session) {
 		final var jdbcCoordinator = session.getJdbcCoordinator();
-		final var jdbcServices = session.getJdbcServices();
-
-		jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-
+		final String sql = statementDetails.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 		try {
 			jdbcValueBindings.beforeStatement( statementDetails );
 			jdbcCoordinator.getResultSetReturn()
-					.executeUpdate( statementDetails.resolveStatement(), statementDetails.getSqlString() );
+					.executeUpdate( statementDetails.resolveStatement(), sql );
 		}
 		finally {
 			if ( statementDetails.getStatement() != null ) {
@@ -85,91 +83,76 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 			}
 			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
 		}
+		return selectGeneratedId( session, entity );
+	}
 
-		// the insert is complete, select the generated id...
+	@Override
+	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
+		final var jdbcCoordinator = session.getJdbcCoordinator();
+		// prepare and execute the insert
+		final var insert =
+				jdbcCoordinator.getStatementPreparer()
+						.prepareStatement( sql, NO_GENERATED_KEYS );
+		try {
+			binder.bindValues( insert );
+			jdbcCoordinator.getResultSetReturn().executeUpdate( insert, sql );
+		}
+		catch (SQLException sqle) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					sqle,
+					"Could not insert: " + infoString( persister ),
+					sql
+			);
+		}
+		finally {
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
+			jdbcCoordinator.afterStatementExecution();
+		}
+		// the insert is complete, select the generated id
+		return selectGeneratedId( session, binder.getEntity() );
+	}
 
+	private GeneratedValues selectGeneratedId(SharedSessionContractImplementor session, Object entity) {
 		final String idSelectSql = getSelectSQL();
+		var jdbcCoordinator = session.getJdbcCoordinator();
 		final var idSelect = jdbcCoordinator.getStatementPreparer().prepareStatement( idSelectSql );
 		try {
-			bindParameters( entity, idSelect, session );
-
-			final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, idSelectSql );
+			bindParameters( entity, session, idSelect, idSelectSql );
+			final var resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
 				return extractReturningValues( resultSet, idSelect, session );
 			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert(
-						e,
-						"Unable to execute post-insert id selection query",
+			catch (SQLException sqle) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						sqle,
+						"Could not retrieve generated id after insert: " + infoString( persister ),
 						idSelectSql
 				);
 			}
 			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( idSelect );
-				jdbcCoordinator.afterStatementExecution();
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );
 			}
 		}
+		finally {
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( idSelect );
+			jdbcCoordinator.afterStatementExecution();
+		}
+	}
+
+	private void bindParameters(
+			Object entity,
+			SharedSessionContractImplementor session,
+			PreparedStatement idSelect,
+			String idSelectSql) {
+		try {
+			bindParameters( entity, idSelect, session );
+		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Unable to bind parameters for post-insert id selection query",
 					idSelectSql
 			);
 		}
 	}
-
-	@Override
-	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
-		final var jdbcCoordinator = session.getJdbcCoordinator();
-		final var statementPreparer = jdbcCoordinator.getStatementPreparer();
-		try {
-			// prepare and execute the insert
-			final var insert = statementPreparer.prepareStatement( sql, NO_GENERATED_KEYS );
-			try {
-				binder.bindValues( insert );
-				jdbcCoordinator.getResultSetReturn().executeUpdate( insert, sql );
-			}
-			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
-				jdbcCoordinator.afterStatementExecution();
-			}
-		}
-		catch (SQLException sqle) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not insert: " + infoString( persister ),
-					sql
-			);
-		}
-
-		final String selectSQL = getSelectSQL();
-
-		try {
-			//fetch the generated id in a separate query
-			final var idSelect = statementPreparer.prepareStatement( selectSQL );
-			try {
-				bindParameters( binder.getEntity(), idSelect, session );
-				final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
-				try {
-					return extractReturningValues( resultSet, idSelect, session );
-				}
-				finally {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );
-				}
-			}
-			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( idSelect );
-				jdbcCoordinator.afterStatementExecution();
-			}
-
-		}
-		catch (SQLException sqle) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
-					"could not retrieve generated id after insert: " + infoString( persister ),
-					selectSQL
-			);
-		}
-	}
-
 }

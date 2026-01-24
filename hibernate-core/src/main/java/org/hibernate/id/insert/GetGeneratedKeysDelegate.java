@@ -5,16 +5,15 @@
 package org.hibernate.id.insert;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
@@ -89,49 +88,16 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			JdbcValueBindings jdbcValueBindings,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final JdbcServices jdbcServices = session.getJdbcServices();
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-
 		final String sql = statementDetails.getSqlString();
-
-		jdbcServices.getSqlStatementLogger().logStatement( sql );
-
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 		try {
 			final var preparedStatement = statementDetails.resolveStatement();
 			jdbcValueBindings.beforeStatement( statementDetails );
-
-			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
-
-			try {
-				final ResultSet resultSet = preparedStatement.getGeneratedKeys();
-				try {
-					return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
-				}
-				catch (SQLException e) {
-					throw jdbcServices.getSqlExceptionHelper().convert(
-							e,
-							() -> String.format(
-									Locale.ROOT,
-									"Unable to extract generated key from generated-key for `%s`",
-									persister.getNavigableRole().getFullPath()
-							),
-							sql
-					);
-				}
-				finally {
-					if ( resultSet != null ) {
-						jdbcCoordinator.getLogicalConnection().getResourceRegistry()
-								.release( resultSet, preparedStatement );
-					}
-				}
-			}
-			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert(
-						e,
-						"Unable to extract generated-keys ResultSet",
-						sql
-				);
-			}
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			return extractGeneratedValues( session, preparedStatement, sql,
+					() -> String.format( Locale.ROOT,
+							"Unable to extract generated key for '%s'",
+							persister.getNavigableRole().getFullPath() ) );
 		}
 		finally {
 			if ( statementDetails.getStatement() != null ) {
@@ -146,22 +112,25 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		final JdbcServices jdbcServices = session.getJdbcServices();
+		session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+		return extractGeneratedValues( session, preparedStatement, sql,
+				() -> "Unable to extract generated keys from ResultSet" );
+	}
 
-		jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
-
+	private @Nullable GeneratedValues extractGeneratedValues(
+			SharedSessionContractImplementor session,
+			PreparedStatement preparedStatement,
+			String sql,
+			Supplier<String> message) {
+		final var jdbcServices = session.getJdbcServices();
+		final var jdbcCoordinator = session.getJdbcCoordinator();
 		try {
-			final ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			final var resultSet = preparedStatement.getGeneratedKeys();
 			try {
 				return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 			}
 			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert(
-						e,
-						"Unable to extract generated key(s) from generated-keys ResultSet",
-						sql
-				);
+				throw jdbcServices.getSqlExceptionHelper().convert( e, message.get(), sql );
 			}
 			finally {
 				if ( resultSet != null ) {
@@ -173,7 +142,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
-					"Unable to extract generated-keys ResultSet",
+					"Unable to extract generated keys from ResultSet",
 					sql
 			);
 		}

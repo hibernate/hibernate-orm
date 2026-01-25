@@ -4,9 +4,12 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.time.Instant;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -16,10 +19,12 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that the annotated entity class is a temporal entity.
- * A temporal entity keeps a historical record of changes over time.
- * Each row of the mapped table represents a single revision of a
- * single instance of the entity, with:
+ * Specifies that the annotated entity class is a temporal entity
+ * or temporal collection. A temporal entity or collection keeps a
+ * historical record of changes over time. Each row of the mapped
+ * table represents a single revision of a single instance of the
+ * entity, or an element of the collection whose existence is
+ * bounded in time, with:
  * <ul>
  * <li>a {@linkplain #starting} timestamp representing the instant
  *     at which the revision became effective, and
@@ -39,12 +44,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@linkplain #ending} timestamp is null or greater than the given
  *     instant.
  * </ul>
- * <p>May also be applied to a collection-valued association to indicate that
- * the collection or join table is temporal.
+ * <p>By default, a session or stateless session reads revisions of
+ * temporal data which are currently effective. To read historical
+ * revisions effective at a given {@linkplain Instant instant}, set
+ * {@linkplain org.hibernate.engine.creation.CommonBuilder#instant
+ * the temporal data instant} when creating the session or stateless
+ * session.
+ *
+ * @see org.hibernate.engine.creation.CommonBuilder#instant(Instant)
  */
 @Documented
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
+@Incubating
 public @interface Temporal {
 	/**
 	 * The column name holding the starting timestamp of a revision.

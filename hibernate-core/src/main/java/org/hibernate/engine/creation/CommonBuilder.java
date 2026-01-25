@@ -177,6 +177,9 @@ public interface CommonBuilder {
 	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
 	 * Instances of temporal entities retrieved in the session will represent
 	 * the revisions effective at the given instant.
+	 *
+	 * @see org.hibernate.annotations.Temporal
 	 */
+	@Incubating
 	CommonBuilder instant(Instant instant);
 }

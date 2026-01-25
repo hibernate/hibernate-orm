@@ -7,6 +7,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -50,7 +51,7 @@ public class H2ArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 			sqlAppender.append( ",null) and " );
 		}
 		sqlAppender.append( "exists(select array_get(" );
-		needleExpression.accept( walker );
+		walker.render( needleExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.append( ",t.i) from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
@@ -58,7 +59,7 @@ public class H2ArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 		sqlAppender.append( ")>=t.i" );
 		sqlAppender.append( " intersect " );
 		sqlAppender.append( "select array_get(" );
-		haystackExpression.accept( walker );
+		walker.render( haystackExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.append( ",t.i) from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );

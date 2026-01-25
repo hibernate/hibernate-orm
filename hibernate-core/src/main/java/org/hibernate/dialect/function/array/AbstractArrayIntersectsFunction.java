@@ -6,7 +6,6 @@ package org.hibernate.dialect.function.array;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -26,10 +25,7 @@ public abstract class AbstractArrayIntersectsFunction extends AbstractSqmSelfRen
 						ArraysOfSameTypeArgumentValidator.INSTANCE
 				),
 				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.standardBasicTypeForJavaType( Boolean.class ) ),
-				StandardFunctionArgumentTypeResolvers.byArgument(
-						StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 1 ),
-						StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 0 )
-				)
+				ArrayIntersectsArgumentTypeResolver.INSTANCE
 		);
 		this.nullable = nullable;
 	}

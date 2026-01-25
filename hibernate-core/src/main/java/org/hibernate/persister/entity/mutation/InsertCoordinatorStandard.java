@@ -239,7 +239,9 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		final var temporalMapping = entityPersister().getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null
+				&& !session.getFactory().getSessionFactoryOptions()
+						.isUseServerTransactionTimestampsEnabled() ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),

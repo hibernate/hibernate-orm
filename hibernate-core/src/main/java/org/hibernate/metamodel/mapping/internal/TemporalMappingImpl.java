@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -44,6 +43,8 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
+	private final boolean useServerTransactionTimestamps;
+	private final String currentTimestampFunctionName;
 
 	public TemporalMappingImpl(
 			Temporalized bootMapping,
@@ -96,6 +97,13 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext
 		);
 
+		useServerTransactionTimestamps =
+				creationContext.getSessionFactory().getSessionFactoryOptions()
+						.isUseServerTransactionTimestampsEnabled();
+		currentTimestampFunctionName =
+				useServerTransactionTimestamps
+						? dialect.currentTimestamp()
+						: null;
 	}
 
 	@Override
@@ -170,33 +178,28 @@ public class TemporalMappingImpl implements TemporalMapping {
 
 	@Override
 	public ColumnValueBinding createStartingValueBinding(ColumnReference startingColumnReference) {
-		// for database-generated values:
-//		final var startingFragment =
-//				new ColumnWriteFragment( dialect.currentTimestamp(), emptyList(), startingColumnMapping );
-		// for JVM-generated values:
-		final var startingParameter = new ColumnValueParameter( startingColumnReference, ParameterUsage.SET );
-		final var startingFragment =
-				new ColumnWriteFragment( "?", startingParameter, startingColumnMapping );
-		return new ColumnValueBinding( startingColumnReference, startingFragment );
+		return createTemporalValueBinding( startingColumnReference, startingColumnMapping );
 	}
 
 	@Override
 	public ColumnValueBinding createEndingValueBinding(ColumnReference endingColumnReference) {
-		// for database-generated values:
-//		final var endingFragment =
-//				new ColumnWriteFragment( dialect.currentTimestamp(), emptyList(), endingColumnMapping );
-		// for JVM-generated values:
-		final var endingParameter = new ColumnValueParameter( endingColumnReference, ParameterUsage.SET );
-		final var endingFragment =
-				new ColumnWriteFragment( "?", endingParameter, endingColumnMapping );
-		return new ColumnValueBinding( endingColumnReference, endingFragment );
+		return createTemporalValueBinding( endingColumnReference, endingColumnMapping );
+	}
+
+	private ColumnValueBinding createTemporalValueBinding(
+			ColumnReference endingColumnReference, SelectableMapping columnMapping) {
+		return new ColumnValueBinding( endingColumnReference,
+				useServerTransactionTimestamps
+						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), columnMapping )
+						: new ColumnWriteFragment( "?",
+								new ColumnValueParameter( endingColumnReference ),
+								columnMapping ) );
 	}
 
 	@Override
 	public ColumnValueBinding createNullEndingValueBinding(ColumnReference endingColumnReference) {
-		final var endingFragment =
-				new ColumnWriteFragment( null, emptyList(), endingColumnMapping );
-		return new ColumnValueBinding( endingColumnReference, endingFragment );
+		return new ColumnValueBinding( endingColumnReference,
+				new ColumnWriteFragment( null, emptyList(), endingColumnMapping ) );
 	}
 
 	private Expression resolveColumn(

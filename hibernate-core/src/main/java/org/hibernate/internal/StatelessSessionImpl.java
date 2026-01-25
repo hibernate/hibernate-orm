@@ -1407,6 +1407,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		transactionCompletionCallbacks.afterTransactionCompletion( successful );
 		afterTransactionCompletionEvents( successful );
+		clearTransactionStartInstant();
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}

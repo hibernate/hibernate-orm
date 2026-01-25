@@ -104,7 +104,7 @@ public class TemporalHelper {
 		table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
 	}
 
-	private static boolean isUseNativeTemporalTablesEnabled(MetadataBuildingContext context) {
+	public static boolean isUseNativeTemporalTablesEnabled(MetadataBuildingContext context) {
 		return getBoolean( USE_NATIVE_TEMPORAL_TABLES,
 				context.getBootstrapContext().getServiceRegistry()
 						.requireService( ConfigurationService.class )

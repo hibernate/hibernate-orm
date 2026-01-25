@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
@@ -108,7 +109,24 @@ class TemporalEntityTest {
 				assertEquals( "world", entity.children.get(0).text );
 			} );
 		}
-	}
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					session.remove( entity );
+				}
+		);
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					assertNull( entity );
+				}
+		);
+		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+			session.inTransaction( tx -> {
+				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+				assertEquals( "hello", entity.text );
+			} );
+		}	}
 
 	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inStatelessTransaction(
@@ -145,6 +163,24 @@ class TemporalEntityTest {
 				entity =
 						session.createSelectionQuery( "from TemporalEntity where id=2", TemporalEntity.class )
 								.getSingleResult();
+				assertEquals( "hello", entity.text );
+			} );
+		}
+		scope.getSessionFactory().inStatelessTransaction(
+				session -> {
+					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
+					session.delete( entity );
+				}
+		);
+		scope.getSessionFactory().inStatelessTransaction(
+				session -> {
+					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
+					assertNull( entity );
+				}
+		);
+		try (var session = scope.getSessionFactory().withStatelessOptions().instant(instant).open()) {
+			session.inTransaction( tx -> {
+				TemporalEntity entity = session.get( TemporalEntity.class, 2L );
 				assertEquals( "hello", entity.text );
 			} );
 		}

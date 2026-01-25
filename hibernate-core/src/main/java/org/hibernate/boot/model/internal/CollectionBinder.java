@@ -1905,81 +1905,38 @@ public abstract class CollectionBinder {
 		collection.setKey( key );
 
 		if ( property != null ) {
-			final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
-			if ( collectionTable != null ) {
+			if ( property.hasDirectAnnotationUsage( CollectionTable.class ) ) {
+				final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
 				final var foreignKey = collectionTable.foreignKey();
-				final var constraintMode = foreignKey.value();
-				if ( constraintMode == NO_CONSTRAINT
-						|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault ) {
-					key.disableForeignKey();
-				}
-				else {
-					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-					key.setForeignKeyOptions( foreignKey.options() );
-					if ( key.getForeignKeyName() == null
-							&& key.getForeignKeyDefinition() == null
-							&& collectionTable.joinColumns().length == 1 ) {
-						final var joinColumn = collectionTable.joinColumns()[0];
-						final var nestedForeignKey = joinColumn.foreignKey();
-						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
-						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
-						key.setForeignKeyOptions( nestedForeignKey.options() );
-					}
-				}
+				handleForeignKey( collectionTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
+			}
+			else if ( property.hasDirectAnnotationUsage( JoinTable.class ) ) {
+				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
+				final var foreignKey = joinTable.foreignKey();
+				handleForeignKey( joinTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
 			}
 			else {
-				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
-				if ( joinTable != null ) {
-					final var foreignKey = joinTable.foreignKey();
-					String foreignKeyName = foreignKey.name();
-					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
-					String foreignKeyOptions = foreignKey.options();
-					ConstraintMode foreignKeyValue = foreignKey.value();
-					final var joinColumnAnnotations = joinTable.joinColumns();
-					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
-						final var joinColumnAnn = joinColumnAnnotations[0];
-						final var joinColumnForeignKey = joinColumnAnn.foreignKey();
-						if ( foreignKeyName.isBlank() ) {
-							foreignKeyName = joinColumnForeignKey.name();
-							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
-							foreignKeyOptions = joinColumnForeignKey.options();
-						}
-						if ( foreignKeyValue != NO_CONSTRAINT ) {
-							foreignKeyValue = joinColumnForeignKey.value();
-						}
-					}
-					if ( foreignKeyValue == NO_CONSTRAINT
-							|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+				final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
+				final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
+				if ( foreignKey != null ) {
+					handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
+				}
+				else {
+					final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
+					final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
+					if ( oneToMany != null
+							&& !oneToMany.mappedBy().isBlank()
+							&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
+						// foreign key should be up to @ManyToOne side
+						// @OnDelete generate "on delete cascade" foreign key
 						key.disableForeignKey();
 					}
 					else {
-						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
-						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
-						key.setForeignKeyOptions( foreignKeyOptions );
-					}
-				}
-				else {
-					final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
-					final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
-					if ( foreignKey != null ) {
-						handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
-					}
-					else {
-						final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
-						final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
-						if ( oneToMany != null
-								&& !oneToMany.mappedBy().isBlank()
-								&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
-							// foreign key should be up to @ManyToOne side
-							// @OnDelete generate "on delete cascade" foreign key
-							key.disableForeignKey();
-						}
-						else {
-							final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-							if ( joinColumn != null ) {
-								handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
-							}
+						final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
+						if ( joinColumn != null ) {
+							handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
 						}
 					}
 				}
@@ -1987,6 +1944,37 @@ public abstract class CollectionBinder {
 		}
 
 		return key;
+	}
+
+	private static void handleForeignKey(
+			JoinColumn[] joinColumnAnnotations,
+			String foreignKeyName,
+			String foreignKeyDefinition,
+			String foreignKeyOptions,
+			ConstraintMode foreignKeyValue,
+			boolean noConstraintByDefault,
+			DependantValue key) {
+		if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
+			final var joinColumn = joinColumnAnnotations[0];
+			final var nestedForeignKey = joinColumn.foreignKey();
+			if ( foreignKeyName.isBlank() ) {
+				foreignKeyName = nestedForeignKey.name();
+				foreignKeyDefinition = nestedForeignKey.foreignKeyDefinition();
+				foreignKeyOptions = nestedForeignKey.options();
+			}
+			if ( foreignKeyValue != NO_CONSTRAINT ) {
+				foreignKeyValue = nestedForeignKey.value();
+			}
+		}
+		if ( foreignKeyValue == NO_CONSTRAINT
+			|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+			key.disableForeignKey();
+		}
+		else {
+			key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
+			key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+			key.setForeignKeyOptions( foreignKeyOptions );
+		}
 	}
 
 	private static void handleForeignKeyConstraint(

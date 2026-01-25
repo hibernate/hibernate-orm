@@ -11,7 +11,7 @@ import java.util.Collections;
 
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.TemporalEntity;
+import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -47,7 +47,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final String currentTimestampFunctionName;
 
 	public TemporalMappingImpl(
-			TemporalEntity bootMapping,
+			Temporalized bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;

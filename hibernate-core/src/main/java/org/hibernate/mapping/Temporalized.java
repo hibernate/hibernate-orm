@@ -7,7 +7,7 @@ package org.hibernate.mapping;
 /**
  * Part of the boot model which is temporal.
  */
-public interface TemporalEntity {
+public interface Temporalized {
 	void enableTemporal(Column startingColumn, Column endingColumn);
 
 	Column getTemporalStartingColumn();

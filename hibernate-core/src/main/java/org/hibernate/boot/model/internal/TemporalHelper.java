@@ -12,7 +12,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.TemporalEntity;
+import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 
@@ -23,7 +23,7 @@ public class TemporalHelper {
 
 	public static void bindTemporalColumns(
 			Temporal temporalConfig,
-			TemporalEntity target,
+			Temporalized target,
 			Table table,
 			MetadataBuildingContext context) {
 		assert temporalConfig != null;
@@ -39,7 +39,7 @@ public class TemporalHelper {
 	}
 
 	public static TemporalMappingImpl resolveTemporalMapping(
-			TemporalEntity bootMapping,
+			Temporalized bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		return bootMapping.getTemporalStartingColumn() == null

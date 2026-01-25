@@ -45,7 +45,7 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable, TemporalEntity
+		implements Fetchable, Value, Filterable, SoftDeletable, Temporalized
 		permits Set, Bag,
 				IndexedCollection, // List, Map
 				IdentifierCollection { // IdentifierBag only built-in implementation

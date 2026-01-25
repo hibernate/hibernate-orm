@@ -5,11 +5,13 @@
 package org.hibernate.boot.model.internal;
 
 import java.time.Instant;
+import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.BasicValue;
@@ -20,8 +22,9 @@ import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 
-import static org.hibernate.cfg.MappingSettings.USE_NATIVE_TEMPORAL_TABLES;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
+import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
 
 /**
  * Helper for dealing with {@link org.hibernate.annotations.Temporal}.
@@ -105,10 +108,15 @@ public class TemporalHelper {
 	}
 
 	public static boolean isUseNativeTemporalTablesEnabled(MetadataBuildingContext context) {
-		return getBoolean( USE_NATIVE_TEMPORAL_TABLES,
+		return getTemporalTableStrategy( context ) == NATIVE;
+	}
+
+	private static TemporalTableStrategy getTemporalTableStrategy(MetadataBuildingContext context) {
+		final var settings =
 				context.getBootstrapContext().getServiceRegistry()
 						.requireService( ConfigurationService.class )
-						.getSettings() );
+						.getSettings();
+		return determineTemporalTableStrategy( settings );
 	}
 
 	private static void applyNativeTemporalTableOptions(
@@ -156,6 +164,25 @@ public class TemporalHelper {
 		}
 		else {
 			return existing + " " + option;
+		}
+	}
+
+	public static TemporalTableStrategy determineTemporalTableStrategy(
+			Map<String, Object> configurationSettings) {
+		final Object setting = configurationSettings.get( TEMPORAL_TABLE_STRATEGY );
+		if ( setting instanceof TemporalTableStrategy temporalTableStrategy ) {
+			return temporalTableStrategy;
+		}
+		else if ( setting instanceof String string ) {
+			for ( var strategy : TemporalTableStrategy.values() ) {
+				if ( strategy.name().equalsIgnoreCase( string ) ) {
+					return strategy;
+				}
+			}
+			return VM_TIMESTAMP;
+		}
+		else {
+			return VM_TIMESTAMP;
 		}
 	}
 }

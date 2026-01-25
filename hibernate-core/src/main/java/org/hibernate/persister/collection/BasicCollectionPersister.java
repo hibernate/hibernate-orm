@@ -49,6 +49,8 @@ import org.hibernate.type.EntityType;
 
 import java.util.List;
 
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
+import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
@@ -441,10 +443,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		);
 
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null
-				&& !session.getFactory().getSessionFactoryOptions()
-						.isUseServerTransactionTimestampsEnabled()
-				&& !isNativeTemporalTablesEnabled() ) {
+		if ( temporalMapping != null && isVmTimestampEnabled( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getStartingColumnMapping(),
@@ -710,9 +709,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null
-				&& !session.getFactory().getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled()
-				&& !isNativeTemporalTablesEnabled() ) {
+		if ( temporalMapping != null && isVmTimestampEnabled( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getEndingColumnMapping(),
@@ -776,8 +773,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return elementType instanceof EntityType; //instanceof AssociationType;
 	}
 
+	private static boolean isVmTimestampEnabled(SharedSessionContractImplementor session) {
+		return session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == VM_TIMESTAMP;
+	}
+
 	private boolean isNativeTemporalTablesEnabled() {
-		return getFactory().getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -381,8 +382,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled) {
-		optionsBuilder.enableUseServerTransactionTimestamps( enabled );
+	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+		optionsBuilder.applyTemporalTableStrategy( strategy );
 		return this;
 	}
 

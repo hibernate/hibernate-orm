@@ -15,6 +15,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -417,8 +418,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled) {
-		delegate.applyUseServerTransactionTimestamps( enabled );
+	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+		delegate.applyTemporalTableStrategy( strategy );
 		return getThis();
 	}
 

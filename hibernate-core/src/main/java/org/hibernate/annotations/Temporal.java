@@ -63,6 +63,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * maintained by the application and validated by offline processes.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#instant(Instant)
+ *
+ * @author Gavin King
  */
 @Documented
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})

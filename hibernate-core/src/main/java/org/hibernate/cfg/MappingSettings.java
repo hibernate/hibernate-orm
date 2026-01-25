@@ -638,4 +638,14 @@ public interface MappingSettings {
 	 */
 	@Incubating
 	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
+
+	/**
+	 * Use the native support for temporal tables provided by the database.
+	 *
+	 * @settingDefault {@code false}
+	 * @see org.hibernate.annotations.Temporal
+	 */
+	@Incubating
+	String USE_NATIVE_TEMPORAL_TABLES = "hibernate.temporal.use_native_temporal_tables";
+
 }

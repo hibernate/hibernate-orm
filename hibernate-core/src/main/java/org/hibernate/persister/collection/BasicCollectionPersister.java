@@ -200,7 +200,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var attributeMapping = getAttributeMapping();
 		assert attributeMapping != null;
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
 			return generateTemporalDeleteAllAst( tableReference );
 		}
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
@@ -340,7 +340,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
 			final var startingColumnReference =
 					new ColumnReference( insertBuilder.getMutatingTable(), temporalMapping.getStartingColumnMapping() );
 			insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumnReference ) );
@@ -443,7 +443,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null
 				&& !session.getFactory().getSessionFactoryOptions()
-						.isUseServerTransactionTimestampsEnabled() ) {
+						.isUseServerTransactionTimestampsEnabled()
+				&& !isNativeTemporalTablesEnabled() ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getStartingColumnMapping(),
@@ -596,7 +597,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
 		final var temporalMapping = pluralAttribute.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
 			return generateTemporalDeleteRowsAst( tableReference );
 		}
 		final var softDeleteMapping = pluralAttribute.getSoftDeleteMapping();
@@ -710,7 +711,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null
-				&& !session.getFactory().getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled() ) {
+				&& !session.getFactory().getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled()
+				&& !isNativeTemporalTablesEnabled() ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getEndingColumnMapping(),
@@ -772,6 +774,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	@Override
 	public boolean isManyToMany() {
 		return elementType instanceof EntityType; //instanceof AssociationType;
+	}
+
+	private boolean isNativeTemporalTablesEnabled() {
+		return getFactory().getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
 	}
 
 	@Override

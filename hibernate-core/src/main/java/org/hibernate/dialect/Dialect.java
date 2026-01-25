@@ -5776,6 +5776,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	public int getTemporalColumnType() {
+		return SqlTypes.TIMESTAMP;
+	}
+
 	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.

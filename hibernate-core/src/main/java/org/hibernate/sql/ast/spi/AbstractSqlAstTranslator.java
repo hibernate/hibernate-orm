@@ -68,6 +68,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
@@ -211,6 +212,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6222,8 +6224,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
+		if ( shouldRenderSystemTimeClause( tableReference ) ) {
+			appendSql( " for system_time as of " );
+			visitParameterAsParameter(
+					new TemporalInstantParameter(
+							tableReference.getTemporalJdbcMapping(),
+							tableReference.getTemporalInstant()
+					)
+			);
+		}
 		renderTableReferenceIdentificationVariable( tableReference );
 		return false;
+	}
+
+	private boolean shouldRenderSystemTimeClause(NamedTableReference tableReference) {
+		return tableReference.getTemporalInstant() != null
+			&& tableReference.getTemporalJdbcMapping() != null
+			&& statementStack.getCurrent() instanceof SelectStatement;
 	}
 
 	@Override
@@ -8833,5 +8850,49 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void simpleColumnWriteFragmentRendering(ColumnWriteFragment columnWriteFragment) {
 		appendSql( columnWriteFragment.getFragment() );
 		columnWriteFragment.getParameters().forEach( this::addParameterBinder );
+	}
+
+	private static class TemporalInstantParameter implements JdbcParameter, JdbcParameterBinder {
+		private final JdbcMapping jdbcMapping;
+		private final Instant value;
+
+		private TemporalInstantParameter(JdbcMapping jdbcMapping, Instant value) {
+			this.jdbcMapping = jdbcMapping;
+			this.value = value;
+		}
+
+		@Override
+		public JdbcParameterBinder getParameterBinder() {
+			return this;
+		}
+
+		@Override
+		public Integer getParameterId() {
+			return null;
+		}
+
+		@Override
+		public void bindParameterValue(
+				PreparedStatement statement,
+				int startPosition,
+				JdbcParameterBindings jdbcParameterBindings,
+				ExecutionContext executionContext) throws SQLException {
+			jdbcMapping.getJdbcValueBinder().bind(
+					statement,
+					jdbcMapping.convertToRelationalValue( value ),
+					startPosition,
+					executionContext.getSession()
+			);
+		}
+
+		@Override
+		public JdbcMappingContainer getExpressionType() {
+			return jdbcMapping;
+		}
+
+		@Override
+		public void accept(SqlAstWalker sqlTreeWalker) {
+			sqlTreeWalker.visitParameter( this );
+		}
 	}
 }

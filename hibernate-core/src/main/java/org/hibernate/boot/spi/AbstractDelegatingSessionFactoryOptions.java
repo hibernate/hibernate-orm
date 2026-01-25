@@ -415,6 +415,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isUseNativeTemporalTablesEnabled() {
+		return delegate.isUseNativeTemporalTablesEnabled();
+	}
+
+	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}

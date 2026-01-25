@@ -1045,8 +1045,7 @@ public class AnnotatedColumn {
 //			column.setComment( comment.value() );
 //		}
 		//not following the spec but more clean
-		if ( nullability != Nullability.FORCED_NULL
-				&& !PropertyBinder.isOptional( inferredData.getAttributeMember(), propertyHolder ) ) {
+		if ( shouldOverrideNullability( nullability, inferredData, propertyHolder, suffixForDefaultColumnName ) ) {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();
@@ -1071,6 +1070,16 @@ public class AnnotatedColumn {
 		}
 		column.bind();
 		return columns;
+	}
+
+	private static boolean shouldOverrideNullability(
+			Nullability nullability,
+			PropertyData inferredData,
+			PropertyHolder propertyHolder,
+			String suffixForDefaultColumnName) {
+		return ( suffixForDefaultColumnName == null && nullability == Nullability.FORCED_NOT_NULL)
+			|| ( nullability != Nullability.FORCED_NULL
+					&& !PropertyBinder.isOptional( inferredData.getAttributeMember(), propertyHolder ) );
 	}
 
 	@Override

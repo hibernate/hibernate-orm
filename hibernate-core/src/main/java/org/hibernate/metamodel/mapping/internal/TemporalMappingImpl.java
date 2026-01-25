@@ -7,10 +7,8 @@ package org.hibernate.metamodel.mapping.internal;
 import java.time.Instant;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
 
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -32,6 +30,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 
@@ -52,8 +51,8 @@ public class TemporalMappingImpl implements TemporalMapping {
 			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;
 
-		final Column startingColumn = bootMapping.getTemporalStartingColumn();
-		final Column endingColumn = bootMapping.getTemporalEndingColumn();
+		final var startingColumn = bootMapping.getTemporalStartingColumn();
+		final var endingColumn = bootMapping.getTemporalEndingColumn();
 		final var startingValue = (BasicValue) startingColumn.getValue();
 		final var endingValue = (BasicValue) endingColumn.getValue();
 
@@ -68,7 +67,9 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var dialect = creationContext.getDialect();
-		final var sqmFunctionRegistry = creationContext.getSessionFactory().getQueryEngine().getSqmFunctionRegistry();
+		final var sqmFunctionRegistry =
+				creationContext.getSessionFactory().getQueryEngine()
+						.getSqmFunctionRegistry();
 
 		startingColumnMapping = SelectableMappingImpl.from(
 				tableName,
@@ -153,9 +154,9 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 		final var instantParameter = new TemporalInstantParameter( jdbcMapping, instant );
 
-		final Predicate startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, instantParameter );
-		final Predicate endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
-		final Predicate endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, instantParameter );
+		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, instantParameter );
+		final var endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
+		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, instantParameter );
 
 		final var endingPredicate = new Junction( Junction.Nature.DISJUNCTION );
 		endingPredicate.add( endingNullPredicate );
@@ -170,22 +171,22 @@ public class TemporalMappingImpl implements TemporalMapping {
 
 	@Override
 	public ColumnValueBinding createStartingValueBinding(ColumnReference startingColumnReference) {
-		final ColumnWriteFragment startingFragment =
-				new ColumnWriteFragment( currentTimestampFunctionName, Collections.emptyList(), startingColumnMapping );
+		final var startingFragment =
+				new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), startingColumnMapping );
 		return new ColumnValueBinding( startingColumnReference, startingFragment );
 	}
 
 	@Override
 	public ColumnValueBinding createEndingValueBinding(ColumnReference endingColumnReference) {
-		final ColumnWriteFragment endingFragment =
-				new ColumnWriteFragment( currentTimestampFunctionName, Collections.emptyList(), endingColumnMapping );
+		final var endingFragment =
+				new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), endingColumnMapping );
 		return new ColumnValueBinding( endingColumnReference, endingFragment );
 	}
 
 	@Override
 	public ColumnValueBinding createNullEndingValueBinding(ColumnReference endingColumnReference) {
-		final ColumnWriteFragment endingFragment =
-				new ColumnWriteFragment( null, Collections.emptyList(), endingColumnMapping );
+		final var endingFragment =
+				new ColumnWriteFragment( null, emptyList(), endingColumnMapping );
 		return new ColumnValueBinding( endingColumnReference, endingFragment );
 	}
 
@@ -193,10 +194,9 @@ public class TemporalMappingImpl implements TemporalMapping {
 			TableReference tableReference,
 			SqlExpressionResolver expressionResolver,
 			SelectableMapping selectableMapping) {
-		if ( expressionResolver != null ) {
-			return expressionResolver.resolveSqlExpression( tableReference, selectableMapping );
-		}
-		return new ColumnReference( tableReference, selectableMapping );
+		return expressionResolver != null
+				? expressionResolver.resolveSqlExpression( tableReference, selectableMapping )
+				: new ColumnReference( tableReference, selectableMapping );
 	}
 
 	@Override

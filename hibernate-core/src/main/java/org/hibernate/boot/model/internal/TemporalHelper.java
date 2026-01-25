@@ -26,8 +26,6 @@ public class TemporalHelper {
 			Temporalized target,
 			Table table,
 			MetadataBuildingContext context) {
-		assert temporalConfig != null;
-
 		final var startingColumn =
 				createTemporalColumn( temporalConfig.starting(), table, context, false );
 		final var endingColumn =
@@ -42,10 +40,9 @@ public class TemporalHelper {
 			Temporalized bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
-		return bootMapping.getTemporalStartingColumn() == null
-			|| bootMapping.getTemporalEndingColumn() == null
-				? null
-				: new TemporalMappingImpl( bootMapping, tableName, creationProcess );
+		return bootMapping.isTemporalized()
+				? new TemporalMappingImpl( bootMapping, tableName, creationProcess )
+				: null;
 	}
 
 	private static Column createTemporalColumn(

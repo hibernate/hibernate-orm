@@ -50,6 +50,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain org.hibernate.engine.creation.CommonBuilder#instant
  * the temporal data instant} when creating the session or stateless
  * session.
+ * <p>It is strongly recommended that every temporal entity declare
+ * a {@linkplain jakarta.persistence.Version version} attribute.
+ * The primary key of a table mapped by a temporal entity includes
+ * the columns mapped by the identifier of the entity, along with
+ * the version column, if there is one, or the {@linkplain #starting}
+ * column if there is no version
+ * <p>Associations targeting temporal entities do not have foreign
+ * key constraints, and so <em>referential integrity is not enforced
+ * by the database</em>. When working with temporal entities, it is
+ * incredibly important to ensure that referential integrity is
+ * maintained by the application and validated by offline processes.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#instant(Instant)
  */

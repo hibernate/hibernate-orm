@@ -73,12 +73,12 @@ public @interface Temporal {
 	 * The column name holding the starting timestamp of a revision.
 	 * That is, the "effective from" timestamp.
 	 */
-	String starting() default "starting";
+	String starting() default "effective";
 	/**
 	 * The column name holding the ending timestamp of a revision.
 	 * That is, the "effective to" timestamp.
 	 */
-	String ending() default "ending";
+	String ending() default "superseded";
 
 	/**
 	 * The fractional seconds precision for both temporal columns.

@@ -26,35 +26,35 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * entity, or an element of the collection whose existence is
  * bounded in time, with:
  * <ul>
- * <li>a {@linkplain #starting} timestamp representing the instant
+ * <li>a {@linkplain #rowStart} timestamp representing the instant
  *     at which the revision became effective, and
- * <li>an {@linkplain #ending} timestamp representing the instant at
+ * <li>a {@linkplain #rowEnd} timestamp representing the instant at
  *     which the revision was superseded by a newer revision.
  * </ul>
  * The revision which is currently effective has a null value for its
- * {@linkplain #ending} timestamp.
+ * {@linkplain #rowEnd} timestamp.
  * <p>Given the identifier of an instance of a temporal entity, along
  * with an instant, which may be represented by an instance if
  * {@link java.time.Instant}, the effective revision of the temporal
  * entity with the given identifier at the given instant is the
  * revision with:
  * <ul>
- * <li>{@linkplain #starting} timestamp is less than or equal to the
+ * <li>{@linkplain #rowStart} timestamp less than or equal to the
  *     given instant, and
- * <li>{@linkplain #ending} timestamp is null or greater than the given
+ * <li>{@linkplain #rowEnd} timestamp null or greater than the given
  *     instant.
  * </ul>
  * <p>By default, a session or stateless session reads revisions of
  * temporal data which are currently effective. To read historical
  * revisions effective at a given {@linkplain Instant instant}, set
- * {@linkplain org.hibernate.engine.creation.CommonBuilder#instant
+ * {@linkplain org.hibernate.engine.creation.CommonBuilder#asOf
  * the temporal data instant} when creating the session or stateless
  * session.
  * <p>It is strongly recommended that every temporal entity declare
  * a {@linkplain jakarta.persistence.Version version} attribute.
  * The primary key of a table mapped by a temporal entity includes
  * the columns mapped by the identifier of the entity, along with
- * the version column, if there is one, or the {@linkplain #starting}
+ * the version column, if there is one, or the {@linkplain #rowStart}
  * column if there is no version
  * <p>Associations targeting temporal entities do not have foreign
  * key constraints, and so <em>referential integrity is not enforced
@@ -62,7 +62,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * incredibly important to ensure that referential integrity is
  * maintained by the application and validated by offline processes.
  *
- * @see org.hibernate.engine.creation.CommonBuilder#instant(Instant)
+ * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  *
  * @author Gavin King
  */
@@ -75,12 +75,12 @@ public @interface Temporal {
 	 * The column name holding the starting timestamp of a revision.
 	 * That is, the "effective from" timestamp.
 	 */
-	String starting() default "effective";
+	String rowStart() default "effective";
 	/**
 	 * The column name holding the ending timestamp of a revision.
 	 * That is, the "effective to" timestamp.
 	 */
-	String ending() default "superseded";
+	String rowEnd() default "superseded";
 
 	/**
 	 * The fractional seconds precision for both temporal columns.

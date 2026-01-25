@@ -120,5 +120,5 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 
 	@Override
-	SharedSessionBuilderImplementor instant(Instant instant);
+	SharedSessionBuilderImplementor asOf(Instant instant);
 }

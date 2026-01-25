@@ -98,7 +98,7 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	SharedSessionBuilder autoClose();
 
 	@Override
-	SharedSessionBuilder instant(Instant instant);
+	SharedSessionBuilder asOf(Instant instant);
 
 	@Override @Deprecated
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);

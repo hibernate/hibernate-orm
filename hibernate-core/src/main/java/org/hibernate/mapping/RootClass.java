@@ -449,14 +449,17 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public void createPrimaryKey() {
-		super.createPrimaryKey();
+	public PrimaryKey makePrimaryKey(Table table) {
+		final var primaryKey = super.makePrimaryKey( table );
 		if ( temporalStartingColumn != null ) {
-			final var primaryKey = getTable().getPrimaryKey();
-			if ( primaryKey != null && !primaryKey.containsColumn( temporalStartingColumn ) ) {
+			if ( isVersioned() ) {
+				primaryKey.addColumns( getVersion().getValue() );
+			}
+			else {
 				primaryKey.addColumn( temporalStartingColumn );
 			}
 		}
+		return primaryKey;
 	}
 
 }

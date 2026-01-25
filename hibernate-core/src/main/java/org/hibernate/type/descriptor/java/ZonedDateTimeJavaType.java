@@ -129,15 +129,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 			}
 		}
 
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return type.cast( java.sql.Date.from( zonedDateTime.toInstant() ) );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return type.cast( java.sql.Time.from( zonedDateTime.toInstant() ) );
-		}
-
-		if ( Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.isAssignableFrom( type ) && !java.sql.Date.class.isAssignableFrom( type ) && !java.sql.Time.class.isAssignableFrom( type ) ) {
 			return type.cast( Date.from( zonedDateTime.toInstant() ) );
 		}
 

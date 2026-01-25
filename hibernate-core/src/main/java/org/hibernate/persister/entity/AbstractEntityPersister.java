@@ -152,6 +152,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
@@ -3497,9 +3498,15 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {
-		return softDeleteMapping == null
-				? new DeleteCoordinatorStandard( this, factory )
-				: new DeleteCoordinatorSoft( this, factory );
+		if ( temporalMapping != null ) {
+			return new DeleteCoordinatorTemporal( this, factory );
+		}
+		else if ( softDeleteMapping != null ) {
+			return new DeleteCoordinatorSoft( this, factory );
+		}
+		else {
+			return new DeleteCoordinatorStandard( this, factory );
+		}
 	}
 
 	@Override

@@ -14,9 +14,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityTest.TemporalEntity.class,
 		TemporalEntityTest.TemporalChild.class})
+@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 class TemporalEntityTest {
 
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {

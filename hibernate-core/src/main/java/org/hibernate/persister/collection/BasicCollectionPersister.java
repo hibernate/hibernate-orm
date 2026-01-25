@@ -441,7 +441,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		);
 
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null
+				&& !session.getFactory().getSessionFactoryOptions()
+						.isUseServerTransactionTimestampsEnabled() ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getStartingColumnMapping(),
@@ -707,7 +709,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null
+				&& !session.getFactory().getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled() ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					temporalMapping.getEndingColumnMapping(),

@@ -613,7 +613,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return transactionStartInstant;
 		}
 		else if ( isTransactionInProgress() ) {
-			transactionStartInstant = generateTransactionStartInstant();
+			initializeTransactionStartInstant();
 			return transactionStartInstant;
 		}
 		else {
@@ -627,7 +627,17 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionBegin() {
-		transactionStartInstant = generateTransactionStartInstant();
+		initializeTransactionStartInstant();
+	}
+
+	protected void initializeTransactionStartInstant() {
+		if ( !factoryOptions.isUseServerTransactionTimestampsEnabled() ) {
+			transactionStartInstant = generateTransactionStartInstant();
+		}
+	}
+
+	protected void clearTransactionStartInstant() {
+		transactionStartInstant = null;
 	}
 
 	@Override
@@ -679,7 +689,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		transactionStartInstant = null;
+		clearTransactionStartInstant();
 		cacheTransactionSynchronization.transactionCompleted( successful );
 	}
 

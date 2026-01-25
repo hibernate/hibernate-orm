@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.model.MutationTarget;
 
 /**
  * @author Christian Beikov
@@ -17,14 +18,17 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 
 	private final NamedTableReference targetTable;
 	private final List<ColumnReference> returningColumns;
+	private final MutationTarget<?> mutationTarget;
 
 	public AbstractMutationStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			List<ColumnReference> returningColumns) {
+			List<ColumnReference> returningColumns,
+			MutationTarget<?> mutationTarget) {
 		super( cteContainer );
 		this.targetTable = targetTable;
 		this.returningColumns = returningColumns;
+		this.mutationTarget = mutationTarget;
 	}
 
 	@Override
@@ -35,5 +39,10 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 	@Override
 	public List<ColumnReference> getReturningColumns() {
 		return returningColumns;
+	}
+
+	@Override
+	public MutationTarget<?> getMutationTarget() {
+		return mutationTarget;
 	}
 }

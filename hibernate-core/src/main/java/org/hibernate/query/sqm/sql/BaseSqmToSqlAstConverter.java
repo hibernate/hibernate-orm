@@ -872,7 +872,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							suppliedPredicate,
 							combinePredicates( queryNodeProcessingState.getPredicate(), additionalRestrictions )
 					),
-					emptyList()
+					emptyList(),
+					entityDescriptor
 			);
 		}
 		finally {
@@ -1138,7 +1139,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									additionalRestrictions
 							)
 					),
-					emptyList()
+					emptyList(),
+					entityDescriptor
 			);
 		}
 		finally {
@@ -1197,7 +1199,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
-					emptyList()
+					emptyList(),
+					entityDescriptor
 			);
 			additionalInsertValues = visitInsertionTargetPaths(
 					(assigable, references) -> insertStatement.addTargetColumnReferences( references ),
@@ -1298,7 +1301,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final InsertSelectStatement insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
-					emptyList()
+					emptyList(),
+					entityDescriptor
 			);
 
 			final AdditionalInsertValues additionalInsertValues = visitInsertionTargetPaths(

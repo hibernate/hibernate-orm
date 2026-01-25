@@ -1319,7 +1319,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof DerbyDialect || dialect instanceof SpannerDialect);
+			return !(dialect instanceof DerbyDialect);
 		}
 	}
 

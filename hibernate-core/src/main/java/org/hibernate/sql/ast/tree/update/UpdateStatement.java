@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.model.MutationTarget;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +61,18 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( cteContainer, targetTable, fromClause, restriction, returningColumns );
+		this( cteContainer, targetTable, fromClause, assignments, restriction, returningColumns, null );
+	}
+
+	public UpdateStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			FromClause fromClause,
+			List<Assignment> assignments,
+			Predicate restriction,
+			List<ColumnReference> returningColumns,
+			MutationTarget<?> mutationTarget) {
+		super( cteContainer, targetTable, fromClause, restriction, returningColumns, mutationTarget );
 		this.assignments = assignments;
 	}
 

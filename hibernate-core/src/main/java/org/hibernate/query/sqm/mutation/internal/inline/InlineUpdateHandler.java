@@ -476,7 +476,8 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 								executionContext
 						)
 				),
-				tableUpdater.updateStatement.getReturningColumns()
+				tableUpdater.updateStatement.getReturningColumns(),
+				tableUpdater.updateStatement.getMutationTarget()
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -500,7 +501,8 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final InsertSelectStatement insertStatement = new InsertSelectStatement(
 				tableUpdater.nullableInsert,
 				tableUpdater.nullableInsert.getTargetTable(),
-				tableUpdater.nullableInsert.getReturningColumns()
+				tableUpdater.nullableInsert.getReturningColumns(),
+				tableUpdater.nullableInsert.getMutationTarget()
 		);
 		final QuerySpec originalQuerySpec = (QuerySpec) tableUpdater.nullableInsert.getSourceSelectStatement();
 		assert originalQuerySpec.getFromClause().getRoots().size() == 1;

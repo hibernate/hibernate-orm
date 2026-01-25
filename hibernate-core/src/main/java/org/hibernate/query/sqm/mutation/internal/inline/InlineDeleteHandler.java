@@ -208,7 +208,8 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 									executionContext
 							)
 					),
-					updateStatement.getReturningColumns()
+					updateStatement.getReturningColumns(),
+					updateStatement.getMutationTarget()
 			);
 		}
 		else {
@@ -229,7 +230,8 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 									executionContext
 							)
 					),
-					deleteStatement.getReturningColumns()
+					deleteStatement.getReturningColumns(),
+					deleteStatement.getMutationTarget()
 			);
 		}
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();

@@ -255,6 +255,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -2917,7 +2918,7 @@ public abstract class AbstractEntityPersister
 
 	private static boolean isUseNativeTemporalTablesEnabled(SqlAstCreationState creationState) {
 		return creationState.getCreationContext().getSessionFactory()
-				.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+				.getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
 	}
 
 	private void applyNativeTemporalTableReference(
@@ -3491,7 +3492,7 @@ public abstract class AbstractEntityPersister
 
 	private boolean useTemporalCoordinators() {
 		return temporalMapping != null
-			&& !factory.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+			&& factory.getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE;
 	}
 
 	protected InsertCoordinator buildInsertCoordinator() {

@@ -6,10 +6,11 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
+
 public class TemporalMutationHelper {
 	public static boolean isUsingParameters(SharedSessionContractImplementor session) {
-		final var options = session.getFactory().getSessionFactoryOptions();
-		return !options.isUseServerTransactionTimestampsEnabled()
-			&& !options.isUseNativeTemporalTablesEnabled();
+		return session.getFactory().getSessionFactoryOptions()
+					.getTemporalTableStrategy() == VM_TIMESTAMP;
 	}
 }

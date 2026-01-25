@@ -108,6 +108,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE;
@@ -302,10 +303,8 @@ public class ToOneAttributeMapping
 							.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
-				final String propertyPath =
-						bootValue.getPropertyName() == null
-								? name
-								: bootValue.getPropertyName();
+				final String propertyName = bootValue.getPropertyName();
+				final String propertyPath = propertyName == null ? name : propertyName;
 				if ( cardinality == LOGICAL_ONE_TO_ONE ) {
 					boolean hasJoinTable = false;
 					// Handle join table cases
@@ -2408,7 +2407,7 @@ public class ToOneAttributeMapping
 
 	private static boolean isUseNativeTemporalTablesEnabled(SqlAstCreationState creationState) {
 		return creationState.getCreationContext().getSessionFactory()
-				.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+				.getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
 	}
 
 	@Override

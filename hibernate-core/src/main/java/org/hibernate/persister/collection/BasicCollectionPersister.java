@@ -138,12 +138,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal) {
 		if ( !isPerformingUpdates() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection row updates - %s",
-//						getRolePath()
-//				);
-//			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -162,12 +156,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertRowCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection inserts - %s",
-//						getRolePath()
-//				);
-//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -181,12 +169,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
 		if ( !needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection row deletions - %s",
-//						getRolePath()
-//				);
-//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -201,12 +183,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( !needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection removals - %s",
-//						getRolePath()
-//				);
-//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 		else {

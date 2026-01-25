@@ -25,7 +25,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, TemporalEntity {
+public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, Temporalized {
 
 	private Property identifierProperty;
 	private KeyValue identifier;

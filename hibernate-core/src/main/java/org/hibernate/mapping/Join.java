@@ -115,7 +115,7 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void createForeignKey() {
 		final var foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
-		if ( disableForeignKeyCreation ) {
+		if ( foreignKey != null && disableForeignKeyCreation ) {
 			foreignKey.disableCreation();
 		}
 	}

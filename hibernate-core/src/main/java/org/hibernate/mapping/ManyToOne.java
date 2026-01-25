@@ -95,7 +95,7 @@ public final class ManyToOne extends ToOne {
 					component.sortProperties();
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
-				if ( isForeignKeyEnabled() && !hasFormula() ) {
+				if ( isConstrained() && !isTemporalEntity( referencedClass ) ) {
 					final var foreignKey = getTable().createForeignKey(
 							getForeignKeyName(),
 							getConstraintColumns(),

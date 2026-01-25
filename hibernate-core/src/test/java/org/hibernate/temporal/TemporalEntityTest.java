@@ -4,14 +4,10 @@
  */
 package org.hibernate.temporal;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -261,7 +257,6 @@ class TemporalEntityTest {
 		List<TemporalChild> children = new ArrayList<>();
 		@Temporal
 		@ElementCollection
-		@CollectionTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		Set<String> strings = new HashSet<>();
 	}
 
@@ -273,12 +268,10 @@ class TemporalEntityTest {
 		@Version
 		int version;
 		String text;
-		@ManyToOne @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+		@ManyToOne @JoinColumn
 		TemporalEntity parent;
 
 		@Temporal @ManyToMany
-		@JoinTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
-				inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		Set<TemporalChild> friends = new HashSet<>();
 	}
 }

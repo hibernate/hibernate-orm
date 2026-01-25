@@ -79,7 +79,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		this.rowMutationOperations = buildRowMutationOperations();
 		this.insertRowsCoordinator = buildInsertRowCoordinator();
-		this.updateCoordinator = buildUpdateRowCoordinator();
+		this.updateCoordinator = buildUpdateRowCoordinator( collectionBinding.isTemporalized() );
 		this.deleteRowsCoordinator = buildDeleteRowCoordinator();
 		this.removeCoordinator = buildDeleteAllCoordinator();
 	}
@@ -136,7 +136,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			&& !isInverse();
 	}
 
-	private UpdateRowsCoordinator buildUpdateRowCoordinator() {
+	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal) {
 		if ( !isPerformingUpdates() ) {
 //			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 //				MODEL_MUTATION_LOGGER.tracef(
@@ -147,20 +147,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 		else {
-			final var attributeMapping = getAttributeMapping();
-			assert attributeMapping != null;
-			if ( attributeMapping.getTemporalMapping() != null ) {
-				return new UpdateRowsCoordinatorTemporal(
-						this,
-						rowMutationOperations,
-						getFactory()
-				);
-			}
-			return new UpdateRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					getFactory()
-			);
+			return temporal
+					? new UpdateRowsCoordinatorTemporal(
+							this,
+							rowMutationOperations,
+							getFactory()
+					) : new UpdateRowsCoordinatorStandard(
+							this,
+							rowMutationOperations,
+							getFactory()
+					);
 		}
 	}
 

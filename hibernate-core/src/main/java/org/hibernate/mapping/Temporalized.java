@@ -13,4 +13,8 @@ public interface Temporalized {
 	Column getTemporalStartingColumn();
 
 	Column getTemporalEndingColumn();
+
+	default boolean isTemporalized() {
+		return getTemporalStartingColumn() != null;
+	}
 }

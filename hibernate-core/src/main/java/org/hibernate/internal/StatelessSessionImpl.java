@@ -1392,6 +1392,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionBegin() {
+		super.afterTransactionBegin();
 		afterTransactionBeginEvents();
 	}
 

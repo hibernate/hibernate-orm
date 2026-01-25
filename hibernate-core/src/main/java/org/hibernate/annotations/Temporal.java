@@ -8,6 +8,10 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -35,9 +39,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@linkplain #ending} timestamp is null or greater than the given
  *     instant.
  * </ul>
+ * <p>May also be applied to a collection-valued association to indicate that
+ * the collection or join table is temporal.
  */
 @Documented
-@Target(TYPE)
+@Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Temporal {
 	/**

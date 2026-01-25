@@ -45,7 +45,7 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable
+		implements Fetchable, Value, Filterable, SoftDeletable, TemporalEntity
 		permits Set, Bag,
 				IndexedCollection, // List, Map
 				IdentifierCollection { // IdentifierBag only built-in implementation
@@ -103,6 +103,9 @@ public abstract sealed class Collection
 
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
+
+	private Column temporalStartingColumn;
+	private Column temporalEndingColumn;
 
 	private String loaderName;
 
@@ -177,6 +180,8 @@ public abstract sealed class Collection
 		this.deleteExpectation = original.deleteExpectation;
 		this.deleteAllExpectation = original.deleteAllExpectation;
 		this.loaderName = original.loaderName;
+		this.temporalStartingColumn = original.temporalStartingColumn;
+		this.temporalEndingColumn = original.temporalEndingColumn;
 	}
 
 	@Override
@@ -848,6 +853,22 @@ public abstract sealed class Collection
 	@Override
 	public Column getSoftDeleteColumn() {
 		return softDeleteColumn;
+	}
+
+	@Override
+	public void enableTemporal(Column startingColumn, Column endingColumn) {
+		this.temporalStartingColumn = startingColumn;
+		this.temporalEndingColumn = endingColumn;
+	}
+
+	@Override
+	public Column getTemporalStartingColumn() {
+		return temporalStartingColumn;
+	}
+
+	@Override
+	public Column getTemporalEndingColumn() {
+		return temporalEndingColumn;
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {

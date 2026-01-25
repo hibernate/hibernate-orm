@@ -59,7 +59,9 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var temporalMapping = entityPersister().getTemporalMapping();
-		if ( temporalMapping == null ) {
+		if ( temporalMapping == null
+				|| session.getFactory().getSessionFactoryOptions()
+						.isUseServerTransactionTimestampsEnabled() ) {
 			return;
 		}
 		jdbcValueBindings.bindValue(

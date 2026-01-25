@@ -439,6 +439,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				},
 				session
 		);
+
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					temporalMapping.getStartingColumnMapping(),
+					ParameterUsage.SET
+			);
+		}
 	}
 
 
@@ -697,6 +706,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					temporalMapping.getEndingColumnMapping(),
+					ParameterUsage.SET
+			);
+		}
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(

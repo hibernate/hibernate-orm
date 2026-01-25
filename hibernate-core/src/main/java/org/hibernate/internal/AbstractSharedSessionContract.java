@@ -111,6 +111,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -169,6 +170,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	// mutable state
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
+	private transient Instant transactionStartInstant;
 
 	private boolean criteriaCopyTreeEnabled;
 	private boolean criteriaPlanCacheEnabled;
@@ -606,6 +608,29 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
+	public Instant getTransactionStartInstant() {
+		if ( transactionStartInstant != null ) {
+			return transactionStartInstant;
+		}
+		else if ( isTransactionInProgress() ) {
+			transactionStartInstant = generateTransactionStartInstant();
+			return transactionStartInstant;
+		}
+		else {
+			return generateTransactionStartInstant();
+		}
+	}
+
+	private Instant generateTransactionStartInstant() {
+		return Instant.now();
+	}
+
+	@Override
+	public void afterTransactionBegin() {
+		transactionStartInstant = generateTransactionStartInstant();
+	}
+
+	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !factoryOptions.isAllowOutOfTransactionUpdateOperations()
 				&& !isTransactionInProgress() ) {
@@ -654,6 +679,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		transactionStartInstant = null;
 		cacheTransactionSynchronization.transactionCompleted( successful );
 	}
 

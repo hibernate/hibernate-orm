@@ -5,6 +5,7 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
@@ -95,6 +96,14 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 					RowMutationOperations.DEFAULT_RESTRICTOR,
 					session
 			);
+			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
+			if ( temporalMapping != null ) {
+				jdbcValueBindings.bindValue(
+						session.getTransactionStartInstant(),
+						temporalMapping.getEndingColumnMapping(),
+						ParameterUsage.SET
+				);
+			}
 
 			mutationExecutor.execute(
 					key,

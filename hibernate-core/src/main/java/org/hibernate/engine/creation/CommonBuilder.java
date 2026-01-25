@@ -181,5 +181,5 @@ public interface CommonBuilder {
 	 * @see org.hibernate.annotations.Temporal
 	 */
 	@Incubating
-	CommonBuilder instant(Instant instant);
+	CommonBuilder asOf(Instant instant);
 }

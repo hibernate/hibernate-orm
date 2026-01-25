@@ -14,6 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 
+import static org.hibernate.boot.model.internal.TemporalHelper.isUseNativeTemporalTablesEnabled;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
@@ -451,7 +452,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	@Override
 	public PrimaryKey makePrimaryKey(Table table) {
 		final var primaryKey = super.makePrimaryKey( table );
-		if ( temporalStartingColumn != null ) {
+		if ( temporalStartingColumn != null
+				&& !isUseNativeTemporalTablesEnabled( getBuildingContext() ) ) {
 			if ( isVersioned() ) {
 				primaryKey.addColumns( getVersion().getValue() );
 			}

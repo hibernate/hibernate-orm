@@ -58,6 +58,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+import static org.hibernate.boot.model.internal.TemporalHelper.isUseNativeTemporalTablesEnabled;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
@@ -391,7 +392,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	protected boolean isTemporalEntity(PersistentClass referencedEntity) {
 		return referencedEntity instanceof Temporalized temporalEntity
-			&& temporalEntity.isTemporalized();
+			&& temporalEntity.isTemporalized()
+			&& !isUseNativeTemporalTablesEnabled( getBuildingContext() );
 	}
 
 	protected boolean isTemporalEntityName(String entityName) {
@@ -403,8 +405,6 @@ public abstract class SimpleValue implements KeyValue {
 			return referencedEntity != null && isTemporalEntity( referencedEntity );
 		}
 	}
-
-
 
 	@Override
 	public void createUniqueKey(MetadataBuildingContext context) {

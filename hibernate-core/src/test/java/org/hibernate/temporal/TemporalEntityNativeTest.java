@@ -44,6 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")})
 class TemporalEntityNativeTest {
 
+	public static final int PAUSE = 500;
+
 	@RequiresDialect(MariaDBDialect.class)
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
@@ -60,9 +62,9 @@ class TemporalEntityNativeTest {
 					session.persist( child );
 				}
 		);
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var instant = Instant.now();
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -142,9 +144,9 @@ class TemporalEntityNativeTest {
 				assertEquals( 0, friends );
 			} );
 		}
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var nextInstant = Instant.now();
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -181,6 +183,7 @@ class TemporalEntityNativeTest {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					session.remove( entity.children.get(0) );
 					session.remove( entity );
 				}
 		);
@@ -209,9 +212,9 @@ class TemporalEntityNativeTest {
 					session.insert( entity );
 				}
 		);
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var instant = Instant.now();
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );

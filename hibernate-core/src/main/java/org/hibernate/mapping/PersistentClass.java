@@ -135,6 +135,10 @@ public abstract sealed class PersistentClass
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
 	}
 
+	MetadataBuildingContext getBuildingContext() {
+		return metadataBuildingContext;
+	}
+
 	public String getClassName() {
 		return className;
 	}

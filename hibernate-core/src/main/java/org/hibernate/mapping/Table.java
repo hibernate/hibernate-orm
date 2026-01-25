@@ -70,6 +70,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String comment;
 	private String viewQuery;
 	private String options;
+	private String systemTimePeriod;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
@@ -857,5 +858,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public void setOptions(String options) {
 		this.options = options;
+	}
+
+	public String getSystemTimePeriod() {
+		return systemTimePeriod;
+	}
+
+	public void setSystemTimePeriod(String systemTimePeriod) {
+		this.systemTimePeriod = systemTimePeriod;
 	}
 }

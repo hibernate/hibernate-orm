@@ -8,6 +8,7 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -97,9 +98,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 					session
 			);
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
-			if ( temporalMapping != null
-					&& !session.getFactory().getSessionFactoryOptions()
-							.isUseServerTransactionTimestampsEnabled() ) {
+			if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
 						session.getTransactionStartInstant(),
 						temporalMapping.getEndingColumnMapping(),

@@ -2233,7 +2233,7 @@ public class ToOneAttributeMapping
 					}
 
 					final var temporalMapping = associatedEntityMappingType.getTemporalMapping();
-					if ( temporalMapping != null ) {
+					if ( temporalMapping != null && !isUseNativeTemporalTablesEnabled( creationState ) ) {
 						final var tableReference =
 								lazyTableGroup.resolveTableReference( navigablePath,
 										associatedEntityMappingType.getTemporalTableDetails().getTableName() );
@@ -2374,7 +2374,7 @@ public class ToOneAttributeMapping
 
 			if ( fetched ) {
 				final var temporalMapping = getAssociatedEntityMappingType().getTemporalMapping();
-				if ( temporalMapping != null ) {
+				if ( temporalMapping != null && !isUseNativeTemporalTablesEnabled( creationState ) ) {
 					final var tableReference =
 							lazyTableGroup.resolveTableReference( navigablePath,
 									getAssociatedEntityMappingType().getTemporalTableDetails().getTableName() );
@@ -2404,6 +2404,11 @@ public class ToOneAttributeMapping
 		}
 
 		return lazyTableGroup;
+	}
+
+	private static boolean isUseNativeTemporalTablesEnabled(SqlAstCreationState creationState) {
+		return creationState.getCreationContext().getSessionFactory()
+				.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
 	}
 
 	@Override

@@ -92,8 +92,7 @@ public class TemporalUpdateCoordinator extends AbstractMutationCoordinator imple
 				jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
 			}
 
-			if ( !session.getFactory().getSessionFactoryOptions()
-					.isUseServerTransactionTimestampsEnabled() ) {
+			if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
 						session.getTransactionStartInstant(),
 						entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),

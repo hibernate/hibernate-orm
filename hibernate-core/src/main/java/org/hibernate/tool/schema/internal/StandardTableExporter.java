@@ -118,6 +118,10 @@ public class StandardTableExporter implements Exporter<Table> {
 
 				applyTableCheck( table, createTable );
 
+				if ( isNotEmpty( table.getSystemTimePeriod() ) ) {
+					createTable.append( ", " ).append( table.getSystemTimePeriod() );
+				}
+
 				createTable.append( ')' );
 
 				createTable.append( extra );

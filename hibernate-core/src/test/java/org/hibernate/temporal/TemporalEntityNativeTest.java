@@ -15,7 +15,10 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,11 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses =
-		{TemporalEntityServerSideTest.TemporalEntity.class,
-		TemporalEntityServerSideTest.TemporalChild.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, value = "true"))
-class TemporalEntityServerSideTest {
+		{TemporalEntityNativeTest.TemporalEntity.class,
+		TemporalEntityNativeTest.TemporalChild.class})
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.USE_NATIVE_TEMPORAL_TABLES, value = "true"),
+		// TODO: make this setting unnecessary!
+		@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")})
+class TemporalEntityNativeTest {
 
+	@RequiresDialect(MariaDBDialect.class)
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -192,6 +198,8 @@ class TemporalEntityServerSideTest {
 		}
 	}
 
+	@RequiresDialect(MariaDBDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
 	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {

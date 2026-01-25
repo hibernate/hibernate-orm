@@ -416,10 +416,23 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final MariaDBSqlAstTranslator<?> translator = new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, MariaDBDialect.this );
-			return translator.createMergeOperation( optionalTableUpdate );
+			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )
+					.createMergeOperation( optionalTableUpdate );
 		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " generated always as " + generatedAs
+				: super.generatedAs( generatedAs );
+	}
+
+	@Override
+	public int getTemporalColumnType() {
+		return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+	}
 }

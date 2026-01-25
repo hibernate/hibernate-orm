@@ -1169,7 +1169,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " as (" + generatedAs + ") persisted";
+		return generatedAs.startsWith( "row " )
+				? " datetime2 generated always as " + generatedAs
+				: " as (" + generatedAs + ") persisted";
 	}
 
 	@Override

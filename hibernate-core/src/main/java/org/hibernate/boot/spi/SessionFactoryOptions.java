@@ -546,6 +546,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isUseServerTransactionTimestampsEnabled();
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_NATIVE_TEMPORAL_TABLES
+	 */
+	boolean isUseNativeTemporalTablesEnabled();
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
 	 */
 	default boolean isCriteriaCopyTreeEnabled() {

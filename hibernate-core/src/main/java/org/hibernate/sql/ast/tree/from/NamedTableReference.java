@@ -7,8 +7,10 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.time.Instant;
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -23,6 +25,8 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
+	private Instant temporalInstant;
+	private JdbcMapping temporalJdbcMapping;
 
 	public NamedTableReference(
 			String tableExpression,
@@ -41,6 +45,19 @@ public class NamedTableReference extends AbstractTableReference {
 
 	public String getTableExpression() {
 		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
+	}
+
+	public void applyTemporalTable(Instant instant, JdbcMapping jdbcMapping) {
+		this.temporalInstant = instant;
+		this.temporalJdbcMapping = jdbcMapping;
+	}
+
+	public Instant getTemporalInstant() {
+		return temporalInstant;
+	}
+
+	public JdbcMapping getTemporalJdbcMapping() {
+		return temporalJdbcMapping;
 	}
 
 	@Override

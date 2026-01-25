@@ -590,33 +590,51 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
-		final var temporalInstant = influencers.getTemporalInstant();
-		final var descriptor = getCollectionDescriptor();
-		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-			final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-			final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
+		if ( !isNativeTemporalTablesEnabled() ) {
+			final var temporalInstant = influencers.getTemporalInstant();
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+				final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
+				if ( temporalMapping != null ) {
+					final String primaryTableName =
+							associatedEntityDescriptor.getTemporalTableDetails().getTableName();
+					final var primaryTableReference =
+							tableGroup.resolveTableReference( primaryTableName );
+					final var temporalRestriction =
+							temporalInstant == null
+									? temporalMapping.createCurrentRestriction( primaryTableReference )
+									: temporalMapping.createRestriction( primaryTableReference, temporalInstant );
+					predicateConsumer.applyPredicate( temporalRestriction );
+				}
+			}
 			if ( temporalMapping != null ) {
-				final String primaryTableName =
-						associatedEntityDescriptor.getTemporalTableDetails().getTableName();
-				final var primaryTableReference =
-						tableGroup.resolveTableReference( primaryTableName );
+				final var tableReference =
+						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
 				final var temporalRestriction =
 						temporalInstant == null
-								? temporalMapping.createCurrentRestriction( primaryTableReference )
-								: temporalMapping.createRestriction( primaryTableReference, temporalInstant );
+								? temporalMapping.createCurrentRestriction( tableReference )
+								: temporalMapping.createRestriction( tableReference, temporalInstant );
 				predicateConsumer.applyPredicate( temporalRestriction );
 			}
 		}
-		if ( temporalMapping != null ) {
-			final var tableReference =
-					tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
-			final var temporalRestriction =
-					temporalInstant == null
-							? temporalMapping.createCurrentRestriction( tableReference )
-							: temporalMapping.createRestriction( tableReference, temporalInstant );
-			predicateConsumer.applyPredicate( temporalRestriction );
+	}
+
+	private void applyNativeTemporalTableReference(
+			NamedTableReference tableReference,
+			SqlAstCreationState creationState) {
+		if ( temporalMapping != null && isNativeTemporalTablesEnabled() ) {
+			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+			if ( temporalInstant != null
+					&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
+				tableReference.applyTemporalTable( temporalInstant, temporalMapping.getJdbcMapping() );
+			}
 		}
+	}
+
+	private boolean isNativeTemporalTablesEnabled() {
+		return collectionDescriptor.getFactory().getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
 	}
 
 	@Override
@@ -1182,6 +1200,7 @@ public class PluralAttributeMappingImpl
 				sqlAliasBase.generateNewAlias(),
 				true
 		);
+		applyNativeTemporalTableReference( collectionTableReference, creationState );
 
 		final var tableGroup = new CollectionTableGroup(
 				canUseInnerJoins,

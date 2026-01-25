@@ -1333,7 +1333,9 @@ public abstract class AbstractEntityPersister
 	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState sqlAstCreationState) {
-		return new NamedTableReference( getTableName(), sqlAliasBase.generateNewAlias() );
+		final var tableReference = new NamedTableReference( getTableName(), sqlAliasBase.generateNewAlias() );
+		applyNativeTemporalTableReference( tableReference, sqlAstCreationState );
+		return tableReference;
 	}
 
 	@Override
@@ -1370,6 +1372,7 @@ public abstract class AbstractEntityPersister
 				sqlAliasBase.generateNewAlias(),
 				!innerJoin
 		);
+		applyNativeTemporalTableReference( joinedTableReference, creationState );
 		return new TableReferenceJoin(
 				innerJoin,
 				joinedTableReference,
@@ -2828,6 +2831,7 @@ public abstract class AbstractEntityPersister
 				needsDiscriminator() ? getRootTableName() : getTableName(),
 				sqlAliasBase.generateNewAlias()
 		);
+		applyNativeTemporalTableReference( rootTableReference, creationState );
 
 		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -2847,6 +2851,7 @@ public abstract class AbstractEntityPersister
 									sqlAliasBase.generateNewAlias(),
 									isNullableSubclassTable( i )
 							);
+							applyNativeTemporalTableReference( joinedTableReference, creationState );
 							return new TableReferenceJoin(
 									shouldInnerJoinSubclassTable( i, emptySet() ),
 									joinedTableReference,
@@ -2889,7 +2894,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-			if ( temporalMapping != null ) {
+			if ( temporalMapping != null && !isUseNativeTemporalTablesEnabled( creationState ) ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
 				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
@@ -2908,6 +2913,23 @@ public abstract class AbstractEntityPersister
 		}
 
 		return tableGroup;
+	}
+
+	private static boolean isUseNativeTemporalTablesEnabled(SqlAstCreationState creationState) {
+		return creationState.getCreationContext().getSessionFactory()
+				.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+	}
+
+	private void applyNativeTemporalTableReference(
+			NamedTableReference tableReference,
+			SqlAstCreationState creationState) {
+		if ( temporalMapping != null && isUseNativeTemporalTablesEnabled( creationState ) ) {
+			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+			if ( temporalInstant != null
+					&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
+				tableReference.applyTemporalTable( temporalInstant, temporalMapping.getJdbcMapping() );
+			}
+		}
 	}
 
 	@Override
@@ -3467,12 +3489,17 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
+	private boolean useTemporalCoordinators() {
+		return temporalMapping != null
+			&& !factory.getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+	}
+
 	protected InsertCoordinator buildInsertCoordinator() {
 		return new InsertCoordinatorStandard( this, factory );
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
-		if ( temporalMapping != null ) {
+		if ( useTemporalCoordinators() ) {
 			return new TemporalUpdateCoordinator( this, factory );
 		}
 		// we only have updates to issue for entities with one or more singular attributes
@@ -3490,7 +3517,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {
-		if ( temporalMapping != null ) {
+		if ( useTemporalCoordinators() ) {
 			return new DeleteCoordinatorTemporal( this, factory );
 		}
 		else if ( softDeleteMapping != null ) {
@@ -3518,7 +3545,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-		if ( temporalMapping != null ) {
+		if ( useTemporalCoordinators() ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
 			final var mutatingTable = insertBuilder.getMutatingTable();
 

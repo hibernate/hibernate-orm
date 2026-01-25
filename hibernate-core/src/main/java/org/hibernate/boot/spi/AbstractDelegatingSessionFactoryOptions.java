@@ -410,13 +410,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isUseServerTransactionTimestampsEnabled() {
-		return delegate.isUseServerTransactionTimestampsEnabled();
-	}
-
-	@Override
-	public boolean isUseNativeTemporalTablesEnabled() {
-		return delegate.isUseNativeTemporalTablesEnabled();
+	public org.hibernate.cfg.TemporalTableStrategy getTemporalTableStrategy() {
+		return delegate.getTemporalTableStrategy();
 	}
 
 	@Override

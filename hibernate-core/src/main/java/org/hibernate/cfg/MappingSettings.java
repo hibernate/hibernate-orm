@@ -626,26 +626,20 @@ public interface MappingSettings {
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 
 	/**
-	 * Use transaction timestamps supplied by the database server's
-	 * {@link Dialect#currentTimestamp() current_timestamp} function
-	 * instead of {@link java.time.Instant#now()} to initialize the
-	 * effectivity columns for
-	 * {@linkplain org.hibernate.annotations.Temporal temporal data}.
-	 * <p>By default, transaction timestamps are generated in memory.
+	 * Specifies the implementation strategy for
+	 * {@linkplain org.hibernate.annotations.Temporal temporal tables}.
+	 * <p>
+	 * Accepts any of:
+	 * <ul>
+	 *     <li>an instance of {@link TemporalTableStrategy}
+	 *     <li>the (case-insensitive) name of a {@code TemporalTableStrategy} (e.g. {@code native})
+	 * </ul>
 	 *
-	 * @settingDefault {@code false}
+	 * @settingDefault {@link TemporalTableStrategy#VM_TIMESTAMP}
 	 * @see org.hibernate.annotations.Temporal
+	 * @see TemporalTableStrategy
 	 */
 	@Incubating
-	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
-
-	/**
-	 * Use the native support for temporal tables provided by the database.
-	 *
-	 * @settingDefault {@code false}
-	 * @see org.hibernate.annotations.Temporal
-	 */
-	@Incubating
-	String USE_NATIVE_TEMPORAL_TABLES = "hibernate.temporal.use_native_temporal_tables";
+	String TEMPORAL_TABLE_STRATEGY = "hibernate.temporal.table_strategy";
 
 }

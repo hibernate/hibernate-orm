@@ -32,6 +32,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.cfg.TemporalTableStrategy.SERVER_TIMESTAMP;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 
@@ -43,7 +44,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
-	private final boolean useServerTransactionTimestamps;
 	private final String currentTimestampFunctionName;
 
 	public TemporalMappingImpl(
@@ -97,9 +97,9 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext
 		);
 
-		useServerTransactionTimestamps =
+		final boolean useServerTransactionTimestamps =
 				creationContext.getSessionFactory().getSessionFactoryOptions()
-						.isUseServerTransactionTimestampsEnabled();
+						.getTemporalTableStrategy() == SERVER_TIMESTAMP;
 		currentTimestampFunctionName =
 				useServerTransactionTimestamps
 						? dialect.currentTimestamp()
@@ -189,7 +189,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private ColumnValueBinding createTemporalValueBinding(
 			ColumnReference endingColumnReference, SelectableMapping columnMapping) {
 		return new ColumnValueBinding( endingColumnReference,
-				useServerTransactionTimestamps
+				currentTimestampFunctionName != null
 						? new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), columnMapping )
 						: new ColumnWriteFragment( "?",
 								new ColumnValueParameter( endingColumnReference ),

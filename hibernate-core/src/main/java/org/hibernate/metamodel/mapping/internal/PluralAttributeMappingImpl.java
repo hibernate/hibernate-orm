@@ -83,6 +83,7 @@ import java.util.function.Supplier;
 import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
@@ -634,7 +635,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {
-		return collectionDescriptor.getFactory().getSessionFactoryOptions().isUseNativeTemporalTablesEnabled();
+		return collectionDescriptor.getFactory().getSessionFactoryOptions()
+					.getTemporalTableStrategy() == NATIVE;
 	}
 
 	@Override

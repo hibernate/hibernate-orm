@@ -30,6 +30,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -163,8 +165,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private boolean useServerTransactionTimestamps;
-	private boolean useNativeTemporalTables;
+	private TemporalTableStrategy temporalTableStrategy;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -373,8 +374,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		useServerTransactionTimestamps = getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
-		useNativeTemporalTables = getBoolean( USE_NATIVE_TEMPORAL_TABLES, settings );
+		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
@@ -1156,12 +1156,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isUseServerTransactionTimestampsEnabled() {
-		return useServerTransactionTimestamps;
+	public TemporalTableStrategy getTemporalTableStrategy() {
+		return temporalTableStrategy;
 	}
 
-	@Override
-	@Deprecated
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
 	}
@@ -1635,14 +1634,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.initializeLazyStateOutsideTransactions = enabled;
 	}
 
-	public void enableUseServerTransactionTimestamps(boolean enabled) {
-		this.useServerTransactionTimestamps = enabled;
+	public void applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+		this.temporalTableStrategy = strategy;
 	}
-
-	public void enableUseNativeTemporalTables(boolean enabled) {
-		this.useNativeTemporalTables = enabled;
-	}
-
 
 	@Deprecated(forRemoval = true)
 	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {

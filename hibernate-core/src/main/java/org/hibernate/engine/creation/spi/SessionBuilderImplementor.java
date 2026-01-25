@@ -102,5 +102,5 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 
 	@Override
-	SessionBuilderImplementor instant(Instant instant);
+	SessionBuilderImplementor asOf(Instant instant);
 }

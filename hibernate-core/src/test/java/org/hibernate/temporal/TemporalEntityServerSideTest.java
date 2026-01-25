@@ -103,7 +103,7 @@ class TemporalEntityServerSideTest {
 					assertEquals( 1, friends );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 				assertEquals( "hello", entity.text );
@@ -113,7 +113,7 @@ class TemporalEntityServerSideTest {
 				assertEquals( 0, entity.children.get(0).friends.size() );
 			} );
 		}
-		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity =
 						session.createSelectionQuery( "from TemporalEntity where id=1", TemporalEntity.class )
@@ -121,7 +121,7 @@ class TemporalEntityServerSideTest {
 				assertEquals( "hello", entity.text );
 			} );
 		}
-		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity =
 						session.createSelectionQuery( "from TemporalEntity p left join fetch p.children c where p.id=1", TemporalEntity.class )
@@ -154,7 +154,7 @@ class TemporalEntityServerSideTest {
 					assertEquals( 0, entity.children.get(0).friends.size() );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -163,7 +163,7 @@ class TemporalEntityServerSideTest {
 					}
 			);
 		}
-		try (var session = scope.getSessionFactory().withOptions().instant(nextInstant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(nextInstant).open()) {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -184,7 +184,7 @@ class TemporalEntityServerSideTest {
 					assertNull( entity );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 				assertEquals( "hello", entity.text );
@@ -221,7 +221,7 @@ class TemporalEntityServerSideTest {
 					assertEquals( "goodbye", entity.text );
 				}
 		);
-		try (var session = scope.getSessionFactory().withStatelessOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withStatelessOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity = session.get( TemporalEntity.class, 2L );
 				assertEquals( "hello", entity.text );
@@ -243,7 +243,7 @@ class TemporalEntityServerSideTest {
 					assertNull( entity );
 				}
 		);
-		try (var session = scope.getSessionFactory().withStatelessOptions().instant(instant).open()) {
+		try (var session = scope.getSessionFactory().withStatelessOptions().asOf(instant).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity entity = session.get( TemporalEntity.class, 2L );
 				assertEquals( "hello", entity.text );
@@ -252,7 +252,7 @@ class TemporalEntityServerSideTest {
 	}
 
 
-	@Temporal(starting = "effective_from", ending = "effective_to")
+	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
 	@Entity(name = "TemporalEntity")
 	static class TemporalEntity {
 		@Id
@@ -267,7 +267,7 @@ class TemporalEntityServerSideTest {
 		Set<String> strings = new HashSet<>();
 	}
 
-	@Temporal(starting = "effective_from", ending = "effective_to")
+	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
 	@Entity(name = "TemporalChild")
 	static class TemporalChild {
 		@Id

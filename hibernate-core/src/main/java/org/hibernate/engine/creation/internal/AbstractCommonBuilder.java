@@ -165,7 +165,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	}
 
 	@Override
-	public T instant(Instant instant) {
+	public T asOf(Instant instant) {
 		this.temporalInstant = instant;
 		return getThis();
 	}

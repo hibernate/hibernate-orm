@@ -36,18 +36,20 @@ public class TemporalHelper {
 			Temporalized target,
 			Table table,
 			MetadataBuildingContext context) {
-		final Integer temporalPrecision =
-				temporalConfig.secondPrecision() == -1 ? null : temporalConfig.secondPrecision();
+		final int secondPrecision = temporalConfig.secondPrecision();
+		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var startingColumn =
-				createTemporalColumn( temporalConfig.starting(), table, context, false, temporalPrecision );
+				createTemporalColumn( temporalConfig.rowStart(),
+						table, context, false, precision );
 		final var endingColumn =
-				createTemporalColumn( temporalConfig.ending(), table, context, true, temporalPrecision );
+				createTemporalColumn( temporalConfig.rowEnd(),
+						table, context, true, precision );
 
 		final boolean nativeTemporalTablesEnabled = isUseNativeTemporalTablesEnabled( context );
 
 		if ( nativeTemporalTablesEnabled ) {
 			applyNativeTemporalTableOptions( table, startingColumn, endingColumn, context );
-			createTransactionIdColumn( table, context, temporalPrecision );
+			createTransactionIdColumn( table, context, precision );
 		}
 
 		table.addColumn( startingColumn );
@@ -66,7 +68,8 @@ public class TemporalHelper {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 		if ( dialect.requiresTemporalTableTransactionIdColumn() ) {
 			final var txidColumn =
-					createTemporalColumn( "ts_id", table, context, true, temporalPrecision );
+					createTemporalColumn( "ts_id",
+							table, context, true, temporalPrecision );
 			txidColumn.setGeneratedAs( "transaction start id" );
 			applyNativeTemporalColumnTypes( txidColumn, dialect );
 			table.addColumn( txidColumn );

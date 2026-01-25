@@ -252,5 +252,5 @@ public interface SessionBuilder extends CommonBuilder {
 	 * Instances of temporal entities retrieved in the session will represent
 	 * the revisions effective at the given instant.
 	 */
-	SessionBuilder instant(Instant instant);
+	SessionBuilder asOf(Instant instant);
 }

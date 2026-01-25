@@ -187,8 +187,8 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	}
 
 	@Override
-	public SessionBuilderImplementor instant(Instant instant) {
-		delegate.instant( instant );
+	public SessionBuilderImplementor asOf(Instant instant) {
+		delegate.asOf( instant );
 		return this;
 	}
 }

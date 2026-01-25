@@ -239,8 +239,8 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SharedSessionBuilder instant(Instant instant) {
-		delegate.instant( instant );
+	public SharedSessionBuilder asOf(Instant instant) {
+		delegate.asOf( instant );
 		return this;
 	}
 }

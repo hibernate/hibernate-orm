@@ -83,5 +83,5 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 * Instances of temporal entities retrieved in the session will represent
 	 * the revisions effective at the given instant.
 	 */
-	StatelessSessionBuilder instant(Instant instant);
+	StatelessSessionBuilder asOf(Instant instant);
 }

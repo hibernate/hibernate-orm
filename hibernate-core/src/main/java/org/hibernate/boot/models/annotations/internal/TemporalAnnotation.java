@@ -30,8 +30,8 @@ public class TemporalAnnotation implements Temporal {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TemporalAnnotation(Temporal annotation, ModelsContext modelContext) {
-		this.starting = annotation.starting();
-		this.ending = annotation.ending();
+		this.starting = annotation.rowStart();
+		this.ending = annotation.rowEnd();
 		this.secondPrecision = annotation.secondPrecision();
 	}
 
@@ -57,7 +57,7 @@ public class TemporalAnnotation implements Temporal {
 	}
 
 	@Override
-	public String starting() {
+	public String rowStart() {
 		return starting;
 	}
 
@@ -66,7 +66,7 @@ public class TemporalAnnotation implements Temporal {
 	}
 
 	@Override
-	public String ending() {
+	public String rowEnd() {
 		return ending;
 	}
 

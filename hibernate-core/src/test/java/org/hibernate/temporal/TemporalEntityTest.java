@@ -4,11 +4,15 @@
  */
 package org.hibernate.temporal;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
@@ -20,7 +24,10 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,6 +45,7 @@ class TemporalEntityTest {
 					TemporalEntity entity = new TemporalEntity();
 					entity.id = 1L;
 					entity.text = "hello";
+					entity.strings.add( "x" );
 					session.persist( entity );
 					TemporalChild child = new TemporalChild();
 					child.id = 1L;
@@ -47,12 +55,18 @@ class TemporalEntityTest {
 				}
 		);
 		var instant = Instant.now();
-		Thread.sleep( 2_000 );
+		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					entity.text = "goodbye";
+					entity.strings.add( "y" );
 					entity.children.get(0).text = "world!";
+					TemporalChild friend = new TemporalChild();
+					friend.id = 5L;
+					friend.text = "friend";
+					session.persist( friend );
+					entity.children.get(0).friends.add( friend );
 				}
 		);
 		scope.getSessionFactory().inTransaction(
@@ -61,6 +75,8 @@ class TemporalEntityTest {
 					assertEquals( "goodbye", entity.text );
 					assertEquals( 1, entity.children.size() );
 					assertEquals( "world!", entity.children.get(0).text );
+					assertEquals( 2, entity.strings.size() );
+					assertEquals( 1, entity.children.get(0).friends.size() );
 				}
 		);
 		scope.getSessionFactory().inTransaction(
@@ -80,6 +96,10 @@ class TemporalEntityTest {
 					assertEquals( "goodbye", entity.text );
 					assertEquals( 1, entity.children.size() );
 					assertEquals( "world!", entity.children.get(0).text );
+					var friends =
+							session.createSelectionQuery( "select f from TemporalEntity p join p.children c join c.friends f where p.id=1", TemporalChild.class )
+									.getResultCount();
+					assertEquals( 1, friends );
 				}
 		);
 		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
@@ -88,6 +108,8 @@ class TemporalEntityTest {
 				assertEquals( "hello", entity.text );
 				assertEquals( 1, entity.children.size() );
 				assertEquals( "world", entity.children.get(0).text );
+				assertEquals( 1, entity.strings.size() );
+				assertEquals( 0, entity.children.get(0).friends.size() );
 			} );
 		}
 		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
@@ -107,7 +129,46 @@ class TemporalEntityTest {
 				assertEquals( "hello", entity.text );
 				assertEquals( 1, entity.children.size() );
 				assertEquals( "world", entity.children.get(0).text );
+				var friends =
+						session.createSelectionQuery( "select f from TemporalEntity p join p.children c join c.friends f where p.id=1", TemporalChild.class )
+								.getResultCount();
+				assertEquals( 0, friends );
 			} );
+		}
+		var nextInstant = Instant.now();
+		Thread.sleep( 250 );
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					entity.strings.remove( "x" );
+					entity.strings.add( "z" );
+					entity.children.get(0).friends.clear();
+				}
+		);
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					assertEquals( Set.of("y", "z"), entity.strings );
+					assertEquals( 0, entity.children.get(0).friends.size() );
+				}
+		);
+		try (var session = scope.getSessionFactory().withOptions().instant(instant).open()) {
+			scope.getSessionFactory().inTransaction(
+					tx -> {
+						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+						assertEquals( Set.of( "x" ), entity.strings );
+						assertEquals( 0, entity.children.get( 0 ).friends.size() );
+					}
+			);
+		}
+		try (var session = scope.getSessionFactory().withOptions().instant(nextInstant).open()) {
+			scope.getSessionFactory().inTransaction(
+					tx -> {
+						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+						assertEquals( Set.of( "x", "y" ), entity.strings );
+						assertEquals( 1, entity.children.get( 0 ).friends.size() );
+					}
+			);
 		}
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -126,7 +187,8 @@ class TemporalEntityTest {
 				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 				assertEquals( "hello", entity.text );
 			} );
-		}	}
+		}
+	}
 
 	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inStatelessTransaction(
@@ -138,7 +200,7 @@ class TemporalEntityTest {
 				}
 		);
 		var instant = Instant.now();
-		Thread.sleep( 2_000 );
+		Thread.sleep( 250 );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
@@ -196,7 +258,11 @@ class TemporalEntityTest {
 		int version;
 		String text;
 		@OneToMany(mappedBy = "parent")
-		List<TemporalChild> children;
+		List<TemporalChild> children = new ArrayList<>();
+		@Temporal
+		@ElementCollection
+		@CollectionTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+		Set<String> strings = new HashSet<>();
 	}
 
 	@Temporal(starting = "effective_from", ending = "effective_to")
@@ -209,5 +275,10 @@ class TemporalEntityTest {
 		String text;
 		@ManyToOne @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		TemporalEntity parent;
+
+		@Temporal @ManyToMany
+		@JoinTable(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
+				inverseForeignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+		Set<TemporalChild> friends = new HashSet<>();
 	}
 }

@@ -36,6 +36,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
@@ -81,6 +82,7 @@ import java.util.function.Supplier;
 
 import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
+import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
@@ -116,6 +118,7 @@ public class PluralAttributeMappingImpl
 	private final FetchStyle fetchStyle;
 	private final SoftDeleteMapping softDeleteMapping;
 	private Boolean hasSoftDelete;
+	private final TemporalMapping temporalMapping;
 
 	private final String bidirectionalAttributeName;
 
@@ -188,6 +191,9 @@ public class PluralAttributeMappingImpl
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, bootDescriptor,
 						getSeparateCollectionTable(), creationProcess );
+		temporalMapping = getSeparateCollectionTable() == null
+				? null
+				: resolveTemporalMapping( bootDescriptor, getSeparateCollectionTable(), creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
@@ -345,6 +351,7 @@ public class PluralAttributeMappingImpl
 		this.fetchStyle = original.fetchStyle;
 		this.softDeleteMapping = original.softDeleteMapping;
 		this.hasSoftDelete = original.hasSoftDelete;
+		this.temporalMapping = original.temporalMapping;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
@@ -487,6 +494,15 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public TemporalMapping getTemporalMapping() {
+		return temporalMapping;
+	}
+
+	public TableDetails getTemporalTableDetails() {
+		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
+	}
+
+	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
 	}
@@ -591,6 +607,15 @@ public class PluralAttributeMappingImpl
 								: temporalMapping.createRestriction( primaryTableReference, temporalInstant );
 				predicateConsumer.applyPredicate( temporalRestriction );
 			}
+		}
+		if ( temporalMapping != null ) {
+			final var tableReference =
+					tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
+			final var temporalRestriction =
+					temporalInstant == null
+							? temporalMapping.createCurrentRestriction( tableReference )
+							: temporalMapping.createRestriction( tableReference, temporalInstant );
+			predicateConsumer.applyPredicate( temporalRestriction );
 		}
 	}
 
@@ -1259,6 +1284,9 @@ public class PluralAttributeMappingImpl
 
 	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalInstant() != null ) {
+			if ( temporalMapping != null ) {
+				return true;
+			}
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();

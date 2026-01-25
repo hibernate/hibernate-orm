@@ -10,6 +10,7 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Temporalized;
@@ -33,6 +34,7 @@ public class TemporalHelper {
 
 		table.addColumn( startingColumn );
 		table.addColumn( endingColumn );
+		addTemporalCheckConstraint( table, startingColumn, endingColumn, context );
 		target.enableTemporal( startingColumn, endingColumn );
 	}
 
@@ -74,5 +76,18 @@ public class TemporalHelper {
 				database.getJdbcEnvironment()
 		);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
+	}
+
+	private static void addTemporalCheckConstraint(
+			Table table,
+			Column startingColumn,
+			Column endingColumn,
+			MetadataBuildingContext context) {
+		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+		final String startingName = startingColumn.getQuotedName( dialect );
+		final String endingName = endingColumn.getQuotedName( dialect );
+		table.addCheck( new CheckConstraint(
+				endingName + " is null or " + endingName + " > " + startingName
+		) );
 	}
 }

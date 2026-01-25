@@ -23,6 +23,7 @@ import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -5770,6 +5771,28 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public int getTemporalColumnType() {
 		return SqlTypes.TIMESTAMP;
 	}
+
+	public int getTemporalColumnPrecision() {
+		return getDefaultTimestampPrecision();
+	}
+
+	/**
+	 * The {@code period} clause for temporal tables,
+	 * usually {@code period for system_time}.
+	 */
+	public String getTemporalPeriodKeyword() {
+		return "period for system_time";
+	}
+
+	public String getTemporalTableOption() {
+		return "";
+	}
+
+	public boolean requiresTemporalTableTransactionIdColumn() {
+		return false;
+	}
+
+	public void addTemporalTableAuxiliaryObject(Table table, Database database) {}
 
 	/**
 	 * Pluggable strategy for determining the {@link Size} to use for

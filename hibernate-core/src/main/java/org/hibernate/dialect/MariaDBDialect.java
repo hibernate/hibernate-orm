@@ -425,6 +425,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public String getTemporalTableOption() {
+		return "with system versioning";
+	}
+
+	@Override
 	public String generatedAs(String generatedAs) {
 		return generatedAs.startsWith( "row " )
 				? " generated always as " + generatedAs

@@ -44,7 +44,7 @@ public class SoftDeleteHelper {
 			Table table,
 			MetadataBuildingContext context) {
 		assert softDeleteConfig != null;
-		final Column softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
+		final var softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
 				softDeleteConfig,
 				createSoftDeleteIndicatorValue( softDeleteConfig, table, context ),
 				context

@@ -15,6 +15,7 @@ import org.hibernate.models.spi.ModelsContext;
 public class TemporalAnnotation implements Temporal {
 	private String starting;
 	private String ending;
+	private int secondPrecision;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -22,6 +23,7 @@ public class TemporalAnnotation implements Temporal {
 	public TemporalAnnotation(ModelsContext modelContext) {
 		this.starting = "starting";
 		this.ending = "ending";
+		this.secondPrecision = -1;
 	}
 
 	/**
@@ -30,6 +32,7 @@ public class TemporalAnnotation implements Temporal {
 	public TemporalAnnotation(Temporal annotation, ModelsContext modelContext) {
 		this.starting = annotation.starting();
 		this.ending = annotation.ending();
+		this.secondPrecision = annotation.secondPrecision();
 	}
 
 	/**
@@ -38,6 +41,8 @@ public class TemporalAnnotation implements Temporal {
 	public TemporalAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.starting = (String) attributeValues.get( "starting" );
 		this.ending = (String) attributeValues.get( "ending" );
+		final Integer secondPrecision = (Integer) attributeValues.get( "secondPrecision" );
+		this.secondPrecision = secondPrecision == null ? -1 : secondPrecision;
 		if ( this.starting == null ) {
 			this.starting = "starting";
 		}
@@ -67,5 +72,14 @@ public class TemporalAnnotation implements Temporal {
 
 	public void setEnding(String ending) {
 		this.ending = ending;
+	}
+
+	@Override
+	public int secondPrecision() {
+		return secondPrecision;
+	}
+
+	public void setSecondPrecision(int secondPrecision) {
+		this.secondPrecision = secondPrecision;
 	}
 }

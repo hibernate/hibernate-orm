@@ -27,10 +27,12 @@ public class TemporalHelper {
 			Temporalized target,
 			Table table,
 			MetadataBuildingContext context) {
+		final Integer temporalPrecision =
+				temporalConfig.secondPrecision() == -1 ? null : temporalConfig.secondPrecision();
 		final var startingColumn =
-				createTemporalColumn( temporalConfig.starting(), table, context, false );
+				createTemporalColumn( temporalConfig.starting(), table, context, false, temporalPrecision );
 		final var endingColumn =
-				createTemporalColumn( temporalConfig.ending(), table, context, true );
+				createTemporalColumn( temporalConfig.ending(), table, context, true, temporalPrecision );
 
 		table.addColumn( startingColumn );
 		table.addColumn( endingColumn );
@@ -51,7 +53,8 @@ public class TemporalHelper {
 			String columnName,
 			Table table,
 			MetadataBuildingContext context,
-			boolean nullable) {
+			boolean nullable,
+			Integer temporalPrecision) {
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> Instant.class );
 
@@ -61,6 +64,7 @@ public class TemporalHelper {
 
 		applyColumnName( column, columnName, context );
 		column.setNullable( nullable );
+		column.setTemporalPrecision( temporalPrecision );
 
 		return column;
 	}

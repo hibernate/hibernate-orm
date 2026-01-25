@@ -68,4 +68,11 @@ public @interface Temporal {
 	 * That is, the "effective to" timestamp.
 	 */
 	String ending() default "ending";
+
+	/**
+	 * The fractional seconds precision for both temporal columns.
+	 *
+	 * @see jakarta.persistence.Column#secondPrecision()
+	 */
+	int secondPrecision() default -1;
 }

@@ -176,7 +176,8 @@ public class SimpleDeleteQueryPlan extends SimpleNonSelectQueryPlan {
 							sqlDeleteAst.getFromClause(),
 							Collections.singletonList( assignment ),
 							sqlDeleteAst.getRestriction(),
-							sqlDeleteAst.getReturningColumns()
+							sqlDeleteAst.getReturningColumns(),
+							sqlDeleteAst.getMutationTarget()
 					),
 					sqmTranslation.getJdbcParamsBySqmParam(),
 					sqmTranslation.getSqmParameterMappingModelTypeResolutions(),

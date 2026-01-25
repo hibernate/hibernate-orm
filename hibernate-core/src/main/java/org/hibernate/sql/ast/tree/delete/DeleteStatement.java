@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.model.MutationTarget;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +24,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 	public static final String DEFAULT_ALIAS = "to_delete_";
 
 	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
-		this( null, targetTable, new FromClause(), restriction, Collections.emptyList() );
+		this( null, targetTable, new FromClause(), restriction, Collections.emptyList(), null );
 	}
 
 	public DeleteStatement(
@@ -51,7 +52,17 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( cteContainer, targetTable, fromClause, restriction, returningColumns );
+		this( cteContainer, targetTable, fromClause, restriction, returningColumns, null );
+	}
+
+	public DeleteStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			FromClause fromClause,
+			Predicate restriction,
+			List<ColumnReference> returningColumns,
+			MutationTarget<?> mutationTarget) {
+		super( cteContainer, targetTable, fromClause, restriction, returningColumns, mutationTarget );
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaConflictClause;
@@ -21,6 +22,7 @@ import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ServiceRegistry
@@ -64,8 +67,8 @@ public class InsertConflictTests {
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
-									"values (1, 'John') " +
-									"on conflict do nothing"
+							"values (1, 'John') " +
+							"on conflict do nothing"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
@@ -109,8 +112,40 @@ public class InsertConflictTests {
 	}
 
 	@Test
+	@RequiresDialect(SpannerDialect.class)
+	public void testSpannerValidationConflictTargetNonPK(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThrows( IllegalStateException.class, () -> {
+				session.createMutationQuery(
+						"insert into BasicEntity (id, data) " +
+						"values (1, 'data') " +
+						"on conflict(id,data) do update " +
+						"set data = excluded.data"
+				).executeUpdate();
+			} );
+		} );
+	}
+
+	@Test
+	@RequiresDialect(SpannerDialect.class)
+	public void testSpannerValidationLiteralInSet(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThrows( IllegalStateException.class, () -> {
+				session.createMutationQuery(
+						"insert into BasicEntity (id, data) " +
+						"values (2, 'New') " +
+						"on conflict(id) do update " +
+						"set data = 'FixedValue'"
+				).executeUpdate();
+			} );
+		} );
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -146,6 +181,8 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -241,6 +278,8 @@ public class InsertConflictTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

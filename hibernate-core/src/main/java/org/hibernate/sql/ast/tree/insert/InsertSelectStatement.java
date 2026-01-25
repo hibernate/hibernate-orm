@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.model.MutationTarget;
 
 /**
  * todo (6.2) - Would much prefer to split insert-values and
@@ -41,11 +42,23 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 		this( null, targetTable, returningColumns );
 	}
 
+	public InsertSelectStatement(NamedTableReference targetTable, MutationTarget<?> mutationTarget) {
+		this( null, targetTable, Collections.emptyList(), mutationTarget );
+	}
+
 	public InsertSelectStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
 			List<ColumnReference> returningColumns) {
-		super( cteContainer, targetTable, returningColumns );
+		this( cteContainer, targetTable, returningColumns, null );
+	}
+
+	public InsertSelectStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			List<ColumnReference> returningColumns,
+			MutationTarget<?> mutationTarget) {
+		super( cteContainer, targetTable, returningColumns, mutationTarget );
 	}
 
 	@Override

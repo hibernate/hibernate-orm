@@ -74,6 +74,13 @@ public interface PluralAttributeMapping
 		return null;
 	}
 
+	/**
+	 * Mapping for temporal support, or {@code null} if temporal not defined
+	 */
+	default TemporalMapping getTemporalMapping() {
+		return null;
+	}
+
 	OrderByFragment getOrderByFragment();
 	OrderByFragment getManyToManyOrderByFragment();
 

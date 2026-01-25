@@ -101,11 +101,6 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			return type.cast( Timestamp.valueOf( value ) );
 		}
 
-		if ( Date.class.isAssignableFrom( type ) && !java.sql.Date.class.isAssignableFrom( type ) && !java.sql.Time.class.isAssignableFrom( type ) ) {
-			final var instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return type.cast( Date.from( instant ) );
-		}
-
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return type.cast( GregorianCalendar.from( value.atZone( ZoneId.systemDefault() ) ) );
 		}

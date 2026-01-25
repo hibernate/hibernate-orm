@@ -226,6 +226,16 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				breakDownJdbcValue( id, session, jdbcValueBindings, tableDetails );
 			}
 		}
+
+		final var temporalMapping = entityPersister().getTemporalMapping();
+		if ( temporalMapping != null ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),
+					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
+					ParameterUsage.SET
+			);
+		}
 	}
 
 	protected void breakDownJdbcValue(

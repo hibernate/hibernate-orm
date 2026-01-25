@@ -5,6 +5,9 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -25,6 +28,46 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	public DeleteCoordinatorTemporal(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
+	}
+
+	@Override
+	protected void applyStaticDeleteTableDetails(
+			Object id,
+			Object rowId,
+			Object[] loadedState,
+			Object version,
+			boolean applyVersion,
+			MutationExecutor mutationExecutor,
+			SharedSessionContractImplementor session) {
+		super.applyStaticDeleteTableDetails( id, rowId, loadedState, version, applyVersion, mutationExecutor, session );
+		bindTemporalEndingValue( session, mutationExecutor.getJdbcValueBindings() );
+	}
+
+	@Override
+	protected void applyDynamicDeleteTableDetails(
+			Object id,
+			Object rowId,
+			Object[] loadedState,
+			MutationExecutor mutationExecutor,
+			MutationOperationGroup operationGroup,
+			SharedSessionContractImplementor session) {
+		super.applyDynamicDeleteTableDetails( id, rowId, loadedState, mutationExecutor, operationGroup, session );
+		bindTemporalEndingValue( session, mutationExecutor.getJdbcValueBindings() );
+	}
+
+	private void bindTemporalEndingValue(
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings) {
+		final var temporalMapping = entityPersister().getTemporalMapping();
+		if ( temporalMapping == null ) {
+			return;
+		}
+		jdbcValueBindings.bindValue(
+				session.getTransactionStartInstant(),
+				entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),
+				temporalMapping.getEndingColumnMapping().getSelectionExpression(),
+				ParameterUsage.SET
+		);
 	}
 
 	@Override

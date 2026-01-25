@@ -10,6 +10,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
@@ -115,6 +117,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
+import static java.util.Collections.emptySet;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -1235,7 +1238,12 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+		return switch ( generatedAs ) {
+			case "transaction start id" -> " not null generated always as transaction start id";
+			case "row start" -> " not null generated always as row begin";
+			case "row end" -> " not null generated always as row end";
+			default -> " generated always as (" + generatedAs + ")";
+		};
 	}
 
 	@Override
@@ -1331,4 +1339,36 @@ public class DB2Dialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public int getTemporalColumnPrecision() {
+		return 12; // required!
+	}
+
+	@Override
+	public String getTemporalPeriodKeyword() {
+		return "period system_time"; // no 'for' keyword
+	}
+
+	@Override
+	public boolean requiresTemporalTableTransactionIdColumn() {
+		return true;
+	}
+
+	@Override
+	public void addTemporalTableAuxiliaryObject(Table table, Database database) {
+		final String name = table.getQuotedName( DB2Dialect.this);
+		final String historyName = name + "_history";
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						historyName,
+						database.getDefaultNamespace(),
+						new String[] {
+								"create table " + historyName + " like " + name,
+								"alter table " + name + " add versioning use history table " + historyName,
+						},
+						new String[] {"drop table " + historyName },
+						emptySet()
+				)
+		);
+	}
 }

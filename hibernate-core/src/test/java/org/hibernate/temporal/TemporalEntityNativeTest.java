@@ -15,8 +15,8 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -47,6 +47,7 @@ class TemporalEntityNativeTest {
 	public static final int PAUSE = 500;
 
 	@RequiresDialect(MariaDBDialect.class)
+	@RequiresDialect(DB2Dialect.class)
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -202,7 +203,8 @@ class TemporalEntityNativeTest {
 	}
 
 	@RequiresDialect(MariaDBDialect.class)
-	@RequiresDialect(SQLServerDialect.class)
+//	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(DB2Dialect.class)
 	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {

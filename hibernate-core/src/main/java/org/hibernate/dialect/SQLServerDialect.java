@@ -1173,6 +1173,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String getTemporalTableOption() {
+		return "with (system_versioning = on)";
+	}
+
+	@Override
 	public String generatedAs(String generatedAs) {
 		return generatedAs.startsWith( "row " )
 				? " datetime2 generated always as " + generatedAs

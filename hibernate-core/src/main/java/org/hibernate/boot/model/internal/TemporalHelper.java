@@ -84,10 +84,8 @@ public class TemporalHelper {
 			Column endingColumn,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		final String startingName = startingColumn.getQuotedName( dialect );
-		final String endingName = endingColumn.getQuotedName( dialect );
-		table.addCheck( new CheckConstraint(
-				endingName + " is null or " + endingName + " > " + startingName
-		) );
+		final String starting = startingColumn.getQuotedName( dialect );
+		final String ending = endingColumn.getQuotedName( dialect );
+		table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
 	}
 }

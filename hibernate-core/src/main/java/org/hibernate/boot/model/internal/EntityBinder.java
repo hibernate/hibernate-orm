@@ -324,7 +324,7 @@ public class EntityBinder {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final var softDelete = extractSoftDelete( classDetails, context );
+		final var softDelete = extract( SoftDelete.class, classDetails, context );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -335,31 +335,12 @@ public class EntityBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
-		if ( fromClass != null ) {
-			return fromClass;
-		}
-
-		ClassDetails classToCheck = classDetails.getSuperClass();
-		while ( classToCheck != null ) {
-			final var fromSuper = classToCheck.getAnnotationUsage( SoftDelete.class, modelsContext );
-			if ( fromSuper != null
-					&& classToCheck.hasAnnotationUsage( MappedSuperclass.class, modelsContext ) ) {
-				return fromSuper;
-			}
-			classToCheck = classToCheck.getSuperClass();
-		}
-
-		return extractFromPackage( SoftDelete.class, classDetails, context );
-	}
 
 	private static void bindTemporal(
 			ClassDetails classDetails,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
-		final var temporal = extractTemporal( classDetails, context );
+		final var temporal = extract( Temporal.class, classDetails, context );
 		if ( temporal != null ) {
 			TemporalHelper.bindTemporalColumns(
 					temporal,
@@ -370,16 +351,17 @@ public class EntityBinder {
 		}
 	}
 
-	private static Temporal extractTemporal(ClassDetails classDetails, MetadataBuildingContext context) {
+	private static <T extends Annotation> T extract(
+			Class<T> annotationClass, ClassDetails classDetails, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var fromClass = classDetails.getAnnotationUsage( Temporal.class, modelsContext );
+		final var fromClass = classDetails.getAnnotationUsage( annotationClass, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
 		}
 
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null ) {
-			final var fromSuper = classToCheck.getAnnotationUsage( Temporal.class, modelsContext );
+			final var fromSuper = classToCheck.getAnnotationUsage( annotationClass, modelsContext );
 			if ( fromSuper != null
 					&& classToCheck.hasAnnotationUsage( MappedSuperclass.class, modelsContext ) ) {
 				return fromSuper;
@@ -387,7 +369,7 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 
-		return extractFromPackage( Temporal.class, classDetails, context );
+		return extractFromPackage( annotationClass, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {

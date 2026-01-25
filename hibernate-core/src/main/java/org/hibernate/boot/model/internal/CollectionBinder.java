@@ -2410,7 +2410,7 @@ public abstract class CollectionBinder {
 
 	private void processSoftDeletes() {
 		assert collection.getCollectionTable() != null;
-		final var softDelete = extractSoftDelete( property, buildingContext );
+		final var softDelete = extract( SoftDelete.class, property, buildingContext );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -2423,7 +2423,7 @@ public abstract class CollectionBinder {
 
 	private void processTemporal() {
 		assert collection.getCollectionTable() != null;
-		final var temporal = extractTemporal( property, buildingContext );
+		final var temporal = extract( Temporal.class, property, buildingContext );
 		if ( temporal != null ) {
 			TemporalHelper.bindTemporalColumns(
 					temporal,
@@ -2434,17 +2434,11 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(MemberDetails property, MetadataBuildingContext context) {
-		final var fromProperty = property.getDirectAnnotationUsage( SoftDelete.class );
+	private static <T extends Annotation> T extract(
+			Class<T> annotationClass, MemberDetails property, MetadataBuildingContext context) {
+		final var fromProperty = property.getDirectAnnotationUsage( annotationClass );
 		return fromProperty == null
-				? extractFromPackage( SoftDelete.class, property.getDeclaringType(), context )
-				: fromProperty;
-	}
-
-	private static Temporal extractTemporal(MemberDetails property, MetadataBuildingContext context) {
-		final var fromProperty = property.getDirectAnnotationUsage( Temporal.class );
-		return fromProperty == null
-				? extractFromPackage( Temporal.class, property.getDeclaringType(), context )
+				? extractFromPackage( annotationClass, property.getDeclaringType(), context )
 				: fromProperty;
 	}
 

@@ -72,6 +72,7 @@ public class BeanValidationEventListener
 						traversableResolver.addPersister( entityPersister, sessionFactory ) );
 	}
 
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(),
@@ -81,6 +82,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(),
@@ -90,6 +92,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(),
@@ -119,8 +122,7 @@ public class BeanValidationEventListener
 	}
 
 	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {
-		if ( object != null
-				&& persister.getRepresentationStrategy().getMode() == POJO ) {
+		if ( object != null && persister.getRepresentationStrategy().getMode() == POJO ) {
 			final var groups = groupsPerOperation.get( operation );
 			if ( groups.length > 0 ) {
 				final var constraintViolations = validator.validate( object, groups );

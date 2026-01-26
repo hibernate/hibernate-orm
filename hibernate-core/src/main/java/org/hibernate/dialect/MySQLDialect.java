@@ -1691,7 +1691,7 @@ public class MySQLDialect extends Dialect {
 			String startingColumn, String endingColumn,
 			boolean partitioned) {
 		return partitioned
-				? endingColumn + "_null" + " tinyint as (" + endingColumn + " is null) virtual invisible"
+				? endingColumn + "_null tinyint as (" + endingColumn + " is null) virtual invisible"
 				: null;
 	}
 

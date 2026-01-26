@@ -73,6 +73,7 @@ public class BeanValidationEventListener
 						traversableResolver.addPersister( entityPersister, sessionFactory ) );
 	}
 
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
 				event.getEntity(),
@@ -82,6 +83,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(),
@@ -91,6 +93,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
 				event.getEntity(),

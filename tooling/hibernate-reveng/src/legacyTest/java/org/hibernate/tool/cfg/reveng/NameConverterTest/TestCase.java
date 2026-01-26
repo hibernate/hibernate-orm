@@ -22,12 +22,11 @@ import org.hibernate.tool.internal.util.NameConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestCase {
 
 	@Test
-    public void testSimplePluralizeWithSingleH() throws Exception {
+    public void testSimplePluralizeWithSingleH() {
         String plural = NameConverter.simplePluralize("h");
         assertEquals("hs", plural);
     }

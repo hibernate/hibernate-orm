@@ -12,6 +12,9 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
@@ -125,6 +128,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.String.join;
+import static java.util.Collections.emptySet;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
@@ -1912,13 +1916,15 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getAsOfOperator() {
-		return "as of period for system_time";
+	public String getAsOfOperator(TemporalTableStrategy strategy) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "as of timestamp"
+				: "as of period for system_time";
 	}
 
 	@Override
 	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
-		return true;
+		return historical || strategy != TemporalTableStrategy.NATIVE;
 	}
 
 	@Override
@@ -1933,13 +1939,42 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
-		if ( partitioned ) {
+		if ( strategy == TemporalTableStrategy.NATIVE ) {
+			return "flashback archive fba_history";
+		}
+		else if ( partitioned ) {
 			return "partition by list( " + endingColumnName + ")"
 				+ " (partition p_current values (null), partition p_history values (default))"
 				+ " enable row movement";
 		}
 		else {
 			return null;
+		}
+	}
+
+	@Override
+	public boolean supportsNativeTemporalTables() {
+		return true;
+	}
+
+	@Override
+	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+		if ( strategy == TemporalTableStrategy.NATIVE ) {
+			database.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject(
+					database.getDefaultNamespace(),
+					new String[0],
+					new String[] { "alter table " + table.getQuotedName(this) + " no flashback archive" } ,
+					emptySet(),
+					false
+			) );
+			database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
+					"fba_history",
+					database.getDefaultNamespace(),
+					"create flashback archive fba_history tablespace users quota 1M retention 1 month",
+					"drop flashback archive fba_history",
+					emptySet(),
+					true
+			) );
 		}
 	}
 }

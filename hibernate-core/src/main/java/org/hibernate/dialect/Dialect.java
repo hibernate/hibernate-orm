@@ -5895,7 +5895,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Oracle we use it all the time.
 	 */
 	@Incubating
-	public String getAsOfOperator() {
+	public String getAsOfOperator(TemporalTableStrategy strategy) {
 		return "for system_time as of";
 	}
 

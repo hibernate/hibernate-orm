@@ -12,6 +12,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -1894,4 +1895,13 @@ public class OracleDialect extends Dialect {
 		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
+	@Override
+	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
+		return false;
+	}
+
+	@Override
+	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
+		return "period for system_time (" + startingColumn + ", " + endingColumn + ")";
+	}
 }

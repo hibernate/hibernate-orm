@@ -150,8 +150,8 @@ public class TemporalHelper {
 			Column startingColumn,
 			Column endingColumn,
 			MetadataBuildingContext context) {
-		if ( !usingNativeTemporalTables( context ) ) {
-			final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+		if ( dialect.createTemporalTableCheckConstraint( getTemporalTableStrategy( context ) ) ) {
 			final String starting = startingColumn.getQuotedName( dialect );
 			final String ending = endingColumn.getQuotedName( dialect );
 			table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );

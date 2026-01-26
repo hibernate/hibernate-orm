@@ -5880,6 +5880,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				: null;
 	}
 
+	@Incubating
+	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
+		return strategy != TemporalTableStrategy.NATIVE;
+	}
+
 	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.

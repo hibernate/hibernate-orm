@@ -4,7 +4,6 @@
  */
 package org.hibernate.temporal;
 
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -15,7 +14,9 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,10 +35,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses =
-		{TemporalEntityServerSideTest.TemporalEntity.class,
-		TemporalEntityServerSideTest.TemporalChild.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "SERVER_TIMESTAMP"))
-class TemporalEntityServerSideTest {
+		{TemporalEntitySqlServerNativeTest.TemporalEntity.class,
+		TemporalEntitySqlServerNativeTest.TemporalChild.class})
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"),
+		// TODO: make this setting unnecessary!
+		@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")})
+@RequiresDialect(SQLServerDialect.class)
+class TemporalEntitySqlServerNativeTest {
+
+	public static final int PAUSE = 500;
 
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
@@ -45,7 +51,6 @@ class TemporalEntityServerSideTest {
 					TemporalEntity entity = new TemporalEntity();
 					entity.id = 1L;
 					entity.text = "hello";
-					entity.strings.add( "x" );
 					session.persist( entity );
 					TemporalChild child = new TemporalChild();
 					child.id = 1L;
@@ -54,14 +59,13 @@ class TemporalEntityServerSideTest {
 					session.persist( child );
 				}
 		);
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var instant = getInstant( scope );
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					entity.text = "goodbye";
-					entity.strings.add( "y" );
 					entity.children.get(0).text = "world!";
 					TemporalChild friend = new TemporalChild();
 					friend.id = 5L;
@@ -76,7 +80,6 @@ class TemporalEntityServerSideTest {
 					assertEquals( "goodbye", entity.text );
 					assertEquals( 1, entity.children.size() );
 					assertEquals( "world!", entity.children.get(0).text );
-					assertEquals( 2, entity.strings.size() );
 					assertEquals( 1, entity.children.get(0).friends.size() );
 				}
 		);
@@ -109,7 +112,6 @@ class TemporalEntityServerSideTest {
 				assertEquals( "hello", entity.text );
 				assertEquals( 1, entity.children.size() );
 				assertEquals( "world", entity.children.get(0).text );
-				assertEquals( 1, entity.strings.size() );
 				assertEquals( 0, entity.children.get(0).friends.size() );
 			} );
 		}
@@ -136,21 +138,18 @@ class TemporalEntityServerSideTest {
 				assertEquals( 0, friends );
 			} );
 		}
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var nextInstant = getInstant( scope );
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-					entity.strings.remove( "x" );
-					entity.strings.add( "z" );
 					entity.children.get(0).friends.clear();
 				}
 		);
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-					assertEquals( Set.of("y", "z"), entity.strings );
 					assertEquals( 0, entity.children.get(0).friends.size() );
 				}
 		);
@@ -158,7 +157,6 @@ class TemporalEntityServerSideTest {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-						assertEquals( Set.of( "x" ), entity.strings );
 						assertEquals( 0, entity.children.get( 0 ).friends.size() );
 					}
 			);
@@ -167,7 +165,6 @@ class TemporalEntityServerSideTest {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-						assertEquals( Set.of( "x", "y" ), entity.strings );
 						assertEquals( 1, entity.children.get( 0 ).friends.size() );
 					}
 			);
@@ -175,6 +172,7 @@ class TemporalEntityServerSideTest {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+					session.remove( entity.children.get(0) );
 					session.remove( entity );
 				}
 		);
@@ -201,9 +199,9 @@ class TemporalEntityServerSideTest {
 					session.insert( entity );
 				}
 		);
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		var instant = getInstant( scope );
-		Thread.sleep( 250 );
+		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
@@ -266,9 +264,6 @@ class TemporalEntityServerSideTest {
 		String text;
 		@OneToMany(mappedBy = "parent")
 		List<TemporalChild> children = new ArrayList<>();
-		@Temporal
-		@ElementCollection
-		Set<String> strings = new HashSet<>();
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

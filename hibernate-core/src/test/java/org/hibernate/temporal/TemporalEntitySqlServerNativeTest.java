@@ -37,9 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntitySqlServerNativeTest.TemporalEntity.class,
 		TemporalEntitySqlServerNativeTest.TemporalChild.class})
-@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"),
-		// TODO: make this setting unnecessary!
-		@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")})
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
 @RequiresDialect(SQLServerDialect.class)
 class TemporalEntitySqlServerNativeTest {
 

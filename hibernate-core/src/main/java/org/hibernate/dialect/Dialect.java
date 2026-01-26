@@ -5875,9 +5875,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			TemporalTableStrategy strategy,
 			String startingColumn, String endingColumn,
 			boolean partitioned) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
-				: null;
+		return null;
 	}
 
 	@Incubating

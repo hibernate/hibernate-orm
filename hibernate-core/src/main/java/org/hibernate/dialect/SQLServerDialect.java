@@ -1174,6 +1174,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String getExtraTemporalTableDeclarations(
+			TemporalTableStrategy strategy,
+			String startingColumn, String endingColumn,
+			boolean partitioned) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				: null;
+	}
+
+	@Override
 	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
 		return strategy == TemporalTableStrategy.NATIVE
 				? "with (system_versioning = on)"

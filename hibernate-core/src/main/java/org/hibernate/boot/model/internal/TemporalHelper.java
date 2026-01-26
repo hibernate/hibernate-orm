@@ -7,12 +7,12 @@ package org.hibernate.boot.model.internal;
 import java.time.Instant;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.TemporalTableStrategy;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -32,48 +32,62 @@ import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
 public class TemporalHelper {
 
 	public static void bindTemporalColumns(
-			Temporal temporalConfig,
+			Temporal temporal,
 			Temporalized target,
 			Table table,
 			MetadataBuildingContext context) {
-		final int secondPrecision = temporalConfig.secondPrecision();
+		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var startingColumn =
-				createTemporalColumn( temporalConfig.rowStart(),
-						table, context, false, precision );
+				createTemporalColumn( temporal.rowStart(),
+						table, false, precision, context );
 		final var endingColumn =
-				createTemporalColumn( temporalConfig.rowEnd(),
-						table, context, true, precision );
+				createTemporalColumn( temporal.rowEnd(),
+						table, true, precision, context );
 
-		final boolean nativeTemporalTablesEnabled = isUseNativeTemporalTablesEnabled( context );
-
-		if ( nativeTemporalTablesEnabled ) {
-			applyNativeTemporalTableOptions( table, startingColumn, endingColumn, context );
-			createTransactionIdColumn( table, context, precision );
+		if ( usingNativeTemporalTables( context ) ) {
+			applyNativeTemporalTableOptions( startingColumn, endingColumn );
+//			createTransactionIdColumn( table, precision, context );
 		}
 
+		final boolean partitioned = temporal.partitioned();
 		table.addColumn( startingColumn );
 		table.addColumn( endingColumn );
-		target.enableTemporal( startingColumn, endingColumn );
+		target.enableTemporal( startingColumn, endingColumn, partitioned );
 
-		if ( !nativeTemporalTablesEnabled ) {
-			addTemporalCheckConstraint( table, startingColumn, endingColumn, context );
-		}
+		addExtraDeclarationsAndOptions( table, startingColumn, endingColumn, partitioned, context );
+		addTemporalCheckConstraint( table, startingColumn, endingColumn, context );
+		addAuxiliaryObjects( table, partitioned, context );
 	}
 
-	private static void createTransactionIdColumn(
+	private static void addExtraDeclarationsAndOptions(
 			Table table,
-			MetadataBuildingContext context,
-			Integer temporalPrecision) {
+			Column startingColumn, Column endingColumn,
+			boolean partitioned,
+			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		if ( dialect.requiresTemporalTableTransactionIdColumn() ) {
-			final var txidColumn =
-					createTemporalColumn( "ts_id",
-							table, context, true, temporalPrecision );
-			txidColumn.setGeneratedAs( "transaction start id" );
-			applyNativeTemporalColumnTypes( txidColumn, dialect );
-			table.addColumn( txidColumn );
-		}
+		TemporalTableStrategy strategy = getTemporalTableStrategy( context );
+		table.setExtraDeclarations( dialect.getExtraTemporalTableDeclarations(
+				strategy, startingColumn.getQuotedName( dialect ),
+				endingColumn.getQuotedName( dialect ),
+				partitioned
+		) );
+		table.setOptions( appendOption( table.getOptions(),
+				dialect.getTemporalTableOptions(
+						strategy,
+						endingColumn.getQuotedName( dialect ),
+						partitioned
+				) ) );
+	}
+
+	private static void addAuxiliaryObjects(
+			Table table,
+			boolean partitioned,
+			MetadataBuildingContext context) {
+		final var database = context.getMetadataCollector().getDatabase();
+		database.getDialect()
+				.addTemporalTableAuxiliaryObjects( getTemporalTableStrategy( context ), table, database,
+						partitioned );
 	}
 
 	public static TemporalMappingImpl resolveTemporalMapping(
@@ -88,29 +102,44 @@ public class TemporalHelper {
 	private static Column createTemporalColumn(
 			String columnName,
 			Table table,
-			MetadataBuildingContext context,
 			boolean nullable,
-			Integer temporalPrecision) {
+			Integer temporalPrecision,
+			MetadataBuildingContext context) {
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> Instant.class );
 		final var column = new Column();
+		column.setNullable( nullable );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
-		applyColumnName( column, columnName, context );
-		column.setNullable( nullable );
-		column.setTemporalPrecision( temporalPrecision );
+		final var database = context.getMetadataCollector().getDatabase();
+		setTemporalColumnName( columnName, column, database,
+				context.getBuildingOptions().getPhysicalNamingStrategy() );
+		setTemporalColumnType( temporalPrecision, column, database );
 		return column;
 	}
 
-	private static void applyColumnName(
+	private static void setTemporalColumnType(
+			Integer temporalPrecision,
 			Column column,
-			String columnName,
-			MetadataBuildingContext context) {
-		final var database = context.getMetadataCollector().getDatabase();
+			Database database) {
+		if ( temporalPrecision != null ) {
+			column.setTemporalPrecision( temporalPrecision );
+		}
+		else {
+			final var dialect = database.getDialect();
+			column.setTemporalPrecision( dialect.getTemporalColumnPrecision() );
+			column.setSqlTypeCode( dialect.getTemporalColumnType() );
+		}
+	}
+
+	private static void setTemporalColumnName(
+			String name,
+			Column column,
+			Database database,
+			PhysicalNamingStrategy physicalNamingStrategy) {
 		final Identifier physicalColumnName =
-				context.getBuildingOptions().getPhysicalNamingStrategy()
-						.toPhysicalColumnName(
-								database.toIdentifier( columnName ),
+						physicalNamingStrategy.toPhysicalColumnName(
+								database.toIdentifier( name ),
 								database.getJdbcEnvironment()
 						);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
@@ -121,14 +150,23 @@ public class TemporalHelper {
 			Column startingColumn,
 			Column endingColumn,
 			MetadataBuildingContext context) {
-		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		final String starting = startingColumn.getQuotedName( dialect );
-		final String ending = endingColumn.getQuotedName( dialect );
-		table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
+		if ( !usingNativeTemporalTables( context ) ) {
+			final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+			final String starting = startingColumn.getQuotedName( dialect );
+			final String ending = endingColumn.getQuotedName( dialect );
+			table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
+		}
 	}
 
-	public static boolean isUseNativeTemporalTablesEnabled(MetadataBuildingContext context) {
-		return getTemporalTableStrategy( context ) == NATIVE;
+	public static boolean usingNativeTemporalTables(MetadataBuildingContext context) {
+		return getTemporalTableStrategy( context ) == NATIVE
+			&& context.getMetadataCollector().getDatabase().getDialect()
+					.supportsNativeTemporalTables();
+	}
+
+	public static boolean suppressesTemporalTablePrimaryKeys(boolean partitioned, MetadataBuildingContext context) {
+		return context.getMetadataCollector().getDatabase().getDialect()
+				.suppressesTemporalTablePrimaryKeys( partitioned );
 	}
 
 	private static TemporalTableStrategy getTemporalTableStrategy(MetadataBuildingContext context) {
@@ -139,34 +177,9 @@ public class TemporalHelper {
 		return determineTemporalTableStrategy( settings );
 	}
 
-	private static void applyNativeTemporalTableOptions(
-			Table table,
-			Column startingColumn,
-			Column endingColumn,
-			MetadataBuildingContext context) {
-		final var database = context.getMetadataCollector().getDatabase();
-		final var dialect = database.getDialect();
-		applyNativeTemporalColumnTypes( startingColumn, dialect );
-		applyNativeTemporalColumnTypes( endingColumn, dialect );
+	private static void applyNativeTemporalTableOptions(Column startingColumn, Column endingColumn) {
 		startingColumn.setGeneratedAs( "row start" );
 		endingColumn.setGeneratedAs( "row end" );
-		table.setSystemTimePeriod( periodForSystemTime( startingColumn, endingColumn, dialect ) );
-		table.setOptions( appendOption( table.getOptions(), dialect.getTemporalTableOption() ) );
-		dialect.addTemporalTableAuxiliaryObject( table, database );
-	}
-
-	private static @NonNull String periodForSystemTime(Column startingColumn, Column endingColumn, Dialect dialect) {
-		return dialect.getTemporalPeriodKeyword()
-			+ " ("
-			+ startingColumn.getQuotedName( dialect )
-			+ ", "
-			+ endingColumn.getQuotedName( dialect )
-			+ ")";
-	}
-
-	private static void applyNativeTemporalColumnTypes(Column column, Dialect dialect) {
-		column.setTemporalPrecision( dialect.getTemporalColumnPrecision() );
-		column.setSqlTypeCode( dialect.getTemporalColumnType() );
 	}
 
 	private static String appendOption(String existing, String option) {

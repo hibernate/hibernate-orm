@@ -14,7 +14,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 
-import static org.hibernate.boot.model.internal.TemporalHelper.isUseNativeTemporalTablesEnabled;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
@@ -54,6 +55,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private SoftDeleteType softDeleteStrategy;
 	private Column temporalStartingColumn;
 	private Column temporalEndingColumn;
+	private boolean temporallyPartitioned;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -429,9 +431,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public void enableTemporal(Column startingColumn, Column endingColumn) {
+	public void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned) {
 		temporalStartingColumn = startingColumn;
 		temporalEndingColumn = endingColumn;
+		temporallyPartitioned = partitioned;
 	}
 
 	@Override
@@ -445,23 +448,38 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
+	public boolean isTemporallyPartitioned() {
+		return temporallyPartitioned;
+	}
+
+	public void setPartitioned(boolean partitioned) {
+		this.temporallyPartitioned = partitioned;
+	}
+
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
 	}
 
 	@Override
 	public PrimaryKey makePrimaryKey(Table table) {
-		final var primaryKey = super.makePrimaryKey( table );
-		if ( temporalStartingColumn != null
-				&& !isUseNativeTemporalTablesEnabled( getBuildingContext() ) ) {
-			if ( isVersioned() ) {
-				primaryKey.addColumns( getVersion().getValue() );
-			}
-			else {
-				primaryKey.addColumn( temporalStartingColumn );
-			}
+		final var context = getBuildingContext();
+		if ( suppressesTemporalTablePrimaryKeys( isTemporallyPartitioned(), context ) ) {
+			return null;
 		}
-		return primaryKey;
+		else {
+			final var primaryKey = super.makePrimaryKey( table );
+			if ( isTemporalized()
+					&& !usingNativeTemporalTables( context ) ) {
+				if ( isVersioned() ) {
+					primaryKey.addColumns( getVersion().getValue() );
+				}
+				else {
+					primaryKey.addColumn( temporalStartingColumn );
+				}
+			}
+			return primaryKey;
+		}
 	}
 
 }

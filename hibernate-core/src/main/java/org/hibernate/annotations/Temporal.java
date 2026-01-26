@@ -88,4 +88,10 @@ public @interface Temporal {
 	 * @see jakarta.persistence.Column#secondPrecision()
 	 */
 	int secondPrecision() default -1;
+
+	/**
+	 * Is the mapped temporal table partitioned into
+	 * current and historical partitions?
+	 */
+	boolean partitioned() default false;
 }

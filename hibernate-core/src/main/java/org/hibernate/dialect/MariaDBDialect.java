@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -425,8 +426,20 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String getTemporalTableOption() {
-		return "with system versioning";
+	public boolean supportsNativeTemporalTables() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsTemporalTablePartitioning() {
+		return false;
+	}
+
+	@Override
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "with system versioning"
+				: null;
 	}
 
 	@Override

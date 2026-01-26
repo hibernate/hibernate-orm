@@ -1355,17 +1355,24 @@ public class DB2Dialect extends Dialect {
 			TemporalTableStrategy strategy,
 			String startingColumn, String endingColumn,
 			boolean partitioned) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "transaction_start_id timestamp(12) not null generated always as transaction start id implicitly hidden"
-						+ ", period system_time (" + startingColumn + ", " + endingColumn + ")" // no 'for' keyword
-				: null;
+		// no 'for' keyword
+		if ( strategy == TemporalTableStrategy.NATIVE ) {
+			return "transaction_start_id timestamp(12) not null generated always as transaction start id implicitly hidden"
+				+ ", period system_time (" + startingColumn + ", " + endingColumn + ")";
+		}
+		else if ( partitioned ) {
+			return endingColumn + "_null smallint generated always as (case when " + endingColumn + " is null then 1 else 0 end) implicitly hidden";
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
 		return partitioned
-				? "partition by range (" + endingColumnName + " nulls last)"
-						+ " (partition p_history starting from ('0001-01-01') ending at ('9999-12-30'), partition p_current ending at (maxvalue))"
+				? "partition by range (" + endingColumnName + "_null)"
+						+ " (partition p_history starting from (0) ending at (0), partition p_current starting from (1) ending at (1))"
 				: null;
 	}
 

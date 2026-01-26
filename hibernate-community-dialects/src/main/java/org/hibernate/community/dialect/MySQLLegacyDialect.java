@@ -51,7 +51,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -95,6 +94,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -938,7 +938,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
 					switch ( Integer.parseInt( sqlState ) ) {
 						case 23000:
@@ -1176,7 +1176,7 @@ public class MySQLLegacyDialect extends Dialect {
 					return new LockAcquisitionException( message, sqlException, sql );
 			}
 
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "41000":

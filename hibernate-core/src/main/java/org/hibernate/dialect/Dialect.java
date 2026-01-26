@@ -26,6 +26,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -5777,31 +5778,116 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Does this dialect natively support SQL 2011-style
+	 * temporal tables?
+	 *
+	 * @see TemporalTableStrategy#NATIVE
+	 */
+	@Incubating
+	public boolean supportsNativeTemporalTables() {
+		return false;
+	}
+
+	/**
+	 * The column type to use for effectivity columns of
+	 * temporal tables. The default implementation returns
+	 * {@link SqlTypes#TIMESTAMP TIMESTAMP}.
+	 */
+	@Incubating
 	public int getTemporalColumnType() {
 		return SqlTypes.TIMESTAMP;
 	}
 
+	/**
+	 * The column precision to use for effectivity columns
+	 * of native temporal tables when the precision is not
+	 * explicitly specified. The default implementation
+	 * returns {@linkplain #getDefaultTimestampPrecision
+	 * the default timestamp precision} for this dialect.
+	 *
+	 * @see org.hibernate.annotations.Temporal#secondPrecision
+	 */
+	@Incubating
 	public int getTemporalColumnPrecision() {
 		return getDefaultTimestampPrecision();
 	}
 
 	/**
-	 * The {@code period} clause for temporal tables,
-	 * usually {@code period for system_time}.
+	 * Table {@linkplain jakarta.persistence.Table#options options}
+	 * to use for temporal tables, used to specify system versioning
+	 * or table partitioning.
+	 *
+	 * @param strategy The temporal table strategy
+	 * @param endingColumnName The name of the {@code row end} column
+	 * specified via {@link org.hibernate.annotations.Temporal#rowEnd}
+	 * @param partitioned Is partitioning requested
+	 * @return The options, or {@code null} if there are no options
 	 */
-	public String getTemporalPeriodKeyword() {
-		return "period for system_time";
+	@Incubating
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return null;
 	}
 
-	public String getTemporalTableOption() {
-		return "";
+	/**
+	 * Do we need to suppress creation of the primary key
+	 * constraint on a temporal table?
+	 *
+	 * @param partitioned Is partitioning requested
+	 */
+	@Incubating
+	public boolean suppressesTemporalTablePrimaryKeys(boolean partitioned) {
+		return partitioned && supportsTemporalTablePartitioning();
 	}
 
-	public boolean requiresTemporalTableTransactionIdColumn() {
+	/**
+	 * Do we support partitioning temporal tables in this
+	 * dialect?
+	 *
+	 * @see org.hibernate.annotations.Temporal#partitioned
+	 */
+	@Incubating
+	public boolean supportsTemporalTablePartitioning() {
 		return false;
 	}
 
-	public void addTemporalTableAuxiliaryObject(Table table, Database database) {}
+	/**
+	 * Register any auxiliary database objects required
+	 * for the given temporary table and strategy. Used
+	 * to create history tables or table partitions.
+	 *
+	 * @param strategy The temporal table strategy
+	 * @param table A temporal table
+	 * @param database The database to register with
+	 * @param partitioned Is partitioning requested
+	 */
+	@Incubating
+	public void addTemporalTableAuxiliaryObjects(
+			TemporalTableStrategy strategy,
+			Table table, Database database,
+			boolean partitioned) {}
+
+	/**
+	 * Any extra declarations required as part of the {@code create table}
+	 * statement for a temporal table. These declarations, unlike the
+	 * {@linkplain #getTemporalTableOptions options} come inside the
+	 * parentheses, along with the column and constraint definitions.
+	 * Examples include the {@code period for system_time} clause, the Db2
+	 * {@code transaction start id} column, the MySQL partitioning column,
+	 * and so on.
+	 *
+	 * @param strategy The temporal table strategy
+	 * @param partitioned Is partitioning requested
+	 */
+	@Incubating
+	public String getExtraTemporalTableDeclarations(
+			TemporalTableStrategy strategy,
+			String startingColumn, String endingColumn,
+			boolean partitioned) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				: null;
+	}
 
 	/**
 	 * Pluggable strategy for determining the {@link Size} to use for

@@ -12,6 +12,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
@@ -1345,30 +1346,54 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporalPeriodKeyword() {
-		return "period system_time"; // no 'for' keyword
-	}
-
-	@Override
-	public boolean requiresTemporalTableTransactionIdColumn() {
+	public boolean supportsNativeTemporalTables() {
 		return true;
 	}
 
 	@Override
-	public void addTemporalTableAuxiliaryObject(Table table, Database database) {
-		final String name = table.getQuotedName( DB2Dialect.this);
-		final String historyName = name + "_history";
-		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						historyName,
-						database.getDefaultNamespace(),
-						new String[] {
-								"create table " + historyName + " like " + name,
-								"alter table " + name + " add versioning use history table " + historyName,
-						},
-						new String[] {"drop table " + historyName },
-						emptySet()
-				)
-		);
+	public boolean supportsTemporalTablePartitioning() {
+		return true;
+	}
+
+	@Override
+	public String getExtraTemporalTableDeclarations(
+			TemporalTableStrategy strategy,
+			String startingColumn, String endingColumn,
+			boolean partitioned) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "transaction_start_id timestamp(12) not null generated always as transaction start id implicitly hidden"
+						+ ", period system_time (" + startingColumn + ", " + endingColumn + ")" // no 'for' keyword
+				: null;
+	}
+
+	@Override
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return partitioned
+				? "partition by range (" + endingColumnName + " nulls last)"
+						+ " (partition p_history starting from ('0001-01-01') ending at ('9999-12-30'), partition p_current ending at (maxvalue))"
+				: null;
+	}
+
+	@Override
+	public void addTemporalTableAuxiliaryObjects(
+			TemporalTableStrategy strategy,
+			Table table, Database database,
+			boolean partitioned) {
+		if ( strategy == TemporalTableStrategy.NATIVE ) {
+			final String name = table.getQuotedName( this );
+			final String historyName = name + "_history";
+			database.addAuxiliaryDatabaseObject(
+					new NamedAuxiliaryDatabaseObject(
+							historyName,
+							database.getDefaultNamespace(),
+							new String[] {
+									"create table " + historyName + " like " + name,
+									"alter table " + name + " add versioning use history table " + historyName,
+							},
+							new String[] {"drop table " + historyName},
+							emptySet()
+					)
+			);
+		}
 	}
 }

@@ -15,6 +15,9 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -121,6 +124,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static java.util.Collections.emptySet;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
@@ -928,6 +932,41 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public GenerationType getNativeValueGenerationStrategy() {
 		return GenerationType.SEQUENCE;
+	}
+
+	@Override
+	public boolean supportsTemporalTablePartitioning() {
+		return true;
+	}
+
+	@Override
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return partitioned
+				? "partition by list (" + endingColumnName + ")"
+				: null;
+	}
+
+	@Override
+	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+		if ( partitioned ) {
+			final String tableName = table.getQuotedName( this );
+			final String currentPartition = tableName + "_current";
+			final String historyPartition = tableName + "_history";
+			database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
+					currentPartition,
+					database.getDefaultNamespace(),
+					"create table " + currentPartition + " partition of " + tableName + " for values in (null)",
+					"drop table if exists " + currentPartition + " cascade",
+					emptySet()
+			) );
+			database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
+					historyPartition,
+					database.getDefaultNamespace(),
+					"create table " + historyPartition + " partition of " + tableName + " default",
+					"drop table if exists " + historyPartition + " cascade",
+					emptySet()
+			) );
+		}
 	}
 
 	@Override

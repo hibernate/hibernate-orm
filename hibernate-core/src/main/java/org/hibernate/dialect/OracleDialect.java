@@ -1908,12 +1908,13 @@ public class OracleDialect extends Dialect {
 //	}
 
 	@Override
-	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
-		return false;
+	public boolean supportsTemporalTablePartitioning() {
+		return true;
 	}
 
 	@Override
-	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
-		return "period for system_time (" + startingColumn + ", " + endingColumn + ")";
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return "partition by list( " + endingColumnName + ")"
+				+ "(partition p_current values (null), partition p_history values (default))";
 	}
 }

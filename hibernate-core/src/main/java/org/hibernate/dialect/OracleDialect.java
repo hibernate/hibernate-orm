@@ -1711,7 +1711,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+		return generatedAs.startsWith( "row " )
+				? ""
+				: " generated always as (" + generatedAs + ")";
 	}
 
 	@Override
@@ -1914,7 +1916,10 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
-		return "partition by list( " + endingColumnName + ")"
-				+ "(partition p_current values (null), partition p_history values (default))";
+		return strategy == TemporalTableStrategy.NATIVE
+				? "flashback archive fba_history"
+				: "partition by list( " + endingColumnName + ")"
+						+ " (partition p_current values (null), partition p_history values (default))"
+						+ " enable row movement";
 	}
 }

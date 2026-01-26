@@ -50,7 +50,7 @@ class TemporalEntityPartitionedTest {
 					session.persist( child );
 				}
 		);
-		var instant = Instant.now();
+		var instant = getInstant( scope );
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -131,7 +131,7 @@ class TemporalEntityPartitionedTest {
 				assertEquals( 0, friends );
 			} );
 		}
-		var nextInstant = Instant.now();
+		var nextInstant = getInstant( scope );
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -195,7 +195,7 @@ class TemporalEntityPartitionedTest {
 					session.insert( entity );
 				}
 		);
-		var instant = Instant.now();
+		var instant = getInstant( scope );
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
@@ -244,6 +244,10 @@ class TemporalEntityPartitionedTest {
 		}
 	}
 
+	private static Instant getInstant(SessionFactoryScope scope) {
+		return scope.getSessionFactory().fromSession(
+				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
+	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to",
 			partitioned = true)

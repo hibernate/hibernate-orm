@@ -42,12 +42,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"),
 		// TODO: make this setting unnecessary!
 		@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")})
+@RequiresDialect(MariaDBDialect.class)
+@RequiresDialect(DB2Dialect.class)
 class TemporalEntityNativeTest {
 
 	public static final int PAUSE = 500;
 
-	@RequiresDialect(MariaDBDialect.class)
-	@RequiresDialect(DB2Dialect.class)
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -64,7 +64,7 @@ class TemporalEntityNativeTest {
 				}
 		);
 		Thread.sleep( PAUSE );
-		var instant = Instant.now();
+		var instant = getInstant( scope );
 		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -146,7 +146,7 @@ class TemporalEntityNativeTest {
 			} );
 		}
 		Thread.sleep( PAUSE );
-		var nextInstant = Instant.now();
+		var nextInstant = getInstant( scope );
 		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -202,9 +202,6 @@ class TemporalEntityNativeTest {
 		}
 	}
 
-	@RequiresDialect(MariaDBDialect.class)
-//	@RequiresDialect(SQLServerDialect.class)
-	@RequiresDialect(DB2Dialect.class)
 	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
@@ -215,7 +212,7 @@ class TemporalEntityNativeTest {
 				}
 		);
 		Thread.sleep( PAUSE );
-		var instant = Instant.now();
+		var instant = getInstant( scope );
 		Thread.sleep( PAUSE );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
@@ -264,6 +261,10 @@ class TemporalEntityNativeTest {
 		}
 	}
 
+	private static Instant getInstant(SessionFactoryScope scope) {
+		return scope.getSessionFactory().fromSession(
+				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
+	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
 	@Entity(name = "TemporalEntity")

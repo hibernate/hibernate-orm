@@ -6228,7 +6228,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final boolean historical = tableReference.getTemporalInstant() != null;
 		if ( shouldRenderSystemTimeClause( tableReference, historical ) ) {
 			appendSql( WHITESPACE );
-			appendSql( dialect.getAsOfOperator() );
+			appendSql( dialect.getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
 			if ( historical ) {
 				visitParameterAsParameter(

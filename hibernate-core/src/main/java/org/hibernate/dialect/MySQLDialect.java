@@ -13,6 +13,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.FetchSettings;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -1657,6 +1658,29 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsTemporalTablePartitioning() {
+		return true;
+	}
+
+	@Override
+	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+		return partitioned
+				? "partition by list (" + endingColumnName + "_null)"
+						+ " (partition p_history values in (0), partition p_current values in (1))"
+				: null;
+	}
+
+	@Override
+	public String getExtraTemporalTableDeclarations(
+			TemporalTableStrategy strategy,
+			String startingColumn, String endingColumn,
+			boolean partitioned) {
+		return partitioned
+				? endingColumn + "_null" + " tinyint as (" + endingColumn + " is null) virtual invisible"
+				: null;
 	}
 
 	@Override

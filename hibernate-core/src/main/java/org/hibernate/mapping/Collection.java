@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.mapping.MappingHelper.classForName;
@@ -106,6 +107,7 @@ public abstract sealed class Collection
 
 	private Column temporalStartingColumn;
 	private Column temporalEndingColumn;
+	private boolean temporallyPartitioned;
 
 	private String loaderName;
 
@@ -567,7 +569,8 @@ public abstract sealed class Collection
 
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
-		if ( !isInverse() ) {
+		if ( !isInverse()
+				&& !suppressesTemporalTablePrimaryKeys( isTemporallyPartitioned(), getBuildingContext() ) ) {
 			createPrimaryKey();
 		}
 	}
@@ -856,9 +859,10 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public void enableTemporal(Column startingColumn, Column endingColumn) {
-		this.temporalStartingColumn = startingColumn;
-		this.temporalEndingColumn = endingColumn;
+	public void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned) {
+		temporalStartingColumn = startingColumn;
+		temporalEndingColumn = endingColumn;
+		temporallyPartitioned = partitioned;
 	}
 
 	@Override
@@ -869,6 +873,11 @@ public abstract sealed class Collection
 	@Override
 	public Column getTemporalEndingColumn() {
 		return temporalEndingColumn;
+	}
+
+	@Override
+	public boolean isTemporallyPartitioned() {
+		return temporallyPartitioned;
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {

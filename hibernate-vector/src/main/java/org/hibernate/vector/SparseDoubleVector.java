@@ -21,6 +21,9 @@ public class SparseDoubleVector extends AbstractSparseVector<Double> {
 	private double[] data = EMPTY_FLOAT_ARRAY;
 
 	public SparseDoubleVector(int size) {
+		if ( size <= 0 ) {
+			throw new IllegalArgumentException( "size must be greater than zero" );
+		}
 		this.size = size;
 	}
 

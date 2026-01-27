@@ -1897,6 +1897,10 @@ public class OracleDialect extends Dialect {
 		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
+	/**
+	 * Return {@code false} because we use {@code period for system_time}
+	 * to implement the constraint on Oracle.
+	 */
 	@Override
 	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
 		return false;

@@ -34,6 +34,8 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
 import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
@@ -107,6 +109,7 @@ public abstract sealed class Collection
 
 	private Column temporalStartingColumn;
 	private Column temporalEndingColumn;
+	private Table temporalTable;
 	private boolean temporallyPartitioned;
 
 	private String loaderName;
@@ -142,6 +145,7 @@ public abstract sealed class Collection
 		this.key = original.key == null ? null : (KeyValue) original.key.copy();
 		this.element = original.element == null ? null : original.element.copy();
 		this.collectionTable = original.collectionTable;
+		this.temporalTable = original.temporalTable;
 		this.role = original.role;
 		this.lazy = original.lazy;
 		this.extraLazy = original.extraLazy;
@@ -569,9 +573,28 @@ public abstract sealed class Collection
 
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
-		if ( !isInverse()
-				&& !suppressesTemporalTablePrimaryKeys( isTemporallyPartitioned(), getBuildingContext() ) ) {
+		if ( hasPrimaryKey() ) {
 			createPrimaryKey();
+			adjustTemporalPrimaryKey();
+		}
+	}
+
+	private boolean hasPrimaryKey() {
+		return !isInverse()
+			&& !suppressesTemporalTablePrimaryKeys( temporallyPartitioned, buildingContext );
+	}
+
+	private void adjustTemporalPrimaryKey() {
+		if ( isTemporalized()
+				&& !usingNativeTemporalTables( buildingContext )
+				&& !usingHistoryTemporalTables( buildingContext ) ) {
+			final var primaryKey = collectionTable.getPrimaryKey();
+			if ( primaryKey != null ) {
+				final var startingColumn = getTemporalStartingColumn();
+				if ( startingColumn != null && !primaryKey.containsColumn( startingColumn ) ) {
+					primaryKey.addColumn( startingColumn );
+				}
+			}
 		}
 	}
 
@@ -871,6 +894,21 @@ public abstract sealed class Collection
 		temporalStartingColumn = startingColumn;
 		temporalEndingColumn = endingColumn;
 		temporallyPartitioned = partitioned;
+	}
+
+	@Override
+	public void setTemporalTable(Table table) {
+		this.temporalTable = table;
+	}
+
+	@Override
+	public Table getTemporalTable() {
+		return temporalTable;
+	}
+
+	@Override
+	public Table getMainTable() {
+		return collectionTable;
 	}
 
 	@Override

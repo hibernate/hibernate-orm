@@ -10,6 +10,12 @@ package org.hibernate.mapping;
 public interface Temporalized {
 	void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned);
 
+	Table getMainTable();
+
+	Table getTemporalTable();
+
+	void setTemporalTable(Table table);
+
 	Column getTemporalStartingColumn();
 
 	Column getTemporalEndingColumn();

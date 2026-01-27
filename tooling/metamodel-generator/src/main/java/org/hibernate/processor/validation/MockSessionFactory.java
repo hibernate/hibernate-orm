@@ -10,6 +10,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
@@ -256,6 +257,11 @@ public abstract class MockSessionFactory
 	@Override
 	public ClassLoaderService getClassLoaderService() {
 		return classLoaderService;
+	}
+
+	@Override
+	public TemporalTableStrategy getTemporalTableStrategy() {
+		return TemporalTableStrategy.VM_TIMESTAMP;
 	}
 
 	@Override

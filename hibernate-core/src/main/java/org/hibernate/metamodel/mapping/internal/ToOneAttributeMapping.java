@@ -9,6 +9,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -175,6 +176,7 @@ public class ToOneAttributeMapping
 	private boolean canUseParentTableGroup;
 	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
 
+	private final TemporalTableStrategy temporalTableStrategy;
 	/**
 	 * For Hibernate Reactive
 	 */
@@ -201,7 +203,7 @@ public class ToOneAttributeMapping
 		sideNature = original.sideNature;
 		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
 		canUseParentTableGroup = original.canUseParentTableGroup;
-
+		temporalTableStrategy = original.temporalTableStrategy;
 	}
 
 	public ToOneAttributeMapping(
@@ -255,6 +257,11 @@ public class ToOneAttributeMapping
 				declaringType,
 				propertyAccess
 		);
+
+
+		temporalTableStrategy =
+				declaringEntityPersister.getFactory()
+						.getSessionFactoryOptions().getTemporalTableStrategy();
 
 		if ( entityMappingType.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			// validate the type.
@@ -721,6 +728,7 @@ public class ToOneAttributeMapping
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
+		this.temporalTableStrategy = original.temporalTableStrategy;
 	}
 
 	private static boolean equal(Value lhsValue, Value rhsValue) {
@@ -2233,7 +2241,7 @@ public class ToOneAttributeMapping
 					if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
 						final var tableReference =
 								lazyTableGroup.resolveTableReference( navigablePath,
-										associatedEntityMappingType.getTemporalTableDetails().getTableName() );
+										temporalMapping.getTableName() );
 						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
 						final var temporalPredicate =
 								temporalInstant == null
@@ -2368,7 +2376,7 @@ public class ToOneAttributeMapping
 				if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
 					final var tableReference =
 							lazyTableGroup.resolveTableReference( navigablePath,
-									getAssociatedEntityMappingType().getTemporalTableDetails().getTableName() );
+									temporalMapping.getTableName() );
 					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
 					final var temporalPredicate =
 							temporalInstant == null
@@ -2390,10 +2398,10 @@ public class ToOneAttributeMapping
 		return lazyTableGroup;
 	}
 
-	private static boolean useTemporalRestriction(SqlAstCreationState creationState) {
+	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
 		final var factory = creationState.getCreationContext().getSessionFactory();
 		return factory.getJdbcServices().getDialect()
-				.useTemporalRestriction( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+				.useTemporalRestriction( temporalTableStrategy,
 						creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
 	}
 

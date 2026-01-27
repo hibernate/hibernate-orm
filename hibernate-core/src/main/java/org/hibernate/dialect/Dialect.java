@@ -5931,7 +5931,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Incubating
 	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return strategy != TemporalTableStrategy.NATIVE;
+		return switch(strategy) {
+			case HISTORY -> historical;
+			case NATIVE -> false;
+			default -> true;
+		};
 	}
 
 	/**

@@ -120,15 +120,16 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 			return false;
 		}
 
+		final Object deleteRowValue = resolveDeleteRowValue( collection, entry, entryPosition );
 		rowMutationOperations.getDeleteRowRestrictions().applyRestrictions(
 				collection,
 				key,
-				entry,
+				deleteRowValue,
 				entryPosition,
 				session,
 				deleteExecutor.getJdbcValueBindings()
 		);
-		deleteExecutor.execute( entry, null, null, null, session );
+		deleteExecutor.execute( deleteRowValue, null, null, null, session );
 
 		rowMutationOperations.getInsertRowValues().applyValues(
 				collection,

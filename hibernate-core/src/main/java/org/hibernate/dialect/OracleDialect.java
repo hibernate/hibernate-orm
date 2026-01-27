@@ -1929,12 +1929,16 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
-		return historical || strategy != TemporalTableStrategy.NATIVE;
+		return switch ( strategy ) {
+			case HISTORY -> false;
+			case NATIVE -> historical;
+			default -> true;
+		};
 	}
 
 	@Override
 	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return false;
+		return strategy == TemporalTableStrategy.HISTORY && historical;
 	}
 
 	@Override

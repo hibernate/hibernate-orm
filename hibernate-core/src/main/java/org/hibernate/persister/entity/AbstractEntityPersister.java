@@ -69,6 +69,7 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -155,6 +156,9 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.HistoryDeleteCoordinator;
+import org.hibernate.persister.entity.mutation.HistoryInsertCoordinator;
+import org.hibernate.persister.entity.mutation.HistoryUpdateCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.MergeCoordinator;
@@ -191,6 +195,7 @@ import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.HistoryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -254,6 +259,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -1335,7 +1341,11 @@ public abstract class AbstractEntityPersister
 	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState sqlAstCreationState) {
-		final var tableReference = new NamedTableReference( getTableName(), sqlAliasBase.generateNewAlias() );
+		final String primaryTableName = resolvePrimaryTableName( sqlAstCreationState );
+		final String primaryAlias = sqlAliasBase.generateNewAlias();
+		final var tableReference = shouldUseHistoryTable( sqlAstCreationState )
+				? new HistoryTableReference( primaryTableName, getTableName(), primaryAlias )
+				: new NamedTableReference( primaryTableName, primaryAlias );
 		applyNativeTemporalTableReference( tableReference, sqlAstCreationState );
 		return tableReference;
 	}
@@ -2830,10 +2840,15 @@ public abstract class AbstractEntityPersister
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final var rootTableReference = new NamedTableReference(
-				needsDiscriminator() ? getRootTableName() : getTableName(),
-				sqlAliasBase.generateNewAlias()
-		);
+		final String rootTableName = resolveRootTableName( creationState );
+		final String rootAlias = sqlAliasBase.generateNewAlias();
+		final var rootTableReference = shouldUseHistoryTable( creationState )
+				? new HistoryTableReference(
+						rootTableName,
+						needsDiscriminator() ? getRootTableName() : getTableName(),
+						rootAlias
+				)
+				: new NamedTableReference( rootTableName, rootAlias );
 		applyNativeTemporalTableReference( rootTableReference, creationState );
 
 		final var tableGroup = new StandardTableGroup(
@@ -2900,7 +2915,7 @@ public abstract class AbstractEntityPersister
 
 			if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
 				final var tableReference =
-						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
+						tableGroup.resolveTableReference( temporalMapping.getTableName() );
 				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
 				final var temporalPredicate =
 						temporalInstant == null
@@ -2924,6 +2939,25 @@ public abstract class AbstractEntityPersister
 	private boolean useAsOfOperator(SqlAstCreationState creationState) {
 		return getDialect().useAsOfOperator( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
 				creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
+	}
+
+	private String resolvePrimaryTableName(SqlAstCreationState creationState) {
+		return shouldUseHistoryTable( creationState )
+				? temporalMapping.getTableName()
+				: getTableName();
+	}
+
+	private String resolveRootTableName(SqlAstCreationState creationState) {
+		if ( shouldUseHistoryTable( creationState ) ) {
+			return temporalMapping.getTableName();
+		}
+		return needsDiscriminator() ? getRootTableName() : getTableName();
+	}
+
+	private boolean shouldUseHistoryTable(SqlAstCreationState creationState) {
+		return temporalMapping != null
+			&& isHistoryStrategy()
+			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
 	}
 
 	private void applyNativeTemporalTableReference(
@@ -3501,18 +3535,35 @@ public abstract class AbstractEntityPersister
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
 	private boolean useTemporalCoordinators() {
+		final var strategy = factory.getSessionFactoryOptions().getTemporalTableStrategy();
 		return temporalMapping != null
-			&& factory.getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE;
+			&& strategy != NATIVE
+			&& strategy != HISTORY;
 	}
 
 	protected InsertCoordinator buildInsertCoordinator() {
-		return new InsertCoordinatorStandard( this, factory );
+		return temporalMapping != null && isHistoryStrategy()
+				? new HistoryInsertCoordinator( this, factory )
+				: new InsertCoordinatorStandard( this, factory );
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
-		if ( useTemporalCoordinators() ) {
-			return new TemporalUpdateCoordinator( this, factory );
-		}
+		return temporalMapping == null
+				? buildNonTemporalUpdateCoordinator()
+				: buildTemporalUpdateCoordinator();
+	}
+
+	protected UpdateCoordinator buildMergeCoordinator() {
+		return new MergeCoordinator( this, factory );
+	}
+
+	protected DeleteCoordinator buildDeleteCoordinator() {
+		return temporalMapping == null
+				? buildNonTemporalDeleteCoordinator()
+				: buildTemporalDeleteCoordinator();
+	}
+
+	private UpdateCoordinator buildNonTemporalUpdateCoordinator() {
 		// we only have updates to issue for entities with one or more singular attributes
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
@@ -3523,20 +3574,30 @@ public abstract class AbstractEntityPersister
 		return new UpdateCoordinatorNoOp( this );
 	}
 
-	protected UpdateCoordinator buildMergeCoordinator() {
-		return new MergeCoordinator( this, factory );
+	private UpdateCoordinator buildTemporalUpdateCoordinator() {
+		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
+			case VM_TIMESTAMP, SERVER_TIMESTAMP -> new TemporalUpdateCoordinator( this, factory );
+			case HISTORY -> new HistoryUpdateCoordinator( this, factory, buildNonTemporalUpdateCoordinator() );
+			case NATIVE -> buildNonTemporalUpdateCoordinator();
+		};
 	}
 
-	protected DeleteCoordinator buildDeleteCoordinator() {
-		if ( useTemporalCoordinators() ) {
-			return new DeleteCoordinatorTemporal( this, factory );
-		}
-		else if ( softDeleteMapping != null ) {
-			return new DeleteCoordinatorSoft( this, factory );
-		}
-		else {
-			return new DeleteCoordinatorStandard( this, factory );
-		}
+	private DeleteCoordinator buildNonTemporalDeleteCoordinator() {
+		return softDeleteMapping != null
+				? new DeleteCoordinatorSoft( this, factory )
+				: new DeleteCoordinatorStandard( this, factory );
+	}
+
+	private DeleteCoordinator buildTemporalDeleteCoordinator() {
+		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
+			case VM_TIMESTAMP, SERVER_TIMESTAMP -> new DeleteCoordinatorTemporal( this, factory );
+			case HISTORY -> new HistoryDeleteCoordinator( this, factory, buildNonTemporalDeleteCoordinator() );
+			case NATIVE -> buildNonTemporalDeleteCoordinator();
+		};
+	}
+
+	private boolean isHistoryStrategy() {
+		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY;
 	}
 
 	@Override
@@ -4960,10 +5021,15 @@ public abstract class AbstractEntityPersister
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, rootClass, getIdentifierTableName(), creationProcess );
 		temporalMapping =
-				resolveTemporalMapping( rootClass, getIdentifierTableName(), creationProcess );
+				resolveTemporalMapping( rootClass, resolveTemporalTableName( rootClass ), creationProcess );
 		if ( softDeleteMapping != null && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}
+	}
+
+	private String resolveTemporalTableName(RootClass rootClass) {
+		final var temporalTable = rootClass.getTemporalTable();
+		return temporalTable == null ? getIdentifierTableName() : determineTableName( temporalTable );
 	}
 
 	private void initializeNaturalIdMapping

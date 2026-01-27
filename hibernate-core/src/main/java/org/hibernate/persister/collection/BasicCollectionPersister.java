@@ -21,6 +21,10 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.HistoryDeleteRowsCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryInsertRowsCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryRemoveCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryUpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
@@ -79,11 +83,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
+		final boolean temporalized = collectionBinding.isTemporalized();
+		final boolean history = temporalized && isHistoryStrategy();
 		this.rowMutationOperations = buildRowMutationOperations();
-		this.insertRowsCoordinator = buildInsertRowCoordinator();
-		this.updateCoordinator = buildUpdateRowCoordinator( collectionBinding.isTemporalized() );
-		this.deleteRowsCoordinator = buildDeleteRowCoordinator();
-		this.removeCoordinator = buildDeleteAllCoordinator();
+		this.insertRowsCoordinator = buildInsertRowCoordinator( history );
+		this.updateCoordinator = buildUpdateRowCoordinator( temporalized, history );
+		this.deleteRowsCoordinator = buildDeleteRowCoordinator( history );
+		this.removeCoordinator = buildDeleteAllCoordinator( history );
 	}
 
 	protected RowMutationOperations getRowMutationOperations() {
@@ -133,76 +139,119 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private boolean isPerformingUpdates() {
-		return getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
-			&& isAnyTrue( elementColumnIsSettable )
-			&& !isInverse();
+		return !isInverse()
+			&& getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
+			&& isAnyTrue( elementColumnIsSettable );
 	}
 
-	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal) {
+	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal, boolean history) {
 		if ( !isPerformingUpdates() ) {
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
-		else {
-			return temporal
-					? new UpdateRowsCoordinatorTemporal(
+		else if ( temporal ) {
+			return history
+					? new HistoryUpdateRowsCoordinator(
 							this,
 							rowMutationOperations,
-							getFactory()
-					) : new UpdateRowsCoordinatorStandard(
+							getFactory(),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase
+					)
+					: new UpdateRowsCoordinatorTemporal(
 							this,
 							rowMutationOperations,
 							getFactory()
 					);
 		}
+		else {
+			return new UpdateRowsCoordinatorStandard(
+					this,
+					rowMutationOperations,
+					getFactory()
+			);
+		}
 	}
 
-	private InsertRowsCoordinator buildInsertRowCoordinator() {
+	private InsertRowsCoordinator buildInsertRowCoordinator(boolean history) {
 		if ( isInverse() || !isRowInsertEnabled() ) {
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 		else {
-			return new InsertRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryInsertRowsCoordinator(
+							this,
+							rowMutationOperations,
+							new InsertRowsCoordinatorStandard(
+									this,
+									rowMutationOperations,
+									getFactory().getServiceRegistry()
+							),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new InsertRowsCoordinatorStandard(
+							this,
+							rowMutationOperations,
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
 
-	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
+	private DeleteRowsCoordinator buildDeleteRowCoordinator(boolean history) {
 		if ( !needsRemove() ) {
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 		else {
-			return new DeleteRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					hasPhysicalIndexColumn(),
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryDeleteRowsCoordinator(
+							this,
+							rowMutationOperations,
+							hasPhysicalIndexColumn(),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new DeleteRowsCoordinatorStandard(
+							this,
+							rowMutationOperations,
+							hasPhysicalIndexColumn(),
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
 
-	private RemoveCoordinator buildDeleteAllCoordinator() {
+	private RemoveCoordinator buildDeleteAllCoordinator(boolean history) {
 		if ( !needsRemove() ) {
 			return new RemoveCoordinatorNoOp( this );
 		}
 		else {
-			return new RemoveCoordinatorStandard(
-					this,
-					this::buildDeleteAllOperation,
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryRemoveCoordinator(
+							this,
+							this::buildDeleteAllOperation,
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new RemoveCoordinatorStandard(
+							this,
+							this::buildDeleteAllOperation,
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
-
 
 	@Override
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		assert attributeMapping != null;
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
+		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
 			return generateTemporalDeleteAllAst( tableReference );
 		}
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
@@ -342,7 +391,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
+		if ( temporalMapping != null && shouldApplyTemporalOperations( insertBuilder.getMutatingTable() ) ) {
 			final var startingColumnReference =
 					new ColumnReference( insertBuilder.getMutatingTable(), temporalMapping.getStartingColumnMapping() );
 			insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumnReference ) );
@@ -596,7 +645,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
 		final var temporalMapping = pluralAttribute.getTemporalMapping();
-		if ( temporalMapping != null && !isNativeTemporalTablesEnabled() ) {
+		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
 			return generateTemporalDeleteRowsAst( tableReference );
 		}
 		final var softDeleteMapping = pluralAttribute.getSoftDeleteMapping();
@@ -774,11 +823,25 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private static boolean isVmTimestampEnabled(SharedSessionContractImplementor session) {
-		return session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == VM_TIMESTAMP;
+		final var strategy = session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy();
+		return strategy == VM_TIMESTAMP;
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {
 		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
+	}
+
+	private boolean shouldApplyTemporalOperations(MutatingTableReference tableReference) {
+		final var attributeMapping = getAttributeMapping();
+		if ( attributeMapping == null ) {
+			return false;
+		}
+		else {
+			final var temporalMapping = attributeMapping.getTemporalMapping();
+			return temporalMapping != null
+				&& !isNativeTemporalTablesEnabled()
+				&& ( !isHistoryStrategy() || temporalMapping.getTableName().equals( tableReference.getTableName() ) );
+		}
 	}
 
 	@Override

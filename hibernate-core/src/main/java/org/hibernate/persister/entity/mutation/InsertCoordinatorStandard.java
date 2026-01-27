@@ -38,6 +38,7 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
@@ -228,7 +229,9 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		final var temporalMapping = entityPersister().getTemporalMapping();
-		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
+		if ( temporalMapping != null
+				&& TemporalMutationHelper.isUsingParameters( session )
+				&& factory().getSessionFactoryOptions().getTemporalTableStrategy() != HISTORY ) {
 			jdbcValueBindings.bindValue(
 					session.getTransactionStartInstant(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),

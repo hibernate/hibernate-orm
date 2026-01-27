@@ -14,6 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 
+import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
 import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
 import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -55,6 +56,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private SoftDeleteType softDeleteStrategy;
 	private Column temporalStartingColumn;
 	private Column temporalEndingColumn;
+	private Table temporalTable;
 	private boolean temporallyPartitioned;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
@@ -438,6 +440,21 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
+	public void setTemporalTable(Table table) {
+		this.temporalTable = table;
+	}
+
+	@Override
+	public Table getTemporalTable() {
+		return temporalTable;
+	}
+
+	@Override
+	public Table getMainTable() {
+		return table;
+	}
+
+	@Override
 	public Column getTemporalStartingColumn() {
 		return temporalStartingColumn;
 	}
@@ -470,7 +487,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		else {
 			final var primaryKey = super.makePrimaryKey( table );
 			if ( isTemporalized()
-					&& !usingNativeTemporalTables( context ) ) {
+					&& !usingNativeTemporalTables( context )
+					&& !usingHistoryTemporalTables( context ) ) {
 				if ( isVersioned() ) {
 					primaryKey.addColumns( getVersion().getValue() );
 				}

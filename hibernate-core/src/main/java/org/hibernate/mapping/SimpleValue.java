@@ -58,6 +58,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
 import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
@@ -393,7 +394,8 @@ public abstract class SimpleValue implements KeyValue {
 	protected boolean isTemporalEntity(PersistentClass referencedEntity) {
 		return referencedEntity instanceof Temporalized temporalEntity
 			&& temporalEntity.isTemporalized()
-			&& !usingNativeTemporalTables( getBuildingContext() );
+			&& !usingNativeTemporalTables( getBuildingContext() )
+			&& !usingHistoryTemporalTables( getBuildingContext() );
 	}
 
 	protected boolean isTemporalEntityName(String entityName) {

@@ -1897,17 +1897,15 @@ public class OracleDialect extends Dialect {
 		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
-	// TODO: Due to what appears to be a bug in Oracle, dropping and recreating
-	//       a table with 'period for ... ' results in failures
-//	@Override
-//	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
-//		return false;
-//	}
-//
-//	@Override
-//	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
-//		return "period for system_time (" + startingColumn + ", " + endingColumn + ")";
-//	}
+	@Override
+	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
+		return false;
+	}
+
+	@Override
+	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
+		return "period for system_time (" + startingColumn + ", " + endingColumn + ")";
+	}
 
 	@Override
 	public boolean supportsTemporalTablePartitioning() {

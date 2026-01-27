@@ -1,6 +1,21 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.2.Final (January 27, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37206
+
+
+** Bug
+    * HHH-20095 New SchemaValidator nullability check should only consider explicitly declared nullability
+    * HHH-20094 New SchemaValidator nullability check rejects Envers revtype column
+    * HHH-20087 NPE with StatelessSession + Bean Validation
+    * HHH-20069 `DB2iDialect.rowId` causes an error in merge queries
+    * HHH-19999 Caching APIs use Comparator<?> for version comparison in Hibernate ORM 7.2.0.Final
+    * HHH-19192 Bulk delete of owner with soft-delete element-collection physically deletes the collection rows
+    * HHH-18835 AssertionError when executing insert-select
+
 Changes in 7.2.1.Final (January 15, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

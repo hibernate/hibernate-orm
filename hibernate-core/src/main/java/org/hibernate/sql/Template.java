@@ -407,10 +407,10 @@ public final class Template {
 		if ( lookahead.hasMoreTokens() ) {
 			String nextToken;
 			do {
-				nextToken = lookahead.nextToken().toLowerCase(Locale.ROOT);
+				nextToken = lookahead.nextToken();
 			}
 			while ( nextToken.isBlank() && lookahead.hasMoreTokens() );
-			return check.apply( nextToken );
+			return check.apply( nextToken.toLowerCase(Locale.ROOT) );
 		}
 		else {
 			return false;

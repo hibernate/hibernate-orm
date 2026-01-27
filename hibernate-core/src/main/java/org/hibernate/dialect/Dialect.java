@@ -5887,9 +5887,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return null;
 	}
 
+	/**
+	 * Should we create a {@code check} constraint to enforce effectivity
+	 * constraints? (That starting timestamps precede ending timestamps.)
+	 * This is typically not needed for native temporal tables.
+	 */
 	@Incubating
 	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
-		return strategy != TemporalTableStrategy.NATIVE;
+		return strategy != TemporalTableStrategy.NATIVE && supportsTableCheck();
 	}
 
 	/**

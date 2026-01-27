@@ -29,9 +29,12 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
@@ -92,9 +95,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// Spanner doesn't support precision with the timestamp
-			case TIMESTAMP_UTC, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
+			case TIMESTAMP, TIMESTAMP_UTC, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
 			case BLOB -> "bytea";
 			case CLOB, NCLOB -> "character varying";
+			// Spanner doesn't support NUMERIC with precision and scale
+			case NUMERIC ->  "numeric";
+			case DECIMAL ->  "decimal";
 			case SMALLINT, INTEGER, TINYINT ->  columnType( BIGINT );
 			default -> super.columnType(sqlTypeCode);
 		};
@@ -257,11 +263,6 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
 		return false;
 	}
 

@@ -83,7 +83,6 @@ import java.util.function.Supplier;
 import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
-import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
@@ -591,7 +590,7 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
-		if ( !isNativeTemporalTablesEnabled() ) {
+		if ( useTemporalRestriction( influencers ) ) {
 			final var temporalInstant = influencers.getTemporalInstant();
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
@@ -625,18 +624,27 @@ public class PluralAttributeMappingImpl
 	private void applyNativeTemporalTableReference(
 			NamedTableReference tableReference,
 			SqlAstCreationState creationState) {
-		if ( temporalMapping != null && isNativeTemporalTablesEnabled() ) {
-			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
-			if ( temporalInstant != null
-					&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
-				tableReference.applyTemporalTable( temporalInstant, temporalMapping.getJdbcMapping() );
-			}
+		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
+		if ( temporalMapping != null && useAsOfOperator( loadQueryInfluencers )
+				&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
+			tableReference.applyTemporalTable(
+					loadQueryInfluencers.getTemporalInstant(),
+					temporalMapping.getJdbcMapping() );
 		}
 	}
 
-	private boolean isNativeTemporalTablesEnabled() {
-		return collectionDescriptor.getFactory().getSessionFactoryOptions()
-					.getTemporalTableStrategy() == NATIVE;
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
+		final var factory = collectionDescriptor.getFactory();
+		return factory.getJdbcServices().getDialect()
+				.useAsOfOperator( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+						influencers.getTemporalInstant() != null );
+	}
+
+	private boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
+		final var factory = collectionDescriptor.getFactory();
+		return factory.getJdbcServices().getDialect()
+				.useTemporalRestriction( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+						influencers.getTemporalInstant() != null );
 	}
 
 	@Override

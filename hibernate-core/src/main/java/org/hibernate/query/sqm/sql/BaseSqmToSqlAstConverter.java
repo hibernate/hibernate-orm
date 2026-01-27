@@ -3622,13 +3622,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroupJoin.applyPredicate( softDeleteRestriction );
 		}
 		final var temporalMapping = entityDescriptor.getTemporalMapping();
-		if ( temporalMapping != null
-				&& getSessionFactoryOptions().getTemporalTableStrategy() != TemporalTableStrategy.NATIVE ) {
+		if ( temporalMapping != null ) {
 			final var temporalInstant = getLoadQueryInfluencers().getTemporalInstant();
-			final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
-			tableGroupJoin.applyPredicate( temporalInstant == null
-					? temporalMapping.createCurrentRestriction( tableReference )
-					: temporalMapping.createRestriction( tableReference, temporalInstant ) );
+			if ( getDialect().useTemporalRestriction( getTemporalTableStrategy(), temporalInstant != null ) ) {
+				final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
+				tableGroupJoin.applyPredicate( temporalInstant == null
+						? temporalMapping.createCurrentRestriction( tableReference )
+						: temporalMapping.createRestriction( tableReference, temporalInstant ) );
+			}
 		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3647,6 +3648,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		}
 		return tableGroup;
+	}
+
+	private TemporalTableStrategy getTemporalTableStrategy() {
+		return getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	private TableGroup consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {

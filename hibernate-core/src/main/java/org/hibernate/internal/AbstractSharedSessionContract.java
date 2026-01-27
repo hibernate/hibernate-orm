@@ -121,6 +121,7 @@ import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
 import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -632,7 +633,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	protected void initializeTransactionStartInstant() {
-		if ( factoryOptions.getTemporalTableStrategy() == VM_TIMESTAMP ) {
+		final var strategy = factoryOptions.getTemporalTableStrategy();
+		if ( strategy == VM_TIMESTAMP || strategy == HISTORY ) {
 			transactionStartInstant = generateTransactionStartInstant();
 		}
 	}

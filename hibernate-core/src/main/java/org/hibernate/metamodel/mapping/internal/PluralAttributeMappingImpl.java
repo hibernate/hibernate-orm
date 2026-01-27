@@ -8,6 +8,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
@@ -57,6 +59,7 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.from.HistoryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -119,6 +122,7 @@ public class PluralAttributeMappingImpl
 	private final SoftDeleteMapping softDeleteMapping;
 	private Boolean hasSoftDelete;
 	private final TemporalMapping temporalMapping;
+	private final TemporalTableStrategy temporalTableStrategy;
 
 	private final String bidirectionalAttributeName;
 
@@ -161,16 +165,15 @@ public class PluralAttributeMappingImpl
 		this.collectionDescriptor = collectionDescriptor;
 		this.referencedPropertyName = bootDescriptor.getReferencedPropertyName();
 
-		this.mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
+		mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
 
-		this.bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+		bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
 		separateCollectionTable = bootDescriptor.isOneToMany() ? null : collectionDescriptor.getTableName();
 
 		final int baseIndex = bootDescriptor instanceof List list ? list.getBaseIndex() : -1;
-
 		indexMetadata = new IndexMetadata() {
 			@Override
 			public CollectionPart getIndexDescriptor() {
@@ -188,18 +191,34 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
+		temporalTableStrategy =
+				creationProcess.getCreationContext()
+						.getSessionFactoryOptions().getTemporalTableStrategy();
+
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, bootDescriptor,
-						getSeparateCollectionTable(), creationProcess );
-		temporalMapping = getSeparateCollectionTable() == null
-				? null
-				: resolveTemporalMapping( bootDescriptor, getSeparateCollectionTable(), creationProcess );
+						separateCollectionTable, creationProcess );
+		temporalMapping =
+				separateCollectionTable == null
+						? null
+						: resolveTemporalMapping(
+								bootDescriptor,
+								resolveTemporalTableName( bootDescriptor, creationProcess ),
+								creationProcess
+						);
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
 		if ( elementDescriptor instanceof EntityCollectionPart elementMapping ) {
 			validateTargetEntity( elementMapping, declaringType, attributeName, propertyAccess, creationProcess );
 		}
+	}
+
+	private String resolveTemporalTableName(Collection bootDescriptor, MappingModelCreationProcess creationProcess) {
+		final var temporalTable = bootDescriptor.getTemporalTable();
+		return temporalTable == null
+				? getSeparateCollectionTable()
+				: MappingModelCreationHelper.getTableIdentifierExpression( temporalTable, creationProcess );
 	}
 
 	/**
@@ -362,6 +381,7 @@ public class PluralAttributeMappingImpl
 		this.fkDescriptor = original.fkDescriptor;
 		this.orderByFragment = original.orderByFragment;
 		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
+		this.temporalTableStrategy = original.temporalTableStrategy;
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
@@ -598,10 +618,8 @@ public class PluralAttributeMappingImpl
 				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
 				final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
 				if ( temporalMapping != null ) {
-					final String primaryTableName =
-							associatedEntityDescriptor.getTemporalTableDetails().getTableName();
 					final var primaryTableReference =
-							tableGroup.resolveTableReference( primaryTableName );
+							tableGroup.resolveTableReference( temporalMapping.getTableName() );
 					final var temporalRestriction =
 							temporalInstant == null
 									? temporalMapping.createCurrentRestriction( primaryTableReference )
@@ -611,7 +629,7 @@ public class PluralAttributeMappingImpl
 			}
 			if ( temporalMapping != null ) {
 				final var tableReference =
-						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
+						tableGroup.resolveTableReference( temporalMapping.getTableName() );
 				final var temporalRestriction =
 						temporalInstant == null
 								? temporalMapping.createCurrentRestriction( tableReference )
@@ -633,17 +651,19 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	private Dialect getDialect() {
+		return collectionDescriptor.getFactory().getJdbcServices().getDialect();
+	}
+
 	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
-		final var factory = collectionDescriptor.getFactory();
-		return factory.getJdbcServices().getDialect()
-				.useAsOfOperator( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+		return getDialect()
+				.useAsOfOperator( temporalTableStrategy,
 						influencers.getTemporalInstant() != null );
 	}
 
 	private boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		final var factory = collectionDescriptor.getFactory();
-		return factory.getJdbcServices().getDialect()
-				.useTemporalRestriction( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+		return getDialect()
+				.useTemporalRestriction( temporalTableStrategy,
 						influencers.getTemporalInstant() != null );
 	}
 
@@ -1204,12 +1224,12 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = collectionDescriptor.getTableName();
-		final var collectionTableReference = new NamedTableReference(
-				collectionTableName,
-				sqlAliasBase.generateNewAlias(),
-				true
-		);
+		final String tableName = collectionDescriptor.getTableName();
+		final String alias = sqlAliasBase.generateNewAlias();
+		final var collectionTableReference =
+				useHistoryTable( creationState )
+						? new HistoryTableReference( temporalMapping.getTableName(), tableName, alias, true )
+						: new NamedTableReference( tableName, alias, true );
 		applyNativeTemporalTableReference( collectionTableReference, creationState );
 
 		final var tableGroup = new CollectionTableGroup(
@@ -1259,6 +1279,12 @@ public class PluralAttributeMappingImpl
 		}
 
 		return tableGroup;
+	}
+
+	private boolean useHistoryTable(SqlAstCreationState creationState) {
+		return temporalMapping != null
+			&& temporalTableStrategy == TemporalTableStrategy.HISTORY
+			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
 	}
 
 	@Override

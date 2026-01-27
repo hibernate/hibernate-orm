@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 /**
  * Root {@link MetadataBuildingContext}.
@@ -21,6 +24,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
+	private final TemporalTableStrategy temporalTableStrategy;
 
 	public MetadataBuildingContextRootImpl(
 			String contributor,
@@ -35,6 +39,15 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 		this.metadataCollector = metadataCollector;
 		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
+		this.temporalTableStrategy = temporalTableStrategy( bootstrapContext );
+	}
+
+	private TemporalTableStrategy temporalTableStrategy(BootstrapContext bootstrapContext) {
+		final var settings =
+				bootstrapContext.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSettings();
+		return TemporalHelper.determineTemporalTableStrategy( settings );
 	}
 
 	@Override
@@ -70,5 +83,10 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public String getCurrentContributorName() {
 		return contributor;
+	}
+
+	@Override
+	public TemporalTableStrategy getTemporalTableStrategy() {
+		return temporalTableStrategy;
 	}
 }

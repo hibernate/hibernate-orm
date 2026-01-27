@@ -14,7 +14,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JiraKey( value = "HHH-5275")
 //@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15,
 //		reason = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class OptimisticLockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;

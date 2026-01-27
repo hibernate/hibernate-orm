@@ -241,10 +241,12 @@ public abstract class CollectionBinder {
 		collectionBinder.setOnDeleteActionAction( onDeleteAction( memberDetails ) );
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
+		final var elementNullability = collectionBinder.isMap() && elementCollectionAnn != null ?
+				Nullability.FORCED_NOT_NULL : nullability;
 
 		collectionBinder.setElementColumns( elementColumns(
 				propertyHolder,
-				nullability,
+				elementNullability,
 				entityBinder,
 				context,
 				memberDetails,

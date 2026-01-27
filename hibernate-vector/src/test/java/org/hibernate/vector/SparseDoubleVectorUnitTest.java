@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SparseDoubleVectorUnitTest {
 
@@ -50,5 +51,15 @@ public class SparseDoubleVectorUnitTest {
 	public void testFromDenseVectorList() {
 		final SparseDoubleVector doubles = new SparseDoubleVector( List.of( (double) 0, (double) 3, (double) 0 ) );
 		assertArrayEquals( new Object[] {(double) 0, (double) 3, (double) 0}, doubles.toArray() );
+	}
+
+	@Test
+	public void testSizeValidation() {
+		assertThrows( IllegalArgumentException.class, () -> new SparseDoubleVector( 0 ) );
+	}
+
+	@Test
+	public void testNegativeSizeValidation() {
+		assertThrows( IllegalArgumentException.class, () -> new SparseDoubleVector( -1 ) );
 	}
 }

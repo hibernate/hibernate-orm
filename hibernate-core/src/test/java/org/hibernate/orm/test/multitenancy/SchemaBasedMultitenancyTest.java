@@ -45,20 +45,26 @@ public class SchemaBasedMultitenancyTest {
 		var schemaManager = (SchemaManager) scope.getEntityManagerFactory().getSchemaManager();
 		createSchema( schemaManager, "HELLO" );
 		createSchema( schemaManager, "GOODBYE" );
-		currentTenantIdentifier = "hello";
-		scope.inTransaction( session -> {
-			Person person = new Person();
-			person.ssn = "123456789";
-			person.name = "Gavin";
-			session.persist( person );
-		} );
-		scope.inTransaction( session -> {
-			assertNotNull( session.find( Person.class, "123456789" ) );
-		} );
-		currentTenantIdentifier = "goodbye";
-		scope.inTransaction( session -> {
-			assertNull( session.find( Person.class, "123456789" ) );
-		} );
+		try {
+			currentTenantIdentifier = "hello";
+			scope.inTransaction( session -> {
+				Person person = new Person();
+				person.ssn = "123456789";
+				person.name = "Gavin";
+				session.persist( person );
+			} );
+			scope.inTransaction( session -> {
+				assertNotNull( session.find( Person.class, "123456789" ) );
+			} );
+			currentTenantIdentifier = "goodbye";
+			scope.inTransaction( session -> {
+				assertNull( session.find( Person.class, "123456789" ) );
+			} );
+		}
+		finally {
+			schemaManager.forSchema( "HELLO" ).drop( true );
+			schemaManager.forSchema( "GOODBYE" ).drop( true );
+		}
 	}
 
 	private static void createSchema(SchemaManager schemaManager, String schemaName) {

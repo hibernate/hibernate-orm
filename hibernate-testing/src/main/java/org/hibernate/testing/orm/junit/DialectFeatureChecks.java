@@ -48,6 +48,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -206,6 +207,13 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsResultSetPositioningOnForwardOnlyCursorCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsResultSetPositionQueryMethodsOnForwardOnlyCursor();
+		}
+	}
+
+	public static class SupportsConcurrentTransactions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Currently Spanner Emulator doesn't allow concurrent modifications
+			return !(dialect instanceof SpannerPostgreSQLDialect);
 		}
 	}
 

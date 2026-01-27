@@ -11,8 +11,10 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.jboss.logging.Logger;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = OptimisticLockTest.Phone.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class OptimisticLockTest {
 	private static final Logger log = Logger.getLogger( OptimisticLockTest.class );
 

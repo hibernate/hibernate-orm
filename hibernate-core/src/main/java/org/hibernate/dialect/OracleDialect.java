@@ -1917,6 +1917,21 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String getAsOfOperator() {
+		return "as of period for system_time";
+	}
+
+	@Override
+	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
+		return true;
+	}
+
+	@Override
+	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
+		return false;
+	}
+
+	@Override
 	public boolean supportsTemporalTablePartitioning() {
 		return true;
 	}

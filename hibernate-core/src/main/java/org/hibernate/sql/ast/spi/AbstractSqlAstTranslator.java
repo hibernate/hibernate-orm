@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
@@ -6224,23 +6225,35 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
-		if ( shouldRenderSystemTimeClause( tableReference ) ) {
-			appendSql( " for system_time as of " );
-			visitParameterAsParameter(
-					new TemporalInstantParameter(
-							tableReference.getTemporalJdbcMapping(),
-							tableReference.getTemporalInstant()
-					)
-			);
+		final boolean historical = tableReference.getTemporalInstant() != null;
+		if ( shouldRenderSystemTimeClause( tableReference, historical ) ) {
+			appendSql( WHITESPACE );
+			appendSql( dialect.getAsOfOperator() );
+			appendSql( WHITESPACE );
+			if ( historical ) {
+				visitParameterAsParameter(
+						new TemporalInstantParameter(
+								tableReference.getTemporalJdbcMapping(),
+								tableReference.getTemporalInstant()
+						)
+				);
+			}
+			else {
+				appendSql( dialect.currentTimestamp() );
+			}
 		}
 		renderTableReferenceIdentificationVariable( tableReference );
 		return false;
 	}
 
-	private boolean shouldRenderSystemTimeClause(NamedTableReference tableReference) {
-		return tableReference.getTemporalInstant() != null
-			&& tableReference.getTemporalJdbcMapping() != null
+	private boolean shouldRenderSystemTimeClause(NamedTableReference tableReference, boolean historical) {
+		return tableReference.getTemporalJdbcMapping() != null
+			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), historical )
 			&& statementStack.getCurrent() instanceof SelectStatement;
+	}
+
+	private TemporalTableStrategy getTemporalTableStrategy() {
+		return getSessionFactory().getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	@Override

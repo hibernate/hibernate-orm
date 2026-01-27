@@ -2884,12 +2884,13 @@ public abstract class AbstractEntityPersister
 				additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
 			}
 
+			final var resolver = creationState.getSqlExpressionResolver();
+
 			if ( softDeleteMapping != null ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
 				final var softDeletePredicate =
-						softDeleteMapping.createNonDeletedRestriction( tableReference,
-								creationState.getSqlExpressionResolver() );
+						softDeleteMapping.createNonDeletedRestriction( tableReference, resolver );
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
 				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
 					// Register entity name usage for the hierarchy root table to avoid pruning
@@ -2897,17 +2898,14 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-			if ( temporalMapping != null && !isUseNativeTemporalTablesEnabled( creationState ) ) {
+			if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( getTemporalTableDetails().getTableName() );
 				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
 				final var temporalPredicate =
 						temporalInstant == null
-								? temporalMapping.createCurrentRestriction( tableReference,
-										creationState.getSqlExpressionResolver() )
-								: temporalMapping.createRestriction( tableReference,
-										creationState.getSqlExpressionResolver(),
-										temporalInstant );
+								? temporalMapping.createCurrentRestriction( tableReference, resolver )
+								: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
 				additionalPredicateCollectorAccess.get().accept( temporalPredicate );
 				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
 					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
@@ -2918,20 +2916,24 @@ public abstract class AbstractEntityPersister
 		return tableGroup;
 	}
 
-	private static boolean isUseNativeTemporalTablesEnabled(SqlAstCreationState creationState) {
-		return creationState.getCreationContext().getSessionFactory()
-				.getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
+	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
+		return getDialect().useTemporalRestriction( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+				creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
+	}
+
+	private boolean useAsOfOperator(SqlAstCreationState creationState) {
+		return getDialect().useAsOfOperator( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
+				creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
 	}
 
 	private void applyNativeTemporalTableReference(
 			NamedTableReference tableReference,
 			SqlAstCreationState creationState) {
-		if ( temporalMapping != null && isUseNativeTemporalTablesEnabled( creationState ) ) {
-			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
-			if ( temporalInstant != null
-					&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
-				tableReference.applyTemporalTable( temporalInstant, temporalMapping.getJdbcMapping() );
-			}
+		if ( temporalMapping != null && useAsOfOperator( creationState )
+				&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
+			tableReference.applyTemporalTable(
+					creationState.getLoadQueryInfluencers().getTemporalInstant(),
+					temporalMapping.getJdbcMapping() );
 		}
 	}
 

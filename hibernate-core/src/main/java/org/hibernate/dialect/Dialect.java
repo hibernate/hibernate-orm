@@ -5898,6 +5898,43 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * The operator used to specify a temporal instant for querying
+	 * historical data. Usually {@code for system_time as of}. This
+	 * is usually used together with native temporal tables, but in
+	 * Oracle we use it all the time.
+	 */
+	@Incubating
+	public String getAsOfOperator() {
+		return "for system_time as of";
+	}
+
+	/**
+	 * Should be use the {@link #getAsOfOperator for system_time as of}
+	 * operator when querying temporal tables? We usually only use it
+	 * for querying native temporal tables at a historical instant, but
+	 * in Oracle we use it all the time.
+	 * @param strategy The strategy
+	 * @param historical Whether it is a historical query
+	 */
+	@Incubating
+	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
+		return strategy == TemporalTableStrategy.NATIVE && historical;
+	}
+
+	/**
+	 * Should we use temporal restrictions on the {@code row start} and
+	 * {@code row end} columns when querying temporal tables? We usually
+	 * use them unless we are using native temporal tables, but on Oracle
+	 * we never use them.
+	 * @param strategy The strategy
+	 * @param historical Whether it is a historical query
+	 */
+	@Incubating
+	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
+		return strategy != TemporalTableStrategy.NATIVE;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>

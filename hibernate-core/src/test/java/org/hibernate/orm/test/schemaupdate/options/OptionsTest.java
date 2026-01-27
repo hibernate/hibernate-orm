@@ -28,8 +28,13 @@ public class OptionsTest {
 	@Test void test(EntityManagerFactoryScope scope) throws SchemaValidationException {
 		SchemaManager schemaManager = scope.getEntityManagerFactory().getSchemaManager();
 		schemaManager.drop(true);
-		schemaManager.create(true);
-		schemaManager.validate();
+		try {
+			schemaManager.create( true );
+			schemaManager.validate();
+		}
+		finally {
+			schemaManager.drop( true );
+		}
 	}
 	@Entity
 	@Table(name = "TableWithOptions",

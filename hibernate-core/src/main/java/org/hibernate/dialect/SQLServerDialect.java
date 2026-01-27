@@ -13,8 +13,10 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -97,6 +99,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import static java.util.Collections.emptySet;
 import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
@@ -1195,6 +1198,19 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return generatedAs.startsWith( "row " )
 				? " datetime2 generated always as " + generatedAs
 				: " as (" + generatedAs + ") persisted";
+	}
+
+	@Override
+	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+		if ( strategy == TemporalTableStrategy.NATIVE ) {
+			database.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject(
+					database.getDefaultNamespace(),
+					new String[0],
+					new String[] { "alter table " + table.getQuotedName(this) + " set (system_versioning = off)" },
+					emptySet(),
+					false
+			) );
+		}
 	}
 
 	@Override

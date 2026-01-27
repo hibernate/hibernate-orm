@@ -54,9 +54,15 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
@@ -87,6 +93,9 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Cloud Spanner.
@@ -542,6 +551,182 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
+	}
+
+	@Override
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "FROM_HEX('" );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
+		appender.appendSql( "')" );
+	}
+
+	@Override
+	public void appendLiteral(SqlAppender appender, String literal) {
+		// Spanner uses backslash escaping, so escape single quotes and backslashes with \
+		// We also explicitly escape newlines (\n) because Spanner forbids raw line breaks
+		// inside standard quoted strings
+		StringBuilder builder = new StringBuilder( literal.length() + 2 );
+		builder.append( '\'' );
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			switch ( c ) {
+				case '\'':
+				case '\\':
+					builder.append( '\\' );
+					builder.append( c );
+					break;
+				case '\n':
+					builder.append( "\\n" );
+					break;
+				default:
+					builder.append( c );
+			}
+		}
+		builder.append( '\'' );
+		appender.appendSql( builder.toString() );
+	}
+
+	@Override
+	public String currentTime() {
+		return currentTimestamp();
+	}
+
+	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return true;
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			org.hibernate.sql.ast.spi.SqlAppender appender,
+			java.time.temporal.TemporalAccessor temporalAccessor,
+			jakarta.persistence.TemporalType precision,
+			java.util.TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "DATE '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( "'" );
+				break;
+			case TIME:
+				appender.appendSql( "TIMESTAMP '" );
+				if ( temporalAccessor instanceof java.time.LocalTime localTime ) {
+					Instant instant = localTime
+							.atDate( LocalDate.of( 1970, 1, 1 ) )
+							.toInstant( ZoneOffset.UTC );
+					appendAsTimestampWithNanos( appender, instant, true, jdbcTimeZone );
+				}
+				else if ( temporalAccessor instanceof java.time.OffsetTime offsetTime ) {
+					OffsetDateTime offsetDateTime =
+							offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) );
+					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
+				}
+				appender.appendSql( "'" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "TIMESTAMP '" );
+				if ( temporalAccessor instanceof java.time.LocalDateTime ldt ) {
+					appendAsTimestampWithNanos(
+							appender,
+							ldt.toInstant( ZoneOffset.UTC ),
+							supportsTemporalLiteralOffset(),
+							jdbcTimeZone
+					);
+				}
+				else {
+					appendAsTimestampWithNanos(
+							appender,
+							temporalAccessor,
+							supportsTemporalLiteralOffset(),
+							jdbcTimeZone
+					);
+				}
+				appender.appendSql( "'" );
+				break;
+			default:
+				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			org.hibernate.sql.ast.spi.SqlAppender appender,
+			java.util.Date date,
+			jakarta.persistence.TemporalType precision,
+			java.util.TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "DATE '" );
+				appendAsDate( appender, date );
+				appender.appendSql( "'" );
+				break;
+			case TIME:
+				appender.appendSql( "TIMESTAMP '" );
+				if ( date instanceof java.sql.Time time ) {
+					Instant instant = time.toLocalTime()
+							.atDate( LocalDate.of( 1970, 1, 1 ) )
+							.toInstant( ZoneOffset.UTC );
+					appendAsTimestampWithNanos( appender, instant, true, jdbcTimeZone );
+				}
+				appender.appendSql( "'" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "TIMESTAMP '" );
+				appendAsTimestampWithNanos(
+						appender,
+						date.toInstant(),
+						supportsTemporalLiteralOffset(),
+						jdbcTimeZone
+				);
+				appender.appendSql( "'" );
+				break;
+			default:
+				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			org.hibernate.sql.ast.spi.SqlAppender appender,
+			java.util.Calendar calendar,
+			jakarta.persistence.TemporalType precision,
+			java.util.TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "DATE '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( "'" );
+				break;
+			case TIME:
+				appender.appendSql( "TIMESTAMP '" );
+				ZonedDateTime zdt = ZonedDateTime.ofInstant(
+						calendar.toInstant(),
+						calendar.getTimeZone().toZoneId()
+				);
+				zdt = zdt.withYear( 1970 )
+						.withMonth( 1 )
+						.withDayOfMonth( 1 );
+				appendAsTimestampWithMillis(
+						appender,
+						zdt.toInstant(),
+						supportsTemporalLiteralOffset(),
+						jdbcTimeZone
+				);
+				appender.appendSql( "'" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "TIMESTAMP '" );
+				appendAsTimestampWithMillis(
+						appender,
+						calendar.toInstant(),
+						supportsTemporalLiteralOffset(),
+						jdbcTimeZone
+				);
+				appender.appendSql( "'" );
+				break;
+			default:
+				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
+		}
 	}
 
 	@Override

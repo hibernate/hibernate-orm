@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
@@ -359,5 +362,19 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			}
 		}
 		return assignedCols;
+	}
+
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		final Class<?> javaTypeClass = literal.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass();
+		if ( BigDecimal.class.isAssignableFrom( javaTypeClass )
+			|| BigInteger.class.isAssignableFrom( javaTypeClass ) ) {
+			appendSql( "NUMERIC '" );
+			appendSql( literal.getUnparsedLiteralValue() );
+			appendSql( "'" );
+		}
+		else {
+			super.visitUnparsedNumericLiteral( literal );
+		}
 	}
 }

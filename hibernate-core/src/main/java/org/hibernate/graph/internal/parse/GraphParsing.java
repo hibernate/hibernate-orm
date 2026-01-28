@@ -8,12 +8,15 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import org.hibernate.GraphParserMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
-import org.hibernate.grammars.graph.GraphLanguageParser.GraphContext;
-import org.hibernate.graph.InvalidGraphException;
-import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.grammars.graph.LegacyGraphLanguageParser;
+import org.hibernate.graph.internal.parse.strategy.ModernGraphParsingStrategy;
+import org.hibernate.graph.internal.parse.strategy.GraphParsingStrategy;
+import org.hibernate.graph.internal.parse.strategy.LegacyGraphParsingStrategy;
 import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -30,18 +33,11 @@ public class GraphParsing {
 			EntityDomainType<T> entityDomainType,
 			String graphText,
 			SessionFactoryImplementor sessionFactory) {
-		if ( graphText == null ) {
-			return null;
-		}
-
-		final var graphContext = parseText( graphText );
-		if ( graphContext.typeIndicator() != null ) {
-			// todo : an alternative here would be to simply validate that the entity type
-			//  	from the text matches the passed one...
-			throw new InvalidGraphException( "Expecting graph text to not include an entity name: " + graphText );
-		}
-
-		return visit( entityDomainType, graphContext.attributeList(), sessionFactory );
+		return getGraphParsingStrategy( sessionFactory ).parse(
+				entityDomainType,
+				graphText,
+				sessionFactory
+		);
 	}
 
 	public static <T> RootGraphImplementor<T> parse(
@@ -60,38 +56,36 @@ public class GraphParsing {
 				graphText, sessionFactory );
 	}
 
+	@Deprecated(forRemoval = true)
 	public static RootGraphImplementor<?> parse(
 			String graphText,
 			SessionFactoryImplementor sessionFactory) {
-		if ( graphText == null ) {
-			return null;
-		}
 
-		final var graphContext = parseText( graphText );
-		if ( graphContext.typeIndicator() == null ) {
-			throw new InvalidGraphException( "Expecting graph text to include an entity name: " + graphText );
-		}
-
-		final String entityName = graphContext.typeIndicator().TYPE_NAME().getText();
-		final var entityType = sessionFactory.getJpaMetamodel().entity( entityName );
-		return visit( entityType, graphContext.attributeList(), sessionFactory );
+		return getGraphParsingStrategy( sessionFactory ).parse( graphText, sessionFactory );
 	}
 
 	public static <T> RootGraphImplementor<T> visit(
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			LegacyGraphLanguageParser.AttributeListContext attributeListContext,
 			SessionFactoryImplementor sessionFactory) {
 		return visit( rootType, attributeListContext, sessionFactory.getJpaMetamodel()::findEntityType );
 	}
 
 	public static <T> RootGraphImplementor<T> visit(
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			LegacyGraphLanguageParser.AttributeListContext attributeListContext,
 			GraphParserEntityNameResolver entityNameResolver) {
 		return visit( null, rootType, attributeListContext, entityNameResolver );
 	}
 
-	public static @NonNull GraphContext parseText(String graphText) {
+	@Deprecated(forRemoval = true)
+	public static LegacyGraphLanguageParser.@NonNull GraphContext parseLegacyGraphText(String graphText) {
+		final var lexer = new GraphLanguageLexer( CharStreams.fromString( graphText ) );
+		final var parser = new LegacyGraphLanguageParser( new CommonTokenStream( lexer ) );
+		return parser.graph();
+	}
+
+	public static GraphLanguageParser.@NonNull GraphContext parseText(String graphText) {
 		final var lexer = new GraphLanguageLexer( CharStreams.fromString( graphText ) );
 		final var parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
 		return parser.graph();
@@ -100,11 +94,19 @@ public class GraphParsing {
 	public static <T> RootGraphImplementor<T> visit(
 			@Nullable String name,
 			EntityDomainType<T> rootType,
-			GraphLanguageParser.AttributeListContext attributeListContext,
+			LegacyGraphLanguageParser.AttributeListContext graphElementListContext,
 			GraphParserEntityNameResolver entityNameResolver) {
-		final RootGraphImpl<T> targetGraph = new RootGraphImpl<>( name, rootType );
-		visitGraph( targetGraph, entityNameResolver, attributeListContext );
-		return targetGraph;
+
+		return LegacyGraphParsingStrategy.parse( name, rootType, graphElementListContext, entityNameResolver );
+	}
+
+	public static <T> RootGraphImplementor<T> visit(
+			@Nullable String name,
+			EntityDomainType<T> rootType,
+			GraphLanguageParser.GraphElementListContext graphElementListContext,
+			GraphParserEntityNameResolver entityNameResolver) {
+
+		return ModernGraphParsingStrategy.parse( name, rootType, graphElementListContext, entityNameResolver );
 	}
 
 	/**
@@ -115,29 +117,18 @@ public class GraphParsing {
 			GraphImplementor<?> targetGraph,
 			CharSequence graphString,
 			SessionFactoryImplementor sessionFactory) {
-		final var graphContext = parseText( graphString.toString() );
-		if ( graphContext.typeIndicator() != null ) {
-			// todo : throw an exception?  Log warning?  Ignore?
-			//		for now, ignore
-		}
-		visitGraph( targetGraph,
-				sessionFactory.getJpaMetamodel()::findEntityType,
-				graphContext.attributeList() );
+
+		getGraphParsingStrategy( sessionFactory ).parseInto( targetGraph, graphString.toString(), sessionFactory );
 	}
 
-	private static void visitGraph(
-			GraphImplementor<?> targetGraph,
-			GraphParserEntityNameResolver entityNameResolver,
-			GraphLanguageParser.AttributeListContext attributeList) {
-		// Build an instance of this class as a visitor
-		final var visitor = new GraphParser( entityNameResolver );
-		visitor.getGraphStack().push( targetGraph );
-		try {
-			visitor.visitAttributeList( attributeList );
+	private static GraphParsingStrategy getGraphParsingStrategy(SessionFactoryImplementor sessionFactory) {
+		final GraphParserMode mode = sessionFactory.getSessionFactoryOptions().getGraphParserMode();
+
+		if ( mode == GraphParserMode.MODERN ) {
+			return new ModernGraphParsingStrategy();
 		}
-		finally {
-			visitor.getGraphStack().pop();
-			assert visitor.getGraphStack().isEmpty();
-		}
+
+		return new LegacyGraphParsingStrategy();
 	}
+
 }

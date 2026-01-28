@@ -302,6 +302,7 @@ tasks.named( "javadoc", Javadoc ) {
 }
 
 tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateDeprecated-graphParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'

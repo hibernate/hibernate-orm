@@ -54,7 +54,7 @@ import org.hibernate.type.EntityType;
 import java.util.List;
 
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
-import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
+import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
@@ -823,8 +823,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private static boolean isVmTimestampEnabled(SharedSessionContractImplementor session) {
-		final var strategy = session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy();
-		return strategy == VM_TIMESTAMP;
+		final var options = session.getFactory().getSessionFactoryOptions();
+		final var strategy = options.getTemporalTableStrategy();
+		return strategy == SINGLE_TABLE
+			&& !options.isUseServerTransactionTimestampsEnabled();
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {

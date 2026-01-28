@@ -547,6 +547,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TemporalTableStrategy getTemporalTableStrategy();
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 */
+	boolean isUseServerTransactionTimestampsEnabled();
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
 	 */
 	default boolean isCriteriaCopyTreeEnabled() {

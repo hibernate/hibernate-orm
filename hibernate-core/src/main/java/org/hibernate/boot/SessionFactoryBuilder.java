@@ -700,6 +700,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy);
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 */
+	SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled);
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION
 	 */
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);

@@ -116,7 +116,7 @@ public @interface Temporal {
 	 * a {@linkplain Temporal temporal entity or collection}
 	 * when the history table strategy is used.
 	 *
-	 * @see org.hibernate.cfg.TemporalTableStrategy#HISTORY
+	 * @see org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE
 	 */
 	@Documented
 	@Target({TYPE, FIELD, METHOD})

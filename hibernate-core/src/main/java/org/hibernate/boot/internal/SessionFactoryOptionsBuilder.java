@@ -164,6 +164,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private TemporalTableStrategy temporalTableStrategy;
+	private boolean useServerTransactionTimestamps;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -363,6 +364,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
+		useServerTransactionTimestamps = getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
@@ -1114,6 +1116,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return temporalTableStrategy;
 	}
 
+	@Override
+	public boolean isUseServerTransactionTimestampsEnabled() {
+		return useServerTransactionTimestamps;
+	}
+
 	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
@@ -1581,6 +1588,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		this.temporalTableStrategy = strategy;
+	}
+
+	public void enableUseServerTransactionTimestamps(boolean enabled) {
+		this.useServerTransactionTimestamps = enabled;
 	}
 
 	@Deprecated(forRemoval = true)

@@ -635,11 +635,27 @@ public interface MappingSettings {
 	 *     <li>the (case-insensitive) name of a {@code TemporalTableStrategy} (e.g. {@code native})
 	 * </ul>
 	 *
-	 * @settingDefault {@link TemporalTableStrategy#VM_TIMESTAMP}
+	 * @settingDefault {@link TemporalTableStrategy#SINGLE_TABLE}
 	 * @see org.hibernate.annotations.Temporal
 	 * @see TemporalTableStrategy
 	 */
 	@Incubating
 	String TEMPORAL_TABLE_STRATEGY = "hibernate.temporal.table_strategy";
 
+	/**
+	 * Use transaction timestamps supplied by the database server's
+	 * {@link Dialect#currentTimestamp() current_timestamp} function
+	 * instead of {@link java.time.Instant#now()} to initialize the
+	 * effectivity columns for
+	 * {@linkplain org.hibernate.annotations.Temporal temporal data}.
+	 * <p>Not recommended on database platforms where there is no
+	 * way to obtain the timestamp of the start of the current
+	 * transaction (MySQL, Maria).
+	 * <p>By default, transaction timestamps are generated in memory.
+	 *
+	 * @settingDefault {@code false}
+	 * @see org.hibernate.annotations.Temporal
+	 */
+	@Incubating
+	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
 }

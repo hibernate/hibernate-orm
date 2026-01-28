@@ -8,9 +8,9 @@ import org.hibernate.Incubating;
 
 
 /**
- * Enumerates the implementation strategies for
- * {@linkplain org.hibernate.annotations.Temporal
- * temporal} tables.
+ * Enumerates the possible mapping strategies for
+ * {@linkplain org.hibernate.annotations.Temporal temporal}
+ * entities and collections.
  *
  * @see org.hibernate.annotations.Temporal
  *
@@ -24,21 +24,13 @@ public enum TemporalTableStrategy {
 	 */
 	NATIVE,
 	/**
-	 * Use timestamps generated on the database server using the
-	 * {@link org.hibernate.dialect.Dialect#currentTimestamp
-	 * current_timestamp} function to initialize effective and
-	 * superseded columns.
-	 * <p>Not recommended on database platforms where there is no
-	 * way to obtain the timestamp of the start of the current
-	 * transaction (MySQL, Maria).
+	 * Store historical data together with current data in one
+	 * table. The table does not have the usual foreign key
+	 * constraints that would exist for any non-temporal entity,
+	 * and so it is the responsibility of the application program
+	 * to maintain and enforce referential integrity.
 	 */
-	SERVER_TIMESTAMP,
-	/**
-	 * Use timestamps {@linkplain java.time.Instant#now generated}
-	 * in the Java Virtual Machine to initialize effective and
-	 * superseded columns. This is the default.
-	 */
-	VM_TIMESTAMP,
+	SINGLE_TABLE,
 	/**
 	 * Maintain two tables, one for current data and one for
 	 * historical data. The table for current data has all the
@@ -68,5 +60,5 @@ public enum TemporalTableStrategy {
 	 * are executed against the table for historical
 	 * data.
 	 */
-	HISTORY
+	HISTORY_TABLE
 }

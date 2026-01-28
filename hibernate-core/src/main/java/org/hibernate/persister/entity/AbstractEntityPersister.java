@@ -260,7 +260,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -3530,7 +3530,7 @@ public abstract class AbstractEntityPersister
 		final var strategy = factory.getSessionFactoryOptions().getTemporalTableStrategy();
 		return temporalMapping != null
 			&& strategy != NATIVE
-			&& strategy != HISTORY;
+			&& strategy != HISTORY_TABLE;
 	}
 
 	protected InsertCoordinator buildInsertCoordinator() {
@@ -3568,8 +3568,8 @@ public abstract class AbstractEntityPersister
 
 	private UpdateCoordinator buildTemporalUpdateCoordinator() {
 		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
-			case VM_TIMESTAMP, SERVER_TIMESTAMP -> new TemporalUpdateCoordinator( this, factory );
-			case HISTORY -> new HistoryUpdateCoordinator( this, factory, buildNonTemporalUpdateCoordinator() );
+			case SINGLE_TABLE -> new TemporalUpdateCoordinator( this, factory );
+			case HISTORY_TABLE -> new HistoryUpdateCoordinator( this, factory, buildNonTemporalUpdateCoordinator() );
 			case NATIVE -> buildNonTemporalUpdateCoordinator();
 		};
 	}
@@ -3582,14 +3582,14 @@ public abstract class AbstractEntityPersister
 
 	private DeleteCoordinator buildTemporalDeleteCoordinator() {
 		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
-			case VM_TIMESTAMP, SERVER_TIMESTAMP -> new DeleteCoordinatorTemporal( this, factory );
-			case HISTORY -> new HistoryDeleteCoordinator( this, factory, buildNonTemporalDeleteCoordinator() );
+			case SINGLE_TABLE -> new DeleteCoordinatorTemporal( this, factory );
+			case HISTORY_TABLE -> new HistoryDeleteCoordinator( this, factory, buildNonTemporalDeleteCoordinator() );
 			case NATIVE -> buildNonTemporalDeleteCoordinator();
 		};
 	}
 
 	private boolean isHistoryStrategy() {
-		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY;
+		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
 	}
 
 	@Override

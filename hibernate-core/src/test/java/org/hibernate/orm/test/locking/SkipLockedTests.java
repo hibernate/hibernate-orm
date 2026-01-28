@@ -189,7 +189,7 @@ public class SkipLockedTests {
 
 	protected void applySkipLocked(SelectionQuery<?> query) {
 		query.setHibernateLockMode( lockMode )
-				.setTimeout( Timeouts.SKIP_LOCKED );
+				.setLockTimeout( Timeouts.SKIP_LOCKED );
 		if ( followOnLocking != null ) {
 			query.setFollowOnStrategy( followOnLocking ? Locking.FollowOn.FORCE : Locking.FollowOn.IGNORE );
 		}

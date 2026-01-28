@@ -5,6 +5,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
+import org.hibernate.cfg.TemporalTableStrategy;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -35,14 +36,36 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain #rowEnd} timestamp.
  * <p>Given the identifier of an instance of a temporal entity, along
  * with an instant, which may be represented by an instance if
- * {@link java.time.Instant}, the effective revision of the temporal
- * entity with the given identifier at the given instant is the
- * revision with:
+ * {@link java.time.Instant}, the <em>effective</em> revision of the
+ * temporal entity with the given identifier at the given instant is
+ * the revision with:
  * <ul>
  * <li>{@linkplain #rowStart} timestamp less than or equal to the
  *     given instant, and
  * <li>{@linkplain #rowEnd} timestamp null or greater than the given
  *     instant.
+ * </ul>
+ * <p>There are three {@linkplain TemporalTableStrategy strategies}
+ * for mapping a temporal entity or collection to a table or tables.
+ * <ul>
+ *     <li>In the {@linkplain TemporalTableStrategy#SINGLE_TABLE
+ *         single table} strategy, current and historical data
+ *         is stored together in the same table. Foreign keys
+ *         referencing this table have no constraints, and so
+ *         the database cannot enforce referential integrity.
+ *     <li>In the {@linkplain TemporalTableStrategy#HISTORY_TABLE
+ *         separate history table} strategy, current data is stored
+ *         in one table, and historical data is stored in a second
+ *         table. Referential integrity may be enforced for current
+ *         data, but not for historical data. The {@code rowStart}
+ *         and {@code rowEnd} columns belong to the history table.
+ *     <li>In the {@linkplain TemporalTableStrategy#NATIVE native}
+ *         strategy, temporal data is stored in a temporal table
+ *         when temporal tables are supported natively by the
+ *         database. The {@code rowStart} and {@code rowEnd} columns
+ *         are managed by the database itself. Depending on the
+ *         capabilities of the database, referential integrity might
+ *         be enforced.
  * </ul>
  * <p>By default, a session or stateless session reads revisions of
  * temporal data which are currently effective. To read historical
@@ -50,18 +73,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain org.hibernate.engine.creation.CommonBuilder#asOf
  * the temporal data instant} when creating the session or stateless
  * session.
- * <p>It is strongly recommended that every temporal entity declare
- * a {@linkplain jakarta.persistence.Version version} attribute.
- * The primary key of a table mapped by a temporal entity includes
- * the columns mapped by the identifier of the entity, along with
- * the version column, if there is one, or the {@linkplain #rowStart}
- * column if there is no version
- * <p>Associations targeting temporal entities do not have foreign
- * key constraints, and so <em>referential integrity is not enforced
- * by the database</em>. When working with temporal entities, it is
- * incredibly important to ensure that referential integrity is
- * maintained by the application and validated by offline processes.
- *
+ * <p>The following recommendations do not apply to the native
+ * mapping strategy:
+ * <ul>
+ * <li>It is recommended that every temporal entity declare a
+ *     {@linkplain jakarta.persistence.Version version} attribute.
+ *     The primary key of a table mapped by a temporal entity
+ *     includes the columns mapped by the identifier of the entity,
+ *     along with the version column, if there is one, or the
+ *     {@linkplain #rowStart} column if there is no version.
+ * <li>When working with temporal entities, it is important to
+ *     ensure that referential integrity is maintained by the
+ *     application and validated by triggers or offline processes.
+ * </ul>
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  *
  * @author Gavin King
@@ -116,7 +140,7 @@ public @interface Temporal {
 	 * a {@linkplain Temporal temporal entity or collection}
 	 * when the history table strategy is used.
 	 *
-	 * @see org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE
+	 * @see TemporalTableStrategy#HISTORY_TABLE
 	 */
 	@Documented
 	@Target({TYPE, FIELD, METHOD})

@@ -1160,9 +1160,20 @@ public class EntityBinder {
 								basicValue.setTypeParameters( originalBasicValue.getTypeParameters() );
 								basicValue.setJpaAttributeConverterDescriptor( originalBasicValue.getJpaAttributeConverterDescriptor() );
 								// Don't copy over the implicit java type access, since we figure that out in ClassPropertyHolder#setType
-//									basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
+								// basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
 								basicValue.setExplicitJavaTypeAccess( originalBasicValue.getExplicitJavaTypeAccess() );
-								basicValue.setExplicitJdbcTypeAccess( originalBasicValue.getExplicitJdbcTypeAccess() );
+								final var explicitJdbcTypeAccess = originalBasicValue.getExplicitJdbcTypeAccess();
+								// Always override the JDBC type with the parent's one, to correctly bind/extract values to/from the db
+								if ( explicitJdbcTypeAccess != null ) {
+									final var explicitJdbcType = explicitJdbcTypeAccess.apply( metadataCollector.getTypeConfiguration() );
+									basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> explicitJdbcType == null ?
+											originalBasicValue.resolve().getJdbcType() :
+											explicitJdbcType
+									);
+								}
+								else {
+									basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> originalBasicValue.resolve().getJdbcType() );
+								}
 								basicValue.setExplicitMutabilityPlanAccess( originalBasicValue.getExplicitMutabilityPlanAccess() );
 								basicValue.setEnumerationStyle( originalBasicValue.getEnumeratedType() );
 								basicValue.setTimeZoneStorageType( originalBasicValue.getTimeZoneStorageType() );

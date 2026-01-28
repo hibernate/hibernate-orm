@@ -22,7 +22,7 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			NamedTableReference targetTable,
 			FromClause fromClause,
 			Predicate restriction) {
-		this( null, targetTable, fromClause, restriction, Collections.emptyList(), null );
+		this( null, targetTable, fromClause, restriction, Collections.emptyList() );
 	}
 
 	public AbstractUpdateOrDeleteStatement(
@@ -30,17 +30,29 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( null, targetTable, fromClause, restriction, returningColumns, null );
+		this( null, targetTable, fromClause, restriction, returningColumns );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public AbstractUpdateOrDeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
 			FromClause fromClause,
 			Predicate restriction,
-			List<ColumnReference> returningColumns,
-			MutationTarget<?> mutationTarget) {
-		super( cteContainer, targetTable, returningColumns, mutationTarget );
+			List<ColumnReference> returningColumns) {
+		super( cteContainer, targetTable, returningColumns );
+		this.fromClause = fromClause;
+		this.restriction = restriction;
+	}
+
+	public AbstractUpdateOrDeleteStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			MutationTarget<?> mutationTarget,
+			FromClause fromClause,
+			Predicate restriction,
+			List<ColumnReference> returningColumns) {
+		super( cteContainer, targetTable, mutationTarget, returningColumns );
 		this.fromClause = fromClause;
 		this.restriction = restriction;
 	}

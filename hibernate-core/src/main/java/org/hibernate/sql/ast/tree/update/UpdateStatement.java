@@ -54,6 +54,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 		this( null, targetTable, fromClause, assignments, restriction, returningColumns );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public UpdateStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
@@ -61,18 +62,18 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, fromClause, assignments, restriction, returningColumns, null );
+		this( cteContainer, targetTable, null, fromClause, assignments, restriction, returningColumns );
 	}
 
 	public UpdateStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
+			MutationTarget<?> mutationTarget,
 			FromClause fromClause,
 			List<Assignment> assignments,
 			Predicate restriction,
-			List<ColumnReference> returningColumns,
-			MutationTarget<?> mutationTarget) {
-		super( cteContainer, targetTable, fromClause, restriction, returningColumns, mutationTarget );
+			List<ColumnReference> returningColumns) {
+		super( cteContainer, targetTable, mutationTarget, fromClause, restriction, returningColumns );
 		this.assignments = assignments;
 	}
 

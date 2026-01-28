@@ -249,7 +249,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 				);
 			}
 			Set<String> conflictTargetCols = new HashSet<>( conflictClause.getConstraintColumnNames() );
-			if ( !pkColumns.equals( conflictTargetCols ) ) {
+			if ( pkColumns.size() != conflictTargetCols.size() || !pkColumns.containsAll( conflictTargetCols ) ) {
 				throw new IllegalQueryOperationException(
 						String.format(
 								"Spanner only supports conflict resolution on the Primary Key. " +
@@ -277,17 +277,16 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	private Set<String> resolvePrimaryKeyColumns(InsertSelectStatement statement) {
 		MutationTarget<?> target = statement.getMutationTarget();
-		if ( target != null ) {
-			TableMapping tableMapping = target.getIdentifierTableMapping();
-			if ( tableMapping != null ) {
-				TableDetails.KeyDetails keyDetails = tableMapping.getKeyDetails();
-				if ( keyDetails != null ) {
-					Set<String> pkCols = new HashSet<>();
-					for ( TableDetails.KeyColumn keyColumn : keyDetails.getKeyColumns() ) {
-						pkCols.add( keyColumn.getColumnName() );
-					}
-					return pkCols;
+		assert target != null;
+		TableMapping tableMapping = target.getIdentifierTableMapping();
+		if ( tableMapping != null ) {
+			TableDetails.KeyDetails keyDetails = tableMapping.getKeyDetails();
+			if ( keyDetails != null ) {
+				Set<String> pkCols = new HashSet<>();
+				for ( TableDetails.KeyColumn keyColumn : keyDetails.getKeyColumns() ) {
+					pkCols.add( keyColumn.getColumnName() );
 				}
+				return pkCols;
 			}
 		}
 		return Collections.emptySet();
@@ -335,7 +334,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 				valueRefs.addAll( ((Assignable) value).getColumnReferences() );
 			}
 			// Ensure we found columns and they match the target structure size
-			if ( valueRefs.isEmpty() || valueRefs.size() != targetRefs.size() ) {
+			if ( valueRefs.size() != targetRefs.size() ) {
 				throw new IllegalQueryOperationException(
 						"Spanner 'INSERT OR UPDATE' SET clause supports only simple column references, not literals or expressions."
 				);

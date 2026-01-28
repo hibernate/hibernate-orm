@@ -13,6 +13,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 /**
  * Dedicated logger for rendering a SQL AST
@@ -32,6 +33,6 @@ public interface SqlAstTreeLogger extends BasicLogger {
 	/**
 	 * Static access to the logging instance
 	 */
-	SqlAstTreeLogger INSTANCE = Logger.getMessageLogger( MethodHandles.lookup(), SqlAstTreeLogger.class, LOGGER_NAME );
+	SqlAstTreeLogger INSTANCE = Logger.getMessageLogger( MethodHandles.lookup(), SqlAstTreeLogger.class, LOGGER_NAME, Locale.ROOT );
 
 }

@@ -18,6 +18,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -41,7 +42,8 @@ public interface TableGeneratorLogger extends BasicLogger {
 	TableGeneratorLogger TABLE_GENERATOR_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			TableGeneratorLogger.class,
-			NAME
+			NAME,
+			Locale.ROOT
 	);
 
 	@LogMessage(level = ERROR)

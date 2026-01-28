@@ -1993,4 +1993,9 @@ public class OracleDialect extends Dialect {
 			) );
 		}
 	}
+
+	@Override //TODO: DELETEME
+	public boolean throttleDdl() {
+		return true;
+	}
 }

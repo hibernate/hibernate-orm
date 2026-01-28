@@ -215,10 +215,8 @@ public class Helper {
 			final String sqlStringFormatted = formatter.format( sqlString );
 			for ( var target : targets ) {
 				try {
-					Thread.sleep( 20 ); //TODO: temporary workaround DELETE ME
 					target.accept( sqlStringFormatted );
 				}
-				catch (InterruptedException e) {}
 				catch (CommandAcceptanceException e) {
 					options.getExceptionHandler().handleException( e );
 				}

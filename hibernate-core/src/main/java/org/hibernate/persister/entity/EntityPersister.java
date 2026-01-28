@@ -1557,6 +1557,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Deprecated(since = "7.0", forRemoval = true)
 	String[] toColumns(String propertyName);
 
+	@Incubating
+	boolean excludedFromTemporalVersioning(int[] dirtyAttributeIndexes, boolean hasDirtyCollection);
+
 	boolean isSharedColumn(String columnExpression);
 
 	String[][] getConstraintOrderedTableKeyColumnClosure();

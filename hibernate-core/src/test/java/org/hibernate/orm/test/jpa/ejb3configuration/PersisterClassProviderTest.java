@@ -1160,6 +1160,11 @@ public class PersisterClassProviderTest {
 		public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 
 		}
+
+		@Override
+		public boolean excludedFromTemporalVersioning(int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
+			return false;
+		}
 	}
 
 	public static class GoofyException extends RuntimeException {

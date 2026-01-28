@@ -9,13 +9,10 @@ import org.hibernate.StaleStateException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -79,16 +76,18 @@ public class HistoryDeleteCoordinator extends AbstractMutationCoordinator implem
 			Object id,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
-		final MutationExecutor mutationExecutor =
-				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ), historyEndUpdateGroup, session );
+		final var mutationExecutor =
+				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
+						historyEndUpdateGroup, session );
 		try {
-			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 			for ( int i = 0; i < historyEndUpdateGroup.getNumberOfOperations(); i++ ) {
 				final var operation = historyEndUpdateGroup.getOperation( i );
-				breakDownKeyJdbcValues( id, null, session, jdbcValueBindings, (EntityTableMapping) operation.getTableDetails() );
+				breakDownKeyJdbcValues( id, null, session, jdbcValueBindings,
+						(EntityTableMapping) operation.getTableDetails() );
 			}
 
-			final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+			final var versionMapping = entityPersister().getVersionMapping();
 			if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 				jdbcValueBindings.bindValue(
 						oldVersion,
@@ -123,7 +122,7 @@ public class HistoryDeleteCoordinator extends AbstractMutationCoordinator implem
 	}
 
 	private MutationOperationGroup buildHistoryEndUpdateGroup() {
-		final TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder =
+		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
@@ -131,13 +130,14 @@ public class HistoryDeleteCoordinator extends AbstractMutationCoordinator implem
 		applyOptimisticLocking( tableUpdateBuilder );
 
 		final var tableMutation = tableUpdateBuilder.buildMutation();
-		final MutationGroupSingle mutationGroup = new MutationGroupSingle(
+		final var mutationGroup = new MutationGroupSingle(
 				MutationType.DELETE,
 				entityPersister(),
 				tableMutation
 		);
 
-		return singleOperation( mutationGroup, tableMutation.createMutationOperation( null, factory() ) );
+		return singleOperation( mutationGroup,
+				tableMutation.createMutationOperation( null, factory() ) );
 	}
 
 	private void applyTemporalEnding(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {

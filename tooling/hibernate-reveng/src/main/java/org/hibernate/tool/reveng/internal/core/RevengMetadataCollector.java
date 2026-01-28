@@ -46,7 +46,7 @@ public class RevengMetadataCollector {
 		String name = tableIdentifier.getName();
 		InFlightMetadataCollector metadataCollector = getMetadataCollector();
 		if (metadataCollector != null) {
-			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext);
+			result = metadataCollector.addTable(schema, catalog, name, null, false, metadataBuildingContext, false);
 		}
 		else {
 			result = createTable(catalog, schema, name);

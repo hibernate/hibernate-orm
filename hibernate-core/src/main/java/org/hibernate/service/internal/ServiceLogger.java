@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 import java.util.ServiceConfigurationError;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -39,7 +40,7 @@ public interface ServiceLogger extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".service";
 
 	Logger LOGGER = Logger.getLogger( NAME );
-	ServiceLogger SERVICE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ServiceLogger.class, NAME );
+	ServiceLogger SERVICE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ServiceLogger.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message(id = 10500, value = "Initializing service: %s")

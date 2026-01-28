@@ -10,6 +10,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -39,7 +40,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @Internal
 public interface BootLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".boot";
-	BootLogging BOOT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BootLogging.class, NAME );
+	BootLogging BOOT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BootLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(id = 160101, value = "Duplicate generator name: '%s'")

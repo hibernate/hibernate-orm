@@ -10,8 +10,8 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import java.util.Map;
 
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
@@ -162,9 +162,9 @@ public interface Timeouts {
 	static Timeout lockTimeoutFromHints(Map<String, Object> properties) {
 		var lockTimeoutRef = properties.get( HINT_SPEC_LOCK_TIMEOUT );
 		if ( lockTimeoutRef == null ) {
-			lockTimeoutRef = properties.get( JAKARTA_LOCK_TIMEOUT );
+			lockTimeoutRef = properties.get( HINT_JAVAEE_LOCK_TIMEOUT );
 			if ( lockTimeoutRef != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedHint( JAKARTA_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
+				DeprecationLogger.DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
 			}
 		}
 		return Timeouts.fromHintTimeout( lockTimeoutRef );

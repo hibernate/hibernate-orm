@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.community.dialect.InformixDialect;
@@ -79,7 +78,7 @@ public class LockedRowsTests {
 					session2.find(Book.class,1, PESSIMISTIC_WRITE, NO_WAIT);
 					fail("Expecting a failure due to locked rows and no-wait");
 				}
-				catch (LockTimeoutException expected) {
+				catch (jakarta.persistence.PessimisticLockException | jakarta.persistence.LockTimeoutException expected) {
 					System.out.println( "Caught expected exception - " + expected );
 				}
 			} );

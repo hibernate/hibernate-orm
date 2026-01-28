@@ -577,7 +577,7 @@ public class NativeSQLQueriesTest {
 					assertEquals(8, o.length);
 
 					list = session.createNativeQuery( getEmploymentSQL() )
-							.setTupleTransformer(Transformers.mapTransformer())
+							.setTupleTransformer(new UpperCasedAliasToEntityMapResultTransformer())
 							.list();
 					assertEquals(1, list.size());
 					m = (Map) list.get(0);

@@ -1319,7 +1319,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		clauseStack.push( Clause.INSERT );
-		appendSql( "insert into " );
+		renderInsertCommand( statement );
 		renderDmlTargetTableExpression( statement.getTargetTable() );
 
 		appendSql( OPEN_PARENTHESIS );
@@ -1343,6 +1343,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitInsertSource( statement );
 		visitConflictClause( statement.getConflictClause() );
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void renderInsertCommand(InsertSelectStatement statement) {
+		appendSql( "insert into " );
 	}
 
 	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {

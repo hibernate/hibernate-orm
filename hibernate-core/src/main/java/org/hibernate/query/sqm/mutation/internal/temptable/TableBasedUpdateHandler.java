@@ -503,7 +503,7 @@ public class TableBasedUpdateHandler
 					.addSqlSelection( new SqlSelectionImpl( assignment.getAssignedValue() ) );
 		}
 
-		final var insertSqlAst = new InsertSelectStatement( targetTableReference );
+		final var insertSqlAst = new InsertSelectStatement( targetTableReference, getEntityDescriptor() );
 		insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 		insertSqlAst.setSourceSelectStatement( insertSourceSelectQuerySpec );
 

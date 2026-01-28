@@ -439,7 +439,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 				);
 			}
 
-			insertSqlAst = new InsertSelectStatement( dmlTableReference );
+			insertSqlAst = new InsertSelectStatement( dmlTableReference, entityPersister );
 			insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 			insertSqlAst.setSourceSelectStatement( querySpec );
 		}
@@ -462,6 +462,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final UpdateStatement updateStatement = new UpdateStatement(
 				tableUpdater.updateStatement,
 				tableUpdater.updateStatement.getTargetTable(),
+				tableUpdater.updateStatement.getMutationTarget(),
 				tableUpdater.updateStatement.getFromClause(),
 				tableUpdater.updateStatement.getAssignments(),
 				Predicate.combinePredicates(
@@ -500,6 +501,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final InsertSelectStatement insertStatement = new InsertSelectStatement(
 				tableUpdater.nullableInsert,
 				tableUpdater.nullableInsert.getTargetTable(),
+				tableUpdater.nullableInsert.getMutationTarget(),
 				tableUpdater.nullableInsert.getReturningColumns()
 		);
 		final QuerySpec originalQuerySpec = (QuerySpec) tableUpdater.nullableInsert.getSourceSelectStatement();

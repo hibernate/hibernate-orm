@@ -611,6 +611,20 @@ public interface HibernateAnnotations {
 			TargetEmbeddable.class,
 			TargetEmbeddableAnnotation.class
 	);
+	OrmAnnotationDescriptor<Temporal,TemporalAnnotation> TEMPORAL = new OrmAnnotationDescriptor<>(
+			Temporal.class,
+			TemporalAnnotation.class
+	);
+	OrmAnnotationDescriptor<Temporal.HistoryPartitioning,HistoryPartitioningAnnotation> TEMPORAL_HISTORY_PARTITIONING =
+			new OrmAnnotationDescriptor<>(
+					Temporal.HistoryPartitioning.class,
+					HistoryPartitioningAnnotation.class
+			);
+	OrmAnnotationDescriptor<Temporal.HistoryTable,HistoryTableAnnotation> TEMPORAL_HISTORY_TABLE =
+			new OrmAnnotationDescriptor<>(
+					Temporal.HistoryTable.class,
+					HistoryTableAnnotation.class
+			);
 	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
 			TenantId.class,
 			TenantIdAnnotation.class

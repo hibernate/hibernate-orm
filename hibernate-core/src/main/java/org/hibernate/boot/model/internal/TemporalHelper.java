@@ -12,6 +12,7 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.mapping.BasicValue;
@@ -29,6 +30,7 @@ import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * Helper for dealing with {@link org.hibernate.annotations.Temporal}.
@@ -39,8 +41,22 @@ public class TemporalHelper {
 			Temporal temporal,
 			Temporalized target,
 			Table table,
+			Temporal.HistoryTable historyTable,
+			Temporal.HistoryPartitioning historyPartitioning,
 			MetadataBuildingContext context) {
-		final boolean partitioned = temporal.partitioned();
+		final var collector = context.getMetadataCollector();
+		final boolean partitioned = historyPartitioning != null;
+		final String currentPartitionName =
+				partitioned
+						? inferredPartitionName( historyPartitioning.currentPartition(),
+								"current", table, collector )
+						: null;
+		final String historyPartitionName =
+				partitioned
+						? inferredPartitionName( historyPartitioning.historyPartition(),
+								"history", table, collector )
+						: null;
+
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var startingColumn =
@@ -53,17 +69,32 @@ public class TemporalHelper {
 
 		final var temporalTable =
 				usingHistoryTemporalTables( context )
-						? createHistoryTable( table, context )
+						? createHistoryTable( table, historyTable, context )
 						: table;
 		temporalTable.addColumn( startingColumn );
 		temporalTable.addColumn( endingColumn );
 		target.enableTemporal( startingColumn, endingColumn, partitioned );
 		target.setTemporalTable( temporalTable );
 
-		addExtraDeclarationsAndOptions( temporalTable, startingColumn, endingColumn, partitioned, context );
+		addExtraDeclarationsAndOptions(
+				temporalTable,
+				startingColumn,
+				endingColumn,
+				partitioned,
+				currentPartitionName,
+				historyPartitionName,
+				context
+		);
 		addTemporalCheckConstraint( temporalTable, startingColumn, endingColumn, context );
-		addAuxiliaryObjects( temporalTable, partitioned, context );
+		addAuxiliaryObjects( temporalTable, partitioned, currentPartitionName, historyPartitionName, context );
 		addSecondPass( target, context );
+	}
+
+	private static String inferredPartitionName(
+			String partitionName, String suffix, Table table, InFlightMetadataCollector collector) {
+		return partitionName == null || partitionName.isBlank()
+				? collector.getLogicalTableName( table ) + '_' + suffix
+				: partitionName;
 	}
 
 	private static void addSecondPass(Temporalized target, MetadataBuildingContext context) {
@@ -79,11 +110,22 @@ public class TemporalHelper {
 		}
 	}
 
-	private static Table createHistoryTable(Table table, MetadataBuildingContext context) {
+	private static Table createHistoryTable(
+			Table table,
+			Temporal.HistoryTable temporalHistoryTable,
+			MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
+		final String explicitHistoryTableName =
+				temporalHistoryTable == null ? null : temporalHistoryTable.name();
+		final boolean hasExplicitHistoryTableName = !isBlank( explicitHistoryTableName );
 		final String historyTableName =
-				collector.getLogicalTableName( table )
-						+ "_history";
+				hasExplicitHistoryTableName
+						? explicitHistoryTableName
+						: collector.getLogicalTableName( table )
+								+ "_history";
+		final boolean explicitHistoryName =
+				hasExplicitHistoryTableName
+						|| table.getNameIdentifier().isExplicit();
 		final var historyTable = collector.addTable(
 				table.getSchema(),
 				table.getCatalog(),
@@ -91,13 +133,9 @@ public class TemporalHelper {
 				table.getSubselect(),
 				table.isAbstract(),
 				context,
-				table.getNameIdentifier().isExplicit()
+				explicitHistoryName
 		);
-		collector.addTableNameBinding(
-				collector.getDatabase().toIdentifier( historyTableName,
-						table.getNameIdentifier().isExplicit() ),
-				historyTable
-		);
+		collector.addTableNameBinding( table.getNameIdentifier(), historyTable );
 		copyTableColumns( table, historyTable );
 		return historyTable;
 	}
@@ -170,6 +208,8 @@ public class TemporalHelper {
 			Table table,
 			Column startingColumn, Column endingColumn,
 			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 		var strategy = context.getTemporalTableStrategy();
@@ -182,18 +222,32 @@ public class TemporalHelper {
 				dialect.getTemporalTableOptions(
 						strategy,
 						endingColumn.getQuotedName( dialect ),
-						partitioned
+						partitioned,
+						currentPartitionName,
+						historyPartitionName
 				) ) );
 	}
 
 	private static void addAuxiliaryObjects(
 			Table table,
 			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
 		database.getDialect()
-				.addTemporalTableAuxiliaryObjects( context.getTemporalTableStrategy(),
-						table, database, partitioned );
+				.addTemporalTableAuxiliaryObjects(
+						context.getTemporalTableStrategy(),
+						table,
+						database,
+						partitioned,
+						currentPartitionName,
+						historyPartitionName
+				);
+	}
+
+	private static String normalizePartitionName(String name) {
+		return isBlank( name ) ? null : name;
 	}
 
 	public static TemporalMappingImpl resolveTemporalMapping(

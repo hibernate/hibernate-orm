@@ -1942,13 +1942,19 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartition,
+			String historyPartition) {
 		if ( strategy == TemporalTableStrategy.NATIVE ) {
 			return "flashback archive fba_history";
 		}
 		else if ( partitioned ) {
 			return "partition by list( " + endingColumnName + ")"
-				+ " (partition p_current values (null), partition p_history values (default))"
+				+ " (partition " + currentPartition + " values (null),"
+				+ " partition " + historyPartition + " values (default))"
 				+ " enable row movement";
 		}
 		else {
@@ -1962,7 +1968,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+	public void addTemporalTableAuxiliaryObjects(
+			TemporalTableStrategy strategy,
+			Table table,
+			Database database,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		if ( strategy == TemporalTableStrategy.NATIVE ) {
 			database.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject(
 					database.getDefaultNamespace(),

@@ -12,6 +12,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.INFO;
 
@@ -24,7 +25,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 public interface IncubationLogger {
 	String CATEGORY = SubSystemLogging.BASE + ".incubating";
 
-	IncubationLogger INCUBATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), IncubationLogger.class, CATEGORY );
+	IncubationLogger INCUBATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), IncubationLogger.class, CATEGORY, Locale.ROOT );
 
 	@LogMessage(level = INFO)
 	@Message(

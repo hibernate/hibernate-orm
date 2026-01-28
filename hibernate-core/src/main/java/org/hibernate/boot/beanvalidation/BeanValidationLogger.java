@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -35,7 +36,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface BeanValidationLogger extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".beanvalidation";
 
-	BeanValidationLogger BEAN_VALIDATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BeanValidationLogger.class, NAME );
+	BeanValidationLogger BEAN_VALIDATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BeanValidationLogger.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 101001, value = "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation")

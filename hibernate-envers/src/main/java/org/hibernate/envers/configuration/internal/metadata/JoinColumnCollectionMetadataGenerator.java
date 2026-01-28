@@ -30,6 +30,7 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 /**
  * An implementation of {@link AbstractCollectionMetadataGenerator} that builds collection metadata
@@ -42,7 +43,8 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			EnversMessageLogger.class,
-			JoinColumnCollectionMetadataGenerator.class.getName()
+			JoinColumnCollectionMetadataGenerator.class.getName(),
+			Locale.ROOT
 	);
 
 	public JoinColumnCollectionMetadataGenerator(

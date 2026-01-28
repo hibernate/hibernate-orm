@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -33,7 +34,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface PersistenceContextLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".persistenceContext";
 
-	PersistenceContextLogging PERSISTENCE_CONTEXT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), PersistenceContextLogging.class, NAME );
+	PersistenceContextLogging PERSISTENCE_CONTEXT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), PersistenceContextLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message("Setting proxy identifier: %s")

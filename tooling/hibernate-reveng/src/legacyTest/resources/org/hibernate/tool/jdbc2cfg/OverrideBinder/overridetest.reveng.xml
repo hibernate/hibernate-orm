@@ -14,13 +14,12 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!DOCTYPE hibernate-reverse-engineering SYSTEM "http://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
 
 <hibernate-reverse-engineering>
 
 	<type-mapping>
-<!--  TODO: HBX-2052: investigate the use of hibernate-type=SomeUserType -->
- 		<sql-type 
+ 		<sql-type
  			jdbc-type="VARCHAR" 
  			length='20'
 			hibernate-type="org.hibernate.tool.jdbc2cfg.OverrideBinder.SomeUserType" /> 

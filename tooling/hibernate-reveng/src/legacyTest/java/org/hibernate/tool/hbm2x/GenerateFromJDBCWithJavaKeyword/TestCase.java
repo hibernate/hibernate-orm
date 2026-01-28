@@ -91,9 +91,6 @@ public class TestCase {
 		configurableNamingStrategy.setSettings(new RevengSettings(configurableNamingStrategy).setDefaultPackageName("org.reveng").setCreateCollectionForForeignKey(false));
 		OverrideRepository overrideRepository = new OverrideRepository();
         String REVENG_XML = """
-                <!DOCTYPE hibernate-reverse-engineering                                           \s
-                          SYSTEM                                                                  \s
-                          'https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd'>      \s
                 <hibernate-reverse-engineering>                                                   \s
                    <table name='MY_RETURN_HISTORY'>                                               \s
                       <foreign-key                                                                \s

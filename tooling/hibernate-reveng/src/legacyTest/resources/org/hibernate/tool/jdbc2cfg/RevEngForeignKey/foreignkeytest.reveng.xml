@@ -14,7 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!DOCTYPE hibernate-reverse-engineering SYSTEM "http://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
 <hibernate-reverse-engineering>
 
 <!-- This one assumes set and many-to-one is exclude=false -->

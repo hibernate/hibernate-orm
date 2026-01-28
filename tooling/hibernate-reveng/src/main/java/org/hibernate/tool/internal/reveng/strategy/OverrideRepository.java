@@ -21,7 +21,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -166,7 +175,9 @@ public class OverrideRepository  {
                     error(exception);
                 }
             };
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(
+                    "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+                    Thread.currentThread().getContextClassLoader());
             DocumentBuilder db = dbf.newDocumentBuilder();
             db.setErrorHandler(errorHandler);
             Document document = db.parse(xmlInputStream);

@@ -829,6 +829,9 @@ abstract public class BasicPOJOClass implements POJOClass {
 		if(hasMetaAttribute(field, "default-value")) {
 			return false;
 		}
+		if (!isToBeGenerated(field)) {
+			return false;
+		}
 		if(field.getValue()!=null) {
 			if (!(field.isOptional() || field.getValue().isNullable()) && (field.getValueGeneratorCreator() == null )) {
 				return true;
@@ -843,6 +846,16 @@ abstract public class BasicPOJOClass implements POJOClass {
 		}
 
 		return false;
+	}
+
+	protected boolean isToBeGenerated(Property property) {
+		MetaAttribute genProperty = property.getMetaAttribute("gen-property");
+		if (genProperty != null ) {
+			return Boolean.valueOf(genProperty.getValue());
+		}
+		else {
+			return true;
+		}
 	}
 
 	public boolean needsMinimalConstructor() {

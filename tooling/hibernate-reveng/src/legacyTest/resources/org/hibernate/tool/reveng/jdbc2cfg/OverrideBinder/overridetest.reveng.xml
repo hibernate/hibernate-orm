@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+
+	<type-mapping>
+<!--  TODO: HBX-2052: investigate the use of hibernate-type=SomeUserType -->
+<!-- 		<sql-type jdbc-type="VARCHAR" length='20'
+			hibernate-type="SomeUserType" /> -->
+		<sql-type jdbc-type="VARCHAR" length='1'>
+			<hibernate-type name="yes_no"/>
+		</sql-type>
+		<sql-type jdbc-type="NUMERIC" precision='10' scale='2'
+			hibernate-type="string" />
+	</type-mapping>
+
+	<table-filter match-schema="Werd" match-name=".*" package="org.werd">
+	  <meta attribute="werd-meta">value one</meta>
+	  <meta attribute="werd-meta">value two</meta>
+	</table-filter>
+	
+	<table-filter match-name="DEFUNCT_TABLE" exclude="true" />
+	<table-filter match-name="DoNotWantIt" exclude="true" />
+	<table-filter match-name="WantedTable" />
+	<table-filter match-catalog="BAD" match-schema="SCHEMA"
+		match-name=".*" exclude="true" />
+
+	<table-filter match-catalog=".*" match-schema=".*"
+		match-name="BIN$.*" exclude="true" />
+		
+	<table-filter match-name=".*" exclude="false"/>
+	<!-- 
+		<table name="CUSTOMER" package="org.funk" class-name="MyCustomer">
+		<column name="order" property-name="orderName" />
+		</table> 
+		
+		<table name="CUSTOMER">
+		<column name="ORDER" />
+		</table>
+		
+		<table catalog="CUSTOMER" schema="WHATEVER" name="ORDER">
+		<column name="name" exclude="true">
+		<meta attribute="property-name">Name</meta>
+		</column>
+		</table>
+	-->
+
+	<!-- 
+		alter table Customer add constraint 'max' foreign key (addressid, x) references address (dfdf)
+	-->
+	<table name="ORDERS">
+	    <meta attribute="order-meta">order table value</meta>
+		<primary-key property="customOrderId" id-class="CustomOID">
+<!-- 			<column name="CUSTID" foreign-table="CUSTOMER" foreign-column="CUSTID" />			-->
+            <key-column name="ORDERID"/>
+ 			<key-column name="CUSTID"/>			
+		</primary-key>
+		<column name="NAME" property="orderName" type="string">
+		    <meta attribute="order-meta">order column value</meta>
+		</column>
+		
+		<foreign-key foreign-table="CUSTOMER">
+			<column-ref local-column="CUSTID" foreign-column="CUSTID"/>
+		</foreign-key>
+	</table>
+
+   <table name="MISC_TYPES">
+   	<primary-key>
+		<generator class="sequence">
+			<param name="table">seq_table</param>
+		</generator>
+	</primary-key>
+   </table>
+   
+    <table name="CHILDREN">
+		<foreign-key constraint-name="child_to_parent" foreign-table="PARENT">
+			<column-ref local-column="parentid" foreign-column="id" />
+			<column-ref local-column="extraparentid" foreign-column="extraid" />
+			<many-to-one property="propertyParent"/>
+			<set property="propertyChildren"/>
+		</foreign-key>
+
+	</table> 
+
+    <table name="EXCOLUMNS">
+    	<column name="EXCOLUMN" exclude="true"/>
+    </table>
+    
+    <table name="TblTest" class="org.test.Test">
+      <meta attribute="use-in-test">true</meta>
+    </table>
+ 
+ 	<table schema="Werd" name="MetaTable">
+ 	  <meta attribute="specific-werd">a one</meta>
+	  <meta attribute="werd-meta">value three</meta>
+	  <column name="MetaColumn">
+	    <meta attribute="specific-column">yes a column with meta</meta>
+	  </column>
+ 	</table>
+ 	
+    <table schema="Werd" name="TBL_PKG" class="MyWorld"/>
+    <table schema="Werd" name="TBL_OTHER" class="other.MyWorld"/>
+
+</hibernate-reverse-engineering>

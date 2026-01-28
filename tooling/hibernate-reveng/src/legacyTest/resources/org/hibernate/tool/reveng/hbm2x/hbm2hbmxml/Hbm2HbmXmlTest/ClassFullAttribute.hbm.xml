@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest">
+<!-- 
+  This mapping demonstrates basic attributes of the mapping document
+
+     (1) Close to full attributes included.
+-->
+    <class
+    	name="ClassFullAttribute"
+    	schema="myschema"
+    	catalog="mycatalog"
+		mutable="false"
+		dynamic-update="true"
+		dynamic-insert="true"
+		select-before-update="true"
+		lazy="false"
+		abstract="true"
+		optimistic-lock="none"
+		discriminator-value="null"
+		polymorphism="explicit"
+		batch-size="10"
+		where="archive='N'"
+		subselect="from query"
+		persister="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest.TestCase$Persister"
+		rowid="rowid"
+    >
+        <comment>A comment for ClassFullAttribute</comment>
+    	<id name="basicId"
+    		length="10"
+    		type="string"
+			unsaved-value="null"
+    	>
+    		<generator class="org.hibernate.id.TableHiLoGenerator">
+    			<param name="table">uni_table</param>
+    			<param name="column">next_hi_value</param>
+    		</generator>
+    	</id>
+    	
+    	<property name="description" 
+    		not-null="true" 
+    		length="200"
+    		type="string" 
+            update="false"
+            insert="false"
+            access="field"
+            lazy="true"
+            optimistic-lock="false"
+    	/>
+
+    	<property name="columnDetails" 
+    		type="string" 
+    	>
+    		<column name="columnd" length="200" not-null="true" sql-type="varchar(200)" unique="true" >
+    		  <comment>columnd comment</comment>
+    		</column>
+    	</property>
+
+        <property name="columnDetails" 
+    		type="string" 
+    	>
+    		<column name="columnd" length="200" not-null="true" sql-type="varchar(200)" unique="true" >
+    		  <comment></comment><!--  empty comment -->
+    		</column>
+    	</property>
+
+    	<property name="vitualValue" 
+    		not-null="true" 
+    		length="200"
+    		type="string" 
+            formula="my virtual formula"
+    	/>
+    		
+	</class>
+
+</hibernate-mapping>

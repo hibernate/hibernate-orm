@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping is a test mapping for hbm2java
+     
+-->
+
+<hibernate-mapping>
+
+    <class name="HelloWorld">
+	    <meta attribute="generated-class" inherit="false">generated.BaseHelloWorld</meta>
+	    <meta attribute="extends">Comparable</meta>
+	    <meta attribute="interface">true</meta>
+    	<meta attribute="class-description">Hey there</meta>
+    	<id name="id"
+    		length="10" type="string">
+    		<meta attribute="field-description">Test Field Description</meta>
+				<meta attribute="use-in-tostring">true</meta>
+    		<generator class="assigned"/>
+    	</id>
+		 
+		  <property name="hello" type="string" length="5">
+			  <meta attribute="use-in-tostring">true</meta>
+			</property>
+			
+			<property name="world" type="long">
+			  <meta attribute="use-in-tostring">false</meta>
+			  <meta attribute="use-in-equals">true</meta>
+			   <meta attribute="property-type">long</meta>
+			</property>
+						
+			
+		<subclass name="HelloUniverse">
+			<property name="dimension" type="string"/>
+			<component name="address" class="UniversalAddress">
+				<property name="galaxy" type="string"/>
+				<property name="planet" type="string"/>
+			</component>
+			
+			<property name="notgenerated" type="string">
+			  <meta attribute="gen-property">false</meta>
+			</property>
+			
+		</subclass>
+	</class>
+
+</hibernate-mapping>

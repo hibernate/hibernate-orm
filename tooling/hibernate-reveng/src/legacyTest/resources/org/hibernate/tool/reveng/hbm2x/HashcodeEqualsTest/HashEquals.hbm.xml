@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+	
+	This mapping demonstrates how to map a collection
+	<key> to one of the primary key columns of an
+	associated child class with a composite key. This
+	is very useful for legacy data!
+	
+-->
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x">
+
+	<class name="HashEquals">
+		<!--  Normally *bad* practice to put global use-in-equals. Only here for testing -->
+		<meta attribute="use-in-equals">true</meta>
+		<id name="id" type="string"/>
+		
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'java.lang.String[]' -->
+<!-- 		<property name="name" type="java.lang.String[]"/>  -->
+       <property name="byteArray" type="byte[]"/>
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'float[]' -->
+<!--        <property name="floatArray" type="float[]"/> -->
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'int[]' -->
+<!--        <property name="intArray" type="int[]"/> -->
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'int[]' -->
+<!--        <property name="shortArray" type="int[]"/> -->
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'boolean[]' -->
+<!--        <property name="booleanArray" type="boolean[]"/> -->
+        
+		<component name="addressComponent" class="Address">
+			<property name="streetAddress1" type="string"
+				column="StreetAddress1" not-null="true">
+				<meta attribute="use-in-equals">true</meta>
+			</property>
+			<property name="streetAddress2" type="string"
+				column="StreetAddress2" />
+			<property name="city" type="short" column="City"
+				not-null="true">
+				<meta attribute="use-in-tostring">true</meta>
+				<meta attribute="use-in-equals">true</meta>
+				<meta attribute="property-type">short</meta>
+			</property>
+<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'java.lang.String[]' -->
+<!-- 			<property name="postcode" type="java.lang.String[]" column="postcode"
+				not-null="true" /> -->
+			<!--    <many-to-one name="state" class="au.com.groupware.model.State" column="StateId" 
+				foreign-key="FK_Address_State" not-null="true" />  -->
+			<property name="verified" type="boolean">
+			   <meta attribute="use-in-equals">true</meta>
+			</property>
+		</component>
+
+		
+	</class>
+
+
+</hibernate-mapping>

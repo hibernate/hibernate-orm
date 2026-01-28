@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE project>
+<project name="javaformattest">
+<!-- 	<property name="build.dir" location="../../target/javaformattest" />
+	<property name="target.dir" location="../../target"/>
+	<property name="test-classes" location="${target.dir}/test-classes"/>
+	<property file="${test-classes}/hibernate.properties" />
+	<property file="${test-classes}/hibernate.properties" /> 
+
+
+
+	<path id="tasks.classpath">
+		<pathelement path="${test-classes}" />
+		<pathelement path="${target.dir}/classes" />
+	</path> 
+	
+	<target name="cleanup">
+		<delete dir="${build.dir}"/>
+	</target> -->
+	
+	<target name="copyfiles">
+		
+		<copy todir="${destinationDir}">
+		  	<fileset dir="${resourcesDir}" includes="formatting/**/*"/>
+		</copy>
+			
+	</target>
+	
+
+	<target name="formatfiles">		
+
+		<taskdef 
+			name="javaformatter" 
+			classname="org.hibernate.tool.ant.JavaFormatterTask"/>
+				
+		<javaformatter> 
+		   <fileset dir="${destinationDir}">
+		   	   <include name="formatting/**/*"/>
+		   	</fileset>
+		</javaformatter>
+			
+	</target>
+
+</project>

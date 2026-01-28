@@ -4,6 +4,18 @@ plugins {
 
 description = "Library providing functionality to perform reverse engineering Hibernate related artefacts from an existing database"
 
+sourceSets {
+    legacyTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    legacyTestImplementation.extendsFrom testImplementation
+    legacyTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
     implementation project( ':hibernate-core' )
 //    implementation project( ':hibernate-ant' )
@@ -12,4 +24,20 @@ dependencies {
     implementation "org.freemarker:freemarker:2.3.34"
     implementation "org.antlr:antlr4-runtime:4.13.2"
     implementation "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2"
+    testRuntimeOnly "jakarta.ejb:jakarta.ejb-api:4.0.1"
 }
+
+tasks.register('legacyTest', Test) {
+    description = 'Runs legacy tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.legacyTest.output.classesDirs
+    classpath = sourceSets.legacyTest.runtimeClasspath
+    useJUnitPlatform()
+}
+
+tasks.forbiddenApisLegacyTest {
+    enabled = false
+}
+
+test.dependsOn legacyTest
+

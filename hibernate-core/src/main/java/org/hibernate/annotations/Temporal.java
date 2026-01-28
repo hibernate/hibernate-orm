@@ -165,4 +165,16 @@ public @interface Temporal {
 		 */
 		String name() default "";
 	}
+
+	/**
+	 * Excludes the annotated attribute from temporal
+	 * versioning. Updates to an excluded attribute
+	 * modify the current row directly without creating
+	 * a new revision of the entity instance.
+	 */
+	@Documented
+	@Target({FIELD, METHOD})
+	@Retention(RUNTIME)
+	@interface Excluded {
+	}
 }

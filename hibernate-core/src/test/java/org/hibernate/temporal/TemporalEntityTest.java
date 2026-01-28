@@ -45,6 +45,7 @@ class TemporalEntityTest {
 					entity.id = 1L;
 					entity.text = "hello";
 					entity.strings.add( "x" );
+					entity.excluded = 1L;
 					session.persist( entity );
 					TemporalChild1 child = new TemporalChild1();
 					child.id = 1L;
@@ -53,12 +54,21 @@ class TemporalEntityTest {
 					session.persist( child );
 				}
 		);
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
+					assertEquals( 1L, entity.excluded );
+					entity.excluded = 2L;
+				}
+		);
 		var instant = Instant.now();
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
+					assertEquals( 2L, entity.excluded );
 					entity.text = "goodbye";
+					entity.excluded = 5L;
 					entity.strings.add( "y" );
 					entity.children.get(0).text = "world!";
 					TemporalChild1 friend = new TemporalChild1();
@@ -72,6 +82,7 @@ class TemporalEntityTest {
 				session -> {
 					TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
 					assertEquals( "goodbye", entity.text );
+					assertEquals( 5L, entity.excluded );
 					assertEquals( 1, entity.children.size() );
 					assertEquals( "world!", entity.children.get(0).text );
 					assertEquals( 2, entity.strings.size() );
@@ -105,6 +116,7 @@ class TemporalEntityTest {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
 				assertEquals( "hello", entity.text );
+				assertEquals( 2L, entity.excluded );
 				assertEquals( 1, entity.children.size() );
 				assertEquals( "world", entity.children.get(0).text );
 				assertEquals( 1, entity.strings.size() );
@@ -340,6 +352,8 @@ class TemporalEntityTest {
 		@ElementCollection
 		@OrderColumn
 		List<String> list = new ArrayList<>();
+		@Temporal.Excluded
+		long excluded;
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

@@ -49,6 +49,7 @@ class TemporalEntityHistoryTest {
 					entity.id = 1L;
 					entity.text = "hello";
 					entity.strings.add( "x" );
+					entity.excluded = 1L;
 					session.persist( entity );
 					TemporalChild4 child = new TemporalChild4();
 					child.id = 1L;
@@ -57,15 +58,24 @@ class TemporalEntityHistoryTest {
 					session.persist( child );
 				}
 		);
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
+					assertEquals( 1L, entity.excluded );
+					entity.excluded = 2L;
+				}
+		);
 		Thread.sleep( 250 );
 		var instant = getInstant( scope );
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
+					assertEquals( 2L, entity.excluded );
 					entity.text = "goodbye";
 					entity.strings.add( "y" );
 					entity.children.get(0).text = "world!";
+					entity.excluded = 5L;
 					TemporalChild4 friend = new TemporalChild4();
 					friend.id = 5L;
 					friend.text = "friend";
@@ -77,6 +87,7 @@ class TemporalEntityHistoryTest {
 				session -> {
 					TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
 					assertEquals( "goodbye", entity.text );
+					assertEquals( 5L, entity.excluded );
 					assertEquals( 1, entity.children.size() );
 					assertEquals( "world!", entity.children.get(0).text );
 					assertEquals( 2, entity.strings.size() );
@@ -110,6 +121,7 @@ class TemporalEntityHistoryTest {
 			session.inTransaction( tx -> {
 				TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
 				assertEquals( "hello", entity.text );
+				assertEquals( 2L, entity.excluded );
 				assertEquals( 1, entity.children.size() );
 				assertEquals( "world", entity.children.get(0).text );
 				assertEquals( 1, entity.strings.size() );
@@ -354,6 +366,8 @@ class TemporalEntityHistoryTest {
 		@ElementCollection
 		@OrderColumn
 		List<String> list = new ArrayList<>();
+		@Temporal.Excluded
+		long excluded;
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

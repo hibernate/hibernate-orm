@@ -17,14 +17,12 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
@@ -101,7 +99,8 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 				: staticHistoryInsertGroup;
 
 		final var mutationExecutor =
-				mutationExecutorService.createExecutor( resolveBatchKeyAccess( dynamicInsert, session ), operationGroup, session );
+				mutationExecutorService.createExecutor( resolveBatchKeyAccess( dynamicInsert, session ),
+						operationGroup, session );
 		try {
 			bindHistoryValues( id, values, propertyInclusions, session, mutationExecutor.getJdbcValueBindings() );
 			mutationExecutor.execute( entity, null, null, HistoryInsertCoordinator::verifyOutcome, session );
@@ -115,15 +114,17 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 			boolean[] propertyInclusions,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final var insertBuilder = new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
+		final var insertBuilder =
+				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions, entity, session );
-		final TableInsert tableMutation = insertBuilder.buildMutation();
-		final MutationGroupSingle mutationGroup = new MutationGroupSingle(
+		final var tableMutation = insertBuilder.buildMutation();
+		final var mutationGroup = new MutationGroupSingle(
 				MutationType.INSERT,
 				entityPersister(),
 				tableMutation
 		);
-		return singleOperation( mutationGroup, tableMutation.createMutationOperation( null, factory() ) );
+		return singleOperation( mutationGroup,
+				tableMutation.createMutationOperation( null, factory() ) );
 	}
 
 	private void applyHistoryInsertDetails(
@@ -131,10 +132,8 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 			boolean[] propertyInclusions,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
-		final int[] attributeIndexes = identifierTableMapping.getAttributeIndexes();
-		for ( int i = 0; i < attributeIndexes.length; i++ ) {
-			final int attributeIndex = attributeIndexes[i];
+		final var attributeMappings = entityPersister().getAttributeMappings();
+		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
 			if ( propertyInclusions[attributeIndex] ) {
 				attributeMapping.forEachInsertable( insertBuilder );
@@ -167,12 +166,12 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 			AttributeMapping attributeMapping,
 			OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue
-				? null
-				: generator.getReferencedColumnValues( factory.getJdbcServices().getDialect() );
-		attributeMapping.forEachSelectable( (j, mapping) -> {
-			insertBuilder.addValueColumn( writePropertyValue ? "?" : columnValues[j], mapping );
-		} );
+		final var columnValues =
+				writePropertyValue
+						? null
+						: generator.getReferencedColumnValues( factory.getJdbcServices().getDialect() );
+		attributeMapping.forEachSelectable( (j, mapping) ->
+				insertBuilder.addValueColumn( writePropertyValue ? "?" : columnValues[j], mapping ) );
 	}
 
 	private void bindHistoryValues(
@@ -193,34 +192,30 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 				session
 		);
 
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
-		final int[] attributeIndexes = identifierTableMapping.getAttributeIndexes();
-		for ( int i = 0; i < attributeIndexes.length; i++ ) {
-			final int attributeIndex = attributeIndexes[i];
-			if ( !propertyInclusions[attributeIndex] ) {
-				continue;
+		final var attributeMappings = entityPersister().getAttributeMappings();
+		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
+			if ( propertyInclusions[attributeIndex] ) {
+				final var attributeMapping = attributeMappings.get( attributeIndex );
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					attributeMapping.decompose(
+							values[attributeIndex],
+							0,
+							jdbcValueBindings,
+							null,
+							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
+								if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
+									bindings.bindValue(
+											jdbcValue,
+											historyTableName,
+											selectableMapping.getSelectionExpression(),
+											ParameterUsage.SET
+									);
+								}
+							},
+							session
+					);
+				}
 			}
-			final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
-			if ( attributeMapping instanceof PluralAttributeMapping ) {
-				continue;
-			}
-			attributeMapping.decompose(
-					values[attributeIndex],
-					0,
-					jdbcValueBindings,
-					null,
-					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-						if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
-							bindings.bindValue(
-									jdbcValue,
-									historyTableName,
-									selectableMapping.getSelectionExpression(),
-									ParameterUsage.SET
-							);
-						}
-					},
-					session
-			);
 		}
 
 		if ( TemporalMutationHelper.isUsingParameters( session ) ) {

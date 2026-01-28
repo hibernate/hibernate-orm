@@ -625,6 +625,11 @@ public interface HibernateAnnotations {
 					Temporal.HistoryTable.class,
 					HistoryTableAnnotation.class
 			);
+	OrmAnnotationDescriptor<Temporal.Excluded,ExcludedAnnotation> TEMPORAL_EXCLUDED =
+			new OrmAnnotationDescriptor<>(
+					Temporal.Excluded.class,
+					ExcludedAnnotation.class
+			);
 	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
 			TenantId.class,
 			TenantIdAnnotation.class

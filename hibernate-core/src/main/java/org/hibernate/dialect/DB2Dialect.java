@@ -1369,10 +1369,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartition,
+			String historyPartition) {
 		return partitioned
 				? "partition by range (" + endingColumnName + "_null)"
-						+ " (partition p_history starting from (0) ending at (0), partition p_current starting from (1) ending at (1))"
+						+ " (partition " + historyPartition + " starting from (0) ending at (0),"
+						+ " partition " + currentPartition + " starting from (1) ending at (1))"
 				: null;
 	}
 
@@ -1380,7 +1386,9 @@ public class DB2Dialect extends Dialect {
 	public void addTemporalTableAuxiliaryObjects(
 			TemporalTableStrategy strategy,
 			Table table, Database database,
-			boolean partitioned) {
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		if ( strategy == TemporalTableStrategy.NATIVE ) {
 			final String name = table.getQuotedName( this );
 			final String historyName = name + "_history";

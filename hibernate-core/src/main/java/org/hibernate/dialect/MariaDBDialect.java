@@ -436,7 +436,12 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		return strategy == TemporalTableStrategy.NATIVE
 				? "with system versioning"
 				: null;

@@ -16,16 +16,14 @@ public class TemporalAnnotation implements Temporal {
 	private String starting;
 	private String ending;
 	private int secondPrecision;
-	private boolean partitioned;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public TemporalAnnotation(ModelsContext modelContext) {
-		this.starting = "starting";
-		this.ending = "ending";
+		this.starting = "effective";
+		this.ending = "superseded";
 		this.secondPrecision = -1;
-		this.partitioned = false;
 	}
 
 	/**
@@ -41,17 +39,15 @@ public class TemporalAnnotation implements Temporal {
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public TemporalAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
-		this.starting = (String) attributeValues.get( "starting" );
-		this.ending = (String) attributeValues.get( "ending" );
+		this.starting = (String) attributeValues.get( "rowStart" );
+		this.ending = (String) attributeValues.get( "rowEnd" );
 		final Integer secondPrecision = (Integer) attributeValues.get( "secondPrecision" );
-		final Boolean partitioned = (Boolean) attributeValues.get( "partitioned" );
 		this.secondPrecision = secondPrecision == null ? -1 : secondPrecision;
-		this.partitioned = partitioned != null && partitioned;
 		if ( this.starting == null ) {
-			this.starting = "starting";
+			this.starting = "effective";
 		}
 		if ( this.ending == null ) {
-			this.ending = "ending";
+			this.ending = "superseded";
 		}
 	}
 
@@ -87,12 +83,4 @@ public class TemporalAnnotation implements Temporal {
 		this.secondPrecision = secondPrecision;
 	}
 
-	@Override
-	public boolean partitioned() {
-		return partitioned;
-	}
-
-	public void setPartitioned(boolean partitioned) {
-		this.partitioned = partitioned;
-	}
 }

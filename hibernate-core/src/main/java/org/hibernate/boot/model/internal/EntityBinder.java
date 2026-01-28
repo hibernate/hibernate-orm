@@ -346,6 +346,8 @@ public class EntityBinder {
 					temporal,
 					rootClass,
 					rootClass.getRootTable(),
+					classDetails.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
 					context
 			);
 		}

@@ -37,10 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses =
-		{TemporalEntityHistoryTest.TemporalEntity4.class,
-		TemporalEntityHistoryTest.TemporalChild4.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"))
-class TemporalEntityHistoryTest {
+		{TemporalEntityHistoryServerSideTest.TemporalEntity4.class,
+		TemporalEntityHistoryServerSideTest.TemporalChild4.class})
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, value = "true")})
+class TemporalEntityHistoryServerSideTest {
 
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(

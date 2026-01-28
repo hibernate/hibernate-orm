@@ -5950,6 +5950,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		};
 	}
 
+	//TODO: DELETEME
+	@Incubating @Deprecated(forRemoval = true)
+	public boolean throttleDdl() {
+		return false;
+	}
+
 	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.

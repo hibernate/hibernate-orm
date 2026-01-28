@@ -24,15 +24,15 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 		if ( dialect instanceof PostgreSQLDialect ) {
 			final VectorFunctionFactory vectorFunctionFactory = new VectorFunctionFactory( functionContributions );
 
-			vectorFunctionFactory.cosineDistance( "?1<=>?2" );
-			vectorFunctionFactory.euclideanDistance( "?1<->?2" );
-			vectorFunctionFactory.euclideanSquaredDistance( "(?1<->?2)^2" );
+			vectorFunctionFactory.cosineDistance( "(?1<=>?2)" );
+			vectorFunctionFactory.euclideanDistance( "(?1<->?2)" );
+			vectorFunctionFactory.euclideanSquaredDistance( "((?1<->?2)^2)" );
 			vectorFunctionFactory.l1Distance( "l1_distance(?1,?2)" );
-			vectorFunctionFactory.hammingDistance( "?1<~>?2" );
-			vectorFunctionFactory.jaccardDistance( "?1<%>?2" );
+			vectorFunctionFactory.hammingDistance( "(?1<~>?2)" );
+			vectorFunctionFactory.jaccardDistance( "(?1<%>?2)" );
 
-			vectorFunctionFactory.innerProduct( "(?1<#>?2)*-1" );
-			vectorFunctionFactory.negativeInnerProduct( "?1<#>?2" );
+			vectorFunctionFactory.innerProduct( "((?1<#>?2)*-1)" );
+			vectorFunctionFactory.negativeInnerProduct( "(?1<#>?2)" );
 
 			final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 			functionContributions.getFunctionRegistry()

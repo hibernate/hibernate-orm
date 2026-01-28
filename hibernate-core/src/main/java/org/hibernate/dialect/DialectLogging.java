@@ -14,6 +14,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 
@@ -30,7 +31,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 public interface DialectLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".dialect";
 	Logger DIALECT_LOGGER = Logger.getLogger(LOGGER_NAME);
-	DialectLogging DIALECT_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), DialectLogging.class, LOGGER_NAME );
+	DialectLogging DIALECT_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), DialectLogging.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Using dialect: %s", id = 35001)

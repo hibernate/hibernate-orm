@@ -52,7 +52,8 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			EnversMessageLogger.class,
-			AuditMetadataGenerator.class.getName()
+			AuditMetadataGenerator.class.getName(),
+			Locale.ROOT
 	);
 
 	private final EnversMetadataBuildingContext metadataBuildingContext;

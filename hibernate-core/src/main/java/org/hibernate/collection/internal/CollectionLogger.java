@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -33,7 +34,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CollectionLogger extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".collection";
 
-	CollectionLogger COLLECTION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CollectionLogger.class, NAME );
+	CollectionLogger COLLECTION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CollectionLogger.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(id = 90030001, value = "Unable to close temporary session used to load lazy collection associated to no session")

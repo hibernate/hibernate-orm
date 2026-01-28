@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 import java.util.UUID;
+import java.util.Locale;
 
 import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -37,7 +38,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface SecondLevelCacheLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".cache";
 
-	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SecondLevelCacheLogger.class, LOGGER_NAME );
+	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SecondLevelCacheLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	int NAMESPACE = 90001000;
 

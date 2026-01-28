@@ -27,9 +27,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * entity, or an element of the collection whose existence is
  * bounded in time, with:
  * <ul>
- * <li>a {@linkplain #rowStart} timestamp representing the instant
- *     at which the revision became effective, and
- * <li>a {@linkplain #rowEnd} timestamp representing the instant at
+ * <li>a {@link #rowStart} timestamp representing the instant at
+ *     which the revision became effective, and
+ * <li>a {@link #rowEnd} timestamp representing the instant at
  *     which the revision was superseded by a newer revision.
  * </ul>
  * The revision which is currently effective has a null value for its
@@ -40,9 +40,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * temporal entity with the given identifier at the given instant is
  * the revision with:
  * <ul>
- * <li>{@linkplain #rowStart} timestamp less than or equal to the
- *     given instant, and
- * <li>{@linkplain #rowEnd} timestamp null or greater than the given
+ * <li>{@link #rowStart} timestamp less than or equal to the given
+ *     instant, and
+ * <li>{@link #rowEnd} timestamp null or greater than the given
  *     instant.
  * </ul>
  * <p>There are three {@linkplain TemporalTableStrategy strategies}
@@ -67,6 +67,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         capabilities of the database, referential integrity might
  *         be enforced.
  * </ul>
+ * <p>The configuration property
+ * {@value org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY}
+ * controls the temporal table mapping strategy.
  * <p>By default, a session or stateless session reads revisions of
  * temporal data which are currently effective. To read historical
  * revisions effective at a given {@linkplain Instant instant}, set
@@ -81,14 +84,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     The primary key of a table mapped by a temporal entity
  *     includes the columns mapped by the identifier of the entity,
  *     along with the version column, if there is one, or the
- *     {@linkplain #rowStart} column if there is no version.
+ *     {@link #rowStart} column if there is no version.
  * <li>When working with temporal entities, it is important to
  *     ensure that referential integrity is maintained by the
  *     application and validated by triggers or offline processes.
  * </ul>
+ * <p>By default, timestamps for the {@code rowStart} and
+ * {@code rowEnd} columns are generated in Java, unless native
+ * temporal tables are used. If timestamps should be generated on
+ * the database server, enable the configuration property
+ * {@value org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS}.
+ *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
+ * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+ * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
+ *
  */
 @Documented
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})

@@ -1192,7 +1192,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		return strategy == TemporalTableStrategy.NATIVE
 				? "with (system_versioning = on)"
 				: null;
@@ -1206,7 +1211,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+	public void addTemporalTableAuxiliaryObjects(
+			TemporalTableStrategy strategy,
+			Table table,
+			Database database,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		if ( strategy == TemporalTableStrategy.NATIVE ) {
 			database.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject(
 					database.getDefaultNamespace(),

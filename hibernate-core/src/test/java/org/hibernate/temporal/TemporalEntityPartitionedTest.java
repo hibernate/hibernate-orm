@@ -249,8 +249,8 @@ class TemporalEntityPartitionedTest {
 				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
 	}
 
-	@Temporal(rowStart = "effective_from", rowEnd = "effective_to",
-			partitioned = true)
+	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
+	@Temporal.HistoryPartitioning
 	@Entity(name = "TemporalEntity3")
 	static class TemporalEntity3 {
 		@Id
@@ -260,13 +260,13 @@ class TemporalEntityPartitionedTest {
 		String text;
 		@OneToMany(mappedBy = "parent")
 		List<TemporalChild3> children = new ArrayList<>();
-		@Temporal(partitioned = true)
+		@Temporal @Temporal.HistoryPartitioning
 		@ElementCollection
 		Set<String> strings = new HashSet<>();
 	}
 
-	@Temporal(rowStart = "effective_from", rowEnd = "effective_to",
-			partitioned = true)
+	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
+	@Temporal.HistoryPartitioning
 	@Entity(name = "TemporalChild3")
 	static class TemporalChild3 {
 		@Id
@@ -277,7 +277,8 @@ class TemporalEntityPartitionedTest {
 		@ManyToOne @JoinColumn
 		TemporalEntity3 parent;
 
-		@Temporal(partitioned = true) @ManyToMany
+		@Temporal @Temporal.HistoryPartitioning
+		@ManyToMany
 		Set<TemporalChild3> friends = new HashSet<>();
 	}
 }

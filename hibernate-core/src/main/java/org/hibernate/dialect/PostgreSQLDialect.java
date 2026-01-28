@@ -940,18 +940,27 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		return partitioned
 				? "partition by list (" + endingColumnName + ")"
 				: null;
 	}
 
 	@Override
-	public void addTemporalTableAuxiliaryObjects(TemporalTableStrategy strategy, Table table, Database database, boolean partitioned) {
+	public void addTemporalTableAuxiliaryObjects(
+			TemporalTableStrategy strategy,
+			Table table,
+			Database database,
+			boolean partitioned,
+			String currentPartition,
+			String historyPartition) {
 		if ( partitioned ) {
 			final String tableName = table.getQuotedName( this );
-			final String currentPartition = tableName + "_current";
-			final String historyPartition = tableName + "_history";
 			database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
 					currentPartition,
 					database.getDefaultNamespace(),

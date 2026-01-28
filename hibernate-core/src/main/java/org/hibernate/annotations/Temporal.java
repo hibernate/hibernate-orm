@@ -90,8 +90,43 @@ public @interface Temporal {
 	int secondPrecision() default -1;
 
 	/**
-	 * Is the mapped temporal table partitioned into
-	 * current and historical partitions?
+	 * Enables partitioning for a temporal table mapped by
+	 * a {@linkplain Temporal temporal entity or collection}.
 	 */
-	boolean partitioned() default false;
+	@Documented
+	@Target({TYPE, FIELD, METHOD})
+	@Retention(RUNTIME)
+	@interface HistoryPartitioning {
+		/**
+		 * The name of the partition holding currently
+		 * effective data. Defaults to the temporal table
+		 * name with the suffix {@code _current}.
+		 */
+		String currentPartition() default "";
+		/**
+		 * The name of the partition holding historical
+		 * data. Defaults to the temporal table name with
+		 * the suffix {@code _history}.
+		 */
+		String historyPartition() default "";
+	}
+
+	/**
+	 * Specifies the name of the separate history table for
+	 * a {@linkplain Temporal temporal entity or collection}
+	 * when the history table strategy is used.
+	 *
+	 * @see org.hibernate.cfg.TemporalTableStrategy#HISTORY
+	 */
+	@Documented
+	@Target({TYPE, FIELD, METHOD})
+	@Retention(RUNTIME)
+	@interface HistoryTable {
+		/**
+		 * The name of the history table. Defaults to the
+		 * name of the main table holding currently effective
+		 * data, with the suffix {@code _history}.
+		 */
+		String name() default "";
+	}
 }

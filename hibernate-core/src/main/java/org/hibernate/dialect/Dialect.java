@@ -5822,10 +5822,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param endingColumnName The name of the {@code row end} column
 	 * specified via {@link org.hibernate.annotations.Temporal#rowEnd}
 	 * @param partitioned Is partitioning requested
+	 * @param currentPartitionName The current partition name, if specified
+	 * @param historyPartitionName The history partition name, if specified
 	 * @return The options, or {@code null} if there are no options
 	 */
 	@Incubating
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
 		return null;
 	}
 
@@ -5844,7 +5851,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Do we support partitioning temporal tables in this
 	 * dialect?
 	 *
-	 * @see org.hibernate.annotations.Temporal#partitioned
+	 * @see org.hibernate.annotations.Temporal.HistoryPartitioning
 	 */
 	@Incubating
 	public boolean supportsTemporalTablePartitioning() {
@@ -5860,12 +5867,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param table A temporal table
 	 * @param database The database to register with
 	 * @param partitioned Is partitioning requested
+	 * @param currentPartitionName The current partition name, if specified
+	 * @param historyPartitionName The history partition name, if specified
 	 */
 	@Incubating
 	public void addTemporalTableAuxiliaryObjects(
 			TemporalTableStrategy strategy,
 			Table table, Database database,
-			boolean partitioned) {}
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
+	}
 
 	/**
 	 * Any extra declarations required as part of the {@code create table}

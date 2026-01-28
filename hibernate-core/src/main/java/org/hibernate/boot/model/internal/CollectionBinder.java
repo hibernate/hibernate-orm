@@ -2429,6 +2429,8 @@ public abstract class CollectionBinder {
 					temporal,
 					collection,
 					collection.getCollectionTable(),
+					property.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+					property.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
 					buildingContext
 			);
 		}

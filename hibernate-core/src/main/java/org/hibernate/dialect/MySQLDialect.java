@@ -1678,10 +1678,16 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporalTableOptions(TemporalTableStrategy strategy, String endingColumnName, boolean partitioned) {
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartition,
+			String historyPartition) {
 		return partitioned
 				? "partition by list (" + endingColumnName + "_null)"
-						+ " (partition p_history values in (0), partition p_current values in (1))"
+						+ " (partition " + historyPartition + " values in (0),"
+						+ " partition " + currentPartition + " values in (1))"
 				: null;
 	}
 

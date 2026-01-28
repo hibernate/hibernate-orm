@@ -24,7 +24,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 	public static final String DEFAULT_ALIAS = "to_delete_";
 
 	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
-		this( null, targetTable, new FromClause(), restriction, Collections.emptyList(), null );
+		this( null, targetTable, new FromClause(), restriction, Collections.emptyList() );
 	}
 
 	public DeleteStatement(
@@ -46,23 +46,24 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 		this( null, targetTable, fromClause, restriction, returningColumns );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.3")
 	public DeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, fromClause, restriction, returningColumns, null );
+		this( cteContainer, targetTable, null, fromClause, restriction, returningColumns );
 	}
 
 	public DeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
+			MutationTarget<?> mutationTarget,
 			FromClause fromClause,
 			Predicate restriction,
-			List<ColumnReference> returningColumns,
-			MutationTarget<?> mutationTarget) {
-		super( cteContainer, targetTable, fromClause, restriction, returningColumns, mutationTarget );
+			List<ColumnReference> returningColumns) {
+		super( cteContainer, targetTable, mutationTarget, fromClause, restriction, returningColumns );
 	}
 
 	@Override

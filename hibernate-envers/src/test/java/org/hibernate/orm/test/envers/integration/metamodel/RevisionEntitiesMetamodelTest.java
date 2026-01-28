@@ -32,6 +32,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Instant;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,7 +53,8 @@ public class RevisionEntitiesMetamodelTest {
 		logger = Logger.getMessageLogger(
 				MethodHandles.lookup(),
 				CoreMessageLogger.class,
-				MetadataContext.class.getName()
+				MetadataContext.class.getName(),
+				Locale.ROOT
 		);
 		// HHH-17612 - Injecting the class_ type field fails
 		t1 = new TriggerOnPrefixLogListener( "HHH015007: Illegal argument on static metamodel field injection" );

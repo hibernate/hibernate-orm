@@ -12,6 +12,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 
@@ -23,7 +24,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 public interface SessionMetricsLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.session.metrics";
 
-	SessionMetricsLogger SESSION_METRICS_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionMetricsLogger.class, LOGGER_NAME );
+	SessionMetricsLogger SESSION_METRICS_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionMetricsLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = DEBUG)
 	@Message(

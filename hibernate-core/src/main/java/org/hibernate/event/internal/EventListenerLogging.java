@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -32,7 +33,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface EventListenerLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".event";
 
-	EventListenerLogging EVENT_LISTENER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), EventListenerLogging.class, NAME );
+	EventListenerLogging EVENT_LISTENER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), EventListenerLogging.class, NAME, Locale.ROOT );
 
 	// Load
 

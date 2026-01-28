@@ -29,7 +29,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 		if ( dialect instanceof PostgreSQLDialect ) {
 			final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 			final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
-			functionRegistry.patternDescriptorBuilder( "cosine_distance", "?1<=>?2" )
+			functionRegistry.patternDescriptorBuilder( "cosine_distance", "(?1<=>?2)" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 2 ),
 							VectorArgumentValidator.INSTANCE
@@ -37,7 +37,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
 					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
 					.register();
-			functionRegistry.patternDescriptorBuilder( "euclidean_distance", "?1<->?2" )
+			functionRegistry.patternDescriptorBuilder( "euclidean_distance", "(?1<->?2)" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 2 ),
 							VectorArgumentValidator.INSTANCE
@@ -56,7 +56,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.register();
 			functionRegistry.registerAlternateKey( "taxicab_distance",  "l1_distance" );
 
-			functionRegistry.patternDescriptorBuilder( "negative_inner_product", "?1<#>?2" )
+			functionRegistry.patternDescriptorBuilder( "negative_inner_product", "(?1<#>?2)" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 2 ),
 							VectorArgumentValidator.INSTANCE
@@ -64,7 +64,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
 					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
 					.register();
-			functionRegistry.patternDescriptorBuilder( "inner_product", "(?1<#>?2)*-1" )
+			functionRegistry.patternDescriptorBuilder( "inner_product", "((?1<#>?2)*-1)" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 2 ),
 							VectorArgumentValidator.INSTANCE

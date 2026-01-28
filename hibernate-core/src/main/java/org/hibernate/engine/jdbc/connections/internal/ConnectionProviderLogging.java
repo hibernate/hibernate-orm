@@ -12,6 +12,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -29,7 +30,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @ValidIdRange(min = 102001, max = 102100)
 interface ConnectionProviderLogging {
 	String NAME = SubSystemLogging.BASE + ".connection";
-	ConnectionProviderLogging CONNECTION_PROVIDER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ConnectionProviderLogging.class, NAME );
+	ConnectionProviderLogging CONNECTION_PROVIDER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ConnectionProviderLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(id = 102001,

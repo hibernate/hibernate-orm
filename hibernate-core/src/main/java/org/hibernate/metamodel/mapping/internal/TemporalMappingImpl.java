@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -44,6 +45,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
 	private final String currentTimestampFunctionName;
+	private final Expression currentTimestampExpression;
 
 	public TemporalMappingImpl(
 			Temporalized bootMapping,
@@ -99,10 +101,15 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final boolean useServerTransactionTimestamps =
 				creationContext.getSessionFactory().getSessionFactoryOptions()
 						.isUseServerTransactionTimestampsEnabled();
-		currentTimestampFunctionName =
-				useServerTransactionTimestamps
-						? dialect.currentTimestamp()
-						: null;
+		if ( useServerTransactionTimestamps ) {
+			currentTimestampFunctionName = dialect.currentTimestamp();
+			currentTimestampExpression =
+					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
+		}
+		else {
+			currentTimestampFunctionName = null;
+			currentTimestampExpression = null;
+		}
 	}
 
 	@Override
@@ -158,11 +165,15 @@ public class TemporalMappingImpl implements TemporalMapping {
 			Instant instant) {
 		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
-		final var instantParameter = new TemporalInstantParameter( jdbcMapping, instant );
 
-		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, instantParameter );
+		final var instantExpression =
+				currentTimestampExpression == null || instant != null
+						? new TemporalInstantParameter( jdbcMapping, instant )
+						: currentTimestampExpression;
+
+		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, instantExpression );
 		final var endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
-		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, instantParameter );
+		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, instantExpression );
 
 		final var endingPredicate = new Junction( Junction.Nature.DISJUNCTION );
 		endingPredicate.add( endingNullPredicate );

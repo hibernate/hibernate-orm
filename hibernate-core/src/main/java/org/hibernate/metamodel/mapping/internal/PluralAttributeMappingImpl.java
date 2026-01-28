@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -122,7 +121,6 @@ public class PluralAttributeMappingImpl
 	private final SoftDeleteMapping softDeleteMapping;
 	private Boolean hasSoftDelete;
 	private final TemporalMapping temporalMapping;
-	private final TemporalTableStrategy temporalTableStrategy;
 
 	private final String bidirectionalAttributeName;
 
@@ -190,10 +188,6 @@ public class PluralAttributeMappingImpl
 				return mapKeyPropertyName;
 			}
 		};
-
-		temporalTableStrategy =
-				creationProcess.getCreationContext()
-						.getSessionFactoryOptions().getTemporalTableStrategy();
 
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, bootDescriptor,
@@ -381,7 +375,6 @@ public class PluralAttributeMappingImpl
 		this.fkDescriptor = original.fkDescriptor;
 		this.orderByFragment = original.orderByFragment;
 		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
-		this.temporalTableStrategy = original.temporalTableStrategy;
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
@@ -639,31 +632,17 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	private void applyNativeTemporalTableReference(
-			NamedTableReference tableReference,
-			SqlAstCreationState creationState) {
-		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
-		if ( temporalMapping != null && useAsOfOperator( loadQueryInfluencers )
-				&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
-			tableReference.applyTemporalTable(
-					loadQueryInfluencers.getTemporalInstant(),
-					temporalMapping.getJdbcMapping() );
-		}
-	}
-
 	private Dialect getDialect() {
 		return collectionDescriptor.getFactory().getJdbcServices().getDialect();
 	}
 
-	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
-		return getDialect()
-				.useAsOfOperator( temporalTableStrategy,
-						influencers.getTemporalInstant() != null );
+	private static TemporalTableStrategy getTemporalTableStrategy(LoadQueryInfluencers influencers) {
+		return influencers.getSessionFactory().getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	private boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		return getDialect()
-				.useTemporalRestriction( temporalTableStrategy,
+				.useTemporalRestriction( getTemporalTableStrategy( influencers ),
 						influencers.getTemporalInstant() != null );
 	}
 
@@ -1110,7 +1089,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
-	private @NonNull TableGroup rootTableGroup(
+	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -1230,7 +1209,8 @@ public class PluralAttributeMappingImpl
 				useHistoryTable( creationState )
 						? new HistoryTableReference( temporalMapping.getTableName(), tableName, alias, true )
 						: new NamedTableReference( tableName, alias, true );
-		applyNativeTemporalTableReference( collectionTableReference, creationState );
+		collectionTableReference.applyTemporalTable( temporalMapping,
+				creationState.getLoadQueryInfluencers() );
 
 		final var tableGroup = new CollectionTableGroup(
 				canUseInnerJoins,
@@ -1282,9 +1262,10 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean useHistoryTable(SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
 		return temporalMapping != null
-			&& temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
-			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
+			&& getTemporalTableStrategy( influencers ) == TemporalTableStrategy.HISTORY_TABLE
+			&& influencers.getTemporalInstant() != null;
 	}
 
 	@Override

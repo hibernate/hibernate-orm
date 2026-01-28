@@ -647,7 +647,9 @@ public interface MappingSettings {
 	 * {@link Dialect#currentTimestamp() current_timestamp} function
 	 * instead of {@link java.time.Instant#now()} to initialize the
 	 * effectivity columns for
-	 * {@linkplain org.hibernate.annotations.Temporal temporal data}.
+	 * {@linkplain org.hibernate.annotations.Temporal temporal data}
+	 * when using the {@link TemporalTableStrategy#SINGLE_TABLE} or
+	 * {@link TemporalTableStrategy#HISTORY_TABLE} mapping strategy.
 	 * <p>Not recommended on database platforms where there is no
 	 * way to obtain the timestamp of the start of the current
 	 * transaction (MySQL, Maria).

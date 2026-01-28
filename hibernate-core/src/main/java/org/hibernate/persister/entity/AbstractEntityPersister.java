@@ -38,6 +38,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -1343,10 +1344,11 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationState sqlAstCreationState) {
 		final String primaryTableName = resolvePrimaryTableName( sqlAstCreationState );
 		final String primaryAlias = sqlAliasBase.generateNewAlias();
-		final var tableReference = shouldUseHistoryTable( sqlAstCreationState )
+		final var tableReference = useHistoryTable( sqlAstCreationState )
 				? new HistoryTableReference( primaryTableName, getTableName(), primaryAlias )
 				: new NamedTableReference( primaryTableName, primaryAlias );
-		applyNativeTemporalTableReference( tableReference, sqlAstCreationState );
+		tableReference.applyTemporalTable( temporalMapping,
+				sqlAstCreationState.getLoadQueryInfluencers() );
 		return tableReference;
 	}
 
@@ -1384,7 +1386,8 @@ public abstract class AbstractEntityPersister
 				sqlAliasBase.generateNewAlias(),
 				!innerJoin
 		);
-		applyNativeTemporalTableReference( joinedTableReference, creationState );
+		joinedTableReference.applyTemporalTable( temporalMapping,
+				creationState.getLoadQueryInfluencers() );
 		return new TableReferenceJoin(
 				innerJoin,
 				joinedTableReference,
@@ -2842,14 +2845,15 @@ public abstract class AbstractEntityPersister
 		);
 		final String rootTableName = resolveRootTableName( creationState );
 		final String rootAlias = sqlAliasBase.generateNewAlias();
-		final var rootTableReference = shouldUseHistoryTable( creationState )
+		final var rootTableReference = useHistoryTable( creationState )
 				? new HistoryTableReference(
 						rootTableName,
 						needsDiscriminator() ? getRootTableName() : getTableName(),
 						rootAlias
 				)
 				: new NamedTableReference( rootTableName, rootAlias );
-		applyNativeTemporalTableReference( rootTableReference, creationState );
+		rootTableReference.applyTemporalTable( temporalMapping,
+				creationState.getLoadQueryInfluencers() );
 
 		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -2869,7 +2873,8 @@ public abstract class AbstractEntityPersister
 									sqlAliasBase.generateNewAlias(),
 									isNullableSubclassTable( i )
 							);
-							applyNativeTemporalTableReference( joinedTableReference, creationState );
+							joinedTableReference.applyTemporalTable( temporalMapping,
+									creationState.getLoadQueryInfluencers() );
 							return new TableReferenceJoin(
 									shouldInnerJoinSubclassTable( i, emptySet() ),
 									joinedTableReference,
@@ -2932,43 +2937,30 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		return getDialect().useTemporalRestriction( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
-				creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
-	}
-
-	private boolean useAsOfOperator(SqlAstCreationState creationState) {
-		return getDialect().useAsOfOperator( factory.getSessionFactoryOptions().getTemporalTableStrategy(),
-				creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
+		return getDialect()
+				.useTemporalRestriction( getTemporalTableStrategy(),
+						creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
 	}
 
 	private String resolvePrimaryTableName(SqlAstCreationState creationState) {
-		return shouldUseHistoryTable( creationState )
+		return useHistoryTable( creationState )
 				? temporalMapping.getTableName()
 				: getTableName();
 	}
 
 	private String resolveRootTableName(SqlAstCreationState creationState) {
-		if ( shouldUseHistoryTable( creationState ) ) {
+		if ( useHistoryTable( creationState ) ) {
 			return temporalMapping.getTableName();
 		}
-		return needsDiscriminator() ? getRootTableName() : getTableName();
-	}
-
-	private boolean shouldUseHistoryTable(SqlAstCreationState creationState) {
-		return temporalMapping != null
-			&& isHistoryStrategy()
-			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
-	}
-
-	private void applyNativeTemporalTableReference(
-			NamedTableReference tableReference,
-			SqlAstCreationState creationState) {
-		if ( temporalMapping != null && useAsOfOperator( creationState )
-				&& temporalMapping.getTableName().equals( tableReference.getTableExpression() ) ) {
-			tableReference.applyTemporalTable(
-					creationState.getLoadQueryInfluencers().getTemporalInstant(),
-					temporalMapping.getJdbcMapping() );
+		else {
+			return needsDiscriminator() ? getRootTableName() : getTableName();
 		}
+	}
+
+	private boolean useHistoryTable(SqlAstCreationState creationState) {
+		return temporalMapping != null
+			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
+			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
 	}
 
 	@Override
@@ -3535,14 +3527,15 @@ public abstract class AbstractEntityPersister
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
 	private boolean useTemporalCoordinators() {
-		final var strategy = factory.getSessionFactoryOptions().getTemporalTableStrategy();
+		final var strategy = getTemporalTableStrategy();
 		return temporalMapping != null
 			&& strategy != NATIVE
 			&& strategy != HISTORY_TABLE;
 	}
 
 	protected InsertCoordinator buildInsertCoordinator() {
-		return temporalMapping != null && isHistoryStrategy()
+		return temporalMapping != null
+			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
 				? new HistoryInsertCoordinator( this, factory )
 				: new InsertCoordinatorStandard( this, factory );
 	}
@@ -3575,7 +3568,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private UpdateCoordinator buildTemporalUpdateCoordinator() {
-		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
+		return switch ( getTemporalTableStrategy() ) {
 			case SINGLE_TABLE -> new TemporalUpdateCoordinator( this, factory );
 			case HISTORY_TABLE -> new HistoryUpdateCoordinator( this, factory, buildNonTemporalUpdateCoordinator() );
 			case NATIVE -> buildNonTemporalUpdateCoordinator();
@@ -3589,15 +3582,15 @@ public abstract class AbstractEntityPersister
 	}
 
 	private DeleteCoordinator buildTemporalDeleteCoordinator() {
-		return switch ( factory.getSessionFactoryOptions().getTemporalTableStrategy() ) {
+		return switch ( getTemporalTableStrategy() ) {
 			case SINGLE_TABLE -> new DeleteCoordinatorTemporal( this, factory );
 			case HISTORY_TABLE -> new HistoryDeleteCoordinator( this, factory, buildNonTemporalDeleteCoordinator() );
 			case NATIVE -> buildNonTemporalDeleteCoordinator();
 		};
 	}
 
-	private boolean isHistoryStrategy() {
-		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
+	private TemporalTableStrategy getTemporalTableStrategy() {
+		return factory.getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	@Override

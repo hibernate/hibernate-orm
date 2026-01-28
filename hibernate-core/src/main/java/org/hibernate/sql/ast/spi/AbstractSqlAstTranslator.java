@@ -6225,30 +6225,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
-		final boolean historical = tableReference.getTemporalInstant() != null;
-		if ( shouldRenderSystemTimeClause( tableReference, historical ) ) {
+		final var temporalInstant = tableReference.getTemporalInstant();
+		if ( renderAsOfClause( tableReference, temporalInstant ) ) {
 			appendSql( WHITESPACE );
 			appendSql( dialect.getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
-			if ( historical ) {
+			if ( temporalInstant == null ) {
+				// we are querying current data,
+				// so we can use the server timestamp
+				appendSql( dialect.currentTimestamp() );
+			}
+			else {
 				visitParameterAsParameter(
 						new TemporalInstantParameter(
 								tableReference.getTemporalJdbcMapping(),
-								tableReference.getTemporalInstant()
+								temporalInstant
 						)
 				);
-			}
-			else {
-				appendSql( dialect.currentTimestamp() );
 			}
 		}
 		renderTableReferenceIdentificationVariable( tableReference );
 		return false;
 	}
 
-	private boolean shouldRenderSystemTimeClause(NamedTableReference tableReference, boolean historical) {
+	private boolean renderAsOfClause(NamedTableReference tableReference, Instant instant) {
 		return tableReference.getTemporalJdbcMapping() != null
-			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), historical )
+			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), instant != null )
 			&& statementStack.getCurrent() instanceof SelectStatement;
 	}
 

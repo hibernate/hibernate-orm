@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
-import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
+import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -137,6 +137,6 @@ public interface MetadataBuildingContext {
 	String getCurrentContributorName();
 
 	default TemporalTableStrategy getTemporalTableStrategy() {
-		return VM_TIMESTAMP;
+		return SINGLE_TABLE;
 	}
 }

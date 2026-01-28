@@ -261,7 +261,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public TemporalTableStrategy getTemporalTableStrategy() {
-		return TemporalTableStrategy.VM_TIMESTAMP;
+		return TemporalTableStrategy.SINGLE_TABLE;
 	}
 
 	@Override

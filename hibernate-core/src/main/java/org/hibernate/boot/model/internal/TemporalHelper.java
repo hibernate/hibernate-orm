@@ -27,9 +27,9 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
-import static org.hibernate.cfg.TemporalTableStrategy.VM_TIMESTAMP;
+import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -325,7 +325,7 @@ public class TemporalHelper {
 	}
 
 	public static boolean usingHistoryTemporalTables(MetadataBuildingContext context) {
-		return context.getTemporalTableStrategy() == HISTORY;
+		return context.getTemporalTableStrategy() == HISTORY_TABLE;
 	}
 
 	public static boolean suppressesTemporalTablePrimaryKeys(boolean partitioned, MetadataBuildingContext context) {
@@ -370,10 +370,10 @@ public class TemporalHelper {
 					return strategy;
 				}
 			}
-			return VM_TIMESTAMP;
+			return SINGLE_TABLE;
 		}
 		else {
-			return VM_TIMESTAMP;
+			return SINGLE_TABLE;
 		}
 	}
 }

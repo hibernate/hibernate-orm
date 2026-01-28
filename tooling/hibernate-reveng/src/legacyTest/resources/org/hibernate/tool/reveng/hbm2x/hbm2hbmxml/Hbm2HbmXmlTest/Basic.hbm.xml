@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest">
+<!--
+  This mapping demonstrates basic attributes of the mapping document
+
+     (1) Simple id and properties
+     (2) Id generation with no arguments.
+-->
+    <class name="Basic" table="`bas-ic`">
+        <meta attribute="class-meta" inherit="false">Basic</meta>
+        <meta attribute="class-meta" inherit="false">Basic2</meta>
+    	<id name="basicId"
+    		length="10"
+    		type="string"
+			unsaved-value="null"
+    	>
+    	    <meta attribute="id-meta" inherit="false">basicId</meta>
+    		<generator class="org.hibernate.id.TableHiLoGenerator">
+    			<param name="table">uni_table</param>
+    			<param name="column">next_hi_value</param>
+    		</generator>
+    	</id>
+
+    	<property name="description"
+    		not-null="true"
+    		length="200"
+    		type="string">
+    		  <meta attribute="property-desc" inherit="false">description</meta>
+    		</property>
+
+    	<property name="price" length="3" type="big_decimal" />
+
+    	<property name="numberAvailable" type="int" column="`number-Available`"/>
+
+    	<set name="aSet" cascade="delete, update">
+    	 <meta attribute="set-desc">anotherone</meta>
+    	 <key/>
+    	 <one-to-many class="Basic"/>
+    	</set>
+
+	</class>
+
+</hibernate-mapping>

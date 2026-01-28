@@ -162,7 +162,9 @@ public class OverrideRepository  {
 					error(exception);
 				}
 			};
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(
+					"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+					Thread.currentThread().getContextClassLoader());
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			db.setErrorHandler(errorHandler);
 			Document document = db.parse(xmlInputStream);

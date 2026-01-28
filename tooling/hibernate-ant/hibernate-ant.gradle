@@ -7,9 +7,45 @@ plugins {
 
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
+sourceSets {
+    legacyTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    legacyTestImplementation.extendsFrom testImplementation
+    legacyTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 dependencies {
     compileOnly libs.ant
-    implementation project( ':hibernate-core' )
-    implementation project( ':hibernate-reveng')
+    implementation project(':hibernate-core')
+    implementation project(':hibernate-reveng')
     testImplementation libs.ant
+    testRuntimeOnly project(':hibernate-scan-jandex')
 }
+
+tasks.register('legacyTest', Test) {
+    description = 'Runs legacy tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.legacyTest.output.classesDirs
+    classpath = sourceSets.legacyTest.runtimeClasspath
+    useJUnitPlatform()
+    jvmArgs(
+            "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    )
+}
+
+tasks.forbiddenApisLegacyTest {
+    enabled = false
+}
+
+test.dependsOn legacyTest
+

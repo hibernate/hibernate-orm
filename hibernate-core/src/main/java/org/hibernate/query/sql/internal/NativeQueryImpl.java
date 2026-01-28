@@ -167,8 +167,7 @@ public class NativeQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// We don't know (yet).  Create an "implicit" ResultSetMapping...
-		//noinspection unchecked
-		resultType = (Class<R>) Object.class;
+		resultType = null;
 		var resultSetMappingProducer = session.getFactory().getJdbcValuesMappingProducerProvider();
 		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, session.getFactory() );
 		resultMappingSuppliedToCtor = false;

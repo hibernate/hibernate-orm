@@ -6,7 +6,7 @@ package org.hibernate.query.results.internal.complete;
 
 import java.util.List;
 
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**

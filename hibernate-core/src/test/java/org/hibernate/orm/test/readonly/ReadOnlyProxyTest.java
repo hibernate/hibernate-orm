@@ -1072,7 +1072,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					DataPoint dp = session.find( DataPoint.class, dpOrig.getId() );
 					assertNull( dp );
 				}
 		);

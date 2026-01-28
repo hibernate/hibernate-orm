@@ -83,7 +83,7 @@ public class SortComparatorTest {
 		private long id;
 
 		@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-		@MapKey(name = "nickname")
+		@MapKey("nickname")
 		@SortComparator( StringCaseInsensitiveComparator.class )
 		private SortedMap<String, Cat> cats = new TreeMap<>();
 	}

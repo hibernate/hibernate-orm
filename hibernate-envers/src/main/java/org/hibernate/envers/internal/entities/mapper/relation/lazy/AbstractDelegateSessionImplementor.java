@@ -4,7 +4,9 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -21,5 +23,20 @@ public abstract class AbstractDelegateSessionImplementor extends SessionDelegato
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		return doImmediateLoad( entityName );
+	}
+
+	@Override
+	public LockOptions getDefaultLockOptions() {
+		return delegate.getDefaultLockOptions();
+	}
+
+	@Override
+	public Timeout getDefaultLockTimeout() {
+		return delegate.getDefaultLockTimeout();
+	}
+
+	@Override
+	public Timeout getDefaultTimeout() {
+		return delegate.getDefaultTimeout();
 	}
 }

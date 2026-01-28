@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
@@ -59,14 +60,14 @@ public class FollowOnLockingAction implements PostAction {
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
 	// Used by Hibernate Reactive
-	protected final Locking.Scope lockScope;
+	protected final PessimisticLockScope lockScope;
 
 	// Used by Hibernate Reactive
 	protected FollowOnLockingAction(
 			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout,
-			Locking.Scope lockScope) {
+			PessimisticLockScope lockScope) {
 		this.loadedValuesCollector = loadedValuesCollector;
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
@@ -90,7 +91,7 @@ public class FollowOnLockingAction implements PostAction {
 				loadedValuesCollector,
 				lockOptions.getLockMode(),
 				lockOptions.getTimeout(),
-				lockOptions.getScope()
+				lockOptions.getLockScope()
 		) );
 	}
 
@@ -185,7 +186,7 @@ public class FollowOnLockingAction implements PostAction {
 		} );
 
 		// now we do process any collections, if asked
-		if ( lockScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+		if ( lockScope == PessimisticLockScope.EXTENDED ) {
 			SqmMutationStrategyHelper.visitCollectionTables( entityMappingType, (attribute) -> {
 				// we may need to lock the "collection table".
 				// the conditions are a bit unclear as to directionality, etc., so for now lock each.
@@ -198,7 +199,7 @@ public class FollowOnLockingAction implements PostAction {
 				);
 			} );
 		}
-		else if ( lockScope == Locking.Scope.INCLUDE_FETCHES
+		else if ( lockScope == PessimisticLockScope.FETCHED
 				&& loadedValuesCollector.getCollectedCollections() != null
 				&& !loadedValuesCollector.getCollectedCollections().isEmpty() ) {
 			final var attributeKeys = collectionSegments.get( entityMappingType );
@@ -254,7 +255,7 @@ public class FollowOnLockingAction implements PostAction {
 
 	// Used by Hibernate Reactive
 	protected Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections() {
-		if ( lockScope == Locking.Scope.ROOT_ONLY ) {
+		if ( lockScope == PessimisticLockScope.NORMAL ) {
 			return emptyMap();
 		}
 		final Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> map = new HashMap<>();

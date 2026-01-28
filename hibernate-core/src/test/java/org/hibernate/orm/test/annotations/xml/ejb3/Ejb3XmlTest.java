@@ -59,9 +59,9 @@ public class Ejb3XmlTest {
 			s.clear();
 
 			model.setYear( new Date() );
-			manufacturer = s.get( Manufacturer.class, manufacturer.getId() );
+			manufacturer = s.find( Manufacturer.class, manufacturer.getId() );
 			@SuppressWarnings("unchecked")
-			List<Model> cars = s.getNamedQuery( "allModelsPerManufacturer" )
+			List<Model> cars = s.createNamedQuery( "allModelsPerManufacturer" )
 					.setParameter( "manufacturer", manufacturer )
 					.list();
 			assertEquals( 1, cars.size() );
@@ -97,7 +97,7 @@ public class Ejb3XmlTest {
 			s.flush();
 			s.clear();
 
-			assertEquals( 1, s.getNamedQuery( "manufacturer.findAll" ).list().size() );
+			assertEquals( 1, s.createNamedQuery( "manufacturer.findAll" ).list().size() );
 
 			tx.rollback();
 		} );

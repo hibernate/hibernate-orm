@@ -66,7 +66,7 @@ public class StatelessCollectionsTest {
 		});
 
 		scope.inStatelessTransaction(s -> {
-			WithCollection loaded = s.get(WithCollection.class, inserted.id);
+			WithCollection loaded = s.find(WithCollection.class, inserted.id);
 			assertNull(loaded);
 		});
 	}

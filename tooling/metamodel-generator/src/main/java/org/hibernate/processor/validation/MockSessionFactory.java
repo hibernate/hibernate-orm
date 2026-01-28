@@ -84,7 +84,7 @@ import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
-import org.hibernate.query.internal.NamedObjectRepositoryImpl;
+import org.hibernate.query.named.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;

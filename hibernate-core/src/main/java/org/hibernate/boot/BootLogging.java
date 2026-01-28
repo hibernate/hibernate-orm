@@ -455,4 +455,12 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(id = 160246, value = "Association '%s' is 'mappedBy' another entity and should not specify an '@OrderColumn' (use '@OrderBy' instead)")
 	void mappedByShouldNotSpecifyOrderColumn(String associationPath);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160247, value = "Binding named mutation query '%s' to [%s]")
+	void bindingNamedMutation(String queryName, String bindingTarget);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 160248, value = "Binding named native mutation query '%s' to [%s]")
+	void bindingNamedNativeMutation(String queryName, String bindingTarget);
 }

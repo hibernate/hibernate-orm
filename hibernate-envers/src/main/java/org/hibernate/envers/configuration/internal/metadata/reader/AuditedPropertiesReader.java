@@ -52,6 +52,7 @@ import static org.hibernate.envers.configuration.internal.ModelsHelper.getMember
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
 import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
+import static org.hibernate.internal.util.StringHelper.coalesce;
 
 /**
  * Reads persistent properties form a {@link PersistentPropertiesSource} and adds the ones that are audited to a
@@ -774,7 +775,7 @@ public class AuditedPropertiesReader {
 	private void addPropertyMapKey(MemberDetails memberDetails, PropertyAuditingData propertyData) {
 		final MapKey mapKey = memberDetails.getDirectAnnotationUsage( MapKey.class );
 		if ( mapKey != null ) {
-			propertyData.setMapKey( mapKey.name() );
+			propertyData.setMapKey( coalesce( mapKey.value(), mapKey.name() ) );
 		}
 		else {
 			final MapKeyEnumerated mapKeyEnumerated = memberDetails.getDirectAnnotationUsage( MapKeyEnumerated.class );

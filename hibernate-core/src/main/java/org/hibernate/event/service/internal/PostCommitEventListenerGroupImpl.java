@@ -8,7 +8,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
@@ -27,9 +26,8 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 
 	public PostCommitEventListenerGroupImpl(
 			EventType<T> eventType,
-			CallbackRegistry callbackRegistry,
 			boolean isJpaBootstrap) {
-		super( eventType, callbackRegistry, isJpaBootstrap );
+		super( eventType, isJpaBootstrap );
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {
 			extendedListenerContract = PostCommitDeleteEventListener.class;

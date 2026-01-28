@@ -5,17 +5,14 @@
 package org.hibernate.orm.test.mapping.inheritance.discriminator.joined;
 
 import jakarta.persistence.Tuple;
-
-import org.hibernate.query.Query;
-
+import org.assertj.core.api.Assertions;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.assertj.core.api.Assertions;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -68,7 +65,7 @@ public class DiscriminatorQueryUsageTests {
 	@Test
 	public void testUsageAsPredicateWithParamOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			Query<Integer> query = session.createQuery(
+			SelectionQuery<Integer> query = session.createQuery(
 					"select p.id from ParentEntity p where type(p) = :type",
 					Integer.class
 			);

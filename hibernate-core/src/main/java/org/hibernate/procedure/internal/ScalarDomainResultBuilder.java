@@ -5,7 +5,7 @@
 package org.hibernate.procedure.internal;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

@@ -4,8 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.util.Arrays;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
@@ -25,10 +23,10 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
+
+import java.util.Arrays;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
@@ -36,8 +34,8 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
@@ -50,14 +48,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Gavin King
  */
-public class DefaultFlushEntityEventListener implements FlushEntityEventListener, CallbackRegistryConsumer {
-
-	private CallbackRegistry callbackRegistry;
-
-	@Override
-	public void injectCallbackRegistry(CallbackRegistry callbackRegistry) {
-		this.callbackRegistry = callbackRegistry;
-	}
+public class DefaultFlushEntityEventListener implements FlushEntityEventListener {
 
 	/**
 	 * Make sure user didn't mangle the id.
@@ -337,14 +328,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final Object[] values = event.getPropertyValues();
 		final var persister = entry.getPersister();
 
-		final boolean isDirty =
-				entry.getStatus() != Status.DELETED && callbackRegistry.preUpdate( entity )
-						&& copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );
+		final boolean isDirty = entry.getStatus() != Status.DELETED
+				&& persister.getEntityCallbacks().preUpdate( entity )
+				&& copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );
 
-		final boolean stateModified =
-				event.getSession().getInterceptor()
-						.onFlushDirty( entity, id, values, entry.getLoadedState(),
-								persister.getPropertyNames(), persister.getPropertyTypes() );
+		final boolean stateModified = event.getSession()
+				.getInterceptor()
+				.onFlushDirty( entity, id, values, entry.getLoadedState(), persister.getPropertyNames(), persister.getPropertyTypes() );
 
 		return stateModified || isDirty;
 	}

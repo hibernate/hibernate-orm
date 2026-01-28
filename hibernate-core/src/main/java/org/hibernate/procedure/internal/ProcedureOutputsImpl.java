@@ -26,7 +26,7 @@ import jakarta.persistence.ParameterMode;
  * @author Steve Ebersole
  */
 class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
-	private final ProcedureCallImpl<?> procedureCall;
+	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
 	private final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations;
@@ -34,7 +34,7 @@ class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
 	private int refCursorParamIndex;
 
 	ProcedureOutputsImpl(
-			ProcedureCallImpl<?> procedureCall,
+			ProcedureCallImpl procedureCall,
 			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations,
 			JdbcCallRefCursorExtractor[] refCursorParameters,
 			CallableStatement callableStatement,

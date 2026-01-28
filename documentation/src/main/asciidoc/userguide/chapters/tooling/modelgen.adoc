@@ -35,18 +35,18 @@ specification, but for completeness the definition is repeated in the following
 paragraphs.  For every class in a persistence-unit, the generator will produce
 a static metamodel class based on the following rules:
 
-* For each managed class `X` in package `p`, a metamodel class `X_` is created in package `p`.
+* For each managed class `T` in package `p`, a metamodel class `X_` is created in package `p`.
 * The name of the metamodel class is derived from the name of the managed class by appending "_" to the managed class name.
 * The metamodel class `X_` must be annotated with the `jakarta.persistence.StaticMetamodel` annotation.  The generation
 can also be configured to add the `javax.annotation.processing.Generated` annotation.
-* If class `X` extends another class `S`, where `S` is the most derived managed class extended by `X`, then
+* If class `T` extends another class `S`, where `S` is the most derived managed class extended by `T`, then
 class `X_` must extend class `S_`, where `S_` is the metamodel class created for `S`.
-* For every persistent singular attribute `y` declared by class `X`, where the type of `y` is `Y`,
+* For every persistent singular attribute `y` declared by class `T`, where the type of `y` is `Y`,
 the metamodel class must contain a declaration as follows:
 
  public static volatile SingularAttribute<X, Y> y;
 
-* For every persistent plural attribute `z` declared by class `X`, where the element type of `z` is `Z`, the metamodel
+* For every persistent plural attribute `z` declared by class `T`, where the element type of `z` is `Z`, the metamodel
 class must contain a declaration as follows:
 
 ** if the collection type of `z` is `java.util.Collection`, then
@@ -65,10 +65,10 @@ class must contain a declaration as follows:
 +
  public static volatile MapAttribute<X, K, Z> z;
 +
-where `K` is the type of the key of the map in class `X`
+where `K` is the type of the key of the map in class `T`
 
 * Import statements must be included for `jakarta.persistence.metamodel` types as
-needed, as well as all domain model classes (i.e., `X`, `S`, `Y`, `Z`, and `K`).
+needed, as well as all domain model classes (i.e., `T`, `S`, `Y`, `Z`, and `K`).
 
 As an example, consider the following domain model -
 

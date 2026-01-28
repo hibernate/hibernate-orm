@@ -41,7 +41,7 @@ public class JdbcPreparedStatementEventTests {
 		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select t from TestEntity t" ).list();
+					session.createQuery( "select t from TestEntity t", TestEntity.class ).list();
 					final List<RecordedEvent> events = jfrEvents.events()
 							.filter(
 									recordedEvent ->

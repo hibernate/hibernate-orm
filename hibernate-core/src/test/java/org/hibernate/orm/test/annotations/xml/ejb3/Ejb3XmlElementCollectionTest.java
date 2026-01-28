@@ -130,6 +130,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 
 		final MapKey mapKeyUsage = memberDetails.getDirectAnnotationUsage( MapKey.class );
 		assertThat( mapKeyUsage.name() ).isEmpty();
+		assertThat( mapKeyUsage.value() ).isEmpty();
 	}
 
 	@Test
@@ -146,7 +147,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertThat( memberDetails.hasDirectAnnotationUsage( MapKeyJoinColumn.class ) ).isFalse();
 
 		final MapKey mapKeyUsage = memberDetails.getDirectAnnotationUsage( MapKey.class );
-		assertThat( mapKeyUsage.name() ).isEqualTo( "field2" );
+		assertThat( mapKeyUsage.value() ).isEqualTo( "field2" );
 	}
 
 	@Test

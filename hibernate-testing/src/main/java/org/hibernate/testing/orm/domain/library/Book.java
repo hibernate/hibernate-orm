@@ -7,6 +7,7 @@ package org.hibernate.testing.orm.domain.library;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -15,15 +16,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import org.hibernate.annotations.NaturalId;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table(name = "books")
 public class Book {
 	@Id
 	private Integer id;
 	private String name;
+	@NaturalId
 	private String isbn;
 
 	@ManyToMany
@@ -49,6 +53,12 @@ public class Book {
 	public Book(Integer id, String name) {
 		this.id = id;
 		this.name = name;
+	}
+
+	public Book(Integer id, String name, String isbn) {
+		this.id = id;
+		this.name = name;
+		this.isbn = isbn;
 	}
 
 	public Integer getId() {

@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
 
 /**
@@ -41,5 +42,23 @@ public enum FlushModeType {
 	/**
 	 * Current flush mode of the persistence context at the time the query is executed.
 	 */
-	PERSISTENCE_CONTEXT
+	PERSISTENCE_CONTEXT;
+
+	public QueryFlushMode toQueryFlushMode() {
+		return switch ( this ) {
+			case AUTO, ALWAYS -> QueryFlushMode.FLUSH;
+			case MANUAL, COMMIT -> QueryFlushMode.NO_FLUSH;
+			case PERSISTENCE_CONTEXT -> QueryFlushMode.DEFAULT;
+		};
+	}
+
+	public FlushMode toFlushMode() {
+		return switch ( this ) {
+			case AUTO -> FlushMode.AUTO;
+			case ALWAYS -> FlushMode.ALWAYS;
+			case MANUAL -> FlushMode.MANUAL;
+			case COMMIT -> FlushMode.COMMIT;
+			case PERSISTENCE_CONTEXT -> null;
+		};
+	}
 }

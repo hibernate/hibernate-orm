@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -12,12 +13,12 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
@@ -45,12 +46,12 @@ import java.util.stream.Stream;
  * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link QueryProducer#createSelectionQuery(String, Class)}, passing the
+ * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(String, Class)}, passing the
  *     HQL as a string,
- * <li>{@link QueryProducer#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
  *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
  *     query object}, or
- * <li>{@link QueryProducer#createNamedSelectionQuery(String, Class)} passing
+ * <li>{@link org.hibernate.SharedSessionContract#createNamedSelectionQuery(String, Class)} passing
  *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
  *     or {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
@@ -120,7 +121,16 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SelectionQuery<R> extends CommonQueryContract {
+public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
+	/**
+	 * The type of things returned from the query.
+	 */
+	Class<R> getResultType();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Execution
+
 	/**
 	 * Execute the query and return the query results as a {@link List}.
 	 * If the query contains multiple items in the selection list, then
@@ -273,8 +283,29 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Options
+
 	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
+
+	/**
+	 * Apply an {@link EntityGraph} to the query using {@linkplain GraphSemantic#LOAD load graph} semantics.
+	 * Covariant override of {@linkplain jakarta.persistence.TypedQuery#setEntityGraph(EntityGraph)}
+	 * <p>
+	 * {@inheritDoc}
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 */
+	@Override
+	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
+	}
 
 	/**
 	 * Apply an {@link EntityGraph} to the query.
@@ -283,6 +314,11 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * should be fetched as part of the initial query.
 	 *
 	 * @since 6.3
+	 *
+	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see Query#asSelectionQuery(EntityGraph)
+	 * @see Query#asSelectionQuery(EntityGraph,GraphSemantic)
+	 * @see jakarta.persistence.Query#withEntityGraph(EntityGraph)
 	 */
 	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
@@ -317,17 +353,20 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
-	@Override @Deprecated(since = "7")
+	@Override
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
-
-	@Override @Deprecated(since = "7")
-	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
 	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
+
+	@Override
+	SelectionQuery<R> setTimeout(Integer timeout);
+
+	@Override
+	SelectionQuery<R> setTimeout(Timeout timeout);
 
 	@Override
 	SelectionQuery<R> setComment(String comment);
@@ -377,6 +416,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *         will be put in read-only mode; {@code false} otherwise
 	 *         (they will be modifiable)
 	 */
+	@Override
 	boolean isReadOnly();
 
 	/**
@@ -408,38 +448,19 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *                 {@code false} indicates that entities and proxies
 	 *                 loaded by the query will be put in modifiable mode
 	 */
+	@Override
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
-	 * The maximum number of query result rows to return.
-	 *
-	 * @return the maximum length of the query result list
+	 * {@inheritDoc
 	 */
-	int getMaxResults();
-
-	/**
-	 * Set the maximum number of query result rows to return.
-	 *
-	 * @param maxResults the maximum length of the query result list
-	 */
+	@Override
 	SelectionQuery<R> setMaxResults(int maxResults);
 
 	/**
-	 * The first query result row to return. The very first row
-	 * of the query result list is considered the zeroth row.
-	 *
-	 * @return the position of the first row to return,
-	 *         indexed from zero
+	 * {@inheritDoc
 	 */
-	int getFirstResult();
-
-	/**
-	 * Set the first query result row to return. The very first
-	 * row of the query result list is considered the zeroth row.
-	 *
-	 * @param startPosition the position of the first row to return,
-	 *                      indexed from zero
-	 */
+	@Override
 	SelectionQuery<R> setFirstResult(int startPosition);
 
 	/**
@@ -559,26 +580,19 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	/**
-	 * The {@link LockOptions} currently in effect for the query
-	 *
-	 * @deprecated Since {@link LockOptions} is transitioning to
-	 *             a new role as an SPI.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	LockOptions getLockOptions();
-
-	/**
-	 * Get the root {@link LockModeType} for the query
+	 * {@inheritDoc}
 	 *
 	 * @see #getHibernateLockMode()
 	 */
+	@Override
 	LockModeType getLockMode();
 
 	/**
-	 * Specify the root {@link LockModeType} for the query
+	 * {@inheritDoc
 	 *
 	 * @see #setHibernateLockMode
 	 */
+	@Override
 	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
@@ -596,36 +610,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
-	 * Apply a scope to any pessimistic locking applied to the query.
-	 *
-	 * @param lockScope The lock scope to apply
-	 *
-	 * @return {@code this}, for method chaining
+	 * {@inheritDoc
 	 */
-	SelectionQuery<R> setLockScope(Locking.Scope lockScope);
-
-	/**
-	 * Apply a scope to any pessimistic locking applied to the query.
-	 *
-	 * @param lockScope The lock scope to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@linkplain #setLockScope(Locking.Scope)} instead.
-	 */
-	@Deprecated(since = "7.1")
+	@Override
 	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
 
-	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 *
-	 * @see #setHibernateLockMode
-	 * @see #setLockScope(Locking.Scope)
-	 *
-	 * @deprecated Use {@linkplain #setLockScope(Locking.Scope)} instead.
-	 */
-	@Deprecated(since = "7")
-	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
+	@Override
+	SelectionQuery<R> setLockTimeout(Timeout lockTimeout);
 
 	/**
 	 * Specifies whether follow-on locking should be applied
@@ -633,22 +624,20 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
 	/**
-	 * Specifies whether follow-on locking should be applied
-	 *
-	 * @deprecated Use {@linkplain #setFollowOnStrategy(Locking.FollowOn)} instead
-	 */
-	@Deprecated(since = "7.1")
-	SelectionQuery<R> setFollowOnLocking(boolean enable);
-
-	/**
 	 * Set a {@link TupleTransformer}.
 	 */
-	<T> SelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 */
 	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Parameter Handling
 
 	@Override
 	SelectionQuery<R> setParameter(String name, Object value);
@@ -659,15 +648,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameter(String name, P value, Type<P> type);
 
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
-
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
-
 	@Override
 	SelectionQuery<R> setParameter(int position, Object value);
 
@@ -676,15 +656,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	@Override
 	<P> SelectionQuery<R> setParameter(int position, P value, Type<P> type);
-
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
-
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
-
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
 	<T> SelectionQuery<R> setParameter(QueryParameter<T> parameter, T value);
@@ -698,11 +669,17 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
 
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Override
+	SelectionQuery<R> setProperties(Object bean);
 
-	@Override @Deprecated
-	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Override
+	SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+
+	@Override
+	<P> SelectionQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> SelectionQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
@@ -758,9 +735,28 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
-	@Override
-	SelectionQuery<R> setProperties(Object bean);
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
-	SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated
+	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
 }

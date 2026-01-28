@@ -15,10 +15,9 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
-import org.hibernate.boot.query.NamedHqlQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinition;
 
 import jakarta.xml.bind.JAXBElement;
+import org.hibernate.query.QueryFlushMode;
 
 import static org.hibernate.boot.model.internal.QueryBinder.createStoredProcedure;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -46,14 +45,14 @@ public class NamedQueryBinder {
 			String prefix) {
 		final String registrationName = prefix + namedQueryBinding.getName();
 		final var queryBuilder =
-				new NamedHqlQueryDefinition.Builder<>( registrationName )
+				new HqlQueryBuilder<>( registrationName )
 						.setComment( namedQueryBinding.getComment() )
 						.setCacheable( namedQueryBinding.isCacheable() )
 						.setCacheMode( namedQueryBinding.getCacheMode() )
 						.setCacheRegion( namedQueryBinding.getCacheRegion() )
 						.setTimeout( namedQueryBinding.getTimeout() )
 						.setReadOnly( namedQueryBinding.isReadOnly() )
-						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFlushMode( QueryFlushMode.fromHibernateMode( namedQueryBinding.getFlushMode() ) )
 						.setFetchSize( namedQueryBinding.getFetchSize() );
 
 		boolean foundQuery = false;
@@ -105,14 +104,14 @@ public class NamedQueryBinder {
 
 		final String registrationName = prefix + namedQueryBinding.getName();
 		final var builder =
-				new NamedNativeQueryDefinition.Builder<>( registrationName )
+				new NativeQueryBuilder<>( registrationName )
 						.setComment( namedQueryBinding.getComment() )
 						.setCacheable( namedQueryBinding.isCacheable() )
 						.setCacheMode( namedQueryBinding.getCacheMode() )
 						.setCacheRegion( namedQueryBinding.getCacheRegion() )
 						.setTimeout( namedQueryBinding.getTimeout() )
 						.setReadOnly( namedQueryBinding.isReadOnly() )
-						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFlushMode( QueryFlushMode.fromHibernateMode( namedQueryBinding.getFlushMode() ) )
 						.setFetchSize( namedQueryBinding.getFetchSize() )
 						.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
@@ -180,7 +179,7 @@ public class NamedQueryBinder {
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedNativeQueryDefinition.Builder<?> queryBuilder,
+			NativeQueryBuilder<?> queryBuilder,
 			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {

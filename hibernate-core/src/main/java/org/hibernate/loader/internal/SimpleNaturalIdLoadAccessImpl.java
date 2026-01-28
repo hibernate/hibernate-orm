@@ -16,7 +16,6 @@ import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,7 +58,7 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		return (SimpleNaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
 	}
 
-	public SimpleNaturalIdLoadAccess<T> with(Locking.Scope lockScope) {
+	public SimpleNaturalIdLoadAccess<T> with(PessimisticLockScope lockScope) {
 		super.with( lockScope );
 		return this;
 	}

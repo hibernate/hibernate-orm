@@ -24,11 +24,11 @@ public class Library {
 	private int entid;
 
 	@OneToMany(mappedBy="library", cascade = CascadeType.ALL)
-	@MapKey(name="inventoryCode")
+	@MapKey("inventoryCode")
 	private Map<String,Book> booksOnInventory = new HashMap<>();
 
 	@OneToMany(mappedBy="library", cascade = CascadeType.ALL)
-	@MapKey(name="isbn")
+	@MapKey("isbn")
 	private Map<String,Book> booksOnIsbn = new HashMap<>();
 
 	public int getEntid() {

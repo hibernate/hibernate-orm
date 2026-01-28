@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.List;
-import java.util.function.Consumer;
-
+import org.hibernate.SessionFactory;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -34,6 +35,7 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 		return name;
 	}
 
+	@Override
 	public List<ResultMemento> getResultMementos() {
 		return unmodifiableList( resultMementos );
 	}
@@ -46,5 +48,22 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 		resultMementos.forEach(
 				memento -> resultSetMapping.addResultBuilder( memento.resolve( querySpaceConsumer, context ) )
 		);
+	}
+
+	@Override
+	public <R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory) {
+		if ( getResultMementos().size() != 1 ) {
+			return false;
+		}
+		var resultMemento = getResultMementos().get( 0 );
+		return resultMemento.canBeTreatedAsResultSetMapping( resultType, sessionFactory );
+	}
+
+	@Override
+	public <R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory) {
+		assert getResultMementos().size() == 1;
+		var resultMemento = getResultMementos().get( 0 );
+
+		return resultMemento.toJpaMapping( sessionFactory );
 	}
 }

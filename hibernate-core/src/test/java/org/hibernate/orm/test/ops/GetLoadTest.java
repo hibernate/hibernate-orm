@@ -67,7 +67,7 @@ public class GetLoadTest {
 					assertTrue( Hibernate.isInitialized( n ) );
 					assertFalse( Hibernate.isInitialized( n.getChildren() ) );
 					assertFalse( Hibernate.isInitialized( n.getParent() ) );
-					assertNull( session.get( Node.class, "xyz" ) );
+					assertNull( session.find( Node.class, "xyz" ) );
 				}
 		);
 
@@ -119,7 +119,7 @@ public class GetLoadTest {
 		Employer e = scope.fromTransaction(
 				session -> {
 					session.remove( emp );
-					return session.get( Employer.class, emp.getId() );
+					return session.find( Employer.class, emp.getId() );
 				}
 		);
 

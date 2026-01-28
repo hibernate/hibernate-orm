@@ -282,7 +282,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 			JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 			ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 
-			session.createSelectionQuery( "select 1" ).uniqueResult();
+			session.createSelectionQuery( "select 1", Integer.class ).uniqueResult();
 
 			assertFalse( resourceRegistry.hasRegisteredResources() );
 			assertEquals( 0, connectionProvider.getAcquiredConnections().size() );

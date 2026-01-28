@@ -57,7 +57,7 @@ public class PolymorphicCacheTest {
 		// test accessing the wrong class by id with a cache-hit
 		scope.inTransaction( (session) -> {
 			try {
-				final CachedItem2 loaded = session.get( CachedItem2.class, 1 );
+				final CachedItem2 loaded = session.find( CachedItem2.class, 1 );
 				assertThat( loaded ).isNull();
 			}
 			catch (WrongClassException legacyBehavior) {
@@ -82,7 +82,7 @@ public class PolymorphicCacheTest {
 		scope.inTransaction( (session) -> {
 			// the legacy behavior for no cache hit was to return null
 			try {
-				final CachedItem2 loaded = session.get( CachedItem2.class, 1 );
+				final CachedItem2 loaded = session.find( CachedItem2.class, 1 );
 				assertThat( loaded ).isNull();
 			}
 			catch (WrongClassException legacyBehavior) {
@@ -114,11 +114,11 @@ public class PolymorphicCacheTest {
 			assertThat( cache.containsEntity( CachedItem2.class, 2 ) ).isTrue();
 
 			scope.inTransaction( session, (s) -> {
-				final CachedItem1 loadedItem1 = s.get( CachedItem1.class, 1 );
+				final CachedItem1 loadedItem1 = s.find( CachedItem1.class, 1 );
 				assertThat( loadedItem1 ).isNotNull();
 				assertThat( loadedItem1.getName() ).isEqualTo( "updated" );
 
-				final CachedItem2 loadedItem2 = s.get( CachedItem2.class, 2 );
+				final CachedItem2 loadedItem2 = s.find( CachedItem2.class, 2 );
 				assertThat( loadedItem2 ).isNotNull();
 
 			} );
@@ -130,10 +130,10 @@ public class PolymorphicCacheTest {
 				session.remove( session.getReference( CachedItem1.class, 1 ) );
 			} );
 			scope.inTransaction( session, (s) -> {
-				final CachedItem1 cachedItem1 = session.get( CachedItem1.class, 1 );
+				final CachedItem1 cachedItem1 = session.find( CachedItem1.class, 1 );
 				assertThat( cachedItem1 ).isNull();
 
-				final CachedItem2 cachedItem2 = session.get( CachedItem2.class, 2 );
+				final CachedItem2 cachedItem2 = session.find( CachedItem2.class, 2 );
 				assertThat( cachedItem2 ).isNotNull();
 			} );
 		} );

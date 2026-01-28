@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.specification;
 
-import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -83,10 +84,13 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	MutationQuery createQuery(StatelessSession session);
 
 	@Override
+	CriteriaStatement<T> buildCriteria(CriteriaBuilder builder);
+
+	@Override
 	MutationSpecification<T> validate(CriteriaBuilder builder);
 
 	@Override
-	TypedQueryReference<Void> reference();
+	StatementReference reference();
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

@@ -100,7 +100,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	@Override
 	public JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
-			ProcedureCallImplementor<?> procedureCall) {
+			ProcedureCallImplementor procedureCall) {
 		final QueryParameterBinding<T> binding =
 				procedureCall.getParameterBindings()
 						.getBinding( this );
@@ -186,7 +186,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	}
 
 	private String getJdbcParamName(
-			ProcedureCallImplementor<?> procedureCall,
+			ProcedureCallImplementor procedureCall,
 			boolean isNamed,
 			boolean passProcedureParameterNames,
 			OutputableType<T> typeToUse,
@@ -231,7 +231,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 
 	private boolean canDoNameParameterBinding(
 			BindableType<?> hibernateType,
-			ProcedureCallImplementor<?> procedureCall,
+			ProcedureCallImplementor procedureCall,
 			ExtractedDatabaseMetaData databaseMetaData) {
 		return procedureCall.getFunctionReturn() == null
 			&& databaseMetaData.supportsNamedParameters()

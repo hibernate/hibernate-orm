@@ -78,7 +78,8 @@ public class LockedRowsTests {
 					session2.find(Book.class,1, PESSIMISTIC_WRITE, NO_WAIT);
 					fail("Expecting a failure due to locked rows and no-wait");
 				}
-				catch (PessimisticLockException expected) {
+				catch (jakarta.persistence.PessimisticLockException | jakarta.persistence.LockTimeoutException expected) {
+					System.out.println( "Caught expected exception - " + expected );
 				}
 			} );
 		} );

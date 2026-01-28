@@ -4,10 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 
 /**
  *  Defines an event class for the loading of an entity.
@@ -37,7 +37,7 @@ public class LoadEvent extends AbstractSessionEvent {
 	}
 
 	public LoadEvent(Object entityId, String entityClassName, boolean isAssociationFetch, EventSource source, Boolean readOnly) {
-		this( entityId, entityClassName, null, LockMode.NONE.toLockOptions(), isAssociationFetch, source, readOnly );
+		this( entityId, entityClassName, null, LockOptions.NONE, isAssociationFetch, source, readOnly );
 	}
 
 	private LoadEvent(
@@ -175,6 +175,6 @@ public class LoadEvent extends AbstractSessionEvent {
 	 */
 	@Deprecated(since = "7.1")
 	public boolean getLockScope() {
-		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+		return lockOptions.getLockScope() != PessimisticLockScope.NORMAL;
 	}
 }

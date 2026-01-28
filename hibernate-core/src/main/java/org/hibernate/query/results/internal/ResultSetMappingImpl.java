@@ -9,9 +9,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.LegacyFetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.LegacyFetchBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -38,7 +38,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * ResultSetMapping implementation used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  *
  * @author Steve Ebersole
  */

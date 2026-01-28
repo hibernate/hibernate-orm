@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -16,7 +17,7 @@ public interface NaturalIdLoader<T> extends EntityLoader, MultiKeyLoader {
 	interface Options {
 		LockMode getLockMode();
 		Timeout getLockTimeout();
-		Locking.Scope getLockScope();
+		PessimisticLockScope getLockScope();
 		Locking.FollowOn getLockFollowOn();
 	}
 

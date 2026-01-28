@@ -4,19 +4,18 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
-import java.math.BigDecimal;
-import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.proxy.HibernateProxy;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,7 +94,7 @@ public class SimpleInheritanceTest {
 										.size(), is( 2 ) );
 					s.clear();
 
-					List<Customer> customers = s.createQuery( "from Customer" ).list();
+					List<Customer> customers = s.createQuery( "from Customer", Customer.class ).list();
 					for ( Customer c : customers ) {
 						assertThat( c.getComments(), is( "Very demanding" ) );
 					}
@@ -127,26 +126,20 @@ public class SimpleInheritanceTest {
 				}
 		);
 
-		Customer c = scope.fromTransaction(
-				s ->
-						s.get( Customer.class, employee.getId() )
-
-		);
+		Customer c = scope.fromTransaction( s -> s.find( Customer.class, employee.getId() ) );
 
 		assertNull( c );
 
 		scope.inTransaction(
 				s -> {
-					Employee e = s.get( Employee.class, employee.getId() );
-					Customer c1 = s.get( Customer.class, e.getId() );
+					Employee e = s.find( Employee.class, employee.getId() );
+					Customer c1 = s.find( Customer.class, e.getId() );
 					assertNotNull( e );
 					assertNull( c1 );
 				}
 		);
 
-		scope.inTransaction(
-				session -> session.remove( employee )
-		);
+		scope.inTransaction(session -> session.remove( employee ) );
 	}
 
 	@Test

@@ -32,13 +32,4 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
 	@Override @Deprecated(forRemoval = true)
 	SubGraph<J> makeSubGraph(boolean mutable);
-
-	/**
-	 * @deprecated Planned for removal in JPA 4
-	 */
-	@Override @Deprecated(forRemoval = true)
-	@SuppressWarnings("unchecked") // The JPA method was defined with an incorrect generic signature
-	default <T> SubGraph<? extends T> addSubclassSubgraph(Class<? extends T> type) {
-		return (SubGraph<? extends T>) addTreatedSubgraph( (Class<? extends J>) type );
-	}
 }

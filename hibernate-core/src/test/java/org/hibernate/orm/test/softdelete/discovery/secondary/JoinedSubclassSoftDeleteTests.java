@@ -82,13 +82,13 @@ public class JoinedSubclassSoftDeleteTests {
 	@Test
 	void testLoading(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			assertThat( session.get( JoinedRoot.class, 1 ) ).isNull();
+			assertThat( session.find( JoinedRoot.class, 1 ) ).isNull();
 			assertThat( session.get( JoinedRoot.class, 2 ) ).isNotNull();
 			assertThat( session.get( JoinedRoot.class, 3 ) ).isNotNull();
 		} );
 
 		scope.inTransaction( (session) -> {
-			assertThat( session.get( JoinedSub.class, 1 ) ).isNull();
+			assertThat( session.find( JoinedSub.class, 1 ) ).isNull();
 			assertThat( session.get( JoinedSub.class, 2 ) ).isNotNull();
 			assertThat( session.get( JoinedSub.class, 3 ) ).isNotNull();
 		} );

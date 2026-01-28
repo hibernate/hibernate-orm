@@ -14,7 +14,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -180,17 +180,16 @@ public class SkipLockedTests {
 	private List<BatchJob> nextFiveBatchJobs(Session session, Integer maxResult) {
 		var query = session.createQuery(
 				"select j from BatchJob j", BatchJob.class )
-				.setMaxResults( maxResult )
-				.unwrap( Query.class );
+				.setMaxResults( maxResult );
 
 		applySkipLocked(query);
 
 		return query.list();
 	}
 
-	protected void applySkipLocked(Query<?> query) {
+	protected void applySkipLocked(SelectionQuery<?> query) {
 		query.setHibernateLockMode( lockMode )
-				.setTimeout( Timeouts.SKIP_LOCKED );
+				.setLockTimeout( Timeouts.SKIP_LOCKED );
 		if ( followOnLocking != null ) {
 			query.setFollowOnStrategy( followOnLocking ? Locking.FollowOn.FORCE : Locking.FollowOn.IGNORE );
 		}

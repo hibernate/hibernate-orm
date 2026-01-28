@@ -4,11 +4,21 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.StatementReference;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaStatement;
+import jakarta.persistence.metamodel.Metamodel;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -34,14 +44,15 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryProducerImplementor;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -50,6 +61,7 @@ import org.hibernate.type.format.FormatMapper;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -61,7 +73,7 @@ import java.util.UUID;
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings("resource")
 public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImplementor {
 
 	protected final SharedSessionContractImplementor delegate;
@@ -75,6 +87,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	 */
 	protected SharedSessionContract delegate() {
 		return delegate;
+	}
+
+	@Override
+	public EntityManagerFactory getEntityManagerFactory() {
+		return delegate().getEntityManagerFactory();
+	}
+
+	@Override
+	public Metamodel getMetamodel() {
+		return delegate().getMetamodel();
 	}
 
 	@Override
@@ -92,56 +114,129 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate.getTenantIdentifierValue();
 	}
 
-	private QueryProducerImplementor queryDelegate() {
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return delegate().getCacheRetrieveMode();
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		delegate().setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return delegate().getCacheStoreMode();
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		delegate().setCacheStoreMode( cacheStoreMode );
+	}
+
+	@Override
+	public void setProperty(String propertyName, Object value) {
+		delegate().setProperty( propertyName, value );
+	}
+
+	@Override
+	public Map<String, Object> getProperties() {
+		return delegate().getProperties();
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object id) {
+		return delegate().get( entityClass, entityClass );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
+		return delegate().get( entityClass, key, findOptions );
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		return delegate().get( entityGraph, key, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+		return delegate().getMultiple( entityClass, keys, findOptions );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		return delegate().getMultiple( entityGraph, keys, findOptions );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object id) {
+		return delegate().find( entityClass, id );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityClass, Object key, FindOption... findOptions) {
+		return delegate().find( entityClass, key, findOptions );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+		return delegate().find( entityGraph, key, findOptions );
+	}
+
+	@Override
+	public <T> List<T> findMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+		return delegate().findMultiple( entityClass, keys, findOptions );
+	}
+
+	@Override
+	public <T> List<T> findMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+		return delegate().findMultiple( entityGraph, keys, findOptions );
+	}
+
+	@Override
+	public <C> void runWithConnection(ConnectionConsumer<C> connectionConsumer) {
+		delegate().runWithConnection( connectionConsumer );
+	}
+
+	@Override
+	public <C, T> T callWithConnection(ConnectionFunction<C, T> connectionFunction) {
+		return delegate().callWithConnection( connectionFunction );
+	}
+
+	@Override
+	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+		return delegate().getEntityGraph( entityClass, name );
+	}
+
+	private SharedSessionContractImplementor queryDelegate() {
 		return delegate;
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
-		//noinspection resource
-		return delegate().createMutationQuery( updateQuery );
+	public MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaStatement) {
+		return delegate.createMutationQuery( criteriaStatement );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
-		//noinspection resource
-		return delegate().createMutationQuery( deleteQuery );
+	public MutationQueryImplementor<?> createStatement(CriteriaStatement<?> criteriaStatement) {
+		return createMutationQuery( criteriaStatement );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
-		//noinspection resource
-		return delegate().createMutationQuery( insert );
+	@SuppressWarnings("rawtypes")
+	public MutationQueryImplementor createMutationQuery(JpaCriteriaInsert insert) {
+		return createMutationQuery( (CriteriaStatement) insert );
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+	public <T> SelectionQueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
 	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
-		return queryDelegate().createQuery( updateQuery );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
-		return queryDelegate().createQuery( deleteQuery );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
-		return queryDelegate().getNamedQuery( name );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
-		return queryDelegate().getNamedNativeQuery( name );
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
-		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
+	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaQuery) {
+		return queryDelegate().createQuery( criteriaQuery );
 	}
 
 	@Override
@@ -150,32 +245,37 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public SelectionQuery<?> createSelectionQuery(String hqlString) {
-		return queryDelegate().createSelectionQuery( hqlString );
+	public <R> SelectionQueryImplementor<R> createQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createQuery( hqlString, resultGraph );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
-		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(String hqlString, Class<R> resultType) {
+		return (SelectionQueryImplementor<R>) queryDelegate().createSelectionQuery( hqlString, resultType );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
-		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return (SelectionQueryImplementor<R>) queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
-		return queryDelegate().createSelectionQuery( criteria );
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		return (SelectionQueryImplementor<R>) queryDelegate().createSelectionQuery( criteria );
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(CriteriaSelect<R> criteria) {
+		return (SelectionQueryImplementor<R>) queryDelegate().createSelectionQuery( criteria );
+	}
+
+	@Override
+	public <T> SelectionQueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
 		return queryDelegate().createQuery( queryString, resultType );
 	}
 
 	@Override
-	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+	public <R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
@@ -185,14 +285,28 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
+	public <T> SelectionQueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
 		return queryDelegate().createNamedQuery( name, resultClass );
 	}
 
 	@Override
-	public SelectionQuery<?> createNamedSelectionQuery(String name) {
-		//noinspection resource
-		return delegate().createNamedSelectionQuery( name );
+	public MutationQuery createNamedStatement(String name) {
+		return queryDelegate().createNamedStatement( name );
+	}
+
+	@Override
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName) {
+		return queryDelegate().createNamedQuery( name, resultSetMappingName );
+	}
+
+	@Override
+	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+		return queryDelegate().createNamedQuery( name, resultSetMappingName, resultClass );
+	}
+
+	@Override
+	public MutationQuery createNativeStatement(String sql) {
+		return queryDelegate().createNativeStatement( sql );
 	}
 
 	@Override
@@ -220,7 +334,12 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 
 	@Override
 	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
-		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+	}
+
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+		return queryDelegate().createNativeQuery( sql, resultSetMapping );
 	}
 
 	@Override
@@ -229,58 +348,72 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(String statementString) {
-		return delegate.createMutationQuery( statementString );
+	@SuppressWarnings("rawtypes")
+	public MutationQueryImplementor createMutationQuery(String statementString) {
+		return (MutationQueryImplementor) queryDelegate().createMutationQuery( statementString );
 	}
 
 	@Override
-	public MutationQuery createNamedMutationQuery(String name) {
-		return delegate.createNamedMutationQuery( name );
+	public MutationQueryImplementor<?> createStatement(String hqlString) {
+		return (MutationQueryImplementor<?>) queryDelegate().createStatement( hqlString );
 	}
 
 	@Override
-	public MutationQuery createNativeMutationQuery(String sqlString) {
-		return delegate.createNativeMutationQuery( sqlString );
+	@SuppressWarnings("rawtypes")
+	public MutationQueryImplementor<?> createStatement(StatementReference statementReference) {
+		return (MutationQueryImplementor) queryDelegate().createStatement( statementReference );
 	}
 
 	@Override
-	public ProcedureCall createNamedStoredProcedureQuery(String name) {
-		return delegate.createNamedStoredProcedureQuery( name );
+	@SuppressWarnings("rawtypes")
+	public MutationQueryImplementor createNamedMutationQuery(String name) {
+		return (MutationQueryImplementor) queryDelegate().createNamedMutationQuery( name );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName) {
-		return delegate.createStoredProcedureQuery( procedureName );
+	@SuppressWarnings("rawtypes")
+	public MutationQueryImplementor createNativeMutationQuery(String sqlString) {
+		return (MutationQueryImplementor) queryDelegate().createNativeMutationQuery( sqlString );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
-		return delegate.createStoredProcedureQuery( procedureName, resultClasses );
+	public ProcedureCallImplementor createNamedStoredProcedureQuery(String name) {
+		return (ProcedureCallImplementor) queryDelegate().createNamedStoredProcedureQuery( name );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
-		return delegate.createStoredProcedureQuery( procedureName, resultSetMappings );
+	public ProcedureCallImplementor createStoredProcedureQuery(String procedureName) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureQuery( procedureName );
 	}
 
 	@Override
-	public ProcedureCall getNamedProcedureCall(String name) {
-		return delegate.getNamedProcedureCall( name );
+	public ProcedureCallImplementor createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureQuery( procedureName, resultClasses );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName) {
-		return delegate.createStoredProcedureCall( procedureName );
+	public ProcedureCallImplementor createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureQuery( procedureName, resultSetMappings );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
-		return delegate.createStoredProcedureCall( procedureName, resultClasses );
+	public ProcedureCallImplementor getNamedProcedureCall(String name) {
+		return (ProcedureCallImplementor) queryDelegate().getNamedProcedureCall( name );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
-		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
+	public ProcedureCallImplementor createStoredProcedureCall(String procedureName) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureCall( procedureName );
+	}
+
+	@Override
+	public ProcedureCallImplementor createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureCall( procedureName, resultClasses );
+	}
+
+	@Override
+	public ProcedureCallImplementor createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		return (ProcedureCallImplementor) queryDelegate().createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
 	@Override
@@ -326,6 +459,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public boolean isJoinedToTransaction() {
 		return delegate.isJoinedToTransaction();
+	}
+
+	@Override
+	public Object find(String entityName, Object key, FindOption... findOptions) {
+		return delegate.find( entityName, key, findOptions );
+	}
+
+	@Override
+	public Object get(String entityName, Object key, FindOption... findOptions) {
+		return delegate.get( entityName, key, findOptions );
 	}
 
 	@Override
@@ -546,6 +689,21 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
+	}
+
+	@Override
+	public LockOptions getDefaultLockOptions() {
+		return delegate.getDefaultLockOptions();
+	}
+
+	@Override
+	public Timeout getDefaultLockTimeout() {
+		return delegate.getDefaultLockTimeout();
+	}
+
+	@Override
+	public Timeout getDefaultTimeout() {
+		return delegate.getDefaultTimeout();
 	}
 
 	@Override

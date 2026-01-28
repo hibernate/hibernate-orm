@@ -40,7 +40,7 @@ public class LockTimeoutPropertyTest {
 			Query query = em.createNamedQuery( "getAll" );
 			query.setLockMode( LockModeType.PESSIMISTIC_READ );
 
-			Timeout timeout = query.unwrap( org.hibernate.query.Query.class ).getLockOptions().getTimeout();
+			Timeout timeout = query.unwrap( org.hibernate.query.Query.class ).getLockTimeout();
 			assertEquals( 3000, timeout.milliseconds() );
 		} );
 	}
@@ -56,14 +56,14 @@ public class LockTimeoutPropertyTest {
 			int timeout = Integer.parseInt( em.getProperties().get( AvailableSettings.JPA_LOCK_TIMEOUT ).toString() );
 			assertEquals( 2000, timeout);
 			org.hibernate.query.Query q = (org.hibernate.query.Query) em.createQuery( "select u from UnversionedLock u" );
-			timeout = q.getLockOptions().getTimeout().milliseconds();
+			timeout = q.getLockTimeout().milliseconds();
 			assertEquals( 2000, timeout );
 
 			Query query = em.createQuery( "select u from UnversionedLock u" );
 			query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 			query.setHint( AvailableSettings.JPA_LOCK_TIMEOUT, 3000 );
 			q = (org.hibernate.query.Query) query;
-			timeout = q.getLockOptions().getTimeout().milliseconds();
+			timeout = q.getLockTimeout().milliseconds();
 			assertEquals( 3000, timeout );
 			em.getTransaction().rollback();
 		} );

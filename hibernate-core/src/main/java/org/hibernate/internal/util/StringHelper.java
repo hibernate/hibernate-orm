@@ -874,6 +874,15 @@ public final class StringHelper {
 		return fallbackValue;
 	}
 
+	public static String coalesce(String... values) {
+		for ( int i = 0; i < values.length; i++ ) {
+			if ( isNotEmpty( values[i] ) ) {
+				return values[i];
+			}
+		}
+		return null;
+	}
+
 	public interface Renderer<T> {
 		String render(T value);
 	}

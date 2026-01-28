@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -64,7 +65,7 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 /**
  * @author Vlad Mihalcea
@@ -634,7 +635,7 @@ public class BootstrapTest {
 		}
 
 		@Override
-		public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
+		public jakarta.persistence.PersistenceUnitTransactionType getTransactionType() {
 			return transactionType;
 		}
 
@@ -683,6 +684,11 @@ public class BootstrapTest {
 		}
 
 		@Override
+		public List<String> getAllManagedClassNames() {
+			return managedClassNames;
+		}
+
+		@Override
 		public boolean excludeUnlistedClasses() {
 			return false;
 		}
@@ -695,6 +701,11 @@ public class BootstrapTest {
 		@Override
 		public ValidationMode getValidationMode() {
 			return ValidationMode.AUTO;
+		}
+
+		@Override
+		public FetchType getDefaultToOneFetchType() {
+			return FetchType.EAGER;
 		}
 
 		public Properties getProperties() {

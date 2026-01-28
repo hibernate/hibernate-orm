@@ -73,8 +73,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			Root<Book> from = query.from( Book.class );
 
 			// The fetch MUST BE created before the join for this test
-			Fetch<Object, Object> fetch = from.fetch( "authors" );
-			Join<Object, Object> join = from.join( "authors" );
+			Fetch<Book, Object> fetch = from.fetch( "authors" );
+			Join<Book, Object> join = from.join( "authors" );
 			query.where( cb.equal( join.get( "id" ), 2L ) );
 
 			// Because there's a filter on the association, they need to be two distinct joins
@@ -100,8 +100,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			Root<Book> from = query.from( Book.class );
 
 			// The join MUST BE created before the fetch for this test
-			Join<Object, Object> join = from.join( "authors" );
-			Fetch<Object, Object> fetch = from.fetch( "authors" );
+			Join<Book, Object> join = from.join( "authors" );
+			Fetch<Book, Object> fetch = from.fetch( "authors" );
 			query.where( cb.equal( join.get( "id" ), 2L ) );
 
 			// Because there's a filter on the association, they need to be two distinct joins
@@ -126,8 +126,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			Root<Book> from = query.from( Book.class );
 
 			// The join MUST BE created before the fetch for this test
-			Join<Object, Object> join = from.join( "authors" );
-			Fetch<Object, Object> fetch = from.fetch( "authors" );
+			Join<Book, Object> join = from.join( "authors" );
+			Fetch<Book, Object> fetch = from.fetch( "authors" );
 
 			// The current behaviour, but we could reuse the same join in this case
 			assertThat( join ).isNotEqualTo( fetch );
@@ -160,8 +160,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			Root<Book> from = query.from( Book.class );
 
 			// The fetch MUST BE created before the join for this test
-			Fetch<Object, Object> fetch = from.fetch( "authors" );
-			Join<Object, Object> join = from.join( "authors" );
+			Fetch<Book, Object> fetch = from.fetch( "authors" );
+			Join<Book, Object> join = from.join( "authors" );
 
 			// The current behaviour, but we could reuse the same join in this case
 			assertThat( join ).isNotEqualTo( fetch );

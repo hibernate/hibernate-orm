@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -16,6 +18,8 @@ import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -46,9 +50,12 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			// prepare the query
 			final var preparedStatement = statementCreator.apply( finalSql );
 			try {
-				final Integer timeout = queryOptions.getTimeout();
-				if ( timeout != null ) {
-					preparedStatement.setQueryTimeout( timeout );
+				final Timeout timeout = queryOptions.getTimeout();
+				if ( Timeouts.isRealTimeout( timeout ) ) {
+					// JDBC expects timeout in seconds
+					final int timeoutInSeconds = Timeouts.getTimeoutInSeconds( timeout );
+					JDBC_LOGGER.settingQueryTimeout( timeoutInSeconds );
+					preparedStatement.setQueryTimeout( timeoutInSeconds );
 				}
 
 				// bind parameters

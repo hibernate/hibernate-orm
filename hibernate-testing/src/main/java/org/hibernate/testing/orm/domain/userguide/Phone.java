@@ -85,7 +85,7 @@ public class Phone {
 
 	//tag::hql-collection-qualification-example[]
 	@OneToMany(mappedBy = "phone")
-	@MapKey(name = "timestamp")
+	@MapKey("timestamp")
 	private Map<LocalDateTime, Call> callHistory = new HashMap<>();
 	//end::hql-collection-qualification-example[]
 

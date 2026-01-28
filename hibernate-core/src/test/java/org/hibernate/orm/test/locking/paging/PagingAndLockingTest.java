@@ -49,7 +49,7 @@ public class PagingAndLockingTest {
 			//noinspection deprecation
 			var qry = session.createQuery( "from Door" );
 			//noinspection removal
-			qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
+			qry.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE );
 			qry.setFirstResult( 2 );
 			qry.setMaxResults( 2 );
 			@SuppressWarnings("unchecked") List<Door> results = qry.list();
@@ -86,7 +86,7 @@ public class PagingAndLockingTest {
 			var qry = session.createNativeQuery( "select * from door" );
 			qry.addRoot( "door", Door.class );
 			//noinspection removal
-			qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
+			qry.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE );
 			qry.setFirstResult( 2 );
 			qry.setMaxResults( 2 );
 			List<?> results = qry.list();

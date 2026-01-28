@@ -23,7 +23,7 @@ public class GenerationUser {
 	private int id;
 
 	@OneToMany
-	@MapKey(name="generation")
+	@MapKey("generation")
 	private Map<Generation, GenerationGroup> ref = new HashMap<>();
 
 	public int getId() {

@@ -158,7 +158,7 @@ import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.jpa.event.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
+import static org.hibernate.jpa.boot.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRelativeType;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 

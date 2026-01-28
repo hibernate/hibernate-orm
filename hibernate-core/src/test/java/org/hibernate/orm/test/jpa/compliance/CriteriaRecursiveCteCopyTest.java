@@ -4,15 +4,17 @@
  */
 package org.hibernate.orm.test.jpa.compliance;
 
-import java.util.List;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Tuple;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.hql.spi.SqmQueryImplementor;
-
+import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
@@ -23,11 +25,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Tuple;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,7 +84,7 @@ public class CriteriaRecursiveCteCopyTest {
 			} );
 			final JpaRoot<Tuple> root = query.from( accountChainTable );
 			query.multiselect( root.get( "id" ), root.get( "name" ), root.get( "parent_id" ) );
-			final SqmQueryImplementor<Tuple> querySqm = (SqmQueryImplementor<Tuple>) entityManager.createQuery( query );
+			final SelectionQueryImpl<Tuple> querySqm = (SelectionQueryImpl<Tuple>) entityManager.createQuery( query );
 			assertThat( querySqm.getSqmStatement() )
 					.withFailMessage( "Query statement should have been copied: [%s]", querySqm.getSqmStatement() )
 					.isNotSameAs( query );

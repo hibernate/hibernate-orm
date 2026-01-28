@@ -74,12 +74,9 @@ public class OneToManyEmbeddedIdFKWithOrphanRemovalTest {
 				}
 		);
 
-		scope.inTransaction(
-				session -> {
-					SystemUser user = session.get( SystemUser.class, superUserKey );
-					assertNull( user );
-				}
-		);
+		scope.inTransaction( session -> {
+			assertNull( session.find( SystemUser.class, superUserKey ) );
+		} );
 	}
 
 	@AfterEach

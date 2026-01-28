@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.query.sqm.mutation;
 
+import jakarta.persistence.NamedNativeStatement;
+import jakarta.persistence.NamedStatement;
 import org.hibernate.query.IllegalMutationQueryException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -88,17 +90,17 @@ public class BasicMutationQueryTests {
 
 	@Entity( name = "SillyEntity" )
 	@Table( name = "SillyEntity" )
-	@NamedQuery(
+	@NamedStatement(
 			name = "valid-hql",
-			query = "delete Contact"
+			statement = "delete Contact"
 	)
 	@NamedQuery(
 			name = "invalid-hql",
 			query = "select c from Contact c"
 	)
-	@NamedNativeQuery(
+	@NamedNativeStatement(
 			name = "valid-native",
-			query = "delete from contacts"
+			statement = "delete from contacts"
 	)
 	@NamedNativeQuery(
 			name = "invalid-native",

@@ -14,7 +14,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
-	JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall);
+	JdbcOperationQueryCall interpretCall(ProcedureCallImplementor procedureCall);
 
 	void registerParameters(
 			String procedureName,

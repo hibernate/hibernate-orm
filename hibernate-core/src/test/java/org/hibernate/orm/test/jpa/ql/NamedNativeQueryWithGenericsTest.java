@@ -56,7 +56,8 @@ public class NamedNativeQueryWithGenericsTest {
 					name = "MyEntity.findMyEntity",
 					query = "WITH all_my_entities AS " +
 							"(SELECT me.* FROM my_entity me) " +
-							"SELECT {ame.*} FROM all_my_entities ame")
+							"SELECT {ame.*} FROM all_my_entities ame"
+			)
 	})
 	@Entity(name = "my_entity")
 	@Table(name = "my_entity")

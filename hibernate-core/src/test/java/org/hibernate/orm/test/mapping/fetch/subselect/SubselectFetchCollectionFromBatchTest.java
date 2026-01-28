@@ -131,7 +131,7 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		scope.inTransaction( (s) -> {
 			List<EmployeeGroup> results = s
-					.createQuery( "from EmployeeGroup where id in :groups" )
+					.createQuery( "from EmployeeGroup where id in :groups", EmployeeGroup.class )
 					.setParameterList( "groups", createdIds )
 					.list();
 

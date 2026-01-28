@@ -76,12 +76,12 @@ public class RemoveDetachedInstanceTest {
 		} );
 
 		scope.inTransaction( session -> {
-			ParentChild pc = session.get( ParentChild.class, PARENT_CHILD_ID );
+			ParentChild pc = session.find( ParentChild.class, PARENT_CHILD_ID );
 			assertThat( pc ).isNull();
-			Parent parent = session.get( Parent.class, PARENT_ID );
+			Parent parent = session.find( Parent.class, PARENT_ID );
 			assertThat( parent ).isNotNull();
 			assertThat( parent.getChildren() ).isEmpty();
-			Child child = session.get( Child.class, CHILD_ID );
+			Child child = session.find( Child.class, CHILD_ID );
 			assertThat( child ).isNotNull();
 			assertThat( child.getChildren() ).isEmpty();
 
@@ -96,23 +96,23 @@ public class RemoveDetachedInstanceTest {
 		scope.inTransaction( session -> {
 			session.remove( parentChild );
 			session.remove( parentChild.getChild() );
-			Parent parent = session.get( Parent.class, PARENT_ID );
+			Parent parent = session.find( Parent.class, PARENT_ID );
 			assertThat( parent ).isNotNull();
 			List<ParentChild> pc = parent.getChildren();
 			assertThat( pc ).isNotNull();
 			assertThat( pc.size() ).isEqualTo( 1 );
 			assertThat( pc.get( 0 ) ).isSameAs( parentChild );
-			Child child = session.get( Child.class, CHILD_ID );
+			Child child = session.find( Child.class, CHILD_ID );
 			assertThat( child ).isNull();
 		} );
 
 		scope.inTransaction( session -> {
-			ParentChild pc = session.get( ParentChild.class, PARENT_CHILD_ID );
+			ParentChild pc = session.find( ParentChild.class, PARENT_CHILD_ID );
 			assertThat( pc ).isNull();
-			Parent parent = session.get( Parent.class, PARENT_ID );
+			Parent parent = session.find( Parent.class, PARENT_ID );
 			assertThat( parent ).isNotNull();
 			assertThat( parent.getChildren() ).isEmpty();
-			Child child = session.get( Child.class, CHILD_ID );
+			Child child = session.find( Child.class, CHILD_ID );
 			assertThat( child ).isNull();
 		} );
 	}

@@ -4,20 +4,20 @@
  */
 package org.hibernate.engine.spi;
 
-import jakarta.persistence.ConnectionConsumer;
-import jakarta.persistence.ConnectionFunction;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.MutationQueryImplementor;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
-import jakarta.persistence.criteria.CriteriaSelect;
 
 /**
  * Defines the "internal contract" between {@link Session} and other parts of Hibernate
@@ -66,7 +66,12 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	SessionFactoryImplementor getSessionFactory();
 
 	@Override
-	<T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);
+	<T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);
+
+	@Override
+	default MutationQueryImplementor<?> createQuery(CriteriaStatement<?> criteriaStatement) {
+		return createMutationQuery( criteriaStatement );
+	}
 
 	/**
 	 * Get the {@link ActionQueue} associated with this session.
@@ -93,30 +98,4 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
 	void forceFlush(EntityKey e) throws HibernateException;
-
-	@Override
-	default <C> void runWithConnection(ConnectionConsumer<C> action) {
-		doWork( connection -> {
-			try {
-				//noinspection unchecked
-				action.accept( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
-
-	@Override
-	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
-		return doReturningWork( connection -> {
-			try {
-				//noinspection unchecked
-				return function.apply( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
 }

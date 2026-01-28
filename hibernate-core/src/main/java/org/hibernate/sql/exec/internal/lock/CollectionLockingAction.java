@@ -4,10 +4,10 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.graph.GraphSemantic;
@@ -33,7 +33,7 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
  * PostAction intended to perform collection locking with
- * {@linkplain Locking.Scope#INCLUDE_COLLECTIONS} for Dialects
+ * {@linkplain PessimisticLockScope#EXTENDED} for Dialects
  * which support "table hint locking" (T-SQL variants).
  *
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public class CollectionLockingAction implements PostAction {
 			LockOptions lockOptions,
 			QuerySpec lockingTarget,
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
-		assert lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS;
+		assert lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 
 		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget );
 

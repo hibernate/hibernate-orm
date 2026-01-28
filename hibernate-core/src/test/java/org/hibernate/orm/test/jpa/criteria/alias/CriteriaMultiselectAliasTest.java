@@ -61,7 +61,7 @@ public class CriteriaMultiselectAliasTest {
 
 			List<BookDto> dtos = entityManager.createQuery( query )
 					.unwrap( Query.class )
-					.setResultTransformer( Transformers.aliasToBean( BookDto.class ) )
+					.setTupleTransformer( Transformers.aliasToBean( BookDto.class ) )
 					.getResultList();
 			assertEquals( 1, dtos.size() );
 			BookDto dto = dtos.get( 0 );
@@ -89,7 +89,7 @@ public class CriteriaMultiselectAliasTest {
 			List<BookDto> dtos = entityManager.createQuery( query )
 					.setParameter( "name", bookName() )
 					.unwrap( Query.class )
-					.setResultTransformer( Transformers.aliasToBean( BookDto.class ) )
+					.setTupleTransformer( Transformers.beanTransformer( BookDto.class ) )
 					.getResultList();
 			assertEquals( 1, dtos.size() );
 			BookDto dto = dtos.get( 0 );

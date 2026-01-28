@@ -52,7 +52,7 @@ public class CriteriaToOneIdJoinTest {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<ParentEntity> query = cb.createQuery( ParentEntity.class );
 			final Root<ParentEntity> root = query.from( ParentEntity.class );
-			final Join<Object, Object> secondaryJoin = root.join( "child" );
+			final Join<ParentEntity, Object> secondaryJoin = root.join( "child" );
 			query.select( root ).orderBy( cb.asc( secondaryJoin.get( "name" ) ) );
 			final ParentEntity result = entityManager.createQuery( query ).getSingleResult();
 			assertThat( result.getChild().getName() ).isEqualTo( "child_entity" );

@@ -13,7 +13,9 @@ import jakarta.persistence.FetchType;
  */
 public class FetchTypeMarshalling {
 	public static FetchType fromXml(String name) {
-		return name == null ? null : FetchType.valueOf( name );
+		final FetchType result = name == null ? null : FetchType.valueOf( name );
+		assert result != FetchType.DEFAULT;
+		return result;
 	}
 
 	public static String toXml(FetchType fetchType) {

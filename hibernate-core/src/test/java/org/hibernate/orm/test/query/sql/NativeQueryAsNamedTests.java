@@ -79,7 +79,7 @@ public class NativeQueryAsNamedTests {
 		} );
 	}
 
-	private void bindParameters(Query<?> query, SessionImplementor session) {
+	private void bindParameters(Query query, SessionImplementor session) {
 		query.setParameter(1, "98C1");
 		query.setParameter(2, 1000L);
 		query.setParameter(3, 2000L);

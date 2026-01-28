@@ -5,7 +5,7 @@
 package org.hibernate.generator.values;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;

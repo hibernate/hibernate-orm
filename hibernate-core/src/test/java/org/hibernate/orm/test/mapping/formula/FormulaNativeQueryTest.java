@@ -4,21 +4,16 @@
  */
 package org.hibernate.orm.test.mapping.formula;
 
-import java.util.Collections;
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Formula;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -26,8 +21,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
+import java.util.Collections;
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
 /**
  * @author Алексей Макаров
@@ -57,7 +55,7 @@ public class FormulaNativeQueryTest {
 	void testNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Foo> query = session.createNativeQuery( "SELECT ft.* FROM foo_table ft", Foo.class );
+					final SelectionQuery<Foo> query = session.createNativeQuery( "SELECT ft.* FROM foo_table ft", Foo.class );
 					try {
 						query.getResultList();
 						Assertions.fail(
@@ -74,7 +72,7 @@ public class FormulaNativeQueryTest {
 	public void testNativeQueryWithAllFields(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query<Foo> query = session.createNativeQuery(
+					SelectionQuery<Foo> query = session.createNativeQuery(
 							"SELECT ft.*, abs(location_end - location_start) as distance FROM foo_table ft",
 							Foo.class
 					);
@@ -119,7 +117,7 @@ public class FormulaNativeQueryTest {
 	void testHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<Foo> query = session.createQuery( "SELECT ft FROM Foo ft", Foo.class );
+					final SelectionQuery<Foo> query = session.createQuery( "SELECT ft FROM Foo ft", Foo.class );
 					final List<Foo> list = query.getResultList();
 					assertThat( list, hasSize( 3 ) );
 				}

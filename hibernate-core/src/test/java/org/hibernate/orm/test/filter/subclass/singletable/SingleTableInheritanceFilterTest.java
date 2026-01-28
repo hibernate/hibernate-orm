@@ -17,7 +17,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -69,7 +69,7 @@ public class SingleTableInheritanceFilterTest extends AbstractStatefulStatelessF
 					int updated = updateQuery.executeUpdate();
 					assertEquals(1, updated);
 
-					Query<AbstractSuperClass> query = s.createQuery( "select p from AbstractSuperClass p where p.name = 'John'", AbstractSuperClass.class);
+					SelectionQuery<AbstractSuperClass> query = s.createQuery( "select p from AbstractSuperClass p where p.name = 'John'", AbstractSuperClass.class);
 					assertEquals(1, query.list().size() );
 				}
 		);
@@ -83,7 +83,7 @@ public class SingleTableInheritanceFilterTest extends AbstractStatefulStatelessF
 					int deleted = deleteQuery.executeUpdate();
 					assertEquals(1, deleted);
 
-					Query<AbstractSuperClass> query = s.createQuery( "select p from AbstractSuperClass p", AbstractSuperClass.class);
+					SelectionQuery<AbstractSuperClass> query = s.createQuery( "select p from AbstractSuperClass p", AbstractSuperClass.class);
 					assertEquals(1, query.list().size() );
 				}
 		);

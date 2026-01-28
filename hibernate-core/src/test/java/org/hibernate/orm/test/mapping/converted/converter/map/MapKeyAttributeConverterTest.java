@@ -267,37 +267,37 @@ public class MapKeyAttributeConverterTest {
 		private Integer id;
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-		@MapKey(name = "implicitType")
+		@MapKey("implicitType")
 		private Map<ColorType, MapValue> implicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "explicitType")
+		@MapKey("explicitType")
 		private Map<ColorType, MapValue> explicitType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumDefault")
+		@MapKey("enumDefault")
 		private Map<EnumMapKey, MapValue> enumDefaultType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumExplicitOrdinal")
+		@MapKey("enumExplicitOrdinal")
 		private Map<EnumMapKey, MapValue> enumExplicitOrdinalType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumExplicitString")
+		@MapKey("enumExplicitString")
 		private Map<EnumMapKey, MapValue> enumExplicitStringType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumExplicit")
+		@MapKey("enumExplicit")
 		private Map<EnumMapKey, MapValue> enumExplicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumImplicit")
+		@MapKey("enumImplicit")
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumImplicitOverrideOrdinal")
+		@MapKey("enumImplicitOverrideOrdinal")
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideOrdinalType = new HashMap<>();
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumImplicitOverrideString")
+		@MapKey("enumImplicitOverrideString")
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverrideStringType = new HashMap<>();
 
 		@OneToMany(mappedBy = "mapEntity", cascade = CascadeType.ALL)
-		@MapKey(name = "enumImplicitOverridden")
+		@MapKey("enumImplicitOverridden")
 		private Map<ImplicitEnumMapKey, MapValue> enumImplicitOverriddenType = new HashMap<>();
 	}
 

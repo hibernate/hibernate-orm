@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.criteria.ParameterExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
@@ -663,6 +665,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name) {
 		return criteriaBuilder.parameter( paramClass, name );
+	}
+
+	@Override
+	public <T> ParameterExpression<T> convertedParameter(Class<? extends AttributeConverter<T, ?>> converter) {
+		return criteriaBuilder.convertedParameter( converter );
 	}
 
 	@Override

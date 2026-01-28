@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.AvgFunction;
 import org.hibernate.dialect.function.SumReturnTypeResolver;
@@ -1730,6 +1732,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 						? new MultiValueParameterType<>( (Class<T>) Collection.class )
 						: basicType;
 		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
+	}
+
+	@Override
+	public <T> ParameterExpression<T> convertedParameter(Class<? extends AttributeConverter<T, ?>> converter) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	@Override

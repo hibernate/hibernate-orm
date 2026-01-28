@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.Locking;
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.spi.NavigablePath;
@@ -20,13 +20,13 @@ import java.util.Set;
 ///
 /// @author Steve Ebersole
 public abstract class AbstractLockingClauseStrategy implements LockingClauseStrategy {
-	protected final Locking.Scope lockingScope;
+	protected final PessimisticLockScope lockingScope;
 	protected final Set<NavigablePath> rootsForLocking;
 
 	private Set<NavigablePath> pathsToLock;
 
 	public AbstractLockingClauseStrategy(
-			Locking.Scope lockingScope,
+			PessimisticLockScope lockingScope,
 			Set<NavigablePath> rootsForLocking) {
 		this.lockingScope = lockingScope;
 		this.rootsForLocking = rootsForLocking == null ? Set.of() : rootsForLocking;
@@ -76,7 +76,7 @@ public abstract class AbstractLockingClauseStrategy implements LockingClauseStra
 			return true;
 		}
 		else if ( isLhsLocked( joinedGroup ) ) {
-			if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			if ( lockingScope == PessimisticLockScope.EXTENDED ) {
 				// if the TableGroup is an owned (aka, non-inverse) collection,
 				// and we are to lock collections, track it
 				if ( joinedGroup.getModelPart() instanceof PluralAttributeMapping attrMapping ) {
@@ -86,7 +86,7 @@ public abstract class AbstractLockingClauseStrategy implements LockingClauseStra
 					}
 				}
 			}
-			else if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
+			else if ( lockingScope == PessimisticLockScope.FETCHED ) {
 				return joinedGroup.isFetched();
 			}
 		}

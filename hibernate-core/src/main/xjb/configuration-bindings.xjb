@@ -8,7 +8,7 @@
           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
           version="3.0">
 
-    <bindings schemaLocation="../resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/cfg/configuration-8.0.xsd" node="/xsd:schema">
         <schemaBindings>
             <package name="org.hibernate.boot.jaxb.configuration.spi" />
             <nameXmlTransform>
@@ -45,9 +45,15 @@
         -->
 
         <bindings node="//xsd:simpleType[@name='persistence-unit-transaction-type']">
-            <javaType name="jakarta.persistence.spi.PersistenceUnitTransactionType"
+            <javaType name="jakarta.persistence.PersistenceUnitTransactionType"
                       parseMethod="org.hibernate.boot.jaxb.cfg.internal.TransactionTypeMarshalling.fromXml"
                       printMethod="org.hibernate.boot.jaxb.cfg.internal.TransactionTypeMarshalling.toXml" />
+        </bindings>
+
+        <bindings node="//xsd:simpleType[@name='persistence-unit-default-to-one-fetch-type']">
+            <javaType name="jakarta.persistence.FetchType"
+                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.toXml" />
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='persistence-unit-caching-type']">

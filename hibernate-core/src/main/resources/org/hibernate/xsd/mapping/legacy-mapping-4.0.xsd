@@ -202,7 +202,7 @@
         <xs:attribute name="flush-mode" type="FlushModeEnum"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="read-only" default="false" type="xs:boolean"/>
-        <xs:attribute name="timeout" type="xs:int"/>
+        <xs:attribute name="timeout" type="TimeoutType"/>
     </xs:complexType>
 
     <xs:complexType name="NamedNativeQueryType" mixed="true">
@@ -224,7 +224,7 @@
         <xs:attribute name="flush-mode" type="FlushModeEnum"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="read-only" default="false" type="xs:boolean"/>
-        <xs:attribute name="timeout" type="xs:int"/>
+        <xs:attribute name="timeout" type="TimeoutType"/>
         <xs:attribute name="callable" default="false" type="xs:boolean"/>
         <xs:attribute name="resultset-ref" type="xs:string"/>
     </xs:complexType>
@@ -2079,5 +2079,9 @@
         <xs:restriction base="xs:string">
             <xs:pattern value="([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*"/>
         </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="TimeoutType">
+        <xs:restriction base="xs:int"/>
     </xs:simpleType>
 </xs:schema>

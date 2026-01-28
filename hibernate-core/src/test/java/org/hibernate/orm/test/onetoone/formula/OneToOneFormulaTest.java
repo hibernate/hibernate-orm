@@ -130,7 +130,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 			Root<Person> root = criteria.from( Person.class );
-			Join<Object, Object> address = root.join( "address", JoinType.INNER );
+			Join<Person, Object> address = root.join( "address", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( address.get( "zip" ), "3181" ) );
 			Person p = session.createQuery( criteria ).uniqueResult();
 

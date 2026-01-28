@@ -355,4 +355,12 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 		return false;
 	}
+
+	public void withAppliedGraph(GraphSemantic semantic, RootGraphImplementor<?> graph, Runnable action) {
+		effectiveEntityGraph.withAppliedGraph( semantic, graph, action );
+	}
+
+	public <T> T fromAppliedGraph(GraphSemantic semantic, RootGraphImplementor<?> graph, Supplier<T> action) {
+		return effectiveEntityGraph.fromAppliedGraph( semantic, graph, action );
+	}
 }

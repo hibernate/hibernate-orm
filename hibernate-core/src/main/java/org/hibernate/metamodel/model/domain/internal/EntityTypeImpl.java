@@ -11,10 +11,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EntityType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -123,6 +126,20 @@ public class EntityTypeImpl<J>
 	@Override
 	public String getName() {
 		return jpaEntityName;
+	}
+
+	@Override
+	public EntityGraph<J> createEntityGraph() {
+		return new RootGraphImpl<>( null, this, true );
+	}
+
+	@Override
+	public Map<String, EntityGraph<J>> getNamedEntityGraphs() {
+		if ( getJavaType() == null || getJavaType() == Map.class ) {
+			return Map.of();
+		}
+		//noinspection unchecked,rawtypes
+		return (Map) metamodel.getNamedEntityGraphs( getJavaType() );
 	}
 
 	@Override

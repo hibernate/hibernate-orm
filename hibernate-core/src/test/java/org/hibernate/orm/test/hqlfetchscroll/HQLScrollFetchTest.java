@@ -17,7 +17,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.transform.ResultTransformer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,16 +40,8 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					List list = session.createQuery( QUERY )
-							.setResultTransformer(new ResultTransformer() {
-								@Override
-								public Object transformTuple(Object[] tuple, String[] aliases) {
-									return tuple[0];
-								}
-								@Override
-								public List transformList(List resultList) {
-									return Arrays.asList( new HashSet(resultList).toArray() );
-								}
-							})
+							.setTupleTransformer( (tuple, aliases) -> tuple[0] )
+							.setResultListTransformer( resultList -> Arrays.asList( new HashSet(resultList).toArray() ) )
 							.list();
 					assertResultFromAllUsers( list );
 				}

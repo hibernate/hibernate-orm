@@ -46,6 +46,7 @@ public class FindMutipleTest {
 			assertSame(record, all.get(0));
 		});
 	}
+
 	@Entity
 	static class Record {
 		@Id Long id;

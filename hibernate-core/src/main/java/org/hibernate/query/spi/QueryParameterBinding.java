@@ -5,6 +5,7 @@
 package org.hibernate.query.spi;
 
 import java.util.Collection;
+
 import jakarta.persistence.TemporalType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;

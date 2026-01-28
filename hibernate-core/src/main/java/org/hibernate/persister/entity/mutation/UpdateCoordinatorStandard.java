@@ -543,7 +543,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final int[] fieldsPreUpdateNeeded = new int[generators.length];
 			int count = 0;
 			for ( int i = 0; i < generators.length; i++ ) {
-				final Generator generator = generators[i];
+				final var generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
@@ -1129,14 +1129,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		entityPersister().forEachMutableTable( (tableMapping) -> {
 			final var tableReference = new MutatingTableReference( tableMapping );
-			final TableMutationBuilder<?> tableUpdateBuilder;
-			if ( ! valuesAnalysis.tablesNeedingUpdate.contains( tableReference.getTableMapping() ) ) {
-				// this table does not need updating
-				tableUpdateBuilder = new TableUpdateBuilderSkipped( tableReference );
-			}
-			else {
-				tableUpdateBuilder = createTableUpdateBuilder( tableMapping );
-			}
+			final var tableUpdateBuilder =
+					valuesAnalysis.tablesNeedingUpdate.contains( tableReference.getTableMapping() )
+							? createTableUpdateBuilder( tableMapping )
+							// this table does not need updating
+							: new TableUpdateBuilderSkipped( tableReference );
 			updateGroupBuilder.addTableDetailsBuilder( tableUpdateBuilder );
 		} );
 
@@ -1184,16 +1181,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[i];
-
+			for ( final int attributeIndex : tableMapping.getAttributeIndexes() ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
 				final var attributeAnalysis = updateValuesAnalysis.attributeAnalyses.get( attributeIndex );
 
 				if ( attributeAnalysis.includeInSet() ) {
 					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping )
-							|| updateValuesAnalysis.tablesNeedingDynamicUpdate.contains( tableMapping );
+						|| updateValuesAnalysis.tablesNeedingDynamicUpdate.contains( tableMapping );
 					applyAttributeUpdateDetails(
 							entity,
 							updateGroupBuilder,

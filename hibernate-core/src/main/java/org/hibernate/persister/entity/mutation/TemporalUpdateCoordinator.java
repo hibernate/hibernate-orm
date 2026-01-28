@@ -8,20 +8,16 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutationGroup;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
@@ -68,6 +64,20 @@ public class TemporalUpdateCoordinator extends AbstractMutationCoordinator imple
 			int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
+		if ( entityPersister()
+				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
+			return versionUpdateDelegate.update(
+					entity,
+					id,
+					rowId,
+					values,
+					oldVersion,
+					incomingOldValues,
+					dirtyAttributeIndexes,
+					hasDirtyCollection,
+					session
+			);
+		}
 		performEndingUpdate( entity, id, rowId, oldVersion, session );
 		return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
 	}
@@ -78,16 +88,17 @@ public class TemporalUpdateCoordinator extends AbstractMutationCoordinator imple
 			Object rowId,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
-		final MutationExecutor mutationExecutor =
-				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ), endingUpdateGroup, session );
+		final var mutationExecutor =
+				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
+						endingUpdateGroup, session );
 		try {
-			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 			for ( int i = 0; i < endingUpdateGroup.getNumberOfOperations(); i++ ) {
 				final var operation = endingUpdateGroup.getOperation( i );
 				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, (EntityTableMapping) operation.getTableDetails() );
 			}
 
-			final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+			final var versionMapping = entityPersister().getVersionMapping();
 			if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 				jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
 			}
@@ -118,7 +129,7 @@ public class TemporalUpdateCoordinator extends AbstractMutationCoordinator imple
 
 	private MutationOperationGroup buildEndingUpdateGroup() {
 		final var tableMapping = entityPersister().getIdentifierTableMapping();
-		final TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder =
+		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), tableMapping, factory() );
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, tableMapping );
@@ -127,7 +138,7 @@ public class TemporalUpdateCoordinator extends AbstractMutationCoordinator imple
 		applyOptimisticLocking( tableUpdateBuilder );
 
 		final var tableMutation = tableUpdateBuilder.buildMutation();
-		final MutationGroup mutationGroup = new MutationGroupSingle(
+		final var mutationGroup = new MutationGroupSingle(
 				MutationType.UPDATE,
 				entityPersister(),
 				tableMutation

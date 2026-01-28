@@ -365,6 +365,8 @@ public abstract class AbstractEntityPersister
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
 	private final Set<String> sharedColumnNames;
+	private final boolean[] propertyTemporalExcluded;
+	private final boolean hasTemporalExcludedProperties;
 
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
@@ -593,6 +595,7 @@ public abstract class AbstractEntityPersister
 		propertyColumnFormulaTemplates = new String[hydrateSpan][];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
+		propertyTemporalExcluded = new boolean[hydrateSpan];
 		sharedColumnNames = new HashSet<>();
 		nonLazyPropertyNames = new HashSet<>();
 
@@ -600,6 +603,8 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String> lazyNames = new ArrayList<>();
 		final ArrayList<Integer> lazyNumbers = new ArrayList<>();
 		final ArrayList<Type> lazyTypes = new ArrayList<>();
+		boolean foundTemporalExcluded = false;
+		boolean foundNonExcludedCollection = false;
 
 		final var propertyClosure = persistentClass.getPropertyClosure();
 		boolean foundFormula = false;
@@ -607,6 +612,13 @@ public abstract class AbstractEntityPersister
 			final var property = propertyClosure.get(i);
 			thisClassProperties.add( property );
 			final var propertyValue = property.getValue();
+
+			final boolean temporalExcluded = property.isTemporalExcluded();
+			propertyTemporalExcluded[i] = temporalExcluded;
+			foundTemporalExcluded = foundTemporalExcluded || temporalExcluded;
+			foundNonExcludedCollection = foundNonExcludedCollection
+					|| propertyValue instanceof org.hibernate.mapping.Collection
+							&& !temporalExcluded;
 
 			final int span = property.getColumnSpan();
 			final String[] colNames = new String[span];
@@ -654,6 +666,7 @@ public abstract class AbstractEntityPersister
 			propertyColumnUpdateable[i] = propertyValue.getColumnUpdateability();
 			propertyColumnInsertable[i] = propertyValue.getColumnInsertability();
 		}
+		hasTemporalExcludedProperties = foundTemporalExcluded;
 		hasFormulaProperties = foundFormula;
 		lazyPropertyNames = toStringArray( lazyNames );
 		lazyPropertyNumbers = toIntArray( lazyNumbers );
@@ -3894,6 +3907,25 @@ public abstract class AbstractEntityPersister
 		return hasUninitializedLazyProperties( entity )
 				? getNonLazyPropertyUpdateability()
 				: getPropertyUpdateability();
+	}
+
+	@Override
+	public boolean excludedFromTemporalVersioning(
+			int[] dirtyAttributeIndexes,
+			boolean hasDirtyCollection) {
+		if ( !hasTemporalExcludedProperties
+				|| hasDirtyCollection
+				|| dirtyAttributeIndexes == null ) {
+			return false;
+		}
+		else {
+			for ( final int index : dirtyAttributeIndexes ) {
+				if ( !propertyTemporalExcluded[index] ) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	private void logDirtyProperties(int[] properties) {

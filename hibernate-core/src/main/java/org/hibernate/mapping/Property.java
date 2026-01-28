@@ -62,6 +62,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
+	private boolean temporalExcluded;
 	private GeneratorCreator generatorCreator;
 	private String propertyAccessorName;
 	private PropertyAccessStrategy propertyAccessStrategy;
@@ -509,6 +510,14 @@ public class Property implements Serializable, MetaAttributable {
 		isGenericSpecialization = genericSpecialization;
 	}
 
+	public boolean isTemporalExcluded() {
+		return temporalExcluded;
+	}
+
+	public void setTemporalExcluded(boolean temporalExcluded) {
+		this.temporalExcluded = temporalExcluded;
+	}
+
 	public boolean isLob() {
 		return lob;
 	}
@@ -563,6 +572,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setInsertable( isInsertable() );
 		property.setSelectable( isSelectable() );
 		property.setOptimisticLocked( isOptimisticLocked() );
+		property.setTemporalExcluded( isTemporalExcluded() );
 		property.setValueGeneratorCreator( getValueGeneratorCreator() );
 		property.setPropertyAccessorName( getPropertyAccessorName() );
 		property.setPropertyAccessStrategy( getPropertyAccessStrategy() );

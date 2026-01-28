@@ -56,7 +56,7 @@ public class PessimisticWriteLockTimeoutTest {
 			session.createQuery( "select a from A a", A.class )
 					.unwrap( Query.class )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-					.setTimeout( Timeouts.NO_WAIT )
+					.setLockTimeout( Timeouts.NO_WAIT )
 					.list();
 
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
@@ -76,7 +76,7 @@ public class PessimisticWriteLockTimeoutTest {
 			//noinspection removal
 			session.createQuery("select a from A a", A.class )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-					.setTimeout( Timeouts.SKIP_LOCKED )
+					.setLockTimeout( Timeouts.SKIP_LOCKED )
 					.list();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			assertThat( sqlCollector.getSqlQueries().get( 0 ) ).containsIgnoringCase( "skip locked" );

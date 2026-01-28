@@ -18,12 +18,12 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 		if (dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect) {
 			final VectorFunctionFactory vectorFunctionFactory = new VectorFunctionFactory( functionContributions );
 
-			vectorFunctionFactory.cosineDistance( "?1<=>?2" );
-			vectorFunctionFactory.euclideanDistance( "?1<->?2" );
+			vectorFunctionFactory.cosineDistance( "(?1<=>?2)" );
+			vectorFunctionFactory.euclideanDistance( "(?1<->?2)" );
 			vectorFunctionFactory.l1Distance( "l1_distance(?1,?2)" );
 
-			vectorFunctionFactory.innerProduct( "(?1<#>?2)*-1" );
-			vectorFunctionFactory.negativeInnerProduct( "?1<#>?2" );
+			vectorFunctionFactory.innerProduct( "((?1<#>?2)*-1)" );
+			vectorFunctionFactory.negativeInnerProduct( "(?1<#>?2)" );
 
 			vectorFunctionFactory.vectorDimensions();
 			vectorFunctionFactory.vectorNorm();

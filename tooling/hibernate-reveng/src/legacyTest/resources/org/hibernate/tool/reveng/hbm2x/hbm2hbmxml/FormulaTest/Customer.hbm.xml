@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+	Shows how to map a one-to-many relationship in the relational
+	schema to "typed" one-to-one associations in the object model.
+	We map the Address class twice, with different entity names,
+	specifying a filtering condition in each mapping. The typed
+	associations then reference the named entities.
+
+-->
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.FormulaTest">
+
+	<class name="Customer" 
+			select-before-update="true" 
+			dynamic-update="true">
+	
+		<id name="customerId">
+			<generator class="assigned"/>
+		</id>
+	
+		<property name="name" not-null="true"/>
+		
+		<many-to-one name="billingAddress" 
+			entity-name="BillingAddress"
+			cascade="persist,save-update,delete"
+			fetch="join">
+			<column name="billingAddressId"/>
+			<formula>'BILLING'</formula>
+		</many-to-one>
+			
+		<many-to-one name="shippingAddress" 
+			entity-name="ShippingAddress"
+			cascade="persist,save-update,delete"
+			fetch="join">
+			<column name="shippingAddressId"/>
+			<formula>'SHIPPING'</formula>
+		</many-to-one>
+			
+	</class>
+	
+	<class name="Address"
+		table="Address"
+		entity-name="BillingAddress" 
+		where="type='BILLING'" 
+		check="type in ('BILLING', 'SHIPPING')"
+		select-before-update="true" 
+		dynamic-update="true">
+	
+		<composite-id name="addressId"> 
+			<key-property name="addressId"/>
+			<key-property name="type"/>
+		</composite-id>
+		
+		<property name="street" not-null="true"/>
+		<property name="city" not-null="true"/>
+		<property name="state" not-null="true"/>
+		<property name="zip" not-null="true"/>
+						
+	</class>
+
+	<class name="Address" 
+		table="Address"
+		entity-name="ShippingAddress"
+		where="type='SHIPPING'"
+		select-before-update="true" 
+		dynamic-update="true">
+	
+		<composite-id name="addressId">
+			<key-property name="addressId"/>
+			<key-property name="type"/>
+		</composite-id>
+		
+		<property name="street" not-null="true"/>
+		<property name="city" not-null="true"/>
+		<property name="state" not-null="true"/>
+		<property name="zip" not-null="true"/>
+						
+	</class>
+
+</hibernate-mapping>

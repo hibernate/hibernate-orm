@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -35,7 +36,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface SessionFactoryLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".factory";
 
-	SessionFactoryLogging SESSION_FACTORY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionFactoryLogging.class, NAME );
+	SessionFactoryLogging SESSION_FACTORY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionFactoryLogging.class, NAME, Locale.ROOT );
 
 	// ---- SessionFactoryImpl related ---------------------------------------------------------------
 

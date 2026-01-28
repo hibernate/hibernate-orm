@@ -52,7 +52,7 @@ public class EagerManyToOneFetchModeJoinWhereTest {
 
 	@Test
 	@JiraKey(value = "HHH-12104")
-	@FailureExpected
+	@FailureExpected(jiraKey = "HHH-2737")
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		var product = new Product();
 		var category = new Category();

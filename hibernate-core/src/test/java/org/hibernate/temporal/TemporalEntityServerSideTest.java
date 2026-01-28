@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityServerSideTest.TemporalEntity2.class,
 		TemporalEntityServerSideTest.TemporalChild2.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "SERVER_TIMESTAMP"))
+@ServiceRegistry(settings = @Setting(name = MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, value = "true"))
 class TemporalEntityServerSideTest {
 
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {

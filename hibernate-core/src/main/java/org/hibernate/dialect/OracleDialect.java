@@ -1930,7 +1930,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
 		return switch ( strategy ) {
-			case HISTORY -> false;
+			case HISTORY_TABLE -> false;
 			case NATIVE -> historical;
 			default -> true;
 		};
@@ -1938,7 +1938,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return strategy == TemporalTableStrategy.HISTORY && historical;
+		return strategy == TemporalTableStrategy.HISTORY_TABLE && historical;
 	}
 
 	@Override

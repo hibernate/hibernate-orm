@@ -137,7 +137,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * Base implementation of the {@code QueryableCollection} interface.
@@ -1112,7 +1112,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	boolean isHistoryStrategy() {
-		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY;
+		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
 	}
 
 	protected boolean isRowDeleteEnabled() {

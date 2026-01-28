@@ -18,6 +18,7 @@ import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -410,8 +411,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public org.hibernate.cfg.TemporalTableStrategy getTemporalTableStrategy() {
+	public TemporalTableStrategy getTemporalTableStrategy() {
 		return delegate.getTemporalTableStrategy();
+	}
+
+	@Override
+	public boolean isUseServerTransactionTimestampsEnabled() {
+		return delegate.isUseServerTransactionTimestampsEnabled();
 	}
 
 	@Override

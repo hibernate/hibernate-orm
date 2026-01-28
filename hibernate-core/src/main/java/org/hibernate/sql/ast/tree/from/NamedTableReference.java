@@ -10,7 +10,9 @@ import java.util.Locale;
 import java.time.Instant;
 import java.util.function.Function;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -47,9 +49,20 @@ public class NamedTableReference extends AbstractTableReference {
 		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
 	}
 
-	public void applyTemporalTable(Instant instant, JdbcMapping jdbcMapping) {
-		this.temporalInstant = instant;
-		this.temporalJdbcMapping = jdbcMapping;
+	public void applyTemporalTable(TemporalMapping mapping, LoadQueryInfluencers influencers) {
+		if ( mapping != null
+				&& useAsOfOperator( influencers )
+				&& mapping.getTableName().equals( getTableExpression() ) ) {
+			this.temporalInstant = influencers.getTemporalInstant();
+			this.temporalJdbcMapping = mapping.getJdbcMapping();
+		}
+	}
+
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
+		final var sessionFactory = influencers.getSessionFactory();
+		return sessionFactory.getJdbcServices().getDialect()
+				.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
+						influencers.getTemporalInstant() != null );
 	}
 
 	public Instant getTemporalInstant() {

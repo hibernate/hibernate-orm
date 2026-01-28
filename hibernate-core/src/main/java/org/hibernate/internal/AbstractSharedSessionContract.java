@@ -622,7 +622,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	private Instant generateTransactionStartInstant() {
-		return Instant.now();
+		return factoryOptions.isUseServerTransactionTimestampsEnabled()
+				? null
+				: Instant.now();
 	}
 
 	@Override
@@ -631,9 +633,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	protected void initializeTransactionStartInstant() {
-		if ( !factoryOptions.isUseServerTransactionTimestampsEnabled() ) { // also not needed for NATIVE strategy
-			transactionStartInstant = generateTransactionStartInstant();
-		}
+		transactionStartInstant = generateTransactionStartInstant();
 	}
 
 	protected void clearTransactionStartInstant() {

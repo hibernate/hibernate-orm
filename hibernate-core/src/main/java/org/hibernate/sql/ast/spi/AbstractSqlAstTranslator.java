@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -6188,6 +6189,53 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Assume that a CTE is correlated/lateral when the CTE is defined in a subquery
 		return statementStack.getCurrent() instanceof SelectStatement selectStatement
 			&& !selectStatement.getQueryPart().isRoot();
+	}
+
+	private boolean hasCorrelatedSubquery(SqlAstNode node, String targetAlias) {
+		return CorrelationChecker.hasCorrelation( node, targetAlias );
+	}
+
+	protected boolean hasNestedCorrelation(SqlAstNode node) {
+		return NestedCorrelationChecker.hasNestedCorrelation( node );
+	}
+
+	private boolean hasCorrelatedSubquery(NamedTableReference targetTable, @Nullable Predicate restriction) {
+		if ( restriction == null ) {
+			return false;
+		}
+		final String targetAlias = targetTable.getIdentificationVariable();
+		if ( targetAlias == null ) {
+			return false;
+		}
+		return hasCorrelatedSubquery( restriction, targetAlias );
+	}
+
+	private boolean hasCorrelatedSubquery(UpdateStatement statement) {
+		final String targetAlias = statement.getTargetTable().getIdentificationVariable();
+		if ( targetAlias == null ) {
+			return false;
+		}
+		if ( statement.getAssignments() != null ) {
+			for ( var assignment : statement.getAssignments() ) {
+				if ( hasCorrelatedSubquery( assignment.getAssignedValue(), targetAlias ) ) {
+					return true;
+				}
+			}
+		}
+		if ( statement.getRestriction() != null ) {
+			return hasCorrelatedSubquery( statement.getRestriction(), targetAlias );
+		}
+		return false;
+	}
+
+	protected boolean hasTargetTableCorrelation(MutationStatement statement) {
+		if ( statement instanceof DeleteStatement deleteStatement ) {
+			return hasCorrelatedSubquery( deleteStatement.getTargetTable(), deleteStatement.getRestriction() );
+		}
+		else if ( statement instanceof UpdateStatement updateStatement ) {
+			return hasCorrelatedSubquery( updateStatement );
+		}
+		return false;
 	}
 
 	protected boolean renderNamedTableReference(

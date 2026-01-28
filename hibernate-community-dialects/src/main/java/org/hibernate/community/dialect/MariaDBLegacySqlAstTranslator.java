@@ -43,6 +43,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  * A SQL AST translator for MariaDB.
  *
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
@@ -100,17 +101,24 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
-		appendSql( "delete" );
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-			if ( statement.getFromClause().getRoots().isEmpty() ) {
-				appendSql( " from " );
-				renderDmlTargetTableExpression( statement.getTargetTable() );
+			if ( usesSingleTableDml( statement ) ) {
+				appendSql( "delete from " );
+				appendSql( statement.getTargetTable().getTableExpression() );
+				registerAffectedTable( statement.getTargetTable() );
 			}
 			else {
-				visitFromClause( statement.getFromClause() );
+				appendSql( "delete" );
+				renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+				if ( statement.getFromClause().getRoots().isEmpty() ) {
+					appendSql( " from " );
+					renderDmlTargetTableExpression( statement.getTargetTable() );
+				}
+				else {
+					visitFromClause( statement.getFromClause() );
+				}
 			}
 		}
 		finally {
@@ -120,7 +128,12 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	protected void renderUpdateClause(UpdateStatement updateStatement) {
-		if ( updateStatement.getFromClause().getRoots().isEmpty() ) {
+		if ( usesSingleTableDml( updateStatement ) ) {
+			appendSql( "update " );
+			appendSql( updateStatement.getTargetTable().getTableExpression() );
+			registerAffectedTable( updateStatement.getTargetTable() );
+		}
+		else if ( updateStatement.getFromClause().getRoots().isEmpty() ) {
 			super.renderUpdateClause( updateStatement );
 		}
 		else {
@@ -132,7 +145,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getClauseStack().getCurrent() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -157,15 +170,27 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
-		final MutationStatement currentDmlStatement;
 		final String dmlAlias;
 		// Since MariaDB does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
 		if ( getClauseStack().getCurrent() != Clause.SET
-				|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
-				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
+				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
+				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+			final MutationStatement currentStatement = getCurrentDmlStatement();
+			if ( usesSingleTableDml( currentStatement ) && columnReference.getQualifier() != null ) {
+				final NamedTableReference targetTable =
+						currentStatement instanceof DeleteStatement deleteStatement
+								? deleteStatement.getTargetTable()
+								: currentStatement.getTargetTable();
+				final String targetTableName = targetTable.getTableExpression();
+				final String qualifier = columnReference.getQualifier();
+				final String targetAlias = targetTable.getIdentificationVariable();
+				if ( ( targetAlias != null && qualifier.equals( targetAlias ) ) || qualifier.equals( targetTableName ) ) {
+					return !getQueryPartStack().isEmpty() ? targetTableName : null;
+				}
+			}
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
@@ -404,11 +429,43 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 						: null );
 	}
 
+	private boolean usesSingleTableDml(MutationStatement statement) {
+		if ( getDialect().getVersion().isSameOrAfter( 11, 1 ) ) {
+			// As of MariaDB 11.1, the self-join rewrite optimization can handle this, so no need force single table DML
+			return false;
+		}
+		return hasTargetTableCorrelation( statement );
+	}
+
 	private boolean needsDmlSubqueryWrapper() {
 		final Statement statement = getStatement();
-		// As of MariaDB 11.1, the self-join rewrite optimization can handle this: https://jira.mariadb.org/browse/MDEV-7487
-		return getDialect().getVersion().isBefore( 11, 1 )
-			&& (statement instanceof DeleteStatement || statement instanceof UpdateStatement);
+		if ( getDialect().getVersion().isSameOrAfter( 11, 1 ) ) {
+			// As of MariaDB 11.1, the self-join rewrite optimization can handle this, so no need for the wrapper
+			return false;
+		}
+		if ( statement instanceof DeleteStatement deleteStatement ) {
+			return !hasTargetTableCorrelation( deleteStatement )
+					&& !hasNestedCorrelation( deleteStatement.getRestriction() );
+		}
+		else if ( statement instanceof UpdateStatement updateStatement ) {
+			if ( hasTargetTableCorrelation( updateStatement ) ) {
+				return false;
+			}
+			if ( hasNestedCorrelation( updateStatement.getRestriction() ) ) {
+				return false;
+			}
+			if ( updateStatement.getAssignments() != null ) {
+				for ( var assignment : updateStatement.getAssignments() ) {
+					if ( hasNestedCorrelation( assignment.getAssignedValue() ) ) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -464,4 +521,5 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	protected void renderFetchFirstRow() {
 		appendSql( " limit 1" );
 	}
+
 }

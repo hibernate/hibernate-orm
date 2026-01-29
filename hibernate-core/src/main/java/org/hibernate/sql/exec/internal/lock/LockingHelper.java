@@ -46,6 +46,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
@@ -468,18 +469,30 @@ public static void lockCollectionTable(
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
 			var summary = new StringBuilder();
 			summary.append( "  Loaded entities:\n" );
-			collector.getCollectedEntities().forEach( (reg) -> {
-				summary.append( String.format( "    - %s#%s\n",
-						reg.entityDescriptor().getEntityName(),
-						reg.entityKey().getIdentifier() ) );
-			} );
+			final var collectedEntities = collector.getCollectedEntities();
+			if ( collectedEntities != null ) {
+				for ( var reg : collectedEntities ) {
+					summary.append( String.format( "    - %s#%s\n",
+							reg.entityDescriptor().getEntityName(),
+							reg.entityKey().getIdentifier() ) );
+				}
+			}
+			else {
+				summary.append( "    -> empty\n" );
+			}
 
 			summary.append( "  Loaded collections:\n" );
-			collector.getCollectedCollections().forEach( (reg) -> {
-				summary.append( String.format( "    - %s#%s\n",
-						reg.collectionDescriptor().getRootPathName(),
-						reg.collectionKey().getKey() ) );
-			} );
+			final var collectedCollections = collector.getCollectedCollections();
+			if ( collectedCollections != null ) {
+				for ( var reg : collectedCollections ) {
+					summary.append( String.format( "    - %s#%s\n",
+							reg.collectionDescriptor().getRootPathName(),
+							reg.collectionKey().getKey() ) );
+				}
+			}
+			else {
+				summary.append( "    -> empty\n" );
+			}
 			SQL_EXEC_LOGGER.followOnLockingCollectedLoadedValues( summary.toString() );
 		}
 	}

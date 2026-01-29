@@ -79,23 +79,26 @@ public class PostgreSQLTruncRoundFunction extends AbstractSqmFunctionDescriptor 
 		}
 		else {
 			// workaround using floor
+			final SqlAstNode secondArg = arguments.get( 1 );
 			if ( getName().equals( "trunc" ) ) {
 				sqlAppender.appendSql( "sign(" );
 				firstArg.accept( walker );
 				sqlAppender.appendSql( ")*floor(abs(" );
 				firstArg.accept( walker );
-				sqlAppender.appendSql( ")*1e" );
-				arguments.get( 1 ).accept( walker );
+				sqlAppender.appendSql( ")*power(10," );
+				secondArg.accept( walker );
+				sqlAppender.appendSql( "))" );
 			}
 			else {
 				sqlAppender.appendSql( "floor(" );
 				firstArg.accept( walker );
-				sqlAppender.appendSql( "*1e" );
-				arguments.get( 1 ).accept( walker );
-				sqlAppender.appendSql( "+0.5" );
+				sqlAppender.appendSql( "*power(10," );
+				secondArg.accept( walker );
+				sqlAppender.appendSql( ")+0.5)" );
 			}
-			sqlAppender.appendSql( ")/1e" );
-			arguments.get( 1 ).accept( walker );
+			sqlAppender.appendSql( "/power(10," );
+			secondArg.accept( walker );
+			sqlAppender.appendSql( ")" );
 		}
 	}
 

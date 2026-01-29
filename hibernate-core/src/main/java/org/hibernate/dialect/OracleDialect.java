@@ -52,6 +52,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
@@ -121,6 +122,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -1923,22 +1925,31 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
+	public boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant) {
 		return switch ( strategy ) {
 			case HISTORY_TABLE -> false;
-			case NATIVE -> historical;
+			case NATIVE -> historicalInstant != null;
 			default -> true;
 		};
 	}
 
 	@Override
-	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return strategy == TemporalTableStrategy.HISTORY_TABLE && historical;
+	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
+		final var options = influencers.getSessionFactory().getSessionFactoryOptions();
+		return options.getTransactionIdSupplier() == null
+				? options.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
+						&& influencers.getTemporalIdentifier() != null
+				: super.useTemporalRestriction( influencers );
 	}
 
 	@Override
 	public boolean supportsTemporalTablePartitioning() {
 		return true;
+	}
+
+	@Override
+	public boolean suppressesTemporalTablePrimaryKeys(boolean partitioned) {
+		return false;
 	}
 
 	@Override

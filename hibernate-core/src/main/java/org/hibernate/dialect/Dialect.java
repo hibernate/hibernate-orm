@@ -75,6 +75,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -193,6 +194,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
@@ -217,6 +219,7 @@ import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -5930,8 +5933,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param historical Whether it is a historical query
 	 */
 	@Incubating
-	public boolean useAsOfOperator(TemporalTableStrategy strategy, boolean historical) {
-		return strategy == TemporalTableStrategy.NATIVE && historical;
+	public boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant) {
+		return strategy == TemporalTableStrategy.NATIVE
+			&& historicalInstant != null;
 	}
 
 	/**
@@ -5943,9 +5947,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param historical Whether it is a historical query
 	 */
 	@Incubating
-	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return switch (strategy) {
-			case HISTORY_TABLE -> historical;
+	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
+		final var strategy =
+				influencers.getSessionFactory().getSessionFactoryOptions()
+						.getTemporalTableStrategy();
+		return switch ( strategy ) {
+			case HISTORY_TABLE -> influencers.getTemporalIdentifier() != null;
 			case NATIVE -> false;
 			default -> true;
 		};
@@ -5958,7 +5965,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	@Incubating
 	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
-		return TemporalTableStrategy.HISTORY_TABLE;
+		return HISTORY_TABLE;
 	}
 
 	//TODO: DELETEME

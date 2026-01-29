@@ -399,8 +399,8 @@ public class TemporalHelper {
 		else {
 			if ( useServerTransactionTimestamps ) {
 				throw new MappingException( "Settings '"
-											+ USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
-											+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
+							+ USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
+							+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
 				);
 			}
 			final var supplierClass = resolveSupplierClass( supplierSetting, serviceRegistry );

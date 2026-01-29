@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -26,7 +27,7 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
-	private Object temporalInstant;
+	private Object temporalIdentifier;
 	private JdbcMapping temporalJdbcMapping;
 
 	public NamedTableReference(
@@ -49,23 +50,29 @@ public class NamedTableReference extends AbstractTableReference {
 	}
 
 	public void applyTemporalTable(TemporalMapping mapping, LoadQueryInfluencers influencers) {
-		if ( mapping != null
-				&& useAsOfOperator( influencers )
+		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
-			this.temporalInstant = influencers.getTemporalIdentifier();
+			this.temporalIdentifier = influencers.getTemporalIdentifier();
 			this.temporalJdbcMapping = mapping.getJdbcMapping();
 		}
 	}
 
-	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
-		final var sessionFactory = influencers.getSessionFactory();
-		return sessionFactory.getJdbcServices().getDialect()
-				.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
-						influencers.getTemporalIdentifier() != null );
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers, TemporalMapping mapping) {
+		if ( mapping == null ) {
+			return false;
+		}
+		else {
+			final var sessionFactory = influencers.getSessionFactory();
+			final var options = sessionFactory.getSessionFactoryOptions();
+			return options.getTransactionIdSupplier() == null
+				&& sessionFactory.getJdbcServices().getDialect()
+					.useAsOfOperator( options.getTemporalTableStrategy(),
+							(Instant) influencers.getTemporalIdentifier() );
+		}
 	}
 
-	public Object getTemporalInstant() {
-		return temporalInstant;
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
 	}
 
 	public JdbcMapping getTemporalJdbcMapping() {

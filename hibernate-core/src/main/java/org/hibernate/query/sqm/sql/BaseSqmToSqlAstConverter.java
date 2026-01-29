@@ -3579,6 +3579,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+		final var loadQueryInfluencers = getLoadQueryInfluencers();
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
@@ -3608,7 +3609,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupJoin::applyPredicate,
 				tableGroup,
 				true,
-				getLoadQueryInfluencers().getEnabledFilters(),
+				loadQueryInfluencers.getEnabledFilters(),
 				false,
 				null,
 				this
@@ -3622,14 +3623,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroupJoin.applyPredicate( softDeleteRestriction );
 		}
 		final var temporalMapping = entityDescriptor.getTemporalMapping();
-		if ( temporalMapping != null ) {
-			final var temporalInstant = getLoadQueryInfluencers().getTemporalIdentifier();
-			if ( getDialect().useTemporalRestriction( getTemporalTableStrategy(), temporalInstant != null ) ) {
-				final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
-				tableGroupJoin.applyPredicate( temporalInstant == null
-						? temporalMapping.createCurrentRestriction( tableReference )
-						: temporalMapping.createRestriction( tableReference, temporalInstant ) );
-			}
+		if ( temporalMapping != null && getDialect().useTemporalRestriction( loadQueryInfluencers ) ) {
+			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
+			final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
+			tableGroupJoin.applyPredicate( temporalInstant == null
+					? temporalMapping.createCurrentRestriction( tableReference )
+					: temporalMapping.createRestriction( tableReference, temporalInstant ) );
 		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {

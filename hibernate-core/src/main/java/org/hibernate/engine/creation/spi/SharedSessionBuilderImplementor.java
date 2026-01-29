@@ -121,4 +121,7 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 
 	@Override
 	SharedSessionBuilderImplementor asOf(Instant instant);
+
+	@Override
+	SharedSessionBuilderImplementor atTransaction(Object transactionId);
 }

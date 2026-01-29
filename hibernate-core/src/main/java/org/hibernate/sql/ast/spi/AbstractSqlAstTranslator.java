@@ -214,7 +214,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6213,7 +6212,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			else {
 				visitParameterAsParameter(
-						new TemporalInstantParameter(
+						new TemporalValueParameter(
 								tableReference.getTemporalJdbcMapping(),
 								temporalInstant
 						)
@@ -6224,9 +6223,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	private boolean renderAsOfClause(NamedTableReference tableReference, Instant instant) {
+	private boolean renderAsOfClause(NamedTableReference tableReference, Object temporalValue) {
 		return tableReference.getTemporalJdbcMapping() != null
-			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), instant != null )
+			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), temporalValue != null )
 			&& statementStack.getCurrent() instanceof SelectStatement;
 	}
 
@@ -8881,11 +8880,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		columnWriteFragment.getParameters().forEach( this::addParameterBinder );
 	}
 
-	private static class TemporalInstantParameter implements JdbcParameter, JdbcParameterBinder {
+	private static class TemporalValueParameter implements JdbcParameter, JdbcParameterBinder {
 		private final JdbcMapping jdbcMapping;
-		private final Instant value;
+		private final Object value;
 
-		private TemporalInstantParameter(JdbcMapping jdbcMapping, Instant value) {
+		private TemporalValueParameter(JdbcMapping jdbcMapping, Object value) {
 			this.jdbcMapping = jdbcMapping;
 			this.value = value;
 		}

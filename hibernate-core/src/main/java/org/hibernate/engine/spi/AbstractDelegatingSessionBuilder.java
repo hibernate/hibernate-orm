@@ -191,4 +191,10 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		delegate.asOf( instant );
 		return this;
 	}
+
+	@Override
+	public SessionBuilderImplementor atTransaction(Object transactionId) {
+		delegate.atTransaction( transactionId );
+		return this;
+	}
 }

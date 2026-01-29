@@ -230,7 +230,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				&& TemporalMutationHelper.isUsingParameters( session )
 				&& factory().getSessionFactoryOptions().getTemporalTableStrategy() != HISTORY_TABLE ) {
 			jdbcValueBindings.bindValue(
-					session.getTransactionStartInstant(),
+					session.getCurrentTransactionIdentifier(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

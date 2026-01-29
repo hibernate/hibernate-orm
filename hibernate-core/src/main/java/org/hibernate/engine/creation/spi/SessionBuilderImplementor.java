@@ -103,4 +103,7 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 
 	@Override
 	SessionBuilderImplementor asOf(Instant instant);
+
+	@Override
+	SessionBuilderImplementor atTransaction(Object transactionId);
 }

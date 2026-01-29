@@ -420,6 +420,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public Supplier<?> getTransactionIdGenerator() {
+		return delegate.getTransactionIdGenerator();
+	}
+
+	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}

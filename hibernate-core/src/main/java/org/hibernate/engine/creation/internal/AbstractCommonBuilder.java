@@ -37,7 +37,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	protected boolean readOnly;
 	protected CacheMode cacheMode;
 	protected TimeZone jdbcTimeZone;
-	protected Instant temporalInstant;
+	protected Object temporalIdentifier;
 
 	public AbstractCommonBuilder(SessionFactoryImplementor factory) {
 		sessionFactory = factory;
@@ -166,7 +166,13 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 
 	@Override
 	public T asOf(Instant instant) {
-		this.temporalInstant = instant;
+		this.temporalIdentifier = instant;
+		return getThis();
+	}
+
+	@Override
+	public T atTransaction(Object transactionId) {
+		this.temporalIdentifier = transactionId;
 		return getThis();
 	}
 }

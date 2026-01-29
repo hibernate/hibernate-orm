@@ -49,7 +49,6 @@ import org.hibernate.type.format.FormatMapper;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -410,8 +409,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public Instant getTransactionStartInstant() {
-		return delegate.getTransactionStartInstant();
+	public Object getCurrentTransactionIdentifier() {
+		return delegate.getCurrentTransactionIdentifier();
 	}
 
 	@Override

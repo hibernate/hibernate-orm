@@ -243,4 +243,10 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		delegate.asOf( instant );
 		return this;
 	}
+
+	@Override
+	public SharedSessionBuilder atTransaction(Object transactionId) {
+		delegate.atTransaction( transactionId );
+		return this;
+	}
 }

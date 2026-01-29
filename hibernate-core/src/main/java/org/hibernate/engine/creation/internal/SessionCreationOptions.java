@@ -5,7 +5,6 @@
 package org.hibernate.engine.creation.internal;
 
 import java.sql.Connection;
-import java.time.Instant;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -57,7 +56,7 @@ public interface SessionCreationOptions {
 
 	TimeZone getJdbcTimeZone();
 
-	Instant getTemporalInstant();
+	Object getTemporalIdentifier();
 
 	/**
 	 * @return the full list of SessionEventListener if this was customized,

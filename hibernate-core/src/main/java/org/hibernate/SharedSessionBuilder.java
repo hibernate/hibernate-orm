@@ -102,6 +102,9 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	@Override
 	SharedSessionBuilder asOf(Instant instant);
 
+	@Override
+	SharedSessionBuilder atTransaction(Object transactionId);
+
 	@Override @Deprecated
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 

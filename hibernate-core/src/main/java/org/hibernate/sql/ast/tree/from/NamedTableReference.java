@@ -7,7 +7,6 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.time.Instant;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -27,7 +26,7 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
-	private Instant temporalInstant;
+	private Object temporalInstant;
 	private JdbcMapping temporalJdbcMapping;
 
 	public NamedTableReference(
@@ -65,7 +64,7 @@ public class NamedTableReference extends AbstractTableReference {
 						influencers.getTemporalInstant() != null );
 	}
 
-	public Instant getTemporalInstant() {
+	public Object getTemporalInstant() {
 		return temporalInstant;
 	}
 

@@ -122,7 +122,7 @@ final class HistoryCollectionRowMutationHelper {
 
 		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getTransactionStartInstant(),
+					session.getCurrentTransactionIdentifier(),
 					historyTableName,
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET
@@ -139,7 +139,7 @@ final class HistoryCollectionRowMutationHelper {
 			JdbcValueBindings jdbcValueBindings) {
 		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getTransactionStartInstant(),
+					session.getCurrentTransactionIdentifier(),
 					historyTableName,
 					temporalMapping.getEndingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET
@@ -213,7 +213,7 @@ final class HistoryCollectionRowMutationHelper {
 		);
 		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getTransactionStartInstant(),
+					session.getCurrentTransactionIdentifier(),
 					historyTableName,
 					temporalMapping.getEndingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

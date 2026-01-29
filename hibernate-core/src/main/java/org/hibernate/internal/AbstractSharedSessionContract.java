@@ -49,6 +49,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import java.util.function.Supplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -142,6 +143,8 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  */
 abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 
+	private static final Supplier<Instant> DEFAULT_TRANSACTION_ID_SUPPLIER = Instant::now;
+
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
 	private transient JdbcServices jdbcServices;
@@ -167,10 +170,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
+	private final Supplier<?> transactionIdSupplier;
+
 	// mutable state
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
-	private transient Instant transactionStartInstant;
+
+	private transient Object currentTransactionIdentifier;
 
 	private boolean criteriaCopyTreeEnabled;
 	private boolean criteriaPlanCacheEnabled;
@@ -211,6 +217,12 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		nativeJdbcParametersIgnored = factoryOptions.getNativeJdbcParametersIgnored();
 
 		final var statementInspector = interpret( options.getStatementInspector() );
+
+		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdGenerator();
+		transactionIdSupplier =
+				configuredTransactionIdSupplier == null
+						? DEFAULT_TRANSACTION_ID_SUPPLIER
+						: configuredTransactionIdSupplier;
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -608,36 +620,36 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public Instant getTransactionStartInstant() {
-		if ( transactionStartInstant != null ) {
-			return transactionStartInstant;
+	public Object getCurrentTransactionIdentifier() {
+		if ( currentTransactionIdentifier != null ) {
+			return currentTransactionIdentifier;
 		}
 		else if ( isTransactionInProgress() ) {
-			initializeTransactionStartInstant();
-			return transactionStartInstant;
+			initializeCurrentTransactionIdentifier();
+			return currentTransactionIdentifier;
 		}
 		else {
-			return generateTransactionStartInstant();
+			return generateCurrentTransactionIdentifier();
 		}
 	}
 
-	private Instant generateTransactionStartInstant() {
+	private Object generateCurrentTransactionIdentifier() {
 		return factoryOptions.isUseServerTransactionTimestampsEnabled()
 				? null
-				: Instant.now();
+				: transactionIdSupplier.get();
 	}
 
 	@Override
 	public void afterTransactionBegin() {
-		initializeTransactionStartInstant();
+		initializeCurrentTransactionIdentifier();
 	}
 
-	protected void initializeTransactionStartInstant() {
-		transactionStartInstant = generateTransactionStartInstant();
+	protected void initializeCurrentTransactionIdentifier() {
+		currentTransactionIdentifier = generateCurrentTransactionIdentifier();
 	}
 
 	protected void clearTransactionStartInstant() {
-		transactionStartInstant = null;
+		currentTransactionIdentifier = null;
 	}
 
 	@Override

@@ -225,8 +225,7 @@ class ColumnDefinitions {
 			final String generatedAs = column.getGeneratedAs();
 			if ( generatedAs != null) {
 				definition.append( dialect.generatedAs( generatedAs ) );
-				// TODO: hack for MariaDB temporal tables
-				if ( generatedAs.startsWith( "row " ) ) {
+				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
 					return;
 				}
 			}

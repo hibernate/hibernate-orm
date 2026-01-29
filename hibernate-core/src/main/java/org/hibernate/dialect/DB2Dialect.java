@@ -1336,6 +1336,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return false;
+	}
+
+	@Override
 	public int getTemporalColumnPrecision() {
 		return 12; // required!
 	}

@@ -59,7 +59,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
 	private Boolean readOnly;
-	private Object temporalInstant;
+	private Object temporalIdentifier;
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -73,7 +73,7 @@ public class LoadQueryInfluencers implements Serializable {
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
-		temporalInstant = options.getTemporalIdentifier();
+		temporalIdentifier = options.getTemporalIdentifier();
 		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
 			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
@@ -98,12 +98,12 @@ public class LoadQueryInfluencers implements Serializable {
 		return sessionFactory;
 	}
 
-	public Object getTemporalInstant() {
-		return temporalInstant;
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
 	}
 
-	public void setTemporalInstant(Object temporalInstant) {
-		this.temporalInstant = temporalInstant;
+	public void setTemporalIdentifier(Object temporalIdentifier) {
+		this.temporalIdentifier = temporalIdentifier;
 	}
 
 

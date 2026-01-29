@@ -52,7 +52,7 @@ public class NamedTableReference extends AbstractTableReference {
 		if ( mapping != null
 				&& useAsOfOperator( influencers )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
-			this.temporalInstant = influencers.getTemporalInstant();
+			this.temporalInstant = influencers.getTemporalIdentifier();
 			this.temporalJdbcMapping = mapping.getJdbcMapping();
 		}
 	}
@@ -61,7 +61,7 @@ public class NamedTableReference extends AbstractTableReference {
 		final var sessionFactory = influencers.getSessionFactory();
 		return sessionFactory.getJdbcServices().getDialect()
 				.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
-						influencers.getTemporalInstant() != null );
+						influencers.getTemporalIdentifier() != null );
 	}
 
 	public Object getTemporalInstant() {

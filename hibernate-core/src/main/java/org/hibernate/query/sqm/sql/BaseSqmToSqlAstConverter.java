@@ -3623,7 +3623,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final var temporalMapping = entityDescriptor.getTemporalMapping();
 		if ( temporalMapping != null ) {
-			final var temporalInstant = getLoadQueryInfluencers().getTemporalInstant();
+			final var temporalInstant = getLoadQueryInfluencers().getTemporalIdentifier();
 			if ( getDialect().useTemporalRestriction( getTemporalTableStrategy(), temporalInstant != null ) ) {
 				final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
 				tableGroupJoin.applyPredicate( temporalInstant == null

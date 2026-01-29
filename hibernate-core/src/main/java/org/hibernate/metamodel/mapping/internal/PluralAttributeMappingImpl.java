@@ -604,7 +604,7 @@ public class PluralAttributeMappingImpl
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
 		if ( useTemporalRestriction( influencers ) ) {
-			final var temporalInstant = influencers.getTemporalInstant();
+			final var temporalInstant = influencers.getTemporalIdentifier();
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
@@ -643,7 +643,7 @@ public class PluralAttributeMappingImpl
 	private boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		return getDialect()
 				.useTemporalRestriction( getTemporalTableStrategy( influencers ),
-						influencers.getTemporalInstant() != null );
+						influencers.getTemporalIdentifier() != null );
 	}
 
 	@Override
@@ -1265,7 +1265,7 @@ public class PluralAttributeMappingImpl
 		final var influencers = creationState.getLoadQueryInfluencers();
 		return temporalMapping != null
 			&& getTemporalTableStrategy( influencers ) == TemporalTableStrategy.HISTORY_TABLE
-			&& influencers.getTemporalInstant() != null;
+			&& influencers.getTemporalIdentifier() != null;
 	}
 
 	@Override
@@ -1319,7 +1319,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
-		if ( influencers.getTemporalInstant() != null ) {
+		if ( influencers.getTemporalIdentifier() != null ) {
 			if ( temporalMapping != null ) {
 				return true;
 			}

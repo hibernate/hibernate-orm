@@ -2242,7 +2242,7 @@ public class ToOneAttributeMapping
 						final var tableReference =
 								lazyTableGroup.resolveTableReference( navigablePath,
 										temporalMapping.getTableName() );
-						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
 						final var temporalPredicate =
 								temporalInstant == null
 										? temporalMapping.createCurrentRestriction( tableReference, resolver )
@@ -2377,7 +2377,7 @@ public class ToOneAttributeMapping
 					final var tableReference =
 							lazyTableGroup.resolveTableReference( navigablePath,
 									temporalMapping.getTableName() );
-					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
 					final var temporalPredicate =
 							temporalInstant == null
 									? temporalMapping.createCurrentRestriction( tableReference, resolver )
@@ -2402,7 +2402,7 @@ public class ToOneAttributeMapping
 		final var factory = creationState.getCreationContext().getSessionFactory();
 		return factory.getJdbcServices().getDialect()
 				.useTemporalRestriction( temporalTableStrategy,
-						creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
+						creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null );
 	}
 
 	@Override

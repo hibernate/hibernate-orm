@@ -31,7 +31,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() ),
-					keySource.getLoadQueryInfluencers().getTemporalInstant() != null
+					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null
 			);
 		}
 		else {

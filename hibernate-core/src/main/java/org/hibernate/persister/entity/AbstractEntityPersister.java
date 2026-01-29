@@ -2932,7 +2932,7 @@ public abstract class AbstractEntityPersister
 			if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( temporalMapping.getTableName() );
-				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
 				final var temporalPredicate =
 						temporalInstant == null
 								? temporalMapping.createCurrentRestriction( tableReference, resolver )
@@ -2950,7 +2950,7 @@ public abstract class AbstractEntityPersister
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
 		return getDialect()
 				.useTemporalRestriction( getTemporalTableStrategy(),
-						creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
+						creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null );
 	}
 
 	private String resolvePrimaryTableName(SqlAstCreationState creationState) {
@@ -2971,7 +2971,7 @@ public abstract class AbstractEntityPersister
 	private boolean useHistoryTable(SqlAstCreationState creationState) {
 		return temporalMapping != null
 			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-			&& creationState.getLoadQueryInfluencers().getTemporalInstant() != null;
+			&& creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null;
 	}
 
 	@Override
@@ -3829,7 +3829,7 @@ public abstract class AbstractEntityPersister
 
 	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
 		return temporalMapping != null
-			&& influencers.getTemporalInstant() != null;
+			&& influencers.getTemporalIdentifier() != null;
 	}
 
 	/**

@@ -10,9 +10,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
@@ -31,6 +28,8 @@ import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.DB2TemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.DB2StructJdbcType;
@@ -118,7 +117,6 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
-import static java.util.Collections.emptySet;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -1341,79 +1339,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public int getTemporalColumnPrecision() {
-		return 12; // required!
-	}
-
-	@Override
-	public boolean supportsNativeTemporalTables() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTemporalTablePartitioning() {
-		return true;
-	}
-
-	@Override
-	public String getExtraTemporalTableDeclarations(
-			TemporalTableStrategy strategy,
-			String rowStartColumn, String rowEndColumn,
-			boolean partitioned) {
-		// no 'for' keyword
-		if ( strategy == TemporalTableStrategy.NATIVE ) {
-			return "transaction_start_id timestamp(12) not null generated always as transaction start id implicitly hidden"
-				+ ", period system_time (" + rowStartColumn + ", " + rowEndColumn + ")";
-		}
-		else if ( partitioned ) {
-			return rowEndColumn + "_null smallint generated always as (case when " + rowEndColumn + " is null then 1 else 0 end) implicitly hidden";
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
-	public String getTemporalTableOptions(
-			TemporalTableStrategy strategy,
-			String rowEndColumnName,
-			boolean partitioned,
-			String currentPartition,
-			String historyPartition) {
-		return partitioned
-				? "partition by range (" + rowEndColumnName + "_null)"
-				+ " (partition " + historyPartition + " starting from (0) ending at (0),"
-				+ " partition " + currentPartition + " starting from (1) ending at (1))"
-				: null;
-	}
-
-	@Override
-	public void addTemporalTableAuxiliaryObjects(
-			TemporalTableStrategy strategy,
-			Table table, Database database,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-		if ( strategy == TemporalTableStrategy.NATIVE ) {
-			final String name = table.getQuotedName( this );
-			final String historyName = name + "_history";
-			database.addAuxiliaryDatabaseObject(
-					new NamedAuxiliaryDatabaseObject(
-							historyName,
-							database.getDefaultNamespace(),
-							new String[] {
-									"create table " + historyName + " like " + name,
-									"alter table " + name + " add versioning use history table " + historyName,
-							},
-							new String[] {"drop table " + historyName},
-							emptySet()
-					)
-			);
-		}
-	}
-
-	@Override
-	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
-		return TemporalTableStrategy.NATIVE;
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DB2TemporalTableSupport( this );
 	}
 }

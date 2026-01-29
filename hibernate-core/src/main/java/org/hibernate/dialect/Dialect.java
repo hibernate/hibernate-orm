@@ -15,7 +15,6 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
-import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -24,10 +23,8 @@ import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -58,6 +55,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temporal.DefaultTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.LegacyTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
@@ -75,7 +74,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
@@ -194,7 +192,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
@@ -219,7 +216,6 @@ import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -5783,189 +5779,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this dialect natively support SQL 2011-style
-	 * temporal tables?
-	 *
-	 * @see TemporalTableStrategy#NATIVE
+	 * Get the {@link TemporalTableSupport} for this dialect.
 	 */
 	@Incubating
-	public boolean supportsNativeTemporalTables() {
-		return false;
-	}
-
-	/**
-	 * The column type to use for effectivity columns of
-	 * temporal tables. The default implementation returns
-	 * {@link SqlTypes#TIMESTAMP TIMESTAMP}.
-	 */
-	@Incubating
-	public int getTemporalColumnType() {
-		return SqlTypes.TIMESTAMP;
-	}
-
-	/**
-	 * The column precision to use for effectivity columns
-	 * of native temporal tables when the precision is not
-	 * explicitly specified. The default implementation
-	 * returns {@linkplain #getDefaultTimestampPrecision
-	 * the default timestamp precision} for this dialect.
-	 *
-	 * @see org.hibernate.annotations.Temporal#secondPrecision
-	 */
-	@Incubating
-	public int getTemporalColumnPrecision() {
-		return getDefaultTimestampPrecision();
-	}
-
-	/**
-	 * Table {@linkplain jakarta.persistence.Table#options options}
-	 * to use for temporal tables, used to specify system versioning
-	 * or table partitioning.
-	 *
-	 * @param strategy The temporal table strategy
-	 * @param rowEndColumnName The name of the {@code row end} column
-	 * specified via {@link org.hibernate.annotations.Temporal#rowEnd}
-	 * @param partitioned Is partitioning requested
-	 * @param currentPartitionName The current partition name, if specified
-	 * @param historyPartitionName The history partition name, if specified
-	 * @return The options, or {@code null} if there are no options
-	 */
-	@Incubating
-	public String getTemporalTableOptions(
-			TemporalTableStrategy strategy,
-			String rowEndColumnName,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-		return null;
-	}
-
-	/**
-	 * Do we need to suppress creation of the primary key
-	 * constraint on a temporal table?
-	 *
-	 * @param partitioned Is partitioning requested
-	 */
-	@Incubating
-	public boolean suppressesTemporalTablePrimaryKeys(boolean partitioned) {
-		return partitioned && supportsTemporalTablePartitioning();
-	}
-
-	/**
-	 * Do we support partitioning temporal tables in this
-	 * dialect?
-	 *
-	 * @see org.hibernate.annotations.Temporal.HistoryPartitioning
-	 */
-	@Incubating
-	public boolean supportsTemporalTablePartitioning() {
-		return false;
-	}
-
-	/**
-	 * Register any auxiliary database objects required
-	 * for the given temporary table and strategy. Used
-	 * to create history tables or table partitions.
-	 *
-	 * @param strategy The temporal table strategy
-	 * @param table A temporal table
-	 * @param database The database to register with
-	 * @param partitioned Is partitioning requested
-	 * @param currentPartitionName The current partition name, if specified
-	 * @param historyPartitionName The history partition name, if specified
-	 */
-	@Incubating
-	public void addTemporalTableAuxiliaryObjects(
-			TemporalTableStrategy strategy,
-			Table table, Database database,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-	}
-
-	/**
-	 * Any extra declarations required as part of the {@code create table}
-	 * statement for a temporal table. These declarations, unlike the
-	 * {@linkplain #getTemporalTableOptions options} come inside the
-	 * parentheses, along with the column and constraint definitions.
-	 * Examples include the {@code period for system_time} clause, the Db2
-	 * {@code transaction start id} column, the MySQL partitioning column,
-	 * and so on.
-	 *
-	 * @param strategy The temporal table strategy
-	 * @param partitioned Is partitioning requested
-	 */
-	@Incubating
-	public String getExtraTemporalTableDeclarations(
-			TemporalTableStrategy strategy,
-			String rowStartColumn, String rowEndColumn,
-			boolean partitioned) {
-		return null;
-	}
-
-	/**
-	 * Should we create a {@code check} constraint to enforce effectivity
-	 * constraints? (That starting timestamps precede ending timestamps.)
-	 * This is typically not needed for native temporal tables.
-	 */
-	@Incubating
-	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
-		return strategy != TemporalTableStrategy.NATIVE && supportsTableCheck();
-	}
-
-	/**
-	 * The operator used to specify a temporal instant for querying
-	 * historical data. Usually {@code for system_time as of}. This
-	 * is usually used together with native temporal tables, but in
-	 * Oracle we use it all the time.
-	 */
-	@Incubating
-	public String getAsOfOperator(TemporalTableStrategy strategy) {
-		return "for system_time as of";
-	}
-
-	/**
-	 * Should be use the {@link #getAsOfOperator for system_time as of}
-	 * operator when querying temporal tables? We usually only use it
-	 * for querying native temporal tables at a historical instant, but
-	 * in Oracle we use it all the time.
-	 * @param strategy The strategy
-	 * @param historical Whether it is a historical query
-	 */
-	@Incubating
-	public boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant) {
-		return strategy == TemporalTableStrategy.NATIVE
-			&& historicalInstant != null;
-	}
-
-	/**
-	 * Should we use temporal restrictions on the {@code row start} and
-	 * {@code row end} columns when querying temporal tables? We usually
-	 * use them unless we are using native temporal tables, but on Oracle
-	 * we never use them.
-	 * @param strategy The strategy
-	 * @param historical Whether it is a historical query
-	 */
-	@Incubating
-	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		final var strategy =
-				influencers.getSessionFactory().getSessionFactoryOptions()
-						.getTemporalTableStrategy();
-		return switch ( strategy ) {
-			case HISTORY_TABLE -> influencers.getTemporalIdentifier() != null;
-			case NATIVE -> false;
-			default -> true;
-		};
-	}
-
-	@Incubating
-	public String getTemporalExclusionColumnOption() {
-		throw new MappingException( "Native temporal exclusion column option is not supported by this dialect" );
-	}
-
-	@Incubating
-	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
-		return HISTORY_TABLE;
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DefaultTemporalTableSupport( this );
 	}
 
 	//TODO: DELETEME

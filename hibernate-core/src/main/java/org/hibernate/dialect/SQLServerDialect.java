@@ -13,12 +13,9 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -35,6 +32,8 @@ import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
+import org.hibernate.dialect.temporal.SQLServerTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.SQLServerLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
@@ -99,7 +98,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import static java.util.Collections.emptySet;
 import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY_LEVEL;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
@@ -1084,6 +1082,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " datetime2 generated always as " + generatedAs
+				: " as (" + generatedAs + ") persisted";
+	}
+
+	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
 		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
 	}
@@ -1168,60 +1173,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
 			return context.formatWithoutCatalog( name );
-		}
-	}
-
-	@Override
-	public boolean supportsNativeTemporalTables() {
-		return true;
-	}
-
-	@Override
-	public String getExtraTemporalTableDeclarations(
-			TemporalTableStrategy strategy,
-			String rowStartColumn, String rowEndColumn,
-			boolean partitioned) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "transaction_start_id bigint generated always as transaction_id start hidden not null"
-				+ ", period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
-				: null;
-	}
-
-	@Override
-	public String getTemporalTableOptions(
-			TemporalTableStrategy strategy,
-			String rowEndColumnName,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "with (system_versioning = on)"
-				: null;
-	}
-
-	@Override
-	public String generatedAs(String generatedAs) {
-		return generatedAs.startsWith( "row " )
-				? " datetime2 generated always as " + generatedAs
-				: " as (" + generatedAs + ") persisted";
-	}
-
-	@Override
-	public void addTemporalTableAuxiliaryObjects(
-			TemporalTableStrategy strategy,
-			Table table,
-			Database database,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-		if ( strategy == TemporalTableStrategy.NATIVE ) {
-			database.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject(
-					database.getDefaultNamespace(),
-					new String[0],
-					new String[] { "alter table " + table.getQuotedName(this) + " set (system_versioning = off)" },
-					emptySet(),
-					false
-			) );
 		}
 	}
 
@@ -1326,4 +1277,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new SQLServerTemporalTableSupport( this );
+	}
 }

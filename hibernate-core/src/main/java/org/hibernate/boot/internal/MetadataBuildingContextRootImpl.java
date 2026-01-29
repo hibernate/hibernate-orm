@@ -88,8 +88,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 
 	@Override
 	public TemporalTableStrategy getTemporalTableStrategy(Dialect dialect) {
-		return temporalTableStrategy == TemporalTableStrategy.AUTO
-				? dialect.getDefaultTemporalTableStrategy()
-				: temporalTableStrategy;
+		return temporalTableStrategy == TemporalTableStrategy.AUTO ? dialect.getTemporalTableSupport()
+				.getDefaultTemporalTableStrategy() : temporalTableStrategy;
 	}
 }

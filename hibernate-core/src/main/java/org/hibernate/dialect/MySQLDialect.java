@@ -13,7 +13,6 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.FetchSettings;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -25,6 +24,8 @@ import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.MySQLTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -1661,35 +1662,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporalTablePartitioning() {
-		return true;
-	}
-
-	@Override
-	public String getTemporalTableOptions(
-			TemporalTableStrategy strategy,
-			String rowEndColumnName,
-			boolean partitioned,
-			String currentPartition,
-			String historyPartition) {
-		return partitioned
-				? "partition by list (" + rowEndColumnName + "_null)"
-				+ " (partition " + historyPartition + " values in (0),"
-				+ " partition " + currentPartition + " values in (1))"
-				: null;
-	}
-
-	@Override
-	public String getExtraTemporalTableDeclarations(
-			TemporalTableStrategy strategy,
-			String rowStartColumn, String rowEndColumn,
-			boolean partitioned) {
-		return partitioned
-				? rowEndColumn + "_null tinyint as (" + rowEndColumn + " is null) virtual invisible"
-				: null;
-	}
-
-	@Override
 	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
 			final MySQLSqlAstTranslator<?> translator = new MySQLSqlAstTranslator<>( factory, optionalTableUpdate, MySQLDialect.this );
@@ -1701,5 +1673,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorMySQLImpl( extractionContext );
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new MySQLTemporalTableSupport( this );
 	}
 }

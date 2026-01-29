@@ -6203,7 +6203,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		registerAffectedTable( tableReference );
 		if ( renderAsOfClause( tableReference ) ) {
 			appendSql( WHITESPACE );
-			appendSql( dialect.getAsOfOperator( getTemporalTableStrategy() ) );
+			appendSql( dialect.getTemporalTableSupport().getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
 			final var temporalInstant = tableReference.getTemporalIdentifier();
 			if ( temporalInstant == null ) {
@@ -6226,14 +6226,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean renderAsOfClause(NamedTableReference tableReference) {
 		return tableReference.getTemporalJdbcMapping() != null
-			&& getSessionFactory().getSessionFactoryOptions().getTransactionIdSupplier() == null
+			&& sessionFactory.getSessionFactoryOptions().getTransactionIdSupplier() == null
 			&& statementStack.getCurrent() instanceof SelectStatement
-			&& getDialect().useAsOfOperator( getTemporalTableStrategy(),
-					(Instant) tableReference.getTemporalIdentifier() );
+			&& dialect.getTemporalTableSupport().useAsOfOperator( getTemporalTableStrategy(),
+				(Instant) tableReference.getTemporalIdentifier() );
 	}
 
 	private TemporalTableStrategy getTemporalTableStrategy() {
-		return getSessionFactory().getSessionFactoryOptions().getTemporalTableStrategy();
+		return sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	@Override

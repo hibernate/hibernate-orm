@@ -553,7 +553,8 @@ public class PropertyBinder {
 				if ( selectable instanceof Column column ) {
 					final String existing = column.getOptions();
 					final String exclusion =
-							dialect.getTemporalExclusionColumnOption();
+							dialect.getTemporalTableSupport()
+									.getTemporalExclusionColumnOption();
 					final String options =
 							isBlank( existing )
 									? exclusion

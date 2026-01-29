@@ -29,9 +29,13 @@ import org.hibernate.sql.model.internal.MutationGroupSingle;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * Insert coordinator for HISTORY temporal strategy.
+ * Insert coordinator for
+ * {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE}
+ * temporal strategy.
+ *
+ * @author Gavin King
  */
-public class HistoryInsertCoordinator extends AbstractMutationCoordinator implements InsertCoordinator {
+public class InsertCoordinatorHistory extends AbstractMutationCoordinator implements InsertCoordinator {
 	private final InsertCoordinatorStandard currentInsertCoordinator;
 	private final EntityTableMapping identifierTableMapping;
 	private final EntityTableMapping historyTableMapping;
@@ -39,7 +43,7 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 	private final BasicBatchKey historyBatchKey;
 	private final MutationOperationGroup staticHistoryInsertGroup;
 
-	public HistoryInsertCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public InsertCoordinatorHistory(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.currentInsertCoordinator = new InsertCoordinatorStandard( entityPersister, factory );
 		this.identifierTableMapping = entityPersister.getIdentifierTableMapping();
@@ -103,7 +107,7 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 						operationGroup, session );
 		try {
 			bindHistoryValues( id, values, propertyInclusions, session, mutationExecutor.getJdbcValueBindings() );
-			mutationExecutor.execute( entity, null, null, HistoryInsertCoordinator::verifyOutcome, session );
+			mutationExecutor.execute( entity, null, null, InsertCoordinatorHistory::verifyOutcome, session );
 		}
 		finally {
 			mutationExecutor.release();
@@ -118,13 +122,10 @@ public class HistoryInsertCoordinator extends AbstractMutationCoordinator implem
 				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions, entity, session );
 		final var tableMutation = insertBuilder.buildMutation();
-		final var mutationGroup = new MutationGroupSingle(
-				MutationType.INSERT,
-				entityPersister(),
-				tableMutation
+		return singleOperation(
+				new MutationGroupSingle( MutationType.INSERT, entityPersister(), tableMutation ),
+				tableMutation.createMutationOperation( null, factory() )
 		);
-		return singleOperation( mutationGroup,
-				tableMutation.createMutationOperation( null, factory() ) );
 	}
 
 	private void applyHistoryInsertDetails(

@@ -145,9 +145,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		public InsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {
 			mutationTarget.forEachMutableTable( (tableMapping) -> {
-				final int[] tableAttributeIndexes = tableMapping.getAttributeIndexes();
-				for ( int i = 0; i < tableAttributeIndexes.length; i++ ) {
-					if ( values[tableAttributeIndexes[i]] != null ) {
+				for ( int tableAttributeIndex : tableMapping.getAttributeIndexes() ) {
+					if ( values[tableAttributeIndex] != null ) {
 						tablesWithNonNullValues.add( tableMapping );
 						break;
 					}
@@ -206,9 +205,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var operation = mutationGroup.getOperation( position );
 			final var tableDetails = (EntityTableMapping) operation.getTableDetails();
 			if ( tableInclusionChecker.include( tableDetails ) ) {
-				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
-					final int attributeIndex = attributeIndexes[ i ];
+				for ( final int attributeIndex : tableDetails.getAttributeIndexes() ) {
 					if ( propertyInclusions[attributeIndex] ) {
 						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings,
 								attributeMappings.get( attributeIndex ) );

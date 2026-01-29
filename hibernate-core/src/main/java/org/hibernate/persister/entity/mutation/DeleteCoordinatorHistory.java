@@ -4,38 +4,39 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
-import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
+import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * Delete coordinator for HISTORY temporal strategy.
+ * Delete coordinator for
+ * {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE}
+ * temporal strategy.
+ *
+ * @author Gavin King
  */
-public class HistoryDeleteCoordinator extends AbstractMutationCoordinator implements DeleteCoordinator {
+public class DeleteCoordinatorHistory
+		extends AbstractMutationCoordinator
+		implements DeleteCoordinator {
+
 	private final DeleteCoordinator currentDeleteCoordinator;
 	private final EntityTableMapping historyTableMapping;
 	private final TemporalMapping temporalMapping;
 	private final BasicBatchKey historyBatchKey;
 	private final MutationOperationGroup historyEndUpdateGroup;
 
-	public HistoryDeleteCoordinator(
+	public DeleteCoordinatorHistory(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor factory,
 			DeleteCoordinator currentDeleteCoordinator) {
@@ -126,50 +127,15 @@ public class HistoryDeleteCoordinator extends AbstractMutationCoordinator implem
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
-		applyTemporalEnding( tableUpdateBuilder );
-		applyOptimisticLocking( tableUpdateBuilder );
+		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
+		if ( entityPersister().optimisticLockStyle().isVersion() ) {
+			applyVersionOptimisticLocking( tableUpdateBuilder );
+		}
 
 		final var tableMutation = tableUpdateBuilder.buildMutation();
-		final var mutationGroup = new MutationGroupSingle(
-				MutationType.DELETE,
-				entityPersister(),
-				tableMutation
+		return singleOperation(
+				new MutationGroupSingle( MutationType.DELETE, entityPersister(), tableMutation ),
+				tableMutation.createMutationOperation( null, factory() )
 		);
-
-		return singleOperation( mutationGroup,
-				tableMutation.createMutationOperation( null, factory() ) );
-	}
-
-	private void applyTemporalEnding(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		final var endingColumnReference =
-				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
-		tableUpdateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
-		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
-	}
-
-	private void applyOptimisticLocking(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		if ( entityPersister().optimisticLockStyle() == OptimisticLockStyle.VERSION
-				&& entityPersister().getVersionMapping() != null ) {
-			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister().getVersionMapping() );
-		}
-	}
-
-	private boolean resultCheck(
-			Object id,
-			PreparedStatementDetails statementDetails,
-			int affectedRowCount,
-			int batchPosition) {
-		return identifiedResultsCheck(
-				statementDetails,
-				affectedRowCount,
-				batchPosition,
-				entityPersister(),
-				id,
-				factory()
-		);
-	}
-
-	private StaleObjectStateException staleObjectStateException(Object id, StaleStateException cause) {
-		return new StaleObjectStateException( entityPersister().getEntityName(), id, cause );
 	}
 }

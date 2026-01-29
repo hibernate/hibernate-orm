@@ -15,6 +15,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -5939,6 +5940,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case NATIVE -> false;
 			default -> true;
 		};
+	}
+
+	@Incubating
+	public String getTemporalExclusionColumnOption() {
+		throw new MappingException( "Native temporal exclusion column option is not supported by this dialect" );
 	}
 
 	//TODO: DELETEME

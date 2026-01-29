@@ -129,7 +129,10 @@ public @interface Temporal {
 
 	/**
 	 * Enables partitioning for a temporal table mapped by
-	 * a {@linkplain Temporal temporal entity or collection}.
+	 * a {@linkplain Temporal temporal entity or collection}
+	 * in the {@linkplain TemporalTableStrategy#SINGLE_TABLE
+	 * single table} temporal mapping strategy. In other
+	 * mapping strategies this annotation has no effect.
 	 */
 	@Documented
 	@Target({TYPE, FIELD, METHOD})
@@ -173,6 +176,10 @@ public @interface Temporal {
 	 * versioning. Updates to an excluded attribute
 	 * modify the current row directly without creating
 	 * a new revision of the entity instance.
+	 * <p>For {@linkplain TemporalTableStrategy#NATIVE
+	 * native temporal tables}, this is only supported
+	 * if the database itself provides a way to exclude
+	 * a column from temporal versioning.
 	 */
 	@Documented
 	@Target({FIELD, METHOD})

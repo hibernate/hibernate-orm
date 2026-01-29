@@ -41,15 +41,18 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
+import org.hibernate.annotations.Temporal.Excluded;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -95,6 +98,7 @@ import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTim
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -535,10 +539,28 @@ public class PropertyBinder {
 	}
 
 	private void handleTemporalExcluded(Property property) {
-		if ( memberDetails != null
-				&& memberDetails.hasDirectAnnotationUsage( org.hibernate.annotations.Temporal.Excluded.class ) ) {
+		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Excluded.class ) ) {
 			property.setTemporalExcluded( true );
 			property.setOptimisticLocked( false );
+			addTemporalExcludedColumnOptions( property );
+		}
+	}
+
+	private void addTemporalExcludedColumnOptions(Property property) {
+		if ( buildingContext.getTemporalTableStrategy() == TemporalTableStrategy.NATIVE ) {
+			for ( var selectable : property.getSelectables() ) {
+				if ( selectable instanceof Column column ) {
+					final String existing = column.getOptions();
+					final String exclusion =
+							buildingContext.getMetadataCollector().getDatabase()
+									.getDialect().getTemporalExclusionColumnOption();
+					final String options =
+							isBlank( existing )
+									? exclusion
+									: existing + " " + exclusion;
+					column.setOptions( options );
+				}
+			}
 		}
 	}
 

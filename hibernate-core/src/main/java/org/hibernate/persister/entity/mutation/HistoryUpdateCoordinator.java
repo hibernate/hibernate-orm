@@ -13,7 +13,6 @@ import org.hibernate.StaleStateException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,7 +21,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,7 +33,6 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
-import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -113,7 +110,6 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 					oldVersion,
 					incomingOldValues,
 					dirtyAttributeIndexes,
-					hasDirtyCollection,
 					session
 			);
 			return generatedValues;
@@ -142,13 +138,11 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			Object oldVersion,
 			Object[] incomingOldValues,
 			int[] dirtyAttributeIndexes,
-			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
 		final var updateDetails = buildHistoryExcludedUpdateDetails(
 				entity,
 				rowId,
 				dirtyAttributeIndexes,
-				hasDirtyCollection,
 				session
 		);
 		if ( updateDetails != null ) {
@@ -193,7 +187,6 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			Object entity,
 			Object rowId,
 			int[] dirtyAttributeIndexes,
-			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
 		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
 			return null;
@@ -207,13 +200,6 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 		}
 
 		final var versionMapping = entityPersister().getVersionMapping();
-		final boolean incrementVersion =
-				versionMapping != null
-						&& isVersionIncrementRequired(
-								dirtyAttributeIndexes,
-								hasDirtyCollection,
-								entityPersister().getPropertyVersionability()
-						);
 		final var updateability =
 				entityPersister().hasUninitializedLazyProperties( entity )
 						? entityPersister().getNonLazyPropertyUpdateability()
@@ -227,42 +213,28 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
 			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
-				final var generator = attributeMapping.getGenerator();
-				final boolean generatedInSql = needsUpdateValueGeneration( entity, session, generator );
-				final boolean include =
-						generatedInSql
-						|| isGeneratedBeforeExecution(
-								entity,
-								session,
-								generator
-						)
-						|| isUpdatable(
-								versionMapping,
-								attributeMapping,
-								dirtyFlags,
-								attributeIndex,
-								incrementVersion,
-								updateability
-						);
+				if ( entityPersister().isPropertyTemporalExcluded( attributeIndex ) ) {
+					final var generator = attributeMapping.getGenerator();
+					final boolean generatedInSql = needsUpdateValueGeneration( entity, session, generator );
+					final boolean include =
+							generatedInSql
+								|| isGeneratedBeforeExecution( entity, session, generator )
+								|| dirtyFlags[attributeIndex] && updateability[attributeIndex];
 
-				if ( include ) {
-					if ( generatedInSql ) {
-						final var onExecutionGenerator = (OnExecutionGenerator) generator;
-						addSqlGeneratedValue( tableUpdateBuilder, attributeMapping, onExecutionGenerator );
-						hasValues = true;
-						if ( onExecutionGenerator.writePropertyValue() ) {
+					if ( include ) {
+						if ( generatedInSql ) {
+							final var onExecutionGenerator = (OnExecutionGenerator) generator;
+							addSqlGeneratedValue( tableUpdateBuilder, attributeMapping, onExecutionGenerator );
+							hasValues = true;
+							if ( onExecutionGenerator.writePropertyValue() ) {
+								bindableAttributeIndexes.add( attributeIndex );
+							}
+						}
+						else {
+							attributeMapping.forEachUpdatable( tableUpdateBuilder );
+							hasValues = true;
 							bindableAttributeIndexes.add( attributeIndex );
 						}
-					}
-					else if ( versionMapping != null && versionMapping.getVersionAttribute() == attributeMapping ) {
-						tableUpdateBuilder.addValueColumn( versionMapping.getVersionAttribute() );
-						hasValues = true;
-						bindableAttributeIndexes.add( attributeIndex );
-					}
-					else {
-						attributeMapping.forEachUpdatable( tableUpdateBuilder );
-						hasValues = true;
-						bindableAttributeIndexes.add( attributeIndex );
 					}
 				}
 			}
@@ -298,18 +270,6 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 		return generator != null
 			&& generator.generatesOnUpdate()
 			&& generator.generatedBeforeExecution( entity, session );
-	}
-
-	private static boolean isUpdatable(
-			EntityVersionMapping versionMapping,
-			AttributeMapping attributeMapping,
-			boolean[] dirtyFlags,
-			int attributeIndex,
-			boolean incrementVersion,
-			boolean[] updateability) {
-		return versionMapping != null && versionMapping.getVersionAttribute() == attributeMapping
-				? dirtyFlags[attributeIndex] || incrementVersion
-				: dirtyFlags[attributeIndex] && updateability[attributeIndex];
 	}
 
 	private void bindHistoryExcludedUpdateValues(
@@ -354,7 +314,7 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			Object rowId,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
-		final MutationExecutor mutationExecutor =
+		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
 						historyEndUpdateGroup, session );
 		try {
@@ -606,7 +566,7 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			SharedSessionContractImplementor session,
 			Generator generator) {
 		return isValueGeneratedOnUpdate( generator )
-			&& generator.generatedOnExecution( entity, session )
+			&& (session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
 			&& isUpdateValueGenerationInSql( generator );
 	}
 

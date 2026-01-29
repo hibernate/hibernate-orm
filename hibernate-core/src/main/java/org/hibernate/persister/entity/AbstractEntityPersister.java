@@ -3902,6 +3902,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean isPropertyTemporalExcluded(int attributeIndex) {
+		return propertyTemporalExcluded[attributeIndex];
+	}
+
+	@Override
 	public boolean excludedFromTemporalVersioning(
 			int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection) {

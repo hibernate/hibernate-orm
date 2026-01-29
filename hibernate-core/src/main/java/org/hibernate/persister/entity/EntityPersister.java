@@ -863,6 +863,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean[] getPropertyUpdateability();
 
 	/**
+	 * Is the property excluded from temporal versioning.
+	 */
+	default boolean isPropertyTemporalExcluded(int attributeIndex) {
+		return false;
+	}
+
+	/**
 	 * Get the "checkability" of the properties of this class
 	 * (is the property dirty checked, does the cache need
 	 * to be updated)

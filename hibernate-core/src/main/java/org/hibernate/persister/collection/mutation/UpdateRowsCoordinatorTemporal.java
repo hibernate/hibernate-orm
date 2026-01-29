@@ -18,7 +18,11 @@ import org.hibernate.sql.model.MutationType;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * UpdateRowsCoordinator implementation for temporal collection tables.
+ * {@link UpdateRowsCoordinator} implementation for temporal collection tables
+ * in the {@link org.hibernate.cfg.TemporalTableStrategy#SINGLE_TABLE} temporal
+ * table mapping strategy.
+ *
+ * @author Gavin King
  */
 public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
 

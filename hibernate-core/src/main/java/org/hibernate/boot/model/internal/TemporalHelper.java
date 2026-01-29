@@ -27,9 +27,9 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
+import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
 import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
-import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -367,10 +367,10 @@ public class TemporalHelper {
 					return strategy;
 				}
 			}
-			return SINGLE_TABLE;
+			return AUTO;
 		}
 		else {
-			return SINGLE_TABLE;
+			return AUTO;
 		}
 	}
 }

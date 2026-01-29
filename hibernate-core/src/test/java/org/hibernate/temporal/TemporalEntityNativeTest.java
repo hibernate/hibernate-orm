@@ -17,12 +17,14 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -42,10 +44,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
 @RequiresDialect(MariaDBDialect.class)
 @RequiresDialect(DB2Dialect.class)
+@RequiresDialect(SQLServerDialect.class)
 class TemporalEntityNativeTest {
 
 	public static final int PAUSE = 500;
 
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction(
 				session -> {

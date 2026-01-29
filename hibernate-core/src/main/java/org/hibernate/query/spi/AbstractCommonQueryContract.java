@@ -377,7 +377,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	boolean isHistorical() {
-		return getSession().getLoadQueryInfluencers().getTemporalInstant() != null;
+		return getSession().getLoadQueryInfluencers().getTemporalIdentifier() != null;
 	}
 
 	protected void applyEntityGraphHint(GraphSemantic graphSemantic, Object value, String hintName) {

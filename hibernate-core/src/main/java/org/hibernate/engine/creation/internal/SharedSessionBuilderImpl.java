@@ -68,7 +68,7 @@ public abstract class SharedSessionBuilderImpl
 		identifierRollback = original.isIdentifierRollbackEnabled();
 		// good idea to inherit this
 		jdbcTimeZone = original.getJdbcTimeZone();
-		temporalIdentifier = original.getLoadQueryInfluencers().getTemporalInstant();
+		temporalIdentifier = original.getLoadQueryInfluencers().getTemporalIdentifier();
 	}
 
 	protected abstract SessionImplementor createSession();

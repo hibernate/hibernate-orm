@@ -427,6 +427,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return false;
+	}
+
+	@Override
 	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
 			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )

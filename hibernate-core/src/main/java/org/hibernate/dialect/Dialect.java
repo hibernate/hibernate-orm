@@ -5780,6 +5780,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect allow an explicit {@code not null}
+	 * constraint on a {@link #generatedAs generated as}
+	 * column?
+	 */
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return true;
+	}
+
+	/**
 	 * Does this dialect natively support SQL 2011-style
 	 * temporal tables?
 	 *

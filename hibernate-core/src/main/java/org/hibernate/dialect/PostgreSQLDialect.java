@@ -923,6 +923,12 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
+		// actually it is allowed for 'generated always as (...) stored'
+		return false;
+	}
+
+	@Override
 	public String generatedAs(String generatedAs) {
 		return getVersion().isSameOrAfter( 18 )
 				? " generated always as (" + generatedAs + ")"

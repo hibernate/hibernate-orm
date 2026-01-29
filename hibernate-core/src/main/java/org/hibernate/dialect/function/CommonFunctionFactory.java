@@ -312,20 +312,43 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
-	private void trunc(TruncFunction.DatetimeTrunc datetimeTrunc) {
-		trunc( "trunc(?1)", "trunc(?1,?2)", datetimeTrunc, null );
-	}
-
 	public void trunc() {
-		trunc( null );
+		trunc( "trunc(?1)", "trunc(?1,?2)", null, null );
 	}
 
+	/**
+	 * H2, DB2
+	 */
 	public void trunc_dateTrunc() {
-		trunc( TruncFunction.DatetimeTrunc.DATE_TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.DATE_TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
+	/**
+	 * HSQL
+	 */
 	public void trunc_dateTrunc_trunc() {
-		trunc( TruncFunction.DatetimeTrunc.TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**

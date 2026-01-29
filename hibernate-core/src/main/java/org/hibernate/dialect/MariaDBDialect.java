@@ -477,4 +477,9 @@ public class MariaDBDialect extends MySQLDialect {
 	public int getTemporalColumnType() {
 		return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 	}
+
+	@Override
+	public String getTemporalExclusionColumnOption() {
+		return "without system versioning";
+	}
 }

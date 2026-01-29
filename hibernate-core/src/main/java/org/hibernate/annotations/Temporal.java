@@ -53,6 +53,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         is stored together in the same table. Foreign keys
  *         referencing this table have no constraints, and so
  *         the database cannot enforce referential integrity.
+ *         The table may be {@linkplain HistoryPartitioning
+ *         partitioned} into current and historical partitions
  *     <li>In the {@linkplain TemporalTableStrategy#HISTORY_TABLE
  *         separate history table} strategy, current data is stored
  *         in one table, and historical data is stored in a second

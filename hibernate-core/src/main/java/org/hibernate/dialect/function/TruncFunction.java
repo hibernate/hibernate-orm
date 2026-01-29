@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -67,6 +68,16 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 			DatetimeTrunc datetimeTrunc,
 			String toDateFunction,
 			TypeConfiguration typeConfiguration) {
+		this( truncPattern, twoArgTruncPattern, datetimeTrunc, toDateFunction, SqlAstNodeRenderingMode.DEFAULT, typeConfiguration );
+	}
+
+	public TruncFunction(
+			String truncPattern,
+			String twoArgTruncPattern,
+			DatetimeTrunc datetimeTrunc,
+			String toDateFunction,
+			SqlAstNodeRenderingMode argumentRenderingMode,
+			TypeConfiguration typeConfiguration) {
 		super(
 				"trunc",
 				new TruncArgumentsValidator(),
@@ -76,23 +87,26 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 						StandardFunctionArgumentTypeResolvers.NULL
 				)
 		);
-		this.numericRenderingSupport = new TruncRenderingSupport(
-				new PatternRenderer( truncPattern ),
-				twoArgTruncPattern != null ? new PatternRenderer( twoArgTruncPattern ) : null
-		);
 		this.datetimeTrunc = datetimeTrunc;
-		TruncRenderingSupport renderingSupport = null;
-		DateTruncEmulation emulation = null;
-		if ( datetimeTrunc != null ) {
+		numericRenderingSupport =
+				new TruncRenderingSupport( new PatternRenderer( truncPattern, argumentRenderingMode ),
+						twoArgTruncPattern == null ? null : new PatternRenderer( twoArgTruncPattern, argumentRenderingMode ) );
+		if ( datetimeTrunc == null ) {
+			dateTruncEmulation = null;
+			datetimeRenderingSupport = null;
+		}
+		else {
 			if ( datetimeTrunc.getPattern() != null ) {
-				renderingSupport = new TruncRenderingSupport( new PatternRenderer( datetimeTrunc.getPattern() ), null );
+				datetimeRenderingSupport =
+						new TruncRenderingSupport( new PatternRenderer( datetimeTrunc.getPattern() ), null );
+				dateTruncEmulation = null;
 			}
 			else {
-				emulation = new DateTruncEmulation( toDateFunction, typeConfiguration );
+				dateTruncEmulation =
+						new DateTruncEmulation( toDateFunction, typeConfiguration );
+				datetimeRenderingSupport = null;
 			}
 		}
-		this.datetimeRenderingSupport = renderingSupport;
-		this.dateTruncEmulation = emulation;
 	}
 
 	@Override

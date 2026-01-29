@@ -65,8 +65,8 @@ dependencies {
 
 
 tasks.register("releasePrepare") {
-    group "release-prepare"
-    description "See :release:releasePrepare for details."
+    group = "release-prepare"
+    description = "See :release:releasePrepare for details."
 
     dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
     dependsOn tasks.generatePomFileForPublishedArtifactsPublication

@@ -54,7 +54,7 @@ configurations {
     }
 }
 
-tasks.withType( Test.class ).each { test ->
+tasks.withType( Test.class ).configureEach { test ->
     // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
     if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
             || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"

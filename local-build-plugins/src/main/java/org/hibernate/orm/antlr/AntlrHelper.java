@@ -11,7 +11,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
 
 /**
  * This is intended to deal with <a href="https://github.com/antlr/antlr4/issues/2634">this Antlr issue</a>
@@ -31,12 +31,12 @@ public class AntlrHelper {
 	 *
 	 * @param generationDirectory The (temp) directory where we did the generation, including package directory structure
 	 * @param outputDirectory The {@code $buildDir/generated/sources/antlr} subdirectory (including package directory structure) into which to copy the fixed files.
-	 * @param project The Gradle project ref
+	 * @param logger The Gradle's context aware task logger
 	 */
 	public static void stripSillyGeneratedFromLines(
 			File generationDirectory,
 			File outputDirectory,
-			Project project) {
+			Logger logger) {
 		final File[] generatedJavaFiles = generationDirectory.listFiles( (dir, name) -> name.endsWith( ".java" ) );
 		if ( generatedJavaFiles == null ) {
 			// warn?
@@ -44,15 +44,15 @@ public class AntlrHelper {
 		}
 
 		for ( int i = 0; i < generatedJavaFiles.length; i++ ) {
-			stripSillyGeneratedFromLineFromFile( generatedJavaFiles[i], outputDirectory, project );
+			stripSillyGeneratedFromLineFromFile( generatedJavaFiles[i], outputDirectory, logger );
 		}
 	}
 
 	private static void stripSillyGeneratedFromLineFromFile(
 			File generatedJavaFile,
 			File outputDirectory,
-			Project project) {
-		project.getLogger().lifecycle( "Stripping silly generated-from line from {} into {}",
+			Logger logger) {
+		logger.lifecycle( "Stripping silly generated-from line from {} into {}",
 				generatedJavaFile.getAbsolutePath(),
 				outputDirectory.getAbsolutePath() );
 
@@ -73,7 +73,7 @@ public class AntlrHelper {
 			}
 		}
 		catch (IOException e) {
-			project.getLogger().lifecycle( "Unable to remove the generated-from line added by Antlr to the generated file: {}", e.getMessage() );
+			logger.lifecycle( "Unable to remove the generated-from line added by Antlr to the generated file: {}", e.getMessage() );
 		}
 	}
 }

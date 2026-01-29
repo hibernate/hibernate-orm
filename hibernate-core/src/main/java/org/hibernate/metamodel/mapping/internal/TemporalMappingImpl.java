@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.time.Instant;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -154,26 +153,26 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	@Override
-	public Predicate createRestriction(TableReference tableReference, Instant instant) {
-		return createRestriction( tableReference, null, instant );
+	public Predicate createRestriction(TableReference tableReference, Object temporalValue) {
+		return createRestriction( tableReference, null, temporalValue );
 	}
 
 	@Override
 	public Predicate createRestriction(
 			TableReference tableReference,
 			SqlExpressionResolver expressionResolver,
-			Instant instant) {
+			Object temporalValue) {
 		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 
-		final var instantExpression =
-				currentTimestampExpression == null || instant != null
-						? new TemporalInstantParameter( jdbcMapping, instant )
+		final var temporalValueExpression =
+				currentTimestampExpression == null || temporalValue != null
+						? new TemporalValueParameter( jdbcMapping, temporalValue )
 						: currentTimestampExpression;
 
-		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, instantExpression );
+		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, temporalValueExpression );
 		final var endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
-		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, instantExpression );
+		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, temporalValueExpression );
 
 		final var endingPredicate = new Junction( Junction.Nature.DISJUNCTION );
 		endingPredicate.add( endingNullPredicate );
@@ -226,11 +225,11 @@ public class TemporalMappingImpl implements TemporalMapping {
 		return "TemporalMapping(" + tableName + "." + getStartingColumnName() + "," + getEndingColumnName() + ")";
 	}
 
-	private static class TemporalInstantParameter implements JdbcParameter, JdbcParameterBinder {
+	private static class TemporalValueParameter implements JdbcParameter, JdbcParameterBinder {
 		private final JdbcMapping jdbcMapping;
-		private final Instant value;
+		private final Object value;
 
-		private TemporalInstantParameter(JdbcMapping jdbcMapping, Instant value) {
+		private TemporalValueParameter(JdbcMapping jdbcMapping, Object value) {
 			this.jdbcMapping = jdbcMapping;
 			this.value = value;
 		}

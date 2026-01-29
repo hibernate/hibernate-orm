@@ -149,7 +149,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
-		influencers.setTemporalInstant( options.getTemporalInstant() );
+		influencers.setTemporalInstant( options.getTemporalIdentifier() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
 		// A nonzero batch size forces the use of write-behind

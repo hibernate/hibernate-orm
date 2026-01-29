@@ -182,4 +182,19 @@ public interface CommonBuilder {
 	 */
 	@Incubating
 	CommonBuilder asOf(Instant instant);
+
+	/**
+	 * Specify the
+	 * {@linkplain org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
+	 * temporal} entity data. Instances of temporal entities retrieved in the
+	 * session will represent the revisions effective at the end of the given
+	 * transaction.
+	 * The given value should match the type returned by the configured
+	 * transaction id supplier.
+	 *
+	 * @see org.hibernate.annotations.Temporal
+	 */
+	@Incubating
+	CommonBuilder atTransaction(Object transactionId);
 }

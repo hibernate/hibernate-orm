@@ -553,6 +553,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isUseServerTransactionTimestampsEnabled();
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 */
+	Supplier<?> getTransactionIdGenerator();
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
 	 */
 	default boolean isCriteriaCopyTreeEnabled() {

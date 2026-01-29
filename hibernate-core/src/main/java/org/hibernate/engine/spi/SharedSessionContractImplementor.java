@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.TransactionRequiredException;
@@ -219,11 +218,11 @@ public interface SharedSessionContractImplementor
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
-	 * An instant representing the beginning of the current transaction,
+	 * A transaction id representing the beginning of the current transaction,
 	 * for use with {@link org.hibernate.annotations.Temporal temporal}
 	 * effectivity columns.
 	 */
-	Instant getTransactionStartInstant();
+	Object getCurrentTransactionIdentifier();
 
 	/**
 	 * Does this session have an active Hibernate transaction, or is it

@@ -32,9 +32,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>a {@link #rowEnd} timestamp representing the instant at
  *     which the revision was superseded by a newer revision.
  * </ul>
- * The revision which is currently effective has a null value for its
- * {@linkplain #rowEnd} timestamp.
- * <p>Given the identifier of an instance of a temporal entity, along
+ * The revision which is currently effective has a null value for
+ * its {@linkplain #rowEnd} timestamp.
+ * <p>
+ * Given the identifier of an instance of a temporal entity, along
  * with an instant, which may be represented by an instance if
  * {@link java.time.Instant}, the <em>effective</em> revision of the
  * temporal entity with the given identifier at the given instant is
@@ -45,7 +46,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@link #rowEnd} timestamp null or greater than the given
  *     instant.
  * </ul>
- * <p>There are three {@linkplain TemporalTableStrategy strategies}
+ * <p>
+ * There are three {@linkplain TemporalTableStrategy strategies}
  * for mapping a temporal entity or collection to a table or tables.
  * <ul>
  *     <li>In the {@linkplain TemporalTableStrategy#SINGLE_TABLE
@@ -69,17 +71,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         capabilities of the database, referential integrity might
  *         be enforced.
  * </ul>
- * <p>The configuration property
+ * <p>
+ * The configuration property
  * {@value org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY}
  * controls the temporal table mapping strategy.
- * <p>By default, a session or stateless session reads revisions of
+ * <p>
+ * By default, a session or stateless session reads revisions of
  * temporal data which are currently effective. To read historical
  * revisions effective at a given {@linkplain Instant instant}, set
  * {@linkplain org.hibernate.engine.creation.CommonBuilder#asOf
  * the temporal data instant} when creating the session or stateless
  * session.
- * <p>The following recommendations do not apply to the native
- * mapping strategy:
+ * <p>
+ * The following recommendations do not apply to the native mapping
+ * strategy:
  * <ul>
  * <li>It is recommended that every temporal entity declare a
  *     {@linkplain jakarta.persistence.Version version} attribute.
@@ -91,11 +96,25 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     ensure that referential integrity is maintained by the
  *     application and validated by triggers or offline processes.
  * </ul>
- * <p>By default, timestamps for the {@code rowStart} and
+ * <p>
+ * By default, timestamps for the {@code rowStart} and
  * {@code rowEnd} columns are generated in Java, unless native
  * temporal tables are used. If timestamps should be generated on
  * the database server, enable the configuration property
  * {@value org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS}.
+ * <p>
+ * An alternative approach, which is not compatible with the
+ * {@linkplain TemporalTableStrategy#NATIVE native} mapping strategy,
+ * is to provide a custom {@link java.util.function.Supplier} of
+ * transaction ids by specifying the configuration property
+ * {@value org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER}.
+ * Transactions ids must be unique and comparable and must increase
+ * monotonically. Typically, such an id is obtained by persisting
+ * an instance of an application-defined entity class with a
+ * generated id which represents the current unit of work. This
+ * entity associates the transaction id with other information about
+ * the work being performed, such as the current timestamp, current
+ * application user, and so on.
  *
  * @apiNote
  * {@linkplain jakarta.persistence.SecondaryTable Secondary tables} and
@@ -103,7 +122,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * joined inheritance mappings} are not supported for temporal entities.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
+ * @see org.hibernate.engine.creation.CommonBuilder#atTransaction(Object)
  * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+ * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
  * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King

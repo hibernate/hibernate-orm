@@ -5,7 +5,6 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
 	private Boolean readOnly;
-	private Instant temporalInstant;
+	private Object temporalInstant;
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -74,7 +73,7 @@ public class LoadQueryInfluencers implements Serializable {
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
-		temporalInstant = options.getTemporalInstant();
+		temporalInstant = options.getTemporalIdentifier();
 		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
 			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
@@ -99,11 +98,11 @@ public class LoadQueryInfluencers implements Serializable {
 		return sessionFactory;
 	}
 
-	public Instant getTemporalInstant() {
+	public Object getTemporalInstant() {
 		return temporalInstant;
 	}
 
-	public void setTemporalInstant(Instant temporalInstant) {
+	public void setTemporalInstant(Object temporalInstant) {
 		this.temporalInstant = temporalInstant;
 	}
 

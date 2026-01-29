@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.time.Instant;
 
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -36,9 +35,9 @@ public interface TemporalMapping {
 
 	Predicate createCurrentRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver);
 
-	Predicate createRestriction(TableReference tableReference, Instant instant);
+	Predicate createRestriction(TableReference tableReference, Object temporalValue);
 
-	Predicate createRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver, Instant instant);
+	Predicate createRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver, Object temporalValue);
 
 	ColumnValueBinding createStartingValueBinding(ColumnReference startingColumnReference);
 

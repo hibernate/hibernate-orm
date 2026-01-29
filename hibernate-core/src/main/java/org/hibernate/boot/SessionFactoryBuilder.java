@@ -705,6 +705,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled);
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 */
+	SessionFactoryBuilder applyTransactionIdGenerator(Supplier<?> supplier);
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION
 	 */
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);

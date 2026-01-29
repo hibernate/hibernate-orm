@@ -8,9 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -33,13 +30,12 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
-import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * Update coordinator for HISTORY temporal strategy.
  */
-public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implements UpdateCoordinator {
+public class HistoryUpdateCoordinator extends AbstractUpdateCoordinator {
 	private final UpdateCoordinator currentUpdateCoordinator;
 	private final EntityTableMapping identifierTableMapping;
 	private final EntityTableMapping historyTableMapping;
@@ -64,7 +60,7 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 		);
 		this.historyUpdateBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_UPDATE" );
 		this.historyInsertBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_INSERT" );
-		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup();
+		this.historyEndUpdateGroup = buildEndingUpdateGroup( historyTableMapping, temporalMapping );
 		this.historyInsertGroup = buildHistoryInsertGroup( entityPersister.getPropertyInsertability() );
 	}
 
@@ -321,7 +317,8 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 			for ( int i = 0; i < historyEndUpdateGroup.getNumberOfOperations(); i++ ) {
 				final var operation = historyEndUpdateGroup.getOperation( i );
-				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, (EntityTableMapping) operation.getTableDetails() );
+				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings,
+						(EntityTableMapping) operation.getTableDetails() );
 			}
 
 			final var versionMapping = entityPersister().getVersionMapping();
@@ -367,61 +364,11 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 		try {
 			bindHistoryInsertValues( id, values, entityPersister().getPropertyInsertability(), session,
 					mutationExecutor.getJdbcValueBindings() );
-			mutationExecutor.execute( id, null, null, HistoryUpdateCoordinator::verifyOutcome, session );
+			mutationExecutor.execute( id, null, null,
+					HistoryUpdateCoordinator::verifyOutcome, session );
 		}
 		finally {
 			mutationExecutor.release();
-		}
-	}
-
-	private MutationOperationGroup buildHistoryEndUpdateGroup() {
-		final var tableUpdateBuilder =
-				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
-
-		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
-		applyTemporalEnding( tableUpdateBuilder );
-		applyPartitionKeyRestriction( tableUpdateBuilder );
-		applyOptimisticLocking( tableUpdateBuilder );
-
-		final var tableMutation = tableUpdateBuilder.buildMutation();
-		final var mutationGroup = new MutationGroupSingle(
-				MutationType.UPDATE,
-				entityPersister(),
-				tableMutation
-		);
-
-		return singleOperation( mutationGroup,
-				tableMutation.createMutationOperation( null, factory() ) );
-	}
-
-	private void applyTemporalEnding(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		final var endingColumnReference =
-				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
-		tableUpdateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
-		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
-	}
-
-	private void applyPartitionKeyRestriction(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		final var persister = entityPersister();
-		if ( persister.hasPartitionedSelectionMapping() ) {
-			final var attributeMappings = persister.getAttributeMappings();
-			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final var attributeMapping = attributeMappings.get( m );
-				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
-				for ( int i = 0; i < jdbcTypeCount; i++ ) {
-					final var selectableMapping = attributeMapping.getSelectable( i );
-					if ( selectableMapping.isPartitioned() ) {
-						tableUpdateBuilder.addKeyRestrictionLeniently( selectableMapping );
-					}
-				}
-			}
-		}
-	}
-
-	private void applyOptimisticLocking(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		if ( entityPersister().optimisticLockStyle() == OptimisticLockStyle.VERSION
-				&& entityPersister().getVersionMapping() != null ) {
-			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister().getVersionMapping() );
 		}
 	}
 
@@ -591,25 +538,6 @@ public class HistoryUpdateCoordinator extends AbstractMutationCoordinator implem
 			this.attributeIndexes = attributeIndexes;
 			this.applyVersionRestriction = applyVersionRestriction;
 		}
-	}
-
-	private boolean resultCheck(
-			Object id,
-			PreparedStatementDetails statementDetails,
-			int affectedRowCount,
-			int batchPosition) {
-		return identifiedResultsCheck(
-				statementDetails,
-				affectedRowCount,
-				batchPosition,
-				entityPersister(),
-				id,
-				factory()
-		);
-	}
-
-	private StaleObjectStateException staleObjectStateException(Object id, StaleStateException cause) {
-		return new StaleObjectStateException( entityPersister().getEntityName(), id, cause );
 	}
 
 	private static boolean verifyOutcome(

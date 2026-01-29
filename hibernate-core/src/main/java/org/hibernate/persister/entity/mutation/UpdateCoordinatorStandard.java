@@ -193,9 +193,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final int[] dirtyAttributeIndexes =
 				dirtyAttributeIndexes( incomingDirtyAttributeIndexes, preUpdateGeneratedAttributeIndexes );
 
+		final boolean temporalExcludedUpdate =
+				entityPersister().excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection );
+
 		final boolean[] attributeUpdateability;
-		boolean forceDynamicUpdate;
-		if ( entityPersister().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
+		final boolean forceDynamicUpdate;
+		if ( temporalExcludedUpdate ) {
+			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
+			for ( int i = 0; i < attributeUpdateability.length; i++ ) {
+				if ( attributeUpdateability[i] && !entityPersister().isPropertyTemporalExcluded( i ) ) {
+					attributeUpdateability[i] = false;
+				}
+			}
+			forceDynamicUpdate = true;
+		}
+		else if ( entityPersister().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 			forceDynamicUpdate = true;
 		}
@@ -228,7 +240,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			forceDynamicUpdate = entityPersister().hasUninitializedLazyProperties( entity );
 		}
 
-
 		return performUpdate(
 				entity,
 				id,
@@ -241,7 +252,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				versionMapping,
 				dirtyAttributeIndexes,
 				attributeUpdateability,
-				forceDynamicUpdate
+				forceDynamicUpdate,
+				temporalExcludedUpdate
 		);
 	}
 
@@ -254,9 +266,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] incomingOldValues,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session,
-			EntityVersionMapping versionMapping, int[] dirtyAttributeIndexes,
+			EntityVersionMapping versionMapping,
+			int[] dirtyAttributeIndexes,
 			boolean[] attributeUpdateability,
-			boolean forceDynamicUpdate) {
+			boolean forceDynamicUpdate,
+			boolean temporalExcludedUpdate) {
 
 		final InclusionChecker dirtinessChecker =
 				(position, attribute) -> isDirty(
@@ -287,6 +301,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				createInclusionChecker( attributeUpdateability ),
 				lockingChecker,
 				dirtinessChecker,
+				temporalExcludedUpdate,
 				rowId,
 				forceDynamicUpdate,
 				session
@@ -611,6 +626,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
 			InclusionChecker dirtinessChecker,
+			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
@@ -638,16 +654,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			try {
 				if ( attributeMapping.getJdbcTypeCount() > 0
-						&& attributeMapping instanceof SingularAttributeMapping asSingularAttributeMapping ) {
+						&& attributeMapping instanceof SingularAttributeMapping singularAttributeMapping ) {
 					processAttribute(
 							entity,
 							analysis,
 							attributeIndex,
-							asSingularAttributeMapping,
+							singularAttributeMapping,
 							oldVersion,
 							oldValues,
 							inclusionChecker,
 							lockingChecker,
+							restrictToTemporalExcluded,
 							session
 					);
 
@@ -676,9 +693,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] oldValues,
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
+			boolean restrictToTemporalExcluded,
 			SharedSessionContractImplementor session) {
 
-		final var generator = attributeMapping.getGenerator();
+		final var generator = restrictToTemporalExcluded
+							  && !entityPersister().isPropertyTemporalExcluded( attributeIndex )
+				? null
+				: attributeMapping.getGenerator();
 		final boolean generatesOnUpdate =
 				generator != null
 						&& generator.generatesOnUpdate();
@@ -826,15 +847,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			MutationOperationGroup jdbcOperationGroup,
 			DirtinessChecker dirtinessChecker,
 			SharedSessionContractImplementor session) {
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		// apply values
 		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
 			final var operation = jdbcOperationGroup.getOperation( position );
 			final var tableMapping = (EntityTableMapping) operation.getTableDetails();
 			if ( valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) ) {
-				final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
+				for ( int attributeIndex : tableMapping.getAttributeIndexes() ) {
 					decomposeAttributeForUpdate(
 							entity,
 							values,
@@ -843,7 +863,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							session,
 							jdbcValueBindings,
 							tableMapping,
-							attributeIndexes[ i ]
+							attributeIndex
 					);
 				}
 			}
@@ -1375,9 +1395,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					tablesWithNonNullValues.add( tableMapping );
 				}
 				else {
-					for ( int i = 0; i < tableMapping.getAttributeIndexes().length; i++ ) {
-						final int attributeIndex = tableMapping.getAttributeIndexes()[ i ];
-						if ( values[ attributeIndex ] != null ) {
+					for ( final int attributeIndex : tableMapping.getAttributeIndexes() ) {
+						if ( values[attributeIndex] != null ) {
 							tablesWithNonNullValues.add( tableMapping );
 							break;
 						}
@@ -1392,9 +1411,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					tablesWithPreviousNonNullValues.add( tableMapping );
 				}
 				else {
-					for ( int i = 0; i < tableMapping.getAttributeIndexes().length; i++ ) {
-						final int attributeIndex = tableMapping.getAttributeIndexes()[ i ];
-						if ( oldValues[ attributeIndex ] != null ) {
+					for ( final int attributeIndex : tableMapping.getAttributeIndexes() ) {
+						if ( oldValues[attributeIndex] != null ) {
 							tablesWithPreviousNonNullValues.add( tableMapping );
 							break;
 						}
@@ -1711,6 +1729,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							default -> false;
 						},
 				(index,attribute) -> true,
+				false,
 				"", // pass anything here to generate the row id restriction if possible
 				false,
 				null

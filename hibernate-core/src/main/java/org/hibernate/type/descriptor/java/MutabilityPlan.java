@@ -32,9 +32,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <ul>
  * <li>if the object is not serializable, we might convert it to a serializable
  *     format,
- * <li>if the object hold a reference to an entity, we must replace that
+ * <li>if the object holds a reference to an entity, we must replace that
  *     reference with an identifier, or
- * <li>if the object hold a reference to some heavyweight resource, we must
+ * <li>if the object holds a reference to some heavyweight resource, we must
  *     release it.
  * </ul>
  * <p>
@@ -43,7 +43,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @apiNote The term "mutability" refers to the fact that, in general,
  *          the aspects of the Java type described by this contract are
- *          determined by whether the Java type has mutable internal
+ *          determined by whether the Java type has any mutable internal
  *          state.
  *
  * @author Steve Ebersole

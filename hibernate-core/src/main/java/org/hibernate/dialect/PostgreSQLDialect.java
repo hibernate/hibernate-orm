@@ -951,12 +951,12 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName) {
 		return partitioned
-				? "partition by list (" + endingColumnName + ")"
+				? "partition by list (" + rowEndColumnName + ")"
 				: null;
 	}
 

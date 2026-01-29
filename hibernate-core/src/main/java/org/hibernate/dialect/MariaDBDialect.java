@@ -443,7 +443,7 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName) {
@@ -453,9 +453,9 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
+	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String rowStartColumn, String rowEndColumn, boolean partitioned) {
 		return strategy == TemporalTableStrategy.NATIVE
-				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				? "period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
 				: null;
 	}
 

@@ -1911,8 +1911,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
-		return "period for system_time (" + startingColumn + ", " + endingColumn + ")";
+	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String rowStartColumn, String rowEndColumn, boolean partitioned) {
+		return "period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")";
 	}
 
 	@Override
@@ -1944,7 +1944,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartition,
 			String historyPartition) {
@@ -1952,7 +1952,7 @@ public class OracleDialect extends Dialect {
 			return "flashback archive fba_history";
 		}
 		else if ( partitioned ) {
-			return "partition by list( " + endingColumnName + ")"
+			return "partition by list( " + rowEndColumnName + ")"
 				+ " (partition " + currentPartition + " values (null),"
 				+ " partition " + historyPartition + " values (default))"
 				+ " enable row movement";

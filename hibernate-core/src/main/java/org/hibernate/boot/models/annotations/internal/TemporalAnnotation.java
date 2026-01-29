@@ -13,16 +13,16 @@ import org.hibernate.models.spi.ModelsContext;
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class TemporalAnnotation implements Temporal {
-	private String starting;
-	private String ending;
+	private String rowStart;
+	private String rowEnd;
 	private int secondPrecision;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public TemporalAnnotation(ModelsContext modelContext) {
-		this.starting = "effective";
-		this.ending = "superseded";
+		this.rowStart = "effective";
+		this.rowEnd = "superseded";
 		this.secondPrecision = -1;
 	}
 
@@ -30,8 +30,8 @@ public class TemporalAnnotation implements Temporal {
 	 * Used in creating annotation instances from JDK variant
 	 */
 	public TemporalAnnotation(Temporal annotation, ModelsContext modelContext) {
-		this.starting = annotation.rowStart();
-		this.ending = annotation.rowEnd();
+		this.rowStart = annotation.rowStart();
+		this.rowEnd = annotation.rowEnd();
 		this.secondPrecision = annotation.secondPrecision();
 	}
 
@@ -39,15 +39,15 @@ public class TemporalAnnotation implements Temporal {
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public TemporalAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
-		this.starting = (String) attributeValues.get( "rowStart" );
-		this.ending = (String) attributeValues.get( "rowEnd" );
+		this.rowStart = (String) attributeValues.get( "rowStart" );
+		this.rowEnd = (String) attributeValues.get( "rowEnd" );
 		final Integer secondPrecision = (Integer) attributeValues.get( "secondPrecision" );
 		this.secondPrecision = secondPrecision == null ? -1 : secondPrecision;
-		if ( this.starting == null ) {
-			this.starting = "effective";
+		if ( this.rowStart == null ) {
+			this.rowStart = "effective";
 		}
-		if ( this.ending == null ) {
-			this.ending = "superseded";
+		if ( this.rowEnd == null ) {
+			this.rowEnd = "superseded";
 		}
 	}
 
@@ -58,20 +58,20 @@ public class TemporalAnnotation implements Temporal {
 
 	@Override
 	public String rowStart() {
-		return starting;
+		return rowStart;
 	}
 
-	public void setStarting(String starting) {
-		this.starting = starting;
+	public void setRowStart(String rowStart) {
+		this.rowStart = rowStart;
 	}
 
 	@Override
 	public String rowEnd() {
-		return ending;
+		return rowEnd;
 	}
 
-	public void setEnding(String ending) {
-		this.ending = ending;
+	public void setRowEnd(String rowEnd) {
+		this.rowEnd = rowEnd;
 	}
 
 	@Override

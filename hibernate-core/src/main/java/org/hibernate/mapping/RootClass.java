@@ -433,9 +433,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned) {
-		temporalStartingColumn = startingColumn;
-		temporalEndingColumn = endingColumn;
+	public void enableTemporal(Column rowStartColumn, Column rowEndColumn, boolean partitioned) {
+		temporalStartingColumn = rowStartColumn;
+		temporalEndingColumn = rowEndColumn;
 		temporallyPartitioned = partitioned;
 	}
 

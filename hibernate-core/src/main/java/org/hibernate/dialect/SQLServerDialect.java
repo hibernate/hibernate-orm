@@ -1179,18 +1179,18 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getExtraTemporalTableDeclarations(
 			TemporalTableStrategy strategy,
-			String startingColumn, String endingColumn,
+			String rowStartColumn, String rowEndColumn,
 			boolean partitioned) {
 		return strategy == TemporalTableStrategy.NATIVE
 				? "transaction_start_id bigint generated always as transaction_id start hidden not null"
-						+ ", period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				+ ", period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
 				: null;
 	}
 
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName) {

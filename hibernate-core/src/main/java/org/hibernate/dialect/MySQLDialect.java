@@ -1668,24 +1668,24 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartition,
 			String historyPartition) {
 		return partitioned
-				? "partition by list (" + endingColumnName + "_null)"
-						+ " (partition " + historyPartition + " values in (0),"
-						+ " partition " + currentPartition + " values in (1))"
+				? "partition by list (" + rowEndColumnName + "_null)"
+				+ " (partition " + historyPartition + " values in (0),"
+				+ " partition " + currentPartition + " values in (1))"
 				: null;
 	}
 
 	@Override
 	public String getExtraTemporalTableDeclarations(
 			TemporalTableStrategy strategy,
-			String startingColumn, String endingColumn,
+			String rowStartColumn, String rowEndColumn,
 			boolean partitioned) {
 		return partitioned
-				? endingColumn + "_null tinyint as (" + endingColumn + " is null) virtual invisible"
+				? rowEndColumn + "_null tinyint as (" + rowEndColumn + " is null) virtual invisible"
 				: null;
 	}
 

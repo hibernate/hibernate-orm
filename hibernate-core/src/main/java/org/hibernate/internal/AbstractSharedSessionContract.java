@@ -170,7 +170,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
-	private final Supplier<?> transactionIdSupplier;
+	private transient Supplier<?> transactionIdSupplier;
 
 	// mutable state
 	private CacheMode cacheMode;
@@ -218,11 +218,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdSupplier();
-		transactionIdSupplier =
-				configuredTransactionIdSupplier == null
-						? DEFAULT_TRANSACTION_ID_SUPPLIER
-						: configuredTransactionIdSupplier;
+		transactionIdSupplier = transactionIdSupplier();
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -262,6 +258,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
+	}
+
+	private Supplier<?> transactionIdSupplier() {
+		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdSupplier();
+		return configuredTransactionIdSupplier == null
+				? DEFAULT_TRANSACTION_ID_SUPPLIER
+				: configuredTransactionIdSupplier;
 	}
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
@@ -1819,6 +1822,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+
+		transactionIdSupplier = transactionIdSupplier();
 	}
 
 }

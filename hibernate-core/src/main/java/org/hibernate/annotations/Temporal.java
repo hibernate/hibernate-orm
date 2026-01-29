@@ -97,6 +97,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the database server, enable the configuration property
  * {@value org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS}.
  *
+ * @apiNote
+ * {@linkplain jakarta.persistence.SecondaryTable Secondary tables} and
+ * {@linkplain org.hibernate.boot.model.source.spi.InheritanceType#JOINED
+ * joined inheritance mappings} are not supported for temporal entities.
+ *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
  * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS

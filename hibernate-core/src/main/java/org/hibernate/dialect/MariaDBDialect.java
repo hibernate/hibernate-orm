@@ -8,7 +8,6 @@ import org.hibernate.Incubating;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -19,6 +18,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
+import org.hibernate.dialect.temporal.MariaDBTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MariaDBCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -443,35 +444,6 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsNativeTemporalTables() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTemporalTablePartitioning() {
-		return false;
-	}
-
-	@Override
-	public String getTemporalTableOptions(
-			TemporalTableStrategy strategy,
-			String rowEndColumnName,
-			boolean partitioned,
-			String currentPartitionName,
-			String historyPartitionName) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "with system versioning"
-				: null;
-	}
-
-	@Override
-	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String rowStartColumn, String rowEndColumn, boolean partitioned) {
-		return strategy == TemporalTableStrategy.NATIVE
-				? "period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
-				: null;
-	}
-
-	@Override
 	public String generatedAs(String generatedAs) {
 		return generatedAs.startsWith( "row " )
 				? " generated always as " + generatedAs
@@ -479,17 +451,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public int getTemporalColumnType() {
-		return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-	}
-
-	@Override
-	public String getTemporalExclusionColumnOption() {
-		return "without system versioning";
-	}
-
-	@Override
-	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
-		return TemporalTableStrategy.NATIVE;
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new MariaDBTemporalTableSupport( this );
 	}
 }

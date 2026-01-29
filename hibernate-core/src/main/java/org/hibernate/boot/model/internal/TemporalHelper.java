@@ -224,16 +224,19 @@ public class TemporalHelper {
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		var strategy = context.getTemporalTableStrategy( dialect );
-		table.setExtraDeclarations( dialect.getExtraTemporalTableDeclarations(
-				strategy, startingColumn.getQuotedName( dialect ),
+		final var strategy = context.getTemporalTableStrategy( dialect );
+		final var temporalTableSupport = dialect.getTemporalTableSupport();
+		table.setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations(
+				strategy,
+				startingColumn.getQuotedName( dialect ),
 				rowEndColumn.getQuotedName( dialect ),
 				partitioned
 		) );
+		String rowEndColumnName = rowEndColumn.getQuotedName( dialect );
 		table.setOptions( appendOption( table.getOptions(),
-				dialect.getTemporalTableOptions(
+				temporalTableSupport.getTemporalTableOptions(
 						strategy,
-						rowEndColumn.getQuotedName( dialect ),
+						rowEndColumnName,
 						partitioned,
 						currentPartitionName,
 						historyPartitionName
@@ -248,14 +251,13 @@ public class TemporalHelper {
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var dialect = database.getDialect();
-		dialect.addTemporalTableAuxiliaryObjects(
-						context.getTemporalTableStrategy( dialect ),
-						table,
-						database,
-						partitioned,
-						currentPartitionName,
-						historyPartitionName
-				);
+		dialect.getTemporalTableSupport().addTemporalTableAuxiliaryObjects(
+				context.getTemporalTableStrategy( dialect ),
+				table, database,
+				partitioned,
+				currentPartitionName,
+				historyPartitionName
+		);
 	}
 
 	public static TemporalMappingImpl resolveTemporalMapping(
@@ -296,9 +298,9 @@ public class TemporalHelper {
 			column.setTemporalPrecision( temporalPrecision );
 		}
 		else if ( Instant.class.equals( transactionIdJavaType ) ) {
-			final var dialect = database.getDialect();
-			column.setTemporalPrecision( dialect.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( dialect.getTemporalColumnType() );
+			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
+			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
+			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
 		}
 	}
 
@@ -321,7 +323,8 @@ public class TemporalHelper {
 			Column rowEndColumn,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		if ( dialect.createTemporalTableCheckConstraint( context.getTemporalTableStrategy( dialect ) ) ) {
+		final var strategy = context.getTemporalTableStrategy( dialect );
+		if ( dialect.getTemporalTableSupport().createTemporalTableCheckConstraint( strategy ) ) {
 			final String rowStartName = rowStartColumn.getQuotedName( dialect );
 			final String rowEndName = rowEndColumn.getQuotedName( dialect );
 			table.addCheck( new CheckConstraint( rowEndName + " is null or " + rowEndName + " > " + rowStartName ) );
@@ -331,7 +334,7 @@ public class TemporalHelper {
 	public static boolean usingNativeTemporalTables(MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 		return context.getTemporalTableStrategy( dialect ) == NATIVE
-			&& dialect.supportsNativeTemporalTables();
+			&& dialect.getTemporalTableSupport().supportsNativeTemporalTables();
 	}
 
 	public static boolean usingHistoryTemporalTables(MetadataBuildingContext context) {
@@ -340,7 +343,7 @@ public class TemporalHelper {
 	}
 
 	public static boolean suppressesTemporalTablePrimaryKeys(boolean partitioned, MetadataBuildingContext context) {
-		return context.getMetadataCollector().getDatabase().getDialect()
+		return context.getMetadataCollector().getDatabase().getDialect().getTemporalTableSupport()
 				.suppressesTemporalTablePrimaryKeys( partitioned );
 	}
 

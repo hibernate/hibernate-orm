@@ -388,7 +388,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				TemporalHelper.resolveTransactionIdSupplier( transactionIdSupplierSetting, strategySelector );
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
-			temporalTableStrategy = dialect.getDefaultTemporalTableStrategy();
+			temporalTableStrategy = dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
 		}
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );

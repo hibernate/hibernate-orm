@@ -603,7 +603,7 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
-		if ( getDialect().useTemporalRestriction( influencers ) ) {
+		if ( getDialect().getTemporalTableSupport().useTemporalRestriction( influencers ) ) {
 			final var temporalInstant = influencers.getTemporalIdentifier();
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {

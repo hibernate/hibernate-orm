@@ -2932,7 +2932,8 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( temporalMapping != null
-					&& getDialect().useTemporalRestriction( loadQueryInfluencers ) ) {
+					&& getDialect().getTemporalTableSupport()
+							.useTemporalRestriction( loadQueryInfluencers ) ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( temporalMapping.getTableName() );
 				final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();

@@ -65,9 +65,9 @@ public class NamedTableReference extends AbstractTableReference {
 			final var sessionFactory = influencers.getSessionFactory();
 			final var options = sessionFactory.getSessionFactoryOptions();
 			return options.getTransactionIdSupplier() == null
-				&& sessionFactory.getJdbcServices().getDialect()
-					.useAsOfOperator( options.getTemporalTableStrategy(),
-							(Instant) influencers.getTemporalIdentifier() );
+				&& sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
+						.useAsOfOperator( options.getTemporalTableStrategy(),
+								(Instant) influencers.getTemporalIdentifier() );
 		}
 	}
 

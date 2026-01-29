@@ -70,6 +70,7 @@ import org.hibernate.type.format.FormatMapper;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -461,6 +462,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public CacheTransactionSynchronization getCacheTransactionSynchronization() {
 		return delegate.getCacheTransactionSynchronization();
+	}
+
+	@Override
+	public Instant getTransactionStartInstant() {
+		return delegate.getTransactionStartInstant();
 	}
 
 	@Override

@@ -7,8 +7,12 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.time.Instant;
 import java.util.function.Function;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -23,6 +27,8 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
+	private Instant temporalInstant;
+	private JdbcMapping temporalJdbcMapping;
 
 	public NamedTableReference(
 			String tableExpression,
@@ -41,6 +47,30 @@ public class NamedTableReference extends AbstractTableReference {
 
 	public String getTableExpression() {
 		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
+	}
+
+	public void applyTemporalTable(TemporalMapping mapping, LoadQueryInfluencers influencers) {
+		if ( mapping != null
+				&& useAsOfOperator( influencers )
+				&& mapping.getTableName().equals( getTableExpression() ) ) {
+			this.temporalInstant = influencers.getTemporalInstant();
+			this.temporalJdbcMapping = mapping.getJdbcMapping();
+		}
+	}
+
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers) {
+		final var sessionFactory = influencers.getSessionFactory();
+		return sessionFactory.getJdbcServices().getDialect()
+				.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
+						influencers.getTemporalInstant() != null );
+	}
+
+	public Instant getTemporalInstant() {
+		return temporalInstant;
+	}
+
+	public JdbcMapping getTemporalJdbcMapping() {
+		return temporalJdbcMapping;
 	}
 
 	@Override

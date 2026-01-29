@@ -9,6 +9,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -175,6 +176,7 @@ public class ToOneAttributeMapping
 	private boolean canUseParentTableGroup;
 	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
 
+	private final TemporalTableStrategy temporalTableStrategy;
 	/**
 	 * For Hibernate Reactive
 	 */
@@ -201,7 +203,7 @@ public class ToOneAttributeMapping
 		sideNature = original.sideNature;
 		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
 		canUseParentTableGroup = original.canUseParentTableGroup;
-
+		temporalTableStrategy = original.temporalTableStrategy;
 	}
 
 	public ToOneAttributeMapping(
@@ -256,6 +258,11 @@ public class ToOneAttributeMapping
 				propertyAccess
 		);
 
+
+		temporalTableStrategy =
+				declaringEntityPersister.getFactory()
+						.getSessionFactoryOptions().getTemporalTableStrategy();
+
 		if ( entityMappingType.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			// validate the type.
 			var declaredType = propertyAccess.getGetter().getReturnTypeClass();
@@ -302,10 +309,8 @@ public class ToOneAttributeMapping
 							.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
-				final String propertyPath =
-						bootValue.getPropertyName() == null
-								? name
-								: bootValue.getPropertyName();
+				final String propertyName = bootValue.getPropertyName();
+				final String propertyPath = propertyName == null ? name : propertyName;
 				if ( cardinality == LOGICAL_ONE_TO_ONE ) {
 					boolean hasJoinTable = false;
 					// Handle join table cases
@@ -723,6 +728,7 @@ public class ToOneAttributeMapping
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
+		this.temporalTableStrategy = original.temporalTableStrategy;
 	}
 
 	private static boolean equal(Value lhsValue, Value rhsValue) {
@@ -2220,16 +2226,28 @@ public class ToOneAttributeMapping
 						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );
 					}
 
+					final var resolver = creationState.getSqlExpressionResolver();
+
 					final var softDeleteMapping = associatedEntityMappingType.getSoftDeleteMapping();
 					if ( softDeleteMapping != null ) {
 						// add the restriction
 						final var tableReference =
 								lazyTableGroup.resolveTableReference( navigablePath,
 										associatedEntityMappingType.getSoftDeleteTableDetails().getTableName() );
-						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction(
-								tableReference,
-								creationState.getSqlExpressionResolver()
-						) );
+						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction( tableReference, resolver ) );
+					}
+
+					final var temporalMapping = associatedEntityMappingType.getTemporalMapping();
+					if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
+						final var tableReference =
+								lazyTableGroup.resolveTableReference( navigablePath,
+										temporalMapping.getTableName() );
+						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+						final var temporalPredicate =
+								temporalInstant == null
+										? temporalMapping.createCurrentRestriction( tableReference, resolver )
+										: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
+						join.applyPredicate( temporalPredicate );
 					}
 				}
 		);
@@ -2343,13 +2361,29 @@ public class ToOneAttributeMapping
 					)
 			);
 
+			final var resolver = creationState.getSqlExpressionResolver();
+
 			if ( fetched && softDeleteMapping != null ) {
 				// add the restriction
 				final var tableReference =
 						lazyTableGroup.resolveTableReference( navigablePath,
 								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName() );
-				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction( tableReference,
-						creationState.getSqlExpressionResolver() ) );
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction( tableReference, resolver ) );
+			}
+
+			if ( fetched ) {
+				final var temporalMapping = getAssociatedEntityMappingType().getTemporalMapping();
+				if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
+					final var tableReference =
+							lazyTableGroup.resolveTableReference( navigablePath,
+									temporalMapping.getTableName() );
+					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalInstant();
+					final var temporalPredicate =
+							temporalInstant == null
+									? temporalMapping.createCurrentRestriction( tableReference, resolver )
+									: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
+					predicateConsumer.accept( temporalPredicate );
+				}
 			}
 		}
 
@@ -2362,6 +2396,13 @@ public class ToOneAttributeMapping
 		}
 
 		return lazyTableGroup;
+	}
+
+	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
+		final var factory = creationState.getCreationContext().getSessionFactory();
+		return factory.getJdbcServices().getDialect()
+				.useTemporalRestriction( temporalTableStrategy,
+						creationState.getLoadQueryInfluencers().getTemporalInstant() != null );
 	}
 
 	@Override

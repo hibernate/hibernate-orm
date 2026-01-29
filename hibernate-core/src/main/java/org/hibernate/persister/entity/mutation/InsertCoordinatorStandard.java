@@ -38,6 +38,7 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
@@ -226,6 +227,18 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				breakDownJdbcValue( id, session, jdbcValueBindings, tableDetails );
 			}
 		}
+
+		final var temporalMapping = entityPersister().getTemporalMapping();
+		if ( temporalMapping != null
+				&& TemporalMutationHelper.isUsingParameters( session )
+				&& factory().getSessionFactoryOptions().getTemporalTableStrategy() != HISTORY_TABLE ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),
+					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
+					ParameterUsage.SET
+			);
+		}
 	}
 
 	protected void breakDownJdbcValue(
@@ -408,6 +421,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		// add the discriminator
 		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
 		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
+		entityPersister().addTemporalToInsertGroup( insertGroupBuilder );
 
 		// add the keys
 		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {

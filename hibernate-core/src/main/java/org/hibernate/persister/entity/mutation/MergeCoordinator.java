@@ -37,6 +37,7 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
 			InclusionChecker dirtinessChecker,
+			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
@@ -49,6 +50,7 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 				inclusionChecker,
 				lockingChecker,
 				dirtinessChecker,
+				restrictToTemporalExcluded,
 				rowId,
 				forceDynamicUpdate,
 				session

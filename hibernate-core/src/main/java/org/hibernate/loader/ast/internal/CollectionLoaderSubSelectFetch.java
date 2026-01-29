@@ -56,6 +56,11 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+		attributeMapping.applyTemporalRestrictions(
+				tableGroup,
+				querySpec::applyPredicate,
+				session.getLoadQueryInfluencers()
+		);
 	}
 
 	@Override

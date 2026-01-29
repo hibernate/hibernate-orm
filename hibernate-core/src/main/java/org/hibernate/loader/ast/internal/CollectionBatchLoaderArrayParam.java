@@ -95,6 +95,7 @@ public class CollectionBatchLoaderArrayParam
 		final var querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+		attributeMapping.applyTemporalRestrictions( tableGroup, querySpec::applyPredicate, getInfluencers() );
 
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()

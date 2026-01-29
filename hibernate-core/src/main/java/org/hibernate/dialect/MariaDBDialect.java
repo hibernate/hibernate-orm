@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -416,10 +417,52 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final MariaDBSqlAstTranslator<?> translator = new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, MariaDBDialect.this );
-			return translator.createMergeOperation( optionalTableUpdate );
+			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )
+					.createMergeOperation( optionalTableUpdate );
 		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
 	}
 
+	@Override
+	public boolean supportsNativeTemporalTables() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsTemporalTablePartitioning() {
+		return false;
+	}
+
+	@Override
+	public String getTemporalTableOptions(
+			TemporalTableStrategy strategy,
+			String endingColumnName,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "with system versioning"
+				: null;
+	}
+
+	@Override
+	public String getExtraTemporalTableDeclarations(TemporalTableStrategy strategy, String startingColumn, String endingColumn, boolean partitioned) {
+		return strategy == TemporalTableStrategy.NATIVE
+				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				: null;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " generated always as " + generatedAs
+				: super.generatedAs( generatedAs );
+	}
+
+	@Override
+	public int getTemporalColumnType() {
+		return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+	}
 }

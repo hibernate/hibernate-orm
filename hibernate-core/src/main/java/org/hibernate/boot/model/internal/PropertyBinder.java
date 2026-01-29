@@ -445,6 +445,7 @@ public class PropertyBinder {
 		handleMutability( property );
 		handleOptional( property );
 		inferOptimisticLocking( property );
+		handleTemporalExcluded( property );
 		return property;
 	}
 
@@ -530,6 +531,14 @@ public class PropertyBinder {
 		}
 		else {
 			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
+		}
+	}
+
+	private void handleTemporalExcluded(Property property) {
+		if ( memberDetails != null
+				&& memberDetails.hasDirectAnnotationUsage( org.hibernate.annotations.Temporal.Excluded.class ) ) {
+			property.setTemporalExcluded( true );
+			property.setOptimisticLocked( false );
 		}
 	}
 

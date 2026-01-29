@@ -14,6 +14,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 
+import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
@@ -25,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
+public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, Temporalized {
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -51,6 +54,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private Property declaredVersion;
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
+	private Column temporalStartingColumn;
+	private Column temporalEndingColumn;
+	private Table temporalTable;
+	private boolean temporallyPartitioned;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -426,8 +433,71 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
+	public void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned) {
+		temporalStartingColumn = startingColumn;
+		temporalEndingColumn = endingColumn;
+		temporallyPartitioned = partitioned;
+	}
+
+	@Override
+	public void setTemporalTable(Table table) {
+		this.temporalTable = table;
+	}
+
+	@Override
+	public Table getTemporalTable() {
+		return temporalTable;
+	}
+
+	@Override
+	public Table getMainTable() {
+		return table;
+	}
+
+	@Override
+	public Column getTemporalStartingColumn() {
+		return temporalStartingColumn;
+	}
+
+	@Override
+	public Column getTemporalEndingColumn() {
+		return temporalEndingColumn;
+	}
+
+	@Override
+	public boolean isTemporallyPartitioned() {
+		return temporallyPartitioned;
+	}
+
+	public void setPartitioned(boolean partitioned) {
+		this.temporallyPartitioned = partitioned;
+	}
+
+	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
+	}
+
+	@Override
+	public PrimaryKey makePrimaryKey(Table table) {
+		final var context = getBuildingContext();
+		if ( suppressesTemporalTablePrimaryKeys( isTemporallyPartitioned(), context ) ) {
+			return null;
+		}
+		else {
+			final var primaryKey = super.makePrimaryKey( table );
+			if ( isTemporalized()
+					&& !usingNativeTemporalTables( context )
+					&& !usingHistoryTemporalTables( context ) ) {
+				if ( isVersioned() ) {
+					primaryKey.addColumns( getVersion().getValue() );
+				}
+				else {
+					primaryKey.addColumn( temporalStartingColumn );
+				}
+			}
+			return primaryKey;
+		}
 	}
 
 }

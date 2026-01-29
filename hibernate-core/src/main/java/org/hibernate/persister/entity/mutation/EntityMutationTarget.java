@@ -44,6 +44,8 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 
 	void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
+	void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder);
+
 	/**
 	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)
 	 * for the given attribute

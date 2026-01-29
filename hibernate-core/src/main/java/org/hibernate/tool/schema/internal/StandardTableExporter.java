@@ -118,6 +118,10 @@ public class StandardTableExporter implements Exporter<Table> {
 
 				applyTableCheck( table, createTable );
 
+				if ( isNotEmpty( table.getExtraDeclarations() ) ) {
+					createTable.append( ", " ).append( table.getExtraDeclarations() );
+				}
+
 				createTable.append( ')' );
 
 				createTable.append( extra );

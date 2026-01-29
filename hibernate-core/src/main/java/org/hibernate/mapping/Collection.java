@@ -34,6 +34,9 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
+import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.mapping.MappingHelper.classForName;
@@ -45,7 +48,7 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable
+		implements Fetchable, Value, Filterable, SoftDeletable, Temporalized
 		permits Set, Bag,
 				IndexedCollection, // List, Map
 				IdentifierCollection { // IdentifierBag only built-in implementation
@@ -104,6 +107,11 @@ public abstract sealed class Collection
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
 
+	private Column temporalStartingColumn;
+	private Column temporalEndingColumn;
+	private Table temporalTable;
+	private boolean temporallyPartitioned;
+
 	private String loaderName;
 
 	private Supplier<? extends Expectation> insertExpectation;
@@ -137,6 +145,7 @@ public abstract sealed class Collection
 		this.key = original.key == null ? null : (KeyValue) original.key.copy();
 		this.element = original.element == null ? null : original.element.copy();
 		this.collectionTable = original.collectionTable;
+		this.temporalTable = original.temporalTable;
 		this.role = original.role;
 		this.lazy = original.lazy;
 		this.extraLazy = original.extraLazy;
@@ -177,6 +186,8 @@ public abstract sealed class Collection
 		this.deleteExpectation = original.deleteExpectation;
 		this.deleteAllExpectation = original.deleteAllExpectation;
 		this.loaderName = original.loaderName;
+		this.temporalStartingColumn = original.temporalStartingColumn;
+		this.temporalEndingColumn = original.temporalEndingColumn;
 	}
 
 	@Override
@@ -562,8 +573,28 @@ public abstract sealed class Collection
 
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
-		if ( !isInverse() ) {
+		if ( hasPrimaryKey() ) {
 			createPrimaryKey();
+			adjustTemporalPrimaryKey();
+		}
+	}
+
+	private boolean hasPrimaryKey() {
+		return !isInverse()
+			&& !suppressesTemporalTablePrimaryKeys( temporallyPartitioned, buildingContext );
+	}
+
+	private void adjustTemporalPrimaryKey() {
+		if ( isTemporalized()
+				&& !usingNativeTemporalTables( buildingContext )
+				&& !usingHistoryTemporalTables( buildingContext ) ) {
+			final var primaryKey = collectionTable.getPrimaryKey();
+			if ( primaryKey != null ) {
+				final var startingColumn = getTemporalStartingColumn();
+				if ( startingColumn != null && !primaryKey.containsColumn( startingColumn ) ) {
+					primaryKey.addColumn( startingColumn );
+				}
+			}
 		}
 	}
 
@@ -848,6 +879,43 @@ public abstract sealed class Collection
 	@Override
 	public Column getSoftDeleteColumn() {
 		return softDeleteColumn;
+	}
+
+	@Override
+	public void enableTemporal(Column startingColumn, Column endingColumn, boolean partitioned) {
+		temporalStartingColumn = startingColumn;
+		temporalEndingColumn = endingColumn;
+		temporallyPartitioned = partitioned;
+	}
+
+	@Override
+	public void setTemporalTable(Table table) {
+		this.temporalTable = table;
+	}
+
+	@Override
+	public Table getTemporalTable() {
+		return temporalTable;
+	}
+
+	@Override
+	public Table getMainTable() {
+		return collectionTable;
+	}
+
+	@Override
+	public Column getTemporalStartingColumn() {
+		return temporalStartingColumn;
+	}
+
+	@Override
+	public Column getTemporalEndingColumn() {
+		return temporalEndingColumn;
+	}
+
+	@Override
+	public boolean isTemporallyPartitioned() {
+		return temporallyPartitioned;
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {

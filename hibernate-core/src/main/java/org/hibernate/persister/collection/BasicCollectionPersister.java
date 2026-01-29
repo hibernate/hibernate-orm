@@ -21,6 +21,10 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.HistoryDeleteRowsCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryInsertRowsCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryRemoveCoordinator;
+import org.hibernate.persister.collection.mutation.HistoryUpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
@@ -32,6 +36,7 @@ import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTemporal;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -48,6 +53,8 @@ import org.hibernate.type.EntityType;
 
 import java.util.List;
 
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
+import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
@@ -76,11 +83,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
+		final boolean temporalized = collectionBinding.isTemporalized();
+		final boolean history = temporalized && isHistoryStrategy();
 		this.rowMutationOperations = buildRowMutationOperations();
-		this.insertRowsCoordinator = buildInsertRowCoordinator();
-		this.updateCoordinator = buildUpdateRowCoordinator();
-		this.deleteRowsCoordinator = buildDeleteRowCoordinator();
-		this.removeCoordinator = buildDeleteAllCoordinator();
+		this.insertRowsCoordinator = buildInsertRowCoordinator( history );
+		this.updateCoordinator = buildUpdateRowCoordinator( temporalized, history );
+		this.deleteRowsCoordinator = buildDeleteRowCoordinator( history );
+		this.removeCoordinator = buildDeleteAllCoordinator( history );
 	}
 
 	protected RowMutationOperations getRowMutationOperations() {
@@ -130,20 +139,30 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private boolean isPerformingUpdates() {
-		return getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
-			&& isAnyTrue( elementColumnIsSettable )
-			&& !isInverse();
+		return !isInverse()
+			&& getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
+			&& isAnyTrue( elementColumnIsSettable );
 	}
 
-	private UpdateRowsCoordinator buildUpdateRowCoordinator() {
+	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal, boolean history) {
 		if ( !isPerformingUpdates() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection row updates - %s",
-//						getRolePath()
-//				);
-//			}
 			return new UpdateRowsCoordinatorNoOp( this );
+		}
+		else if ( temporal ) {
+			return history
+					? new HistoryUpdateRowsCoordinator(
+							this,
+							rowMutationOperations,
+							getFactory(),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase
+					)
+					: new UpdateRowsCoordinatorTemporal(
+							this,
+							rowMutationOperations,
+							getFactory()
+					);
 		}
 		else {
 			return new UpdateRowsCoordinatorStandard(
@@ -154,69 +173,87 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	private InsertRowsCoordinator buildInsertRowCoordinator() {
+	private InsertRowsCoordinator buildInsertRowCoordinator(boolean history) {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection inserts - %s",
-//						getRolePath()
-//				);
-//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 		else {
-			return new InsertRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryInsertRowsCoordinator(
+							this,
+							rowMutationOperations,
+							new InsertRowsCoordinatorStandard(
+									this,
+									rowMutationOperations,
+									getFactory().getServiceRegistry()
+							),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new InsertRowsCoordinatorStandard(
+							this,
+							rowMutationOperations,
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
 
-	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
+	private DeleteRowsCoordinator buildDeleteRowCoordinator(boolean history) {
 		if ( !needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection row deletions - %s",
-//						getRolePath()
-//				);
-//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 		else {
-			return new DeleteRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					hasPhysicalIndexColumn(),
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryDeleteRowsCoordinator(
+							this,
+							rowMutationOperations,
+							hasPhysicalIndexColumn(),
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new DeleteRowsCoordinatorStandard(
+							this,
+							rowMutationOperations,
+							hasPhysicalIndexColumn(),
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
 
-	private RemoveCoordinator buildDeleteAllCoordinator() {
+	private RemoveCoordinator buildDeleteAllCoordinator(boolean history) {
 		if ( !needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef(
-//						"Skipping collection removals - %s",
-//						getRolePath()
-//				);
-//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 		else {
-			return new RemoveCoordinatorStandard(
-					this,
-					this::buildDeleteAllOperation,
-					getFactory().getServiceRegistry()
-			);
+			return history
+					? new HistoryRemoveCoordinator(
+							this,
+							this::buildDeleteAllOperation,
+							indexColumnIsSettable,
+							elementColumnIsSettable,
+							this::incrementIndexByBase,
+							getFactory().getServiceRegistry()
+					)
+					: new RemoveCoordinatorStandard(
+							this,
+							this::buildDeleteAllOperation,
+							getFactory().getServiceRegistry()
+					);
 		}
 	}
-
 
 	@Override
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
 		final var attributeMapping = getAttributeMapping();
 		assert attributeMapping != null;
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
+			return generateTemporalDeleteAllAst( tableReference );
+		}
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
 		if ( softDeleteMapping == null ) {
 			return super.generateDeleteAllAst( tableReference );
@@ -241,6 +278,30 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					List.of( nonDeletedBinding )
 			);
 		}
+	}
+
+	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteAllAst(MutatingTableReference tableReference) {
+		final var attributeMapping = getAttributeMapping();
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		assert temporalMapping != null;
+		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
+		assert foreignKeyDescriptor != null;
+		final int keyColumnCount = foreignKeyDescriptor.getJdbcTypeCount();
+		final var parameterBinders =
+				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
+		final List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
+		applyKeyRestrictions( parameterBinders, restrictionBindings );
+		final var endingColumn = new ColumnReference( tableReference, temporalMapping.getEndingColumnMapping() );
+		final var endingBinding = temporalMapping.createEndingValueBinding( endingColumn );
+		final var nullEndingBinding = temporalMapping.createNullEndingValueBinding( endingColumn );
+		return new TableUpdateStandard(
+				tableReference,
+				this,
+				"temporal removal",
+				List.of( endingBinding ),
+				restrictionBindings,
+				List.of( nullEndingBinding )
+		);
 	}
 
 	protected RowMutationOperations buildRowMutationOperations() {
@@ -328,6 +389,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		if ( softDeleteMapping != null ) {
 			final var columnReference = new ColumnReference( insertBuilder.getMutatingTable(), softDeleteMapping );
 			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
+		}
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null && shouldApplyTemporalOperations( insertBuilder.getMutatingTable() ) ) {
+			final var startingColumnReference =
+					new ColumnReference( insertBuilder.getMutatingTable(), temporalMapping.getStartingColumnMapping() );
+			insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumnReference ) );
+			final var endingColumnReference =
+					new ColumnReference( insertBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
+			insertBuilder.addValueColumn( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
 		}
 	}
 
@@ -420,6 +490,15 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				},
 				session
 		);
+
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null && isUsingTimestampParameters( session ) ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					temporalMapping.getStartingColumnMapping(),
+					ParameterUsage.SET
+			);
+		}
 	}
 
 
@@ -565,6 +644,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
 		final var pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
+		final var temporalMapping = pluralAttribute.getTemporalMapping();
+		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
+			return generateTemporalDeleteRowsAst( tableReference );
+		}
 		final var softDeleteMapping = pluralAttribute.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
 			return generateSoftDeleteRowsAst( tableReference );
@@ -633,6 +716,39 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return updateBuilder.buildMutation();
 	}
 
+	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteRowsAst(MutatingTableReference tableReference) {
+		final var attributeMapping = getAttributeMapping();
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		assert temporalMapping != null;
+		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
+		assert foreignKeyDescriptor != null;
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
+		}
+		else {
+			updateBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
+			if ( hasIndex() && !indexContainsFormula ) {
+				assert attributeMapping.getIndexDescriptor() != null;
+				updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getIndexDescriptor() );
+			}
+			else {
+				updateBuilder.addKeyRestrictions( attributeMapping.getElementDescriptor() );
+			}
+		}
+
+		final var endingColumnReference = new ColumnReference( tableReference, temporalMapping.getEndingColumnMapping() );
+		updateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
+		updateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
+		return updateBuilder.buildMutation();
+	}
+
 	private void applyDeleteRowRestrictions(
 			PersistentCollection<?> collection,
 			Object keyValue,
@@ -641,6 +757,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
+		final var temporalMapping = attributeMapping.getTemporalMapping();
+		if ( temporalMapping != null && isUsingTimestampParameters( session ) ) {
+			jdbcValueBindings.bindValue(
+					session.getTransactionStartInstant(),
+					temporalMapping.getEndingColumnMapping(),
+					ParameterUsage.SET
+			);
+		}
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(
@@ -696,6 +820,30 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	@Override
 	public boolean isManyToMany() {
 		return elementType instanceof EntityType; //instanceof AssociationType;
+	}
+
+	private static boolean isUsingTimestampParameters(SharedSessionContractImplementor session) {
+		final var options = session.getFactory().getSessionFactoryOptions();
+		final var strategy = options.getTemporalTableStrategy();
+		return strategy == SINGLE_TABLE
+			&& !options.isUseServerTransactionTimestampsEnabled();
+	}
+
+	private boolean isNativeTemporalTablesEnabled() {
+		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == NATIVE;
+	}
+
+	private boolean shouldApplyTemporalOperations(MutatingTableReference tableReference) {
+		final var attributeMapping = getAttributeMapping();
+		if ( attributeMapping == null ) {
+			return false;
+		}
+		else {
+			final var temporalMapping = attributeMapping.getTemporalMapping();
+			return temporalMapping != null
+				&& !isNativeTemporalTablesEnabled()
+				&& ( !isHistoryStrategy() || temporalMapping.getTableName().equals( tableReference.getTableName() ) );
+		}
 	}
 
 	@Override

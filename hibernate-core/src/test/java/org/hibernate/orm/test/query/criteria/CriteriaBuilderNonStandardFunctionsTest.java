@@ -450,21 +450,26 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@JiraKey("HHH-16185")
+	@JiraKey("HHH-20113")
 	public void testNumericTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			query.multiselect(
 					cb.function( "trunc", Float.class, cb.literal( 32.92345f ) ),
-					cb.function( "truncate", Float.class, cb.literal( 32.92345f ) ),
-					cb.function( "trunc", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
+					cb.function( "truncate", Float.class, cb.parameter( Float.class, "floatValue" ) ),
+					cb.function( "trunc", Float.class, cb.parameter( Float.class, "floatValue" ), cb.parameter( Integer.class, "decimals" ) ),
 					cb.function( "truncate", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
-					cb.function( "trunc", Double.class, cb.literal( 32.92345d ) ),
+					cb.function( "trunc", Double.class, cb.parameter( Double.class, "doubleValue" ) ),
 					cb.function( "truncate", Double.class, cb.literal( 32.92345d ) ),
 					cb.function( "trunc", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) ),
-					cb.function( "truncate", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) )
+					cb.function( "truncate", Double.class, cb.parameter( Double.class, "doubleValue" ), cb.parameter( Integer.class, "decimals" ) )
 			);
-			final Tuple result = session.createQuery( query ).getSingleResult();
+			final Tuple result = session.createQuery( query )
+					.setParameter( "floatValue", 32.92345f  )
+					.setParameter( "doubleValue", 32.92345d  )
+					.setParameter( "decimals", 3 )
+					.getSingleResult();
 			assertEquals( 32f, result.get( 0 ) );
 			assertEquals( 32f, result.get( 1 ) );
 			assertEquals( 32.923f, result.get( 2 ) );

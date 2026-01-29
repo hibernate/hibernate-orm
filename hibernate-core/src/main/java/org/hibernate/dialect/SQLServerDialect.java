@@ -1182,7 +1182,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			String startingColumn, String endingColumn,
 			boolean partitioned) {
 		return strategy == TemporalTableStrategy.NATIVE
-				? "period for system_time (" + startingColumn + ", " + endingColumn + ")"
+				? "transaction_start_id bigint generated always as transaction_id start hidden not null"
+						+ ", period for system_time (" + startingColumn + ", " + endingColumn + ")"
 				: null;
 	}
 

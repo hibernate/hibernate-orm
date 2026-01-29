@@ -157,16 +157,16 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.persister.entity.mutation.HistoryDeleteCoordinator;
-import org.hibernate.persister.entity.mutation.HistoryInsertCoordinator;
-import org.hibernate.persister.entity.mutation.HistoryUpdateCoordinator;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorHistory;
+import org.hibernate.persister.entity.mutation.InsertCoordinatorHistory;
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.persister.entity.mutation.TemporalUpdateCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -3549,7 +3549,7 @@ public abstract class AbstractEntityPersister
 	protected InsertCoordinator buildInsertCoordinator() {
 		return temporalMapping != null
 			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-				? new HistoryInsertCoordinator( this, factory )
+				? new InsertCoordinatorHistory( this, factory )
 				: new InsertCoordinatorStandard( this, factory );
 	}
 
@@ -3582,8 +3582,8 @@ public abstract class AbstractEntityPersister
 
 	private UpdateCoordinator buildTemporalUpdateCoordinator() {
 		return switch ( getTemporalTableStrategy() ) {
-			case SINGLE_TABLE -> new TemporalUpdateCoordinator( this, factory );
-			case HISTORY_TABLE -> new HistoryUpdateCoordinator( this, factory, buildNonTemporalUpdateCoordinator() );
+			case SINGLE_TABLE -> new UpdateCoordinatorTemporal( this, factory );
+			case HISTORY_TABLE -> new UpdateCoordinatorHistory( this, factory, buildNonTemporalUpdateCoordinator() );
 			case NATIVE -> buildNonTemporalUpdateCoordinator();
 		};
 	}
@@ -3597,7 +3597,7 @@ public abstract class AbstractEntityPersister
 	private DeleteCoordinator buildTemporalDeleteCoordinator() {
 		return switch ( getTemporalTableStrategy() ) {
 			case SINGLE_TABLE -> new DeleteCoordinatorTemporal( this, factory );
-			case HISTORY_TABLE -> new HistoryDeleteCoordinator( this, factory, buildNonTemporalDeleteCoordinator() );
+			case HISTORY_TABLE -> new DeleteCoordinatorHistory( this, factory, buildNonTemporalDeleteCoordinator() );
 			case NATIVE -> buildNonTemporalDeleteCoordinator();
 		};
 	}

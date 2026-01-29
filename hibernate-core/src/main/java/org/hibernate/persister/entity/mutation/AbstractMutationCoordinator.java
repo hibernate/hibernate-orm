@@ -5,10 +5,14 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.Internal;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
@@ -28,6 +32,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 
 import static java.lang.System.arraycopy;
+import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.manyOperations;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noOperations;
@@ -273,6 +278,55 @@ public abstract class AbstractMutationCoordinator {
 					},
 					session
 			);
+		}
+	}
+
+	boolean resultCheck(
+			Object id,
+			PreparedStatementDetails statementDetails,
+			int affectedRowCount,
+			int batchPosition) {
+		return identifiedResultsCheck(
+				statementDetails,
+				affectedRowCount,
+				batchPosition,
+				entityPersister(),
+				id,
+				factory()
+		);
+	}
+
+	void applyOptimisticLocking(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+		if ( entityPersister().optimisticLockStyle() == OptimisticLockStyle.VERSION ) {
+			applyVersionOptimisticLocking( tableMutationBuilder );
+		}
+	}
+
+	void applyVersionOptimisticLocking(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+		final var versionMapping = entityPersister().getVersionMapping();
+		if ( versionMapping != null ) {
+			tableMutationBuilder.addOptimisticLockRestriction( versionMapping );
+		}
+	}
+
+	StaleObjectStateException staleObjectStateException(Object id, StaleStateException cause) {
+		return new StaleObjectStateException( entityPersister().getEntityName(), id, cause );
+	}
+
+	void applyPartitionKeyRestriction(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+		final var persister = entityPersister();
+		if ( persister.hasPartitionedSelectionMapping() ) {
+			final var attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final var attributeMapping = attributeMappings.get( m );
+				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+				for ( int i = 0; i < jdbcTypeCount; i++ ) {
+					final var selectableMapping = attributeMapping.getSelectable( i );
+					if ( selectableMapping.isPartitioned() ) {
+						tableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
+					}
+				}
+			}
 		}
 	}
 }

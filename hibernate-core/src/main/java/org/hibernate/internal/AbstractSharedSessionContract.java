@@ -218,7 +218,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdGenerator();
+		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdSupplier();
 		transactionIdSupplier =
 				configuredTransactionIdSupplier == null
 						? DEFAULT_TRANSACTION_ID_SUPPLIER
@@ -497,10 +497,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public String getTenantIdentifier() {
-		if ( tenantIdentifier == null ) {
-			return null;
-		}
-		return factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		return tenantIdentifier == null
+				? null
+				: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
 	}
 
 	@Override

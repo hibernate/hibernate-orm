@@ -603,7 +603,7 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
-		if ( useTemporalRestriction( influencers ) ) {
+		if ( getDialect().useTemporalRestriction( influencers ) ) {
 			final var temporalInstant = influencers.getTemporalIdentifier();
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
@@ -613,11 +613,9 @@ public class PluralAttributeMappingImpl
 				if ( temporalMapping != null ) {
 					final var primaryTableReference =
 							tableGroup.resolveTableReference( temporalMapping.getTableName() );
-					final var temporalRestriction =
-							temporalInstant == null
-									? temporalMapping.createCurrentRestriction( primaryTableReference )
-									: temporalMapping.createRestriction( primaryTableReference, temporalInstant );
-					predicateConsumer.applyPredicate( temporalRestriction );
+					predicateConsumer.applyPredicate( temporalInstant == null
+							? temporalMapping.createCurrentRestriction( primaryTableReference )
+							: temporalMapping.createRestriction( primaryTableReference, temporalInstant ) );
 				}
 			}
 			if ( temporalMapping != null ) {
@@ -638,12 +636,6 @@ public class PluralAttributeMappingImpl
 
 	private static TemporalTableStrategy getTemporalTableStrategy(LoadQueryInfluencers influencers) {
 		return influencers.getSessionFactory().getSessionFactoryOptions().getTemporalTableStrategy();
-	}
-
-	private boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		return getDialect()
-				.useTemporalRestriction( getTemporalTableStrategy( influencers ),
-						influencers.getTemporalIdentifier() != null );
 	}
 
 	@Override

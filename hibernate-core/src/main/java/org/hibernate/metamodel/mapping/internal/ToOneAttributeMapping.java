@@ -2399,10 +2399,8 @@ public class ToOneAttributeMapping
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		final var factory = creationState.getCreationContext().getSessionFactory();
-		return factory.getJdbcServices().getDialect()
-				.useTemporalRestriction( temporalTableStrategy,
-						creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null );
+		return creationState.getCreationContext().getSessionFactory().getJdbcServices()
+				.getDialect().useTemporalRestriction( creationState.getLoadQueryInfluencers() );
 	}
 
 	@Override

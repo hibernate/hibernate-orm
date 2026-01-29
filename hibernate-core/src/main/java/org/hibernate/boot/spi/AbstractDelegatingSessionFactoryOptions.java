@@ -421,8 +421,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Supplier<?> getTransactionIdGenerator() {
-		return delegate.getTransactionIdGenerator();
+	public Supplier<?> getTransactionIdSupplier() {
+		return delegate.getTransactionIdSupplier();
 	}
 
 	@Override

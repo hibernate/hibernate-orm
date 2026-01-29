@@ -213,6 +213,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6224,11 +6225,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
-		final var temporalInstant = tableReference.getTemporalInstant();
-		if ( renderAsOfClause( tableReference, temporalInstant ) ) {
+		if ( renderAsOfClause( tableReference ) ) {
 			appendSql( WHITESPACE );
 			appendSql( dialect.getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
+			final var temporalInstant = tableReference.getTemporalIdentifier();
 			if ( temporalInstant == null ) {
 				// we are querying current data,
 				// so we can use the server timestamp
@@ -6247,10 +6248,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	private boolean renderAsOfClause(NamedTableReference tableReference, Object temporalValue) {
+	private boolean renderAsOfClause(NamedTableReference tableReference) {
 		return tableReference.getTemporalJdbcMapping() != null
-			&& getDialect().useAsOfOperator( getTemporalTableStrategy(), temporalValue != null )
-			&& statementStack.getCurrent() instanceof SelectStatement;
+			&& getSessionFactory().getSessionFactoryOptions().getTransactionIdSupplier() == null
+			&& statementStack.getCurrent() instanceof SelectStatement
+			&& getDialect().useAsOfOperator( getTemporalTableStrategy(),
+					(Instant) tableReference.getTemporalIdentifier() );
 	}
 
 	private TemporalTableStrategy getTemporalTableStrategy() {

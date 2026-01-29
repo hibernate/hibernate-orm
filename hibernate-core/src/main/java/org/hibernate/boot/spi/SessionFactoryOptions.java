@@ -555,7 +555,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
 	 */
-	Supplier<?> getTransactionIdGenerator();
+	Supplier<?> getTransactionIdSupplier();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE

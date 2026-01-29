@@ -1180,7 +1180,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Supplier<?> getTransactionIdGenerator() {
+	public Supplier<?> getTransactionIdSupplier() {
 		return transactionIdSupplier;
 	}
 

@@ -2850,6 +2850,8 @@ public abstract class AbstractEntityPersister
 			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState) {
+		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
+
 		final var sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
 				explicitSourceAlias,
@@ -2865,8 +2867,7 @@ public abstract class AbstractEntityPersister
 						rootAlias
 				)
 				: new NamedTableReference( rootTableName, rootAlias );
-		rootTableReference.applyTemporalTable( temporalMapping,
-				creationState.getLoadQueryInfluencers() );
+		rootTableReference.applyTemporalTable( temporalMapping, loadQueryInfluencers );
 
 		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -2886,8 +2887,7 @@ public abstract class AbstractEntityPersister
 									sqlAliasBase.generateNewAlias(),
 									isNullableSubclassTable( i )
 							);
-							joinedTableReference.applyTemporalTable( temporalMapping,
-									creationState.getLoadQueryInfluencers() );
+							joinedTableReference.applyTemporalTable( temporalMapping, loadQueryInfluencers );
 							return new TableReferenceJoin(
 									shouldInnerJoinSubclassTable( i, emptySet() ),
 									joinedTableReference,
@@ -2931,28 +2931,23 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-			if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
+			if ( temporalMapping != null
+					&& getDialect().useTemporalRestriction( loadQueryInfluencers ) ) {
 				final var tableReference =
 						tableGroup.resolveTableReference( temporalMapping.getTableName() );
-				final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
-				final var temporalPredicate =
-						temporalInstant == null
+				final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
+				additionalPredicateCollectorAccess.get()
+						.accept( temporalInstant == null
 								? temporalMapping.createCurrentRestriction( tableReference, resolver )
-								: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
-				additionalPredicateCollectorAccess.get().accept( temporalPredicate );
+								: temporalMapping.createRestriction( tableReference, resolver, temporalInstant ) );
 				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
-					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
+					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
+							getRootEntityName() );
 				}
 			}
 		}
 
 		return tableGroup;
-	}
-
-	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		return getDialect()
-				.useTemporalRestriction( getTemporalTableStrategy(),
-						creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null );
 	}
 
 	private String resolvePrimaryTableName(SqlAstCreationState creationState) {

@@ -14,7 +14,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.SortedSet;
 
-import org.gradle.api.Project;
 import org.gradle.api.file.RegularFile;
 
 /**
@@ -25,8 +24,7 @@ public class AsciiDocWriter {
 	public static void writeToFile(
 			String anchorNameBase,
 			Map<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
-			RegularFile outputFile,
-			Project project) {
+			RegularFile outputFile) {
 		final File outputFileAsFile = outputFile.getAsFile();
 		try {
 			Files.createDirectories( outputFileAsFile.getParentFile().toPath() );
@@ -36,7 +34,7 @@ public class AsciiDocWriter {
 		}
 
 		try ( FileWriter fileWriter = new FileWriter( outputFileAsFile ) ) {
-			write( anchorNameBase, settingDescriptorMap, fileWriter, project );
+			write( anchorNameBase, settingDescriptorMap, fileWriter );
 		}
 		catch (IOException e) {
 			throw new RuntimeException( "Failed to produce asciidoc output for collected properties", e );
@@ -46,8 +44,7 @@ public class AsciiDocWriter {
 	private static void write(
 			String anchorNameBase,
 			Map<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
-			FileWriter writer,
-			Project project) throws IOException {
+			FileWriter writer) throws IOException {
 		for ( Map.Entry<SettingsDocSection, SortedSet<SettingDescriptor>> entry : settingDescriptorMap.entrySet() ) {
 			final SettingsDocSection sectionDescriptor = entry.getKey();
 			final SortedSet<SettingDescriptor> sectionSettingDescriptors = entry.getValue();

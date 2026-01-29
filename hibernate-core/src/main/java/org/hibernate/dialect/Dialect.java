@@ -5829,7 +5829,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * or table partitioning.
 	 *
 	 * @param strategy The temporal table strategy
-	 * @param endingColumnName The name of the {@code row end} column
+	 * @param rowEndColumnName The name of the {@code row end} column
 	 * specified via {@link org.hibernate.annotations.Temporal#rowEnd}
 	 * @param partitioned Is partitioning requested
 	 * @param currentPartitionName The current partition name, if specified
@@ -5839,7 +5839,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	@Incubating
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName) {
@@ -5904,7 +5904,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	@Incubating
 	public String getExtraTemporalTableDeclarations(
 			TemporalTableStrategy strategy,
-			String startingColumn, String endingColumn,
+			String rowStartColumn, String rowEndColumn,
 			boolean partitioned) {
 		return null;
 	}
@@ -5953,7 +5953,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Incubating
 	public boolean useTemporalRestriction(TemporalTableStrategy strategy, boolean historical) {
-		return switch(strategy) {
+		return switch (strategy) {
 			case HISTORY_TABLE -> historical;
 			case NATIVE -> false;
 			default -> true;

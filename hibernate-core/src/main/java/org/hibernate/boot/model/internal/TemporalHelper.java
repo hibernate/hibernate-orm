@@ -59,33 +59,33 @@ public class TemporalHelper {
 
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
-		final var startingColumn =
+		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
 						table, false, precision, context );
-		final var endingColumn =
+		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
 						table, true, precision, context );
-		handleTemporalColumnGeneration( startingColumn, endingColumn, context );
+		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
 				usingHistoryTemporalTables( context )
 						? createHistoryTable( table, historyTable, context )
 						: table;
-		temporalTable.addColumn( startingColumn );
-		temporalTable.addColumn( endingColumn );
-		target.enableTemporal( startingColumn, endingColumn, partitioned );
+		temporalTable.addColumn( rowStartColumn );
+		temporalTable.addColumn( rowEndColumn );
+		target.enableTemporal( rowStartColumn, rowEndColumn, partitioned );
 		target.setTemporalTable( temporalTable );
 
 		addExtraDeclarationsAndOptions(
 				temporalTable,
-				startingColumn,
-				endingColumn,
+				rowStartColumn,
+				rowEndColumn,
 				partitioned,
 				currentPartitionName,
 				historyPartitionName,
 				context
 		);
-		addTemporalCheckConstraint( temporalTable, startingColumn, endingColumn, context );
+		addTemporalCheckConstraint( temporalTable, rowStartColumn, rowEndColumn, context );
 		addAuxiliaryObjects( temporalTable, partitioned, currentPartitionName, historyPartitionName, context );
 		addSecondPass( target, context );
 	}
@@ -206,7 +206,7 @@ public class TemporalHelper {
 
 	private static void addExtraDeclarationsAndOptions(
 			Table table,
-			Column startingColumn, Column endingColumn,
+			Column startingColumn, Column rowEndColumn,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName,
@@ -215,13 +215,13 @@ public class TemporalHelper {
 		var strategy = context.getTemporalTableStrategy( dialect );
 		table.setExtraDeclarations( dialect.getExtraTemporalTableDeclarations(
 				strategy, startingColumn.getQuotedName( dialect ),
-				endingColumn.getQuotedName( dialect ),
+				rowEndColumn.getQuotedName( dialect ),
 				partitioned
 		) );
 		table.setOptions( appendOption( table.getOptions(),
 				dialect.getTemporalTableOptions(
 						strategy,
-						endingColumn.getQuotedName( dialect ),
+						rowEndColumn.getQuotedName( dialect ),
 						partitioned,
 						currentPartitionName,
 						historyPartitionName
@@ -303,14 +303,14 @@ public class TemporalHelper {
 
 	private static void addTemporalCheckConstraint(
 			Table table,
-			Column startingColumn,
-			Column endingColumn,
+			Column rowStartColumn,
+			Column rowEndColumn,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 		if ( dialect.createTemporalTableCheckConstraint( context.getTemporalTableStrategy( dialect ) ) ) {
-			final String starting = startingColumn.getQuotedName( dialect );
-			final String ending = endingColumn.getQuotedName( dialect );
-			table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
+			final String rowStartName = rowStartColumn.getQuotedName( dialect );
+			final String rowEndName = rowEndColumn.getQuotedName( dialect );
+			table.addCheck( new CheckConstraint( rowEndName + " is null or " + rowEndName + " > " + rowStartName ) );
 		}
 	}
 
@@ -335,11 +335,11 @@ public class TemporalHelper {
 	}
 
 	private static void handleTemporalColumnGeneration(
-			Column startingColumn, Column endingColumn,
+			Column rowStartColumn, Column rowEndColumn,
 			MetadataBuildingContext context) {
 		if ( usingNativeTemporalTables( context ) ) {
-			startingColumn.setGeneratedAs( "row start" );
-			endingColumn.setGeneratedAs( "row end" );
+			rowStartColumn.setGeneratedAs( "row start" );
+			rowEndColumn.setGeneratedAs( "row end" );
 		}
 	}
 

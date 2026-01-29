@@ -1363,15 +1363,15 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getExtraTemporalTableDeclarations(
 			TemporalTableStrategy strategy,
-			String startingColumn, String endingColumn,
+			String rowStartColumn, String rowEndColumn,
 			boolean partitioned) {
 		// no 'for' keyword
 		if ( strategy == TemporalTableStrategy.NATIVE ) {
 			return "transaction_start_id timestamp(12) not null generated always as transaction start id implicitly hidden"
-				+ ", period system_time (" + startingColumn + ", " + endingColumn + ")";
+				+ ", period system_time (" + rowStartColumn + ", " + rowEndColumn + ")";
 		}
 		else if ( partitioned ) {
-			return endingColumn + "_null smallint generated always as (case when " + endingColumn + " is null then 1 else 0 end) implicitly hidden";
+			return rowEndColumn + "_null smallint generated always as (case when " + rowEndColumn + " is null then 1 else 0 end) implicitly hidden";
 		}
 		else {
 			return null;
@@ -1381,14 +1381,14 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getTemporalTableOptions(
 			TemporalTableStrategy strategy,
-			String endingColumnName,
+			String rowEndColumnName,
 			boolean partitioned,
 			String currentPartition,
 			String historyPartition) {
 		return partitioned
-				? "partition by range (" + endingColumnName + "_null)"
-						+ " (partition " + historyPartition + " starting from (0) ending at (0),"
-						+ " partition " + currentPartition + " starting from (1) ending at (1))"
+				? "partition by range (" + rowEndColumnName + "_null)"
+				+ " (partition " + historyPartition + " starting from (0) ending at (0),"
+				+ " partition " + currentPartition + " starting from (1) ending at (1))"
 				: null;
 	}
 

@@ -55,6 +55,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.*;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+import static org.hibernate.sql.ast.SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
 
 /**
  * Enumeratoes common function template definitions.
@@ -308,20 +309,43 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
-	private void trunc(TruncFunction.DatetimeTrunc datetimeTrunc) {
-		trunc( "trunc(?1)", "trunc(?1,?2)", datetimeTrunc, null );
-	}
-
 	public void trunc() {
-		trunc( null );
+		trunc( "trunc(?1)", "trunc(?1,?2)", null, null );
 	}
 
+	/**
+	 * H2, DB2
+	 */
 	public void trunc_dateTrunc() {
-		trunc( TruncFunction.DatetimeTrunc.DATE_TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.DATE_TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
+	/**
+	 * HSQL
+	 */
 	public void trunc_dateTrunc_trunc() {
-		trunc( TruncFunction.DatetimeTrunc.TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**
@@ -829,7 +853,7 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
-				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentRenderingMode( NO_PLAIN_PARAMETER )
 				.register();
 	}
 

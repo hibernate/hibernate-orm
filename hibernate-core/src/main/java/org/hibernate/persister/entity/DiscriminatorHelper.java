@@ -29,8 +29,8 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
 @Internal
 public class DiscriminatorHelper {
 
-	public static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
-	public static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
+	public static final MarkerObject NULL_DISCRIMINATOR = MarkerObject.NULL_DISCRIMINATOR;
+	public static final MarkerObject NOT_NULL_DISCRIMINATOR = MarkerObject.NOT_NULL_DISCRIMINATOR;
 
 	/**
 	 * The underlying BasicType as the "JDBC mapping" between the relational {@link org.hibernate.type.descriptor.java.JavaType}

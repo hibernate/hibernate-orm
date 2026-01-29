@@ -51,7 +51,7 @@ public class EnumIdTest {
 
 		scope.inTransaction(
 				session -> {
-					PlanetCheatSheet mercuryFromDb = session.get(
+					PlanetCheatSheet mercuryFromDb = session.find(
 							PlanetCheatSheet.class,
 							Planet.MERCURY
 					);

@@ -58,14 +58,11 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 
 	Set<String> getQuerySpaces();
 
-	/**
-	 * Convert the memento back into an executable (connected) form.
-	 *
-	 * @param session The session to connect the procedure call to
-	 *
-	 * @return The executable call
-	 */
-	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session);
+	@Override
+	ProcedureCallImplementor toQuery(SharedSessionContractImplementor session);
+
+	@Override
+	<X> ProcedureCallImplementor<X> toQuery(SharedSessionContractImplementor session, Class<X> javaType);
 
 	/**
 	 * Convert the memento back into an executable (connected) form.
@@ -74,14 +71,18 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 *
 	 * @return The executable call
 	 */
-	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, String... resultSetMappingNames);
+	ProcedureCallImplementor makeProcedureCall(SharedSessionContractImplementor session);
+
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	ProcedureCallImplementor makeProcedureCall(SharedSessionContractImplementor session, String... resultSetMappingNames);
 
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
 		ProcedureParameterImplementor<?> resolve(SharedSessionContractImplementor session);
-	}
-
-	@Override
-	default Class<Object> getResultType() {
-		return Object.class;
 	}
 }

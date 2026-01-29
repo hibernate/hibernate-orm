@@ -7,7 +7,7 @@ package org.hibernate.query.named;
 import java.util.function.Consumer;
 
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 
 /**
  * @author Steve Ebersole

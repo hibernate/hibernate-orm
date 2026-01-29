@@ -110,7 +110,12 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 
 	@Override
 	public char[] coerce(Object value) {
-		return wrap( value, null );
+		try {
+			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
 	}
 
 	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<char[]> {

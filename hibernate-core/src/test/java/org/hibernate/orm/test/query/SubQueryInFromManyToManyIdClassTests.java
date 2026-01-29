@@ -56,7 +56,7 @@ public class SubQueryInFromManyToManyIdClassTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
+					final Join<Contact, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
 					subquery.multiselect( alternativeContacts.alias( "contact" ) );
 					subquery.orderBy( cb.asc( alternativeContacts.get( "name" ).get( "first" ) ) );
@@ -107,14 +107,14 @@ public class SubQueryInFromManyToManyIdClassTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
+					final Join<Contact, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
 					subquery.multiselect( alternativeContacts.alias( "contact" ) );
 					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
-					final Join<Object, Object> alt = a.join( "contact" );
+					final Join<Tuple, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id1" ) ) );
@@ -155,7 +155,7 @@ public class SubQueryInFromManyToManyIdClassTests {
 					final JpaRoot<Contact> root = cq.from( Contact.class );
 					final JpaSubQuery<Tuple> subquery = cq.subquery( Tuple.class );
 					final Root<Contact> correlatedRoot = subquery.correlate( root );
-					final Join<Object, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
+					final Join<Contact, Object> alternativeContacts = correlatedRoot.join( "alternativeContacts" );
 
 					subquery.multiselect( alternativeContacts.alias( "contact" ) );
 					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );

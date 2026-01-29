@@ -5,10 +5,10 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
@@ -310,14 +310,14 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
 		// Set your transaction mode to READ_COMMITTED before using
 		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
 		// Set your transaction mode to READ_COMMITTED before using
 		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );

@@ -114,7 +114,12 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public Date coerce(Object value) {
-		return wrap( value, null );
+		try {
+			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
 	}
 
 	@Override

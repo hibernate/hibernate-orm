@@ -20,15 +20,15 @@ public class HQLThisTest {
 	void test(SessionFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new This("gavin")));
 		scope.inSession(s -> {
-			s.createSelectionQuery("select this.name from This this where this.name = 'gavin'").getSingleResult();
-			s.createSelectionQuery("from This where this.name = 'gavin'").getSingleResult();
-			s.createSelectionQuery("select this.name from This order by this.name").getSingleResult();
-			s.createSelectionQuery("select count(this) from This").getSingleResult();
-			s.createSelectionQuery("select id(this) from This").getSingleResult();
+			s.createSelectionQuery("select this.name from This this where this.name = 'gavin'", String.class).getSingleResult();
+			s.createSelectionQuery("from This where this.name = 'gavin'", This.class).getSingleResult();
+			s.createSelectionQuery("select this.name from This order by this.name", String.class).getSingleResult();
+			s.createSelectionQuery("select count(this) from This", Long.class).getSingleResult();
+			s.createSelectionQuery("select id(this) from This", Long.class).getSingleResult();
 			// testing case insensitivity
-			s.createSelectionQuery("select THIS.name from This ORDER BY THIS.name").getSingleResult();
-			s.createSelectionQuery("select count(THIS) from This").getSingleResult();
-			s.createSelectionQuery("select id(ThIs) from This").getSingleResult();
+			s.createSelectionQuery("select THIS.name from This ORDER BY THIS.name", String.class).getSingleResult();
+			s.createSelectionQuery("select count(THIS) from This", Long.class).getSingleResult();
+			s.createSelectionQuery("select id(ThIs) from This", Long.class).getSingleResult();
 		});
 	}
 	@Entity(name="This")

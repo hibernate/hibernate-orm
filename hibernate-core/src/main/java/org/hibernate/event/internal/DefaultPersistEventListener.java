@@ -15,7 +15,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
-import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
@@ -33,7 +32,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class DefaultPersistEventListener
 		extends AbstractSaveEventListener<PersistContext>
-		implements PersistEventListener, CallbackRegistryConsumer {
+		implements PersistEventListener {
 
 	@Override
 	protected CascadingAction<PersistContext> getCascadeAction() {

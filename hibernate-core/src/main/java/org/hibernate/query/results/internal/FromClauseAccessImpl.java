@@ -7,6 +7,7 @@ package org.hibernate.query.results.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -15,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * FromClauseAccess implementation used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  *
  * @author Steve Ebersole
  */

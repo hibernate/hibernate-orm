@@ -94,7 +94,7 @@ public class TreatJoinTest {
 			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
 			Root<Bid> bid = query.from( Bid.class );
 
-			Join<Object, Object> item = bid.join( "item" );
+			Join<Bid, Object> item = bid.join( "item" );
 			cb.treat( item, Book.class );
 			cb.treat( item, Car.class );
 
@@ -114,7 +114,7 @@ public class TreatJoinTest {
 			Root<Bid> bid = query.from( Bid.class );
 
 			final Join<Bid, Book> item = bid.join( "item" );
-			final Join<Object, Object> price = item.join( "price" );
+			final Join<Book, Object> price = item.join( "price" );
 			Join<Bid, Book> book = cb.treat( item, Book.class );
 
 			Join<Book, Author> owner = book.join( "author" );
@@ -154,7 +154,7 @@ public class TreatJoinTest {
 			Root<Book> treatedRoot =  cb.treat(root, Book.class);
 			criteria.where(
 					cb.equal(
-							treatedRoot.<Book, Author>join("author").<String>get("name"),
+							treatedRoot.join("author").<String>get("name"),
 							"Andrea Camilleri"));
 			final List<Item> resultList = entityManager.createQuery( criteria.select( treatedRoot ) ).getResultList();
 			final Item item = resultList.get( 0 );
@@ -174,7 +174,7 @@ public class TreatJoinTest {
 			Root<Book> treatedRoot =  cb.treat(root, Book.class);
 			criteria.where(
 					cb.equal(
-							treatedRoot.<Book, Author>join("author").<String>get("name"),
+							treatedRoot.join("author").<String>get("name"),
 							"Andrea Camilleri"));
 			entityManager.createQuery(criteria.select(treatedRoot)).getResultList();
 		} );
@@ -187,8 +187,7 @@ public class TreatJoinTest {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Bid> criteria = cb.createQuery(Bid.class);
 			Root<Bid> root = criteria.from(Bid.class);
-			Join<Book, Author> join = cb.treat(
-					root.<Bid, Item> join("item"), Book.class)
+			Join<Book, Author> join = cb.treat(root.join("item"), Book.class)
 					.join("author");
 			criteria.where(cb.equal(join.<String> get("name"), "Andrea Camilleri"));
 			entityManager.createQuery(criteria.select(root)).getResultList();

@@ -121,7 +121,7 @@ public class LoadAndFetchGraphAssociationNotExplicitlySpecifiedTest {
 
 			var graph = session.createEntityGraph( RootEntity.class );
 			graph.addAttributeNode( propertySpecifiedInGraph );
-			query.applyGraph( graph, FETCH );
+			query.setEntityGraph( graph, FETCH );
 
 			var resultList = query.list();
 			assertThat( resultList ).isNotEmpty();
@@ -150,7 +150,7 @@ public class LoadAndFetchGraphAssociationNotExplicitlySpecifiedTest {
 			if ( graphSemantic != null ) {
 				var graph = session.createEntityGraph( RootEntity.class );
 				graph.addAttributeNode( propertySpecifiedInGraph );
-				query.applyGraph( graph, graphSemantic );
+				query.setEntityGraph( graph, graphSemantic );
 			} // else just run the query without a graph
 
 			var resultList = query.list();

@@ -4,15 +4,21 @@
  */
 package org.hibernate.internal;
 
+import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityHandler;
+import jakarta.persistence.EntityListenerRegistration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
+import jakarta.persistence.Statement;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -65,6 +71,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
@@ -108,6 +115,7 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
+import java.lang.annotation.Annotation;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -123,6 +131,7 @@ import java.util.function.Function;
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Locale.ROOT;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
@@ -381,6 +390,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EventListenerGroups getEventListenerGroups() {
 		return eventListenerGroups;
+	}
+
+	@Override
+	public <E> EntityListenerRegistration addListener(
+			Class<E> entityClass,
+			Class<? extends Annotation> callbackType,
+			Consumer<? super E> callback) {
+		//noinspection unchecked
+		return getMappingMetamodel()
+				.getEntityDescriptor( entityClass )
+				.getEntityCallbacks()
+				.addListener( CallbackType.fromCallbackAnnotation( callbackType ), callback );
 	}
 
 	@Override
@@ -702,6 +723,24 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public EntityAgent createEntityAgent() {
+		validateNotClosed();
+		return openStatelessSession();
+	}
+
+	@Override
+	public EntityAgent createEntityAgent(Map<?, ?> map) {
+		assert map != null;
+		var agent = createEntityAgent();
+		map.forEach( (key,val) -> {
+			if ( key instanceof String prop ) {
+				agent.setProperty( prop, val );
+			}
+		} );
+		return agent;
+	}
+
+	@Override
 	public NodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return queryEngine.getCriteriaBuilder();
@@ -865,14 +904,62 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public Map<String, StatementReference> getNamedStatements() {
+		return getNamedObjectRepository().getNamedMutations();
+	}
+
+	@Override
 	public void addNamedQuery(String name, Query query) {
-		getNamedObjectRepository().registerNamedQuery( name, query );
+		if ( query instanceof TypedQuery<?> typedQuery ) {
+			addNamedQuery( name, typedQuery );
+		}
+		else if ( query instanceof Statement statement ) {
+			addNamedStatement( name, statement );
+		}
+		else {
+			throw new HibernateException( String.format( ROOT,
+					"Unknown query type for registering as named query (%s) : %s",
+					name,
+					query
+			) );
+		}
 	}
 
 	@Override
 	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
 		return getNamedObjectRepository().registerNamedQuery( name, query );
 	}
+
+	@Override
+	public StatementReference addNamedStatement(String name, Statement statement) {
+		return getNamedObjectRepository().registerNamedMutation( name, statement );
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+	}
+
+	@Override
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
+	}
+	@Override
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+		return getJpaMetamodel().getNamedEntityGraphs( entityType );
+	}
+
+	@Override
+	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
+		final var result = new HashMap<String, ResultSetMapping<R>>();
+		getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
+			if ( memento.canBeTreatedAsResultSetMapping( resultType, this ) ) {
+				result.put( memento.getName(), memento.toJpaMapping( this ) );
+			}
+		} );
+		return result;
+	}
+
 
 	@Override
 	public <T> T unwrap(Class<T> type) {
@@ -912,28 +999,43 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
-	}
-
-	@Override
-	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
-		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
-	}
-
-	@Override
-	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
-		return getJpaMetamodel().getNamedEntityGraphs( entityType );
-	}
-
-	@Override
 	public void runInTransaction(Consumer<EntityManager> work) {
 		inTransaction( work );
 	}
 
 	@Override
+	public <H extends EntityHandler> void runInTransaction(Class<H> handlerType, Consumer<H> consumer) {
+		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			inTransaction( (Consumer<EntityManager>) consumer );
+		}
+		else if ( EntityAgent.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			inStatelessTransaction( (Consumer<EntityAgent>) consumer );
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown EntityHandler type passed : " + handlerType.getName() );
+		}
+	}
+
+	@Override
 	public <R> R callInTransaction(Function<EntityManager, R> work) {
 		return fromTransaction( work );
+	}
+
+	@Override
+	public <R, H extends EntityHandler> R callInTransaction(Class<H> handlerType, Function<H, R> function) {
+		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			return fromTransaction( (Function<EntityManager,R>) function );
+		}
+		else if ( EntityAgent.class.isAssignableFrom( handlerType ) ) {
+			//noinspection unchecked
+			return fromStatelessTransaction( (Function<EntityAgent,R>) function );
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown EntityHandler type passed : " + handlerType.getName() );
+		}
 	}
 
 	@Override

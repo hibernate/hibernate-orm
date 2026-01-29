@@ -25,7 +25,7 @@ public class RefEdMapKeyEntity {
 
 	@Audited
 	@OneToMany(mappedBy = "reference")
-	@MapKey(name = "data")
+	@MapKey("data")
 	private Map<String, RefIngMapKeyEntity> idmap;
 
 	public RefEdMapKeyEntity() {

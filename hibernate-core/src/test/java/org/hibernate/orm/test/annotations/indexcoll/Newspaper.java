@@ -39,7 +39,7 @@ public class Newspaper {
 	}
 
 	@ManyToMany
-	@MapKey(name = "title")
+	@MapKey("title")
 	public Map<String, News> getNews() {
 		return news;
 	}

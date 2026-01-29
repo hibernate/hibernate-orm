@@ -4,9 +4,9 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -236,7 +236,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 			if ( isFollowOnLockStrategy ) {
 				FollowOnLockingAction.apply( lockOptions, lockingTarget, lockingClauseStrategy, this );
 			}
-			else if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			else if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
 				CollectionLockingAction.apply( lockOptions, lockingTarget, this );
 			}
 			if ( preActions == null && postActions == null ) {

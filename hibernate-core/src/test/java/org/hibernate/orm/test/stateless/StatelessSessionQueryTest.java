@@ -61,7 +61,7 @@ public class StatelessSessionQueryTest {
 					Query query = session.createQuery( queryString );
 					assertEquals( 1, query.getResultList().size() );
 
-					query = session.getNamedQuery( Contact.class.getName() + ".contacts" );
+					query = session.createNamedQuery( Contact.class.getName() + ".contacts" );
 					assertEquals( 1, query.getResultList().size() );
 
 					NativeQuery sqlQuery = session.createNativeQuery( "select id from Contact" );

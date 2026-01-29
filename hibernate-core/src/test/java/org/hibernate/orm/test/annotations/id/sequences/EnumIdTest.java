@@ -53,7 +53,7 @@ public class EnumIdTest {
 
 		scope.inTransaction(
 				session -> {
-					PlanetCheatSheet mercuryFromDb = session.get( PlanetCheatSheet.class, Planet.MERCURY );
+					PlanetCheatSheet mercuryFromDb = session.find( PlanetCheatSheet.class, Planet.MERCURY );
 					assertNull( mercuryFromDb );
 				}
 		);

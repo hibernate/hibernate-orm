@@ -24,7 +24,7 @@ class Book {
 
 	@OneToMany(cascade = PERSIST,
 			mappedBy = "isbn")
-	@MapKey(name = "name")
+	@MapKey("name")
 	Map<String,Chapter> chapters;
 
 	Book(String isbn) {

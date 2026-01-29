@@ -18,8 +18,8 @@
                         insertable="true"
                         updatable="true"
                         unique="true"
-                        comment="The name column"
                         options="the options" >
+                    <comment>The name column</comment>
                     <check-constraint constraint="nombre is not null"/>
                 </column>
             </basic>

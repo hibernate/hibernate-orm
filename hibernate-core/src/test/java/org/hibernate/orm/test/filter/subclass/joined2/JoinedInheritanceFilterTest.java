@@ -67,7 +67,7 @@ public class JoinedInheritanceFilterTest implements SessionFactoryScopeAware {
 		BiConsumer<SessionFactoryScope, Consumer<SessionImplementor>> kind1 = SessionFactoryScope::inTransaction;
 		TriFunction<Session, Class<?>, Object, Object> find1 = Session::find;
 		BiConsumer<SessionFactoryScope, Consumer<StatelessSessionImplementor>> kind2 = SessionFactoryScope::inStatelessTransaction;
-		TriFunction<StatelessSession, Class<?>, Object, Object> find2 = StatelessSession::get;
+		TriFunction<StatelessSession, Class<?>, Object, Object> find2 = StatelessSession::find;
 		return List.of(
 				Arguments.of( kind1, find1 ),
 				Arguments.of( kind2, find2 )

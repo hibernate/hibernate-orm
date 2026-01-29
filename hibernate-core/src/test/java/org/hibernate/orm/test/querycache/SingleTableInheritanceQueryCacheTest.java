@@ -7,7 +7,7 @@ package org.hibernate.orm.test.querycache;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -71,7 +71,7 @@ public class SingleTableInheritanceQueryCacheTest {
 
 	private void executeQuery(
 			SessionImplementor session,
-			Query<AbstractEntity> query,
+			SelectionQuery<AbstractEntity> query,
 			Class<? extends AbstractEntity> resultClass) {
 		final StatisticsImplementor statistics = session.getSessionFactory().getStatistics();
 		query.setHint( HibernateHints.HINT_CACHEABLE, true );

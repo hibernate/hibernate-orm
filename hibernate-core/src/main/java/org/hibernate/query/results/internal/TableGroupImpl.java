@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -16,7 +17,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * TableGroup implementation used while building
- * {@linkplain org.hibernate.query.results.ResultSetMapping} references.
+ * {@linkplain ResultSetMapping} references.
  *
  * @author Steve Ebersole
  */

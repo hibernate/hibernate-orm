@@ -39,7 +39,7 @@ public class QueryApiTests {
 		catch (IllegalStateException ise) {
 			assertThat( ise.getCause() ).isNotNull();
 			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-			assertThat( ise.getMessage() ).endsWith( "[" + hql + "]" );
+			assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
 		}
 	}
 
@@ -55,7 +55,7 @@ public class QueryApiTests {
 			catch (IllegalStateException ise) {
 				assertThat( ise.getCause() ).isNotNull();
 				assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-				assertThat( ise.getMessage() ).endsWith( "[" + hql + "]" );
+				assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
 			}
 		} );
 
@@ -68,7 +68,7 @@ public class QueryApiTests {
 		catch (IllegalStateException ise) {
 			assertThat( ise.getCause() ).isNotNull();
 			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-			assertThat( ise.getMessage() ).endsWith( "[" + hql + "]" );
+			assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
 		}
 	}
 

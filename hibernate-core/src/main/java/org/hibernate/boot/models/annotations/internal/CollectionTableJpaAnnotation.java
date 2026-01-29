@@ -7,6 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.CheckConstraint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
@@ -22,6 +23,7 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applySchema;
+import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectIndexes;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectUniqueConstraints;
 
@@ -32,10 +34,12 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	private String name;
 	private String catalog;
 	private String schema;
+	private String comment;
 	private jakarta.persistence.JoinColumn[] joinColumns;
 	private jakarta.persistence.ForeignKey foreignKey;
 	private jakarta.persistence.UniqueConstraint[] uniqueConstraints;
 	private jakarta.persistence.Index[] indexes;
+	private jakarta.persistence.CheckConstraint[] check;
 	private String options;
 
 	/**
@@ -45,10 +49,12 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.name = "";
 		this.catalog = "";
 		this.schema = "";
+		this.comment = "";
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
 		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
+		this.check = new jakarta.persistence.CheckConstraint[0];
 		this.options = "";
 	}
 
@@ -59,10 +65,12 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.name = annotation.name();
 		this.catalog = annotation.catalog();
 		this.schema = annotation.schema();
+		this.comment = annotation.comment();
 		this.joinColumns = extractJdkValue( annotation, COLLECTION_TABLE, "joinColumns", modelContext );
 		this.foreignKey = extractJdkValue( annotation, COLLECTION_TABLE, "foreignKey", modelContext );
 		this.uniqueConstraints = extractJdkValue( annotation, COLLECTION_TABLE, "uniqueConstraints", modelContext );
 		this.indexes = extractJdkValue( annotation, COLLECTION_TABLE, "indexes", modelContext );
+		this.check = extractJdkValue( annotation, COLLECTION_TABLE, "check", modelContext );
 		this.options = extractJdkValue( annotation, COLLECTION_TABLE, "options", modelContext );
 	}
 
@@ -73,10 +81,12 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.name = (String) attributeValues.get( "name" );
 		this.catalog = (String) attributeValues.get( "catalog" );
 		this.schema = (String) attributeValues.get( "schema" );
+		this.comment = (String) attributeValues.get( "comment" );
 		this.joinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "joinColumns" );
 		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
 		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
 		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
 		this.options = (String) attributeValues.get( "options" );
 	}
 
@@ -114,6 +124,15 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.schema = value;
 	}
 
+
+	@Override
+	public String comment() {
+		return comment;
+	}
+
+	public void comment(String comment) {
+		this.comment = comment;
+	}
 
 	@Override
 	public jakarta.persistence.JoinColumn[] joinColumns() {
@@ -156,6 +175,16 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 
 
 	@Override
+	public CheckConstraint[] check() {
+		return check;
+	}
+
+	public void check(CheckConstraint[] check) {
+		this.check = check;
+	}
+
+
+	@Override
 	public String options() {
 		return options;
 	}
@@ -168,6 +197,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		applyOptionalString( jaxbTable.getName(), this::name );
 		applyCatalog( jaxbTable, this, xmlDocumentContext );
 		applySchema( jaxbTable, this, xmlDocumentContext );
+		applyOptionalString( jaxbTable.getComment(), this::comment);
 		applyOptionalString( jaxbTable.getOptions(), this::options );
 
 		joinColumns( JoinColumnProcessing.transformJoinColumnList( jaxbTable.getJoinColumns(), xmlDocumentContext ) );
@@ -181,6 +211,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 
 		indexes( collectIndexes( jaxbTable.getIndexes(), xmlDocumentContext ) );
 		uniqueConstraints( collectUniqueConstraints( jaxbTable.getUniqueConstraints(), xmlDocumentContext ) );
+		check( collectCheckConstraints( jaxbTable.getCheckConstraints(), xmlDocumentContext ) );
 	}
 
 

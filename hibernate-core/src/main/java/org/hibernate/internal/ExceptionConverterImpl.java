@@ -79,7 +79,11 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 
 	@Override
 	public RuntimeException convert(HibernateException exception, LockOptions lockOptions) {
-		if ( exception instanceof StaleStateException staleStateException ) {
+		if ( exception instanceof IllegalQueryOperationException ) {
+			// JPA requires IAE
+			throw new IllegalArgumentException( exception.getMessage(), exception );
+		}
+		else if ( exception instanceof StaleStateException staleStateException ) {
 			final var converted = wrapStaleStateException( staleStateException );
 			rollbackIfNecessary( converted );
 			return converted;

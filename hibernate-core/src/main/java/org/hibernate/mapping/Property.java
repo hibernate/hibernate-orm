@@ -4,12 +4,6 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.StringTokenizer;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -20,8 +14,9 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.jpa.event.internal.EmbeddableCallback;
-import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.spi.MemberDetails;
@@ -31,17 +26,18 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
-import org.hibernate.type.MappingContext;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
+import java.io.Serializable;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.StringTokenizer;
+
 import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.cfg.MappingSettings.WRAPPER_ARRAY_HANDLING;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -512,27 +508,6 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
-	/**
-	 * @deprecated See discussion in {@link EmbeddableCallback}.
-	 */
-	@Deprecated(since = "7")
-	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
-		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
-			if ( this.callbackDefinitions == null ) {
-				this.callbackDefinitions = new ArrayList<>();
-			}
-			this.callbackDefinitions.addAll( callbackDefinitions );
-		}
-	}
-
-	/**
-	 * @deprecated See discussion in {@link EmbeddableCallback}.
-	 */
-	@Deprecated(since = "7")
-	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
-		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
-	}
-
 	public String getReturnedClassName() {
 		return returnedClassName;
 	}
@@ -570,7 +545,6 @@ public class Property implements Serializable, MetaAttributable {
 		property.setGeneric( isGeneric() );
 		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
-		property.addCallbackDefinitions( getCallbackDefinitions() );
 		property.setReturnedClassName( getReturnedClassName() );
 		return property;
 	}

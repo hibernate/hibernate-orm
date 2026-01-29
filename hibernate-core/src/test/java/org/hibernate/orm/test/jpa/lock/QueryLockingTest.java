@@ -52,14 +52,14 @@ public class QueryLockingTest {
 		scope.inTransaction( em -> {
 			org.hibernate.query.Query query = em.createQuery( "from Lockable l" )
 					.unwrap( org.hibernate.query.Query.class );
-			assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
+			assertEquals( LockModeType.NONE, query.getLockMode() );
 
 			// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
 			query.setLockMode( LockModeType.READ );
-			assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
+			assertEquals( LockModeType.OPTIMISTIC, query.getLockMode() );
 
 			query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.PESSIMISTIC_WRITE );
-			assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getLockMode() );
+			assertEquals( LockModeType.PESSIMISTIC_WRITE, query.getLockMode() );
 		} );
 	}
 
@@ -70,7 +70,7 @@ public class QueryLockingTest {
 			org.hibernate.query.Query query = em.createQuery( "delete from Lockable l" )
 					.unwrap( org.hibernate.query.Query.class );
 
-			assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
+			assertEquals( LockMode.NONE, query.getHibernateLockMode() );
 
 			query.setLockMode( LockModeType.NONE );
 
@@ -78,7 +78,7 @@ public class QueryLockingTest {
 		// ensure other modes still throw the exception
 		scope.inTransaction( em -> {
 			org.hibernate.query.Query query = em.createQuery( "delete from Lockable l" ).unwrap( org.hibernate.query.Query.class );
-			assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
+			assertEquals( LockMode.NONE, query.getHibernateLockMode() );
 			Assertions.assertThrows(
 					IllegalStateException.class,
 					() -> {
@@ -113,10 +113,10 @@ public class QueryLockingTest {
 			// however, we should be able to set it using hints
 			query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.READ );
 			// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
-			assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
+			assertEquals( LockMode.OPTIMISTIC, query.getQueryOptions().getLockOptions().getLockMode() );
 
 			query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.PESSIMISTIC_WRITE );
-			assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getLockMode() );
+			assertEquals( LockMode.PESSIMISTIC_WRITE, query.getQueryOptions().getLockOptions().getLockMode() );
 
 		} );
 	}

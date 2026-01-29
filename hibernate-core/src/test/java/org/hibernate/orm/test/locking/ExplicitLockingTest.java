@@ -15,6 +15,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.Session;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
@@ -183,7 +184,7 @@ public class ExplicitLockingTest {
 					.setMaxResults( 10 )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.unwrap( Query.class )
-					.setFollowOnLocking( false )
+					.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
 					.getResultList();
 			//end::locking-follow-on-explicit-example[]
 		});

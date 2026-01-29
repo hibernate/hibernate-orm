@@ -19,12 +19,21 @@ import org.hibernate.query.TypedTupleTransformer;
  * a user specified class which will be populated via setter
  * methods or fields matching the alias names.
  *
- * @author max
+ * @see AliasToBeanConstructorResultTransformer
+ * @see jakarta.persistence.sql.ConstructorMapping
+ * @see jakarta.persistence.ConstructorResult
  *
- * @deprecated since {@link ResultTransformer} is deprecated
+ * @deprecated Use dynamic instantiation instead, either
+ * directly in HQL/JPQL ({@code select new MyClass(...) ...}) or
+ * using a {@linkplain jakarta.persistence.ConstructorResult}
+ *
+ * @author max
  */
 @Deprecated
-public class AliasToBeanResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
+public class AliasToBeanResultTransformer<T> implements TypedTupleTransformer<T> {
+	public static <X> TypedTupleTransformer<X> forBeanClass(Class<X> type) {
+		return new AliasToBeanResultTransformer<>( type );
+	}
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached
 	// 		for performance), we really cannot properly define equality for

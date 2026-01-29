@@ -38,8 +38,8 @@ import org.hibernate.orm.test.cid.Order;
 import org.hibernate.orm.test.cid.Product;
 import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.spi.SqmQuery;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -56,7 +56,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -238,7 +237,7 @@ public class ASTParserLoadingTest {
 					Query<?> query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
 					query.list();
 					SqmSelectStatement<?> sqmStatement =
-							(SqmSelectStatement<?>) query.unwrap( SqmQuery.class ).getSqmStatement();
+							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 1 );
 					SqmSelection<?> typeSelection = selections.get( 0 );
@@ -248,7 +247,7 @@ public class ASTParserLoadingTest {
 					// test
 					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
 					query.list();
-					sqmStatement = (SqmSelectStatement<?>) query.unwrap( SqmQuery.class ).getSqmStatement();
+					sqmStatement = (SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 1 );
 					typeSelection = selections.get( 0 );
@@ -1454,7 +1453,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					final Query<?> query = session.createQuery( "select h.name from Human h" );
 					final SqmSelectStatement<?> sqmStatement =
-							(SqmSelectStatement<?>) query.unwrap( SqmQuery.class ).getSqmStatement();
+							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections()
 							.get( 0 );
@@ -1837,7 +1836,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
 					final SqmSelectStatement<?> sqmStatement =
-							(SqmSelectStatement<?>) query.unwrap( SqmQuery.class ).getSqmStatement();
+							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections()
 							.get( 0 );
@@ -2149,7 +2148,7 @@ public class ASTParserLoadingTest {
 	}
 
 	private static void verifyAnimalZooSelection(Query q) {
-		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQuery.class ).getSqmStatement();
+		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmStatementAccess.class ).getSqmStatement();
 		final SqmSelection<?> sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( sqmSelection.getSelectableNode() ).isInstanceOf( SqmPath.class );
 		final SqmPath<?> selectedPath = (SqmPath<?>) sqmSelection.getSelectableNode();
@@ -2582,7 +2581,7 @@ public class ASTParserLoadingTest {
 					session.persist( a );
 
 					Query<?> q = session.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
-					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQuery.class )
+					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmStatementAccess.class )
 							.getSqmStatement();
 					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 2 );
@@ -2590,7 +2589,7 @@ public class ASTParserLoadingTest {
 					assertThat( selections.get( 1 ).getAlias() ).isNull();
 
 					q = session.createQuery( "select count(*), avg(a.bodyWeight) as avg from Animal a" );
-					sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQuery.class ).getSqmStatement();
+					sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 2 );
 
@@ -3503,7 +3502,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					List list = session.createQuery(
 									"select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description" )
-							.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP )
+							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
 					assertThat( list.size() ).isEqualTo( 2 );
 					Map<String, Animal> m1 = (Map<String, Animal>) list.get( 0 );
@@ -3526,7 +3525,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( query )
-							.setResultTransformer( Transformers.aliasToBean( Animal.class ) ).list();
+							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).list();
 
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
@@ -3541,7 +3540,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults sr = session.createQuery( query )
-							.setResultTransformer( Transformers.aliasToBean( Animal.class ) ).scroll()) {
+							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
 						assertThat( session.contains( sr.get() ) ).isFalse();
@@ -3552,12 +3551,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
-							.setResultTransformer( new ResultTransformer() {
-								@Override
-								public Object transformTuple(Object[] tuple, String[] aliases) {
-									return tuple[0];
-								}
-							} )
+							.setTupleTransformer( (tuple, aliases) -> tuple[0] )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
@@ -3580,7 +3574,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( query )
-							.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP ).list();
+							.setTupleTransformer( Transformers.mapTransformer() ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).isInstanceOf( Map.class );
 					Map map = ((Map) results.get( 0 ));
@@ -3599,7 +3593,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults sr = session.createQuery( query )
-							.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP ).scroll()) {
+							.setTupleTransformer( Transformers.mapTransformer() ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).isInstanceOf( Map.class );
 					}

@@ -5,12 +5,13 @@
 package org.hibernate.orm.test.jpa.xml.versions;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.InvalidMappingException;
@@ -146,6 +147,11 @@ public class JpaXsdVersionsTest {
 			return managedClassNames;
 		}
 
+		@Override
+		public List<String> getAllManagedClassNames() {
+			return managedClassNames;
+		}
+
 		public String getPersistenceProviderClassName() {
 			return null;
 		}
@@ -182,6 +188,11 @@ public class JpaXsdVersionsTest {
 
 		public ValidationMode getValidationMode() {
 			return null;
+		}
+
+		@Override
+		public FetchType getDefaultToOneFetchType() {
+			return FetchType.EAGER;
 		}
 
 		private final Properties properties = new Properties();

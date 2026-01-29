@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**

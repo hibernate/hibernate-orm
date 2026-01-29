@@ -49,8 +49,8 @@ public class NoDepthTests {
 	private void testIt(boolean configureMaxDepth) {
 		try ( final SessionFactoryImplementor sf = buildSessionFactory( configureMaxDepth ) ) {
 			inTransaction( sf, (session) -> {
-				session.createSelectionQuery( "from SysModule" ).getResultList();
-				session.createSelectionQuery( "from SysModule2" ).getResultList();
+				session.createSelectionQuery( "from SysModule", SysModule.class ).getResultList();
+				session.createSelectionQuery( "from SysModule2", SysModule2.class ).getResultList();
 			} );
 		}
 	}
@@ -97,8 +97,8 @@ public class NoDepthTests {
 			try ( final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class ) ) {
 				// play around with the SF and make sure it is operable
 				inTransaction( sf, (s) -> {
-					s.createSelectionQuery( "from SysModule" ).list();
-					s.createSelectionQuery( "from SysModule2" ).list();
+					s.createSelectionQuery( "from SysModule", SysModule.class ).list();
+					s.createSelectionQuery( "from SysModule2", SysModule2.class ).list();
 				});
 			}
 		}

@@ -9,11 +9,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -38,7 +40,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private List<String> qualifierAnnotationNames = List.of();
 	private SharedCacheMode cacheMode;
 	private ValidationMode validationMode;
-	@SuppressWarnings("removal")
+	private FetchType defaultToOneFetchType = FetchType.EAGER;
 	private PersistenceUnitTransactionType transactionType;
 
 	private List<String> mappingFiles;
@@ -83,7 +85,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionType;
 	}
@@ -106,6 +108,15 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return validationMode;
 	}
 
+	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return defaultToOneFetchType;
+	}
+
+	public void setDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+		this.defaultToOneFetchType = defaultToOneFetchType;
+	}
+
 	public void setValidationMode(ValidationMode validationMode) {
 		this.validationMode = validationMode;
 	}
@@ -125,6 +136,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	@Override
 	public List<String> getManagedClassNames() {
 		return managedClassNames == null ? emptyList() : managedClassNames;
+	}
+
+	@Override
+	public List<String> getAllManagedClassNames() {
+		return getManagedClassNames();
 	}
 
 	public void applyManagedClassNames(String... managedClassNames) {

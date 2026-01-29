@@ -6,6 +6,7 @@ package org.hibernate.boot.jaxb.mapping.spi;
 
 import java.util.List;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
@@ -15,7 +16,7 @@ import org.hibernate.FlushMode;
 public interface JaxbNamedQuery extends JaxbQueryHintContainer {
 	String getQuery();
 	String getComment();
-	Integer getTimeout();
+	Timeout getTimeout();
 	Boolean isCacheable();
 	String getCacheRegion();
 	Integer getFetchSize();

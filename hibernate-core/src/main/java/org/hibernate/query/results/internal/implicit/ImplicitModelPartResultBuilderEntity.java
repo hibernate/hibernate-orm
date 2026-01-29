@@ -6,8 +6,8 @@ package org.hibernate.query.results.internal.implicit;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultBuilderEntityValued;
+import org.hibernate.query.results.spi.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilderEntityValued;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;

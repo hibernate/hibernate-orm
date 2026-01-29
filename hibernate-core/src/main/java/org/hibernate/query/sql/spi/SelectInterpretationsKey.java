@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 

@@ -49,14 +49,14 @@ public class NoFromTest {
 	public void testError(SessionFactoryScope scope) {
 		scope.inSession( s -> {
 			try {
-				s.createSelectionQuery("where id = 1").getResultList();
+				s.createSelectionQuery("where id = 1", Object.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}
 		});
 		scope.inSession( s -> {
 			try {
-				s.createSelectionQuery("order by id desc").getResultList();
+				s.createSelectionQuery("order by id desc", Object.class).getResultList();
 				fail();
 			}
 			catch (SemanticException se) {}

@@ -59,7 +59,7 @@ public class BidirectionalMapTest {
 		private Long id;
 
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
-		@MapKey(name = "type")
+		@MapKey("type")
 		@MapKeyEnumerated
 		private Map<PhoneType, Phone> phoneRegister = new HashMap<>();
 

@@ -2,7 +2,7 @@
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 7.3
+:version: 8.0
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -23,6 +23,12 @@ earlier versions, see any other pertinent migration guides as well.
 See the link:{releaseSeriesBase}[website] for the list of requirements for the {version} series.
 
 
+[[jpa4]]
+=== Jakarta Persistence 4.0
+
+One specific requirement change that is important to call out is the move to from Jakarta Persistence version 3.2 to 4.0 which has a number of impacts, many of which are discussed below.
+
+See https://hibernate.atlassian.net/browse/HHH-20028[this issue] for more details.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // New Features
@@ -43,7 +49,68 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
-The obsolete `@Columns` annotation was removed, since this is no longer used.
+
+[[stateless]]
+=== StatelessSession
+
+Jakarta Persistence now defines a contract for "stateless" processing, named `EntityAgent`, similar to Hibernate's `StatelessSession`.
+Hibernate's `StatelessSession` now implements `EntityAgent`.
+2 methods on `EntityAgent` clash with methods already defined on `StatelessSession` -
+
+* `insert()` - `EntityAgent` defines a `void` return type, whereas Hibernate has historically returned the identifier of the inserted entity.
+* `fetch()` - `EntityAgent` defines that the fetched value be returned, whereas `StatelessSession` has historically defined a `void` return type.
+
+In both cases, `StatelessSession` has been changed to match the `EntityAgent` signatures.
+
+
+[[timeout]]
+=== Query and Transaction Timeouts
+
+Historically, both Hibernate and Jakarta Persistence have defined timeouts as integer values.
+Confusingly, Hibernate generally used second precision while Jakarta Persistence used millisecond precision.
+Starting in 3.2, Jakarta Persistence added a new `Timeout` class which helps alleviate this potential confusion.
+Originally this new `Timeout` type was not exposed on any API directly, so there was no impact from an API perspective.
+However, this has changed a bit in 4.0 where `Timeout` *is* now exposed on certain APIs.
+This causes a signature conflict with a few of Hibernate API methods; as part of fixing those conflicts, it was decided to change all exposures of timeout in Hibernate APIs to use `Timeout` as this helps clarify these confusions.
+
+
+[[query-api]]
+=== Query API
+
+One of the biggest changes in Jakarta Persistence 4.0 is the better modeling of "queries" into selections (`TypedQuery`) and mutations (its new `Statement` contract),
+aligning closely with Hibernate's already existing `SelectionQuery` and `MutationQuery` contracts.
+At the same time, it deprecated all "operation methods" from its "raw" `Query` contract.
+
+Hibernate's Query contracts implement the Jakarta Persistence ones, so changes were needed here.
+
+:fn_selectionquery: footnote:[Unfortunately that means `SelectionQuery` now inherits the `executeUpdate()` method from JPA's `Query`, but as mentioned that method is deprecated.]
+:fn_mutationquery: footnote:[Unfortunately that means `MutationQuery` now inherits `getResultList()`, and other such methods from JPA's `Query`, but as mentioned these methods are all deprecated.]
+
+* Hibernate's `Query` interface is still typed, but it now extends from JPA's `Query` rather than `TypedQuery`.
+* Hibernate's `SelectionQuery` now implements `TypedQuery`{fn_selectionquery}.
+* Hibernate's `MutationQuery` now implements the new `Statement` contract{fn_mutationquery}.
+
+Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hibernate's variants) may no longer be used to define mutation queries -
+
+* `@NamedQuery` - A `SelectionQuery` defined using HQL/JPQL
+* `@NamedStatement` - A `MutationQuery` defined using HQL/JPQL
+* `@NamedNativeQuery` - A `SelectionQuery` defined using native SQL
+* `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
+
+
+[[graph-attr-node]]
+=== AttributeNode Subgraphs
+
+As part of its support for "entity graphs", Hibernate's `org.hibernate.graph.AttributeNode` contract extends fropm the Jakarta Persistence `jakarta.persistence.AttributeNode`.
+Starting in version 4.0, Jakarta Persistence has "fixed" the use of raw types for the `AttributeNode#getSubgraphs` and `AttributeNode#getKeySubgraphs` methods.
+Hibernate has therefore needed to do the same in its `org.hibernate.graph.AttributeNode`.
+
+
+[[criteria-join-fetch]]
+=== Join and Fetch in Criteria
+
+Jakarta Persistence has changed/fixed the type signature of methods in the Criteria API which return Join and Fetch based on the String name of attributes.  This can lead to compilation issues if an application uses these methods in certain ways.
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,6 +131,23 @@ In particular, `ClassmateContext` was completely removed.
 
 Raw `Map` types were eliminated from the signatures of methods of the class
 `org.hibernate.jpa.boot.spi.Bootstrap`.
+
+[[query-memento]]
+=== Query Memento
+
+Hibernate uses a number of implementations of its `NamedQueryMemento` contract to
+model "named queries".  Starting in version 3.2, Jakarta Persistence added the
+`TypedQueryReference` contract intended to serve the much the same goal.
+Hibernate's `NamedQueryMemento` implementations were changed to extend from
+`TypedQueryReference`.
+
+In version 4.0, Jakarta Persistence has added some additional methods to
+`TypedQueryReference` which now conflict with some of Hibernate's existing methods
+requiring a rename.  Notably, the addition of `TypedQueryReference#getParameterTypes`
+caused conflict's with Hibernate's `NamedSqmQueryMemento#getParameterTypes`.  To
+address this conflict, we've renamed the `NamedSqmQueryMemento` method to
+`#getAnticipatedParameterTypes`.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
@@ -87,21 +171,58 @@ query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
 which collapses duplicate results according to value equality.
 
-=== Envers association not-audited target mode
+[[session-get]]
+=== Session.get
 
-Previously, if an association of an Envers `@Audited` entity pointing to another
-`@Audited` entity was defined as:
+Jakarta Persistence now defines a series of overloaded `EntityHandler.get()` methods as corollaries to `EntityHandler.find()`.
+These methods are defined to throw an `EntityNotFoundException` rather than return null.
+This operates quite differently from the older Hibernate `Session.get()` methods which
 
-[source,java]
-@ManyToOne
-@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-private OtherEntity otherEntity;
+* still returned null if no entity with that is was found
+* force initialized the entity, if there was one and it was previously uninitialized.
 
-the `targetAuditMode = RelationTargetAuditMode.NOT_AUDITED` setting was ignored,
-and when reading a historic version of the owning entity, the associated `OtherEntity`
-was also read from its historic audit table (at the relevant revision).
-As of Hibernate 7.3, the `NOT_AUDITED` setting is now respected: the associated
-`OtherEntity` is read from its current state, not from its historic audit table.
+Applications which use(d) `Session.get()` should be aware of this change in behavior.
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// XSD changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[behavior-changes]]
+== Changes in XSD
+
+This section describes changes in XML Schema Descriptors
+
+[[xsd-comments]
+=== Table and Column Comments
+
+Previous versions of the `mapping.xsd` defined table and column comments (for schema export)
+using XSD attributes.  This was a decision made at the time to facilitate users migrating
+from `hbm.xml` mapping format.  In the intervening period, Jakarta Persistence has
+also added comments to its table and column XSD types, but using dedicated element.
+
+We now align with the Jakarta Persistence approach of using elements.  This will require
+changes any `mapping.xml` documents which define table or column comments.  E.g.,
+
+[source,xml]
+----
+<entity ...>
+    <table ... comment="some comment"/>
+</entity>
+----
+
+would need to be changed to
+
+[source,xml]
+----
+<entity ...>
+    <table>
+         <comment>some comment</comment>
+    </table>
+</entity>
+----
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
@@ -113,9 +234,10 @@ As of Hibernate 7.3, the `NOT_AUDITED` setting is now respected: the associated
 This section describes changes to DDL generated by the schema export tooling.
 Such changes typically do not impact programs using a relational schema managed externally to Hibernate.
 
-=== Not null constraints on version columns
 
-Columns mapped by `@Version` fields are now declared `not null` by default.
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Dependency changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[dependency-changes]]
 == Changes in Dependencies

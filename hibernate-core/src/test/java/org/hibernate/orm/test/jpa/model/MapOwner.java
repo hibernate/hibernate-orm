@@ -20,7 +20,7 @@ public class MapOwner {
 	private Long id;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	@MapKey(name = "relationship")
+	@MapKey("relationship")
 	private Map<Relationship, MapContent> contents;
 
 	public Long getId() {

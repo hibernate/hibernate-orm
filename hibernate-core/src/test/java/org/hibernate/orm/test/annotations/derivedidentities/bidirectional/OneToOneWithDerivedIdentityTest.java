@@ -231,7 +231,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 					session.getTransaction().begin();
 
-					Query q = session.getNamedQuery( "PersonQuery" );
+					Query q = session.createNamedQuery( "PersonQuery" );
 					List<Person> persons = q.list();
 					assertEquals( persons.size(), 1 );
 					assertEquals( persons.get( 0 ).getName(), "Alfio" );

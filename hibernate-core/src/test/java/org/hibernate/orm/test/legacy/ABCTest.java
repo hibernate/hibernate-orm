@@ -160,15 +160,15 @@ public class ABCTest {
 	}
 
 	@Test
-	public void testGetSave(SessionFactoryScope scope) {
+	public void testFindSave(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( D.class, 1L ) );
+					assertNull( session.find( D.class, 1L ) );
 					D d = new D();
 					d.setId( 1L );
 					session.persist( d );
 					session.flush();
-					assertNotNull( session.get( D.class, 1L ) );
+					assertNotNull( session.find( D.class, 1L ) );
 					session.remove( d );
 					session.flush();
 				}

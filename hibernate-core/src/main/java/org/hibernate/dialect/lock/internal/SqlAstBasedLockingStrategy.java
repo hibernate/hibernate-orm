@@ -4,9 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -51,9 +51,9 @@ import java.util.Locale;
 public class SqlAstBasedLockingStrategy implements LockingStrategy {
 	private final EntityMappingType entityToLock;
 	private final LockMode lockMode;
-	private final Locking.Scope lockScope;
+	private final PessimisticLockScope lockScope;
 
-	public SqlAstBasedLockingStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+	public SqlAstBasedLockingStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
 		this.entityToLock = lockable.getRootEntityDescriptor();
 		this.lockMode = lockMode;
 		this.lockScope = lockScope;
@@ -176,7 +176,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 							SingleResultConsumer.instance()
 					);
 
-			if ( lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
 				SqmMutationStrategyHelper.visitCollectionTables( entityToLock, (attribute) -> {
 					final var collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
 					LockingHelper.lockCollectionTable(

@@ -14,6 +14,7 @@ import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.PersistenceUtil;
 import org.hibernate.Hibernate;
+import org.hibernate.KeyType;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.NaturalId;
@@ -93,9 +94,21 @@ public class PersistenceContextTest {
 		scope.inTransaction( entityManager -> {
 			Long personId = _personId;
 
-			//tag::pc-find-jpa-example[]
+			//tag::pc-find-example[]
 			Person person = entityManager.find( Person.class, personId );
-			//end::pc-find-jpa-example[]
+			//end::pc-find-example[]
+		} );
+		scope.inTransaction( entityManager -> {
+			Long personId = _personId;
+
+			//tag::pc-get-example[]
+			try {
+				Person person = entityManager.get( Person.class, personId );
+			}
+			catch (EntityNotFoundException e) {
+				// handle it
+			}
+			//end::pc-get-example[]
 		} );
 		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -126,32 +139,25 @@ public class PersistenceContextTest {
 			//end::pc-get-reference-native-example[]
 		} );
 		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			Long personId = _personId;
-
-			//tag::pc-find-native-example[]
-			Person person = session.get( Person.class, personId );
-			//end::pc-find-native-example[]
-		} );
-		scope.inTransaction( entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			Long personId = _personId;
-
-			//tag::pc-find-by-id-native-example[]
-			Person person = session.byId( Person.class ).load( personId );
-			//end::pc-find-by-id-native-example[]
-
-			//tag::pc-find-optional-by-id-native-example[]
-			Optional<Person> optionalPerson = session.byId( Person.class ).loadOptional( personId );
-			//end::pc-find-optional-by-id-native-example[]
-
 			String isbn = "123-456-7890";
 
-			//tag::pc-find-by-simple-natural-id-example[]
-			Book book = session.bySimpleNaturalId( Book.class ).getReference( isbn );
+			//tag::pc-find-by-natural-id-example[]
+			Book book = entityManager.find( Book.class, isbn, KeyType.NATURAL );
 			//end::pc-find-by-simple-natural-id-example[]
-			assertThat(book ).isNotNull();
+			assertThat(book).isNotNull();
 		} );
+		scope.inTransaction( entityManager -> {
+			String isbn = "123-456-7890";
+
+			//tag::pc-get-by-natural-id-example[]
+			Book book = entityManager.find( Book.class, isbn, KeyType.NATURAL );
+			//end::pc-get-by-simple-natural-id-example[]
+			assertThat(book).isNotNull();
+		} );
+
+
+
+		// todo (jpa4) : find references to these tags in the doc and drop
 		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			String isbn = "123-456-7890";

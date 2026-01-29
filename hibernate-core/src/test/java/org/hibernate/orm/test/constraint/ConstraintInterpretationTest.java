@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -83,7 +84,7 @@ public class ConstraintInterpretationTest {
 				assertEquals( ConstraintViolationException.ConstraintKind.UNIQUE, cve.getKind() );
 				// DB2 error message doesn't contain unique constraint name
 				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
-					assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
+					assertThat( cve.getConstraintName() ).containsIgnoringCase( "ssnuk" );
 				}
 			}
 		} );

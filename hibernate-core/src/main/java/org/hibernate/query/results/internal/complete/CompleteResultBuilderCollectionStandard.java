@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;

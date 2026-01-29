@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;

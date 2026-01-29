@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -19,20 +20,24 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
-import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
-/**
- * @author Steve Ebersole
- */
+/// Wraps a JPA {@linkplain PersistenceUnitInfo} as Hibernate's {@linkplain PersistenceUnitDescriptor}
+///
+/// @author Steve Ebersole
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
-
 	private final PersistenceUnitInfo persistenceUnitInfo;
+	private final boolean disableClassTransformerRegistration;
 	private ClassTransformer classTransformer;
 
 	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo) {
+		this( persistenceUnitInfo, false );
+	}
+
+	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo, boolean disableClassTransformerRegistration) {
 		this.persistenceUnitInfo = persistenceUnitInfo;
+		this.disableClassTransformerRegistration = disableClassTransformerRegistration;
 	}
 
 	@Override
@@ -62,11 +67,6 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public PersistenceUnitTransactionType getPersistenceUnitTransactionType() {
-		return PersistenceUnitTransactionTypeHelper.toNewForm( getTransactionType() );
-	}
-
-	@Override @SuppressWarnings("removal")
-	public jakarta.persistence.spi.PersistenceUnitTransactionType getTransactionType() {
 		return persistenceUnitInfo.getTransactionType();
 	}
 
@@ -96,6 +96,11 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
+	public FetchType getDefaultToOneFetchType() {
+		return persistenceUnitInfo.getDefaultToOneFetchType();
+	}
+
+	@Override
 	public ValidationMode getValidationMode() {
 		return persistenceUnitInfo.getValidationMode();
 	}
@@ -121,7 +126,12 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
-	public void pushClassTransformer(EnhancementContext enhancementContext) {
+	public boolean isClassTransformerRegistrationDisabled() {
+		return disableClassTransformerRegistration;
+	}
+
+	@Override
+	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
 		if ( this.classTransformer != null ) {
 			throw new PersistenceException( "Persistence unit ["
 					+ persistenceUnitInfo.getPersistenceUnitName()
@@ -138,10 +148,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );
 		}
-	}
 
-	@Override
-	public ClassTransformer getClassTransformer() {
 		return classTransformer;
 	}
 }

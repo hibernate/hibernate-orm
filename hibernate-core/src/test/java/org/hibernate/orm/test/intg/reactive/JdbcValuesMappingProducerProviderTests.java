@@ -6,7 +6,7 @@ package org.hibernate.orm.test.intg.reactive;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderStandard;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;

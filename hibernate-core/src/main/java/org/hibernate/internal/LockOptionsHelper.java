@@ -4,11 +4,9 @@
  */
 package org.hibernate.internal;
 
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.Timeout;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -47,24 +45,10 @@ public final class LockOptionsHelper {
 				properties.containsKey( JAKARTA_LOCK_SCOPE )
 						? JAKARTA_LOCK_SCOPE
 						: JPA_LOCK_SCOPE;
-		final Object lockScope = properties.get( lockScopeHint );
-		if ( lockScope != null ) {
+		final Object value = properties.get( lockScopeHint );
+		if ( value != null ) {
 			final var options = lockOptions.get();
-			if ( lockScope instanceof Locking.Scope scope ) {
-				options.setScope( scope );
-			}
-			else if ( lockScope instanceof PessimisticLockScope pessimisticLockScope ) {
-				options.setLockScope( pessimisticLockScope );
-			}
-			else if ( lockScope instanceof String string ) {
-				final var scope = Locking.Scope.interpret( string );
-				if ( scope != null ) {
-					options.setScope( scope );
-				}
-			}
-			else {
-				throw new PersistenceException( "Unable to interpret " + lockScopeHint + ": " + lockScope );
-			}
+			options.setLockScope( Locking.scopeFromHint( value ) );
 		}
 	}
 
@@ -73,25 +57,13 @@ public final class LockOptionsHelper {
 				properties.containsKey( JAKARTA_LOCK_TIMEOUT )
 						? JAKARTA_LOCK_TIMEOUT
 						: JPA_LOCK_TIMEOUT;
-		final Object lockTimeout = properties.get( lockTimeoutHint );
-		if ( lockTimeout != null ) {
+		final Object value = properties.get( lockTimeoutHint );
+		if ( value != null ) {
 			if ( lockTimeoutHint.equals( JPA_LOCK_TIMEOUT ) ) {
 				DEPRECATION_LOGGER.deprecatedHint( JPA_LOCK_TIMEOUT, JAKARTA_LOCK_TIMEOUT );
 			}
 			final var options = lockOptions.get();
-			if ( lockTimeout instanceof Timeout timeout ) {
-				options.setTimeout( timeout );
-			}
-			else if ( lockTimeout instanceof String string ) {
-				options.setTimeOut( Integer.parseInt( string ) );
-			}
-			else if ( lockTimeout instanceof Number number ) {
-				int timeout = number.intValue();
-				options.setTimeOut( timeout );
-			}
-			else {
-				throw new PersistenceException( "Unable to interpret " + lockTimeoutHint + ": " + lockTimeout );
-			}
+			options.setTimeout( Timeouts.fromJpaHint( value ) );
 		}
 	}
 
@@ -99,15 +71,7 @@ public final class LockOptionsHelper {
 		final Object strategyValue = properties.get( HINT_FOLLOW_ON_STRATEGY );
 		if ( strategyValue != null ) {
 			final var options = lockOptions.get();
-			if ( strategyValue instanceof Locking.FollowOn strategy ) {
-				options.setFollowOnStrategy( strategy );
-			}
-			else if ( strategyValue instanceof String name ) {
-				options.setFollowOnStrategy( Locking.FollowOn.interpret( name ) );
-			}
-			else {
-				throw new PersistenceException( "Unable to interpret " + HINT_FOLLOW_ON_STRATEGY + ": " + strategyValue );
-			}
+			options.setFollowOnStrategy( Locking.FollowOn.fromHint( strategyValue ) );
 		}
 		else {
 			// accounts for manually specifying null...

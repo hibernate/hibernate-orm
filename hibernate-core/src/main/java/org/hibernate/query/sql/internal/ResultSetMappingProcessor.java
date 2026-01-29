@@ -24,10 +24,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.LegacyFetchBuilder;
-import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.FetchBuilder;
+import org.hibernate.query.results.spi.LegacyFetchBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollectionStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderContainer;
 import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
@@ -45,7 +45,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.hibernate.internal.util.collections.ArrayHelper.slice;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
-import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
+import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
 
 
 /**

@@ -180,34 +180,34 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map, JoinType jt);
 
 	@Override
-	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName);
+	<Y> SqmAttributeJoin<R, Y> join(String attributeName);
 
 	@Override
-	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt);
+	<Y> SqmAttributeJoin<R, Y> join(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName);
+	<Y> SqmBagJoin<R, Y> joinCollection(String attributeName);
 
 	@Override
-	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt);
+	<Y> SqmBagJoin<R, Y> joinCollection(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName);
+	<Y> SqmSetJoin<R, Y> joinSet(String attributeName);
 
 	@Override
-	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt);
+	<Y> SqmSetJoin<R, Y> joinSet(String attributeName, JoinType jt);
 
 	@Override
-	<X, Y> SqmListJoin<X, Y> joinList(String attributeName);
+	<Y> SqmListJoin<R, Y> joinList(String attributeName);
 
 	@Override
-	<X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt);
+	<Y> SqmListJoin<R, Y> joinList(String attributeName, JoinType jt);
 
 	@Override
-	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName);
+	<K, V> SqmMapJoin<R, K, V> joinMap(String attributeName);
 
 	@Override
-	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
+	<K, V> SqmMapJoin<R, K, V> joinMap(String attributeName, JoinType jt);
 
 	@Override
 	SqmFrom<L, R> copy(SqmCopyContext context);

@@ -31,7 +31,7 @@ public class EventListenerDuplicationStrategyTest {
 
 	Tracker tracker = new Tracker();
 	ClearEvent event = new ClearEvent( null );
-	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null, false );
+	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, false );
 
 	@Test
 	public void testListenersIterator() {

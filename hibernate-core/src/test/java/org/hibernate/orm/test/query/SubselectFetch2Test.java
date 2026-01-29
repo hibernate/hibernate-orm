@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -90,7 +91,10 @@ public class SubselectFetch2Test {
 	@Test
 	void test3(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createSelectionQuery( "select nh, n1, n2 from NodeHolder nh join nh.node1 n1 join  nh.node2 n2" ).getResultList();
+			session.createSelectionQuery(
+					"select nh, n1, n2 from NodeHolder nh join nh.node1 n1 join  nh.node2 n2",
+					Tuple.class
+			).getResultList();
 		} );
 	}
 

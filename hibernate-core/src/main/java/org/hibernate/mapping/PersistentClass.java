@@ -25,7 +25,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;

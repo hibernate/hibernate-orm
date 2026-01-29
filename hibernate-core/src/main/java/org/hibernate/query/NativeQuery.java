@@ -15,18 +15,14 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
-
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 
 import java.time.Instant;
@@ -53,9 +49,9 @@ import java.util.Map;
  * A {@code NativeQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link QueryProducer#createNativeQuery(String, Class)}, passing
+ * <li>{@link org.hibernate.SharedSessionContract#createNativeQuery(String, Class)}, passing
  *     native SQL as a string, or
- * <li>{@link QueryProducer#createNativeQuery(String, String, Class)}
+ * <li>{@link org.hibernate.SharedSessionContract#createNativeQuery(String, String, Class)}
  *     passing the native SQL string and the name of a result set mapping
  *     defined using {@link jakarta.persistence.SqlResultSetMapping}.
  * </ul>
@@ -63,7 +59,7 @@ import java.util.Map;
  * A result set mapping may be specified by:
  * <ul>
  * <li>a named {@link jakarta.persistence.SqlResultSetMapping} passed to
- *     {@link QueryProducer#createNativeQuery(String, String, Class)},
+ *     {@link org.hibernate.SharedSessionContract#createNativeQuery(String, String, Class)},
  * <li>a named  {@link jakarta.persistence.SqlResultSetMapping} specified
  *     using {@link jakarta.persistence.NamedNativeQuery#resultSetMapping}
  *     for a named query, or
@@ -104,9 +100,273 @@ import java.util.Map;
  *
  * @see Query
  * @see SynchronizeableQuery
- * @see QueryProducer
+ * @see org.hibernate.SharedSessionContract
  */
-public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
+public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery {
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - SynchronizeableQuery
+	@Override
+	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
+
+	@Override
+	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
+
+	@Override
+	NativeQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - SelectionQuery & MutationQuery
+
+
+	@Override
+	NativeQuery<T> setTimeout(Integer timeout);
+
+	@Override
+	NativeQuery<T> setQueryPlanCacheable(boolean queryPlanCacheable);
+
+	@Override
+	NativeQuery<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	SelectionQuery<T> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	SelectionQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	SelectionQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
+	SelectionQuery<T> setCacheable(boolean cacheable);
+
+	@Override
+	SelectionQuery<T> setCacheRegion(String cacheRegion);
+
+	@Override
+	NativeQuery<T> setTimeout(int timeout);
+
+	@Override
+	SelectionQuery<T> setFetchSize(int fetchSize);
+
+	@Override
+	SelectionQuery<T> setReadOnly(boolean readOnly);
+
+	@Override
+	NativeQuery<T> setComment(String comment);
+
+	@Override
+	NativeQuery<T> addQueryHint(String hint);
+
+	@Override
+	SelectionQuery<T> setMaxResults(int maxResults);
+
+	@Override
+	SelectionQuery<T> setFirstResult(int startPosition);
+
+	@Override
+	NativeQuery<T> setHint(String hintName, Object value);
+
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #getHibernateLockMode()} to obtain the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
+	@SuppressWarnings("removal")
+	@Override
+	LockModeType getLockMode();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockMode getHibernateLockMode();
+
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #setHibernateLockMode(LockMode)} or the hint named
+	 * {@value org.hibernate.jpa.HibernateHints#HINT_NATIVE_LOCK_MODE}
+	 * to set the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
+	@Override
+	SelectionQuery<T> setLockMode(LockModeType lockMode);
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	SelectionQuery<T> setHibernateLockMode(LockMode lockMode);
+
+	/**
+	 * Apply a timeout to the corresponding database query.
+	 *
+	 * @param timeout The timeout to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> setTimeout(Timeout timeout);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SelectionQuery<T> setLockScope(PessimisticLockScope lockScope);
+
+	@Override
+	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
+
+	@Override
+	SelectionQuery<T> setResultListTransformer(ResultListTransformer<T> transformer);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Object value);
+
+	@Override
+	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(String name, P val, Type<P> type);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Object value);
+
+	@Override
+	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(int position, P val, Type<P> type);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override @Deprecated(since = "7")
+	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setProperties(Object bean);
+
+	@Override
+	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
+
+	@Override
+	<P> NativeQuery<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	<P> NativeQuery<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+
+	@Override
+	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(String name, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, Type<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Type<P> javaType);
+
+	@Override
+	NativeQuery<T> setParameterList(int position, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, Type<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+
+
+
+
+
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically
 	 * detect the underlying type.
@@ -118,7 +378,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *                    processed as a scalar result
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addScalar(String columnAlias);
 
 	/**
@@ -132,7 +397,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type);
 
 	/**
@@ -146,7 +416,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param type The Hibernate type as which to treat the value.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
 
 	/**
@@ -158,7 +433,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
 
 	/**
@@ -172,7 +452,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
 
 	/**
@@ -188,7 +473,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	<O,R> NativeQuery<T> addScalar(String columnAlias, Class<O> domainJavaType, Class<R> jdbcJavaType, AttributeConverter<O,R> converter);
 
 	/**
@@ -202,7 +492,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
 
 	/**
@@ -218,13 +513,24 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	<O,R> NativeQuery<T> addScalar(
 			String columnAlias,
 			Class<O> domainJavaType,
 			Class<R> jdbcJavaType,
 			Class<? extends AttributeConverter<O,R>> converter);
 
+	/**
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
+	 */
+	@Deprecated(since = "8.0")
 	<J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType);
 
 	/**
@@ -235,7 +541,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
 
 	/**
@@ -246,7 +557,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addAttributeResult(String columnAlias, String entityName, String attributePath);
 
 	/**
@@ -259,7 +575,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 6.0
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
 	/**
@@ -272,7 +593,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return The return config object for further control.
 	 *
 	 * @since 3.6
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	/**
@@ -285,7 +611,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return The return config object for further control.
 	 *
 	 * @since 3.6
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	RootReturn addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
@@ -297,7 +628,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param entityName The entity name that is the root return of the query
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(String entityName);
 
 	/**
@@ -307,7 +643,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param entityName The entity name
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(String tableAlias, String entityName);
 
 	/**
@@ -318,7 +659,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param lockMode The lock mode for this return.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	/**
@@ -328,7 +674,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param entityType The java type of the entity to add as a root
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(@SuppressWarnings("rawtypes") Class entityType);
 
 	/**
@@ -338,7 +689,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param entityType The java type of the entity to add as a root
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
@@ -349,7 +705,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param lockMode The lock mode for this return
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
 
 	/**
@@ -363,7 +724,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return The return config object for further control.
 	 *
 	 * @since 3.6
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	/**
@@ -373,7 +739,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param path The association path of form {@code [owner-alias].[property-name]}.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addJoin(String tableAlias, String path);
 
 	/**
@@ -387,7 +758,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 3.6
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	/**
@@ -398,7 +774,12 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @param lockMode The lock mode for this return.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain jakarta.persistence.sql.ResultSetMapping}, or
+	 * similar approach pending the outcome of
+	 * <a href="https://github.com/jakartaee/persistence/issues/887">this Jakarta Persistence request</a>.
 	 */
+	@Deprecated(since = "8.0")
 	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
@@ -553,277 +934,4 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		 */
 		ReturnProperty addProperty(String propertyName);
 	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides - SynchronizeableQuery
-	@Override
-	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
-
-	@Override
-	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
-
-	@Override
-	NativeQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides - Query
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	NativeQuery<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setFlushMode(FlushModeType flushMode);
-
-	@Override
-	NativeQuery<T> setCacheMode(CacheMode cacheMode);
-
-	@Override
-	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
-
-	@Override
-	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
-
-	@Override
-	NativeQuery<T> setCacheable(boolean cacheable);
-
-	@Override
-	NativeQuery<T> setCacheRegion(String cacheRegion);
-
-	@Override
-	NativeQuery<T> setTimeout(int timeout);
-
-	@Override
-	NativeQuery<T> setFetchSize(int fetchSize);
-
-	@Override
-	NativeQuery<T> setReadOnly(boolean readOnly);
-
-	@Override
-	NativeQuery<T> setComment(String comment);
-
-	@Override
-	NativeQuery<T> addQueryHint(String hint);
-
-	@Override
-	NativeQuery<T> setMaxResults(int maxResults);
-
-	@Override
-	NativeQuery<T> setFirstResult(int startPosition);
-
-	@Override
-	NativeQuery<T> setHint(String hintName, Object value);
-
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override @Deprecated(forRemoval = true)
-	LockOptions getLockOptions();
-
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override @Deprecated(forRemoval = true)
-	NativeQuery<T> setLockOptions(LockOptions lockOptions);
-
-	/**
-	 * Not applicable to native SQL queries, due to an unfortunate
-	 * requirement of the JPA specification.
-	 * <p>
-	 * Use {@link #getHibernateLockMode()} to obtain the lock mode.
-	 *
-	 * @throws IllegalStateException as required by JPA
-	 */
-	@Override
-	LockModeType getLockMode();
-
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override
-	LockMode getHibernateLockMode();
-
-	/**
-	 * Not applicable to native SQL queries, due to an unfortunate
-	 * requirement of the JPA specification.
-	 * <p>
-	 * Use {@link #setHibernateLockMode(LockMode)} or the hint named
-	 * {@value org.hibernate.jpa.HibernateHints#HINT_NATIVE_LOCK_MODE}
-	 * to set the lock mode.
-	 *
-	 * @throws IllegalStateException as required by JPA
-	 */
-	@Override
-	NativeQuery<T> setLockMode(LockModeType lockMode);
-
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override
-	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
-
-	/**
-	 * Apply a timeout to the corresponding database query.
-	 *
-	 * @param timeout The timeout to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	NativeQuery<T> setTimeout(Timeout timeout);
-
-	/**
-	 * Apply a scope to any pessimistic locking applied to the query.
-	 *
-	 * @param lockScope The lock scope to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
-
-	@Override
-	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);
-
-	@Override
-	NativeQuery<T> setResultListTransformer(ResultListTransformer<T> transformer);
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	<S> NativeQuery<S> setResultTransformer(ResultTransformer<S> transformer);
-
-	@Override
-	NativeQuery<T> setParameter(String name, Object value);
-
-	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, Type<P> type);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Object value);
-
-	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, Type<P> type);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
-
-	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
-
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, Type<P> type);
-
-	@Override
-	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Type<P> javaType);
-
-	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, Type<P> javaType);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
-
-	@Override
-	NativeQuery<T> setProperties(Object bean);
-
-	@Override
-	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

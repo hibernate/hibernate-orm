@@ -5,7 +5,7 @@
 package org.hibernate.query.results.internal.dynamic;
 
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.spi.ResultBuilder;
 
 /**
  * ResultBuilder specialization for results added through the Hibernate-specific

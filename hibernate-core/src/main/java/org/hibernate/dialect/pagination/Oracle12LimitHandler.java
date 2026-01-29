@@ -4,13 +4,13 @@
  */
 package org.hibernate.dialect.pagination;
 
-import java.util.Locale;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
+import java.util.Locale;
 
 import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
 

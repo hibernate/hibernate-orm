@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReaderInputStream;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityValued;
 import org.hibernate.testing.orm.junit.BaseUnitTest;

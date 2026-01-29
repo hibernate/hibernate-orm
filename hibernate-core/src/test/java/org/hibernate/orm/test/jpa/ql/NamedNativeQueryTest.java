@@ -66,7 +66,7 @@ public class NamedNativeQueryTest {
 		final DestinationEntity destination = createDestination( scope, createFrom( scope, name, lastName ), fullName );
 
 		scope.inSession( session -> {
-			Query select = session.getNamedQuery( "DestinationEntity.selectIds" );
+			Query select = session.createNamedQuery( "DestinationEntity.selectIds" );
 			select.setParameterList( "ids", Collections.singletonList( destination.id ) );
 			Object[] unique = (Object[]) select.uniqueResult();
 			// Compare the Strings, not the actual IDs.  Can come back as, for ex,
@@ -92,7 +92,7 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inSession( session -> {
-			Query select = session.getNamedQuery( "DestinationEntity.selectIds" );
+			Query select = session.createNamedQuery( "DestinationEntity.selectIds" );
 			select.setParameterList( "ids", ids );
 			List list = select.list();
 
@@ -118,7 +118,7 @@ public class NamedNativeQueryTest {
 		final int id = 10000;// id fake
 
 		scope.inTransaction( session -> {
-			Query insert = session.getNamedQuery( "DestinationEntity.insert" );
+			Query insert = session.createNamedQuery( "DestinationEntity.insert" );
 			insert.setParameter( "generatedId", id );
 			insert.setParameter( "fromId", fromEntity.id );
 			insert.setParameter( "fullName", fullName );
@@ -150,7 +150,7 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inTransaction( session -> {
-			Query insertSelect = session.getNamedQuery( "DestinationEntity.insertSelect" );
+			Query insertSelect = session.createNamedQuery( "DestinationEntity.insertSelect" );
 			insertSelect.setParameterList( "ids", ids );
 			int executeUpdate = insertSelect.executeUpdate();
 			assertEquals( quantity, executeUpdate );
@@ -180,7 +180,7 @@ public class NamedNativeQueryTest {
 		final FromEntity anotherFrom = createFrom( scope, lastName, name );
 
 		scope.inTransaction( session -> {
-			Query update = session.getNamedQuery( "DestinationEntity.update" );
+			Query update = session.createNamedQuery( "DestinationEntity.update" );
 			update.setParameter( "idFrom", anotherFrom.id );
 			update.setParameter( "fullName", inverseFullName );
 			update.setParameterList( "ids", Collections.singletonList( destinationEntity.id ) );
@@ -213,7 +213,7 @@ public class NamedNativeQueryTest {
 		final FromEntity anotherFrom = createFrom( scope, lastName, name );
 
 		scope.inTransaction( session -> {
-			Query update = session.getNamedQuery( "DestinationEntity.update" );
+			Query update = session.createNamedQuery( "DestinationEntity.update" );
 			update.setParameter( "idFrom", anotherFrom.id );
 			update.setParameter( "fullName", inverseFullName );
 			update.setParameterList( "ids", ids );
@@ -243,7 +243,7 @@ public class NamedNativeQueryTest {
 		final DestinationEntity destinationEntity = createDestination( scope, fromEntity, fullName );
 
 		scope.inTransaction( session -> {
-			Query delete = session.getNamedQuery( "DestinationEntity.delete" );
+			Query delete = session.createNamedQuery( "DestinationEntity.delete" );
 			delete.setParameterList( "ids", Collections.singletonList( destinationEntity.id ) );
 
 			int executeUpdate = delete.executeUpdate();
@@ -269,7 +269,7 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inTransaction( session -> {
-			Query delete = session.getNamedQuery( "DestinationEntity.delete" );
+			Query delete = session.createNamedQuery( "DestinationEntity.delete" );
 			delete.setParameterList( "ids", ids );
 
 			int executeUpdate = delete.executeUpdate();

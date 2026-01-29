@@ -13,45 +13,58 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
-/**
- * Enumerates the entity lifecycle callback types defined by JPA.
- *
- * @author Steve Ebersole
- */
+/// Enumerates the Jakarta Persistence style lifecycle callback types.
+///
+/// @author Steve Ebersole
 public enum CallbackType {
-	/**
-	 * @see PreUpdate
-	 */
+	/// @see PreUpdate
 	PRE_UPDATE,
-	/**
-	 * @see PostUpdate
-	 */
+
+	/// @see PostUpdate
 	POST_UPDATE,
-	/**
-	 * @see PrePersist
-	 */
+
+	/// @see PrePersist
 	PRE_PERSIST,
-	/**
-	 * @see PostPersist
-	 */
+
+	/// @see PostPersist
 	POST_PERSIST,
-	/**
-	 * @see PreRemove
-	 */
+
+	/// @see PreRemove
 	PRE_REMOVE,
-	/**
-	 * @see PostRemove
-	 */
+
+	/// @see PostRemove
 	POST_REMOVE,
-	/**
-	 * @see PostLoad
-	 */
+
+	/// @see PostLoad
 	POST_LOAD;
 
-	/**
-	 * The JPA-defined callback annotation type corresponding
-	 * to this lifecycle event type.
-	 */
+	/// Returns the callback type for a given callback annotation.
+	public static CallbackType fromCallbackAnnotation(Class<? extends Annotation> ann) {
+		if ( PrePersist.class.equals( ann ) ) {
+			return PRE_PERSIST;
+		}
+		if ( PostPersist.class.equals( ann ) ) {
+			return POST_PERSIST;
+		}
+		if ( PreUpdate.class.equals( ann ) ) {
+			return PRE_UPDATE;
+		}
+		if ( PostUpdate.class.equals( ann ) ) {
+			return POST_UPDATE;
+		}
+		if ( PreRemove.class.equals( ann ) ) {
+			return PRE_REMOVE;
+		}
+		if ( PostRemove.class.equals( ann ) ) {
+			return POST_REMOVE;
+		}
+		if ( PostLoad.class.equals( ann ) ) {
+			return POST_LOAD;
+		}
+		throw new IllegalArgumentException( "Unknown callback annotation : " + ann );
+	}
+
+	/// The callback annotation type corresponding to this lifecycle callback type.
 	public Class<? extends Annotation> getCallbackAnnotation() {
 		return switch ( this ) {
 			case PRE_PERSIST -> PrePersist.class;

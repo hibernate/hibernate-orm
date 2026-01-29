@@ -29,7 +29,7 @@ public class ComponentMapKeyEntity {
 
 	@Audited
 	@ManyToMany
-	@MapKey(name = "comp1")
+	@MapKey("comp1")
 	private Map<Component1, ComponentTestEntity> idmap;
 
 	public ComponentMapKeyEntity() {

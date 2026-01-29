@@ -146,45 +146,45 @@ public class BooleanMappingTests {
 	public void testComparisonLiteralHandling(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 		} );
 
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = false" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = false", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = false" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = false", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = false" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = false", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 		} );
 
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo != true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo != true", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse != true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse != true", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric != true" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric != true", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 		} );
@@ -195,30 +195,30 @@ public class BooleanMappingTests {
 	public void testExpressionAsPredicateUsage(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 		} );
 
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where (convertedYesNo)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedYesNo)", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where (convertedTrueFalse)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedTrueFalse)", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where (convertedNumeric)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedNumeric)", EntityOfBooleans.class ).list(),
 					hasSize( 0 )
 			);
 		} );
@@ -230,29 +230,29 @@ public class BooleanMappingTests {
 	public void testNegatedExpressionAsPredicateUsage(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not convertedYesNo" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedYesNo", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not convertedTrueFalse" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedTrueFalse", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not convertedNumeric" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedNumeric", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 		} );
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not (convertedYesNo)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedYesNo)", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not (convertedTrueFalse)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedTrueFalse)", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where not (convertedNumeric)" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedNumeric)", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 		} );
@@ -278,15 +278,15 @@ public class BooleanMappingTests {
 
 		scope.inTransaction( (session) -> {
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 			assertThat(
-					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric" ).list(),
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric", EntityOfBooleans.class ).list(),
 					hasSize( 1 )
 			);
 		} );
@@ -337,7 +337,7 @@ public class BooleanMappingTests {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 or boolean_func2" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 or boolean_func2", EntityOfBooleans.class ).list();
 		} );
 
 		assertThat( statementInspector.getSqlQueries().size(), equalTo( 1 ) );
@@ -364,7 +364,7 @@ public class BooleanMappingTests {
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 = true or boolean_func2 = false" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 = true or boolean_func2 = false", EntityOfBooleans.class ).list();
 		} );
 
 		assertThat( statementInspector.getSqlQueries().size(), equalTo( 1 ) );

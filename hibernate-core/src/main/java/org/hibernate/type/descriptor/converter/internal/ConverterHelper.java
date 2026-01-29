@@ -6,9 +6,12 @@ package org.hibernate.type.descriptor.converter.internal;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 
 import static org.hibernate.internal.util.GenericsHelper.erasedType;
@@ -50,5 +53,13 @@ public class ConverterHelper {
 				registry.resolveDescriptor( domainJavaClass ),
 				registry.resolveDescriptor( relationalJavaClass )
 		);
+	}
+
+	public static <X, Y> JpaAttributeConverter<X, Y> createJpaAttributeConverter(
+			Class<? extends AttributeConverter<X,Y>> converterClass,
+			ServiceRegistry serviceRegistry,
+			TypeConfiguration typeConfiguration) {
+		var converterBean = serviceRegistry.requireService( ManagedBeanRegistry.class ).getBean( converterClass );
+		return createJpaAttributeConverter( converterBean, typeConfiguration.getJavaTypeRegistry() );
 	}
 }

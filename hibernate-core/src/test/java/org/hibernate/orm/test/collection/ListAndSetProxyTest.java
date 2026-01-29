@@ -104,7 +104,7 @@ public class ListAndSetProxyTest {
 		}
 
 		@OneToMany(mappedBy = "theMapKey.theOne")
-		@MapKey(name = "theMapKey")
+		@MapKey("theMapKey")
 		public Map<TheMapKey, TheMany> getTheManys() {
 			return theManys;
 		}

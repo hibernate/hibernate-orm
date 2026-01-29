@@ -8,7 +8,7 @@
           xmlns:simplify="http://jvnet.org/basicjaxb/xjc/simplify"
           version="3.0">
 
-    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-7.0.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-8.0.xsd" node="/xsd:schema">
         <schemaBindings>
             <package name="org.hibernate.boot.jaxb.mapping.spi" />
             <nameXmlTransform>
@@ -690,6 +690,19 @@
             <javaType name="jakarta.persistence.LockModeType"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.fromXml"
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.toXml" />
+        </bindings>
+
+        <bindings node="//xsd:simpleType[@name='pessimistic-lock-scope']">
+            <javaType name="jakarta.persistence.PessimisticLockScope"
+                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.PessimisticLockScopeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.mapping.internal.PessimisticLockScopeMarshalling.toXml" />
+        </bindings>
+
+
+        <bindings node="//xsd:simpleType[@name='timeout']">
+            <javaType name="jakarta.persistence.Timeout"
+                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.TimeoutMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.mapping.internal.TimeoutMarshalling.toXml" />
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='optimistic-locking-type']">

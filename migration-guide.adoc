@@ -63,6 +63,18 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 This section describes changes in behavior that applications should be aware of.
 
 
+=== MySQL default max fetch depth
+
+Previously, `MySQLDialect` defined a dialect-level default value of `2` for the
+`hibernate.max_fetch_depth` configuration property.
+
+As of Hibernate ORM {version}, this dialect-specific default has been removed.
+MySQL now behaves consistently with other dialects and relies on Hibernate’s
+general defaults or explicit user configuration.
+
+Applications that relied on the previous implicit default should explicitly set
+`hibernate.max_fetch_depth` if required.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

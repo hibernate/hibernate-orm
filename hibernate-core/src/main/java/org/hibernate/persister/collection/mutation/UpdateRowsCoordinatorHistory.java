@@ -20,9 +20,13 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noO
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * Update coordinator for HISTORY temporal collection tables.
+ * {@link UpdateRowsCoordinator} implementation for temporal collection tables
+ * in the {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE} temporal
+ * table mapping strategy.
+ *
+ * @author Gavin King
  */
-public class HistoryUpdateRowsCoordinator extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
+public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 	private final BasicBatchKey historyDeleteBatchKey;
 	private final BasicBatchKey historyInsertBatchKey;
@@ -36,7 +40,7 @@ public class HistoryUpdateRowsCoordinator extends AbstractUpdateRowsCoordinator 
 	private CollectionTableMapping historyTableMapping;
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 
-	public HistoryUpdateRowsCoordinator(
+	public UpdateRowsCoordinatorHistory(
 			CollectionMutationTarget mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory,

@@ -6,48 +6,54 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * Insert coordinator for HISTORY temporal collection tables.
+ * {@link RemoveCoordinator} implementation for temporal collection tables
+ * in the {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE}
+ * temporal table mapping strategy.
+ *
+ * @author Gavin King
  */
-public class HistoryInsertRowsCoordinator implements InsertRowsCoordinator {
+public class RemoveCoordinatorHistory implements RemoveCoordinator {
 	private final CollectionMutationTarget mutationTarget;
-	private final RowMutationOperations rowMutationOperations;
-	private final InsertRowsCoordinator currentInsertCoordinator;
+	private final OperationProducer operationProducer;
 	private final MutationExecutorService mutationExecutorService;
+	private final BasicBatchKey batchKey;
 	private final BasicBatchKey historyBatchKey;
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
 	private final UnaryOperator<Object> indexIncrementer;
 
+	private MutationOperationGroup operationGroup;
 	private MutationOperationGroup historyOperationGroup;
 	private CollectionTableMapping historyTableMapping;
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 
-	public HistoryInsertRowsCoordinator(
+	public RemoveCoordinatorHistory(
 			CollectionMutationTarget mutationTarget,
-			RowMutationOperations rowMutationOperations,
-			InsertRowsCoordinator currentInsertCoordinator,
+			OperationProducer operationProducer,
 			boolean[] indexColumnIsSettable,
 			boolean[] elementColumnIsSettable,
 			UnaryOperator<Object> indexIncrementer,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.rowMutationOperations = rowMutationOperations;
-		this.currentInsertCoordinator = currentInsertCoordinator;
+		this.operationProducer = operationProducer;
 		this.indexColumnIsSettable = indexColumnIsSettable;
 		this.elementColumnIsSettable = elementColumnIsSettable;
 		this.indexIncrementer = indexIncrementer;
-		this.historyBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#HISTORY_INSERT" );
+		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
+		this.historyBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#HISTORY_REMOVE" );
 		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
@@ -57,60 +63,67 @@ public class HistoryInsertRowsCoordinator implements InsertRowsCoordinator {
 	}
 
 	@Override
-	public void insertRows(
-			PersistentCollection<?> collection,
-			Object id,
-			EntryFilter entryChecker,
-			SharedSessionContractImplementor session) {
-		currentInsertCoordinator.insertRows( collection, id, entryChecker, session );
+	public String getSqlString() {
+		if ( operationGroup == null ) {
+			operationGroup = buildOperationGroup( mutationTarget.getCollectionTableMapping() );
+		}
+		final var operation = (JdbcMutationOperation) operationGroup.getSingleOperation();
+		return operation.getSqlString();
+	}
 
-		if ( historyOperationGroup == null ) {
-			historyOperationGroup = createHistoryOperationGroup();
+	@Override
+	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
+		}
+
+		if ( operationGroup == null ) {
+			operationGroup = buildOperationGroup( mutationTarget.getCollectionTableMapping() );
 		}
 		if ( historyOperationGroup == null ) {
-			return;
-		}
-
-		final var pluralAttribute = mutationTarget.getTargetPart();
-		final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
-		final var entries = collection.entries( collectionDescriptor );
-		if ( !entries.hasNext() ) {
-			return;
+			historyOperationGroup = buildOperationGroup( getHistoryTableMapping() );
 		}
 
 		final var mutationExecutor = mutationExecutorService.createExecutor(
+				() -> batchKey,
+				operationGroup,
+				session
+		);
+		final var historyExecutor = mutationExecutorService.createExecutor(
 				() -> historyBatchKey,
 				historyOperationGroup,
 				session
 		);
 
 		try {
-			int entryCount = 0;
-			final var historyBindings = getRowMutationHelper();
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-				if ( entryChecker == null || entryChecker.include( entry, entryCount, collection, pluralAttribute ) ) {
-					historyBindings.bindInsertValues(
-							collection,
-							id,
-							entry,
-							entryCount,
-							session,
-							mutationExecutor.getJdbcValueBindings()
-					);
-					mutationExecutor.execute( entry, null, null, null, session );
-				}
-				entryCount++;
-			}
+			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
+			foreignKeyDescriptor.getKeyPart().decompose(
+					key,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
+			mutationExecutor.execute( key, null, null, null, session );
+
+			getRowMutationHelper().bindDeleteAllRestrictions(
+					key,
+					session,
+					historyExecutor.getJdbcValueBindings()
+			);
+			historyExecutor.execute( key, null, null, null, session );
 		}
 		finally {
 			mutationExecutor.release();
+			historyExecutor.release();
 		}
 	}
 
-	private MutationOperationGroup createHistoryOperationGroup() {
-		final var operation = rowMutationOperations.getInsertRowOperation( getHistoryTableMapping() );
-		return operation == null ? null : singleOperation( MutationType.INSERT, mutationTarget, operation );
+	private MutationOperationGroup buildOperationGroup(CollectionTableMapping tableMapping) {
+		final var tableReference = new MutatingTableReference( tableMapping );
+		return singleOperation( MutationType.DELETE, mutationTarget, operationProducer.createOperation( tableReference ) );
 	}
 
 	private CollectionTableMapping getHistoryTableMapping() {

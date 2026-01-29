@@ -18,9 +18,13 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
- * Delete coordinator for HISTORY temporal collection tables.
+ * {@link DeleteRowsCoordinator} implementation for temporal collection tables
+ * in the {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE} temporal
+ * table mapping strategy.
+ *
+ * @author Gavin King
  */
-public class HistoryDeleteRowsCoordinator implements DeleteRowsCoordinator {
+public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final boolean deleteByIndex;
@@ -36,7 +40,7 @@ public class HistoryDeleteRowsCoordinator implements DeleteRowsCoordinator {
 	private CollectionTableMapping historyTableMapping;
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
 
-	public HistoryDeleteRowsCoordinator(
+	public DeleteRowsCoordinatorHistory(
 			CollectionMutationTarget mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			boolean deleteByIndex,

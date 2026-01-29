@@ -21,10 +21,10 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.HistoryDeleteRowsCoordinator;
-import org.hibernate.persister.collection.mutation.HistoryInsertRowsCoordinator;
-import org.hibernate.persister.collection.mutation.HistoryRemoveCoordinator;
-import org.hibernate.persister.collection.mutation.HistoryUpdateRowsCoordinator;
+import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorHistory;
+import org.hibernate.persister.collection.mutation.RemoveCoordinatorHistory;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorHistory;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
@@ -150,7 +150,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 		else if ( temporal ) {
 			return history
-					? new HistoryUpdateRowsCoordinator(
+					? new UpdateRowsCoordinatorHistory(
 							this,
 							rowMutationOperations,
 							getFactory(),
@@ -179,7 +179,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 		else {
 			return history
-					? new HistoryInsertRowsCoordinator(
+					? new InsertRowsCoordinatorHistory(
 							this,
 							rowMutationOperations,
 							new InsertRowsCoordinatorStandard(
@@ -206,7 +206,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 		else {
 			return history
-					? new HistoryDeleteRowsCoordinator(
+					? new DeleteRowsCoordinatorHistory(
 							this,
 							rowMutationOperations,
 							hasPhysicalIndexColumn(),
@@ -230,7 +230,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 		else {
 			return history
-					? new HistoryRemoveCoordinator(
+					? new RemoveCoordinatorHistory(
 							this,
 							this::buildDeleteAllOperation,
 							indexColumnIsSettable,

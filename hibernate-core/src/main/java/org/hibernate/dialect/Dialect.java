@@ -5947,6 +5947,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		throw new MappingException( "Native temporal exclusion column option is not supported by this dialect" );
 	}
 
+	@Incubating
+	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
+		return TemporalTableStrategy.HISTORY_TABLE;
+	}
+
 	//TODO: DELETEME
 	@Incubating @Deprecated(forRemoval = true)
 	public boolean throttleDdl() {

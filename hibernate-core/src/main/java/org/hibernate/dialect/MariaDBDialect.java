@@ -470,4 +470,9 @@ public class MariaDBDialect extends MySQLDialect {
 	public String getTemporalExclusionColumnOption() {
 		return "without system versioning";
 	}
+
+	@Override
+	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
+		return TemporalTableStrategy.NATIVE;
+	}
 }

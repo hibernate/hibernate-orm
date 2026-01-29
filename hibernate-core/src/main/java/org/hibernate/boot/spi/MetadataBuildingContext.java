@@ -9,6 +9,7 @@ import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -16,7 +17,7 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
-import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
+import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -136,7 +137,7 @@ public interface MetadataBuildingContext {
 	 */
 	String getCurrentContributorName();
 
-	default TemporalTableStrategy getTemporalTableStrategy() {
-		return SINGLE_TABLE;
+	default TemporalTableStrategy getTemporalTableStrategy(Dialect dialect) {
+		return AUTO;
 	}
 }

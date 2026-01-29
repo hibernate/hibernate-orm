@@ -260,7 +260,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public TemporalTableStrategy getTemporalTableStrategy() {
+	public TemporalTableStrategy getTemporalTableStrategy(Dialect dialect) {
 		return TemporalTableStrategy.SINGLE_TABLE;
 	}
 

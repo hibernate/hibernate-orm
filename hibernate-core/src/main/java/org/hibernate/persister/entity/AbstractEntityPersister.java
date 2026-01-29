@@ -3585,6 +3585,7 @@ public abstract class AbstractEntityPersister
 			case SINGLE_TABLE -> new UpdateCoordinatorTemporal( this, factory );
 			case HISTORY_TABLE -> new UpdateCoordinatorHistory( this, factory, buildNonTemporalUpdateCoordinator() );
 			case NATIVE -> buildNonTemporalUpdateCoordinator();
+			case AUTO -> throw new IllegalArgumentException();
 		};
 	}
 
@@ -3599,6 +3600,7 @@ public abstract class AbstractEntityPersister
 			case SINGLE_TABLE -> new DeleteCoordinatorTemporal( this, factory );
 			case HISTORY_TABLE -> new DeleteCoordinatorHistory( this, factory, buildNonTemporalDeleteCoordinator() );
 			case NATIVE -> buildNonTemporalDeleteCoordinator();
+			case AUTO -> throw new IllegalArgumentException();
 		};
 	}
 

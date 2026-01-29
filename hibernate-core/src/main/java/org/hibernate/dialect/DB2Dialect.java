@@ -1411,4 +1411,9 @@ public class DB2Dialect extends Dialect {
 			);
 		}
 	}
+
+	@Override
+	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
+		return TemporalTableStrategy.NATIVE;
+	}
 }

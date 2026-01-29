@@ -377,6 +377,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		useServerTransactionTimestamps = getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
+		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
+			temporalTableStrategy = dialect.getDefaultTemporalTableStrategy();
+		}
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );

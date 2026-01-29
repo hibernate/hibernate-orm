@@ -11,6 +11,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 
 /**
@@ -86,7 +87,9 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	}
 
 	@Override
-	public TemporalTableStrategy getTemporalTableStrategy() {
-		return temporalTableStrategy;
+	public TemporalTableStrategy getTemporalTableStrategy(Dialect dialect) {
+		return temporalTableStrategy == TemporalTableStrategy.AUTO
+				? dialect.getDefaultTemporalTableStrategy()
+				: temporalTableStrategy;
 	}
 }

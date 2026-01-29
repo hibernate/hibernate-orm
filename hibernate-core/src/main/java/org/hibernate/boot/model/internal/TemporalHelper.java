@@ -212,7 +212,7 @@ public class TemporalHelper {
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		var strategy = context.getTemporalTableStrategy();
+		var strategy = context.getTemporalTableStrategy( dialect );
 		table.setExtraDeclarations( dialect.getExtraTemporalTableDeclarations(
 				strategy, startingColumn.getQuotedName( dialect ),
 				endingColumn.getQuotedName( dialect ),
@@ -235,19 +235,15 @@ public class TemporalHelper {
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
-		database.getDialect()
-				.addTemporalTableAuxiliaryObjects(
-						context.getTemporalTableStrategy(),
+		final var dialect = database.getDialect();
+		dialect.addTemporalTableAuxiliaryObjects(
+						context.getTemporalTableStrategy( dialect ),
 						table,
 						database,
 						partitioned,
 						currentPartitionName,
 						historyPartitionName
 				);
-	}
-
-	private static String normalizePartitionName(String name) {
-		return isBlank( name ) ? null : name;
 	}
 
 	public static TemporalMappingImpl resolveTemporalMapping(
@@ -311,7 +307,7 @@ public class TemporalHelper {
 			Column endingColumn,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		if ( dialect.createTemporalTableCheckConstraint( context.getTemporalTableStrategy() ) ) {
+		if ( dialect.createTemporalTableCheckConstraint( context.getTemporalTableStrategy( dialect ) ) ) {
 			final String starting = startingColumn.getQuotedName( dialect );
 			final String ending = endingColumn.getQuotedName( dialect );
 			table.addCheck( new CheckConstraint( ending + " is null or " + ending + " > " + starting ) );
@@ -319,13 +315,14 @@ public class TemporalHelper {
 	}
 
 	public static boolean usingNativeTemporalTables(MetadataBuildingContext context) {
-		return context.getTemporalTableStrategy() == NATIVE
-			&& context.getMetadataCollector().getDatabase().getDialect()
-					.supportsNativeTemporalTables();
+		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+		return context.getTemporalTableStrategy( dialect ) == NATIVE
+			&& dialect.supportsNativeTemporalTables();
 	}
 
 	public static boolean usingHistoryTemporalTables(MetadataBuildingContext context) {
-		return context.getTemporalTableStrategy() == HISTORY_TABLE;
+		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
+		return context.getTemporalTableStrategy( dialect ) == HISTORY_TABLE;
 	}
 
 	public static boolean suppressesTemporalTablePrimaryKeys(boolean partitioned, MetadataBuildingContext context) {

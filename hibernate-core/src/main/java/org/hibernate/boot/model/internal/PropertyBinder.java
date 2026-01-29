@@ -550,13 +550,13 @@ public class PropertyBinder {
 	}
 
 	private void addTemporalExcludedColumnOptions(Property property) {
-		if ( buildingContext.getTemporalTableStrategy() == TemporalTableStrategy.NATIVE ) {
+		final var dialect = buildingContext.getMetadataCollector().getDatabase().getDialect();
+		if ( buildingContext.getTemporalTableStrategy( dialect ) == TemporalTableStrategy.NATIVE ) {
 			for ( var selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
 					final String existing = column.getOptions();
 					final String exclusion =
-							buildingContext.getMetadataCollector().getDatabase()
-									.getDialect().getTemporalExclusionColumnOption();
+							dialect.getTemporalExclusionColumnOption();
 					final String options =
 							isBlank( existing )
 									? exclusion

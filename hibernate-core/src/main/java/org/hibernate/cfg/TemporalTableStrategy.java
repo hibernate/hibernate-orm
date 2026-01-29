@@ -60,5 +60,13 @@ public enum TemporalTableStrategy {
 	 * are executed against the table for historical
 	 * data.
 	 */
-	HISTORY_TABLE
+	HISTORY_TABLE,
+	/**
+	 * Let us choose a temporal table mapping strategy for you
+	 * because YOLO. Selects {@link #HISTORY_TABLE} except on
+	 * databases with especially robust implementations of
+	 * {@link #NATIVE} temporal versioning. This is the default.
+	 * @see org.hibernate.dialect.Dialect#getDefaultTemporalTableStrategy()
+	 */
+	AUTO
 }

@@ -4,20 +4,14 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -27,9 +21,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
@@ -165,14 +157,20 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 
-		final var temporalValueExpression =
-				currentTimestampExpression == null || temporalValue != null
-						? new TemporalValueParameter( jdbcMapping, temporalValue )
-						: currentTimestampExpression;
+		final Expression startingTemporalValue;
+		final Expression endingTemporalValue;
+		if ( currentTimestampExpression == null || temporalValue != null ) {
+			startingTemporalValue = new TemporalJdbcParameter( startingColumnMapping );
+			endingTemporalValue = new TemporalJdbcParameter( endingColumnMapping );
+		}
+		else {
+			startingTemporalValue = currentTimestampExpression;
+			endingTemporalValue = currentTimestampExpression;
+		}
 
-		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, temporalValueExpression );
+		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, startingTemporalValue );
 		final var endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
-		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, temporalValueExpression );
+		final var endingAfterPredicate = new ComparisonPredicate( endingColumn, GREATER_THAN, endingTemporalValue );
 
 		final var endingPredicate = new Junction( Junction.Nature.DISJUNCTION );
 		endingPredicate.add( endingNullPredicate );
@@ -225,47 +223,4 @@ public class TemporalMappingImpl implements TemporalMapping {
 		return "TemporalMapping(" + tableName + "." + getStartingColumnName() + "," + getEndingColumnName() + ")";
 	}
 
-	private static class TemporalValueParameter implements JdbcParameter, JdbcParameterBinder {
-		private final JdbcMapping jdbcMapping;
-		private final Object value;
-
-		private TemporalValueParameter(JdbcMapping jdbcMapping, Object value) {
-			this.jdbcMapping = jdbcMapping;
-			this.value = value;
-		}
-
-		@Override
-		public JdbcParameterBinder getParameterBinder() {
-			return this;
-		}
-
-		@Override
-		public Integer getParameterId() {
-			return null;
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParameterBindings,
-				ExecutionContext executionContext) throws SQLException {
-			jdbcMapping.getJdbcValueBinder().bind(
-					statement,
-					jdbcMapping.convertToRelationalValue( value ),
-					startPosition,
-					executionContext.getSession()
-			);
-		}
-
-		@Override
-		public JdbcMappingContainer getExpressionType() {
-			return jdbcMapping;
-		}
-
-		@Override
-		public void accept(SqlAstWalker sqlTreeWalker) {
-			sqlTreeWalker.visitParameter( this );
-		}
-	}
 }

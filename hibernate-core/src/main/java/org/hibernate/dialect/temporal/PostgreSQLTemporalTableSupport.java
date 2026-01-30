@@ -9,6 +9,7 @@ import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.emptySet;
 
@@ -65,4 +66,8 @@ public class PostgreSQLTemporalTableSupport extends DefaultTemporalTableSupport 
 		}
 	}
 
+	@Override
+	public int getTemporalColumnType() {
+		return SqlTypes.TIMESTAMP_UTC;
+	}
 }

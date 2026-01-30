@@ -33,7 +33,7 @@ import java.util.List;
  * <li>on the other hand, for databases with no SQL array type, a
  *     large batch size results in long SQL statements with many JDBC
  *     parameters.
- * <p>
+ * </ul>
  * A batch size is considered a hint. This option has no effect
  * on {@link Session#find(Class, Object, FindOption...)}.
  *

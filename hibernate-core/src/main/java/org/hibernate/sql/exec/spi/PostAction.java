@@ -16,7 +16,7 @@ import java.sql.Connection;
 public interface PostAction extends SecondaryAction {
 	/**
 	 * Perform the action.
-	 * <p/>
+	 * <p>
 	 * Generally the action should use the passed {@code jdbcStatementAccess} to interact with the
 	 * database, although the {@code jdbcConnection} can be used to create specialized statements,
 	 * access the {@linkplain java.sql.DatabaseMetaData database metadata}, etc.

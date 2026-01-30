@@ -23,7 +23,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Used to model numeric literals found in HQL queries.
- * <p/>
+ * <p>
  * Used instead of {@link SqmLiteral} which would require parsing the
  * literal value to the specified number type to avoid loss of precision
  * due to Float and Double being non-exact types.

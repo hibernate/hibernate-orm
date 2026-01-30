@@ -43,7 +43,7 @@ public class SettingsDocExtension {
 
 	/**
 	 * The local directory which contains the Javadoc to be processed.
-	 * <p/>
+	 * <p>
 	 * Defaults to {@code ${build-dir}/javadocs}
 	 */
 	public DirectoryProperty getJavadocDirectory() {
@@ -53,7 +53,7 @@ public class SettingsDocExtension {
 	/**
 	 * The base URL for the published doc server.  This is used to
 	 * replace local hrefs with hrefs on the doc sever
-	 * <p/>
+	 * <p>
 	 * Defaults to {@code https://docs.hibernate.org/orm}
 	 */
 	public Property<String> getPublishedDocsUrl() {
@@ -91,7 +91,7 @@ public class SettingsDocExtension {
 
 	/**
 	 * The file where the settings doc should be written
-	 * <p/>
+	 * <p>
 	 * Defaults to {@code ${build-dir}/asciidoc/fragments/config-settings.adoc}
 	 */
 	public RegularFileProperty getOutputFile() {

@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 
 /**
  * Similar to JUnit's {@link org.junit.jupiter.api.BeforeAll} but called before
- * each template invocation in a {@link @ClassTemplate} test class.
+ * each template invocation in a {@link org.junit.jupiter.api.ClassTemplate} test class.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

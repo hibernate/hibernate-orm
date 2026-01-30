@@ -159,15 +159,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
-/**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
- * <p>
- * Please refer to the
- * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
- *
- * @author Gavin King
- * @author Yoobin Yoon
- */
+/// A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
+///
+/// Please refer to the
+/// <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
+///
+/// @author Gavin King
+/// @author Yoobin Yoon
 public class PostgreSQLDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
 
@@ -463,12 +461,10 @@ public class PostgreSQLDialect extends Dialect {
 		return "current_timestamp";
 	}
 
-	/**
-	 * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK}
-	 * numbered from 0 to 6. This isn't consistent with what most other
-	 * databases do, so here we adjust the result by generating
-	 * {@code (extract(dow,arg)+1))}.
-	 */
+	/// The `extract()` function returns [TemporalUnit#DAY_OF_WEEK]
+	/// numbered from 0 to 6. This isn't consistent with what most other
+	/// databases do, so here we adjust the result by generating
+	/// `(extract(dow,arg)+1))`.
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
@@ -487,14 +483,12 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
-	/**
-	 * {@code microsecond} is the smallest unit for an {@code interval},
-	 * and the highest precision for a {@code timestamp}, so we could
-	 * use it as the "native" precision, but it's more convenient to use
-	 * whole seconds (with the fractional part), since we want to use
-	 * {@code extract(epoch from ...)} in our emulation of
-	 * {@code timestampdiff()}.
-	 */
+	/// `microsecond` is the smallest unit for an `interval`,
+	/// and the highest precision for a `timestamp`, so we could
+	/// use it as the "native" precision, but it's more convenient to use
+	/// whole seconds (with the fractional part), since we want to use
+	/// `extract(epoch from ...)` in our emulation of
+	/// `timestampdiff()`.
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1_000_000_000; //seconds
@@ -739,51 +733,49 @@ public class PostgreSQLDialect extends Dialect {
 		return "ordinality";
 	}
 
-	/**
-	 * Whether PostgreSQL supports {@code min(uuid)}/{@code max(uuid)},
-	 * which it doesn't by default. Since the emulation does not perform well,
-	 * this method may be overridden by any user who ensures that aggregate
-	 * functions for handling uuids exist in the database.
-	 * <p>
-	 * The following definitions can be used for this purpose:
-	 * <code><pre>
-	 * create or replace function min(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return least($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate min(uuid) (
-	 *     sfunc = min,
-	 *     stype = uuid,
-	 *     combinefunc = min,
-	 *     parallel = safe,
-	 *     sortop = operator (&lt;)
-	 *     );
-	 *
-	 * create or replace function max(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return greatest($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate max(uuid) (
-	 *     sfunc = max,
-	 *     stype = uuid,
-	 *     combinefunc = max,
-	 *     parallel = safe,
-	 *     sortop = operator (&gt;)
-	 *     );
-	 * </pre></code>
-	 */
+	/// Whether PostgreSQL supports `min(uuid)`/`max(uuid)`,
+	/// which it doesn't by default. Since the emulation does not perform well,
+	/// this method may be overridden by any user who ensures that aggregate
+	/// functions for handling uuids exist in the database.
+	///
+	/// The following definitions can be used for this purpose:
+	/// ```sql
+	/// create or replace function min(uuid, uuid)
+	///     returns uuid
+	///     immutable parallel safe
+	///     language plpgsql as
+	/// $$
+	/// begin
+	///     return least($1, $2);
+	/// end
+	/// $$;
+	///
+	/// create aggregate min(uuid) (
+	///     sfunc = min,
+	///     stype = uuid,
+	///     combinefunc = min,
+	///     parallel = safe,
+	///     sortop = operator (&lt;)
+	///     );
+	///
+	/// create or replace function max(uuid, uuid)
+	///     returns uuid
+	///     immutable parallel safe
+	///     language plpgsql as
+	/// $$
+	/// begin
+	///     return greatest($1, $2);
+	/// end
+	/// $$;
+	///
+	/// create aggregate max(uuid) (
+	///     sfunc = max,
+	///     stype = uuid,
+	///     combinefunc = max,
+	///     parallel = safe,
+	///     sortop = operator (&gt;)
+	///     );
+	/// ```
 	protected boolean supportsMinMaxOnUuid() {
 		return false;
 	}
@@ -1056,10 +1048,8 @@ public class PostgreSQLDialect extends Dialect {
 		return EXTRACTOR;
 	}
 
-	/**
-	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Originally contributed by Denny Bartelt.
-	 */
+	/// Constraint-name extractor for Postgres constraint violation exceptions.
+	/// Originally contributed by Denny Bartelt.
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
@@ -1484,9 +1474,7 @@ public class PostgreSQLDialect extends Dialect {
 		contributePostgreSQLTypes(typeContributions, serviceRegistry);
 	}
 
-	/**
-	 * Allow for extension points to override this only
-	 */
+	/// Allow for extension points to override this only
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
@@ -1560,9 +1548,7 @@ public class PostgreSQLDialect extends Dialect {
 		return postgresqlTableExporter;
 	}
 
-	/**
-	 * @return {@code true}, but only because we can "batch" truncate
-	 */
+	/// @return `true`, but only because we can "batch" truncate
 	@Override
 	public boolean canBatchTruncate() {
 		return true;

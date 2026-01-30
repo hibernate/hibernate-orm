@@ -18,12 +18,10 @@ import org.hibernate.sql.model.jdbc.MergeOperation;
 
 /**
  * Base for translators which support a full insert-or-update-or-delete (MERGE) command.
- * <p/>
+ * <p>
  * Use {@link #createMergeOperation(OptionalTableUpdate)} to translate an
  * {@linkplain OptionalTableUpdate} into an executable {@linkplain MergeOperation}
  * operation.
- * <p/>
- *
  *
  * @author Steve Ebersole
  */

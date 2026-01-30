@@ -13,7 +13,7 @@
  * which is a {@link org.hibernate.service.Service} and available via the
  * {@link org.hibernate.boot.registry.StandardServiceRegistry}.
  *
- * <h3>Resource-local transaction</h3>
+ * <h2>Resource-local transaction</h2>
  *
  * A <em>resource-local</em> transaction is exposed to the application as an
  * instance of {@link org.hibernate.Transaction}, allowing full control over the

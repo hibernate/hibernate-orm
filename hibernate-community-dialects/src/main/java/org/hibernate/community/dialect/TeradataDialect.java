@@ -644,7 +644,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	/**
-	 * Teradata uses the syntax DELETE FROM <tablename> ALL instead of TRUNCATE <tablename>
+	 * Teradata uses the syntax {@code DELETE FROM <tablename> ALL instead of TRUNCATE <tablename>}
 	 * @param tableName the name of the table
 	 */
 	public String getTruncateTableStatement(String tableName) {

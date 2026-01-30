@@ -619,8 +619,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setHint(String hintName, Object value);
 
 	/**
-	 * @inheritDoc
-	 *
+	 * {@inheritDoc}
+	 * <p>
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
 	 * result in changes to the native SQL query that is
@@ -630,7 +630,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	LockOptions getLockOptions();
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 *
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
@@ -652,8 +652,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	LockModeType getLockMode();
 
 	/**
-	 * @inheritDoc
-	 *
+	 * {@inheritDoc}
+	 * <p>
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
 	 * result in changes to the native SQL query that is
@@ -676,8 +676,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setLockMode(LockModeType lockMode);
 
 	/**
-	 * @inheritDoc
-	 *
+	 * {@inheritDoc}
+	 * <p>
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
 	 * result in changes to the native SQL query that is

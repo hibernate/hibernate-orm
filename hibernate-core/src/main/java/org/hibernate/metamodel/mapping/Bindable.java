@@ -43,8 +43,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * <p>
 	 * Generally speaking, this is the form in which entity state is kept relative to a
 	 * Session via {@code EntityEntry}.
-	 * <p>
-	 * <pre>
+	 * <pre>{@code
 	 * &#64;Entity class Person {
 	 *     &#64;Id Integer id;
 	 *     &#64;Embedded Name name;
@@ -55,27 +54,23 @@ public interface Bindable extends JdbcMappingContainer {
 	 *     String familiarName;
 	 *     String familyName;
 	 * }
-	 * </pre>
+	 * }</pre>
 	 * <p>
 	 * At the top level, we would want to disassemble a {@code Person} value, so we'd
 	 * ask the {@code Bindable} for the {@code Person} entity to disassemble.  Given a
 	 * {@code Person} value:
-	 * <p>
 	 * <pre>
 	 * Person( id=1, name=Name( 'Steve', 'Ebersole' ), 28 )
 	 * </pre>
-	 * <p>
 	 * this disassemble would result in a multidimensional array:
-	 * <p>
-	 * <pre>
+	 * <pre>{@code
 	 * [ ["Steve", "Ebersole"], 28 ]
-	 * </pre>
+	 * }</pre>
 	 * <p>
 	 * Note that the identifier is not part of this disassembled state.  Note also
 	 * how the embedded value results in a sub-array.
 	 *
 	 * @see org.hibernate.engine.spi.EntityEntry
-	 * <p>
 	 */
 	Object disassemble(Object value, SharedSessionContractImplementor session);
 
@@ -94,12 +89,11 @@ public interface Bindable extends JdbcMappingContainer {
 	 * <p>
 	 * Given the example in {@link #disassemble}, this results in the consumer being
 	 * called for each simple value.  E.g.:
-	 * <p>
-	 * <pre>
+	 * <pre>{@code
 	 * consumer.consume( "Steve" );
 	 * consumer.consume( "Ebersole" );
 	 * consumer.consume( 28 );
-	 * </pre>
+	 * }</pre>
 	 * <p>
 	 * Think of it as breaking the multidimensional array into a visitable flat array.
 	 * Additionally, it passes through the values {@code X} and {@code Y} to the consumer.

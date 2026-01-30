@@ -59,9 +59,7 @@ import jakarta.persistence.metamodel.Type;
  * Setting the {@linkplain QueryFlushMode query flush mode} does not affect the flush
  * mode of other operations performed via the parent {@linkplain Session session}.
  * This operation is usually used as follows:
- * <p>
- * <pre>query.setQueryFlushMode(NO_FLUSH).getResultList()</pre>
- * <p>
+ * <pre>{@code query.setQueryFlushMode(NO_FLUSH).getResultList() }</pre>
  * The call to {@code setQueryFlushMode(NO_FLUSH)} disables the usual automatic flush
  * operation that occurs before query execution.
  *

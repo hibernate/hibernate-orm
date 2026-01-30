@@ -152,9 +152,9 @@ public class LoaderHelper {
 
 	/**
 	 * Normalize an array of keys (primary, foreign or natural).
-	 * <p/>
+	 * <p>
 	 * If the array is already typed as the key type, {@code keys} is simply returned.
-	 * <p/>
+	 * <p>
 	 * Otherwise, a new typed array is created and the contents copied from {@code keys} to this new array.  If
 	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion} is enabled, the
 	 * values will be coerced to the key type.

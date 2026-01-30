@@ -13,7 +13,6 @@ import org.hibernate.query.specification.internal.DeleteSpecificationImpl;
 /**
  * Specialization of {@link MutationSpecification} for programmatic customization
  * of delete queries.
- * <p>
  *
  * @param <T> The entity type which is the target of the mutation.
  *

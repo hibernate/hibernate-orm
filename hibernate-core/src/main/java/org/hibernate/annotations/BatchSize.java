@@ -61,7 +61,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface BatchSize {
 	/**
 	 * The maximum batch size, a strictly positive integer.
-	 * <p/>
+	 * <p>
 	 * Default is defined by {@link org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE}
 	 */
 	int size();

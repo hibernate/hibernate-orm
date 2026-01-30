@@ -10,9 +10,9 @@ import org.hibernate.boot.model.TypeContributor;
 
 /**
  * A bootstrap process hook for contributing settings to {@link MetadataBuilder}.
- * <p/>
+ * <p>
  * Generally this is used from JPA bootstrapping where {@link MetadataBuilder} is not accessible.
- * <p/>
+ * <p>
  * Implementations can be {@linkplain java.util.ServiceLoader discovered}. For historical reasons,
  * an implementation can also be named using the
  * {@value org.hibernate.jpa.boot.spi.JpaSettings#METADATA_BUILDER_CONTRIBUTOR} setting, though

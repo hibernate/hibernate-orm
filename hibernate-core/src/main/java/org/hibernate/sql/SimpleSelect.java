@@ -121,7 +121,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	/**
 	 * Appends a restriction based on the comparison between {@code lhs} and {@code rhs}.
-	 * <p/>
+	 * <p>
 	 * The {@code rhs} is checked for parameter marker and processed via {@link ParameterMarkerStrategy}
 	 * if needed.
 	 */

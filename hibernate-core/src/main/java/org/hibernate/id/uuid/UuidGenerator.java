@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
  * {@linkplain org.hibernate.generator.Generator} for producing {@link UUID} values.
- * <p/>
+ * <p>
  * Uses a {@linkplain UuidValueGenerator} and {@linkplain ValueTransformer} to
  * generate the values.
  *

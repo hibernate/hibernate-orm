@@ -47,7 +47,7 @@ public interface Locking {
 		 * rows for collection tables ({@linkplain jakarta.persistence.ElementCollection},
 		 * {@linkplain jakarta.persistence.OneToMany} and {@linkplain jakarta.persistence.ManyToMany})
 		 * will also be locked.
-		 * <p/>
+		 * <p>
 		 * Hibernate will only lock these collection rows when they are joined.  The alternatives
 		 * would be to either:<ul>
 		 *     <li>

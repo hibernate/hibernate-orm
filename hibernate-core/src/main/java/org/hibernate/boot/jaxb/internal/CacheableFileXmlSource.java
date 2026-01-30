@@ -22,7 +22,7 @@ import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
  * Support for creating a mapping {@linkplain Binding binding} from "cached" XML files.
- * <p/>
+ * <p>
  * This is a legacy feature, caching a serialized form of the {@linkplain JaxbBindableMappingDescriptor JAXB model}
  * into a file for later use.  While not deprecated per se, its use is discouraged.
  *

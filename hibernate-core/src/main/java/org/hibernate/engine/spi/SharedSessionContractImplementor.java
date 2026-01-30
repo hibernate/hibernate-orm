@@ -155,7 +155,7 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Determines whether the session is closed.
-	 * <p>
+	 *
 	 * @apiNote Provided separately from {@link #isOpen()} as this method
 	 *          does not attempt any JTA synchronization registration,
 	 *          whereas {@link #isOpen()} does. This one is better for most

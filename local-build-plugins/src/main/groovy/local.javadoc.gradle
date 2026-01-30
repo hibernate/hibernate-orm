@@ -66,7 +66,9 @@ tasks.withType(Javadoc).configureEach {
         use = true
         quiet()
 
-        addBooleanOption('Xdoclint:none', true)
+        addBooleanOption('Xdoclint:all,-missing', true)
+        // uncomment the `Werror` to get a bit more failures ;)
+        // addBooleanOption('Werror', true)
 
         header = "<div id=\"toggleContainer\"></div>"
         addStringOption '-add-script', rootThemeDir.dir('resources').file('theme-switch.js').asFile.absolutePath

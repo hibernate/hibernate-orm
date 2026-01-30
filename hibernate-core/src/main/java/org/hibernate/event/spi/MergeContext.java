@@ -185,7 +185,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * This method assumes that the merge process is not yet operating on {@code mergeEntity}.
 	 * Later when {@code mergeEntity} enters the merge process, {@link #setOperatedOn(Object, boolean)}
 	 * should be called.
-	 * <p>
+	 *
 	 * @param mergeEntity the merge entity; must be non-null
 	 * @param managedEntity the managed entity result; must be non-null
 	 * @return previous managed entity associated with specified merge entity, or null if

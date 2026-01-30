@@ -16,7 +16,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 /**
  * A compound path which represents a {@link org.hibernate.metamodel.mapping.ModelPart}
  * and uniquely identifies it with the runtime metamodel.
- * <p/>
+ * <p>
  * The {@linkplain #isRoot root} will name either an
  * {@linkplain org.hibernate.metamodel.MappingMetamodel#getEntityDescriptor entity} or
  * {@linkplain org.hibernate.metamodel.MappingMetamodel#getCollectionDescriptor collection}.

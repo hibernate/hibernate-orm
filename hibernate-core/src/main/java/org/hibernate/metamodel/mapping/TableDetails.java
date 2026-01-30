@@ -31,7 +31,7 @@ public interface TableDetails {
 
 	/**
 	 * Whether this table is the root for a given {@link ModelPartContainer}.
-	 * <p/>
+	 * <p>
 	 * Only relevant for entity-mappings where this indicates whether this
 	 * table holds the entity's identifier.
 	 */

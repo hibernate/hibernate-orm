@@ -14,8 +14,8 @@ import static java.lang.annotation.ElementType.*;
  * Marks an entity, collection, or attribute of an entity as immutable. The absence of this
  * annotation means the element is mutable.
  *
- * <h3>Immutable entities</h3>
- * <p>
+ * <h2>Immutable entities</h2>
+ *
  * Changes made in memory to the state of an immutable entity are never synchronized to
  * the database. The changes are ignored, with no exception thrown.
  * <p>

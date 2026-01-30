@@ -94,7 +94,6 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  * These initial properties may be completely discarded by calling
  * {@link #setProperties(Properties)}, or they may be overridden
  * individually by calling {@link #setProperty(String, String)}.
- * <p>
  * <pre>
  * SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations

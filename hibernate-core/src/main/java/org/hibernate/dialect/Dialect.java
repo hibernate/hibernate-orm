@@ -5716,7 +5716,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Support for native parameter markers.
-	 * <p/>
+	 * <p>
 	 * This is generally dependent on both the database and the driver.
 	 *
 	 * @return May return {@code null} to indicate that the JDBC

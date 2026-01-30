@@ -33,8 +33,8 @@ import org.geolatte.geom.jts.JTS;
 /**
  * A utility class to serialize from/to H2GIS WKB's.
  * <p>
- * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
- * not available in common maven repositories, such a dependency is to be avoided.</p>
+ * Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
+ * not available in common maven repositories, such a dependency is to be avoided.
  *
  * @author Karel Maesen, Geovise BVBA
  */

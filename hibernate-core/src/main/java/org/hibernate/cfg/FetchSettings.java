@@ -21,7 +21,7 @@ public interface FetchSettings {
 
 	/**
 	 * Specifies the default value for {@linkplain BatchSize#size() batch fetching}.
-	 * <p/>
+	 * <p>
 	 * By default, Hibernate only uses batch fetching for entities and collections explicitly
 	 * annotated {@code @BatchSize}.
 	 *

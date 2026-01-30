@@ -6,6 +6,7 @@ package org.hibernate.dialect.temporal;
 
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.type.SqlTypes;
 
 /**
  * @author Gavin King
@@ -45,5 +46,8 @@ public class MySQLTemporalTableSupport extends DefaultTemporalTableSupport {
 				: null;
 	}
 
-
+	@Override
+	public int getTemporalColumnType() {
+		return SqlTypes.TIMESTAMP_UTC;
+	}
 }

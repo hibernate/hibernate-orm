@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Filter;
@@ -39,6 +40,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -1419,6 +1421,34 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
+		@Override
+		public RowMutationOperations getRowMutationOperations() {
+			return null;
+		}
 
+		@Override
+		public boolean isRowInsertEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isRowDeleteEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean[] getIndexColumnIsSettable() {
+			return new boolean[0];
+		}
+
+		@Override
+		public boolean[] getElementColumnIsSettable() {
+			return new boolean[0];
+		}
+
+		@Override
+		public UnaryOperator<Object> getIndexIncrementer() {
+			return null;
+		}
 	}
 }

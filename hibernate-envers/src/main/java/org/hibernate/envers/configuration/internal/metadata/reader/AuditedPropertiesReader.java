@@ -59,7 +59,7 @@ import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Erik-Berndt Scheper
- * @author Hern&aacut;n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)

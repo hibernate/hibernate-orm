@@ -16,7 +16,7 @@ public interface TransactionSettings {
 	 * implementation to use for creating instances of
 	 * {@link org.hibernate.resource.transaction.spi.TransactionCoordinator} which the interface
 	 * Hibernate uses to manage transactions.
-	 * <p/>
+	 * <p>
 	 * Accepts either:
 	 * <ul>
 	 *     <li>an instance of {@code TransactionCoordinatorBuilder},
@@ -24,7 +24,6 @@ public interface TransactionSettings {
 	 *     <li>the name of a class that implements {@code TransactionCoordinatorBuilder},
 	 *     <li>{@code jta} or {@code jdbc}</li>
 	 * </ul>
-	 * <p/>
 	 *
 	 * @settingDefault With Jakarta Persistence bootstrapping, based on the persistence unit's {@link PersistenceUnitInfo#getTransactionType()};
 	 * otherwise {@code jdbc}.
@@ -120,7 +119,6 @@ public interface TransactionSettings {
 	 * using a JTA for transaction management.
 	 * <p>
 	 * Values are {@code true}, which grants access, and {@code false}, which does not.
-	 * <p>
 	 *
 	 * @settingDefault {@code false} when bootstrapped via JPA; {@code true} otherwise.
 	 *

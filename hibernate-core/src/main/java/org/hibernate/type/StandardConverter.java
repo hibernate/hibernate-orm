@@ -10,7 +10,7 @@ import jakarta.persistence.AttributeConverter;
 
 /**
  * Marker for Hibernate supplied {@linkplain AttributeConverter converter} classes.
- * <p/>
+ * <p>
  * Also implements the Hibernate-specific BasicValueConverter contract
  *
  * @author Steve Ebersole

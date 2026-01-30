@@ -199,6 +199,7 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 		overview = rootProject.file( "shared/javadoc/overview.html" )
 		windowTitle = 'Hibernate Javadocs'
 		docTitle = "Hibernate Javadoc ($project.version)"
+        options.addBooleanOption('Xdoclint:none', true)
 	}
 
 	if ( jdkVersions.explicit ) {

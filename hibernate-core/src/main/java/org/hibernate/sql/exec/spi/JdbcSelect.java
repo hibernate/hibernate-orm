@@ -35,7 +35,7 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 
 	/**
 	 * Perform any pre-actions.
-	 * <p/>
+	 * <p>
 	 * Generally the pre-actions should use the passed {@code jdbcStatementAccess} to interact with the
 	 * database, although the {@code jdbcConnection} can be used to create specialized statements,
 	 * access the {@linkplain java.sql.DatabaseMetaData database metadata}, etc.
@@ -47,7 +47,7 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);	/**
 
 	 * Perform any post-actions.
-	 * <p/>
+	 * <p>
 	 * Generally the post-actions should use the passed {@code jdbcStatementAccess} to interact with the
 	 * database, although the {@code jdbcConnection} can be used to create specialized statements,
 	 * access the {@linkplain java.sql.DatabaseMetaData database metadata}, etc.

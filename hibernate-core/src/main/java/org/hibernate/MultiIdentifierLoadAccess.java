@@ -16,7 +16,6 @@ import org.hibernate.graph.GraphSemantic;
  * Loads multiple instances of a given entity type at once, by
  * specifying a list of identifier values. This allows the entities
  * to be fetched from the database in batches.
- * <p>
  * <pre>
  * var graph = session.createEntityGraph(Book.class);
  * graph.addSubgraph(Book_.publisher);

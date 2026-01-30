@@ -149,7 +149,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * <p>
  * A {@code UserType} is much more useful when the persistent attribute
  * type is mutable. For example:
- * <p>
  * <pre>
  * public class BitSetUserType implements UserType&lt;BitSet&gt; {
  *
@@ -213,7 +212,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *     }
  * }
  * </pre>
- * <p>
  * Every implementor of {@code UserType} must be immutable.
  * <p>
  * A custom type may receive parameters from its type annotation.

@@ -62,7 +62,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 * @implNote This only works for {@link InstanceIdentity} keys, and it's inefficient
 	 * since we need to do a type check. Prefer using {@link #containsKey(int, Object)}.
 	 */
@@ -130,7 +130,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 * @implNote This only works for {@link InstanceIdentity} keys, and it's inefficient
 	 * since we need to do a type check. Prefer using {@link #get(int, Object)}.
 	 */
@@ -200,7 +200,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 * @implNote This only works for {@link InstanceIdentity} keys, and it's inefficient
 	 * since we need to do a type check. Prefer using {@link #remove(int, Object)}.
 	 */

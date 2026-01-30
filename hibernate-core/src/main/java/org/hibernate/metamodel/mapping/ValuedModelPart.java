@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 /**
  * Describes a ModelPart that is also a ValueMapping (and therefore also a SelectableMappings).
- * <p/>
+ * <p>
  * {@linkplain BasicValuedModelPart Basic} and {@linkplain EmbeddableValuedModelPart embedded}
  * model-parts fall into this category.
  *

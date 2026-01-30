@@ -32,7 +32,6 @@ import org.apache.tools.ant.types.FileSet;
 
 /**
  * An Ant task for {@code SchemaUpdate}.
- * <p>
  * <pre>
  * &lt;taskdef name="schemaupdate"
  *     classname="org.hibernate.tool.hbm2ddl.SchemaUpdateTask"

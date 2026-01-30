@@ -308,7 +308,6 @@ public interface QuerySettings {
 	/**
 	 * The maximum number of {@link org.hibernate.query.ParameterMetadata} instances
 	 * maintained by the {@link org.hibernate.query.spi.QueryInterpretationCache}.
-	 * <p>
 	 *
 	 * @deprecated this setting is not currently used
 	 */

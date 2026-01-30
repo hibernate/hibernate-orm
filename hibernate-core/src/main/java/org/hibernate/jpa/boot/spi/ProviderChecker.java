@@ -26,7 +26,7 @@ public final class ProviderChecker {
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
 	 * {@link jakarta.persistence.spi.PersistenceProvider}?
-	 * <p></p>
+	 * <p>
 	 * Note that in the case of no requested provider being named, we
 	 * assume we are the provider. (The calls got to us somehow...)
 	 *

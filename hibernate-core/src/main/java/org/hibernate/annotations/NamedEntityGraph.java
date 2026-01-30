@@ -20,9 +20,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Defines a named {@linkplain EntityGraph entity graph}
  * based on Hibernate's {@linkplain org.hibernate.graph.GraphParser entity graph language}.
- * <p/>
+ * <p>
  * When applied to a root entity class, the root entity name is implied - e.g. {@code "title, isbn, author(name, books)"}
- * <p/>
+ * <p>
  * When applied to a package, the root entity name must be specified - e.g. {@code "Book: title, isbn, author(name, books)"}
  *
  * @see EntityManager#getEntityGraph(String)
@@ -43,7 +43,7 @@ public @interface NamedEntityGraph {
 	 * The name used to identify the entity graph in calls to
 	 * {@linkplain org.hibernate.Session#getEntityGraph(String)}.
 	 * Entity graph names must be unique within the persistence unit.
-	 * <p/>
+	 * <p>
 	 * When applied to a root entity class, the name is optional and
 	 * defaults to the JPA entity name of that entity.
 	 */
@@ -51,11 +51,11 @@ public @interface NamedEntityGraph {
 
 	/**
 	 * The textual representation of the graph.
-	 * <p/>
+	 * <p>
 	 * When applied to a package, the syntax requires the entity name - e.g., {@code "Book: title, isbn, author(name, books)"}.
-	 * <p/>
+	 * <p>
 	 * When applied to an entity, the entity name should be omitted - e.g., {@code "title, isbn, author(name, books)"}.
-	 * <p/>
+	 * <p>
 	 * See {@linkplain org.hibernate.graph.GraphParser} for details about the syntax.
 	 */
 	String graph();

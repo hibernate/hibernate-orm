@@ -66,7 +66,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes),
-	 * instead of calling {@link #release}.
+	 * instead of calling {@code release()}.
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session
@@ -100,7 +100,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 
 	/**
 	 * Called after an item has been updated (after the transaction completes),
-	 * instead of calling {@link #release}. This method is used by "asynchronous"
+	 * instead of calling {@code release()}. This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *
 	 * @param session Current session

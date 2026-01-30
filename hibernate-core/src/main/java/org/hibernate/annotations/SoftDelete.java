@@ -24,10 +24,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Describes a soft-delete indicator mapping.
- * <p/>
+ * <p>
  * Soft deletes handle "deletions" from a database table by setting a column in
  * the table to indicate deletion.
- * <p/>
+ * <p>
  * May be defined at various levels<ul>
  *     <li>
  *         {@linkplain ElementType#PACKAGE PACKAGE}, where it applies to all
@@ -60,7 +60,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface SoftDelete {
 	/**
 	 * (Optional) The name of the column.
-	 * <p/>
+	 * <p>
 	 * Default depends on the {@linkplain #strategy() strategy} being used.
 	 *
 	 * @see SoftDeleteType#getDefaultColumnName()
@@ -87,7 +87,7 @@ public @interface SoftDelete {
 
 	/**
 	 * The strategy to use for storing/reading values to/from the database.
-	 * <p/>
+	 * <p>
 	 * The strategy also affects the default {@linkplain #columnName() column name} - see
 	 * {@linkplain SoftDeleteType#getDefaultColumnName}.
 	 */
@@ -102,7 +102,7 @@ public @interface SoftDelete {
 	 *     <dt>{@code false}</dt>
 	 *     <dd>Indicates that the row is considered NOT deleted</dd>
 	 * </dl>
-	 * <p/>
+	 * <p>
 	 * By default, values are stored as booleans in the database according to
 	 * the {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect}
 	 * and {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}

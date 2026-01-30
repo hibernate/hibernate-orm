@@ -65,7 +65,7 @@ public interface EntityMappingType
 
 	/**
 	 * The entity name.
-	 * <p/>
+	 * <p>
 	 * For most entities, this will be the fully-qualified name
 	 * of the entity class.  The alternative is an explicit
 	 * {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#getName() entity-name} which takes precedence if provided

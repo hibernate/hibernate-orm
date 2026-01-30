@@ -124,6 +124,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -893,7 +894,8 @@ public abstract class AbstractCollectionPersister
 		return useShallowQueryCacheLayout;
 	}
 
-	protected abstract RowMutationOperations getRowMutationOperations();
+	@Override
+	public abstract RowMutationOperations getRowMutationOperations();
 	protected abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
@@ -1115,7 +1117,8 @@ public abstract class AbstractCollectionPersister
 		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
 	}
 
-	protected boolean isRowDeleteEnabled() {
+	@Override
+	public boolean isRowDeleteEnabled() {
 		return keyIsUpdateable;
 	}
 
@@ -1124,8 +1127,24 @@ public abstract class AbstractCollectionPersister
 		return !isInverse() && isRowDeleteEnabled();
 	}
 
-	protected boolean isRowInsertEnabled() {
+	@Override
+	public boolean isRowInsertEnabled() {
 		return keyIsUpdateable;
+	}
+
+	@Override
+	public boolean[] getIndexColumnIsSettable() {
+		return indexColumnIsSettable;
+	}
+
+	@Override
+	public boolean[] getElementColumnIsSettable() {
+		return elementColumnIsSettable;
+	}
+
+	@Override
+	public UnaryOperator<Object> getIndexIncrementer() {
+		return this::incrementIndexByBase;
 	}
 
 	public String getOwnerEntityName() {

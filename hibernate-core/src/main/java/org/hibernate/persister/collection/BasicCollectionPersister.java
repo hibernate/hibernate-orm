@@ -19,24 +19,12 @@ import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorHistory;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorHistory;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorHistory;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
 import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorStandard;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTemporal;
+import org.hibernate.persister.state.StateManagement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -83,16 +71,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
-		final boolean temporalized = collectionBinding.isTemporalized();
-		final boolean history = temporalized && isHistoryStrategy();
 		this.rowMutationOperations = buildRowMutationOperations();
-		this.insertRowsCoordinator = buildInsertRowCoordinator( history );
-		this.updateCoordinator = buildUpdateRowCoordinator( temporalized, history );
-		this.deleteRowsCoordinator = buildDeleteRowCoordinator( history );
-		this.removeCoordinator = buildDeleteAllCoordinator( history );
+		final var stateManagement =
+				StateManagement.forCollection( collectionBinding,
+						creationContext.getSessionFactoryOptions() );
+		this.insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
+		this.updateCoordinator = stateManagement.createUpdateRowsCoordinator( this );
+		this.deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );
+		this.removeCoordinator = stateManagement.createRemoveCoordinator( this );
 	}
 
-	protected RowMutationOperations getRowMutationOperations() {
+	@Override
+	public RowMutationOperations getRowMutationOperations() {
 		return rowMutationOperations;
 	}
 
@@ -142,108 +132,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return !isInverse()
 			&& getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
 			&& isAnyTrue( elementColumnIsSettable );
-	}
-
-	private UpdateRowsCoordinator buildUpdateRowCoordinator(boolean temporal, boolean history) {
-		if ( !isPerformingUpdates() ) {
-			return new UpdateRowsCoordinatorNoOp( this );
-		}
-		else if ( temporal ) {
-			return history
-					? new UpdateRowsCoordinatorHistory(
-							this,
-							rowMutationOperations,
-							getFactory(),
-							indexColumnIsSettable,
-							elementColumnIsSettable,
-							this::incrementIndexByBase
-					)
-					: new UpdateRowsCoordinatorTemporal(
-							this,
-							rowMutationOperations,
-							getFactory()
-					);
-		}
-		else {
-			return new UpdateRowsCoordinatorStandard(
-					this,
-					rowMutationOperations,
-					getFactory()
-			);
-		}
-	}
-
-	private InsertRowsCoordinator buildInsertRowCoordinator(boolean history) {
-		if ( isInverse() || !isRowInsertEnabled() ) {
-			return new InsertRowsCoordinatorNoOp( this );
-		}
-		else {
-			return history
-					? new InsertRowsCoordinatorHistory(
-							this,
-							rowMutationOperations,
-							new InsertRowsCoordinatorStandard(
-									this,
-									rowMutationOperations,
-									getFactory().getServiceRegistry()
-							),
-							indexColumnIsSettable,
-							elementColumnIsSettable,
-							this::incrementIndexByBase,
-							getFactory().getServiceRegistry()
-					)
-					: new InsertRowsCoordinatorStandard(
-							this,
-							rowMutationOperations,
-							getFactory().getServiceRegistry()
-					);
-		}
-	}
-
-	private DeleteRowsCoordinator buildDeleteRowCoordinator(boolean history) {
-		if ( !needsRemove() ) {
-			return new DeleteRowsCoordinatorNoOp( this );
-		}
-		else {
-			return history
-					? new DeleteRowsCoordinatorHistory(
-							this,
-							rowMutationOperations,
-							hasPhysicalIndexColumn(),
-							indexColumnIsSettable,
-							elementColumnIsSettable,
-							this::incrementIndexByBase,
-							getFactory().getServiceRegistry()
-					)
-					: new DeleteRowsCoordinatorStandard(
-							this,
-							rowMutationOperations,
-							hasPhysicalIndexColumn(),
-							getFactory().getServiceRegistry()
-					);
-		}
-	}
-
-	private RemoveCoordinator buildDeleteAllCoordinator(boolean history) {
-		if ( !needsRemove() ) {
-			return new RemoveCoordinatorNoOp( this );
-		}
-		else {
-			return history
-					? new RemoveCoordinatorHistory(
-							this,
-							this::buildDeleteAllOperation,
-							indexColumnIsSettable,
-							elementColumnIsSettable,
-							this::incrementIndexByBase,
-							getFactory().getServiceRegistry()
-					)
-					: new RemoveCoordinatorStandard(
-							this,
-							this::buildDeleteAllOperation,
-							getFactory().getServiceRegistry()
-					);
-		}
 	}
 
 	@Override
@@ -342,6 +230,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			deleteRowRestrictions = null;
 		}
 
+		final OperationProducer deleteAllRowsOperationProducer;
+		if ( !isInverse() && isRowDeleteEnabled() ) {
+			deleteAllRowsOperationProducer = this::buildDeleteAllOperation;
+		}
+		else {
+			deleteAllRowsOperationProducer = null;
+		}
+
 		return new RowMutationOperations(
 				this,
 				insertRowOperationProducer,
@@ -350,7 +246,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				updateRowValues,
 				updateRowRestrictions,
 				deleteRowOperationProducer,
-				deleteRowRestrictions
+				deleteRowRestrictions,
+				deleteAllRowsOperationProducer
 		);
 	}
 

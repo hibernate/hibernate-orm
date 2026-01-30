@@ -152,22 +152,12 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
-import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
-import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
-import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.persister.entity.mutation.DeleteCoordinatorHistory;
-import org.hibernate.persister.entity.mutation.InsertCoordinatorHistory;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
-import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
-import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.persister.state.StateManagement;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
@@ -380,6 +370,8 @@ public abstract class AbstractEntityPersister
 	private final String[][] subclassPropertyColumnReaderClosure;
 	private final String[][] subclassPropertyColumnReaderTemplateClosure;
 	private final FetchMode[] subclassPropertyFetchModeClosure;
+
+	private final StateManagement stateManagement;
 
 	private Map<String, SingleIdArrayLoadPlan> lazyLoadPlanByFetchGroup;
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
@@ -787,6 +779,9 @@ public abstract class AbstractEntityPersister
 		if ( hasNamedQueryLoader() ) {
 			getNamedQueryMemento( creationContext.getBootModel() );
 		}
+
+		stateManagement = StateManagement.forEntity( persistentClass, factoryOptions );
+
 	}
 
 	private static String renderSqlWhereStringTemplate(
@@ -3534,61 +3529,19 @@ public abstract class AbstractEntityPersister
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
 	protected InsertCoordinator buildInsertCoordinator() {
-		return temporalMapping != null
-			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-				? new InsertCoordinatorHistory( this, factory )
-				: new InsertCoordinatorStandard( this, factory );
+		return stateManagement.createInsertCoordinator( this );
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
-		return temporalMapping == null
-				? buildNonTemporalUpdateCoordinator()
-				: buildTemporalUpdateCoordinator();
+		return stateManagement.createUpdateCoordinator( this );
 	}
 
 	protected UpdateCoordinator buildMergeCoordinator() {
-		return new MergeCoordinator( this, factory );
+		return stateManagement.createMergeCoordinator( this );
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {
-		return temporalMapping == null
-				? buildNonTemporalDeleteCoordinator()
-				: buildTemporalDeleteCoordinator();
-	}
-
-	private UpdateCoordinator buildNonTemporalUpdateCoordinator() {
-		// we only have updates to issue for entities with one or more singular attributes
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			if ( attributeMappings.get( i ) instanceof SingularAttributeMapping ) {
-				return new UpdateCoordinatorStandard( this, factory );
-			}
-		}
-		// otherwise, nothing to update
-		return new UpdateCoordinatorNoOp( this );
-	}
-
-	private UpdateCoordinator buildTemporalUpdateCoordinator() {
-		return switch ( getTemporalTableStrategy() ) {
-			case SINGLE_TABLE -> new UpdateCoordinatorTemporal( this, factory );
-			case HISTORY_TABLE -> new UpdateCoordinatorHistory( this, factory, buildNonTemporalUpdateCoordinator() );
-			case NATIVE -> buildNonTemporalUpdateCoordinator();
-			case AUTO -> throw new IllegalArgumentException();
-		};
-	}
-
-	private DeleteCoordinator buildNonTemporalDeleteCoordinator() {
-		return softDeleteMapping != null
-				? new DeleteCoordinatorSoft( this, factory )
-				: new DeleteCoordinatorStandard( this, factory );
-	}
-
-	private DeleteCoordinator buildTemporalDeleteCoordinator() {
-		return switch ( getTemporalTableStrategy() ) {
-			case SINGLE_TABLE -> new DeleteCoordinatorTemporal( this, factory );
-			case HISTORY_TABLE -> new DeleteCoordinatorHistory( this, factory, buildNonTemporalDeleteCoordinator() );
-			case NATIVE -> buildNonTemporalDeleteCoordinator();
-			case AUTO -> throw new IllegalArgumentException();
-		};
+		return stateManagement.createDeleteCoordinator( this );
 	}
 
 	private TemporalTableStrategy getTemporalTableStrategy() {

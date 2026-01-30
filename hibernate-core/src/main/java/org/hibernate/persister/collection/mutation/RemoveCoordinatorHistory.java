@@ -42,13 +42,13 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 
 	public RemoveCoordinatorHistory(
 			CollectionMutationTarget mutationTarget,
-			OperationProducer operationProducer,
+			RowMutationOperations mutationOperations,
 			boolean[] indexColumnIsSettable,
 			boolean[] elementColumnIsSettable,
 			UnaryOperator<Object> indexIncrementer,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = operationProducer;
+		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
 		this.indexColumnIsSettable = indexColumnIsSettable;
 		this.elementColumnIsSettable = elementColumnIsSettable;
 		this.indexIncrementer = indexIncrementer;

@@ -39,10 +39,10 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
-			OperationProducer operationProducer,
+			RowMutationOperations mutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = operationProducer;
+		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
 
 		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
@@ -88,8 +88,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 
 		try {
 			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
-			foreignKeyDescriptor.getKeyPart().decompose(
+			mutationTarget.getTargetPart().getKeyDescriptor().getKeyPart().decompose(
 					key,
 					0,
 					jdbcValueBindings,

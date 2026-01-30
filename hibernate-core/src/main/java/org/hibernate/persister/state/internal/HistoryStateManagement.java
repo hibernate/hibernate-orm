@@ -4,10 +4,7 @@
  */
 package org.hibernate.persister.state.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
@@ -26,10 +23,10 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorHistory;
+import org.hibernate.persister.entity.mutation.MergeCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.state.StateManagement;
-import org.hibernate.sql.model.MutationOperationGroup;
 
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isInsertAllowed;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isUpdatePossible;
@@ -47,25 +44,7 @@ public final class HistoryStateManagement implements StateManagement {
 
 	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
-		//TODO: fix this!
-		return new UpdateCoordinator() {
-			@Override
-			public @Nullable GeneratedValues update(Object entity, Object id, Object rowId, Object[] values, Object oldVersion, Object[] incomingOldValues, int[] dirtyAttributeIndexes, boolean hasDirtyCollection, SharedSessionContractImplementor session) {
-				throw new UnsupportedOperationException( "upsert() not supported for history tables" );
-			}
-
-			@Override
-			public void forceVersionIncrement(Object id, Object currentVersion, Object nextVersion, SharedSessionContractImplementor session) {
-				throw new UnsupportedOperationException( "upsert() not supported for history tables" );
-
-			}
-
-			@Override
-			public MutationOperationGroup getStaticMutationOperationGroup() {
-				throw new UnsupportedOperationException( "upsert() not supported for history tables" );
-
-			}
-		};
+		return new MergeCoordinatorHistory( persister, persister.getFactory() );
 	}
 
 	@Override

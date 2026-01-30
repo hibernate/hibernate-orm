@@ -24,6 +24,7 @@ import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -195,12 +196,12 @@ public class CollectionLockingAction implements PostAction {
 
 		@Override
 		public List<LoadedEntityRegistration> getCollectedEntities() {
-			return entitiesToLock;
+			return entitiesToLock == null ? Collections.emptyList() : entitiesToLock;
 		}
 
 		@Override
 		public List<LoadedCollectionRegistration> getCollectedCollections() {
-			return collectionsToLock;
+			return collectionsToLock == null ? Collections.emptyList() : collectionsToLock;
 		}
 	}
 }

@@ -35,6 +35,7 @@ import org.hibernate.sql.exec.spi.StatementAccess;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -331,12 +332,12 @@ public class FollowOnLockingAction implements PostAction {
 
 		@Override
 		public List<LoadedEntityRegistration> getCollectedEntities() {
-			return entitiesToLock;
+			return entitiesToLock == null ? Collections.emptyList() : entitiesToLock;
 		}
 
 		@Override
 		public List<LoadedCollectionRegistration> getCollectedCollections() {
-			return collectionsToLock;
+			return collectionsToLock == null ? Collections.emptyList() : collectionsToLock;
 		}
 	}
 }

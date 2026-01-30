@@ -17,6 +17,7 @@ import java.util.Collection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
@@ -35,6 +36,7 @@ public final class CollectionEntry implements Serializable {
 	private @Nullable Serializable snapshot;
 	// allow the CollectionSnapshot to be serialized
 	private @Nullable String role;
+	private boolean readOnly;
 
 	// "loaded" means the reference that is consistent
 	// with the current database state
@@ -80,8 +82,10 @@ public final class CollectionEntry implements Serializable {
 			final PersistentCollection<?> collection,
 			final CollectionPersister loadedPersister,
 			final Object loadedKey,
-			final boolean ignore ) {
+			final boolean ignore,
+			final boolean readOnly) {
 		this.ignore = ignore;
+		this.readOnly = readOnly;
 		//collection.clearDirty()
 		this.loadedKey = loadedKey;
 		this.loadedPersister = loadedPersister;
@@ -128,10 +132,12 @@ public final class CollectionEntry implements Serializable {
 			@Nullable String role,
 			Serializable snapshot,
 			Object loadedKey,
+			boolean readOnly,
 			@Nullable SessionFactoryImplementor factory) {
 		this.role = role;
 		this.snapshot = snapshot;
 		this.loadedKey = loadedKey;
+		this.readOnly = readOnly;
 		if ( role != null ) {
 			afterDeserialize( factory );
 		}
@@ -149,12 +155,25 @@ public final class CollectionEntry implements Serializable {
 
 	private boolean forceDirty(PersistentCollection<?> collection) {
 		final var loadedPersister = this.loadedPersister;
-		return collection.wasInitialized()
+		return loadedPersister != null
+			&& collection.wasInitialized()
 			&& !collection.isDirty() //optimization
-			&& loadedPersister != null
-			&& loadedPersister.isMutable() //optimization
-			&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
+			&& isModifiable() //optimization
+			&& isElementMutable( collection, loadedPersister ) //optimization
 			&& !collection.equalsSnapshot( loadedPersister );
+	}
+
+	private static boolean isElementMutable(
+			PersistentCollection<?> collection,
+			CollectionPersister loadedPersister) {
+		return collection.isDirectlyAccessible()
+			|| loadedPersister.getElementType().isMutable();
+	}
+
+	private boolean isModifiable() {
+		return !readOnly
+			&& loadedPersister != null
+			&& loadedPersister.isMutable();
 	}
 
 	public void preFlush(PersistentCollection<?> collection) {
@@ -165,7 +184,7 @@ public final class CollectionEntry implements Serializable {
 		final var loadedPersister = this.loadedPersister;
 		if ( collection.isDirty()
 				&& loadedPersister != null
-				&& !loadedPersister.isMutable() ) {
+				&& !isModifiable() ) {
 			throw new HibernateException( "Immutable collection was modified: " +
 					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
@@ -188,10 +207,7 @@ public final class CollectionEntry implements Serializable {
 
 	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
 		final var loadedPersister = this.loadedPersister;
-		snapshot =
-				loadedPersister != null && loadedPersister.isMutable()
-						? collection.getSnapshot( loadedPersister )
-						: null;
+		snapshot = loadedPersister != null && isModifiable() ? collection.getSnapshot( loadedPersister ) : null;
 		collection.setSnapshot( loadedKey, role, snapshot );
 		if ( loadedPersister != null
 				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
@@ -222,10 +238,9 @@ public final class CollectionEntry implements Serializable {
 		if ( collection.wasInitialized()
 				&& ( doremove || dorecreate || doupdate ) ) {
 			// update the snapshot
-			snapshot =
-					loadedPersister != null && loadedPersister.isMutable()
-							? collection.getSnapshot( castNonNull( loadedPersister ) )
-							: null;
+			snapshot = isModifiable()
+					? collection.getSnapshot( castNonNull( loadedPersister ) )
+					: null;
 		}
 		collection.postAction();
 	}
@@ -240,6 +255,10 @@ public final class CollectionEntry implements Serializable {
 
 	public @Nullable Serializable getSnapshot() {
 		return snapshot;
+	}
+
+	public boolean isReadOnly() {
+		return readOnly;
 	}
 
 	private boolean fromMerge;
@@ -257,6 +276,25 @@ public final class CollectionEntry implements Serializable {
 			snapshot = storedSnapshot;
 			collection.setSnapshot( loadedKey, role, snapshot );
 			fromMerge = true;
+		}
+	}
+
+	public void setReadOnly(boolean readOnly, PersistentCollection<?> collection) {
+		if ( this.readOnly != readOnly ) {
+			this.readOnly = readOnly;
+			if ( readOnly ) {
+				snapshot = null;
+				collection.setSnapshot( loadedKey, role, null );
+			}
+			else {
+				final var loadedPersister = this.loadedPersister;
+				if ( collection.wasInitialized()
+						&& loadedPersister != null
+						&& loadedPersister.isMutable() ) {
+					snapshot = collection.getSnapshot( loadedPersister );
+					collection.setSnapshot( loadedKey, role, snapshot );
+				}
+			}
 		}
 	}
 
@@ -366,10 +404,15 @@ public final class CollectionEntry implements Serializable {
 	 * Get the collection orphans (entities which were removed from the collection)
 	 */
 	public Collection<?> getOrphans(String entityName, PersistentCollection<?> collection) {
-		if ( snapshot == null ) {
-			throw new AssertionFailure( "no collection snapshot for orphan delete" );
+		if ( readOnly ) {
+			return emptyList();
 		}
-		return collection.getOrphans( snapshot, entityName );
+		else {
+			if ( snapshot == null ) {
+				throw new AssertionFailure( "no collection snapshot for orphan delete" );
+			}
+			return collection.getOrphans( snapshot, entityName );
+		}
 	}
 
 	public boolean isSnapshotEmpty(PersistentCollection<?> collection) {
@@ -377,7 +420,7 @@ public final class CollectionEntry implements Serializable {
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
 		return collection.wasInitialized()
-			&& ( loadedPersister == null || loadedPersister.isMutable() )
+			&& ( loadedPersister == null || isModifiable() )
 			&& ( snapshot == null || collection.isSnapshotEmpty( snapshot ) );
 	}
 
@@ -393,6 +436,7 @@ public final class CollectionEntry implements Serializable {
 		oos.writeObject( role );
 		oos.writeObject( snapshot );
 		oos.writeObject( loadedKey );
+		oos.writeBoolean( readOnly );
 	}
 
 	/**
@@ -410,6 +454,7 @@ public final class CollectionEntry implements Serializable {
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
 				ois.readObject(),
+				ois.readBoolean(),
 				session == null ? null : session.getFactory()
 		);
 	}

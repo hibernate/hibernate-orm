@@ -8,6 +8,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -249,4 +250,10 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	public boolean isResultInitializer() {
 		return isResultInitializer;
 	}
+
+	boolean isReadOnly(RowProcessingState rowProcessingState, SharedSessionContractImplementor session) {
+		final Boolean readOnly = rowProcessingState.getQueryOptions().isReadOnly();
+		return readOnly == null ? session.isDefaultReadOnly() : readOnly;
+	}
+
 }

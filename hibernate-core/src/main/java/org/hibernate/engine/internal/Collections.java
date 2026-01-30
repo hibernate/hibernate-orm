@@ -240,22 +240,14 @@ public final class Collections {
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 
-			// if either its role changed, or its key changed
+			// if either its role changed or its key changed
 			final boolean ownerChanged =
 					loadedPersister != currentPersister
 						|| wasKeyChanged( collectionEntry, factory, currentPersister );
 
 			if ( ownerChanged ) {
-				// do a check
-				final boolean orphanDeleteAndRoleChanged =
-						loadedPersister != null && currentPersister != null && loadedPersister.hasOrphanDelete();
-
-				if ( orphanDeleteAndRoleChanged ) {
-					throw new HibernateException(
-							"Don't change the reference to a collection with delete orphan enabled: "
-							+ loadedPersister.getRole()
-					);
-				}
+				// do some checks
+				checkOnChangedOwner( collection, collectionEntry, loadedPersister, currentPersister );
 
 				// do the work
 				if ( currentPersister != null ) {
@@ -276,6 +268,37 @@ public final class Collections {
 				collectionEntry.setDoupdate( true );
 			}
 		}
+	}
+
+	private static void checkOnChangedOwner(PersistentCollection<?> collection, CollectionEntry collectionEntry, CollectionPersister loadedPersister, CollectionPersister currentPersister) {
+		final boolean immutableDereferenced =
+				collectionEntry.isReadOnly()
+				&& loadedPersister != null
+				&& !isOwnerDeletedOrGone( collection );
+		if ( immutableDereferenced ) {
+			throw new HibernateException( "Immutable collection dereferenced by owner: "
+						+ collectionInfoString( loadedPersister.getRole(), collectionEntry.getLoadedKey() ) );
+		}
+
+
+		final boolean orphanDeleteAndRoleChanged =
+				loadedPersister != null
+				&& currentPersister != null
+				&& loadedPersister.hasOrphanDelete();
+		if ( orphanDeleteAndRoleChanged ) {
+			throw new HibernateException(
+					"Collection with orphan orphan delete enabled has modifier owner: "
+					+ collectionInfoString( loadedPersister.getRole(), collectionEntry.getLoadedKey() ) );
+		}
+	}
+
+	private static boolean isOwnerDeletedOrGone(PersistentCollection<?> collection) {
+		final Object owner = collection.getOwner();
+		assert owner != null;
+		final var session = collection.getSession();
+		assert session != null;
+		final var entry = session.getPersistenceContextInternal().getEntry( owner );
+		return entry != null && entry.getStatus().isDeletedOrGone();
 	}
 
 	/**

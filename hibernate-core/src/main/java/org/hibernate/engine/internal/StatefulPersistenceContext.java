@@ -282,10 +282,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void setEntryStatus(EntityEntry entry, Status status) {
 		entry.setStatus( status );
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
+		// TODO: can/should we also set its collections to read-only?
 	}
 
-	private void setHasNonReadOnlyEnties(Status status) {
+	private void setHasNonReadOnlyEntities(Status status) {
 		if ( status==Status.DELETED || status==Status.MANAGED || status==Status.SAVING ) {
 			hasNonReadOnlyEntities = true;
 		}
@@ -641,7 +642,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 						this
 				);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
 		return entityEntry;
 	}
 
@@ -652,7 +653,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 		entityEntry.setStatus( status );
 		entityEntryContext.addEntityEntry( entity, entityEntry );
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
 		return entityEntry;
 	}
 
@@ -977,8 +978,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
-		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
+	public void addUninitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id,
+			boolean readOnly) {
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing, readOnly );
 		addCollection( collection, collectionEntry, id );
 		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, collectionEntry );
@@ -1016,6 +1021,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 						? new CollectionEntry( collection, session.getFactory() )
 						// A newly wrapped collection
 						: new CollectionEntry( persister, collection );
+		entry.setReadOnly( oldEntry.isReadOnly(), collection );
 		putCollectionEntry( collection, entry );
 		final Object key = collection.getKey();
 		if ( key != null ) {
@@ -1080,9 +1086,13 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
+	public CollectionEntry addInitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id,
+			boolean readOnly)
 			throws HibernateException {
-		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing, readOnly );
 		collectionEntry.postInitialize( collection, session );
 		addCollection( collection, collectionEntry, id );
 		return collectionEntry;
@@ -1697,8 +1707,19 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( entry == null ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
-		entry.setReadOnly( readOnly, entity );
-		hasNonReadOnlyEntities = hasNonReadOnlyEntities || ! readOnly;
+		if ( entry.setReadOnly( readOnly, entity ) ) {
+			hasNonReadOnlyEntities = hasNonReadOnlyEntities || !readOnly;
+			if ( collectionEntries != null && entry.getPersister().hasCollections() ) {
+				forEachCollectionEntry(
+						(collection, collectionEntry) -> {
+							if ( collection.getOwner() == entity ) {
+								collectionEntry.setReadOnly( readOnly, collection );
+							}
+						},
+						false
+				);
+			}
+		}
 	}
 
 	@Override

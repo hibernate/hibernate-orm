@@ -103,7 +103,12 @@ public class WrapVisitor extends ProxyVisitor {
 										collectionInstance =
 												persister.getCollectionSemantics()
 														.instantiateWrapper( key, persister, session );
-										persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+										persistenceContext.addUninitializedCollection(
+												persister,
+												collectionInstance,
+												key,
+												entry.isReadOnly()
+										);
 										persistenceContext.getCollectionEntry( collectionInstance ).setDoremove( true );
 									}
 								}

@@ -260,8 +260,6 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
-import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -3535,13 +3533,6 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
-	private boolean useTemporalCoordinators() {
-		final var strategy = getTemporalTableStrategy();
-		return temporalMapping != null
-			&& strategy != NATIVE
-			&& strategy != HISTORY_TABLE;
-	}
-
 	protected InsertCoordinator buildInsertCoordinator() {
 		return temporalMapping != null
 			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
@@ -3621,7 +3612,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-		if ( useTemporalCoordinators() ) {
+		if ( temporalMapping != null && getTemporalTableStrategy() == TemporalTableStrategy.SINGLE_TABLE ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
 			final var mutatingTable = insertBuilder.getMutatingTable();
 

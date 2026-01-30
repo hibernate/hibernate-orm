@@ -136,13 +136,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Incubating
 public @interface Temporal {
 	/**
-	 * The column name holding the starting timestamp of a revision.
-	 * That is, the "effective from" timestamp.
+	 * The name of the column holding the starting timestamp
+	 * or transaction id of a revision; the timestamp or id
+	 * representing the moment the revision became effective;
+	 * that is, the "effective from" timestamp.
 	 */
 	String rowStart() default "effective";
 	/**
-	 * The column name holding the ending timestamp of a revision.
-	 * That is, the "effective to" timestamp.
+	 * The name of the column holding the ending timestamp
+	 * or transaction id of a revision; the timestamp or id
+	 * representing the moment the revision was superseded;
+	 * that is, the "effective to" timestamp.
 	 */
 	String rowEnd() default "superseded";
 

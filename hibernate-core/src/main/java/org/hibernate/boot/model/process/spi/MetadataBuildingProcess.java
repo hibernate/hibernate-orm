@@ -13,6 +13,7 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -85,6 +86,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.util.Comparator.comparingInt;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
@@ -711,7 +713,7 @@ public class MetadataBuildingProcess {
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 
 		// add TypeContributor contributed types.
-		for ( var typeContributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+		for ( var typeContributor : sortedTypeContributors( classLoaderService ) ) {
 			typeContributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
@@ -836,6 +838,17 @@ public class MetadataBuildingProcess {
 //		}
 //		// else warning?
 //	}
+
+	private static List<TypeContributor> sortedTypeContributors(
+			ClassLoaderService classLoaderService) {
+		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort(
+				comparingInt( TypeContributor::ordinal )
+						.thenComparing( a -> a.getClass().getCanonicalName() )
+		);
+		return contributors;
+	}
 
 	private static void adaptToPreferredSqlTypeCode(
 			TypeConfiguration typeConfiguration,

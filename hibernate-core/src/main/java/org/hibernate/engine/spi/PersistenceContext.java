@@ -383,7 +383,18 @@ public interface PersistenceContext {
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id);
+	void addUninitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id,
+			boolean readOnly);
+
+	default void addUninitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id) {
+		addUninitializedCollection( persister, collection, id, false );
+	}
 
 	/**
 	 * add a detached uninitialized collection
@@ -401,9 +412,7 @@ public interface PersistenceContext {
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	void addInitializedDetachedCollection(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection);
+	void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection<?> collection);
 
 	/**
 	 * Replaces a directly accessible collection with the given one
@@ -420,7 +429,15 @@ public interface PersistenceContext {
 	CollectionEntry addInitializedCollection(
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
-			Object id);
+			Object id,
+			boolean readOnly);
+
+	default CollectionEntry addInitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id) {
+		return addInitializedCollection( persister, collection, id, false );
+	}
 
 	/**
 	 * Get the collection instance associated with the {@code CollectionKey}

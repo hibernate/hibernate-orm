@@ -1544,7 +1544,8 @@ public abstract class AbstractEntityPersister
 		if ( collection == null ) {
 			final var newCollection = collectionType.instantiate( session, persister, key );
 			newCollection.setOwner( entity );
-			persistenceContext.addUninitializedCollection( persister, newCollection, key );
+			persistenceContext.addUninitializedCollection( persister, newCollection, key,
+					entry != null && entry.isReadOnly() );
 			return newCollection;
 		}
 		else {

@@ -310,7 +310,8 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 					persistenceContext.addUninitializedCollection(
 							collectionDescriptor,
 							persistentCollection,
-							collectionKey.getKey()
+							collectionKey.getKey(),
+							isReadOnly( rowProcessingState, session )
 					);
 
 					if ( !data.shallowCached ) {

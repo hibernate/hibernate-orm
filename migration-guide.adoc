@@ -74,6 +74,14 @@ Raw `Map` types were eliminated from the signatures of methods of the class
 
 This section describes changes in behavior that applications should be aware of.
 
+=== Collections belonging to read-only entities
+
+Previously, collections belonging to an entity loaded in read-only mode were not
+marked as read-only and could be modified. This behavior was surprising and
+significantly undermined the benefits of the read-only mode. A collection is now
+set to read-only when its owning entity is read-only, and modifications to the
+collection result in an error.
+
 === Result deduplication
 
 In Hibernate 6.x query result lists with duplicate results were handled in an

@@ -14,7 +14,7 @@ repositories {
 
 group = 'org.hibernate.build'
 version = '1.0.0-SNAPSHOT'
-buildDir = "target"
+layout.buildDirectory.set(file("target"))
 
 dependencies {
 	implementation gradleApi()

@@ -75,23 +75,23 @@ if ( jdkVersions.test.launcher.asInt() > 21 ) {
 }
 
 def releasePrepareTask = tasks.register("releasePrepare") {
-	group "release-prepare"
-	description "See :release:releasePrepare for details.  Here we hook in the `check` task."
+	group ="release-prepare"
+	description = "See :release:releasePrepare for details.  Here we hook in the `check` task."
 
 	dependsOn tasks.check
 }
 
 // used from the h2 CI job
 tasks.register("preVerifyRelease") {
-	group "release-prepare"
-	description "Delegates to `releasePrepare` task"
+	group = "release-prepare"
+	description = "Delegates to `releasePrepare` task"
 
 	dependsOn releasePrepareTask
 }
 
 tasks.register("releaseGradlePluginPerform") {
-	group "release-perform"
-	description "An explicit task for publishing Gradle Plugins to the Plugin Portal"
+	group = "release-perform"
+	description = "An explicit task for publishing Gradle Plugins to the Plugin Portal"
 
 	dependsOn tasks.publishPlugins
 }
@@ -102,7 +102,7 @@ publishing {
 	repositories {
 		maven {
 			name = 'localPluginRepository'
-			url = "${buildDir}/local-plugin-repository"
+            url = layout.buildDirectory.dir("local-plugin-repository").get().asFile.toURI()
 		}
 	}
 }

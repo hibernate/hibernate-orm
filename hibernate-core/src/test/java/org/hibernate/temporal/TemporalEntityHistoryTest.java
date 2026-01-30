@@ -341,6 +341,49 @@ class TemporalEntityHistoryTest {
 		}
 	}
 
+	@Test void testUpsert(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( s -> {
+			TemporalEntity4 entity = new TemporalEntity4();
+			entity.id = 7L;
+			entity.text = "hello";
+			entity.strings.add( "x" );
+			entity.strings.add( "y" );
+			entity.strings.add( "z" );
+			entity.map.put( "a", "A" );
+			entity.map.put( "b", "B" );
+			entity.list.add( "M" );
+			entity.list.add( "N" );
+			s.upsert( entity );
+		} );
+		TemporalEntity4 entity1 = scope.getSessionFactory().fromStatelessTransaction( s -> {
+			TemporalEntity4 entity = s.get( TemporalEntity4.class, 7L );
+			s.fetch( entity.strings );
+			s.fetch( entity.map );
+			s.fetch( entity.list );
+			assertEquals( "hello", entity.text );
+			assertEquals( Set.of( "x", "y", "z" ), entity.strings );
+			assertEquals( Map.of( "a", "A", "b", "B" ), entity.map );
+			assertEquals( List.of( "M", "N" ), entity.list );
+			return entity;
+		} );
+		entity1.text = "goodbye";
+		entity1.strings.add( "w" );
+		entity1.map.put( "c", "C" );
+		scope.inStatelessTransaction( s -> {
+			s.upsert( entity1 );
+		} );
+		scope.inStatelessTransaction( s -> {
+			TemporalEntity4 entity = s.get( TemporalEntity4.class, 7L );
+			s.fetch( entity.strings );
+			s.fetch( entity.map );
+			s.fetch( entity.list );
+			assertEquals( "goodbye", entity.text );
+			assertEquals( Set.of( "w", "x", "y", "z" ), entity.strings );
+			assertEquals( Map.of( "a", "A", "b", "B", "c", "C" ), entity.map );
+			assertEquals( List.of( "M", "N" ), entity.list );
+		} );
+	}
+
 	private static Instant getInstant(SessionFactoryScope scope) {
 		return scope.getSessionFactory().fromSession(
 				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );

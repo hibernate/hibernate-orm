@@ -235,7 +235,7 @@ public interface MappingSettings {
 	 * boundary for binding and extracting temporal values to/from the database using
 	 * the support added in JDBC 4.2 via {@linkplain java.sql.PreparedStatement#setObject(int, Object, int)}
 	 * and {@linkplain java.sql.ResultSet#getObject(int, Class)}.
-	 * <p/>
+	 * <p>
 	 * Used to set the value across the entire system as opposed to scattered, individual
 	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
 	 * naming specific {@linkplain JavaTimeJdbcType} implementations.
@@ -280,7 +280,7 @@ public interface MappingSettings {
 	/**
 	 * Indicates whether {@link Locale#toLanguageTag()} should be preferred over
 	 * {@link Locale#toString()} when converting a {@code Locale} to a {@code String}.
-	 * <p/>
+	 * <p>
 	 * This configuration property is used to specify a global preference,
 	 * but Hibernate ORM can always read both formats, so no data needs to be migrated.
 	 * The setting only affects how {@link Locale} data is stored.

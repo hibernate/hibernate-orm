@@ -34,7 +34,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
  *         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
  *         side.  To properly handle the type parameters in the hierarchy we would need to
  *         change this to accept type parameter for the left-handle side as well.
- *         <p/>
+ *         <p>
  *         Another option is to not make it a join as in `SqmJoin`.  Instead, model it
  *         as a root with its predicate(s) added to an internal `SqmPredicateCollection` (ansi join predicate)
  *         or to the query where clause (theta joins).

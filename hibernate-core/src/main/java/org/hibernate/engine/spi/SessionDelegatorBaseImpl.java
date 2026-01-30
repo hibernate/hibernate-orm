@@ -97,7 +97,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	/**
 	 * Returns the delegate session.
-	 * <p>
+	 *
 	 * @apiNote This returns a different object to the {@link #getDelegate()}
 	 *          method inherited from {@link jakarta.persistence.EntityManager}.
 	 *

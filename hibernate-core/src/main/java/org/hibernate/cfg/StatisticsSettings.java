@@ -24,7 +24,7 @@ public interface StatisticsSettings {
 	 * When statistics are {@linkplain #GENERATE_STATISTICS enabled}, names the
 	 * {@link StatisticsFactory} to use.  Recognizes a class name as well as an instance of
 	 * {@link StatisticsFactory}.
-	 * <p/>
+	 * <p>
 	 * Allows customization of how the Hibernate Statistics are collected.
 	 */
 	String STATS_BUILDER = "hibernate.stats.factory";

@@ -72,7 +72,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * By default, we use a single row for all generators (the {@value #DEF_SEGMENT_VALUE}
  * segment). The configuration parameter {@value #CONFIG_PREFER_SEGMENT_PER_ENTITY} can
  * be used to change that to instead default to using a row for each entity name.
- * <p>
  * <table>
  * <caption>Configuration parameters</caption>
  * 	 <tr>

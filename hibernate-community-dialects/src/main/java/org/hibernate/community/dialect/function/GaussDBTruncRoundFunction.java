@@ -36,8 +36,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  * This custom function falls back to using {@code floor} as a workaround only when necessary,
  * e.g. when there are 2 arguments to the function and either:
  * <ul>
- *     <li>The first argument is not of type {@code numeric}</li>
- *     or
+ *     <li>The first argument is not of type {@code numeric}, or</li>
  *     <li>The dialect doesn't support the two-argument {@code trunc} function</li>
  * </ul>
  *

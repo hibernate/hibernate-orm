@@ -18,7 +18,7 @@ import java.util.List;
  *     <li>Entities which are in a removed state are {@linkplain RemovalsMode#REPLACE replaced with null}
  *     		from the result by default, but can be {@linkplain RemovalsMode#INCLUDE included} if desired.
  * </ul>
- * <p/>
+ * <p>
  * The default is {@link #DISABLED}.
  *
  * @see org.hibernate.Session#findMultiple(Class, List, FindOption...)

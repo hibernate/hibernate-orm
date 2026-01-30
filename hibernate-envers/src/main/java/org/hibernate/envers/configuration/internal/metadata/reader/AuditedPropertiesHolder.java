@@ -10,7 +10,7 @@ import java.util.List;
  * Implementations hold other audited properties.
  *
  * @author Adam Warski (adam at warski dot org)
- * @author Hern&aacut;n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * @author Chris Cranford
  */
 public interface AuditedPropertiesHolder {

@@ -27,7 +27,11 @@ configurations {
 
 dependencies {
     javadocSources sourceSets.main.allJava.filter { file ->
-        !file.path.contains( "/internal/" )
+        !(file.path.contains("/internal/")
+                || file.path.contains("/org/hibernate/boot/jaxb/")
+                || file.path.contains("/org/hibernate/tuple/")
+                || file.path.contains("/org/hibernate/grammars/hql/")
+        )
     }
 }
 

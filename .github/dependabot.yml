@@ -5,6 +5,7 @@ registries:
     url: https://plugins.gradle.org/m2
     username: dummy # Required by dependabot
     password: dummy # Required by dependabot
+
 updates:
   - package-ecosystem: github-actions
     directory: "/"
@@ -112,6 +113,7 @@ updates:
           - "jakarta.*"
           - "org.glassfish*"
           - "org.eclipse:yasson"
+    target-branch: "main"
     ignore:
       # Avoid non-patch updates for complex dependencies and their implementation, even if we only use them for tests.
       - dependency-name: "org.hibernate*"
@@ -143,3 +145,255 @@ updates:
       # (see https://central.sonatype.com/artifact/org.apache.maven/maven-embedder/3.9.9/dependencies)
       - dependency-name: "org.slf4j:*"
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "7.2"
+    commit-message:
+      prefix: "[7.2] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "7.1"
+    commit-message:
+      prefix: "[7.1] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "6.6"
+    commit-message:
+      prefix: "[6.6] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "6.4"
+    commit-message:
+      prefix: "[6.4] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "6.2"
+    commit-message:
+      prefix: "[6.2] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "5.6"
+    commit-message:
+      prefix: "[5.6] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    registries:
+      - gradle-plugin-portal
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 20
+    groups:
+      tooling-dependencies:
+        patterns:
+          # Note: Gradle tooling dependencies seem to be tied to the version of Gradle we use for building.
+          - "org.apache.ant*"
+          - "org.apache.maven:maven-plugin-api"
+          - "org.apache.maven:maven-project"
+          - "org.apache.maven.shared:file-management"
+          - "org.apache.maven.plugin-tools:maven-plugin-annotations"
+      hibernate:
+        patterns:
+          - "org.hibernate*"
+      jakarta:
+        patterns:
+          - "jakarta.*"
+          - "org.glassfish*"
+          - "org.eclipse:yasson"
+      # This group combines all other dependencies.
+      other-dependencies:
+        patterns:
+          - "*"
+    target-branch: "5.3"
+    commit-message:
+      prefix: "[5.3] "
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-major", "version-update:semver-minor" ]

@@ -57,7 +57,15 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 
 	abstract void bindVersionRestriction(Object oldVersion, JdbcValueBindings jdbcValueBindings, String temporalTableName);
 
-	void performRowEndUpdate(Object entity, Object id, Object rowId, Object oldVersion, SharedSessionContractImplementor session, TemporalMapping temporalMapping, MutationOperationGroup endUpdateGroup, String temporalTableName) {
+	void performRowEndUpdate(
+			Object entity,
+			Object id,
+			Object rowId,
+			Object oldVersion,
+			SharedSessionContractImplementor session,
+			TemporalMapping temporalMapping,
+			MutationOperationGroup endUpdateGroup,
+			String temporalTableName) {
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
 						endUpdateGroup, session );

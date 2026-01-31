@@ -44,30 +44,26 @@ public final class HistoryStateManagement implements StateManagement {
 
 	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
-		return new MergeCoordinatorHistory( persister, persister.getFactory() );
+		return new MergeCoordinatorHistory( persister, persister.getFactory(),
+				StandardStateManagement.INSTANCE.createMergeCoordinator( persister ) );
 	}
 
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
-		return new InsertCoordinatorHistory( persister, persister.getFactory() );
+		return new InsertCoordinatorHistory( persister, persister.getFactory(),
+				StandardStateManagement.INSTANCE.createInsertCoordinator( persister ) );
 	}
 
 	@Override
 	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
-		return new UpdateCoordinatorHistory(
-				persister,
-				persister.getFactory(),
-				StandardStateManagement.INSTANCE.createUpdateCoordinator( persister )
-		);
+		return new UpdateCoordinatorHistory( persister, persister.getFactory(),
+				StandardStateManagement.INSTANCE.createUpdateCoordinator( persister ) );
 	}
 
 	@Override
 	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
-		return new DeleteCoordinatorHistory(
-				persister,
-				persister.getFactory(),
-				StandardStateManagement.INSTANCE.createDeleteCoordinator( persister )
-		);
+		return new DeleteCoordinatorHistory( persister, persister.getFactory(),
+				StandardStateManagement.INSTANCE.createDeleteCoordinator( persister ) );
 	}
 
 	@Override

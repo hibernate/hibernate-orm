@@ -17,6 +17,10 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
 
 /**
+ * State management for temporal entities and collections in the
+ * {@linkplain org.hibernate.cfg.TemporalTableStrategy#SINGLE_TABLE
+ * single table strategy}.
+ *
  * @author Gavin King
  */
 @Internal

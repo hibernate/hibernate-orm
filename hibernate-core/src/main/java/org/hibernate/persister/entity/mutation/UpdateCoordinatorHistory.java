@@ -122,7 +122,10 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 					session,
 					temporalMapping,
 					historyEndUpdateGroup,
-					historyTableMapping.getTableName()
+					historyTableMapping.getTableName(),
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition )
+
 			);
 			insertHistoryRow( id, values, session );
 		}

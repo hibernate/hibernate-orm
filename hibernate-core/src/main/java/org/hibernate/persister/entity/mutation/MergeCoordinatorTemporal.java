@@ -7,7 +7,9 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
@@ -33,7 +35,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		this.temporalMapping = entityPersister.getTemporalMapping();
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );
 		this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_MERGE" );
-		this.versionUpdateDelegate = new UpdateCoordinatorStandard( entityPersister, factory );
+		this.versionUpdateDelegate = new MergeCoordinatorStandard( entityPersister, factory );
 	}
 
 	@Override
@@ -59,7 +61,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			SharedSessionContractImplementor session) {
 		if ( entityPersister()
 				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
-			return updateCurrentRowOrInsert(
+			return versionUpdateDelegate.update(
 					entity,
 					id,
 					rowId,
@@ -80,96 +82,34 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		}
 	}
 
-	private GeneratedValues updateCurrentRowOrInsert(
-			Object entity,
-			Object id,
-			Object rowId,
-			Object[] values,
-			Object oldVersion,
-			Object[] incomingOldValues,
-			int[] dirtyAttributeIndexes,
-			boolean hasDirtyCollection,
-			SharedSessionContractImplementor session) {
-		try {
-			final var generatedValues = versionUpdateDelegate.update(
-					entity,
-					id,
-					rowId,
-					values,
-					oldVersion,
-					incomingOldValues,
-					dirtyAttributeIndexes,
-					hasDirtyCollection,
-					session
-			);
-			if ( generatedValues != null ) {
-				return generatedValues;
-			}
-		}
-		catch (StaleObjectStateException exception) {
-			if ( currentRowExists( id, session ) ) {
-				throw exception;
-			}
-			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
-		}
-
-		return currentRowExists( id, session )
-				? null
-				: entityPersister().getInsertCoordinator().insert( entity, id, values, session );
-	}
-
-	private boolean performRowEndUpdate(
+	boolean performRowEndUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
-		// Avoid batching so we can detect whether the current row was ended.
-		final var mutationExecutor =
-				mutationExecutorService.createExecutor( resolveBatchKeyAccess( true, session ),
-						endingUpdateGroup, session );
-		try {
-			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			for ( int i = 0; i < endingUpdateGroup.getNumberOfOperations(); i++ ) {
-				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings,
-						(EntityTableMapping) endingUpdateGroup.getOperation( i ).getTableDetails() );
+		class Result implements OperationResultChecker {
+			private boolean updated;
+			@Override
+			public boolean checkResult(PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
+				updated = affectedRowCount > 0;
+				return !updated
+					|| resultCheck( id, statementDetails, affectedRowCount, batchPosition );
 			}
-
-			final String temporalTableName =
-					entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() );
-			bindVersionRestriction( oldVersion, jdbcValueBindings, temporalTableName );
-
-			if ( TemporalMutationHelper.isUsingParameters( session ) ) {
-				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
-						temporalTableName,
-						temporalMapping.getEndingColumnMapping().getSelectionExpression(),
-						ParameterUsage.SET
-				);
-			}
-
-			final boolean[] updated = { false };
-			mutationExecutor.execute(
-					entity,
-					null,
-					null,
-					(statementDetails, affectedRowCount, batchPosition) -> {
-						if ( affectedRowCount == 0 ) {
-							return true;
-						}
-						else {
-							updated[0] = true;
-							return resultCheck( id, statementDetails, affectedRowCount, batchPosition );
-						}
-					},
-					session,
-					staleStateException -> staleObjectStateException( id, staleStateException )
-			);
-			return updated[0];
 		}
-		finally {
-			mutationExecutor.release();
-		}
+		final var resultChecker = new Result();
+		performRowEndUpdate(
+				entity,
+				id,
+				rowId,
+				oldVersion,
+				session,
+				temporalMapping,
+				endingUpdateGroup,
+				entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),
+				resultChecker
+		);
+		return resultChecker.updated;
 	}
 
 	private boolean currentRowExists(Object id, SharedSessionContractImplementor session) {

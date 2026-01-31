@@ -31,7 +31,7 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
-import org.hibernate.persister.entity.mutation.MergeCoordinator;
+import org.hibernate.persister.entity.mutation.MergeCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
@@ -61,7 +61,7 @@ abstract class AbstractStateManagement implements StateManagement {
 
 	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
-		return new MergeCoordinator( persister, persister.getFactory() );
+		return new MergeCoordinatorStandard( persister, persister.getFactory() );
 	}
 
 	@Override

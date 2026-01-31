@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -65,7 +66,8 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 			SharedSessionContractImplementor session,
 			TemporalMapping temporalMapping,
 			MutationOperationGroup endUpdateGroup,
-			String temporalTableName) {
+			String temporalTableName,
+			OperationResultChecker resultChecker) {
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
 						endUpdateGroup, session );
@@ -91,8 +93,7 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 					entity,
 					null,
 					null,
-					(statementDetails, affectedRowCount, batchPosition) ->
-							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+					resultChecker,
 					session,
 					staleStateException -> staleObjectStateException( id, staleStateException )
 			);

@@ -83,7 +83,10 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 					temporalMapping,
 					endingUpdateGroup,
 					entityPersister()
-							.physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() )
+							.physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition )
+
 			);
 			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
 		}

@@ -26,6 +26,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
+import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -36,25 +37,28 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Gavin King
  */
 public class InsertCoordinatorHistory extends AbstractMutationCoordinator implements InsertCoordinator {
-	private final InsertCoordinatorStandard currentInsertCoordinator;
+	private final InsertCoordinator currentInsertCoordinator;
 	private final EntityTableMapping identifierTableMapping;
 	private final EntityTableMapping historyTableMapping;
 	private final TemporalMapping temporalMapping;
 	private final BasicBatchKey historyBatchKey;
 	private final MutationOperationGroup staticHistoryInsertGroup;
 
-	public InsertCoordinatorHistory(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public InsertCoordinatorHistory(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor factory,
+			InsertCoordinator currentInsertCoordinator) {
 		super( entityPersister, factory );
-		this.currentInsertCoordinator = new InsertCoordinatorStandard( entityPersister, factory );
-		this.identifierTableMapping = entityPersister.getIdentifierTableMapping();
-		this.temporalMapping = entityPersister.getTemporalMapping();
-		this.historyTableMapping = HistoryTableMappingHelper.createHistoryTableMapping(
+		this.currentInsertCoordinator = currentInsertCoordinator;
+		identifierTableMapping = entityPersister.getIdentifierTableMapping();
+		temporalMapping = entityPersister.getTemporalMapping();
+		historyTableMapping = HistoryTableMappingHelper.createHistoryTableMapping(
 				identifierTableMapping,
 				entityPersister,
 				temporalMapping.getTableName()
 		);
-		this.historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_INSERT" );
-		this.staticHistoryInsertGroup = entityPersister.isDynamicInsert()
+		historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_INSERT" );
+		staticHistoryInsertGroup = entityPersister.isDynamicInsert()
 				? null
 				: buildHistoryInsertGroup( entityPersister.getPropertyInsertability(), null, null );
 	}
@@ -96,7 +100,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 			SharedSessionContractImplementor session) {
 		final boolean dynamicInsert = entityPersister().isDynamicInsert();
 		final boolean[] propertyInclusions = dynamicInsert
-				? currentInsertCoordinator.getPropertiesToInsert( values )
+				? getPropertiesToInsert( entityPersister(), values )
 				: entityPersister().getPropertyInsertability();
 		final var operationGroup = dynamicInsert
 				? buildHistoryInsertGroup( propertyInclusions, entity, session )

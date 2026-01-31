@@ -66,19 +66,19 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		final var historyDeleteGroup = getHistoryDeleteOperationGroup();
 		final var historyInsertGroup = getHistoryInsertOperationGroup();
 
-		final MutationExecutor updateExecutor = mutationExecutorService.createExecutor(
+		final var updateExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				updateOperationGroup,
 				session
 		);
-		final MutationExecutor historyDeleteExecutor = historyDeleteGroup == null
+		final var historyDeleteExecutor = historyDeleteGroup == null
 				? null
 				: mutationExecutorService.createExecutor(
 						() -> historyDeleteBatchKey,
 						historyDeleteGroup,
 						session
 				);
-		final MutationExecutor historyInsertExecutor = historyInsertGroup == null
+		final var historyInsertExecutor = historyInsertGroup == null
 				? null
 				: mutationExecutorService.createExecutor(
 						() -> historyInsertBatchKey,
@@ -208,9 +208,10 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	private MutationOperationGroup getUpdateOperationGroup() {
 		if ( updateOperationGroup == null ) {
 			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			final var mutationTarget = getMutationTarget();
 			updateOperationGroup = updateRowOperation == null
-					? noOperations( MutationType.UPDATE, getMutationTarget() )
-					: singleOperation( MutationType.UPDATE, getMutationTarget(), updateRowOperation );
+					? noOperations( MutationType.UPDATE, mutationTarget )
+					: singleOperation( MutationType.UPDATE, mutationTarget, updateRowOperation );
 		}
 		return updateOperationGroup;
 	}
@@ -237,10 +238,10 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
-			final var temporalMapping = getMutationTarget().getTargetPart().getTemporalMapping();
+			final var mutationTarget = getMutationTarget();
 			historyTableMapping = HistoryCollectionTableMappingHelper.createHistoryTableMapping(
-					getMutationTarget().getCollectionTableMapping(),
-					temporalMapping.getTableName()
+					mutationTarget.getCollectionTableMapping(),
+					mutationTarget.getTargetPart().getTemporalMapping().getTableName()
 			);
 		}
 		return historyTableMapping;

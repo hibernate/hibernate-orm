@@ -73,10 +73,10 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		}
 		else {
 			final boolean rowEnded = performRowEndUpdate( entity, id, rowId, oldVersion, session );
-			if ( rowEnded || !currentRowExists( id, session ) ) {
-				return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
+			if ( !rowEnded && currentRowExists( id, session ) ) {
+				throw new StaleObjectStateException( entityPersister().getEntityName(), id );
 			}
-			throw new StaleObjectStateException( entityPersister().getEntityName(), id );
+			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
 		}
 	}
 

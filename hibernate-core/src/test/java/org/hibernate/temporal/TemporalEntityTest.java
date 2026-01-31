@@ -348,7 +348,7 @@ class TemporalEntityTest {
 			entity.map.put( "b", "B" );
 			entity.list.add( "M" );
 			entity.list.add( "N" );
-			s.insert( entity );
+			s.upsert( entity );
 		} );
 		TemporalEntity1 entity1 = scope.getSessionFactory().fromStatelessTransaction( s -> {
 			TemporalEntity1 entity = s.get( TemporalEntity1.class, 7L );

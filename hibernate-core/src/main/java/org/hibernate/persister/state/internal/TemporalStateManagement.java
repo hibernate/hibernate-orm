@@ -12,6 +12,7 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTemporal
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
+import org.hibernate.persister.entity.mutation.MergeCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
 
@@ -28,6 +29,11 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	@Override
 	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
 		return new UpdateCoordinatorTemporal( persister, persister.getFactory() );
+	}
+
+	@Override
+	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
+		return new MergeCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
 	@Override

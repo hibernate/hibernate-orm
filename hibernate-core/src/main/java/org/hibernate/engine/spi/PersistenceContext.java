@@ -45,7 +45,7 @@ public interface PersistenceContext {
 	/**
 	 * Marker object used to indicate (via reference checking) that no row was returned.
 	 */
-	Object NO_ROW = new MarkerObject( "NO_ROW" );
+	MarkerObject NO_ROW = MarkerObject.NO_ROW;
 
 	boolean isStateless();
 

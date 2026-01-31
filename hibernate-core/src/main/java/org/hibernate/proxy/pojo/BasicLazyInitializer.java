@@ -21,7 +21,7 @@ import static java.lang.System.identityHashCode;
  */
 public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
-	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
+	protected static final MarkerObject INVOKE_IMPLEMENTATION = MarkerObject.INVOKE_IMPLEMENTATION;
 
 	protected final Class<?> persistentClass;
 	protected final Method getIdentifierMethod;

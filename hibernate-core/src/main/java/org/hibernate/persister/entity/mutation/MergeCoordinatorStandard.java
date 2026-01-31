@@ -16,9 +16,9 @@ import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
  *
  * @author Gavin King
  */
-public class MergeCoordinator extends UpdateCoordinatorStandard {
+public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
-	public MergeCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public MergeCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 	}
 

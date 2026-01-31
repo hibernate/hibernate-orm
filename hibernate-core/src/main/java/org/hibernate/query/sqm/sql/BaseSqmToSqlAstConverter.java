@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -61,7 +62,6 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
@@ -3579,6 +3579,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+		final var loadQueryInfluencers = getLoadQueryInfluencers();
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
@@ -3608,18 +3609,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupJoin::applyPredicate,
 				tableGroup,
 				true,
-				getLoadQueryInfluencers().getEnabledFilters(),
+				loadQueryInfluencers.getEnabledFilters(),
 				false,
 				null,
 				this
 		);
 
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		final var softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
 			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction(
 					tableGroup.resolveTableReference( softDeleteMapping.getTableName() )
 			);
 			tableGroupJoin.applyPredicate( softDeleteRestriction );
+		}
+		final var temporalMapping = entityDescriptor.getTemporalMapping();
+		if ( temporalMapping != null
+				&& getDialect().getTemporalTableSupport()
+						.useTemporalRestriction( loadQueryInfluencers ) ) {
+			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
+			final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
+			tableGroupJoin.applyPredicate( temporalInstant == null
+					? temporalMapping.createCurrentRestriction( tableReference )
+					: temporalMapping.createRestriction( tableReference, temporalInstant ) );
 		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3638,6 +3649,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		}
 		return tableGroup;
+	}
+
+	private TemporalTableStrategy getTemporalTableStrategy() {
+		return getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	private TableGroup consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {

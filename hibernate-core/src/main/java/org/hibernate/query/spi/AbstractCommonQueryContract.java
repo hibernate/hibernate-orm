@@ -330,6 +330,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					queryOptions.setQueryPlanCachingEnabled( getBoolean( value ) );
 					return true;
 				case HINT_CACHEABLE:
+					if ( isHistorical() ) {
+						throw new IllegalStateException( "Query result set caching disallowed for historical query" );
+					}
 					queryOptions.setResultCachingEnabled( getBoolean( value ) );
 					return true;
 				case HINT_CACHE_REGION:
@@ -371,6 +374,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					return false;
 			}
 		}
+	}
+
+	boolean isHistorical() {
+		return getSession().getLoadQueryInfluencers().getTemporalIdentifier() != null;
 	}
 
 	protected void applyEntityGraphHint(GraphSemantic graphSemantic, Object value, String hintName) {

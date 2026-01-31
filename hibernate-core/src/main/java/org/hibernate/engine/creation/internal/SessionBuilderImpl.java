@@ -139,6 +139,11 @@ public abstract class SessionBuilderImpl
 	}
 
 	@Override
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
+	}
+
+	@Override
 	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return listeners;
 	}

@@ -4,10 +4,11 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
@@ -36,6 +37,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
@@ -56,6 +58,7 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.from.HistoryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -81,6 +84,7 @@ import java.util.function.Supplier;
 
 import static java.util.Locale.ROOT;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
+import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
@@ -116,6 +120,7 @@ public class PluralAttributeMappingImpl
 	private final FetchStyle fetchStyle;
 	private final SoftDeleteMapping softDeleteMapping;
 	private Boolean hasSoftDelete;
+	private final TemporalMapping temporalMapping;
 
 	private final String bidirectionalAttributeName;
 
@@ -158,16 +163,15 @@ public class PluralAttributeMappingImpl
 		this.collectionDescriptor = collectionDescriptor;
 		this.referencedPropertyName = bootDescriptor.getReferencedPropertyName();
 
-		this.mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
+		mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
 
-		this.bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+		bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
 		separateCollectionTable = bootDescriptor.isOneToMany() ? null : collectionDescriptor.getTableName();
 
 		final int baseIndex = bootDescriptor instanceof List list ? list.getBaseIndex() : -1;
-
 		indexMetadata = new IndexMetadata() {
 			@Override
 			public CollectionPart getIndexDescriptor() {
@@ -187,13 +191,28 @@ public class PluralAttributeMappingImpl
 
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, bootDescriptor,
-						getSeparateCollectionTable(), creationProcess );
+						separateCollectionTable, creationProcess );
+		temporalMapping =
+				separateCollectionTable == null
+						? null
+						: resolveTemporalMapping(
+								bootDescriptor,
+								resolveTemporalTableName( bootDescriptor, creationProcess ),
+								creationProcess
+						);
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
 		if ( elementDescriptor instanceof EntityCollectionPart elementMapping ) {
 			validateTargetEntity( elementMapping, declaringType, attributeName, propertyAccess, creationProcess );
 		}
+	}
+
+	private String resolveTemporalTableName(Collection bootDescriptor, MappingModelCreationProcess creationProcess) {
+		final var temporalTable = bootDescriptor.getTemporalTable();
+		return temporalTable == null
+				? getSeparateCollectionTable()
+				: MappingModelCreationHelper.getTableIdentifierExpression( temporalTable, creationProcess );
 	}
 
 	/**
@@ -345,6 +364,7 @@ public class PluralAttributeMappingImpl
 		this.fetchStyle = original.fetchStyle;
 		this.softDeleteMapping = original.softDeleteMapping;
 		this.hasSoftDelete = original.hasSoftDelete;
+		this.temporalMapping = original.temporalMapping;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
@@ -487,6 +507,15 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public TemporalMapping getTemporalMapping() {
+		return temporalMapping;
+	}
+
+	public TableDetails getTemporalTableDetails() {
+		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
+	}
+
+	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
 	}
@@ -567,6 +596,46 @@ public class PluralAttributeMappingImpl
 				predicateConsumer.applyPredicate( softDeleteRestriction );
 			}
 		}
+	}
+
+	@Override
+	public void applyTemporalRestrictions(
+			TableGroup tableGroup,
+			PredicateConsumer predicateConsumer,
+			LoadQueryInfluencers influencers) {
+		if ( getDialect().getTemporalTableSupport().useTemporalRestriction( influencers ) ) {
+			final var temporalInstant = influencers.getTemporalIdentifier();
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+				final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
+				if ( temporalMapping != null ) {
+					final var primaryTableReference =
+							tableGroup.resolveTableReference( temporalMapping.getTableName() );
+					predicateConsumer.applyPredicate( temporalInstant == null
+							? temporalMapping.createCurrentRestriction( primaryTableReference )
+							: temporalMapping.createRestriction( primaryTableReference, temporalInstant ) );
+				}
+			}
+			if ( temporalMapping != null ) {
+				final var tableReference =
+						tableGroup.resolveTableReference( temporalMapping.getTableName() );
+				final var temporalRestriction =
+						temporalInstant == null
+								? temporalMapping.createCurrentRestriction( tableReference )
+								: temporalMapping.createRestriction( tableReference, temporalInstant );
+				predicateConsumer.applyPredicate( temporalRestriction );
+			}
+		}
+	}
+
+	private Dialect getDialect() {
+		return collectionDescriptor.getFactory().getJdbcServices().getDialect();
+	}
+
+	private static TemporalTableStrategy getTemporalTableStrategy(LoadQueryInfluencers influencers) {
+		return influencers.getSessionFactory().getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	@Override
@@ -874,6 +943,11 @@ public class PluralAttributeMappingImpl
 				tableGroup,
 				creationState
 		);
+		applyTemporalRestrictions(
+				tableGroup,
+				predicateCollector::applyPredicate,
+				creationState.getLoadQueryInfluencers()
+		);
 
 		if ( fetched ) {
 			if ( orderByFragment != null ) {
@@ -1007,7 +1081,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
-	private @NonNull TableGroup rootTableGroup(
+	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -1121,12 +1195,14 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = collectionDescriptor.getTableName();
-		final var collectionTableReference = new NamedTableReference(
-				collectionTableName,
-				sqlAliasBase.generateNewAlias(),
-				true
-		);
+		final String tableName = collectionDescriptor.getTableName();
+		final String alias = sqlAliasBase.generateNewAlias();
+		final var collectionTableReference =
+				useHistoryTable( creationState )
+						? new HistoryTableReference( temporalMapping.getTableName(), tableName, alias, true )
+						: new NamedTableReference( tableName, alias, true );
+		collectionTableReference.applyTemporalTable( temporalMapping,
+				creationState.getLoadQueryInfluencers() );
 
 		final var tableGroup = new CollectionTableGroup(
 				canUseInnerJoins,
@@ -1177,6 +1253,13 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	private boolean useHistoryTable(SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
+		return temporalMapping != null
+			&& getTemporalTableStrategy( influencers ) == TemporalTableStrategy.HISTORY_TABLE
+			&& influencers.getTemporalIdentifier() != null;
+	}
+
 	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
@@ -1219,6 +1302,26 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
+			|| isAffectedByTemporal( influencers );
+	}
+
+	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
+		if ( influencers.getTemporalIdentifier() != null ) {
+			if ( temporalMapping != null ) {
+				return true;
+			}
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				return elementDescriptor.getAssociatedEntityMappingType().getTemporalMapping() != null;
+			}
+		}
+		return false;
 	}
 
 	@Override

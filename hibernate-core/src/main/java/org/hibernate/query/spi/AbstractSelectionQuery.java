@@ -580,6 +580,9 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setCacheable(boolean cacheable) {
+		if ( cacheable && isHistorical() ) {
+			throw new IllegalStateException( "Query result set caching disallowed for historical query" );
+		}
 		getQueryOptions().setResultCachingEnabled( cacheable );
 		return this;
 	}

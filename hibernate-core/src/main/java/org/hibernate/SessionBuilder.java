@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -244,4 +245,21 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @since 7.2
 	 */
 	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
+
+	/**
+	 * Specify the instant for reading
+	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
+	 * Instances of temporal entities retrieved in the session represent the
+	 * revisions effective at the given instant.
+	 */
+	SessionBuilder asOf(Instant instant);
+
+	/**
+	 * Specify the
+	 * {@linkplain org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
+	 * temporal} entity data. Instances of temporal entities retrieved in the
+	 * session represent revisions effective at the end of the given transaction.
+	 */
+	SessionBuilder atTransaction(Object transactionId);
 }

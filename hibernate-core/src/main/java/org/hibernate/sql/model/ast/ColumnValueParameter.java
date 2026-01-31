@@ -23,6 +23,10 @@ public class ColumnValueParameter extends AbstractJdbcParameter {
 		this.usage = usage;
 	}
 
+	public ColumnValueParameter(ColumnReference columnReference) {
+		this( columnReference, ParameterUsage.SET );
+	}
+
 	@Override
 	public ColumnReference getColumnReference() {
 		return columnReference;

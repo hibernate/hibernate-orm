@@ -49,6 +49,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import java.util.function.Supplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -111,6 +112,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -141,6 +143,8 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  */
 abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 
+	private static final Supplier<Instant> DEFAULT_TRANSACTION_ID_SUPPLIER = Instant::now;
+
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
 	private transient JdbcServices jdbcServices;
@@ -166,9 +170,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
+	private transient Supplier<?> transactionIdSupplier;
+
 	// mutable state
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
+
+	private transient Object currentTransactionIdentifier;
 
 	private boolean criteriaCopyTreeEnabled;
 	private boolean criteriaPlanCacheEnabled;
@@ -210,6 +218,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
+		transactionIdSupplier = transactionIdSupplier();
+
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
 			isTransactionCoordinatorShared = true;
@@ -248,6 +258,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
+	}
+
+	private Supplier<?> transactionIdSupplier() {
+		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdSupplier();
+		return configuredTransactionIdSupplier == null
+				? DEFAULT_TRANSACTION_ID_SUPPLIER
+				: configuredTransactionIdSupplier;
 	}
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
@@ -483,10 +500,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public String getTenantIdentifier() {
-		if ( tenantIdentifier == null ) {
-			return null;
-		}
-		return factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		return tenantIdentifier == null
+				? null
+				: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
 	}
 
 	@Override
@@ -606,6 +622,39 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
+	public Object getCurrentTransactionIdentifier() {
+		if ( currentTransactionIdentifier != null ) {
+			return currentTransactionIdentifier;
+		}
+		else if ( isTransactionInProgress() ) {
+			initializeCurrentTransactionIdentifier();
+			return currentTransactionIdentifier;
+		}
+		else {
+			return generateCurrentTransactionIdentifier();
+		}
+	}
+
+	private Object generateCurrentTransactionIdentifier() {
+		return factoryOptions.isUseServerTransactionTimestampsEnabled()
+				? null
+				: transactionIdSupplier.get();
+	}
+
+	@Override
+	public void afterTransactionBegin() {
+		initializeCurrentTransactionIdentifier();
+	}
+
+	protected void initializeCurrentTransactionIdentifier() {
+		currentTransactionIdentifier = generateCurrentTransactionIdentifier();
+	}
+
+	protected void clearTransactionStartInstant() {
+		currentTransactionIdentifier = null;
+	}
+
+	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !factoryOptions.isAllowOutOfTransactionUpdateOperations()
 				&& !isTransactionInProgress() ) {
@@ -654,6 +703,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		clearTransactionStartInstant();
 		cacheTransactionSynchronization.transactionCompleted( successful );
 	}
 
@@ -1772,6 +1822,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+
+		transactionIdSupplier = transactionIdSupplier();
 	}
 
 }

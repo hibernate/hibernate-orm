@@ -14,6 +14,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -692,6 +693,21 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled);
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+	 */
+	SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy);
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 */
+	SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled);
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 */
+	SessionFactoryBuilder applyTransactionIdGenerator(Supplier<?> supplier);
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION

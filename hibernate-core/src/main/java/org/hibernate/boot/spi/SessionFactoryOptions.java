@@ -20,6 +20,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -539,6 +540,21 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.SessionBuilder#jdbcTimeZone(TimeZone)
 	 */
 	TimeZone getJdbcTimeZone();
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+	 */
+	TemporalTableStrategy getTemporalTableStrategy();
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 */
+	boolean isUseServerTransactionTimestampsEnabled();
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 */
+	Supplier<?> getTransactionIdSupplier();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE

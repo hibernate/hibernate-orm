@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -49,6 +50,11 @@ public interface PluralAttributeMapping
 
 	void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer);
 
+	void applyTemporalRestrictions(
+			TableGroup tableGroup,
+			PredicateConsumer predicateConsumer,
+			LoadQueryInfluencers influencers);
+
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
 		int getListIndexBase();
@@ -65,6 +71,13 @@ public interface PluralAttributeMapping
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
 	default SoftDeleteMapping getSoftDeleteMapping() {
+		return null;
+	}
+
+	/**
+	 * Mapping for temporal support, or {@code null} if temporal not defined
+	 */
+	default TemporalMapping getTemporalMapping() {
 		return null;
 	}
 

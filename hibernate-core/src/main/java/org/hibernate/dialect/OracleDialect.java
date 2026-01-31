@@ -27,6 +27,8 @@ import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
+import org.hibernate.dialect.temporal.OracleTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -1710,7 +1712,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+		return generatedAs.startsWith( "row " )
+				? ""
+				: " generated always as (" + generatedAs + ")";
 	}
 
 	@Override
@@ -1894,4 +1898,13 @@ public class OracleDialect extends Dialect {
 		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new OracleTemporalTableSupport( this );
+	}
+
+	@Override //TODO: DELETEME
+	public boolean throttleDdl() {
+		return true;
+	}
 }

@@ -35,10 +35,10 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			OperationProducer operationProducer,
+			RowMutationOperations mutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = operationProducer;
+		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 

@@ -12,7 +12,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
  * @see InsertCoordinator
  * @see DeleteCoordinator
  * @see UpdateCoordinator
- * @see MergeCoordinator
+ * @see MergeCoordinatorStandard
  *
  * @author Marco Belladelli
  */

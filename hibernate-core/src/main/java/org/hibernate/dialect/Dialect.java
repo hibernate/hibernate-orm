@@ -55,6 +55,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temporal.DefaultTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.LegacyTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
@@ -5764,6 +5766,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * marked for rollback on this database?
 	 */
 	public boolean causesRollback(SQLException sqlException) {
+		return false;
+	}
+
+	/**
+	 * Does this dialect allow an explicit {@code not null}
+	 * constraint on a {@link #generatedAs generated as}
+	 * column?
+	 */
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return true;
+	}
+
+	/**
+	 * Get the {@link TemporalTableSupport} for this dialect.
+	 */
+	@Incubating
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DefaultTemporalTableSupport( this );
+	}
+
+	//TODO: DELETEME
+	@Incubating @Deprecated(forRemoval = true)
+	public boolean throttleDdl() {
 		return false;
 	}
 

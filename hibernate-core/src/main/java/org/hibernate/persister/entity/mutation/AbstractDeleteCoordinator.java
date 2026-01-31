@@ -4,19 +4,25 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.internal.MutationGroupSingle;
 
-import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
+import java.util.function.Function;
+
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * Template support for DeleteCoordinator implementations.  Mainly
@@ -115,7 +121,7 @@ public abstract class AbstractDeleteCoordinator
 					(statementDetails, affectedRowCount, batchPosition) ->
 							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
 					session,
-					staleStateException -> staleObjectState( id, staleStateException )
+					staleStateException -> staleObjectStateException( id, staleStateException )
 			);
 		}
 		finally {
@@ -272,28 +278,12 @@ public abstract class AbstractDeleteCoordinator
 					(statementDetails, affectedRowCount, batchPosition) ->
 							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
 					session,
-					staleStateException -> staleObjectState( id, staleStateException )
+					staleStateException -> staleObjectStateException( id, staleStateException )
 			);
 		}
 		finally {
 			mutationExecutor.release();
 		}
-	}
-
-	private StaleObjectStateException staleObjectState(Object id, StaleStateException staleStateException) {
-		return new StaleObjectStateException( entityPersister.getEntityName(), id, staleStateException );
-	}
-
-	private boolean resultCheck(
-			Object id, PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
-		return identifiedResultsCheck(
-				statementDetails,
-				affectedRowCount,
-				batchPosition,
-				entityPersister,
-				id,
-				factory
-		);
 	}
 
 	protected void applyStaticDeleteTableDetails(
@@ -323,5 +313,116 @@ public abstract class AbstractDeleteCoordinator
 			noVersionDeleteGroup = generateOperationGroup( "", null, false, session );
 		}
 		return noVersionDeleteGroup;
+	}
+
+	protected void applyOptimisticLocking(
+			OptimisticLockStyle optimisticLockStyle,
+			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
+		if ( optimisticLockStyle.isVersion() && entityPersister().getVersionMapping() != null ) {
+			applyVersionBasedOptLocking( resolver );
+		}
+		else if ( loadedState != null && optimisticLockStyle.isAllOrDirty() ) {
+			applyNonVersionOptLocking( optimisticLockStyle, resolver, loadedState, session );
+		}
+	}
+
+	protected void applyVersionBasedOptLocking(Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
+		final var versionMapping = entityPersister().getVersionMapping();
+		if ( versionMapping != null ) {
+			final String tableNameForMutation =
+					entityPersister().physicalTableNameForMutation( versionMapping );
+			final var tableMutationBuilder = resolver.apply( tableNameForMutation );
+			if ( tableMutationBuilder != null ) {
+				applyVersionOptimisticLocking( tableMutationBuilder );
+			}
+		}
+	}
+
+	protected void applyNonVersionOptLocking(
+			OptimisticLockStyle lockStyle,
+			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
+		final var persister = entityPersister();
+		assert loadedState != null;
+		assert lockStyle.isAllOrDirty();
+		assert persister.optimisticLockStyle().isAllOrDirty();
+		assert session != null;
+
+		final boolean[] versionability = persister.getPropertyVersionability();
+		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
+			// only makes sense to lock on singular attributes which are not excluded from optimistic locking
+			if ( versionability[attributeIndex] ) {
+				final var attribute = persister.getAttributeMapping( attributeIndex );
+				if ( !attribute.isPluralAttributeMapping() ) {
+					breakDownJdbcValues( resolver, session, attribute, loadedState[attributeIndex] );
+				}
+			}
+		}
+	}
+
+	private void breakDownJdbcValues(
+			Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			SharedSessionContractImplementor session,
+			AttributeMapping attribute,
+			Object loadedValue) {
+		final var tableMutationBuilder =
+				resolver.apply( attribute.getContainingTableExpression() );
+		if ( tableMutationBuilder != null ) {
+			final var optimisticLockBindings = tableMutationBuilder.getOptimisticLockBindings();
+			if ( optimisticLockBindings != null ) {
+				attribute.breakDownJdbcValues(
+						loadedValue,
+						(valueIndex, value, jdbcValueMapping) -> {
+							if ( !tableMutationBuilder.getKeyRestrictionBindings()
+									.containsColumn(
+											jdbcValueMapping.getSelectableName(),
+											jdbcValueMapping.getJdbcMapping()
+									) ) {
+								optimisticLockBindings.consume( valueIndex, value, jdbcValueMapping );
+							}
+						},
+						session
+				);
+			}
+		}
+	}
+
+	protected Function<String,RestrictedTableMutationBuilder<?, ?>> tableMutationBuilderResolver(
+			RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+		final String tableName = tableMutationBuilder.getMutatingTable().getTableName();
+		return name -> tableName.equals( name ) ? tableMutationBuilder : null;
+	}
+
+	protected void applyPartitionKeyRestriction(Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
+		final var persister = entityPersister();
+		if ( persister.hasPartitionedSelectionMapping() ) {
+			final var attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final var attributeMapping = attributeMappings.get( m );
+				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+				for ( int i = 0; i < jdbcTypeCount; i++ ) {
+					final var selectableMapping = attributeMapping.getSelectable( i );
+					if ( selectableMapping.isPartitioned() ) {
+						final String tableNameForMutation =
+								persister.physicalTableNameForMutation( selectableMapping );
+						final var tableMutationBuilder = resolver.apply( tableNameForMutation );
+						if ( tableMutationBuilder != null ) {
+							tableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	MutationOperationGroup createMutationOperationGroup(TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
+		final var tableMutation = tableUpdateBuilder.buildMutation();
+		return singleOperation(
+				new MutationGroupSingle( MutationType.DELETE, entityPersister(), tableMutation ),
+				tableMutation.createMutationOperation( null, factory() )
+		);
 	}
 }

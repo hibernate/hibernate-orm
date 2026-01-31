@@ -218,6 +218,13 @@ public interface SharedSessionContractImplementor
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
+	 * A transaction id representing the beginning of the current transaction,
+	 * for use with {@link org.hibernate.annotations.Temporal temporal}
+	 * effectivity columns.
+	 */
+	Object getCurrentTransactionIdentifier();
+
+	/**
 	 * Does this session have an active Hibernate transaction, or is it
 	 * associated with a JTA transaction currently in progress?
 	 */

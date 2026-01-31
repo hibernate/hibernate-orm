@@ -135,6 +135,10 @@ public abstract sealed class PersistentClass
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
 	}
 
+	MetadataBuildingContext getBuildingContext() {
+		return metadataBuildingContext;
+	}
+
 	public String getClassName() {
 		return className;
 	}
@@ -434,8 +438,12 @@ public abstract sealed class PersistentClass
 	}
 
 	public void createPrimaryKey() {
-		//Primary key constraint
 		final var table = getTable();
+		final var primaryKey = makePrimaryKey( table );
+		table.setPrimaryKey( primaryKey );
+	}
+
+	PrimaryKey makePrimaryKey(Table table) {
 		final var primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		primaryKey.addColumns( getKey() );
@@ -446,7 +454,7 @@ public abstract sealed class PersistentClass
 				}
 			}
 		}
-		table.setPrimaryKey( primaryKey );
+		return primaryKey;
 	}
 
 	private boolean addPartitionKeyToPrimaryKey() {

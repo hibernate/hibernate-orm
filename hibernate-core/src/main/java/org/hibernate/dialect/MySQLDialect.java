@@ -12,7 +12,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.FetchSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -255,12 +254,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
-	}
-
-	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( FetchSettings.MAX_FETCH_DEPTH, "2" );
 	}
 
 	private MySQLStorageEngine createStorageEngine(String configuredStorageEngine) {

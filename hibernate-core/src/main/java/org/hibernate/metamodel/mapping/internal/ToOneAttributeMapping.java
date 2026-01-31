@@ -100,9 +100,11 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -2249,10 +2251,38 @@ public class ToOneAttributeMapping
 										: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
 						join.applyPredicate( temporalPredicate );
 					}
+
+					final var auditMapping = associatedEntityMappingType.getAuditMapping();
+					if ( auditMapping != null
+							&& creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null ) {
+						final var tableReference =
+								lazyTableGroup.resolveTableReference( navigablePath, auditMapping.getTableName() );
+						final var keySelectables = collectEntityKeySelectables( associatedEntityMappingType );
+						final var auditPredicate = auditMapping.createRestriction(
+								associatedEntityMappingType.getEntityPersister(),
+								tableReference,
+								keySelectables
+						);
+						if ( auditPredicate != null ) {
+							join.applyPredicate( auditPredicate );
+						}
+					}
 				}
 		);
 
 		return join;
+	}
+
+	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
+		final var keySelectables = new ArrayList<SelectableMapping>();
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !selectableMapping.isFormula() ) {
+						keySelectables.add( selectableMapping );
+					}
+				}
+		);
+		return keySelectables;
 	}
 
 	@Override

@@ -7,25 +7,26 @@ package org.hibernate.sql.ast.tree.from;
 import org.hibernate.spi.NavigablePath;
 
 /**
- * Table reference that matches both the history table expression and the current table expression.
+ * Table reference that matches both an auxiliary table expression
+ * (history or audit table) and the current table expression.
  */
-public class HistoryTableReference extends NamedTableReference {
+public class AuxiliaryTableReference extends NamedTableReference {
 	private final String currentTableExpression;
 
-	public HistoryTableReference(
-			String historyTableExpression,
+	public AuxiliaryTableReference(
+			String auxiliaryTableExpression,
 			String currentTableExpression,
 			String identificationVariable) {
-		super( historyTableExpression, identificationVariable );
+		super( auxiliaryTableExpression, identificationVariable );
 		this.currentTableExpression = currentTableExpression;
 	}
 
-	public HistoryTableReference(
-			String historyTableExpression,
+	public AuxiliaryTableReference(
+			String auxiliaryTableExpression,
 			String currentTableExpression,
 			String identificationVariable,
 			boolean isOptional) {
-		super( historyTableExpression, identificationVariable, isOptional );
+		super( auxiliaryTableExpression, identificationVariable, isOptional );
 		this.currentTableExpression = currentTableExpression;
 	}
 

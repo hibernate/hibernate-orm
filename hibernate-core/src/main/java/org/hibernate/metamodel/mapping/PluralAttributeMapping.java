@@ -81,6 +81,13 @@ public interface PluralAttributeMapping
 		return null;
 	}
 
+	/**
+	 * Mapping for audit support, or {@code null} if audit not defined
+	 */
+	default AuditMapping getAuditMapping() {
+		return null;
+	}
+
 	OrderByFragment getOrderByFragment();
 	OrderByFragment getManyToManyOrderByFragment();
 

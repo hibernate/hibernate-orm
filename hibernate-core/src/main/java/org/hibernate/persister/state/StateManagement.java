@@ -17,6 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
+import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.SoftDeleteStateManagement;
 import org.hibernate.persister.state.internal.StandardStateManagement;
@@ -31,6 +32,7 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
  * @see SoftDeleteStateManagement
  * @see TemporalStateManagement
  * @see HistoryStateManagement
+ * @see AuditStateManagement
  */
 @Internal
 public interface StateManagement {
@@ -43,6 +45,9 @@ public interface StateManagement {
 		else if ( rootClass.getSoftDeleteStrategy() != null ) {
 			return SoftDeleteStateManagement.INSTANCE;
 		}
+		else if ( rootClass.isAudited() ) {
+			return AuditStateManagement.INSTANCE;
+		}
 		else {
 			return StandardStateManagement.INSTANCE;
 		}
@@ -54,6 +59,9 @@ public interface StateManagement {
 		}
 		else if ( collectionBinding.getSoftDeleteStrategy() != null ) {
 			return SoftDeleteStateManagement.INSTANCE;
+		}
+		else if ( collectionBinding.isAudited() ) {
+			return AuditStateManagement.INSTANCE;
 		}
 		else {
 			return StandardStateManagement.INSTANCE;

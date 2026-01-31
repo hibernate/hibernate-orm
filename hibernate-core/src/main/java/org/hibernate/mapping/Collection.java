@@ -48,7 +48,7 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable, Temporalized
+		implements Fetchable, Value, Filterable, SoftDeletable, Temporalized, Auditable
 		permits Set, Bag,
 				IndexedCollection, // List, Map
 				IdentifierCollection { // IdentifierBag only built-in implementation
@@ -111,6 +111,9 @@ public abstract sealed class Collection
 	private Column temporalEndingColumn;
 	private Table temporalTable;
 	private boolean temporallyPartitioned;
+	private Table auditTable;
+	private Column auditTransactionIdColumn;
+	private Column auditModificationTypeColumn;
 
 	private String loaderName;
 
@@ -889,6 +892,13 @@ public abstract sealed class Collection
 	}
 
 	@Override
+	public void enableAudit(Table auditTable, Column transactionIdColumn, Column modificationTypeColumn) {
+		this.auditTable = auditTable;
+		this.auditTransactionIdColumn = transactionIdColumn;
+		this.auditModificationTypeColumn = modificationTypeColumn;
+	}
+
+	@Override
 	public void setTemporalTable(Table table) {
 		this.temporalTable = table;
 	}
@@ -916,6 +926,21 @@ public abstract sealed class Collection
 	@Override
 	public boolean isTemporallyPartitioned() {
 		return temporallyPartitioned;
+	}
+
+	@Override
+	public Table getAuditTable() {
+		return auditTable;
+	}
+
+	@Override
+	public Column getAuditTransactionIdColumn() {
+		return auditTransactionIdColumn;
+	}
+
+	@Override
+	public Column getAuditModificationTypeColumn() {
+		return auditModificationTypeColumn;
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {

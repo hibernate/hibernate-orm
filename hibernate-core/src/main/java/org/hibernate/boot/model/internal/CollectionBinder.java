@@ -2371,6 +2371,7 @@ public abstract class CollectionBinder {
 		handleCheckConstraints( collectionTable );
 		processSoftDeletes();
 		processTemporal();
+		processAudited();
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2419,6 +2420,14 @@ public abstract class CollectionBinder {
 		}
 	}
 
+	private void processAudited() {
+		assert collection.getCollectionTable() != null;
+		final var audited = extract( Audited.class, property, buildingContext );
+		if ( audited != null ) {
+			AuditHelper.bindAuditTable( audited, collection, buildingContext );
+		}
+	}
+
 	private static <T extends Annotation> T extract(
 			Class<T> annotationClass, MemberDetails property, MetadataBuildingContext context) {
 		final var fromProperty = property.getDirectAnnotationUsage( annotationClass );
@@ -2450,6 +2459,7 @@ public abstract class CollectionBinder {
 
 		processSoftDeletes();
 		processTemporal();
+		processAudited();
 		checkCheckAnnotation();
 	}
 

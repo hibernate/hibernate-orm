@@ -156,10 +156,9 @@ public class DeleteRowsCoordinatorHistory implements DeleteRowsCoordinator {
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
-			historyTableMapping = HistoryCollectionTableMappingHelper.createHistoryTableMapping(
-					mutationTarget.getCollectionTableMapping(),
-					temporalMapping.getTableName()
-			);
+			historyTableMapping =
+					new CollectionTableMapping( mutationTarget.getCollectionTableMapping(),
+							temporalMapping.getTableName() );
 		}
 		return historyTableMapping;
 	}

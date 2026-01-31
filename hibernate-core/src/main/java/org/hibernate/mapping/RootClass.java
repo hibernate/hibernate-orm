@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, Temporalized {
+public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, Temporalized, Auditable {
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -58,6 +58,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private Column temporalEndingColumn;
 	private Table temporalTable;
 	private boolean temporallyPartitioned;
+	private Table auditTable;
+	private Column auditTransactionIdColumn;
+	private Column auditModificationTypeColumn;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -467,6 +470,28 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	@Override
 	public boolean isTemporallyPartitioned() {
 		return temporallyPartitioned;
+	}
+
+	@Override
+	public void enableAudit(Table auditTable, Column transactionIdColumn, Column modificationTypeColumn) {
+		this.auditTable = auditTable;
+		this.auditTransactionIdColumn = transactionIdColumn;
+		this.auditModificationTypeColumn = modificationTypeColumn;
+	}
+
+	@Override
+	public Table getAuditTable() {
+		return auditTable;
+	}
+
+	@Override
+	public Column getAuditTransactionIdColumn() {
+		return auditTransactionIdColumn;
+	}
+
+	@Override
+	public Column getAuditModificationTypeColumn() {
+		return auditModificationTypeColumn;
 	}
 
 	public void setPartitioned(boolean partitioned) {

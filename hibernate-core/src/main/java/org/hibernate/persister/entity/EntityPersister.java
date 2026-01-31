@@ -870,6 +870,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	/**
+	 * Is the property excluded from audit logging.
+	 */
+	default boolean isPropertyAuditedExcluded(int attributeIndex) {
+		return false;
+	}
+
+	/**
 	 * Get the "checkability" of the properties of this class
 	 * (is the property dirty checked, does the cache need
 	 * to be updated)

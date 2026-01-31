@@ -397,6 +397,13 @@ public interface EntityMappingType
 		return null;
 	}
 
+	/**
+	 * Mapping for audit support, or {@code null} if not defined.
+	 */
+	default AuditMapping getAuditMapping() {
+		return null;
+	}
+
 	@Override
 	default TableDetails getSoftDeleteTableDetails() {
 		return getIdentifierTableDetails();

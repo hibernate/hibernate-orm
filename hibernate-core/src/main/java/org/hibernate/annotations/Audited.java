@@ -39,13 +39,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     creation, 1 for modification, and 2 for deletion.
  * </ul>
  * <p>
- * On the other hand, the past state of an audited entity or
- * collection cannot easily be reconstructed from the historical
- * audit log, since an audit log entry is considered immutable,
- * and therefore does not hold {@linkplain Temporal#rowEnd
- * information about the time at which the changed data was
- * uperseded by a newer revision}.
- * <p>
  * Audited entities are typically used when a supplier of
  * transaction identifiers is available to Hibernate. A supplier
  * may be specified via the configuration property

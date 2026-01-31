@@ -33,6 +33,10 @@ import static org.hibernate.persister.state.internal.AbstractStateManagement.isU
 import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
 
 /**
+ * State management for temporal entities and collections with
+ * {@linkplain org.hibernate.annotations.Temporal.HistoryTable
+ * history tables}.
+ *
  * @author Gavin King
  */
 @Internal

@@ -52,10 +52,9 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 		this.currentInsertCoordinator = currentInsertCoordinator;
 		identifierTableMapping = entityPersister.getIdentifierTableMapping();
 		temporalMapping = entityPersister.getTemporalMapping();
-		historyTableMapping = HistoryTableMappingHelper.createHistoryTableMapping(
-				identifierTableMapping,
-				entityPersister,
-				temporalMapping.getTableName()
+		historyTableMapping =
+				createAuxiliaryTableMapping( identifierTableMapping,
+						entityPersister, temporalMapping.getTableName()
 		);
 		historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_INSERT" );
 		staticHistoryInsertGroup = entityPersister.isDynamicInsert()

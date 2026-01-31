@@ -22,6 +22,7 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
@@ -58,7 +59,7 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
-import org.hibernate.sql.ast.tree.from.HistoryTableReference;
+import org.hibernate.sql.ast.tree.from.AuxiliaryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -78,14 +79,17 @@ import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollection
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Locale.ROOT;
+import static org.hibernate.boot.model.internal.AuditHelper.resolveAuditMapping;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
 /**
@@ -121,6 +125,7 @@ public class PluralAttributeMappingImpl
 	private final SoftDeleteMapping softDeleteMapping;
 	private Boolean hasSoftDelete;
 	private final TemporalMapping temporalMapping;
+	private final AuditMapping auditMapping;
 
 	private final String bidirectionalAttributeName;
 
@@ -192,14 +197,22 @@ public class PluralAttributeMappingImpl
 		softDeleteMapping =
 				resolveSoftDeleteMapping( this, bootDescriptor,
 						separateCollectionTable, creationProcess );
-		temporalMapping =
-				separateCollectionTable == null
-						? null
-						: resolveTemporalMapping(
-								bootDescriptor,
-								resolveTemporalTableName( bootDescriptor, creationProcess ),
-								creationProcess
-						);
+		if ( separateCollectionTable != null ) {
+			temporalMapping = resolveTemporalMapping(
+					bootDescriptor,
+					resolveTemporalTableName( bootDescriptor, creationProcess ),
+					creationProcess
+			);
+			auditMapping = resolveAuditMapping(
+					bootDescriptor,
+					resolveAuditTableName( bootDescriptor, creationProcess ),
+					creationProcess
+			);
+		}
+		else {
+			temporalMapping = null;
+			auditMapping = null;
+		}
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
@@ -208,11 +221,16 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	private static String resolveAuditTableName(Collection bootDescriptor, MappingModelCreationProcess creationProcess) {
+		final var auditTable = bootDescriptor.getAuditTable();
+		return auditTable == null ? null : getTableIdentifierExpression( auditTable, creationProcess );
+	}
+
 	private String resolveTemporalTableName(Collection bootDescriptor, MappingModelCreationProcess creationProcess) {
 		final var temporalTable = bootDescriptor.getTemporalTable();
 		return temporalTable == null
 				? getSeparateCollectionTable()
-				: MappingModelCreationHelper.getTableIdentifierExpression( temporalTable, creationProcess );
+				: getTableIdentifierExpression( temporalTable, creationProcess );
 	}
 
 	/**
@@ -365,6 +383,7 @@ public class PluralAttributeMappingImpl
 		this.softDeleteMapping = original.softDeleteMapping;
 		this.hasSoftDelete = original.hasSoftDelete;
 		this.temporalMapping = original.temporalMapping;
+		this.auditMapping = original.auditMapping;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
@@ -511,6 +530,11 @@ public class PluralAttributeMappingImpl
 		return temporalMapping;
 	}
 
+	@Override
+	public AuditMapping getAuditMapping() {
+		return auditMapping;
+	}
+
 	public TableDetails getTemporalTableDetails() {
 		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
 	}
@@ -603,8 +627,8 @@ public class PluralAttributeMappingImpl
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers) {
+		final var temporalInstant = influencers.getTemporalIdentifier();
 		if ( getDialect().getTemporalTableSupport().useTemporalRestriction( influencers ) ) {
-			final var temporalInstant = influencers.getTemporalIdentifier();
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
@@ -628,10 +652,101 @@ public class PluralAttributeMappingImpl
 				predicateConsumer.applyPredicate( temporalRestriction );
 			}
 		}
+
+		if ( temporalInstant != null ) {
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+				final var associatedAuditMapping = associatedEntityDescriptor.getAuditMapping();
+				if ( associatedAuditMapping != null ) {
+					final var tableReference = tableGroup.resolveTableReference( associatedAuditMapping.getTableName() );
+					final var keySelectables = collectEntityKeySelectables( associatedEntityDescriptor );
+					final var auditPredicate = associatedAuditMapping.createRestriction(
+							associatedEntityDescriptor.getEntityPersister(),
+							tableReference,
+							keySelectables
+					);
+					if ( auditPredicate != null ) {
+						predicateConsumer.applyPredicate( auditPredicate );
+					}
+				}
+			}
+
+			if ( auditMapping != null ) {
+				final var tableReference =
+						tableGroup.resolveTableReference( auditMapping.getTableName() );
+				final var keySelectables = collectCollectionRowKeySelectables();
+				final var auditPredicate = auditMapping.createRestriction(
+						this,
+						tableReference,
+						keySelectables
+				);
+				if ( auditPredicate != null ) {
+					predicateConsumer.applyPredicate( auditPredicate );
+				}
+			}
+		}
 	}
 
 	private Dialect getDialect() {
 		return collectionDescriptor.getFactory().getJdbcServices().getDialect();
+	}
+
+	private static java.util.List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
+		final var keySelectables = new ArrayList<SelectableMapping>();
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !selectableMapping.isFormula() ) {
+						keySelectables.add( selectableMapping );
+					}
+				}
+		);
+		return keySelectables;
+	}
+
+	private java.util.List<SelectableMapping> collectCollectionRowKeySelectables() {
+		final var keySelectables = new ArrayList<SelectableMapping>();
+		final var identifierDescriptor = getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			identifierDescriptor.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+			return keySelectables;
+		}
+
+		getKeyDescriptor().getKeyPart().forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !selectableMapping.isFormula() ) {
+						keySelectables.add( selectableMapping );
+					}
+				}
+		);
+
+		final CollectionPart indexDescriptor = getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			indexDescriptor.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+		}
+		else {
+			getElementDescriptor().forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+		}
+		return keySelectables;
 	}
 
 	private static TemporalTableStrategy getTemporalTableStrategy(LoadQueryInfluencers influencers) {
@@ -1197,10 +1312,18 @@ public class PluralAttributeMappingImpl
 		);
 		final String tableName = collectionDescriptor.getTableName();
 		final String alias = sqlAliasBase.generateNewAlias();
-		final var collectionTableReference =
-				useHistoryTable( creationState )
-						? new HistoryTableReference( temporalMapping.getTableName(), tableName, alias, true )
-						: new NamedTableReference( tableName, alias, true );
+		final NamedTableReference collectionTableReference;
+		if ( useAuditTable( creationState ) ) {
+			collectionTableReference = new AuxiliaryTableReference(
+					auditMapping.getTableName(), tableName, alias, true );
+		}
+		else if ( useHistoryTable( creationState ) ) {
+			collectionTableReference = new AuxiliaryTableReference(
+					temporalMapping.getTableName(), tableName, alias, true );
+		}
+		else {
+			collectionTableReference = new NamedTableReference( tableName, alias, true );
+		}
 		collectionTableReference.applyTemporalTable( temporalMapping,
 				creationState.getLoadQueryInfluencers() );
 
@@ -1255,8 +1378,15 @@ public class PluralAttributeMappingImpl
 
 	private boolean useHistoryTable(SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
-		return temporalMapping != null
+		return !useAuditTable( creationState )
+			&& temporalMapping != null
 			&& getTemporalTableStrategy( influencers ) == TemporalTableStrategy.HISTORY_TABLE
+			&& influencers.getTemporalIdentifier() != null;
+	}
+
+	private boolean useAuditTable(SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
+		return auditMapping != null
 			&& influencers.getTemporalIdentifier() != null;
 	}
 
@@ -1312,13 +1442,15 @@ public class PluralAttributeMappingImpl
 
 	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalIdentifier() != null ) {
-			if ( temporalMapping != null ) {
+			if ( temporalMapping != null || auditMapping != null ) {
 				return true;
 			}
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				return elementDescriptor.getAssociatedEntityMappingType().getTemporalMapping() != null;
+				final var associatedEntityMappingType = elementDescriptor.getAssociatedEntityMappingType();
+				return associatedEntityMappingType.getTemporalMapping() != null
+					|| associatedEntityMappingType.getAuditMapping() != null;
 			}
 		}
 		return false;

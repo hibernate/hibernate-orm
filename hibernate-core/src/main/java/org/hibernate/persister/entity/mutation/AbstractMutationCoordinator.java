@@ -329,4 +329,33 @@ public abstract class AbstractMutationCoordinator {
 			}
 		}
 	}
-}
+
+	/**
+	 * For temporal history tables and audit log tables.
+	 */
+	static EntityTableMapping createAuxiliaryTableMapping(
+			EntityTableMapping identifierTableMapping,
+			EntityPersister persister,
+			String tableName) {
+		return new EntityTableMapping(
+				tableName,
+				identifierTableMapping.getRelativePosition(),
+				identifierTableMapping.getKeyMapping(),
+				identifierTableMapping.isOptional(),
+				identifierTableMapping.isInverse(),
+				identifierTableMapping.isIdentifierTable(),
+				identifierTableMapping.getAttributeIndexes(),
+				identifierTableMapping.getInsertExpectation(),
+				identifierTableMapping.getInsertCustomSql(),
+				identifierTableMapping.isInsertCallable(),
+				identifierTableMapping.getUpdateExpectation(),
+				identifierTableMapping.getUpdateCustomSql(),
+				identifierTableMapping.isUpdateCallable(),
+				identifierTableMapping.isCascadeDeleteEnabled(),
+				identifierTableMapping.getDeleteExpectation(),
+				identifierTableMapping.getDeleteCustomSql(),
+				identifierTableMapping.isDeleteCallable(),
+				persister.isDynamicUpdate(),
+				persister.isDynamicInsert()
+		);
+	}}

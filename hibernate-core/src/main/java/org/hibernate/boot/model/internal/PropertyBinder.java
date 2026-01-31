@@ -30,6 +30,7 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CascadeType;
@@ -453,6 +454,7 @@ public class PropertyBinder {
 		handleOptional( property );
 		inferOptimisticLocking( property );
 		handleTemporalExcluded( property );
+		handleAuditedExcluded( property );
 		return property;
 	}
 
@@ -546,6 +548,13 @@ public class PropertyBinder {
 			property.setTemporalExcluded( true );
 			property.setOptimisticLocked( false );
 			addTemporalExcludedColumnOptions( property );
+		}
+	}
+
+	private void handleAuditedExcluded(Property property) {
+		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			property.setAuditedExcluded( true );
+			property.setOptimisticLocked( false );
 		}
 	}
 

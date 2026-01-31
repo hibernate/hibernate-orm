@@ -43,11 +43,9 @@ public class DeleteCoordinatorHistory
 		super( entityPersister, factory );
 		this.currentDeleteCoordinator = currentDeleteCoordinator;
 		this.temporalMapping = entityPersister.getTemporalMapping();
-		this.historyTableMapping = HistoryTableMappingHelper.createHistoryTableMapping(
-				entityPersister.getIdentifierTableMapping(),
-				entityPersister,
-				temporalMapping.getTableName()
-		);
+		this.historyTableMapping =
+				createAuxiliaryTableMapping( entityPersister.getIdentifierTableMapping(),
+						entityPersister, temporalMapping.getTableName() );
 		this.historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_DELETE" );
 		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup();
 	}

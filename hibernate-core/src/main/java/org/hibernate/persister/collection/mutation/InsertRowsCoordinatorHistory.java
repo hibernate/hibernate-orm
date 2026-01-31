@@ -120,10 +120,9 @@ public class InsertRowsCoordinatorHistory implements InsertRowsCoordinator {
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
-			historyTableMapping = HistoryCollectionTableMappingHelper.createHistoryTableMapping(
-					mutationTarget.getCollectionTableMapping(),
-					temporalMapping.getTableName()
-			);
+			historyTableMapping =
+					new CollectionTableMapping( mutationTarget.getCollectionTableMapping(),
+							temporalMapping.getTableName() );
 		}
 		return historyTableMapping;
 	}

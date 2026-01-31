@@ -58,6 +58,7 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
+import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.Subselect;
@@ -260,6 +261,7 @@ public class EntityBinder {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
 			bindTemporal( clazzToProcess, rootClass, context );
+			bindAudited( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -335,7 +337,6 @@ public class EntityBinder {
 		}
 	}
 
-
 	private static void bindTemporal(
 			ClassDetails classDetails,
 			RootClass rootClass,
@@ -350,6 +351,16 @@ public class EntityBinder {
 					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
 					context
 			);
+		}
+	}
+
+	private static void bindAudited(
+			ClassDetails classDetails,
+			RootClass rootClass,
+			MetadataBuildingContext context) {
+		final var audited = extract( Audited.class, classDetails, context );
+		if ( audited != null ) {
+			AuditHelper.bindAuditTable( audited, rootClass, context );
 		}
 	}
 

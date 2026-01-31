@@ -239,10 +239,9 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	private CollectionTableMapping getHistoryTableMapping() {
 		if ( historyTableMapping == null ) {
 			final var mutationTarget = getMutationTarget();
-			historyTableMapping = HistoryCollectionTableMappingHelper.createHistoryTableMapping(
-					mutationTarget.getCollectionTableMapping(),
-					mutationTarget.getTargetPart().getTemporalMapping().getTableName()
-			);
+			historyTableMapping =
+					new CollectionTableMapping( mutationTarget.getCollectionTableMapping(),
+							mutationTarget.getTargetPart().getTemporalMapping().getTableName() );
 		}
 		return historyTableMapping;
 	}

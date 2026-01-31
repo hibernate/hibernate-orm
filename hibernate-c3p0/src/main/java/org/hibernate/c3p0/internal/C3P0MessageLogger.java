@@ -14,6 +14,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -32,7 +33,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface C3P0MessageLogger extends ConnectionInfoLogger {
 	String NAME = ConnectionInfoLogger.LOGGER_NAME + ".c3p0";
 
-	C3P0MessageLogger C3P0_MSG_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), C3P0MessageLogger.class, NAME );
+	C3P0MessageLogger C3P0_MSG_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), C3P0MessageLogger.class, NAME, Locale.ROOT );
 
 	/**
 	 * Log a message (WARN) about conflicting {@code hibernate.c3p0.XYZ} and {@code c3p0.XYZ} settings

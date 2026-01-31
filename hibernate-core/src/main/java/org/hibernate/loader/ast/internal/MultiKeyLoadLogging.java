@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 
@@ -38,7 +39,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface MultiKeyLoadLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader.multi";
 
-	MultiKeyLoadLogging MULTI_KEY_LOAD_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), MultiKeyLoadLogging.class, LOGGER_NAME );
+	MultiKeyLoadLogging MULTI_KEY_LOAD_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), MultiKeyLoadLogging.class, LOGGER_NAME, Locale.ROOT );
 
 	// Enablement messages
 	@LogMessage(level = TRACE)

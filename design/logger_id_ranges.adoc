@@ -56,7 +56,7 @@ well as some helper info such as whether DEBUG or TRACE are enabled.  E.g.:
 public interface MappingModelCreationLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.orm.model.mapping.creation";
 
-	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME );
+	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();

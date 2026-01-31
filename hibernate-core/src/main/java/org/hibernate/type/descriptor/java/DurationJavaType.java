@@ -37,7 +37,6 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 * Singleton access
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
-	private static final BigDecimal BILLION = BigDecimal.ONE.movePointRight(9);
 
 	public DurationJavaType() {
 		super( Duration.class, ImmutableMutabilityPlan.instance() );
@@ -130,7 +129,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if ( value instanceof BigDecimal decimal ) {
-			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BILLION );
+			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BigDecimalHolder.BILLION );
 			return Duration.ofSeconds(
 					secondsAndNanos[0].longValueExact(),
 					// use intValue() not intValueExact() here, because
@@ -179,5 +178,12 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 				? dialect.getDefaultIntervalSecondScale()
 				: 0; // For non-interval types, we use the type numeric(21)
 
+	}
+
+	// Avoids initializing the BigDecimal class when not strictly necessary
+	// Initializing BigDecimal generates a lot of allocations
+	private static class BigDecimalHolder {
+
+		private static final BigDecimal BILLION = BigDecimal.valueOf(1_000_000_000L);
 	}
 }

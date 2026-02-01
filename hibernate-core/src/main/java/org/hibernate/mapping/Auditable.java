@@ -12,6 +12,8 @@ public interface Auditable {
 
 	Table getAuditTable();
 
+	Table getMainTable();
+
 	Column getAuditTransactionIdColumn();
 
 	Column getAuditModificationTypeColumn();

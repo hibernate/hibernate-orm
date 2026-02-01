@@ -30,14 +30,10 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
@@ -222,24 +218,24 @@ public class AuditMappingImpl implements AuditMapping {
 		return predicate;
 	}
 
-	@Override
-	public ColumnValueBinding createTransactionIdValueBinding(ColumnReference columnReference) {
-		return currentTimestampFunctionName != null
-				? new ColumnValueBinding( columnReference,
-						new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), transactionIdMapping ) )
-				: new ColumnValueBinding( columnReference,
-						new ColumnWriteFragment( "?",
-								new ColumnValueParameter( columnReference ),
-								transactionIdMapping ) );
-	}
-
-	@Override
-	public ColumnValueBinding createModificationTypeValueBinding(ColumnReference columnReference, int modificationType) {
-		return new ColumnValueBinding( columnReference,
-				new ColumnWriteFragment( "?",
-						new ColumnValueParameter( columnReference ),
-						modificationTypeMapping ) );
-	}
+//	@Override
+//	public ColumnValueBinding createTransactionIdValueBinding(ColumnReference columnReference) {
+//		return currentTimestampFunctionName != null
+//				? new ColumnValueBinding( columnReference,
+//						new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), transactionIdMapping ) )
+//				: new ColumnValueBinding( columnReference,
+//						new ColumnWriteFragment( "?",
+//								new ColumnValueParameter( columnReference ),
+//								transactionIdMapping ) );
+//	}
+//
+//	@Override
+//	public ColumnValueBinding createModificationTypeValueBinding(ColumnReference columnReference, int modificationType) {
+//		return new ColumnValueBinding( columnReference,
+//				new ColumnWriteFragment( "?",
+//						new ColumnValueParameter( columnReference ),
+//						modificationTypeMapping ) );
+//	}
 
 	private AggregateFunctionExpression buildMaxExpression(ColumnReference expression) {
 		return new SelfRenderingAggregateFunctionSqlAstExpression<>(

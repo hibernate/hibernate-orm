@@ -1,6 +1,31 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.15.Final (February 01, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37107
+
+
+** Bug
+    * HHH-20118 Vector operator SQL templates miss parenthesis around
+    * HHH-20113 Round function broken in PostgreSQL for parameter expressions
+    * HHH-20069 `DB2iDialect.rowId` causes an error in merge queries
+    * HHH-20048 ByteArrayJavaType#isInstance wrongly considers byte[] instead of Byte[] to be an instance
+    * HHH-20041 DB2 for z IN tuple list predicate performs badly
+    * HHH-20032 SubSequence.subSequence violates CharSequence contract for start == end == length()
+    * HHH-20015 Hibernate Maven Plugin 7.x does not include maven project dependencies in the enhancement classpath
+    * HHH-19929 DB2iDialect problem with supportsRowValueConstructorSyntaxInInSubQuery
+    * HHH-19192 Bulk delete of owner with soft-delete element-collection physically deletes the collection rows
+    * HHH-19075 SqmFunction.appendHqlString(…) fails with IndexOutOfBoundsException for trim rendering
+    * HHH-18835 AssertionError when executing insert-select
+
+** Improvement
+    * HHH-19977 Relax scopes of methods to allow HIbernate Reactive to execute a flush during query preparation
+
+** Task
+    * HHH-20071 Exclude Guava from the Hibernate maven plugin dependencies
+
 Changes in 7.1.14.Final (January 04, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

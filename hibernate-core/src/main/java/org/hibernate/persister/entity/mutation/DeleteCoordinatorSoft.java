@@ -45,11 +45,11 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 		return createMutationOperationGroup( tableUpdateBuilder );
 	}
 
-	private void applySoftDelete(
+	private static void applySoftDelete(
 			SoftDeleteMapping softDeleteMapping,
 			TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		final var softDeleteColumnReference = new ColumnReference( tableUpdateBuilder.getMutatingTable(), softDeleteMapping );
-
+		final var softDeleteColumnReference =
+				new ColumnReference( tableUpdateBuilder.getMutatingTable(), softDeleteMapping );
 		// apply the assignment
 		tableUpdateBuilder.addValueColumn( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
 		// apply the restriction

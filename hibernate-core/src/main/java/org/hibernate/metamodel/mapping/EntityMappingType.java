@@ -386,6 +386,7 @@ public interface EntityMappingType
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
+	@Incubating
 	default SoftDeleteMapping getSoftDeleteMapping() {
 		return null;
 	}
@@ -393,6 +394,7 @@ public interface EntityMappingType
 	/**
 	 * Mapping for temporal entity support, or {@code null} if not defined.
 	 */
+	@Incubating
 	default TemporalMapping getTemporalMapping() {
 		return null;
 	}
@@ -400,6 +402,7 @@ public interface EntityMappingType
 	/**
 	 * Mapping for audit support, or {@code null} if not defined.
 	 */
+	@Incubating
 	default AuditMapping getAuditMapping() {
 		return null;
 	}

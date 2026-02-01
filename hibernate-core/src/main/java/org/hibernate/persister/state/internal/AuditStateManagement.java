@@ -4,6 +4,12 @@
  */
 package org.hibernate.persister.state.internal;
 
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.mapping.AuditMapping;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
@@ -16,6 +22,7 @@ import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorAudit;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorAudit;
@@ -25,6 +32,9 @@ import org.hibernate.persister.entity.mutation.MergeCoordinatorAudit;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorAudit;
 import org.hibernate.persister.state.StateManagement;
+
+import static org.hibernate.boot.model.internal.AuditHelper.resolveAuditMapping;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 
 /**
  * State management for {@linkplain org.hibernate.annotations.Audited audited}
@@ -154,4 +164,35 @@ public class AuditStateManagement implements StateManagement {
 			return StandardStateManagement.INSTANCE.createRemoveCoordinator( persister );
 		}
 	}
+
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			EntityPersister persister,
+			RootClass rootClass,
+			MappingModelCreationProcess creationProcess) {
+		final var auditTable = rootClass.getAuditTable();
+		return resolveAuditMapping(
+				rootClass,
+				auditTable == null
+						? persister.getIdentifierTableName()
+						: ( (AbstractEntityPersister) persister )
+								.determineTableName( auditTable ),
+				creationProcess
+		);
+	}
+
+	@Override
+	public AuditMapping createAuxiliaryMapping(
+			PluralAttributeMapping pluralAttributeMapping,
+			Collection bootDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		final var auditTable = bootDescriptor.getAuditTable();
+		return resolveAuditMapping(
+				bootDescriptor,
+				auditTable == null ? null
+						: getTableIdentifierExpression( auditTable, creationProcess ),
+				creationProcess
+		);
+	}
+
 }

@@ -393,4 +393,14 @@ public class AuditMappingImpl implements AuditMapping {
 			) );
 		}
 	}
+
+	@Override
+	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+		return influencers.getTemporalIdentifier() != null;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return influencers.getTemporalIdentifier() != null;
+	}
 }

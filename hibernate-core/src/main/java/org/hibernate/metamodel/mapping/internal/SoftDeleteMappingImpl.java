@@ -440,6 +440,16 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	}
 
 	@Override
+	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
 	public String toString() {
 		return "SoftDeleteMapping(" + tableName + "." + columnName + ")";
 	}

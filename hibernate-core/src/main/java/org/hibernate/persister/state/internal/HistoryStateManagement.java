@@ -5,6 +5,11 @@
 package org.hibernate.persister.state.internal;
 
 import org.hibernate.Internal;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
@@ -18,6 +23,7 @@ import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorHistory;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorHistory;
@@ -28,6 +34,8 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.state.StateManagement;
 
+import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isInsertAllowed;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isUpdatePossible;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
@@ -154,5 +162,36 @@ public final class HistoryStateManagement implements StateManagement {
 					persister.getFactory().getServiceRegistry()
 			);
 		}
+	}
+
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			EntityPersister persister,
+			RootClass rootClass,
+			MappingModelCreationProcess creationProcess) {
+		final var temporalTable = rootClass.getTemporalTable();
+		return resolveTemporalMapping(
+				rootClass,
+				temporalTable == null
+						? persister.getIdentifierTableName()
+						: ( (AbstractEntityPersister) persister )
+								.determineTableName( temporalTable ),
+				creationProcess
+		);
+	}
+
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			PluralAttributeMapping pluralAttributeMapping,
+			Collection bootDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		final var temporalTable = bootDescriptor.getTemporalTable();
+		return resolveTemporalMapping(
+				bootDescriptor,
+				temporalTable == null
+						? pluralAttributeMapping.getSeparateCollectionTable()
+						: getTableIdentifierExpression( temporalTable, creationProcess ),
+				creationProcess
+		);
 	}
 }

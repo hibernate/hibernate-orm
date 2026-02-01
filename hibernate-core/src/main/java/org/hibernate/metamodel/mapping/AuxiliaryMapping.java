@@ -63,4 +63,8 @@ public interface AuxiliaryMapping {
 			NamedTableReference rootTableReference, EntityMappingType entityMappingType);
 
 	JdbcMapping getJdbcMapping();
+
+	boolean useAuxiliaryTable(LoadQueryInfluencers influencers);
+
+	boolean isAffectedByInfluencers(LoadQueryInfluencers influencers);
 }

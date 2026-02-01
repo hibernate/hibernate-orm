@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
@@ -73,6 +74,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
+	@Incubating
 	default SoftDeleteMapping getSoftDeleteMapping() {
 		return null;
 	}
@@ -80,6 +82,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for temporal support, or {@code null} if temporal not defined
 	 */
+	@Incubating
 	default TemporalMapping getTemporalMapping() {
 		return null;
 	}
@@ -87,6 +90,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for audit support, or {@code null} if audit not defined
 	 */
+	@Incubating
 	default AuditMapping getAuditMapping() {
 		return null;
 	}

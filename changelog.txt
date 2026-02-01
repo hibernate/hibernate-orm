@@ -1,6 +1,17 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.3.Final (February 01, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37504
+
+
+** Bug
+    * HHH-20121 NPE when logging loaded values in follow-on locking post action
+    * HHH-20118 Vector operator SQL templates miss parenthesis around
+    * HHH-20113 Round function broken in PostgreSQL for parameter expressions
+
 Changes in 7.2.2.Final (January 27, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

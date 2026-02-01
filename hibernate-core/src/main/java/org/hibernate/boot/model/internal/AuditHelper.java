@@ -12,7 +12,6 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Auditable;
 import org.hibernate.mapping.BasicValue;
@@ -30,9 +29,10 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
  * Helper for building audit log tables in the boot model.
  */
 public final class AuditHelper {
+
+	// defaults for backward compatibility with envers
+
 	private static final String DEFAULT_TABLE_SUFFIX = "_aud";
-	private static final String DEFAULT_TRANSACTION_ID_COLUMN = "REV";
-	private static final String DEFAULT_MODIFICATION_TYPE_COLUMN = "REVTYPE";
 
 	private AuditHelper() {
 	}
@@ -41,94 +41,59 @@ public final class AuditHelper {
 			Audited audited,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
-		if ( audited != null ) {
-			final var table = rootClass.getRootTable();
-			if ( table != null ) {
-				final var collector = context.getMetadataCollector();
-				final String auditTableName = resolveTableName( audited, table, collector );
-				final boolean explicitName = isExplicitName( audited, table );
-				final Table auditTable = collector.addTable(
-						table.getSchema(),
-						table.getCatalog(),
-						auditTableName,
-						table.getSubselect(),
-						table.isAbstract(),
-						context,
-						explicitName
-				);
-				collector.addTableNameBinding( table.getNameIdentifier(), auditTable );
-
-				final var excludedColumns = resolveExcludedColumns( rootClass );
-				copyTableColumns( table, auditTable, excludedColumns );
-				final Column transactionIdColumn = createTransactionIdColumn( audited, auditTable, context );
-				final Column modificationTypeColumn = createModificationTypeColumn( audited, auditTable, context );
-				auditTable.addColumn( transactionIdColumn );
-				auditTable.addColumn( modificationTypeColumn );
-				rootClass.enableAudit( auditTable, transactionIdColumn, modificationTypeColumn );
-
-				collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> copyTableColumns( table, auditTable, excludedColumns ) );
-			}
-		}
+		bindAuditTable( audited, rootClass, context,
+				resolveExcludedColumns( rootClass ) );
 	}
 
 	static void bindAuditTable(
 			Audited audited,
 			Collection collection,
 			MetadataBuildingContext context) {
-		if ( audited != null ) {
-			final var table = collection.getCollectionTable();
-			if ( table != null ) {
-				final var collector = context.getMetadataCollector();
-				final String auditTableName = resolveTableName( audited, table, collector );
-				final boolean explicitName = isExplicitName( audited, table );
-				final var auditTable = collector.addTable(
-						table.getSchema(),
-						table.getCatalog(),
-						auditTableName,
-						table.getSubselect(),
-						table.isAbstract(),
-						context,
-						explicitName
-				);
-				collector.addTableNameBinding( table.getNameIdentifier(), auditTable );
+		bindAuditTable( audited, collection, context, Set.of() );
+	}
 
-				copyTableColumns( table, auditTable, Set.of() );
-				final var transactionIdColumn = createTransactionIdColumn( audited, auditTable, context );
-				final var modificationTypeColumn = createModificationTypeColumn( audited, auditTable, context );
-				auditTable.addColumn( transactionIdColumn );
-				auditTable.addColumn( modificationTypeColumn );
-				collection.enableAudit( auditTable, transactionIdColumn, modificationTypeColumn );
+	private static void bindAuditTable(
+			Audited audited,
+			Auditable auditable,
+			MetadataBuildingContext context,
+			Set<String> excludedColumns) {
+		final var collector = context.getMetadataCollector();
+		final var table = auditable.getMainTable();
+		final String explicitAuditTableName = audited.tableName();
+		final boolean hasExplicitAuditTableName = !isBlank( explicitAuditTableName );
+		final var auditTable = collector.addTable(
+				table.getSchema(),
+				table.getCatalog(),
+				hasExplicitAuditTableName
+						? explicitAuditTableName
+						: collector.getLogicalTableName( table )
+								+ DEFAULT_TABLE_SUFFIX,
+				table.getSubselect(),
+				table.isAbstract(),
+				context,
+				hasExplicitAuditTableName
+						|| table.getNameIdentifier().isExplicit()
+		);
+		collector.addTableNameBinding( table.getNameIdentifier(), auditTable );
+		copyTableColumns( table, auditTable, excludedColumns );
+		final var transactionIdColumn =
+				createAuditColumn( audited.transactionId(),
+						getTransactionIdType( context ), auditTable, context );
+		final var modificationTypeColumn =
+				createAuditColumn( audited.modificationType(),
+						Byte.class, auditTable, context );
+		auditTable.addColumn( transactionIdColumn );
+		auditTable.addColumn( modificationTypeColumn );
+		auditable.enableAudit( auditTable, transactionIdColumn, modificationTypeColumn );
 
-				collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> copyTableColumns( table, auditTable, Set.of() ) );
-			}
-		}
+		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored ->
+				copyTableColumns( table, auditTable, excludedColumns ) );
 	}
 
 	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getServiceRegistry()
 				.requireService( TransactionIdentifierService.class )
 				.getIdentifierType();
-	}
-
-	private static String resolveTableName(
-			Audited audited,
-			Table table,
-			InFlightMetadataCollector collector) {
-		final String explicitName = audited == null ? null : audited.tableName();
-		if ( isBlank( explicitName ) ) {
-			final String baseName = table.getName() != null
-					? table.getName()
-					: collector.getLogicalTableName( table );
-			return baseName + DEFAULT_TABLE_SUFFIX;
-		}
-		return explicitName;
-	}
-
-	private static boolean isExplicitName(Audited audited, Table table) {
-		final String explicitName = audited == null ? null : audited.tableName();
-		return !isBlank( explicitName )
-			|| table.getName() != null
-			|| table.getNameIdentifier().isExplicit();
 	}
 
 	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<String> excludedColumns) {
@@ -139,33 +104,15 @@ public final class AuditHelper {
 		}
 	}
 
-	private static Column createTransactionIdColumn(
-			Audited audited,
-			Table table,
-			MetadataBuildingContext context) {
-		final String columnName = resolveTransactionIdColumn( audited );
-		final var transactionIdJavaType = getTransactionIdType( context );
-		return createAuditColumn( columnName, table, false, transactionIdJavaType, context );
-	}
-
-	private static Column createModificationTypeColumn(
-			Audited audited,
-			Table table,
-			MetadataBuildingContext context) {
-		final String columnName = resolveModificationTypeColumn( audited );
-		return createAuditColumn( columnName, table, false, Integer.class, context );
-	}
-
 	private static Column createAuditColumn(
 			String columnName,
-			Table table,
-			boolean nullable,
 			Class<?> javaType,
+			Table table,
 			MetadataBuildingContext context) {
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> javaType );
 		final var column = new Column();
-		column.setNullable( nullable );
+		column.setNullable( false );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
 
@@ -207,16 +154,6 @@ public final class AuditHelper {
 		return bootMapping.isAudited()
 				? new AuditMappingImpl( bootMapping, tableName, creationProcess )
 				: null;
-	}
-
-	private static String resolveTransactionIdColumn(Audited audited) {
-		final String explicitName = audited == null ? null : audited.transactionId();
-		return isBlank( explicitName ) ? DEFAULT_TRANSACTION_ID_COLUMN : explicitName;
-	}
-
-	private static String resolveModificationTypeColumn(Audited audited) {
-		final String explicitName = audited == null ? null : audited.modificationType();
-		return isBlank( explicitName ) ? DEFAULT_MODIFICATION_TYPE_COLUMN : explicitName;
 	}
 
 	private static Set<String> resolveExcludedColumns(RootClass rootClass) {

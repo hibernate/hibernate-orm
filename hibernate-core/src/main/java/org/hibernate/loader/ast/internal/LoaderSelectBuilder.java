@@ -37,10 +37,9 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.AliasCollector;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -103,6 +102,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -115,7 +115,8 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				true,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
 		);
 		return process.generateSelect();
 	}
@@ -129,6 +130,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers influencers,
 			LockOptions lockOptions,
 			JdbcParameter jdbcArrayParameter,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var builder = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -141,7 +143,8 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				determineGraphTraversalState( influencers, sessionFactory.getJpaMetamodel() ),
 				true,
-				null
+				null,
+				sqlAliasBaseGenerator
 		);
 
 		final var rootQuerySpec = new QuerySpec( true );
@@ -226,6 +229,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -236,7 +240,8 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
 		);
 		return process.generateSelect();
 	}
@@ -250,6 +255,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -260,7 +266,8 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
 		);
 		return process.generateSelect();
 	}
@@ -277,6 +284,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -289,9 +297,9 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				forceIdentifierSelection,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
 		);
-
 		return process.generateSelect();
 	}
 
@@ -315,6 +323,7 @@ public class LoaderSelectBuilder {
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			SessionFactoryImplementor sessionFactory) {
 		final var process = new LoaderSelectBuilder(
 				sessionFactory.getSqlTranslationEngine(),
@@ -325,9 +334,10 @@ public class LoaderSelectBuilder {
 				-1,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
 		);
-		return process.generateSelect( subselect );
+		return process.generateSelect( subselect, sqlAliasBaseGenerator );
 	}
 
 	private final SqlAstCreationContext creationContext;
@@ -344,6 +354,7 @@ public class LoaderSelectBuilder {
 
 	private int fetchDepth;
 	private RowCardinality rowCardinality = RowCardinality.SINGLE;
+	private final SqlAliasBaseGenerator sqlAliasBasGenerator;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -356,7 +367,8 @@ public class LoaderSelectBuilder {
 			LockOptions lockOptions,
 			EntityGraphTraversalState entityGraphTraversalState,
 			boolean forceIdentifierSelection,
-			Consumer<JdbcParameter> jdbcParameterConsumer) {
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this.creationContext = creationContext;
 		this.loadable = loadable;
 		this.partsToSelect = partsToSelect;
@@ -368,6 +380,7 @@ public class LoaderSelectBuilder {
 		this.entityGraphTraversalState = entityGraphTraversalState;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
+		this.sqlAliasBasGenerator = sqlAliasBasGenerator;
 		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics()
 						.getCollectionClassification() == CollectionClassification.BAG ) {
@@ -385,7 +398,8 @@ public class LoaderSelectBuilder {
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer) {
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this(
 				creationContext,
 				loadable,
@@ -397,7 +411,8 @@ public class LoaderSelectBuilder {
 				lockOptions != null ? lockOptions : new LockOptions(),
 				determineGraphTraversalState( loadQueryInfluencers, creationContext.getJpaMetamodel() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBasGenerator
 		);
 	}
 
@@ -410,7 +425,8 @@ public class LoaderSelectBuilder {
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer) {
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBasGenerator) {
 		this(
 				creationContext,
 				loadable,
@@ -420,7 +436,8 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions,
-				jdbcParameterConsumer
+				jdbcParameterConsumer,
+				sqlAliasBasGenerator
 		);
 	}
 
@@ -570,7 +587,7 @@ public class LoaderSelectBuilder {
 	private LoaderSqlAstCreationState createSqlAstCreationState(QuerySpec rootQuerySpec) {
 		return new LoaderSqlAstCreationState(
 				rootQuerySpec,
-				new SqlAliasBaseManager(),
+				sqlAliasBasGenerator,
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,
@@ -578,6 +595,10 @@ public class LoaderSelectBuilder {
 				loadQueryInfluencers,
 				creationContext
 		);
+	}
+
+	private SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+		return sqlAliasBasGenerator;
 	}
 
 	private void applyRestriction(
@@ -960,7 +981,7 @@ public class LoaderSelectBuilder {
 		return true;
 	}
 
-	private SelectStatement generateSelect(SubselectFetch subselect) {
+	private SelectStatement generateSelect(SubselectFetch subselect, SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 
 		// todo (6.0) : we could even convert this to a join by piecing together
 		//		parts from the subselect-fetch sql-ast.  e.g. today we do:
@@ -989,11 +1010,9 @@ public class LoaderSelectBuilder {
 		final var rootQuerySpec = new QuerySpec( true );
 		rootQuerySpec.applyRootPathForLocking( rootNavigablePath );
 
-		// We need to initialize the acronymMap based on subselect.getLoadingSqlAst() to avoid alias collisions
-		final var tableReferences = AliasCollector.getTableReferences( subselect.getLoadingSqlAst() );
 		final var sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
-				new SqlAliasBaseManager( tableReferences.keySet() ),
+				sqlAliasBaseGenerator,
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,

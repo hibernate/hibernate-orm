@@ -2261,7 +2261,8 @@ public class ToOneAttributeMapping
 						final var auditPredicate = auditMapping.createRestriction(
 								associatedEntityMappingType.getEntityPersister(),
 								tableReference,
-								keySelectables
+								keySelectables,
+								creationState.getSqlAliasBaseGenerator()
 						);
 						if ( auditPredicate != null ) {
 							join.applyPredicate( auditPredicate );

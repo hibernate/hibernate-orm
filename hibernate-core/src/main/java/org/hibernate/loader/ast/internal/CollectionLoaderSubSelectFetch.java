@@ -16,6 +16,7 @@ import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -43,6 +44,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		this.attributeMapping = attributeMapping;
 		this.subselect = subselect;
 
+		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
+
 		sqlAst = LoaderSelectBuilder.createSubSelectFetchSelect(
 				attributeMapping,
 				subselect,
@@ -50,6 +53,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				session.getLoadQueryInfluencers(),
 				new LockOptions(),
 				jdbcParameter -> {},
+				sqlAliasBaseGenerator,
 				session.getFactory()
 		);
 
@@ -59,7 +63,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		attributeMapping.applyTemporalRestrictions(
 				tableGroup,
 				querySpec::applyPredicate,
-				session.getLoadQueryInfluencers()
+				session.getLoadQueryInfluencers(),
+				sqlAliasBaseGenerator
 		);
 	}
 

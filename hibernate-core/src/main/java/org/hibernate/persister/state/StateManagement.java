@@ -8,6 +8,10 @@ import org.hibernate.Internal;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
@@ -92,4 +96,14 @@ public interface StateManagement {
 	DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister);
 
 	RemoveCoordinator createRemoveCoordinator(CollectionPersister persister);
+
+	AuxiliaryMapping createAuxiliaryMapping(
+			EntityPersister persister,
+			RootClass rootClass,
+			MappingModelCreationProcess creationProcess);
+
+	AuxiliaryMapping createAuxiliaryMapping(
+			PluralAttributeMapping pluralAttributeMapping,
+			Collection bootDescriptor,
+			MappingModelCreationProcess creationProcess);
 }

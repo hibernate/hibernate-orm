@@ -4,7 +4,12 @@
  */
 package org.hibernate.persister.state.internal;
 
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
@@ -197,5 +202,22 @@ abstract class AbstractStateManagement implements StateManagement {
 			return collectionMutationTarget;
 		}
 		throw new IllegalArgumentException( "CollectionPersister does not implement CollectionMutationTarget" );
+	}
+
+
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			EntityPersister persister,
+			RootClass rootClass,
+			MappingModelCreationProcess creationProcess) {
+		return null;
+	}
+
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			PluralAttributeMapping pluralAttributeMapping,
+			Collection bootDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		return null;
 	}
 }

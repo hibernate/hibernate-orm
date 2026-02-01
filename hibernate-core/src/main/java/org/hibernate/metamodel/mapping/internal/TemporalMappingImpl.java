@@ -334,8 +334,18 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		return creationState.getCreationContext().getSessionFactory()
-				.getJdbcServices().getDialect().getTemporalTableSupport()
+		return creationState.getCreationContext().getDialect().getTemporalTableSupport()
 				.useTemporalRestriction( creationState.getLoadQueryInfluencers() );
+	}
+
+	@Override
+	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+		return temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
+			&& influencers.getTemporalIdentifier() != null;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return influencers.getTemporalIdentifier() != null;
 	}
 }

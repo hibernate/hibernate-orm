@@ -38,7 +38,6 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -70,7 +69,6 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
@@ -249,9 +247,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
-import static org.hibernate.boot.model.internal.AuditHelper.resolveAuditMapping;
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
-import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -426,9 +421,7 @@ public abstract class AbstractEntityPersister
 	private EntityVersionMapping versionMapping;
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
-	private SoftDeleteMapping softDeleteMapping;
-	private TemporalMapping temporalMapping;
-	private AuditMapping auditMapping;
+	private AuxiliaryMapping auxiliaryMapping;
 
 	private AttributeMappingsList attributeMappings;
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
@@ -1355,14 +1348,20 @@ public abstract class AbstractEntityPersister
 	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
-		final String primaryTableName = resolvePrimaryTableName( creationState );
+		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
+		final boolean useAuxiliaryTable =
+				auxiliaryMapping != null
+						&& auxiliaryMapping.useAuxiliaryTable( loadQueryInfluencers );
+		final String primaryTableName =
+				useAuxiliaryTable
+						? auxiliaryMapping.getTableName()
+						: getTableName();
 		final String primaryAlias = sqlAliasBase.generateNewAlias();
 		final var tableReference =
-				hasAuxiliaryTable( creationState )
-					? new AuxiliaryTableReference( primaryTableName, getTableName(), primaryAlias )
-					: new NamedTableReference( primaryTableName, primaryAlias );
-		tableReference.applyAuxiliaryTable( getAuxiliaryMapping(),
-				creationState.getLoadQueryInfluencers() );
+				useAuxiliaryTable
+						? new AuxiliaryTableReference( primaryTableName, getTableName(), primaryAlias )
+						: new NamedTableReference( primaryTableName, primaryAlias );
+		tableReference.applyAuxiliaryTable( auxiliaryMapping, loadQueryInfluencers );
 		return tableReference;
 	}
 
@@ -1400,7 +1399,7 @@ public abstract class AbstractEntityPersister
 				sqlAliasBase.generateNewAlias(),
 				!innerJoin
 		);
-		joinedTableReference.applyAuxiliaryTable( getAuxiliaryMapping(),
+		joinedTableReference.applyAuxiliaryTable( auxiliaryMapping,
 				creationState.getLoadQueryInfluencers() );
 		return new TableReferenceJoin(
 				innerJoin,
@@ -2859,10 +2858,16 @@ public abstract class AbstractEntityPersister
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String rootTableName = resolveRootTableName( creationState );
+		final boolean useAuxiliaryTable =
+				auxiliaryMapping != null
+						&& auxiliaryMapping.useAuxiliaryTable( loadQueryInfluencers );
+		final String rootTableName =
+				useAuxiliaryTable
+						? auxiliaryMapping.getTableName()
+						: needsDiscriminator() ? getRootTableName() : getTableName();
 		final String rootAlias = sqlAliasBase.generateNewAlias();
 		final var rootTableReference =
-				hasAuxiliaryTable( creationState )
+				useAuxiliaryTable
 						? new AuxiliaryTableReference(
 								rootTableName,
 								needsDiscriminator()
@@ -2871,7 +2876,7 @@ public abstract class AbstractEntityPersister
 								rootAlias
 						)
 						: new NamedTableReference( rootTableName, rootAlias );
-		rootTableReference.applyAuxiliaryTable( getAuxiliaryMapping(), loadQueryInfluencers );
+		rootTableReference.applyAuxiliaryTable( auxiliaryMapping, loadQueryInfluencers );
 
 		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -2891,7 +2896,7 @@ public abstract class AbstractEntityPersister
 									sqlAliasBase.generateNewAlias(),
 									isNullableSubclassTable( i )
 							);
-							joinedTableReference.applyAuxiliaryTable( getAuxiliaryMapping(), loadQueryInfluencers );
+							joinedTableReference.applyAuxiliaryTable( auxiliaryMapping, loadQueryInfluencers );
 							return new TableReferenceJoin(
 									shouldInnerJoinSubclassTable( i, emptySet() ),
 									joinedTableReference,
@@ -2921,7 +2926,6 @@ public abstract class AbstractEntityPersister
 				additionalPredicateCollector.get().accept( discriminatorPredicate );
 			}
 
-			final var auxiliaryMapping = getAuxiliaryMapping();
 			if ( auxiliaryMapping != null ) {
 				auxiliaryMapping.applyPredicate(
 						additionalPredicateCollector,
@@ -2934,47 +2938,6 @@ public abstract class AbstractEntityPersister
 		}
 
 		return tableGroup;
-	}
-
-	private boolean hasAuxiliaryTable(SqlAstCreationState creationState) {
-		return useAuditTable( creationState ) || useHistoryTable( creationState );
-	}
-
-	private String resolvePrimaryTableName(SqlAstCreationState creationState) {
-		if ( useAuditTable( creationState ) ) {
-			return auditMapping.getTableName();
-		}
-		else if ( useHistoryTable( creationState ) ) {
-			return temporalMapping.getTableName();
-		}
-		else {
-			return getTableName();
-		}
-	}
-
-	private String resolveRootTableName(SqlAstCreationState creationState) {
-		if ( useAuditTable( creationState ) ) {
-			return auditMapping.getTableName();
-		}
-		else if ( useHistoryTable( creationState ) ) {
-			return temporalMapping.getTableName();
-		}
-		else {
-			return needsDiscriminator()
-					? getRootTableName()
-					: getTableName();
-		}
-	}
-
-	private boolean useHistoryTable(SqlAstCreationState creationState) {
-		return temporalMapping != null
-			&& getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-			&& creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null;
-	}
-
-	private boolean useAuditTable(SqlAstCreationState creationState) {
-		return auditMapping != null
-			&& creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null;
 	}
 
 	@Override
@@ -3317,10 +3280,10 @@ public abstract class AbstractEntityPersister
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
 
-		insertCoordinator = buildInsertCoordinator();
-		updateCoordinator = buildUpdateCoordinator();
-		deleteCoordinator = buildDeleteCoordinator();
-		mergeCoordinator = buildMergeCoordinator();
+		insertCoordinator = stateManagement.createInsertCoordinator( this );
+		updateCoordinator = stateManagement.createUpdateCoordinator( this );
+		deleteCoordinator = stateManagement.createDeleteCoordinator( this );
+		mergeCoordinator = stateManagement.createMergeCoordinator( this );
 
 		//select SQL
 		sqlVersionSelectString = generateSelectVersionString();
@@ -3540,33 +3503,12 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
-	protected InsertCoordinator buildInsertCoordinator() {
-		return stateManagement.createInsertCoordinator( this );
-	}
-
-	protected UpdateCoordinator buildUpdateCoordinator() {
-		return stateManagement.createUpdateCoordinator( this );
-	}
-
-	protected UpdateCoordinator buildMergeCoordinator() {
-		return stateManagement.createMergeCoordinator( this );
-	}
-
-	protected DeleteCoordinator buildDeleteCoordinator() {
-		return stateManagement.createDeleteCoordinator( this );
-	}
-
-	private TemporalTableStrategy getTemporalTableStrategy() {
-		return factory.getSessionFactoryOptions().getTemporalTableStrategy();
-	}
-
 	@Override
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 	}
 
 	@Override
 	public void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-		final var auxiliaryMapping = getAuxiliaryMapping();
 		if ( auxiliaryMapping != null ) {
 			auxiliaryMapping.addToInsertGroup( insertGroupBuilder, this );
 		}
@@ -3767,12 +3709,7 @@ public abstract class AbstractEntityPersister
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		return EntityPersister.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
-			|| isAffectedByTemporal( influencers );
-	}
-
-	private boolean isAffectedByTemporal(LoadQueryInfluencers influencers) {
-		return influencers.getTemporalIdentifier() != null
-			&& ( temporalMapping != null || auditMapping != null );
+			|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers );
 	}
 
 	/**
@@ -4635,7 +4572,7 @@ public abstract class AbstractEntityPersister
 		return 0;
 	}
 
-	protected String determineTableName(Table table) {
+	public String determineTableName(Table table) {
 		return table.getSubselect() != null
 				? "( " + createSqlQueryParser( table ).process() + " )"
 				: factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
@@ -4813,9 +4750,7 @@ public abstract class AbstractEntityPersister
 		naturalIdMapping = superMappingType.getNaturalIdMapping();
 		versionMapping = superMappingType.getVersionMapping();
 		rowIdMapping = superMappingType.getRowIdMapping();
-		softDeleteMapping = superMappingType.getSoftDeleteMapping();
-		temporalMapping = superMappingType.getTemporalMapping();
-		auditMapping = superMappingType.getAuditMapping();
+		auxiliaryMapping = superMappingType.getAuxiliaryMapping();
 	}
 
 	private void buildDeclaredAttributeMappings
@@ -4991,25 +4926,10 @@ public abstract class AbstractEntityPersister
 						(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this ) );
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
 		final var rootClass = bootEntityDescriptor.getRootClass();
-		softDeleteMapping =
-				resolveSoftDeleteMapping( this, rootClass, getIdentifierTableName(), creationProcess );
-		temporalMapping =
-				resolveTemporalMapping( rootClass, resolveTemporalTableName( rootClass ), creationProcess );
-		auditMapping =
-				resolveAuditMapping( rootClass, resolveAuditTableName( rootClass ), creationProcess );
-		if ( softDeleteMapping != null && rootClass.getCustomSQLDelete() != null ) {
+		auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess );
+		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}
-	}
-
-	private String resolveTemporalTableName(RootClass rootClass) {
-		final var temporalTable = rootClass.getTemporalTable();
-		return temporalTable == null ? getIdentifierTableName() : determineTableName( temporalTable );
-	}
-
-	private String resolveAuditTableName(RootClass rootClass) {
-		final var auditTable = rootClass.getAuditTable();
-		return auditTable == null ? getIdentifierTableName() : determineTableName( auditTable );
 	}
 
 	private void initializeNaturalIdMapping
@@ -5801,33 +5721,25 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
-		return softDeleteMapping;
+		return auxiliaryMapping instanceof SoftDeleteMapping softDeleteMapping
+				? softDeleteMapping : null;
 	}
 
 	@Override
 	public TemporalMapping getTemporalMapping() {
-		return temporalMapping;
+		return auxiliaryMapping instanceof TemporalMapping temporalMapping
+				? temporalMapping : null;
 	}
 
 	@Override
 	public AuditMapping getAuditMapping() {
-		return auditMapping;
+		return auxiliaryMapping instanceof AuditMapping auditMapping
+				? auditMapping : null;
 	}
 
 	@Override
 	public AuxiliaryMapping getAuxiliaryMapping() {
-		if ( softDeleteMapping != null ) {
-			return softDeleteMapping;
-		}
-		else if ( temporalMapping != null ) {
-			return temporalMapping;
-		}
-		else if ( auditMapping != null ) {
-			return auditMapping;
-		}
-		else {
-			return null;
-		}
+		return auxiliaryMapping;
 	}
 
 	@Override

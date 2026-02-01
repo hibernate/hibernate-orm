@@ -2331,7 +2331,8 @@ public class ToOneAttributeMapping
 				tableGroupProducer,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext().getSessionFactory(),
+				creationState.getCreationContext()
+						.getSessionFactory(),
 				lhs
 		);
 
@@ -2372,12 +2373,6 @@ public class ToOneAttributeMapping
 		}
 
 		return lazyTableGroup;
-	}
-
-	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		return creationState.getCreationContext().getSessionFactory()
-				.getJdbcServices().getDialect().getTemporalTableSupport()
-				.useTemporalRestriction( creationState.getLoadQueryInfluencers() );
 	}
 
 	@Override

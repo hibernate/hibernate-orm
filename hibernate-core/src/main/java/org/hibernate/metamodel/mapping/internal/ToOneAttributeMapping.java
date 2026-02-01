@@ -100,11 +100,9 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -2228,62 +2226,21 @@ public class ToOneAttributeMapping
 						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );
 					}
 
-					final var resolver = creationState.getSqlExpressionResolver();
-
-					final var softDeleteMapping = associatedEntityMappingType.getSoftDeleteMapping();
-					if ( softDeleteMapping != null ) {
-						// add the restriction
-						final var tableReference =
-								lazyTableGroup.resolveTableReference( navigablePath,
-										associatedEntityMappingType.getSoftDeleteTableDetails().getTableName() );
-						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction( tableReference, resolver ) );
-					}
-
-					final var temporalMapping = associatedEntityMappingType.getTemporalMapping();
-					if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
-						final var tableReference =
-								lazyTableGroup.resolveTableReference( navigablePath,
-										temporalMapping.getTableName() );
-						final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
-						final var temporalPredicate =
-								temporalInstant == null
-										? temporalMapping.createCurrentRestriction( tableReference, resolver )
-										: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
-						join.applyPredicate( temporalPredicate );
-					}
-
-					final var auditMapping = associatedEntityMappingType.getAuditMapping();
-					if ( auditMapping != null
-							&& creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null ) {
-						final var tableReference =
-								lazyTableGroup.resolveTableReference( navigablePath, auditMapping.getTableName() );
-						final var keySelectables = collectEntityKeySelectables( associatedEntityMappingType );
-						final var auditPredicate = auditMapping.createRestriction(
-								associatedEntityMappingType.getEntityPersister(),
-								tableReference,
-								keySelectables,
-								creationState.getSqlAliasBaseGenerator()
+					final var auxiliaryMapping =
+							associatedEntityMappingType.getAuxiliaryMapping();
+					if ( auxiliaryMapping != null ) {
+						auxiliaryMapping.applyPredicate(
+								associatedEntityMappingType,
+								join::applyPredicate,
+								lazyTableGroup,
+								navigablePath,
+								creationState
 						);
-						if ( auditPredicate != null ) {
-							join.applyPredicate( auditPredicate );
-						}
 					}
 				}
 		);
 
 		return join;
-	}
-
-	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
-		final var keySelectables = new ArrayList<SelectableMapping>();
-		entityDescriptor.getIdentifierMapping().forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					if ( !selectableMapping.isFormula() ) {
-						keySelectables.add( selectableMapping );
-					}
-				}
-		);
-		return keySelectables;
 	}
 
 	@Override
@@ -2316,7 +2273,6 @@ public class ToOneAttributeMapping
 				creationState.getSqlAliasBaseGenerator()
 		);
 
-		final var softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
 		final boolean canUseInnerJoin;
 		final var currentlyProcessingJoinType =
 				creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
@@ -2392,28 +2348,17 @@ public class ToOneAttributeMapping
 					)
 			);
 
-			final var resolver = creationState.getSqlExpressionResolver();
-
-			if ( fetched && softDeleteMapping != null ) {
-				// add the restriction
-				final var tableReference =
-						lazyTableGroup.resolveTableReference( navigablePath,
-								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName() );
-				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction( tableReference, resolver ) );
-			}
-
 			if ( fetched ) {
-				final var temporalMapping = getAssociatedEntityMappingType().getTemporalMapping();
-				if ( temporalMapping != null && useTemporalRestriction( creationState ) ) {
-					final var tableReference =
-							lazyTableGroup.resolveTableReference( navigablePath,
-									temporalMapping.getTableName() );
-					final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
-					final var temporalPredicate =
-							temporalInstant == null
-									? temporalMapping.createCurrentRestriction( tableReference, resolver )
-									: temporalMapping.createRestriction( tableReference, resolver, temporalInstant );
-					predicateConsumer.accept( temporalPredicate );
+				final var auxiliaryMapping =
+						getAssociatedEntityMappingType().getAuxiliaryMapping();
+				if ( auxiliaryMapping != null ) {
+					auxiliaryMapping.applyPredicate(
+							getAssociatedEntityMappingType(),
+							predicateConsumer,
+							lazyTableGroup,
+							navigablePath,
+							creationState
+					);
 				}
 			}
 		}

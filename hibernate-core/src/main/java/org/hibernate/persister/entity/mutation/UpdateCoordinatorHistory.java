@@ -60,8 +60,9 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		this.historyTableMapping =
 				createAuxiliaryTableMapping( identifierTableMapping, entityPersister,
 						temporalMapping.getTableName() );
-		this.historyUpdateBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_UPDATE" );
-		this.historyInsertBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_INSERT" );
+		final String entityName = entityPersister.getEntityName();
+		this.historyUpdateBatchKey = new BasicBatchKey( entityName + "#HISTORY_UPDATE" );
+		this.historyInsertBatchKey = new BasicBatchKey( entityName + "#HISTORY_INSERT" );
 		this.historyEndUpdateGroup = buildEndingUpdateGroup( historyTableMapping, temporalMapping );
 		this.historyInsertGroup = buildHistoryInsertGroup( entityPersister.getPropertyInsertability() );
 	}

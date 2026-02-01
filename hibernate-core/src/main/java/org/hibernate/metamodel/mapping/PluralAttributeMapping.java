@@ -49,9 +49,10 @@ public interface PluralAttributeMapping
 		void applyPredicate(Predicate predicate);
 	}
 
-	void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer);
-
-	void applyTemporalRestrictions(
+	/**
+	 * Apply auxiliary restrictions (soft delete, temporal, audit) in a single pass.
+	 */
+	void applyAuxiliaryRestrictions(
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers,

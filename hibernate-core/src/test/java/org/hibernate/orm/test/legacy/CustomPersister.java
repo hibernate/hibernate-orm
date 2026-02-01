@@ -1190,11 +1190,6 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	}
 
 	@Override
-	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-
-	}
-
-	@Override
 	public String getAttributeMutationTableName(int i) {
 		return "";
 	}
@@ -1215,7 +1210,7 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	}
 
 	@Override
-	public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+	public void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 
 	}
 

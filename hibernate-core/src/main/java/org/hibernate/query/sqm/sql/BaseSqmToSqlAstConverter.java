@@ -12,7 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -3615,22 +3614,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				this
 		);
 
-		final var softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction(
-					tableGroup.resolveTableReference( softDeleteMapping.getTableName() )
-			);
-			tableGroupJoin.applyPredicate( softDeleteRestriction );
-		}
-		final var temporalMapping = entityDescriptor.getTemporalMapping();
-		if ( temporalMapping != null
-				&& getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( loadQueryInfluencers ) ) {
-			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
-			final var tableReference = tableGroup.resolveTableReference( temporalMapping.getTableName() );
-			tableGroupJoin.applyPredicate( temporalInstant == null
-					? temporalMapping.createCurrentRestriction( tableReference )
-					: temporalMapping.createRestriction( tableReference, temporalInstant ) );
+		final var auxiliaryMapping = entityDescriptor.getAuxiliaryMapping();
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyPredicate( tableGroupJoin, loadQueryInfluencers );
 		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3649,10 +3635,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		}
 		return tableGroup;
-	}
-
-	private TemporalTableStrategy getTemporalTableStrategy() {
-		return getSessionFactoryOptions().getTemporalTableStrategy();
 	}
 
 	private TableGroup consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {

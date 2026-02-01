@@ -1063,11 +1063,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
-
-		}
-
-		@Override
 		public String getAttributeMutationTableName(int i) {
 			return "";
 		}
@@ -1128,7 +1123,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void addTemporalToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+		public void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 
 		}
 

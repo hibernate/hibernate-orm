@@ -4,15 +4,29 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Temporalized;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
+import org.hibernate.persister.entity.EntityNameUse;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -22,6 +36,11 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
@@ -29,6 +48,8 @@ import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 
 /**
  * Temporal mapping implementation.
+ *
+ * @author Gavin King
  */
 public class TemporalMappingImpl implements TemporalMapping {
 	private final String tableName;
@@ -37,12 +58,18 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final JdbcMapping jdbcMapping;
 	private final String currentTimestampFunctionName;
 	private final Expression currentTimestampExpression;
+	private final TemporalTableStrategy temporalTableStrategy;
 
 	public TemporalMappingImpl(
 			Temporalized bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;
+
+		final var creationContext = creationProcess.getCreationContext();
+		temporalTableStrategy =
+				creationContext.getSessionFactoryOptions()
+						.getTemporalTableStrategy();
 
 		final var startingColumn = bootMapping.getTemporalStartingColumn();
 		final var endingColumn = bootMapping.getTemporalEndingColumn();
@@ -57,7 +84,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 			throw new IllegalStateException( "Temporal starting and ending columns must use the same JDBC mapping" );
 		}
 
-		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var dialect = creationContext.getDialect();
 		final var sessionFactory = creationContext.getSessionFactory();
@@ -100,16 +126,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	@Override
-	public String getStartingColumnName() {
-		return startingColumnMapping.getSelectionExpression();
-	}
-
-	@Override
-	public String getEndingColumnName() {
-		return endingColumnMapping.getSelectionExpression();
-	}
-
-	@Override
 	public String getTableName() {
 		return tableName;
 	}
@@ -129,24 +145,20 @@ public class TemporalMappingImpl implements TemporalMapping {
 		return jdbcMapping;
 	}
 
-	@Override
-	public Predicate createCurrentRestriction(TableReference tableReference) {
+	private Predicate createCurrentRestriction(TableReference tableReference) {
 		return createCurrentRestriction( tableReference, null );
 	}
 
-	@Override
-	public Predicate createCurrentRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver) {
+	private Predicate createCurrentRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver) {
 		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 		return new NullnessPredicate( endingColumn, false, jdbcMapping );
 	}
 
-	@Override
-	public Predicate createRestriction(TableReference tableReference, Object temporalValue) {
+	private Predicate createRestriction(TableReference tableReference, Object temporalValue) {
 		return createRestriction( tableReference, null, temporalValue );
 	}
 
-	@Override
-	public Predicate createRestriction(
+	private Predicate createRestriction(
 			TableReference tableReference,
 			SqlExpressionResolver expressionResolver,
 			Object temporalValue) {
@@ -215,8 +227,115 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	@Override
-	public String toString() {
-		return "TemporalMapping(" + tableName + "." + getStartingColumnName() + "," + getEndingColumnName() + ")";
+	public void addToInsertGroup(MutationGroupBuilder insertGroupBuilder, EntityPersister persister) {
+		if ( temporalTableStrategy == TemporalTableStrategy.SINGLE_TABLE ) {
+			final TableInsertBuilder insertBuilder =
+					insertGroupBuilder.getTableDetailsBuilder( persister.getIdentifierTableName() );
+			final var mutatingTable = insertBuilder.getMutatingTable();
+
+			final var startingColumn = new ColumnReference( mutatingTable, getStartingColumnMapping() );
+			insertBuilder.addValueColumn( createStartingValueBinding( startingColumn ) );
+
+			final var endingColumn = new ColumnReference( mutatingTable, getEndingColumnMapping() );
+			insertBuilder.addValueColumn( createNullEndingValueBinding( endingColumn ) );
+		}
 	}
 
+	@Override
+	public void applyPredicate(
+			EntityMappingType associatedEntityMappingType,
+			Consumer<Predicate> predicateConsumer,
+			LazyTableGroup lazyTableGroup,
+			NavigablePath navigablePath,
+			SqlAstCreationState creationState) {
+		if ( useTemporalRestriction( creationState ) ) {
+			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
+			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
+			final var resolver = creationState.getSqlExpressionResolver();
+			final var temporalPredicate =
+					temporalInstant == null
+							? createCurrentRestriction( tableReference, resolver )
+							: createRestriction( tableReference, resolver, temporalInstant );
+			predicateConsumer.accept( temporalPredicate );
+		}
+	}
+
+	@Override
+	public void applyPredicate(
+			EntityMappingType associatedEntityDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		if ( useTemporalRestriction( influencers ) ) {
+			final var instant = influencers.getTemporalIdentifier();
+			final var primaryTableReference =
+					tableGroup.resolveTableReference( getTableName() );
+			predicateConsumer.accept( instant == null
+					? createCurrentRestriction( primaryTableReference )
+					: createRestriction( primaryTableReference, instant ) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(
+			PluralAttributeMapping associatedEntityDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		if ( useTemporalRestriction( influencers ) ) {
+			final var instant = influencers.getTemporalIdentifier();
+			final var tableReference = tableGroup.resolveTableReference( getTableName() );
+			predicateConsumer.accept( instant == null
+					? createCurrentRestriction( tableReference )
+					: createRestriction( tableReference, instant ) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
+			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
+			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );
+			tableGroupJoin.applyPredicate( temporalInstant == null
+					? createCurrentRestriction( tableReference )
+					: createRestriction( tableReference, temporalInstant ) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(
+			Supplier<Consumer<Predicate>> predicateCollector,
+			SqlAstCreationState creationState,
+			StandardTableGroup tableGroup,
+			NamedTableReference rootTableReference,
+			EntityMappingType entityMappingType) {
+		if ( useTemporalRestriction( creationState ) ) {
+			final var tableReference =
+					tableGroup.resolveTableReference( getTableName() );
+			final var temporalInstant =
+					creationState.getLoadQueryInfluencers().getTemporalIdentifier();
+			final var resolver = creationState.getSqlExpressionResolver();
+			predicateCollector.get()
+					.accept( temporalInstant == null
+							? createCurrentRestriction( tableReference, resolver )
+							: createRestriction( tableReference, resolver, temporalInstant ) );
+			if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+				creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
+						entityMappingType.getRootEntityDescriptor().getEntityName() );
+			}
+		}
+	}
+
+	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
+		return influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
+				.useTemporalRestriction( influencers );
+	}
+
+	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
+		return creationState.getCreationContext().getSessionFactory()
+				.getJdbcServices().getDialect().getTemporalTableSupport()
+				.useTemporalRestriction( creationState.getLoadQueryInfluencers() );
+	}
 }

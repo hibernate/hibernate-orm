@@ -4,12 +4,18 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Auditable;
 import org.hibernate.metamodel.mapping.AuditMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -17,12 +23,16 @@ import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -42,6 +52,8 @@ import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
 
 /**
  * Audit mapping implementation.
+ *
+ * @author Gavin King
  */
 public class AuditMappingImpl implements AuditMapping {
 	private static final String SUBQUERY_ALIAS_STEM = "audit";
@@ -114,16 +126,6 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public String getTransactionIdColumnName() {
-		return transactionIdMapping.getSelectionExpression();
-	}
-
-	@Override
-	public String getModificationTypeColumnName() {
-		return modificationTypeMapping.getSelectionExpression();
-	}
-
-	@Override
 	public SelectableMapping getTransactionIdMapping() {
 		return transactionIdMapping;
 	}
@@ -138,8 +140,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return jdbcMapping;
 	}
 
-	@Override
-	public Predicate createRestriction(
+	private Predicate createRestriction(
 			TableGroupProducer tableGroupProducer,
 			TableReference tableReference,
 			List<SelectableMapping> keySelectables,
@@ -225,25 +226,6 @@ public class AuditMappingImpl implements AuditMapping {
 		return predicate;
 	}
 
-//	@Override
-//	public ColumnValueBinding createTransactionIdValueBinding(ColumnReference columnReference) {
-//		return currentTimestampFunctionName != null
-//				? new ColumnValueBinding( columnReference,
-//						new ColumnWriteFragment( currentTimestampFunctionName, emptyList(), transactionIdMapping ) )
-//				: new ColumnValueBinding( columnReference,
-//						new ColumnWriteFragment( "?",
-//								new ColumnValueParameter( columnReference ),
-//								transactionIdMapping ) );
-//	}
-//
-//	@Override
-//	public ColumnValueBinding createModificationTypeValueBinding(ColumnReference columnReference, int modificationType) {
-//		return new ColumnValueBinding( columnReference,
-//				new ColumnWriteFragment( "?",
-//						new ColumnValueParameter( columnReference ),
-//						modificationTypeMapping ) );
-//	}
-
 	private AggregateFunctionExpression buildMaxExpression(ColumnReference expression) {
 		return new SelfRenderingAggregateFunctionSqlAstExpression<>(
 				MAX,
@@ -284,7 +266,131 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public String toString() {
-		return "AuditMapping(" + tableName + "." + getTransactionIdColumnName() + "," + getModificationTypeColumnName() + ")";
+	public void applyPredicate(
+			EntityMappingType associatedEntityMappingType,
+			Consumer<Predicate> predicateConsumer,
+			LazyTableGroup lazyTableGroup,
+			NavigablePath navigablePath,
+			SqlAstCreationState creationState) {
+		if ( creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null ) {
+			predicateConsumer.accept( createRestriction(
+					associatedEntityMappingType.getEntityPersister(),
+					lazyTableGroup.resolveTableReference( navigablePath, getTableName() ),
+					collectEntityKeySelectables( associatedEntityMappingType ),
+					creationState.getSqlAliasBaseGenerator()
+			) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(
+			EntityMappingType associatedEntityDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		if ( influencers.getTemporalIdentifier() != null ) {
+			predicateConsumer.accept( createRestriction(
+					associatedEntityDescriptor.getEntityPersister(),
+					tableGroup.resolveTableReference( getTableName() ),
+					collectEntityKeySelectables( associatedEntityDescriptor ),
+					sqlAliasBaseGenerator
+			) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(
+			PluralAttributeMapping collectionDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		if ( influencers.getTemporalIdentifier() != null ) {
+			predicateConsumer.accept( createRestriction(
+					collectionDescriptor,
+					tableGroup.resolveTableReference( getTableName() ),
+					collectCollectionRowKeySelectables( collectionDescriptor ),
+					sqlAliasBaseGenerator
+			) );
+		}
+	}
+
+	@Override
+	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+		//TODO!!
+	}
+
+	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
+		final var keySelectables = new ArrayList<SelectableMapping>();
+		entityDescriptor.getIdentifierMapping().forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !selectableMapping.isFormula() ) {
+						keySelectables.add( selectableMapping );
+					}
+				}
+		);
+		return keySelectables;
+	}
+
+	private List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
+		final var keySelectables = new ArrayList<SelectableMapping>();
+		final var identifierDescriptor = collectionDescriptor.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			identifierDescriptor.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+			return keySelectables;
+		}
+
+		collectionDescriptor.getKeyDescriptor().getKeyPart().forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !selectableMapping.isFormula() ) {
+						keySelectables.add( selectableMapping );
+					}
+				}
+		);
+
+		final var indexDescriptor = collectionDescriptor.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			indexDescriptor.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+		}
+		else {
+			collectionDescriptor.getElementDescriptor().forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() ) {
+							keySelectables.add( selectableMapping );
+						}
+					}
+			);
+		}
+		return keySelectables;
+	}
+
+	@Override
+	public void applyPredicate(
+			Supplier<Consumer<Predicate>> predicateCollector,
+			SqlAstCreationState creationState,
+			StandardTableGroup tableGroup,
+			NamedTableReference rootTableReference,
+			EntityMappingType entityMappingType) {
+		if ( creationState.getLoadQueryInfluencers().getTemporalIdentifier() != null ) {
+			predicateCollector.get().accept( createRestriction(
+					entityMappingType,
+					tableGroup.resolveTableReference( getTableName() ),
+					collectEntityKeySelectables( entityMappingType ),
+					creationState.getSqlAliasBaseGenerator()
+			) );
+		}
 	}
 }

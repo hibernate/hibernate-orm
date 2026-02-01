@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cfg.TemporalTableStrategy;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
@@ -22,8 +21,10 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -80,7 +81,6 @@ import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollection
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -213,6 +213,12 @@ public class PluralAttributeMappingImpl
 		else {
 			temporalMapping = null;
 			auditMapping = null;
+		}
+		if ( ( softDeleteMapping != null ? 1 : 0 )
+				+ ( temporalMapping != null ? 1 : 0 )
+				+ ( auditMapping != null ? 1 : 0 ) > 1 ) {
+			throw new UnsupportedMappingException(
+					"Collection may not define multiple auxiliary mappings (soft delete, temporal, audit)" );
 		}
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
@@ -536,6 +542,22 @@ public class PluralAttributeMappingImpl
 		return auditMapping;
 	}
 
+	private AuxiliaryMapping getAuxiliaryMapping() {
+		if ( softDeleteMapping != null ) {
+			return softDeleteMapping;
+		}
+		else if ( temporalMapping != null ) {
+			return temporalMapping;
+		}
+		else if ( auditMapping != null ) {
+			return auditMapping;
+		}
+		else {
+			return null;
+		}
+	}
+
+
 	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
@@ -588,165 +610,37 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
-		if ( hasSoftDelete() ) {
-			final var descriptor = getCollectionDescriptor();
-			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-				// see if the associated entity has soft-delete defined
-				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-				final var softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
-				if ( softDeleteMapping != null ) {
-					final String primaryTableName =
-							associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
-					final var primaryTableReference =
-							tableGroup.resolveTableReference( primaryTableName );
-					final var softDeleteRestriction =
-							softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
-					predicateConsumer.applyPredicate( softDeleteRestriction );
-				}
-			}
-
-			// apply the collection's soft-delete mapping, if one
-			final var softDeleteMapping = getSoftDeleteMapping();
-			if ( softDeleteMapping != null ) {
-				final var primaryTableReference =
-						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final var softDeleteRestriction =
-						softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
-				predicateConsumer.applyPredicate( softDeleteRestriction );
-			}
-		}
-	}
-
-	@Override
-	public void applyTemporalRestrictions(
+	public void applyAuxiliaryRestrictions(
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
 			LoadQueryInfluencers influencers,
 			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
-		final var temporalInstant = influencers.getTemporalIdentifier();
-		if ( getDialect().getTemporalTableSupport().useTemporalRestriction( influencers ) ) {
-			final var descriptor = getCollectionDescriptor();
-			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-				final var temporalMapping = associatedEntityDescriptor.getTemporalMapping();
-				if ( temporalMapping != null ) {
-					final var primaryTableReference =
-							tableGroup.resolveTableReference( temporalMapping.getTableName() );
-					predicateConsumer.applyPredicate( temporalInstant == null
-							? temporalMapping.createCurrentRestriction( primaryTableReference )
-							: temporalMapping.createRestriction( primaryTableReference, temporalInstant ) );
-				}
-			}
-			if ( temporalMapping != null ) {
-				final var tableReference =
-						tableGroup.resolveTableReference( temporalMapping.getTableName() );
-				final var temporalRestriction =
-						temporalInstant == null
-								? temporalMapping.createCurrentRestriction( tableReference )
-								: temporalMapping.createRestriction( tableReference, temporalInstant );
-				predicateConsumer.applyPredicate( temporalRestriction );
-			}
-		}
-
-		if ( temporalInstant != null ) {
-			final var descriptor = getCollectionDescriptor();
-			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-				final var associatedAuditMapping = associatedEntityDescriptor.getAuditMapping();
-				if ( associatedAuditMapping != null ) {
-					final var tableReference = tableGroup.resolveTableReference( associatedAuditMapping.getTableName() );
-					final var keySelectables = collectEntityKeySelectables( associatedEntityDescriptor );
-					final var auditPredicate = associatedAuditMapping.createRestriction(
-							associatedEntityDescriptor.getEntityPersister(),
-							tableReference,
-							keySelectables,
-							sqlAliasBaseGenerator
-					);
-					if ( auditPredicate != null ) {
-						predicateConsumer.applyPredicate( auditPredicate );
-					}
-				}
-			}
-
-			if ( auditMapping != null ) {
-				final var tableReference =
-						tableGroup.resolveTableReference( auditMapping.getTableName() );
-				final var keySelectables = collectCollectionRowKeySelectables();
-				final var auditPredicate = auditMapping.createRestriction(
-						this,
-						tableReference,
-						keySelectables,
-						sqlAliasBaseGenerator
+		final var descriptor = getCollectionDescriptor();
+		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+			final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+			final var associatedAuxiliaryMapping = associatedEntityDescriptor.getAuxiliaryMapping();
+			if ( associatedAuxiliaryMapping != null ) {
+				associatedAuxiliaryMapping.applyPredicate(
+						associatedEntityDescriptor,
+						predicateConsumer::applyPredicate,
+						tableGroup,
+						sqlAliasBaseGenerator,
+						influencers
 				);
-				if ( auditPredicate != null ) {
-					predicateConsumer.applyPredicate( auditPredicate );
-				}
 			}
 		}
-	}
 
-	private Dialect getDialect() {
-		return collectionDescriptor.getFactory().getJdbcServices().getDialect();
-	}
-
-	private static java.util.List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {
-		final var keySelectables = new ArrayList<SelectableMapping>();
-		entityDescriptor.getIdentifierMapping().forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					if ( !selectableMapping.isFormula() ) {
-						keySelectables.add( selectableMapping );
-					}
-				}
-		);
-		return keySelectables;
-	}
-
-	private java.util.List<SelectableMapping> collectCollectionRowKeySelectables() {
-		final var keySelectables = new ArrayList<SelectableMapping>();
-		final var identifierDescriptor = getIdentifierDescriptor();
-		if ( identifierDescriptor != null ) {
-			identifierDescriptor.forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						if ( !selectableMapping.isFormula() ) {
-							keySelectables.add( selectableMapping );
-						}
-					}
-			);
-			return keySelectables;
-		}
-
-		getKeyDescriptor().getKeyPart().forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					if ( !selectableMapping.isFormula() ) {
-						keySelectables.add( selectableMapping );
-					}
-				}
-		);
-
-		final CollectionPart indexDescriptor = getIndexDescriptor();
-		if ( indexDescriptor != null ) {
-			indexDescriptor.forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						if ( !selectableMapping.isFormula() ) {
-							keySelectables.add( selectableMapping );
-						}
-					}
+		final var auxiliaryMapping = getAuxiliaryMapping();
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyPredicate(
+					this,
+					predicateConsumer::applyPredicate,
+					tableGroup,
+					sqlAliasBaseGenerator,
+					influencers
 			);
 		}
-		else {
-			getElementDescriptor().forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						if ( !selectableMapping.isFormula() ) {
-							keySelectables.add( selectableMapping );
-						}
-					}
-			);
-		}
-		return keySelectables;
 	}
 
 	private static TemporalTableStrategy getTemporalTableStrategy(LoadQueryInfluencers influencers) {
@@ -1053,12 +947,7 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
-		applySoftDeleteRestriction(
-				predicateCollector::applyPredicate,
-				tableGroup,
-				creationState
-		);
-		applyTemporalRestrictions(
+		applyAuxiliaryRestrictions(
 				tableGroup,
 				predicateCollector::applyPredicate,
 				creationState.getLoadQueryInfluencers(),
@@ -1089,7 +978,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean hasSoftDelete() {
-		// NOTE : this needs to be done lazily because the associated entity mapping (if one)
+		// NOTE: this needs to be done lazily because the associated entity mapping (if one)
 		// does not know its SoftDeleteMapping yet when this is created
 		if ( hasSoftDelete == null ) {
 			hasSoftDelete =
@@ -1098,34 +987,6 @@ public class PluralAttributeMappingImpl
 								&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
 		}
 		return hasSoftDelete;
-	}
-
-	private void applySoftDeleteRestriction(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
-		if ( hasSoftDelete() ) {
-			if ( getElementDescriptor() instanceof EntityCollectionPart entityCollectionPart ) {
-				final var entityMappingType = entityCollectionPart.getAssociatedEntityMappingType();
-				final var softDeleteMapping = entityMappingType.getSoftDeleteMapping();
-				if ( softDeleteMapping != null ) {
-					final var softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
-					predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
-							tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-							creationState.getSqlExpressionResolver()
-					) );
-				}
-			}
-
-			final var softDeleteMapping = getSoftDeleteMapping();
-			if ( softDeleteMapping != null ) {
-				final var softDeleteTable = getSoftDeleteTableDetails();
-				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
-						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-						creationState.getSqlExpressionResolver()
-				) );
-			}
-		}
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
@@ -1315,7 +1176,7 @@ public class PluralAttributeMappingImpl
 		final String alias = sqlAliasBase.generateNewAlias();
 		final var collectionTableReference =
 				collectionTableReference( creationState, tableName, alias );
-		collectionTableReference.applyTemporalTable( temporalMapping,
+		collectionTableReference.applyAuxiliaryTable( temporalMapping,
 				creationState.getLoadQueryInfluencers() );
 
 		final var tableGroup = new CollectionTableGroup(

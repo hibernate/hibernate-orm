@@ -9,6 +9,7 @@ import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
@@ -23,8 +24,11 @@ import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoor
  * @author Gavin King
  */
 public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
+	private final TemporalMapping temporalMapping;
+
 	public DeleteCoordinatorTemporal(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
+		this.temporalMapping = entityPersister.getTemporalMapping();
 	}
 
 	@Override
@@ -55,8 +59,7 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	private void bindTemporalEndingValue(
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		final var temporalMapping = entityPersister().getTemporalMapping();
-		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
+		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getCurrentTransactionIdentifier(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),

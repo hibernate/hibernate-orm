@@ -417,12 +417,12 @@ public interface EntityMappingType
 		return null;
 	}
 
-	@Override
-	default TableDetails getSoftDeleteTableDetails() {
-		return getIdentifierTableDetails();
+	default AuxiliaryMapping getAuxiliaryMapping() {
+		return null;
 	}
 
-	default TableDetails getTemporalTableDetails() {
+	@Override
+	default TableDetails getSoftDeleteTableDetails() {
 		return getIdentifierTableDetails();
 	}
 

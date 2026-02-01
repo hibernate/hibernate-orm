@@ -11,8 +11,8 @@ import java.util.Locale;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -49,7 +49,7 @@ public class NamedTableReference extends AbstractTableReference {
 		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
 	}
 
-	public void applyTemporalTable(TemporalMapping mapping, LoadQueryInfluencers influencers) {
+	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
 		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
 			this.temporalIdentifier = influencers.getTemporalIdentifier();
@@ -57,7 +57,7 @@ public class NamedTableReference extends AbstractTableReference {
 		}
 	}
 
-	private boolean useAsOfOperator(LoadQueryInfluencers influencers, TemporalMapping mapping) {
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers, AuxiliaryMapping mapping) {
 		if ( mapping == null ) {
 			return false;
 		}

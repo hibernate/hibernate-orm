@@ -238,6 +238,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 		}
 
+		// TODO: BIG TODO --- move this to InsertCoordinatorTemporal!
 		final var temporalMapping = entityPersister().getTemporalMapping();
 		if ( temporalMapping != null
 				&& TemporalMutationHelper.isUsingParameters( session )
@@ -568,8 +569,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// add the discriminator
 		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
-		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
-		entityPersister().addTemporalToInsertGroup( insertGroupBuilder );
+		entityPersister().addAuxiliaryToInsertGroup( insertGroupBuilder );
 
 		// add the keys
 		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {

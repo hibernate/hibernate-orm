@@ -6,14 +6,12 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
-import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
+import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 
 public class TemporalMutationHelper {
 	public static boolean isUsingParameters(SharedSessionContractImplementor session) {
-		final var options = session.getFactory().getSessionFactoryOptions();
-		final var strategy = options.getTemporalTableStrategy();
-		return ( strategy == SINGLE_TABLE || strategy == HISTORY_TABLE )
-			&& !options.isUseServerTransactionTimestampsEnabled();
+		final var factory = session.getFactory();
+		return factory.getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE
+			&& !factory.getTransactionIdentifierService().isDisabled();
 	}
 }

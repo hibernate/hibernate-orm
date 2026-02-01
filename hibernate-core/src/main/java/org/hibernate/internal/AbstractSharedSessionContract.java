@@ -112,7 +112,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -142,8 +141,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  * @author Steve Ebersole
  */
 abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
-
-	private static final Supplier<Instant> DEFAULT_TRANSACTION_ID_SUPPLIER = Instant::now;
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -218,7 +215,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		transactionIdSupplier = transactionIdSupplier();
+		transactionIdSupplier = initializeTransactionIdSupplier( factory );
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -260,11 +257,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private Supplier<?> transactionIdSupplier() {
-		final var configuredTransactionIdSupplier = factoryOptions.getTransactionIdSupplier();
-		return configuredTransactionIdSupplier == null
-				? DEFAULT_TRANSACTION_ID_SUPPLIER
-				: configuredTransactionIdSupplier;
+	private static Supplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
+		final var transactionIdentifierService = factory.getTransactionIdentifierService();
+		return transactionIdentifierService.isDisabled()
+				? null
+				: transactionIdentifierService.getIdentifierSupplier();
 	}
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
@@ -636,7 +633,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	private Object generateCurrentTransactionIdentifier() {
-		return factoryOptions.isUseServerTransactionTimestampsEnabled()
+		return transactionIdSupplier == null
 				? null
 				: transactionIdSupplier.get();
 	}
@@ -1823,7 +1820,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
-		transactionIdSupplier = transactionIdSupplier();
+		transactionIdSupplier = initializeTransactionIdSupplier( factory );
 	}
 
 }

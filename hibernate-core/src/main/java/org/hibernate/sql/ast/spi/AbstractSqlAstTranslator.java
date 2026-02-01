@@ -6226,7 +6226,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean renderAsOfClause(NamedTableReference tableReference) {
 		return tableReference.getTemporalJdbcMapping() != null
-			&& sessionFactory.getSessionFactoryOptions().getTransactionIdSupplier() == null
+			&& sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
 			&& statementStack.getCurrent() instanceof SelectStatement
 			&& dialect.getTemporalTableSupport().useAsOfOperator( getTemporalTableStrategy(),
 				(Instant) tableReference.getTemporalIdentifier() );

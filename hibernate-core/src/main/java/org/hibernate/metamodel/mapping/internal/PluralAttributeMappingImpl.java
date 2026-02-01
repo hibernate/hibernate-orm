@@ -535,10 +535,6 @@ public class PluralAttributeMappingImpl
 		return auditMapping;
 	}
 
-	public TableDetails getTemporalTableDetails() {
-		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
-	}
-
 	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
@@ -1312,18 +1308,8 @@ public class PluralAttributeMappingImpl
 		);
 		final String tableName = collectionDescriptor.getTableName();
 		final String alias = sqlAliasBase.generateNewAlias();
-		final NamedTableReference collectionTableReference;
-		if ( useAuditTable( creationState ) ) {
-			collectionTableReference = new AuxiliaryTableReference(
-					auditMapping.getTableName(), tableName, alias, true );
-		}
-		else if ( useHistoryTable( creationState ) ) {
-			collectionTableReference = new AuxiliaryTableReference(
-					temporalMapping.getTableName(), tableName, alias, true );
-		}
-		else {
-			collectionTableReference = new NamedTableReference( tableName, alias, true );
-		}
+		final var collectionTableReference =
+				collectionTableReference( creationState, tableName, alias );
 		collectionTableReference.applyTemporalTable( temporalMapping,
 				creationState.getLoadQueryInfluencers() );
 
@@ -1374,6 +1360,20 @@ public class PluralAttributeMappingImpl
 		}
 
 		return tableGroup;
+	}
+
+	private NamedTableReference collectionTableReference(SqlAstCreationState creationState, String tableName, String alias) {
+		if ( useAuditTable( creationState ) ) {
+			return new AuxiliaryTableReference( auditMapping.getTableName(),
+					tableName, alias, true );
+		}
+		else if ( useHistoryTable( creationState ) ) {
+			return new AuxiliaryTableReference( temporalMapping.getTableName(),
+					tableName, alias, true );
+		}
+		else {
+			return new NamedTableReference( tableName, alias, true );
+		}
 	}
 
 	private boolean useHistoryTable(SqlAstCreationState creationState) {

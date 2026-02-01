@@ -7,18 +7,13 @@ package org.hibernate.boot.model.internal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.MappingSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.Auditable;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -27,12 +22,9 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.TransactionIdentifierService;
 
-import static org.hibernate.internal.util.GenericsHelper.erasedType;
-import static org.hibernate.internal.util.GenericsHelper.supertypeInstantiation;
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Helper for building audit log tables in the boot model.
@@ -112,6 +104,12 @@ public final class AuditHelper {
 		}
 	}
 
+	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
+		return context.getBootstrapContext().getServiceRegistry()
+				.requireService( TransactionIdentifierService.class )
+				.getIdentifierType();
+	}
+
 	private static String resolveTableName(
 			Audited audited,
 			Table table,
@@ -146,7 +144,7 @@ public final class AuditHelper {
 			Table table,
 			MetadataBuildingContext context) {
 		final String columnName = resolveTransactionIdColumn( audited );
-		final var transactionIdJavaType = resolveTransactionIdJavaType( context );
+		final var transactionIdJavaType = getTransactionIdType( context );
 		return createAuditColumn( columnName, table, false, transactionIdJavaType, context );
 	}
 
@@ -219,73 +217,6 @@ public final class AuditHelper {
 	private static String resolveModificationTypeColumn(Audited audited) {
 		final String explicitName = audited == null ? null : audited.modificationType();
 		return isBlank( explicitName ) ? DEFAULT_MODIFICATION_TYPE_COLUMN : explicitName;
-	}
-
-	private static Class<?> resolveTransactionIdJavaType(MetadataBuildingContext context) {
-		final var serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final var settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
-		final boolean useServerTransactionTimestamps =
-				getBoolean( MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
-		final Object supplierSetting = settings.get( MappingSettings.TRANSACTION_ID_SUPPLIER );
-		if ( supplierSetting == null ) {
-			return Instant.class;
-		}
-		if ( useServerTransactionTimestamps ) {
-			throw new MappingException( "Settings '"
-					+ MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
-					+ MappingSettings.TRANSACTION_ID_SUPPLIER + "' are mutually exclusive" );
-		}
-
-		final Class<? extends Supplier<?>> supplierClass = resolveSupplierClass( supplierSetting, serviceRegistry );
-		final Class<?> suppliedType = resolveSuppliedType( supplierClass );
-		if ( suppliedType == null || Object.class.equals( suppliedType ) ) {
-			throw new MappingException( "Could not determine the Java type of values supplied by '"
-					+ supplierClass.getName() + "'"
-					+ " (implement 'Supplier<T>' with a concrete type argument)" );
-		}
-		return suppliedType;
-	}
-
-	private static Class<? extends Supplier<?>> resolveSupplierClass(
-			Object supplierSetting,
-			ServiceRegistry serviceRegistry) {
-		if ( supplierSetting instanceof Supplier<?> supplier ) {
-			@SuppressWarnings("unchecked")
-			final var supplierClass = (Class<? extends Supplier<?>>) supplier.getClass();
-			return supplierClass;
-		}
-		else if ( supplierSetting instanceof Class<?> supplierClass ) {
-			if ( !Supplier.class.isAssignableFrom( supplierClass ) ) {
-				throw new MappingException( MappingSettings.TRANSACTION_ID_SUPPLIER + " must specify a "
-						+ Supplier.class.getName() + " or a class name" );
-			}
-			@SuppressWarnings("unchecked")
-			final var castClass = (Class<? extends Supplier<?>>) supplierClass;
-			return castClass;
-		}
-		else if ( supplierSetting instanceof String supplierName ) {
-			final var supplierClass =
-					serviceRegistry.requireService( StrategySelector.class )
-							.selectStrategyImplementor( Supplier.class, supplierName );
-			@SuppressWarnings("unchecked")
-			final var castClass = (Class<? extends Supplier<?>>) supplierClass;
-			return castClass;
-		}
-		else {
-			throw new MappingException( MappingSettings.TRANSACTION_ID_SUPPLIER + " must specify a '"
-						+ Supplier.class.getName() + "' or a class name" );
-		}
-	}
-
-	private static Class<?> resolveSuppliedType(Class<? extends Supplier<?>> supplierClass) {
-		final var supplierInstantiation = supertypeInstantiation( Supplier.class, supplierClass );
-		if ( supplierInstantiation == null ) {
-			return null;
-		}
-		else {
-			final var typeArguments = supplierInstantiation.getActualTypeArguments();
-			return typeArguments.length == 0 ? null : erasedType( typeArguments[0] );
-		}
 	}
 
 	private static Set<String> resolveExcludedColumns(RootClass rootClass) {

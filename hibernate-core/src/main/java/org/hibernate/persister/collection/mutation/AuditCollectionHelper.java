@@ -51,7 +51,7 @@ final class AuditCollectionHelper {
 		this.transactionIdMapping = auditMapping.getTransactionIdMapping();
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping();
 		this.useServerTransactionTimestamps =
-				sessionFactory.getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled();
+				sessionFactory.getTransactionIdentifierService().isDisabled();
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
 				? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
 				: null;

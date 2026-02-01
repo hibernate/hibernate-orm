@@ -91,6 +91,7 @@ import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.TransactionIdentifierService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -205,6 +206,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient EntityCopyObserverFactory entityCopyObserverFactory;
 	final transient ParameterMarkerStrategy parameterMarkerStrategy;
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+	final transient TransactionIdentifierService transactionIdentifierService;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -255,6 +257,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// used for initializing the MappingMetamodelImpl
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
+
+		transactionIdentifierService = serviceRegistry.requireService( TransactionIdentifierService.class );
 
 		final var integratorObserver = new IntegratorObserver();
 		observerChain.addObserver( integratorObserver );
@@ -1092,6 +1096,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return multiTenantConnectionProvider != null
 				? multiTenantConnectionProvider.handlesConnectionSchema()
 				: connectionProvider.handlesConnectionSchema();
+	}
+
+	@Override
+	public TransactionIdentifierService getTransactionIdentifierService() {
+		return transactionIdentifierService;
 	}
 
 	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

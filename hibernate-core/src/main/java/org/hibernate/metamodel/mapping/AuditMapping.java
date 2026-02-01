@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 
 /**
  * Metadata about audit log tables for entities and collections enabled for audit logging.
@@ -31,7 +32,8 @@ public interface AuditMapping {
 	Predicate createRestriction(
 			TableGroupProducer tableGroupProducer,
 			TableReference tableReference,
-			List<SelectableMapping> keySelectables);
+			List<SelectableMapping> keySelectables,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator);
 //
 //	ColumnValueBinding createTransactionIdValueBinding(ColumnReference columnReference);
 //

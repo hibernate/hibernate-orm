@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -53,7 +54,8 @@ public interface PluralAttributeMapping
 	void applyTemporalRestrictions(
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
-			LoadQueryInfluencers influencers);
+			LoadQueryInfluencers influencers,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();

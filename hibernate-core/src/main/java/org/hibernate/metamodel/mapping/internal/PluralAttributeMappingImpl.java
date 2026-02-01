@@ -54,6 +54,7 @@ import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -622,7 +623,8 @@ public class PluralAttributeMappingImpl
 	public void applyTemporalRestrictions(
 			TableGroup tableGroup,
 			PredicateConsumer predicateConsumer,
-			LoadQueryInfluencers influencers) {
+			LoadQueryInfluencers influencers,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 		final var temporalInstant = influencers.getTemporalIdentifier();
 		if ( getDialect().getTemporalTableSupport().useTemporalRestriction( influencers ) ) {
 			final var descriptor = getCollectionDescriptor();
@@ -661,7 +663,8 @@ public class PluralAttributeMappingImpl
 					final var auditPredicate = associatedAuditMapping.createRestriction(
 							associatedEntityDescriptor.getEntityPersister(),
 							tableReference,
-							keySelectables
+							keySelectables,
+							sqlAliasBaseGenerator
 					);
 					if ( auditPredicate != null ) {
 						predicateConsumer.applyPredicate( auditPredicate );
@@ -676,7 +679,8 @@ public class PluralAttributeMappingImpl
 				final var auditPredicate = auditMapping.createRestriction(
 						this,
 						tableReference,
-						keySelectables
+						keySelectables,
+						sqlAliasBaseGenerator
 				);
 				if ( auditPredicate != null ) {
 					predicateConsumer.applyPredicate( auditPredicate );
@@ -1057,7 +1061,8 @@ public class PluralAttributeMappingImpl
 		applyTemporalRestrictions(
 				tableGroup,
 				predicateCollector::applyPredicate,
-				creationState.getLoadQueryInfluencers()
+				creationState.getLoadQueryInfluencers(),
+				creationState.getSqlAliasBaseGenerator()
 		);
 
 		if ( fetched ) {

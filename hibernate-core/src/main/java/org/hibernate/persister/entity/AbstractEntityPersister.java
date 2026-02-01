@@ -1276,6 +1276,7 @@ public abstract class AbstractEntityPersister
 				new LoadQueryInfluencers( factory ),
 				lockOptions,
 				jdbcParametersBuilder::add,
+				new SqlAliasBaseManager(),
 				factory
 		);
 		return new SingleIdArrayLoadPlan(
@@ -2938,7 +2939,8 @@ public abstract class AbstractEntityPersister
 					tableGroup.resolveTableReference( auditMapping.getTableName() );
 			final var auditPredicate =
 					auditMapping.createRestriction( this, tableReference,
-							collectKeySelectables( getIdentifierMapping() ) );
+							collectKeySelectables( getIdentifierMapping() ),
+							creationState.getSqlAliasBaseGenerator() );
 			if ( auditPredicate != null ) {
 				additionalPredicateCollectorAccess.get().accept( auditPredicate );
 			}

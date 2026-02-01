@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
@@ -43,7 +44,7 @@ import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
  * Audit mapping implementation.
  */
 public class AuditMappingImpl implements AuditMapping {
-	private static final String SUBQUERY_ALIAS = "audit_sub";
+	private static final String SUBQUERY_ALIAS_STEM = "audit";
 	public static final String MAX = "max";
 
 	private final String tableName;
@@ -141,9 +142,10 @@ public class AuditMappingImpl implements AuditMapping {
 	public Predicate createRestriction(
 			TableGroupProducer tableGroupProducer,
 			TableReference tableReference,
-			List<SelectableMapping> keySelectables) {
+			List<SelectableMapping> keySelectables,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 		final var subQueryExpression =
-				new SelectStatement( buildSubquery( tableGroupProducer, tableReference, keySelectables ) );
+				new SelectStatement( buildSubquery( tableGroupProducer, tableReference, keySelectables, sqlAliasBaseGenerator ) );
 		final var revisionPredicate =
 				new ComparisonPredicate(
 						new ColumnReference( tableReference, transactionIdMapping ),
@@ -169,10 +171,15 @@ public class AuditMappingImpl implements AuditMapping {
 	private QuerySpec buildSubquery(
 			TableGroupProducer tableGroupProducer,
 			TableReference tableReference,
-			List<SelectableMapping> keySelectables) {
+			List<SelectableMapping> keySelectables,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
 		final var subQuerySpec = new QuerySpec( false, 1 );
-		final var subTableReference = new NamedTableReference( tableName, SUBQUERY_ALIAS );
 		final String stem = tableGroupProducer.getSqlAliasStem();
+		final String aliasStem = stem == null ? SUBQUERY_ALIAS_STEM : stem;
+		final var subTableReference =
+				new NamedTableReference( tableName,
+						sqlAliasBaseGenerator.createSqlAliasBase( aliasStem )
+								.generateNewAlias() );
 		final var subTableGroup = new StandardTableGroup(
 				true,
 				new NavigablePath( stem == null ? "audit-subquery" : stem + "#audit" ),

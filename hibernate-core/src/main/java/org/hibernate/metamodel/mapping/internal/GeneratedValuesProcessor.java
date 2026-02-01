@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -81,6 +82,7 @@ public class GeneratedValuesProcessor {
 					new LoadQueryInfluencers( sessionFactory ),
 					new LockOptions( LockMode.READ ),
 					builder::add,
+					new SqlAliasBaseManager(),
 					sessionFactory
 			);
 			jdbcSelect =

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -82,6 +83,8 @@ public class CollectionBatchLoaderArrayParam
 				)
 		);
 
+		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
+
 		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
@@ -89,13 +92,19 @@ public class CollectionBatchLoaderArrayParam
 				getInfluencers(),
 				new LockOptions(),
 				jdbcParameter,
+				sqlAliasBaseGenerator,
 				getSessionFactory()
 		);
 
 		final var querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
-		attributeMapping.applyTemporalRestrictions( tableGroup, querySpec::applyPredicate, getInfluencers() );
+		attributeMapping.applyTemporalRestrictions(
+				tableGroup,
+				querySpec::applyPredicate,
+				getInfluencers(),
+				sqlAliasBaseGenerator
+		);
 
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()

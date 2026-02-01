@@ -416,16 +416,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isUseServerTransactionTimestampsEnabled() {
-		return delegate.isUseServerTransactionTimestampsEnabled();
-	}
-
-	@Override
-	public Supplier<?> getTransactionIdSupplier() {
-		return delegate.getTransactionIdSupplier();
-	}
-
-	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}

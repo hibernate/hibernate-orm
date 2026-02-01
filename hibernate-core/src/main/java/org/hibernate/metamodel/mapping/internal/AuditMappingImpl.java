@@ -4,11 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Auditable;
 import org.hibernate.metamodel.mapping.AuditMapping;
@@ -42,8 +39,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hibernate.internal.util.GenericsHelper.erasedType;
-import static org.hibernate.internal.util.GenericsHelper.supertypeInstantiation;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
@@ -76,8 +71,8 @@ public class AuditMappingImpl implements AuditMapping {
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var dialect = creationContext.getDialect();
 		final var sessionFactory = creationContext.getSessionFactory();
+		final var transactionIdJavaType = sessionFactory.getTransactionIdentifierService().getIdentifierType();
 		final var sqmFunctionRegistry = sessionFactory.getQueryEngine().getSqmFunctionRegistry();
-		final var transactionIdJavaType = resolveTransactionIdJavaType( sessionFactory );
 
 		jdbcMapping = resolveJdbcMapping( typeConfiguration, transactionIdJavaType );
 		transactionIdBasicType = resolveBasicType( typeConfiguration, transactionIdJavaType );
@@ -108,11 +103,10 @@ public class AuditMappingImpl implements AuditMapping {
 				creationContext
 		);
 
-		final boolean useServerTransactionTimestamps =
-				sessionFactory.getSessionFactoryOptions().isUseServerTransactionTimestampsEnabled();
-		currentTimestampFunctionName = useServerTransactionTimestamps
-				? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
-				: null;
+		currentTimestampFunctionName =
+				sessionFactory.getTransactionIdentifierService().isDisabled()
+						? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
+						: null;
 
 		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );
 	}
@@ -284,29 +278,6 @@ public class AuditMappingImpl implements AuditMapping {
 		return basicType == null
 				? typeConfiguration.standardBasicTypeForJavaType( javaType )
 				: basicType;
-	}
-
-	private static Class<?> resolveTransactionIdJavaType(SessionFactoryImplementor factory) {
-		final var supplier = factory.getSessionFactoryOptions().getTransactionIdSupplier();
-		if ( supplier == null ) {
-			return Instant.class;
-		}
-
-		final var supplierInstantiation = supertypeInstantiation( Supplier.class, supplier.getClass() );
-		if ( supplierInstantiation == null ) {
-			throw new MappingException( "Could not determine the Java type of values supplied by '"
-					+ supplier.getClass().getName() + "'"
-					+ " (implement 'Supplier<T>' with a concrete type argument)" );
-		}
-
-		final var typeArguments = supplierInstantiation.getActualTypeArguments();
-		final var suppliedType = typeArguments.length == 0 ? null : erasedType( typeArguments[0] );
-		if ( suppliedType == null || Object.class.equals( suppliedType ) ) {
-			throw new MappingException( "Could not determine the Java type of values supplied by '"
-					+ supplier.getClass().getName() + "'"
-					+ " (implement 'Supplier<T>' with a concrete type argument)" );
-		}
-		return suppliedType;
 	}
 
 	@Override

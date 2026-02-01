@@ -7,19 +7,14 @@ package org.hibernate.boot.model.internal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.TemporalTableStrategy;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -30,17 +25,12 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Temporalized;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.TransactionIdentifierService;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
-import static org.hibernate.cfg.MappingSettings.TRANSACTION_ID_SUPPLIER;
-import static org.hibernate.cfg.MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
 import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
 import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
-import static org.hibernate.internal.util.GenericsHelper.erasedType;
-import static org.hibernate.internal.util.GenericsHelper.supertypeInstantiation;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -70,7 +60,7 @@ public class TemporalHelper {
 
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
-		final var transactionIdType = resolveTransactionIdJavaType( context );
+		final var transactionIdType = getTransactionIdType( context );
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
 						table, false, precision, transactionIdType, context );
@@ -100,6 +90,12 @@ public class TemporalHelper {
 		addTemporalCheckConstraint( temporalTable, rowStartColumn, rowEndColumn, context );
 		addAuxiliaryObjects( temporalTable, partitioned, currentPartitionName, historyPartitionName, context );
 		addSecondPass( target, context );
+	}
+
+	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
+		return context.getBootstrapContext().getServiceRegistry()
+				.requireService( TransactionIdentifierService.class )
+				.getIdentifierType();
 	}
 
 	private static String inferredPartitionName(
@@ -388,108 +384,6 @@ public class TemporalHelper {
 		}
 		else {
 			return AUTO;
-		}
-	}
-
-	private static Class<?> resolveTransactionIdJavaType(MetadataBuildingContext context) {
-		final var serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final var settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
-		final boolean useServerTransactionTimestamps = getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
-		final Object supplierSetting = settings.get( TRANSACTION_ID_SUPPLIER );
-		if ( supplierSetting == null ) {
-			return Instant.class;
-		}
-		else {
-			if ( useServerTransactionTimestamps ) {
-				throw new MappingException( "Settings '"
-							+ USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
-							+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
-				);
-			}
-			final var supplierClass = resolveSupplierClass( supplierSetting, serviceRegistry );
-			final Class<?> suppliedType = resolveSuppliedType( supplierClass );
-			if ( suppliedType == null || Object.class.equals( suppliedType ) ) {
-				throw new MappingException(
-						"Could not determine the Java type of values supplied by '" + supplierClass.getName() + "'"
-						+ " (implement 'Supplier<T>' with a concrete type argument)"
-				);
-			}
-			return suppliedType;
-		}
-	}
-
-	private static Class<? extends Supplier<?>> resolveSupplierClass(
-			Object supplierSetting,
-			ServiceRegistry serviceRegistry) {
-		if ( supplierSetting instanceof Supplier<?> supplier ) {
-			@SuppressWarnings("unchecked") // completely safe
-			final var supplierClass = (Class<? extends Supplier<?>>) supplier.getClass();
-			return supplierClass;
-		}
-		else if ( supplierSetting instanceof Class<?> supplierClass ) {
-			if ( !Supplier.class.isAssignableFrom( supplierClass ) ) {
-				throw new MappingException(
-						TRANSACTION_ID_SUPPLIER + " must specify a "
-						+ Supplier.class.getName() + " or a class name"
-				);
-			}
-			@SuppressWarnings("unchecked") // safe, we just checked
-			final var castClass = (Class<? extends Supplier<?>>) supplierClass;
-			return castClass;
-		}
-		else if ( supplierSetting instanceof String supplierName ) {
-			final var supplierClass =
-					serviceRegistry.requireService( StrategySelector.class )
-							.selectStrategyImplementor( Supplier.class, supplierName );
-			@SuppressWarnings("unchecked") // safe
-			final var castClass = (Class<? extends Supplier<?>>) supplierClass;
-			return castClass;
-		}
-		else {
-			throw new MappingException(
-					TRANSACTION_ID_SUPPLIER + " must specify a '"
-					+ Supplier.class.getName() + "' or a class name"
-			);
-		}
-	}
-
-	private static Class<?> resolveSuppliedType(Class<? extends Supplier<?>> supplierClass) {
-		final var supplierInstantiation = supertypeInstantiation( Supplier.class, supplierClass );
-		if ( supplierInstantiation == null ) {
-			return null;
-		}
-		else {
-			final var typeArguments = supplierInstantiation.getActualTypeArguments();
-			return typeArguments.length == 0 ? null : erasedType( typeArguments[0] );
-		}
-	}
-
-	public static Supplier<?> resolveTransactionIdSupplier(
-			Object setting,
-			StrategySelector strategySelector) {
-		if ( setting == null ) {
-			return null;
-		}
-		else if ( setting instanceof Supplier<?> supplier ) {
-			return supplier;
-		}
-		else if ( setting instanceof Class<?> clazz ) {
-			if ( !Supplier.class.isAssignableFrom( clazz ) ) {
-				throw new HibernateException(
-						"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-						+ Supplier.class.getName() + "' or a class name"
-				);
-			}
-			return strategySelector.resolveStrategy( Supplier.class, clazz );
-		}
-		else if ( setting instanceof String name ) {
-			return strategySelector.resolveStrategy( Supplier.class, name );
-		}
-		else {
-			throw new HibernateException(
-					"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-					+ Supplier.class.getName() + "' or a class name"
-			);
 		}
 	}
 }

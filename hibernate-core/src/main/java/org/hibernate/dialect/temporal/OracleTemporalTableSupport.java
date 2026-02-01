@@ -15,6 +15,7 @@ import org.hibernate.mapping.Table;
 import java.time.Instant;
 
 import static java.util.Collections.emptySet;
+import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * @author Gavin King
@@ -57,10 +58,10 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 
 	@Override
 	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		final var options = influencers.getSessionFactory().getSessionFactoryOptions();
-		return options.getTransactionIdSupplier() == null
-				? options.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-				&& influencers.getTemporalIdentifier() != null
+		final var sessionFactory = influencers.getSessionFactory();
+		return sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
+				? sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE
+						&& influencers.getTemporalIdentifier() != null
 				: super.useTemporalRestriction( influencers );
 	}
 

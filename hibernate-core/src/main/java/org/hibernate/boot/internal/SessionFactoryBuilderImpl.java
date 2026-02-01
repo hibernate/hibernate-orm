@@ -388,18 +388,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled) {
-		optionsBuilder.enableUseServerTransactionTimestamps( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyTransactionIdGenerator(Supplier<?> supplier) {
-		optionsBuilder.applyTransactionIdGenerator( supplier );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow) {
 		optionsBuilder.allowOutOfTransactionUpdateOperations( allow );
 		return this;

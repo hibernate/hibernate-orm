@@ -389,7 +389,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		);
 
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && isUsingTimestampParameters( session ) ) {
+		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getCurrentTransactionIdentifier(),
 					temporalMapping.getStartingColumnMapping(),
@@ -655,7 +655,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
 		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && isUsingTimestampParameters( session ) ) {
+		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getCurrentTransactionIdentifier(),
 					temporalMapping.getEndingColumnMapping(),
@@ -719,11 +719,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return elementType instanceof EntityType; //instanceof AssociationType;
 	}
 
-	private static boolean isUsingTimestampParameters(SharedSessionContractImplementor session) {
-		final var options = session.getFactory().getSessionFactoryOptions();
-		final var strategy = options.getTemporalTableStrategy();
-		return strategy == SINGLE_TABLE
-			&& !options.isUseServerTransactionTimestampsEnabled();
+	private static boolean isUsingTransactionIdParameters(SharedSessionContractImplementor session) {
+		final var factory = session.getFactory();
+		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE
+			&& !factory.getTransactionIdentifierService().isDisabled();
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {

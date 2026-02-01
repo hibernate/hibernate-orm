@@ -60,9 +60,8 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var dialect = creationContext.getDialect();
-		final var sqmFunctionRegistry =
-				creationContext.getSessionFactory().getQueryEngine()
-						.getSqmFunctionRegistry();
+		final var sessionFactory = creationContext.getSessionFactory();
+		final var sqmFunctionRegistry = sessionFactory.getQueryEngine().getSqmFunctionRegistry();
 
 		startingColumnMapping = SelectableMappingImpl.from(
 				tableName,
@@ -89,10 +88,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext
 		);
 
-		final boolean useServerTransactionTimestamps =
-				creationContext.getSessionFactory().getSessionFactoryOptions()
-						.isUseServerTransactionTimestampsEnabled();
-		if ( useServerTransactionTimestamps ) {
+		if ( sessionFactory.getTransactionIdentifierService().isDisabled() ) {
 			currentTimestampFunctionName = dialect.currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );

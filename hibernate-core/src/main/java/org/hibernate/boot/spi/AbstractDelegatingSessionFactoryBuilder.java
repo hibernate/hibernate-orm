@@ -424,18 +424,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyUseServerTransactionTimestamps(boolean enabled) {
-		delegate.applyUseServerTransactionTimestamps( enabled );
-		return getThis();
-	}
-
-	@Override
-	public SessionFactoryBuilder applyTransactionIdGenerator(Supplier<?> supplier) {
-		delegate.applyTransactionIdGenerator( supplier );
-		return getThis();
-	}
-
-	@Override
 	public SessionFactory build() {
 		return delegate.build();
 	}

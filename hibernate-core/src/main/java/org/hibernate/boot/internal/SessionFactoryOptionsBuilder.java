@@ -166,8 +166,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private TemporalTableStrategy temporalTableStrategy;
-	private boolean useServerTransactionTimestamps;
-	private Supplier<?> transactionIdSupplier;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -376,16 +374,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		useServerTransactionTimestamps = getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
-		final Object transactionIdSupplierSetting = settings.get( TRANSACTION_ID_SUPPLIER );
-		if ( useServerTransactionTimestamps && transactionIdSupplierSetting != null ) {
-			throw new HibernateException(
-					"Settings '" + USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '" + TRANSACTION_ID_SUPPLIER
-					+ "' are mutually exclusive"
-			);
-		}
-		transactionIdSupplier =
-				TemporalHelper.resolveTransactionIdSupplier( transactionIdSupplierSetting, strategySelector );
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
 			temporalTableStrategy = dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
@@ -1174,16 +1162,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return temporalTableStrategy;
 	}
 
-	@Override
-	public boolean isUseServerTransactionTimestampsEnabled() {
-		return useServerTransactionTimestamps;
-	}
-
-	@Override
-	public Supplier<?> getTransactionIdSupplier() {
-		return transactionIdSupplier;
-	}
-
 	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
@@ -1660,14 +1638,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		this.temporalTableStrategy = strategy;
-	}
-
-	public void enableUseServerTransactionTimestamps(boolean enabled) {
-		this.useServerTransactionTimestamps = enabled;
-	}
-
-	public void applyTransactionIdGenerator(Supplier<?> supplier) {
-		this.transactionIdSupplier = supplier;
 	}
 
 	@Deprecated(forRemoval = true)

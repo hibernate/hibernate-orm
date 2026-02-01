@@ -19,6 +19,8 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorTemporal;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.InsertCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.MergeCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
@@ -38,6 +40,11 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	public static final TemporalStateManagement INSTANCE = new TemporalStateManagement();
 
 	private TemporalStateManagement() {
+	}
+
+	@Override
+	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
+		return new InsertCoordinatorTemporal( persister, persister.getFactory() );
 	}
 
 	@Override

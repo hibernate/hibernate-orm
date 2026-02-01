@@ -66,7 +66,7 @@ public enum TemporalTableStrategy {
 	 * because YOLO. Selects {@link #HISTORY_TABLE} except on
 	 * databases with especially robust implementations of
 	 * {@link #NATIVE} temporal versioning. This is the default.
-	 * @see org.hibernate.dialect.Dialect#getDefaultTemporalTableStrategy()
+	 * @see org.hibernate.dialect.temporal.TemporalTableSupport#getDefaultTemporalTableStrategy
 	 */
 	AUTO
 }

@@ -1544,9 +1544,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				columnNames.add( "c" + columnNames.size() );
 			}
 			else if ( rowIdExpression == null ) {
-				final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-				identifierMapping.forEachSelectable(
-						0,
+				final var identifierTableMapping = statement.getMutationTarget().getIdentifierTableMapping();
+				identifierTableMapping.getKeyDetails().forEachSelectable( 0,
 						(selectionIndex, selectableMapping) -> {
 							selectClause.addSqlSelection( new SqlSelectionImpl(
 									new ColumnReference( statement.getTargetTable(), selectableMapping )

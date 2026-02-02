@@ -146,13 +146,6 @@ public class UpdateRowsCoordinatorAudit implements UpdateRowsCoordinator {
 		return rows;
 	}
 
-	private static final class RowReference {
-		private final Object entry;
-		private final int position;
-
-		private RowReference(Object entry, int position) {
-			this.entry = entry;
-			this.position = position;
-		}
+	private record RowReference(Object entry, int position) {
 	}
 }

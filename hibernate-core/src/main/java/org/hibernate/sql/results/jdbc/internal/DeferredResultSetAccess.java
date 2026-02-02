@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import jakarta.persistence.Timeout;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;

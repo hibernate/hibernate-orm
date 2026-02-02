@@ -13,9 +13,9 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.type.descriptor.ValueExtractor;
 
 /// Represents a selection at the SQL/JDBC level.  Essentially made up of:
-/// * [#getJdbcValueExtractor()]: How to read a value from JDBC (conceptually similar to a method reference)
-/// * [#getValuesArrayPosition()]: The position for this selection in relation to the "JDBC values array" (see `getJdbcValue`)
-/// * [#getJdbcResultSetIndex()]: The position for this selection in relation to the JDBC object (ResultSet, etc)
+/// * [#getJdbcValueExtractor] - How to read a value from JDBC (conceptually similar to a method reference)
+/// * [#getValuesArrayPosition] - The position for this selection in relation to the "JDBC values array" (see [RowProcessingState#getJdbcValue])
+/// * [#getJdbcResultSetIndex()] - The position for this selection in relation to the JDBC object (ResultSet, etc)
 ///
 /// @author Steve Ebersole
 public interface SqlSelection extends SqlAstNode {

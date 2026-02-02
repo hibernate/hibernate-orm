@@ -50,8 +50,6 @@ public class SqmJpaCompoundSelection<T>
 		super( null, criteriaBuilder );
 		this.selectableNodes = selectableNodes;
 		this.javaType = javaType;
-
-//		setExpressibleType( this );
 	}
 
 	@Override
@@ -88,11 +86,6 @@ public class SqmJpaCompoundSelection<T>
 	public Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
-
-//	@Override
-//	public Class<T> getJavaType() {
-//		return getJavaType();
-//	}
 
 	@Override
 	public List<? extends SqmSelectableNode<?>> getSelectionItems() {

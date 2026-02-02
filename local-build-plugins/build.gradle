@@ -52,10 +52,6 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.reports'
 			implementationClass = 'org.hibernate.orm.post.ReportGenerationPlugin'
 		}
-		docPubPlugin {
-			id = 'org.hibernate.orm.build.doc-pub'
-			implementationClass = 'org.hibernate.orm.docs.DocumentationPublishingPlugin'
-		}
 		envSettings {
 			id = 'org.hibernate.orm.build.env-settings'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentSettingsPlugin'

@@ -1551,7 +1551,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
 		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
 		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-		final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
+		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );
 		if ( rowIdMapping != null ) {
 			appendSql( "t." );
@@ -1612,7 +1612,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
 			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
 			final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-			final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
+			final EntityRowIdMapping rowIdMapping =
+					entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 			final String rowIdExpression = dialect.rowId( null );
 			if ( rowIdMapping != null ) {
 				selectClause.addSqlSelection( new SqlSelectionImpl(
@@ -5897,7 +5898,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
 		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
-		final EntityRowIdMapping rowIdMapping = entityMappingType.getRowIdMapping();
+		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );
 		if ( rowIdMapping != null ) {
 			return new ComparisonPredicate(

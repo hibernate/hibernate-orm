@@ -135,9 +135,7 @@ public class TemporalHelper {
 	}
 
 	private static void addSecondPass(Stateful target, MetadataBuildingContext context) {
-		if ( context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
-			// TODO: this condition is not really correct!
-			&& !target.isPrimaryKeyDisabled() ) {
+		if ( context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE ) {
 			context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 				copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
 				createHistoryTablePrimaryKey( target,

@@ -4,9 +4,12 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
+
 /**
  * Part of the boot model which is temporal.
  */
+@Incubating
 public interface Temporalized {
 	void enableTemporal(Column rowStartColumn, Column rowEndColumn, boolean partitioned);
 

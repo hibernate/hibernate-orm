@@ -4,9 +4,12 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
+
 /**
  * Part of the boot model which is audited.
  */
+@Incubating
 public interface Auditable {
 	void enableAudit(Table auditTable, Column transactionIdColumn, Column modificationTypeColumn);
 

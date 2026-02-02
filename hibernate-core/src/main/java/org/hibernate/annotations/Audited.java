@@ -5,6 +5,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
+import org.hibernate.cfg.StateManagementSettings;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -32,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>columns holding the state of the entity or collection at
  *     the moment of creation, modification, or deletion, except
  *     for state held by {@linkplain Excluded excluded attributes},
- * <li>a {@linkplain org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+ * <li>a {@linkplain StateManagementSettings#TRANSACTION_ID_SUPPLIER
  *     transaction id} recording the unit of work in which the
  *     change occurred, and
  * <li>a column indicating the type of change, encoded as 0 for
@@ -42,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Audited entities are typically used when a supplier of
  * transaction identifiers is available to Hibernate. A supplier
  * may be specified via the configuration property
- * {@value org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER}.
+ * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
  * If no supplier is provided, Hibernate defaults to using the
  * {@linkplain java.time.Instant#now() current JVM instant} as
  * the transaction identifier, but this default behavior is not

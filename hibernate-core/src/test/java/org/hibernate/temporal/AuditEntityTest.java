@@ -9,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.Audited;
-import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SessionFactory
 @DomainModel(annotatedClasses = AuditEntityTest.AuditEntity.class)
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
 		value = "org.hibernate.temporal.AuditEntityTest$TxIdSupplier"))
 class AuditEntityTest {
 	private static int currentTxId;

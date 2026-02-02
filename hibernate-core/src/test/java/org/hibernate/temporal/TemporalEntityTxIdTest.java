@@ -15,7 +15,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
-import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,8 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityTxIdTest.TemporalEntity1.class,
 		TemporalEntityTxIdTest.TemporalChild1.class})
-@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
-		@Setting(name = MappingSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = {@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
+		@Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
 				value = "org.hibernate.temporal.TemporalEntityTxIdTest$TxIdSupplier")})
 class TemporalEntityTxIdTest {
 

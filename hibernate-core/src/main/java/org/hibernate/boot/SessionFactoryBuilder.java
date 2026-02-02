@@ -14,6 +14,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -695,7 +696,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled);
 
 	/**
-	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
 	 */
 	SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy);
 

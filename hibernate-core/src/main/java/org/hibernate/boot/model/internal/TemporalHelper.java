@@ -29,7 +29,7 @@ import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
 import org.hibernate.service.TransactionIdentifierService;
 
-import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
+import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
 import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;

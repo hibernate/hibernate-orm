@@ -12,6 +12,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
+import org.hibernate.cfg.StateManagementSettings;
 
 import java.sql.Connection;
 import java.time.Instant;
@@ -185,7 +186,7 @@ public interface CommonBuilder {
 
 	/**
 	 * Specify the
-	 * {@linkplain org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 * {@linkplain StateManagementSettings#TRANSACTION_ID_SUPPLIER
 	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
 	 * temporal} entity data. Instances of temporal entities retrieved in the
 	 * session will represent the revisions effective at the end of the given

@@ -14,7 +14,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
-import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityOracleNativeTest.TemporalEntity5.class,
 		TemporalEntityOracleNativeTest.TemporalChild5.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
 @RequiresDialect(OracleDialect.class)
 @Disabled
 class TemporalEntityOracleNativeTest {

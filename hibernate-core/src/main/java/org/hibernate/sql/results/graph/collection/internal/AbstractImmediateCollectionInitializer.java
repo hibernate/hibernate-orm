@@ -42,6 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public abstract class AbstractImmediateCollectionInitializer<Data extends AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData>
 		extends AbstractCollectionInitializer<Data> implements BiConsumer<Data, List<Object>> {
 
+	private final boolean isReadOnly;
 	/**
 	 * refers to the rows entry in the collection.  null indicates that the collection is empty
 	 */
@@ -86,6 +87,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		this.collectionValueKeyResultAssembler = collectionKeyResult == collectionValueKeyResult
 				? null
 				: collectionValueKeyResult.createResultAssembler( this, creationState );
+		this.isReadOnly = collectionAttributeMapping.isReadOnly();
 	}
 
 	@Override
@@ -324,7 +326,13 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	public void resolveInstance(Object instance, Data data) {
 		assert data.getState() == State.UNINITIALIZED || instance == data.getCollectionInstance();
 		if ( instance == null ) {
-			setMissing( data );
+			if ( isReadOnly ) {
+				// When the mapping is read-only, we can't trust the state of the persistence context
+				resolveKey( data );
+			}
+			else {
+				setMissing( data );
+			}
 			return;
 		}
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();

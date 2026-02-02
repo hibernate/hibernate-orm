@@ -1542,7 +1542,7 @@ Almost every many-valued relationship should map to a foreign key association be
 And almost every table should be mapped by an entity class.
 
 The features we're about to meet in the next two subsections are used much more often by beginners than they're used by experts.
-So if you're a beginner, you'll save yourself same hassle by staying away from these features for now.
+So if you're a beginner, you'll save yourself some hassle by staying away from these features for now.
 ====
 
 We'll talk about `@Array` mappings first.
@@ -1663,9 +1663,49 @@ The code above results in a table with three columns:
 
 Instead of a surrogate primary key, it has a composite key comprising the foreign key of `Event` and the order column.
 
-When—inevitably—we find that we need to add a fourth column to that table, our Java code must change completely.
+When--inevitably--we find that we need to add a fourth column to that table, our Java code must change completely.
 Most likely, we'll realize that we need to add a separate entity after all.
 So this mapping isn't very robust in the face of minor changes to our data model.
+====
+
+[CAUTION]
+====
+Consider the following very simple mapping:
+[source,java]
+----
+@ElementCollection
+Set<String> topics;
+----
+Hibernate would generate the following DDL:
+[source,sql]
+----
+create table Book_topics (
+    Book_isbn varchar(255) not null,
+    topics varchar(255)
+)
+----
+Here, there's no `not null` constraint on one of the columns.
+As a result, Hibernate cannot add a primary key to the table.
+This is not a great data model.
+
+We can fix this problem with a `@Column` annotation:
+[source,java]
+----
+@ElementCollection
+@Column(nullable=false)
+Set<String> topics;
+----
+Now the generated DDL looks a lot better:
+[source,sql]
+----
+create table Book_topics (
+    Book_isbn varchar(255) not null,
+    topics varchar(255) not null,
+    primary key (Book_isbn, strings)
+)
+----
+Of course, with this mapping we can't have `null` as an element of our `Set`.
+But we can't think of a good reason why you might want that or what it would even mean for a set to contain null.
 ====
 
 There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun you'll shoot your foot with.

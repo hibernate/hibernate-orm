@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 8.0.0.Alpha1 (February 02, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32326
+
+
+** Improvement
+    * HHH-20129 Move JPA callbacks to EntityPersister
+    * HHH-20074 Adapt Hibernate Query contracts to new JPA 4.0 structure
+
+** Task
+    * HHH-20028 Update to Jakarta Persistence 4.0
+
 Changes in 7.3.0.CR1 (January 23, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

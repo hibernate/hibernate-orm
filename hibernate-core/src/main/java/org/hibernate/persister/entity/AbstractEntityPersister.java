@@ -783,8 +783,7 @@ public abstract class AbstractEntityPersister
 			getNamedQueryMemento( creationContext.getBootModel() );
 		}
 
-		stateManagement = StateManagement.forEntity( persistentClass, factoryOptions );
-
+		stateManagement = persistentClass.getRootClass().getStateManagement();
 	}
 
 	private static String renderSqlWhereStringTemplate(

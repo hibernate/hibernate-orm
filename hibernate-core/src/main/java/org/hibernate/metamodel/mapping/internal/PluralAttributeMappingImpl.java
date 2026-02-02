@@ -50,7 +50,6 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
-import org.hibernate.persister.state.StateManagement;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -188,9 +187,8 @@ public class PluralAttributeMappingImpl
 		};
 
 		auxiliaryMapping =
-				StateManagement.forCollection( bootDescriptor,
-								creationProcess.getCreationContext().getSessionFactoryOptions() )
-				.createAuxiliaryMapping( this, bootDescriptor, creationProcess );
+				bootDescriptor.getStateManagement()
+						.createAuxiliaryMapping( this, bootDescriptor, creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 

@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.Auditable;
+import org.hibernate.mapping.Stateful;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -46,6 +46,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
+import static org.hibernate.boot.model.internal.AuditHelper.TRANSACTION_ID;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
@@ -68,13 +70,13 @@ public class AuditMappingImpl implements AuditMapping {
 	private final FunctionRenderer maxFunctionDescriptor;
 
 	public AuditMappingImpl(
-			Auditable auditable,
+			Stateful auditable,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;
 
-		final var transactionIdColumnName = auditable.getAuditTransactionIdColumn();
-		final var modificationTypeColumnName = auditable.getAuditModificationTypeColumn();
+		final var transactionIdColumnName = auditable.getAuxiliaryColumn( TRANSACTION_ID );
+		final var modificationTypeColumnName = auditable.getAuxiliaryColumn( MODIFICATION_TYPE );
 
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();

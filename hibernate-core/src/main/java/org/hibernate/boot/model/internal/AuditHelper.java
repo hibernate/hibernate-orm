@@ -13,15 +13,13 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.Auditable;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.AuditMapping;
-import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.service.TransactionIdentifierService;
 
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -30,6 +28,8 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
  * Helper for building audit log tables in the boot model.
  */
 public final class AuditHelper {
+	public static final String TRANSACTION_ID = "transactionId";
+	public static final String MODIFICATION_TYPE = "modificationType";
 
 	// defaults for backward compatibility with envers
 
@@ -55,7 +55,7 @@ public final class AuditHelper {
 
 	private static void bindAuditTable(
 			Audited audited,
-			Auditable auditable,
+			Stateful auditable,
 			MetadataBuildingContext context,
 			Set<String> excludedColumns) {
 		final var collector = context.getMetadataCollector();
@@ -85,10 +85,19 @@ public final class AuditHelper {
 						Byte.class, auditTable, context );
 		auditTable.addColumn( transactionIdColumn );
 		auditTable.addColumn( modificationTypeColumn );
-		auditable.enableAudit( auditTable, transactionIdColumn, modificationTypeColumn );
+		enableAudit( auditable, auditTable, transactionIdColumn, modificationTypeColumn );
 
 		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored ->
 				copyTableColumns( table, auditTable, excludedColumns ) );
+	}
+
+	static void enableAudit(
+			Stateful model, Table auditTable,
+			Column transactionIdColumn, Column modificationTypeColumn) {
+		model.setAuxiliaryTable( auditTable );
+		model.addAuxiliaryColumn( TRANSACTION_ID, transactionIdColumn );
+		model.addAuxiliaryColumn( MODIFICATION_TYPE, modificationTypeColumn );
+		model.setStateManagementType( AuditStateManagement.class );
 	}
 
 	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
@@ -146,15 +155,6 @@ public final class AuditHelper {
 					database.getJdbcEnvironment()
 				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
-	}
-
-	public static AuditMapping resolveAuditMapping(
-			Auditable bootMapping,
-			String tableName,
-			MappingModelCreationProcess creationProcess) {
-		return bootMapping.isAudited()
-				? new AuditMappingImpl( bootMapping, tableName, creationProcess )
-				: null;
 	}
 
 	private static Set<String> resolveExcludedColumns(RootClass rootClass) {

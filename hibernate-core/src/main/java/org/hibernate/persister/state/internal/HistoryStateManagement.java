@@ -10,6 +10,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
@@ -34,7 +35,6 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.state.StateManagement;
 
-import static org.hibernate.boot.model.internal.TemporalHelper.resolveTemporalMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isInsertAllowed;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isUpdatePossible;
@@ -169,15 +169,12 @@ public final class HistoryStateManagement implements StateManagement {
 			EntityPersister persister,
 			RootClass rootClass,
 			MappingModelCreationProcess creationProcess) {
-		final var temporalTable = rootClass.getTemporalTable();
-		return resolveTemporalMapping(
-				rootClass,
-				temporalTable == null
-						? persister.getIdentifierTableName()
-						: ( (AbstractEntityPersister) persister )
-								.determineTableName( temporalTable ),
-				creationProcess
-		);
+		final var temporalTable = rootClass.getAuxiliaryTable();
+		String tableName = temporalTable == null
+				? persister.getIdentifierTableName()
+				: ( (AbstractEntityPersister) persister )
+						.determineTableName( temporalTable );
+		return new TemporalMappingImpl( rootClass, tableName, creationProcess );
 	}
 
 	@Override
@@ -185,13 +182,10 @@ public final class HistoryStateManagement implements StateManagement {
 			PluralAttributeMapping pluralAttributeMapping,
 			Collection bootDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final var temporalTable = bootDescriptor.getTemporalTable();
-		return resolveTemporalMapping(
-				bootDescriptor,
-				temporalTable == null
-						? pluralAttributeMapping.getSeparateCollectionTable()
-						: getTableIdentifierExpression( temporalTable, creationProcess ),
-				creationProcess
-		);
+		final var temporalTable = bootDescriptor.getAuxiliaryTable();
+		String tableName = temporalTable == null
+				? pluralAttributeMapping.getSeparateCollectionTable()
+				: getTableIdentifierExpression( temporalTable, creationProcess );
+		return new TemporalMappingImpl( bootDescriptor, tableName, creationProcess );
 	}
 }

@@ -7,7 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Temporalized;
+import org.hibernate.mapping.Stateful;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -43,6 +43,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.boot.model.internal.TemporalHelper.ROW_END;
+import static org.hibernate.boot.model.internal.TemporalHelper.ROW_START;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
 
@@ -61,7 +63,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 	private final TemporalTableStrategy temporalTableStrategy;
 
 	public TemporalMappingImpl(
-			Temporalized bootMapping,
+			Stateful bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;
@@ -71,8 +73,8 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext.getSessionFactoryOptions()
 						.getTemporalTableStrategy();
 
-		final var startingColumn = bootMapping.getTemporalStartingColumn();
-		final var endingColumn = bootMapping.getTemporalEndingColumn();
+		final var startingColumn = bootMapping.getAuxiliaryColumn( ROW_START );
+		final var endingColumn = bootMapping.getAuxiliaryColumn( ROW_END );
 		final var startingValue = (BasicValue) startingColumn.getValue();
 		final var endingValue = (BasicValue) endingColumn.getValue();
 

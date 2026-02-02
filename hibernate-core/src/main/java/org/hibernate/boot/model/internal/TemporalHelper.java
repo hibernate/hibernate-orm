@@ -15,23 +15,24 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Temporalized;
-import org.hibernate.metamodel.mapping.TemporalMapping;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
+import org.hibernate.persister.state.internal.HistoryStateManagement;
+import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
+import org.hibernate.persister.state.internal.TemporalStateManagement;
 import org.hibernate.service.TransactionIdentifierService;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
 import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
+import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -39,9 +40,12 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
  */
 public class TemporalHelper {
 
+	public static final String ROW_START = "rowStart";
+	public static final String ROW_END = "rowEnd";
+
 	public static void bindTemporalColumns(
 			Temporal temporal,
-			Temporalized target,
+			Stateful target,
 			Table table,
 			Temporal.HistoryTable historyTable,
 			Temporal.HistoryPartitioning historyPartitioning,
@@ -71,13 +75,14 @@ public class TemporalHelper {
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
-				usingHistoryTemporalTables( context )
+				context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
 						? createHistoryTable( table, historyTable, context )
 						: table;
 		temporalTable.addColumn( rowStartColumn );
 		temporalTable.addColumn( rowEndColumn );
-		target.enableTemporal( rowStartColumn, rowEndColumn, partitioned );
-		target.setTemporalTable( temporalTable );
+		enableTemporal( target, context.getTemporalTableStrategy(),
+				rowStartColumn, rowEndColumn, temporalTable, partitioned,
+				collector.getDatabase().getDialect() );
 
 		addExtraDeclarationsAndOptions(
 				temporalTable,
@@ -93,6 +98,29 @@ public class TemporalHelper {
 		addSecondPass( target, context );
 	}
 
+	static void enableTemporal(
+			Stateful model,
+			TemporalTableStrategy temporalTableStrategy,
+			Column rowStartColumn, Column rowEndColumn,
+			Table temporalTable, boolean partitioned,
+			Dialect dialect) {
+		model.addAuxiliaryColumn( ROW_START, rowStartColumn );
+		model.addAuxiliaryColumn( ROW_END, rowEndColumn );
+		model.setAuxiliaryTable( temporalTable );
+		model.setMainTablePartitioned( partitioned );
+		model.setStateManagementType( switch ( temporalTableStrategy ) {
+			case NATIVE -> NativeTemporalStateManagement.class;
+			case SINGLE_TABLE -> TemporalStateManagement.class;
+			case HISTORY_TABLE -> HistoryStateManagement.class;
+			case AUTO -> throw new IllegalArgumentException();
+		} );
+		if ( temporalTableStrategy == SINGLE_TABLE ) {
+			model.setAuxiliaryColumnInPrimaryKey( ROW_START );
+		}
+		model.setPrimaryKeyDisabled( dialect.getTemporalTableSupport()
+				.suppressesTemporalTablePrimaryKeys( partitioned ) );
+	}
+
 	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getServiceRegistry()
 				.requireService( TransactionIdentifierService.class )
@@ -106,15 +134,14 @@ public class TemporalHelper {
 				: partitionName;
 	}
 
-	private static void addSecondPass(Temporalized target, MetadataBuildingContext context) {
-		if ( usingHistoryTemporalTables( context )
-				&& !suppressesTemporalTablePrimaryKeys( target.isTemporallyPartitioned(), context ) ) {
+	private static void addSecondPass(Stateful target, MetadataBuildingContext context) {
+		if ( context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
+			// TODO: this condition is not really correct!
+			&& !target.isPrimaryKeyDisabled() ) {
 			context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
-				copyTableColumns( target.getMainTable(), target.getTemporalTable() );
-//				final var primaryKey = target.getTemporalTable().getPrimaryKey();
-//				if ( primaryKey == null || primaryKey.getColumnSpan() == 0 ) {
-					createHistoryTablePrimaryKey( target, context );
-//				}
+				copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
+				createHistoryTablePrimaryKey( target,
+						context.getMetadataCollector().getDatabase().getDialect() );
 			} );
 		}
 	}
@@ -156,15 +183,15 @@ public class TemporalHelper {
 	}
 
 	private static void createHistoryTablePrimaryKey(
-			Temporalized target,
-			MetadataBuildingContext context) {
-		final var historyTable = target.getTemporalTable();
-		final var startingColumn = target.getTemporalStartingColumn();
+			Stateful target,
+			Dialect dialect) {
+		final var historyTable = target.getAuxiliaryTable();
+		final var startingColumn = target.getAuxiliaryColumn( ROW_START );
 		if ( target instanceof RootClass rootClass ) {
 			final var primaryKey = new PrimaryKey( historyTable );
 			addColumnsByName( primaryKey, historyTable,
 					rootClass.getKey().getColumns() );
-			if ( addPartitionKeyToPrimaryKey( context ) ) {
+			if ( dialect.addPartitionKeyToPrimaryKey() ) {
 				for ( var property : rootClass.getProperties() ) {
 					if ( property.getValue().isPartitionKey() ) {
 						addColumnsByName( primaryKey, historyTable,
@@ -221,7 +248,7 @@ public class TemporalHelper {
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		final var strategy = context.getTemporalTableStrategy( dialect );
+		final var strategy = context.getTemporalTableStrategy();
 		final var temporalTableSupport = dialect.getTemporalTableSupport();
 		table.setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations(
 				strategy,
@@ -247,23 +274,14 @@ public class TemporalHelper {
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
-		final var dialect = database.getDialect();
-		dialect.getTemporalTableSupport().addTemporalTableAuxiliaryObjects(
-				context.getTemporalTableStrategy( dialect ),
-				table, database,
-				partitioned,
-				currentPartitionName,
-				historyPartitionName
-		);
-	}
-
-	public static TemporalMapping resolveTemporalMapping(
-			Temporalized bootMapping,
-			String tableName,
-			MappingModelCreationProcess creationProcess) {
-		return bootMapping.isTemporalized()
-				? new TemporalMappingImpl( bootMapping, tableName, creationProcess )
-				: null;
+		database.getDialect().getTemporalTableSupport()
+				.addTemporalTableAuxiliaryObjects(
+						context.getTemporalTableStrategy(),
+						table, database,
+						partitioned,
+						currentPartitionName,
+						historyPartitionName
+				);
 	}
 
 	private static Column createTemporalColumn(
@@ -307,10 +325,10 @@ public class TemporalHelper {
 			Database database,
 			PhysicalNamingStrategy physicalNamingStrategy) {
 		final Identifier physicalColumnName =
-						physicalNamingStrategy.toPhysicalColumnName(
-								database.toIdentifier( name ),
-								database.getJdbcEnvironment()
-						);
+				physicalNamingStrategy.toPhysicalColumnName(
+						database.toIdentifier( name ),
+						database.getJdbcEnvironment()
+				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}
 
@@ -320,38 +338,18 @@ public class TemporalHelper {
 			Column rowEndColumn,
 			MetadataBuildingContext context) {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		final var strategy = context.getTemporalTableStrategy( dialect );
-		if ( dialect.getTemporalTableSupport().createTemporalTableCheckConstraint( strategy ) ) {
+		if ( dialect.getTemporalTableSupport()
+				.createTemporalTableCheckConstraint( context.getTemporalTableStrategy() ) ) {
 			final String rowStartName = rowStartColumn.getQuotedName( dialect );
 			final String rowEndName = rowEndColumn.getQuotedName( dialect );
 			table.addCheck( new CheckConstraint( rowEndName + " is null or " + rowEndName + " > " + rowStartName ) );
 		}
 	}
 
-	public static boolean usingNativeTemporalTables(MetadataBuildingContext context) {
-		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		return context.getTemporalTableStrategy( dialect ) == NATIVE
-			&& dialect.getTemporalTableSupport().supportsNativeTemporalTables();
-	}
-
-	public static boolean usingHistoryTemporalTables(MetadataBuildingContext context) {
-		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		return context.getTemporalTableStrategy( dialect ) == HISTORY_TABLE;
-	}
-
-	public static boolean suppressesTemporalTablePrimaryKeys(boolean partitioned, MetadataBuildingContext context) {
-		return context.getMetadataCollector().getDatabase().getDialect().getTemporalTableSupport()
-				.suppressesTemporalTablePrimaryKeys( partitioned );
-	}
-
-	private static boolean addPartitionKeyToPrimaryKey(MetadataBuildingContext context) {
-		return context.getMetadataCollector().getDatabase().getDialect().addPartitionKeyToPrimaryKey();
-	}
-
 	private static void handleTemporalColumnGeneration(
 			Column rowStartColumn, Column rowEndColumn,
 			MetadataBuildingContext context) {
-		if ( usingNativeTemporalTables( context ) ) {
+		if ( context.getTemporalTableStrategy() == NATIVE ) {
 			rowStartColumn.setGeneratedAs( "row start" );
 			rowEndColumn.setGeneratedAs( "row end" );
 		}

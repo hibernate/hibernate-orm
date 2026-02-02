@@ -4,8 +4,10 @@
  */
 package org.hibernate.mapping;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
@@ -13,10 +15,8 @@ import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.persister.state.StateManagement;
 
-import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
-import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
-import static org.hibernate.boot.model.internal.TemporalHelper.suppressesTemporalTablePrimaryKeys;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
 import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable, Temporalized, Auditable {
+public final class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 
 	private Property identifierProperty;
 	private KeyValue identifier;
@@ -52,15 +52,15 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
-	private Column softDeleteColumn;
+
 	private SoftDeleteType softDeleteStrategy;
-	private Column temporalStartingColumn;
-	private Column temporalEndingColumn;
-	private Table temporalTable;
-	private boolean temporallyPartitioned;
-	private Table auditTable;
-	private Column auditTransactionIdColumn;
-	private Column auditModificationTypeColumn;
+
+	private Class<? extends StateManagement> stateManagementType;
+	private Table auxiliaryTable;
+	private boolean partitioned;
+	private Map<String, Column> auxiliaryColumns;
+	private String auxiliaryColumnInPrimaryKey;
+	private boolean primaryKeyDisabled;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -421,13 +421,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	@Override
 	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
-		softDeleteColumn = indicatorColumn;
+		SoftDeletable.super.enableSoftDelete( indicatorColumn, strategy );
 		softDeleteStrategy = strategy;
-	}
-
-	@Override
-	public Column getSoftDeleteColumn() {
-		return softDeleteColumn;
 	}
 
 	@Override
@@ -436,66 +431,37 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public void enableTemporal(Column rowStartColumn, Column rowEndColumn, boolean partitioned) {
-		temporalStartingColumn = rowStartColumn;
-		temporalEndingColumn = rowEndColumn;
-		temporallyPartitioned = partitioned;
-	}
-
-	@Override
-	public void setTemporalTable(Table table) {
-		this.temporalTable = table;
-	}
-
-	@Override
-	public Table getTemporalTable() {
-		return temporalTable;
-	}
-
-	@Override
 	public Table getMainTable() {
 		return table;
 	}
 
 	@Override
-	public Column getTemporalStartingColumn() {
-		return temporalStartingColumn;
+	public boolean isMainTablePartitioned() {
+		return partitioned;
+	}
+
+	public void setMainTablePartitioned(boolean partitioned) {
+		this.partitioned = partitioned;
 	}
 
 	@Override
-	public Column getTemporalEndingColumn() {
-		return temporalEndingColumn;
+	public boolean isAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey != null;
 	}
 
 	@Override
-	public boolean isTemporallyPartitioned() {
-		return temporallyPartitioned;
+	public void setAuxiliaryColumnInPrimaryKey(String key) {
+		this.auxiliaryColumnInPrimaryKey = key;
 	}
 
 	@Override
-	public void enableAudit(Table auditTable, Column transactionIdColumn, Column modificationTypeColumn) {
-		this.auditTable = auditTable;
-		this.auditTransactionIdColumn = transactionIdColumn;
-		this.auditModificationTypeColumn = modificationTypeColumn;
+	public boolean isPrimaryKeyDisabled() {
+		return primaryKeyDisabled;
 	}
 
 	@Override
-	public Table getAuditTable() {
-		return auditTable;
-	}
-
-	@Override
-	public Column getAuditTransactionIdColumn() {
-		return auditTransactionIdColumn;
-	}
-
-	@Override
-	public Column getAuditModificationTypeColumn() {
-		return auditModificationTypeColumn;
-	}
-
-	public void setPartitioned(boolean partitioned) {
-		this.temporallyPartitioned = partitioned;
+	public void setPrimaryKeyDisabled(boolean disabled) {
+		this.primaryKeyDisabled = disabled;
 	}
 
 	@Override
@@ -505,24 +471,48 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	@Override
 	public PrimaryKey makePrimaryKey(Table table) {
-		final var context = getBuildingContext();
-		if ( suppressesTemporalTablePrimaryKeys( isTemporallyPartitioned(), context ) ) {
+		if ( isPrimaryKeyDisabled() ) {
 			return null;
 		}
 		else {
 			final var primaryKey = super.makePrimaryKey( table );
-			if ( isTemporalized()
-					&& !usingNativeTemporalTables( context )
-					&& !usingHistoryTemporalTables( context ) ) {
+			if ( isAuxiliaryColumnInPrimaryKey() ) {
 				if ( isVersioned() ) {
 					primaryKey.addColumns( getVersion().getValue() );
 				}
 				else {
-					primaryKey.addColumn( temporalStartingColumn );
+					primaryKey.addColumn( getAuxiliaryColumn( auxiliaryColumnInPrimaryKey ) );
 				}
 			}
 			return primaryKey;
 		}
 	}
 
+	public void setStateManagementType(Class<? extends StateManagement> stateManagementType) {
+		this.stateManagementType = stateManagementType;
+	}
+
+	public Class<? extends StateManagement> getStateManagementType() {
+		return stateManagementType;
+	}
+
+	public Table getAuxiliaryTable() {
+		return auxiliaryTable;
+	}
+
+	public void setAuxiliaryTable(Table auxiliaryTable) {
+		this.auxiliaryTable = auxiliaryTable;
+	}
+
+	public Column getAuxiliaryColumn(String column) {
+		return auxiliaryColumns == null ? null
+				: auxiliaryColumns.get( column );
+	}
+
+	public void addAuxiliaryColumn(String name, Column column) {
+		if ( auxiliaryColumns == null ) {
+			auxiliaryColumns = new HashMap<>();
+		}
+		auxiliaryColumns.put( name, column );
+	}
 }

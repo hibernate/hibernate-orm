@@ -58,8 +58,6 @@ import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
-import static org.hibernate.boot.model.internal.TemporalHelper.usingHistoryTemporalTables;
-import static org.hibernate.boot.model.internal.TemporalHelper.usingNativeTemporalTables;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
@@ -357,7 +355,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
-		if ( isConstrained() && !isTemporalEntityName( entityName ) ) {
+		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -375,7 +373,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
-		if ( isConstrained() && !isTemporalEntityName( entityName ) ) {
+		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -391,20 +389,17 @@ public abstract class SimpleValue implements KeyValue {
 		return null;
 	}
 
-	protected boolean isTemporalEntity(PersistentClass referencedEntity) {
-		return referencedEntity instanceof Temporalized temporalEntity
-			&& temporalEntity.isTemporalized()
-			&& !usingNativeTemporalTables( getBuildingContext() )
-			&& !usingHistoryTemporalTables( getBuildingContext() );
+	protected boolean hasAuxiliaryColumnInPrimaryKey(PersistentClass referencedEntity) {
+		return referencedEntity.getRootClass().isAuxiliaryColumnInPrimaryKey();
 	}
 
-	protected boolean isTemporalEntityName(String entityName) {
+	protected boolean hasAuxiliaryColumnInPrimaryKey(String entityName) {
 		if ( entityName == null ) {
 			return false;
 		}
 		else {
 			final var referencedEntity = metadata.getEntityBinding( entityName );
-			return referencedEntity != null && isTemporalEntity( referencedEntity );
+			return referencedEntity != null && hasAuxiliaryColumnInPrimaryKey( referencedEntity );
 		}
 	}
 

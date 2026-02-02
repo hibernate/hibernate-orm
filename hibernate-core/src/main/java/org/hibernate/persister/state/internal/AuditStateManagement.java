@@ -7,8 +7,8 @@ package org.hibernate.persister.state.internal;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuditMapping;
-import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
@@ -33,8 +33,8 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorAudit;
 import org.hibernate.persister.state.StateManagement;
 
-import static org.hibernate.boot.model.internal.AuditHelper.resolveAuditMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
+import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
 
 /**
  * State management for {@linkplain org.hibernate.annotations.Audited audited}
@@ -88,7 +88,7 @@ public class AuditStateManagement implements StateManagement {
 
 	@Override
 	public InsertRowsCoordinator createInsertRowsCoordinator(CollectionPersister persister) {
-		final var mutationTarget = AbstractStateManagement.resolveMutationTarget( persister );
+		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !AbstractStateManagement.isInsertAllowed( persister ) ) {
 			return new InsertRowsCoordinatorNoOp( mutationTarget );
 		}
@@ -110,7 +110,7 @@ public class AuditStateManagement implements StateManagement {
 
 	@Override
 	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
-		final var mutationTarget = AbstractStateManagement.resolveMutationTarget( persister );
+		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !AbstractStateManagement.isUpdatePossible( persister ) ) {
 			return new UpdateRowsCoordinatorNoOp( mutationTarget );
 		}
@@ -131,7 +131,7 @@ public class AuditStateManagement implements StateManagement {
 
 	@Override
 	public DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister) {
-		final var mutationTarget = AbstractStateManagement.resolveMutationTarget( persister );
+		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new DeleteRowsCoordinatorNoOp( mutationTarget );
 		}
@@ -153,7 +153,7 @@ public class AuditStateManagement implements StateManagement {
 
 	@Override
 	public RemoveCoordinator createRemoveCoordinator(CollectionPersister persister) {
-		final var mutationTarget = AbstractStateManagement.resolveMutationTarget( persister );
+		final var mutationTarget = resolveMutationTarget( persister );
 		if ( !persister.needsRemove() ) {
 			return new RemoveCoordinatorNoOp( mutationTarget );
 		}
@@ -170,15 +170,12 @@ public class AuditStateManagement implements StateManagement {
 			EntityPersister persister,
 			RootClass rootClass,
 			MappingModelCreationProcess creationProcess) {
-		final var auditTable = rootClass.getAuditTable();
-		return resolveAuditMapping(
-				rootClass,
-				auditTable == null
-						? persister.getIdentifierTableName()
-						: ( (AbstractEntityPersister) persister )
-								.determineTableName( auditTable ),
-				creationProcess
-		);
+		final var auditTable = rootClass.getAuxiliaryTable();
+		final String tableName = auditTable == null
+				? persister.getIdentifierTableName()
+				: ( (AbstractEntityPersister) persister )
+						.determineTableName( auditTable );
+		return new AuditMappingImpl( rootClass, tableName, creationProcess );
 	}
 
 	@Override
@@ -186,13 +183,10 @@ public class AuditStateManagement implements StateManagement {
 			PluralAttributeMapping pluralAttributeMapping,
 			Collection bootDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final var auditTable = bootDescriptor.getAuditTable();
-		return resolveAuditMapping(
-				bootDescriptor,
-				auditTable == null ? null
-						: getTableIdentifierExpression( auditTable, creationProcess ),
-				creationProcess
-		);
+		final var auditTable = bootDescriptor.getAuxiliaryTable();
+		final String tableName = auditTable == null ? null
+				: getTableIdentifierExpression( auditTable, creationProcess );
+		return new AuditMappingImpl( bootDescriptor, tableName, creationProcess );
 	}
 
 }

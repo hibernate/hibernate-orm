@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -186,6 +185,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -5817,7 +5817,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #createRowMatchingPredicate(MutationTarget, TableGroup, String, String)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "7.3")
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
+		return createRowMatchingPredicate(
+				(MutationTarget<?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
+				dmlTargetTableGroup,
+				lhsAlias,
+				rhsAlias
+		);
+	}
+
+	protected Predicate createRowMatchingPredicate(
+			MutationTarget<?> mutationTarget,
+			TableGroup dmlTargetTableGroup,
+			String lhsAlias,
+			String rhsAlias) {
 		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
 		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );
@@ -5840,13 +5857,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					)
 			);
 		}
-		else if ( rowIdExpression == null ) {
-			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
+		else if ( rowIdExpression == null && entityMappingType != null ) {
+			final var identifierTableMapping = mutationTarget.getIdentifierTableMapping();
+			final int jdbcTypeCount = identifierTableMapping.getKeyDetails().getJdbcTypeCount();
 			final List<ColumnReference> targetExpressions = new ArrayList<>( jdbcTypeCount );
 			final List<ColumnReference> sourceExpressions = new ArrayList<>( jdbcTypeCount );
-			identifierMapping.forEachSelectable(
-					0,
+			identifierTableMapping.getKeyDetails().forEachSelectable(
 					(selectionIndex, selectableMapping) -> {
 						targetExpressions.add( new ColumnReference(
 								lhsAlias,
@@ -5867,11 +5883,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return new ComparisonPredicate(
 					targetExpressions.size() == 1
 							? targetExpressions.get( 0 )
-							: new SqlTuple( targetExpressions, identifierMapping ),
+							: new SqlTuple( targetExpressions, entityMappingType.getIdentifierMapping() ),
 					ComparisonOperator.EQUAL,
 					sourceExpressions.size() == 1
 							? sourceExpressions.get( 0 )
-							: new SqlTuple( sourceExpressions, identifierMapping )
+							: new SqlTuple( sourceExpressions, entityMappingType.getIdentifierMapping() )
 			);
 		}
 		else {

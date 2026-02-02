@@ -452,13 +452,13 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
-	 * {@inheritDoc
+	 * {@inheritDoc}
 	 */
 	@Override
 	SelectionQuery<R> setMaxResults(int maxResults);
 
 	/**
-	 * {@inheritDoc
+	 * {@inheritDoc}
 	 */
 	@Override
 	SelectionQuery<R> setFirstResult(int startPosition);
@@ -588,7 +588,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	LockModeType getLockMode();
 
 	/**
-	 * {@inheritDoc
+	 * {@inheritDoc}
 	 *
 	 * @see #setHibernateLockMode
 	 */
@@ -610,7 +610,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
-	 * {@inheritDoc
+	 * {@inheritDoc}
 	 */
 	@Override
 	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);

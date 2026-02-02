@@ -617,8 +617,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *              flush mode, cache mode, timeout, and lock options
 	 *
 	 * @see #addNamedQuery(String, jakarta.persistence.Query)
-	 * @see org.hibernate.query.QueryProducer#createQuery(TypedQueryReference)
-	 * @see org.hibernate.query.QueryProducer#createSelectionQuery(String, Class)
+	 * @see org.hibernate.Session#createQuery(TypedQueryReference)
+	 * @see org.hibernate.Session#createSelectionQuery(String, Class)
 	 *
 	 * @since 7.0
 	 */

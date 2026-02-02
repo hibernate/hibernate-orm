@@ -92,8 +92,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 * triggered if the operation is successful.
 	 *
 	 * @param entity a new transient instance
-	 *
-	 * @return The identifier of the inserted entity
 	 */
 	void insert(Object entity);
 

@@ -5,7 +5,10 @@
 package org.hibernate.query.named;
 
 import jakarta.persistence.Query;
+import jakarta.persistence.Statement;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.Incubating;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 
 /**
  * Contract for {@linkplain org.hibernate.query.spi.QueryImplementor query implementations}
@@ -22,7 +25,9 @@ public interface NameableQuery {
 	 * Convert this query into the memento.
 	 *
 	 * @see org.hibernate.SessionFactory#addNamedQuery(String, Query)
-	 * @see NamedObjectRepository#registerNamedQuery(String, Query)
+	 * @see NamedObjectRepository#registerNamedQuery(String, TypedQuery)
+	 * @see NamedObjectRepository#registerNamedMutation(String, Statement)
+	 * @see NamedObjectRepository#registerCallableQueryMemento(String, NamedCallableQueryMemento)
 	 */
 	NamedQueryMemento<?> toMemento(String name);
 }

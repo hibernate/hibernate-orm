@@ -34,7 +34,7 @@ import java.util.Optional;
  * @see org.hibernate.annotations.NaturalId
  * @see SimpleNaturalIdLoadAccess
  *
- * @deprecated (since 7.3) Use {@linkplain Session#find} with {@link KeyType#NATURAL} instead.
+ * @deprecated (since 7.3) Use {@linkplain Session#find} with {@linkplain KeyType#NATURAL} instead.
  */
 @Deprecated
 public interface NaturalIdLoadAccess<T> {

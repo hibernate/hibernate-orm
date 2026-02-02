@@ -202,7 +202,7 @@ public abstract sealed class ToOne
 		sortProperties();
 		if ( referencedPropertyName == null
 				&& isActuallyConstrained()
-				&& !isTemporalEntity( referencedEntity ) ) {
+				&& !hasAuxiliaryColumnInPrimaryKey( referencedEntity ) ) {
 			final var firstColumn = joinColumns.getJoinColumns().get( 0 );
 			final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
 			if ( owner instanceof Join join ) {

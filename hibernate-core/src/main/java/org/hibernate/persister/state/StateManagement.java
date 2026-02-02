@@ -5,9 +5,7 @@
 package org.hibernate.persister.state;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -29,6 +27,9 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
 
 /**
  * Aggregates the coordinators for a given state management strategy.
+ * <p>
+ * Every concrete implementation of this interface should declare a
+ * field {@code public static final StateManagement INSTANCE}.
  *
  * @author Gavin King
  *
@@ -40,46 +41,6 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
  */
 @Internal
 public interface StateManagement {
-
-	static StateManagement forEntity(PersistentClass persistentClass, SessionFactoryOptions options) {
-		final var rootClass = persistentClass.getRootClass();
-		if ( rootClass.isTemporalized() ) {
-			return selectTemporalStateManagement( options );
-		}
-		else if ( rootClass.getSoftDeleteStrategy() != null ) {
-			return SoftDeleteStateManagement.INSTANCE;
-		}
-		else if ( rootClass.isAudited() ) {
-			return AuditStateManagement.INSTANCE;
-		}
-		else {
-			return StandardStateManagement.INSTANCE;
-		}
-	}
-
-	static StateManagement forCollection(Collection collectionBinding, SessionFactoryOptions options) {
-		if ( collectionBinding.isTemporalized() ) {
-			return selectTemporalStateManagement( options );
-		}
-		else if ( collectionBinding.getSoftDeleteStrategy() != null ) {
-			return SoftDeleteStateManagement.INSTANCE;
-		}
-		else if ( collectionBinding.isAudited() ) {
-			return AuditStateManagement.INSTANCE;
-		}
-		else {
-			return StandardStateManagement.INSTANCE;
-		}
-	}
-
-	private static StateManagement selectTemporalStateManagement(SessionFactoryOptions options) {
-		return switch ( options.getTemporalTableStrategy() ) {
-			case NATIVE -> StandardStateManagement.INSTANCE;
-			case SINGLE_TABLE -> TemporalStateManagement.INSTANCE;
-			case HISTORY_TABLE -> HistoryStateManagement.INSTANCE;
-			case AUTO -> throw new IllegalArgumentException();
-		};
-	}
 
 	InsertCoordinator createInsertCoordinator(EntityPersister persister);
 

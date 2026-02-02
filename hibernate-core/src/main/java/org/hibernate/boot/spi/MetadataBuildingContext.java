@@ -9,7 +9,6 @@ import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.TemporalTableStrategy;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -137,7 +136,7 @@ public interface MetadataBuildingContext {
 	 */
 	String getCurrentContributorName();
 
-	default TemporalTableStrategy getTemporalTableStrategy(Dialect dialect) {
+	default TemporalTableStrategy getTemporalTableStrategy() {
 		return AUTO;
 	}
 }

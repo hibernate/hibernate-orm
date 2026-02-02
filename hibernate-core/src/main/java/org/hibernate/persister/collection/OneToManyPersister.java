@@ -32,7 +32,6 @@ import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
-import org.hibernate.persister.state.StateManagement;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -95,8 +94,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& !getElementPersisterInternal().managesColumns( indexColumnNames );
 
 		rowMutationOperations = buildRowMutationOperations();
-		final var stateManagement =
-				StateManagement.forCollection( collectionBinding, creationContext.getSessionFactoryOptions() );
+		final var stateManagement = collectionBinding.getStateManagement();
 		insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
 		updateRowsCoordinator = stateManagement.createUpdateRowsCoordinator( this );
 		deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );

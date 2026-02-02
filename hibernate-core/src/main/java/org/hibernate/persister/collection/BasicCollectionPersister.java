@@ -24,7 +24,6 @@ import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
-import org.hibernate.persister.state.StateManagement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -72,9 +71,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		this.rowMutationOperations = buildRowMutationOperations();
-		final var stateManagement =
-				StateManagement.forCollection( collectionBinding,
-						creationContext.getSessionFactoryOptions() );
+		final var stateManagement = collectionBinding.getStateManagement();
 		this.insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
 		this.updateCoordinator = stateManagement.createUpdateRowsCoordinator( this );
 		this.deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.annotations.SoftDeleteType;
 
 /**
@@ -11,6 +12,7 @@ import org.hibernate.annotations.SoftDeleteType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SoftDeletable {
 	/**
 	 * Enable soft-delete for this part of the model.

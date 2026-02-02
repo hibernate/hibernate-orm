@@ -373,6 +373,8 @@ ext {
                     'jdbc.url'   : 'jdbc:cloudspanner://' + dbHost + ':9010/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db?lenient=true;autoconfigemulator=true;dialect=postgresql;defaultsequencekind=bit_reversed_positive;unknownLength=255;',
                     'jdbc.datasource': 'com.google.cloud.spanner.jdbc.JdbcDriver',
                     'connection.init_sql' : '',
+                    'sequence.mismatch_strategy': 'NONE',
+                    'sequence.optimizer.preferred': 'none'
             ],
     ]
 }

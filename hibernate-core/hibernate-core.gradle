@@ -179,6 +179,8 @@ task copyBundleResourcesNonXml (type: Copy) {
         bundlesTargetDir = file( "${buildDir}/bundles" )
         // Escape
         bundleTokens = dbBundle[db]
+        bundleTokens['sequence.mismatch_strategy'] = dbBundle[db]['sequence.mismatch_strategy']?.replace("&", "&amp;") ?: 'EXCEPTION'
+        bundleTokens['sequence.optimizer.preferred'] = dbBundle[db]['sequence.optimizer.preferred']?.replace("&", "&amp;") ?: ''
         ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 

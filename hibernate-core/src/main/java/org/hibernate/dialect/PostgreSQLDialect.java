@@ -648,7 +648,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
 	}
 
-	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();

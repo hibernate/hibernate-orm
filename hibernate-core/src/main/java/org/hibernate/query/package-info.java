@@ -10,7 +10,6 @@
  * {@link org.hibernate.query.MutationQuery}, {@link org.hibernate.query.Query},
  * and {@link org.hibernate.query.NativeQuery} provide an API for executing
  * queries. Instances of these interfaces may be obtained from a
- * {@link org.hibernate.query.QueryProducer}, that is, from any
  * {@link org.hibernate.Session} or {@link org.hibernate.StatelessSession}.
  * <p>
  * The classes {@link org.hibernate.query.Order}, {@link org.hibernate.query.Page},

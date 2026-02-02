@@ -58,14 +58,14 @@ public interface ModelPart extends MappingModelExpressible {
 	MappingType getPartMappingType();
 
 	/// The Java type for this part.  Generally equivalent to
-	/// `getMappedJavaType()` relative to
+	/// [MappingType#getMappedJavaType()] relative to
 	/// [#getPartMappingType()]
 	JavaType<?> getJavaType();
 
 	/// Whether this model part describes something that physically
 	/// exists in the domain model.
 	///
-	/// For example, an entity's {@linkplain EntityDiscriminatorMapping discriminator}
+	/// For example, an entity's [discriminator][EntityDiscriminatorMapping]
 	/// is part of the model, but is not a physical part of the domain model - there
 	/// is no "discriminator attribute".
 	///
@@ -102,7 +102,7 @@ public interface ModelPart extends MappingModelExpressible {
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
-	/// A short hand form of [#forEachSelectable(int,SelectableConsumer)], that passes `0` as offset.
+	/// A shorthand form of [#forEachSelectable(int,SelectableConsumer)], that passes `0` as offset.
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
@@ -125,7 +125,7 @@ public interface ModelPart extends MappingModelExpressible {
 		return null;
 	}
 
-	/// A short hand form of [#breakDownJdbcValues(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
+	/// A shorthand form of [#breakDownJdbcValues(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
 	/// that passes `0` as offset and null for the two values `X` and `Y`.
 	default int breakDownJdbcValues(
 			Object domainValue,
@@ -147,7 +147,7 @@ public interface ModelPart extends MappingModelExpressible {
 			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session);
 
-	/// A short hand form of [#decompose(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
+	/// A shorthand form of [#decompose(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
 	/// that passes `0` as offset and null for the two values `X` and `Y`.
 	default int decompose(
 			Object domainValue,

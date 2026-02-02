@@ -11,12 +11,13 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.TransactionIdentifierService;
 
-import static org.hibernate.cfg.MappingSettings.TRANSACTION_ID_SUPPLIER;
-import static org.hibernate.cfg.MappingSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
+import static org.hibernate.cfg.StateManagementSettings.TRANSACTION_ID_SUPPLIER;
+import static org.hibernate.cfg.StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
 import static org.hibernate.internal.util.GenericsHelper.erasedType;
 import static org.hibernate.internal.util.GenericsHelper.supertypeInstantiation;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -24,8 +25,8 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 /**
  * Default implementation of {@link TransactionIdentifierService}.
  *
- * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
- * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+ * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+ * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
  */

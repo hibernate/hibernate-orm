@@ -4,6 +4,8 @@
  */
 package org.hibernate.service;
 
+import org.hibernate.cfg.StateManagementSettings;
+
 import java.util.function.Supplier;
 
 
@@ -42,14 +44,14 @@ public interface TransactionIdentifierService extends Service {
 	/**
 	 * A supplier of transaction identifiers or timestamps.
 	 *
-	 * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
 	 */
 	Supplier<?> getIdentifierSupplier();
 
 	/**
 	 * Whether the timestamps or identifiers are assigned by the database server.
 	 *
-	 * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
 	 */
 	boolean isDisabled();
 

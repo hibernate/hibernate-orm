@@ -21,6 +21,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -543,7 +544,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TimeZone getJdbcTimeZone();
 
 	/**
-	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
+	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
 	 */
 	TemporalTableStrategy getTemporalTableStrategy();
 

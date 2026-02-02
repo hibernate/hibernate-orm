@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -87,7 +88,7 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 
 	/**
 	 * Specify the
-	 * {@linkplain org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
+	 * {@linkplain StateManagementSettings#TRANSACTION_ID_SUPPLIER
 	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
 	 * temporal} entity data. Instances of temporal entities retrieved in the
 	 * session will represent the revisions effective at the end of the given

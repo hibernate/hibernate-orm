@@ -5,6 +5,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.cfg.TemporalTableStrategy;
 
 import java.lang.annotation.Documented;
@@ -73,7 +74,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  * <p>
  * The configuration property
- * {@value org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY}
+ * {@value StateManagementSettings#TEMPORAL_TABLE_STRATEGY}
  * controls the temporal table mapping strategy.
  * <p>
  * By default, a session or stateless session reads revisions of
@@ -101,13 +102,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code rowEnd} columns are generated in Java, unless native
  * temporal tables are used. If timestamps should be generated on
  * the database server, enable the configuration property
- * {@value org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS}.
+ * {@value StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS}.
  * <p>
  * An alternative approach, which is not compatible with the
  * {@linkplain TemporalTableStrategy#NATIVE native} mapping strategy,
  * is to provide a custom {@link java.util.function.Supplier} of
  * transaction ids by specifying the configuration property
- * {@value org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER}.
+ * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
  * Transactions ids must be unique and comparable and must increase
  * monotonically. Typically, such an id is obtained by persisting
  * an instance of an application-defined entity class with a
@@ -123,9 +124,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  * @see org.hibernate.engine.creation.CommonBuilder#atTransaction(Object)
- * @see org.hibernate.cfg.MappingSettings#TEMPORAL_TABLE_STRATEGY
- * @see org.hibernate.cfg.MappingSettings#TRANSACTION_ID_SUPPLIER
- * @see org.hibernate.cfg.MappingSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+ * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
+ * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+ * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
  *

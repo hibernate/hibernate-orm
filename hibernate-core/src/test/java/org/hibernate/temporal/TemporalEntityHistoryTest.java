@@ -15,7 +15,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
-import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityHistoryTest.TemporalEntity4.class,
 		TemporalEntityHistoryTest.TemporalChild4.class})
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"))
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"))
 class TemporalEntityHistoryTest {
 
 	@Test void test(SessionFactoryScope scope) throws InterruptedException {

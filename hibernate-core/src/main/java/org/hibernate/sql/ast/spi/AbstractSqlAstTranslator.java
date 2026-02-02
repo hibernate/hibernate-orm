@@ -189,6 +189,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
@@ -1622,9 +1623,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				columnNames.add( "c" + columnNames.size() );
 			}
 			else if ( rowIdExpression == null ) {
-				final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-				identifierMapping.forEachSelectable(
-						0,
+				final var identifierTableMapping = statement.getMutationTarget().getIdentifierTableMapping();
+				identifierTableMapping.getKeyDetails().forEachSelectable( 0,
 						(selectionIndex, selectableMapping) -> {
 							selectClause.addSqlSelection( new SqlSelectionImpl(
 									new ColumnReference( statement.getTargetTable(), selectableMapping )

@@ -758,7 +758,7 @@ public class PropertyBinder {
 		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
 				&& isSimpleId( memberDetails ) ) {
 			throw new AnnotationException("Member '" + memberDetails.getName()
-					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
+					+ "' of embeddable class '" + propertyHolder.getClassName() + "' is annotated '@Id'");
 		}
 
 		final var attributeTypeDetails =
@@ -1161,7 +1161,7 @@ public class PropertyBinder {
 		}
 		else if ( isId() ) {
 			if ( isIdentifierMapper ) {
-				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
 						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 			}
 			//components and regular basic types create SimpleValue objects

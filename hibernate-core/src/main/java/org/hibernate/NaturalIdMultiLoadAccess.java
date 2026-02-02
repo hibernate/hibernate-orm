@@ -37,7 +37,7 @@ import java.util.List;
  * @see Session#byMultipleNaturalId(Class)
  * @see org.hibernate.annotations.NaturalId
  *
- * @deprecated (since 7.3) Use {@linkplain Session#findMultipleByNaturalId} instead.
+ * @deprecated (since 7.3) Use {@linkplain Session#find} with {@linkplain KeyType#NATURAL} instead.
  */
 @Deprecated
 public interface NaturalIdMultiLoadAccess<T> {

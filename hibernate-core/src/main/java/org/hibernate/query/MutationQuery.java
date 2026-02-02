@@ -10,6 +10,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.Statement;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
@@ -33,8 +34,7 @@ import java.util.Map;
  *     string,
  * <li>{@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)}, passing native
  *     SQL as a string,
- * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)} or
- *     {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)},
+ * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(CriteriaStatement)},
  *     passing a criteria update or delete object, or
  * <li>{@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)}, passing the
  *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
@@ -77,9 +77,8 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 	 * For use with instances of {@code MutationQuery} created using
 	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
 	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)} or
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(CriteriaStatement)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)

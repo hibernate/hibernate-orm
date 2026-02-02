@@ -65,8 +65,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version);
 
 	/**
-	 * Called after an item has been inserted (after the transaction completes),
-	 * instead of calling {@link #release}.
+	 * Called after an item has been inserted (after the transaction completes).
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session
@@ -99,9 +98,8 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 			Object previousVersion);
 
 	/**
-	 * Called after an item has been updated (after the transaction completes),
-	 * instead of calling {@link #release}. This method is used by "asynchronous"
-	 * concurrency strategies.
+	 * Called after an item has been updated (after the transaction completes).
+	 * This method is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session
 	 * @param key The item key

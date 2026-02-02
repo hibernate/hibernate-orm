@@ -54,7 +54,7 @@ import java.util.stream.Stream;
  * This type simply mixes the {@link TypedQuery} interface defined by JPA with
  * {@link SelectionQuery} and {@link MutationQuery}. Unfortunately, JPA does
  * not distinguish between {@linkplain SelectionQuery<T> selection queries} and
- * {@linkplain MutationQuery<T> mutation queries}, so we lose that distinction here.
+ * {@linkplain MutationQuery mutation queries}, so we lose that distinction here.
  * However, every {@code Query} may logically be classified as one or the other.
  * <p>
  * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
@@ -874,9 +874,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * For use with instances of {@link MutationQuery} created using
 	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
 	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)}, or
+	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(jakarta.persistence.criteria.CriteriaStatement)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)

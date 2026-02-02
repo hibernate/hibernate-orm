@@ -14,17 +14,12 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
-/**
- * @asciidoc
- *
- * Logger for DomainResult related messages.  This includes messages related to:
- *
- * 		* creation of the DomainResult / Fetch nodes
- * 		* creation of Initializer / DomainResultAssembler delegates
- * 		* processing of values from JDBC and cache via Initializer / DomainResultAssembler
- *
- * @author Steve Ebersole
- */
+/// Logger for DomainResult related messages.  This includes messages related to:
+/// * creation of the DomainResult / Fetch nodes
+/// * creation of Initializer / DomainResultAssembler delegates
+/// * processing of values from JDBC and cache via Initializer / DomainResultAssembler
+///
+/// @author Steve Ebersole
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005001, max = 90005100 )
 @SubSystemLogging(

@@ -14,7 +14,7 @@ import jakarta.persistence.NamedNativeQuery;
  * @see NamedNativeQuery#resultSetMapping()
  * @see org.hibernate.Session#createNativeQuery(String, String)
  * @see org.hibernate.Session#createNativeQuery(String, String, Class)
- * @see org.hibernate.Session#getNamedNativeQuery(String, String)
+ * @see org.hibernate.Session#getNamedNativeQuery(String)
  *
  * @author Steve Ebersole
  */

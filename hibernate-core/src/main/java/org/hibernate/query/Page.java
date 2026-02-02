@@ -22,7 +22,7 @@ import java.util.List;
  * <p>
  * This is a convenience class which allows a reference to a page of
  * results to be passed around the system before being applied to a
- * {@link Query} by calling {@link Query#setPage(Page)}.
+ * {@link Query} by calling {@link SelectionQuery#setPage(Page)}.
  * <p>
  * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
  * finder method} or {@linkplain org.hibernate.annotations.processing.HQL

@@ -23,7 +23,7 @@ import java.util.Collection;
 /// varied by the requested {@linkplain org.hibernate.LockMode LockMode}.
 ///
 /// Operates in 2 "phases"-
-/// * collect tables which are to be locked (based on {@linkplain org.hibernate.Locking.Scope}, and other things)
+/// * collect tables which are to be locked (based on [jakarta.persistence.PessimisticLockScope], and other things)
 /// * render the appropriate locking fragment
 ///
 /// @implSpec Note that this is also used to determine and track which

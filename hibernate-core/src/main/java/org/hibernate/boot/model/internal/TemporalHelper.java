@@ -23,6 +23,7 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Temporalized;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 import org.hibernate.service.TransactionIdentifierService;
@@ -256,7 +257,7 @@ public class TemporalHelper {
 		);
 	}
 
-	public static TemporalMappingImpl resolveTemporalMapping(
+	public static TemporalMapping resolveTemporalMapping(
 			Temporalized bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {

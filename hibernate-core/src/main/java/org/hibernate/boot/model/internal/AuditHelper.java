@@ -19,6 +19,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.service.TransactionIdentifierService;
@@ -147,7 +148,7 @@ public final class AuditHelper {
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}
 
-	public static AuditMappingImpl resolveAuditMapping(
+	public static AuditMapping resolveAuditMapping(
 			Auditable bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {

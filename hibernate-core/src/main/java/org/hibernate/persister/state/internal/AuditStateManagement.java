@@ -166,7 +166,7 @@ public class AuditStateManagement implements StateManagement {
 	}
 
 	@Override
-	public AuxiliaryMapping createAuxiliaryMapping(
+	public AuditMapping createAuxiliaryMapping(
 			EntityPersister persister,
 			RootClass rootClass,
 			MappingModelCreationProcess creationProcess) {

@@ -80,7 +80,7 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 	}
 
 	@Override
-	public AuxiliaryMapping createAuxiliaryMapping(
+	public TemporalMapping createAuxiliaryMapping(
 			EntityPersister persister,
 			RootClass rootClass,
 			MappingModelCreationProcess creationProcess) {

@@ -162,7 +162,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		else if ( !domainJtd.getMutabilityPlan().isMutable()
 				&& !isCollection( domainJtd.getJavaTypeClass() ) ) {
 			// if the domain JavaType is immutable, use the immutability plan
-			// 		- note : ignore this for collection-as-basic mappings.
+			// NOTE: ignore this for collection-as-basic mappings.
 			return ImmutableMutabilityPlan.instance();
 		}
 		else {

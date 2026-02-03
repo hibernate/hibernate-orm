@@ -95,6 +95,15 @@ query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
 which collapses duplicate results according to value equality.
 
+=== Timeout exceptions and transaction rollback
+
+Previously, when a query or a lock timeout occurred, Hibernate would throw a
+`QueryTimeoutException` or `LockTimeoutException` respectively. However, the
+Jakarta Persistence API specifies that if such timeouts cause the transaction
+to be marked for rollback by the database platform, a `PersistenceException`
+should be thrown instead. As of Hibernate 7.3, Hibernate now adheres to the
+spec and throws the appropriate exception type.
+
 === Envers association not-audited target mode
 
 Previously, if an association of an Envers `@Audited` entity pointing to another

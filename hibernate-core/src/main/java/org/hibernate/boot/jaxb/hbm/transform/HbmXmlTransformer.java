@@ -1760,6 +1760,10 @@ public class HbmXmlTransformer {
 			transferElementInfo( roleBase, source, source.getCompositeElement(), target );
 		}
 
+		if ( isNotEmpty( source.getWhere() ) ) {
+			target.setSqlRestriction( source.getWhere() );
+		}
+
 		return target;
 	}
 

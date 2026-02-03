@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
+import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedNativeStatements;
 import jakarta.persistence.NamedStatement;
@@ -40,6 +41,7 @@ import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EnumeratedValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExcludeDefaultListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExcludeSuperclassListenersJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ExcludedFromVersioningJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ForeignKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
@@ -396,7 +398,10 @@ public interface JpaAnnotations {
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-
+	OrmAnnotationDescriptor<ExcludedFromVersioning, ExcludedFromVersioningJpaAnnotation> EXCLUDE_FROM_VERSIONING = new OrmAnnotationDescriptor<>(
+			ExcludedFromVersioning.class,
+			ExcludedFromVersioningJpaAnnotation.class
+	);
 	OrmAnnotationDescriptor<ExcludeSuperclassListeners,ExcludeSuperclassListenersJpaAnnotation> EXCLUDE_SUPERCLASS_LISTENERS = new OrmAnnotationDescriptor<>(
 			ExcludeSuperclassListeners.class,
 			ExcludeSuperclassListenersJpaAnnotation.class,

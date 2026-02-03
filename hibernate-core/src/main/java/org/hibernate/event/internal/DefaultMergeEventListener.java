@@ -40,6 +40,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTra
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
@@ -453,6 +454,7 @@ public class DefaultMergeEventListener
 			final Object[] sourceValues = persister.getValues( entity );
 			final Object[] originalValues = persister.getValues( target );
 			interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes );
+			verifyImmutableAttributes( persister, sourceValues, originalValues, session );
 			final Object[] targetValues = TypeHelper.replace(
 					sourceValues,
 					originalValues,
@@ -466,6 +468,25 @@ public class DefaultMergeEventListener
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target );
 			event.setResult( result );
+		}
+	}
+
+	private void verifyImmutableAttributes(
+			EntityPersister persister,
+			Object[] sourceValues,
+			Object[] targetValues,
+			EventSource session) {
+		for ( int i : persister.getImmutablePropertyIndexes() ) {
+			final Object sourceValue = sourceValues[i];
+			final Object targetValue = targetValues[i];
+			if ( sourceValue != UNFETCHED_PROPERTY && targetValue != UNFETCHED_PROPERTY ) {
+				if ( !persister.getPropertyTypes()[i]
+						.isEqual( sourceValue, targetValue, session.getFactory() ) ) {
+					throw new HibernateException( "Immutable attribute '%s' of entity '%s' was modified"
+							.formatted( persister.getPropertyNames()[i], persister.getEntityName() )
+									+ " (mark the field non-'final' or remove the '@Immutable' annotation)");
+				}
+			}
 		}
 	}
 

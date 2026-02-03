@@ -112,7 +112,9 @@ public class ImmutableConvertedBaselineTests {
 
 		// make the change to the detached instance and merge it
 		detached.theDate.setTime( Instant.EPOCH.toEpochMilli() );
+//		assertThrows( HibernateException.class, () ->
 		scope.inTransaction( (session) -> session.merge( detached ) );
+//		);
 
 		// verify the value did not change
 		scope.inTransaction( (session) -> {

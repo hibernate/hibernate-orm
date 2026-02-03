@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 public interface AttributeMetadata {
 	PropertyAccess getPropertyAccess();
 
-	MutabilityPlan getMutabilityPlan();
+	MutabilityPlan<?> getMutabilityPlan();
 
 	boolean isNullable();
 

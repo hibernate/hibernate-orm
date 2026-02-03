@@ -493,6 +493,10 @@ public class PropertyBinder {
 		}
 		property.setInsertable( insertable );
 		property.setUpdatable( updatable );
+		// FOR NOW: only mark it as immutable if it's
+		//          final and not if it's @Immutable
+//		property.setMutable( !isEffectivelyImmutable() );
+		property.setMutable( !isFinalField() );
 	}
 
 	/**

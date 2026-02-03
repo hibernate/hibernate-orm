@@ -361,6 +361,7 @@ public abstract class AbstractEntityPersister
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
 	private final Set<String> sharedColumnNames;
+	private final int[] immutablePropertyIndexes;
 
 	//information about lazy properties of this class
 	private final String[] lazyPropertyNames;
@@ -595,6 +596,7 @@ public abstract class AbstractEntityPersister
 		propertyColumnInsertable = new boolean[hydrateSpan][];
 		sharedColumnNames = new HashSet<>();
 		nonLazyPropertyNames = new HashSet<>();
+		final List<Integer> immutableProperties = new ArrayList<>();
 
 		final HashSet<Property> thisClassProperties = new HashSet<>();
 		final ArrayList<String> lazyNames = new ArrayList<>();
@@ -653,11 +655,16 @@ public abstract class AbstractEntityPersister
 
 			propertyColumnUpdateable[i] = propertyValue.getColumnUpdateability();
 			propertyColumnInsertable[i] = propertyValue.getColumnInsertability();
+
+			if ( !property.isMutable() ) {
+				immutableProperties.add( i );
+			}
 		}
 		hasFormulaProperties = foundFormula;
 		lazyPropertyNames = toStringArray( lazyNames );
 		lazyPropertyNumbers = toIntArray( lazyNumbers );
 		lazyPropertyTypes = toTypeArray( lazyTypes );
+		immutablePropertyIndexes = toIntArray( immutableProperties );
 
 		// SUBCLASS PROPERTY CLOSURE
 		final ArrayList<String> aliases = new ArrayList<>();
@@ -5129,6 +5136,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public int[] getImmutablePropertyIndexes() {
+		return immutablePropertyIndexes;
+	}
+
+	@Override
 	public int getNumberOfDeclaredAttributeMappings() {
 		return declaredAttributeMappings.size();
 	}
@@ -5296,18 +5308,17 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
-		final Type type = tupleAttrDefinition.getType();
+		final var type = tupleAttrDefinition.getType();
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
-		final String[] attrColumnExpression = type instanceof BasicType<?> && bootProperty.getSelectables().get( 0 ).isFormula()
-				? propertyColumnFormulaTemplates[ propertyIndex ]
-				: getPropertyColumnNames( propertyIndex ) ;
 		return generateNonIdAttributeMapping(
 				tupleAttrDefinition.getName(),
 				type,
 				tupleAttrDefinition.getCascadeStyle(),
 				propertyIndex,
 				getTableName( getPropertyTableNumbers()[propertyIndex] ),
-				attrColumnExpression,
+				type instanceof BasicType<?> && bootProperty.getSelectables().get( 0 ).isFormula()
+						? propertyColumnFormulaTemplates[ propertyIndex ]
+						: getPropertyColumnNames( propertyIndex ),
 				bootProperty,
 				stateArrayPosition,
 				fetchableIndex,

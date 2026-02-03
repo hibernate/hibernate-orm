@@ -113,7 +113,9 @@ public class BasicAttributeMutabilityTests {
 		// make the change again, this time to a detached instance and merge it.
 		//tag::attribute-immutable-merge-example[]
 		detached.theDate.setTime( Instant.EPOCH.toEpochMilli() );
+//		assertThrows( HibernateException.class, () ->
 		scope.inTransaction( (session) -> session.merge( detached ) );
+//		);
 		//end::attribute-immutable-merge-example[]
 
 		// verify the value did not change via the merge

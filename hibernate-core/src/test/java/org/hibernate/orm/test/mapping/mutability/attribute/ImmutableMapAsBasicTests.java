@@ -117,9 +117,10 @@ public class ImmutableMapAsBasicTests {
 
 		// clear statements prior to merge
 		statementInspector.clear();
-
+//		assertThrows( HibernateException.class, () ->
 		// do the merge
 		scope.inTransaction( (session) -> session.merge( detached ) );
+//		);
 
 		// the SELECT - no UPDATE
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );

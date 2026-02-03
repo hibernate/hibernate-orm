@@ -1070,6 +1070,11 @@ public 	class CustomPersister extends EntityMetamodel implements EntityPersister
 	}
 
 	@Override
+	public int[] getImmutablePropertyIndexes() {
+		return new int[0];
+	}
+
+	@Override
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
 		return new String[0];
 	}

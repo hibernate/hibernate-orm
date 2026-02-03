@@ -4,19 +4,16 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.MappingException;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.Alias;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-
-import org.hibernate.MappingException;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.Alias;
-
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 
 /**
  * A mapping model object representing some sort of auxiliary table, for
@@ -159,10 +156,9 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		return properties.size();
 	}
 
-	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -173,10 +169,9 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		return customInsertCallable;
 	}
 
-	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -187,10 +182,9 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		return customUpdateCallable;
 	}
 
-	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {

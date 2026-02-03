@@ -152,7 +152,6 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -1504,11 +1503,7 @@ public class EntityBinder {
 			sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, "" );
 		}
 		if ( sqlInsert != null ) {
-			persistentClass.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
-					sqlInsert.callable(),
-					fromResultCheckStyle( sqlInsert.check() )
-			);
+			persistentClass.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
 			final var expectationClass = sqlInsert.verify();
 			if ( expectationClass != Expectation.class ) {
 				persistentClass.setInsertExpectation( getDefaultSupplier( expectationClass ) );
@@ -1520,11 +1515,7 @@ public class EntityBinder {
 			sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, "" );
 		}
 		if ( sqlUpdate != null ) {
-			persistentClass.setCustomSQLUpdate(
-					sqlUpdate.sql().trim(),
-					sqlUpdate.callable(),
-					fromResultCheckStyle( sqlUpdate.check() )
-			);
+			persistentClass.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
 			final var expectationClass = sqlUpdate.verify();
 			if ( expectationClass != Expectation.class ) {
 				persistentClass.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
@@ -1536,11 +1527,7 @@ public class EntityBinder {
 			sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, "" );
 		}
 		if ( sqlDelete != null ) {
-			persistentClass.setCustomSQLDelete(
-					sqlDelete.sql().trim(),
-					sqlDelete.callable(),
-					fromResultCheckStyle( sqlDelete.check() )
-			);
+			persistentClass.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
 			final var expectationClass = sqlDelete.verify();
 			if ( expectationClass != Expectation.class ) {
 				persistentClass.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
@@ -2334,11 +2321,7 @@ public class EntityBinder {
 
 		final var sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, tableName );
 		if ( sqlInsert != null ) {
-			join.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
-					sqlInsert.callable(),
-					fromResultCheckStyle( sqlInsert.check() )
-			);
+			join.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
 			final var expectationClass = sqlInsert.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setInsertExpectation( getDefaultSupplier( expectationClass ) );
@@ -2347,11 +2330,7 @@ public class EntityBinder {
 
 		final var sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, tableName );
 		if ( sqlUpdate != null ) {
-			join.setCustomSQLUpdate(
-					sqlUpdate.sql().trim(),
-					sqlUpdate.callable(),
-					fromResultCheckStyle( sqlUpdate.check() )
-			);
+			join.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
 			final var expectationClass = sqlUpdate.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
@@ -2360,11 +2339,7 @@ public class EntityBinder {
 
 		final var sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, tableName );
 		if ( sqlDelete != null ) {
-			join.setCustomSQLDelete(
-					sqlDelete.sql().trim(),
-					sqlDelete.callable(),
-					fromResultCheckStyle( sqlDelete.check() )
-			);
+			join.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
 			final var expectationClass = sqlDelete.verify();
 			if ( expectationClass != Expectation.class ) {
 				join.setDeleteExpectation( getDefaultSupplier( expectationClass ) );

@@ -4,11 +4,10 @@
  */
 package org.hibernate.orm.test.sql.check;
 
-
 /**
  * An entity which is expected to be mapped to each database using stored
  * procedures which throw exceptions on their own; in other words, using
- * {@link org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle#NONE}.
+ * {@link org.hibernate.boot.jaxb.ResultCheckStyle#NONE}.
  *
  * @author Steve Ebersole
  */

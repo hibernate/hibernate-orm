@@ -718,7 +718,7 @@
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='custom-sql-result-check-type']">
-            <javaType name="org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle"
+            <javaType name="org.hibernate.boot.jaxb.ResultCheckStyle"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.ResultCheckStyleMarshalling.fromXml"
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.ResultCheckStyleMarshalling.toXml" />
         </bindings>

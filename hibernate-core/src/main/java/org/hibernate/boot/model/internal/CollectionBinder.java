@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+import jakarta.persistence.ExcludedFromVersioning;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -1101,7 +1102,17 @@ public abstract class CollectionBinder {
 
 	private void bindOptimisticLock(boolean isMappedBy) {
 		final var lockAnn = property.getDirectAnnotationUsage( OptimisticLock.class );
-		final boolean includeInOptimisticLockChecks = lockAnn != null ? !lockAnn.excluded() : !isMappedBy;
+		final var jpaExcludeAnn = property.getDirectAnnotationUsage( ExcludedFromVersioning.class );
+		final boolean includeInOptimisticLockChecks;
+		if ( lockAnn != null ) {
+			includeInOptimisticLockChecks = !lockAnn.excluded();
+		}
+		else if ( jpaExcludeAnn != null ) {
+			includeInOptimisticLockChecks = false;
+		}
+		else {
+			includeInOptimisticLockChecks = !isMappedBy;
+		}
 		collection.setOptimisticLocked( includeInOptimisticLockChecks );
 	}
 

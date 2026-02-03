@@ -8,6 +8,7 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -527,6 +528,10 @@ public class PropertyBinder {
 			final boolean excluded = optimisticLock.excluded();
 			validateOptimisticLock( excluded );
 			property.setOptimisticLocked( !excluded );
+		}
+		else if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( ExcludedFromVersioning.class ) ) {
+			validateOptimisticLock( true );
+			property.setOptimisticLocked( false );
 		}
 		else {
 			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???

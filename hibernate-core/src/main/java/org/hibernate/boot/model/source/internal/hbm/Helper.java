@@ -4,11 +4,7 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.hibernate.boot.jaxb.ResultCheckStyle;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmConfigParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
@@ -20,17 +16,21 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmToolingHintType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
-import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.CustomSql;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.source.spi.InheritanceType;
 import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHint;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
@@ -66,10 +66,10 @@ public class Helper {
 		if ( customSqlElement == null ) {
 			return null;
 		}
-		final ExecuteUpdateResultCheckStyle checkStyle = customSqlElement.getCheck() == null
+		final ResultCheckStyle checkStyle = customSqlElement.getCheck() == null
 				? customSqlElement.isCallable()
-						? ExecuteUpdateResultCheckStyle.NONE
-						: ExecuteUpdateResultCheckStyle.COUNT
+						? ResultCheckStyle.NONE
+						: ResultCheckStyle.COUNT
 				: customSqlElement.getCheck();
 		return new CustomSql( customSqlElement.getValue(), customSqlElement.isCallable(), checkStyle );
 	}

@@ -17,7 +17,6 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 	private String sql;
 	private boolean callable;
 	private java.lang.Class<? extends org.hibernate.jdbc.Expectation> verify;
-	private org.hibernate.annotations.ResultCheckStyle check;
 	private String table;
 
 	/**
@@ -26,7 +25,6 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 	public SQLUpdateAnnotation(ModelsContext modelContext) {
 		this.callable = false;
 		this.verify = org.hibernate.jdbc.Expectation.class;
-		this.check = org.hibernate.annotations.ResultCheckStyle.NONE;
 		this.table = "";
 	}
 
@@ -37,7 +35,6 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 		this.sql = annotation.sql();
 		this.callable = annotation.callable();
 		this.verify = annotation.verify();
-		this.check = annotation.check();
 		this.table = annotation.table();
 	}
 
@@ -47,8 +44,8 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 	public SQLUpdateAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.sql = (String) attributeValues.get( "sql" );
 		this.callable = (boolean) attributeValues.get( "callable" );
+		//noinspection unchecked
 		this.verify = (Class<? extends org.hibernate.jdbc.Expectation>) attributeValues.get( "verify" );
-		this.check = (org.hibernate.annotations.ResultCheckStyle) attributeValues.get( "check" );
 		this.table = (String) attributeValues.get( "table" );
 	}
 
@@ -84,16 +81,6 @@ public class SQLUpdateAnnotation implements SQLUpdate, CustomSqlDetails {
 
 	public void verify(java.lang.Class<? extends org.hibernate.jdbc.Expectation> value) {
 		this.verify = value;
-	}
-
-
-	@Override
-	public org.hibernate.annotations.ResultCheckStyle check() {
-		return check;
-	}
-
-	public void check(org.hibernate.annotations.ResultCheckStyle value) {
-		this.check = value;
 	}
 
 

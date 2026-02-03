@@ -99,3 +99,4 @@ tasks.register("transformHbmXml", TransformHbmXmlTask) {
     outputDirectory = file("generated/orm")
 }
 ```
+More coming soon...

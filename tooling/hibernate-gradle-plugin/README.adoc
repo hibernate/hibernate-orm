@@ -77,4 +77,25 @@ All options are deprecated for removal.
 [[hbm-xml]]
 == Legacy `hbm.xml` Transformation
 
-Coming soon...
+Gradle Task Example
+```
+//build.gradle
+
+import org.hibernate.orm.tooling.gradle.misc.TransformHbmXmlTask
+
+plugins {
+    ...
+    id("org.hibernate.orm") version "6.6.40.Final" // replace version as appropriate
+}
+
+tasks.register("transformHbmXml", TransformHbmXmlTask) { 
+    group = "hibernate"
+    source = fileTree("path/to/your/xml/mappings") {
+        include "**/*.hbm.xml"
+    }
+    it.renaming.get().prefix.set("")
+    it.renaming.get().suffix.set("")
+    it.renaming.get().extension.set("orm.xml")
+    outputDirectory = file("generated/orm")
+}
+```

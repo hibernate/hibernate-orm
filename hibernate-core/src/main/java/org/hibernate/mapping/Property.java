@@ -55,6 +55,7 @@ public class Property implements Serializable, MetaAttributable {
 	private String name;
 	private Value value;
 	private String cascade;
+	private boolean mutable = true;
 	private boolean updatable = true;
 	private boolean insertable = true;
 	private boolean selectable = true;
@@ -560,6 +561,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
+		property.setMutable( isMutable() );
 		property.setUpdatable( isUpdatable() );
 		property.setInsertable( isInsertable() );
 		property.setSelectable( isSelectable() );
@@ -580,6 +582,14 @@ public class Property implements Serializable, MetaAttributable {
 		property.setLob( isLob() );
 		property.setReturnedClassName( getReturnedClassName() );
 		return property;
+	}
+
+	public void setMutable(boolean mutable) {
+		this.mutable = mutable;
+	}
+
+	public boolean isMutable() {
+		return mutable;
 	}
 
 	private class PropertyGeneratorCreationContext implements GeneratorCreationContext {

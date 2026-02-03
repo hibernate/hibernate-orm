@@ -1701,7 +1701,7 @@ Now the generated DDL looks a lot better:
 create table Book_topics (
     Book_isbn varchar(255) not null,
     topics varchar(255) not null,
-    primary key (Book_isbn, strings)
+    primary key (Book_isbn, topics)
 )
 ----
 Of course, with this mapping we can't have `null` as an element of our `Set`.

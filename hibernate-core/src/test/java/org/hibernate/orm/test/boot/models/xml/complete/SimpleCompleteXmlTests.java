@@ -4,26 +4,24 @@
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
-
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
@@ -82,7 +80,7 @@ public class SimpleCompleteXmlTests {
 		assertThat( sqlInsert ).isNotNull();
 		assertThat( sqlInsert.sql() ).isEqualTo( "insertSimpleEntity(?)" );
 		assertThat( sqlInsert.callable() ).isTrue();
-		assertThat( sqlInsert.check() ).isEqualTo( ResultCheckStyle.COUNT );
+		assertThat( sqlInsert.verify() ).isEqualTo( Expectation.RowCount.class );
 		assertThat( sqlInsert.table() ).isEqualTo( "SimpleEntity" );
 	}
 }

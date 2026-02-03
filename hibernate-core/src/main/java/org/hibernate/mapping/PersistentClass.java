@@ -4,6 +4,23 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Internal;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.util.collections.JoinedList;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jpa.boot.spi.CallbackDefinition;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.Alias;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.TypeConfiguration;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,28 +31,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Supplier;
 
-import org.hibernate.Internal;
-import org.hibernate.MappingException;
-import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.jpa.boot.spi.CallbackDefinition;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.Alias;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.TypeConfiguration;
-
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
@@ -810,10 +808,9 @@ public abstract sealed class PersistentClass
 		return properties;
 	}
 
-	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -824,10 +821,9 @@ public abstract sealed class PersistentClass
 		return customInsertCallable;
 	}
 
-	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -838,10 +834,9 @@ public abstract sealed class PersistentClass
 		return customUpdateCallable;
 	}
 
-	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {

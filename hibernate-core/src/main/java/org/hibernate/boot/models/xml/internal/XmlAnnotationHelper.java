@@ -4,33 +4,23 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.net.URL;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
-
 import jakarta.persistence.AccessType;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CheckConstraint;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
@@ -80,11 +70,64 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.boot.models.annotations.internal.*;
+import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionIdJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnTransformerAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorFormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorOptionsAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterJoinTableAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterJoinTablesAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.GeneratedAnnotation;
+import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
+import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
+import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
-import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
@@ -92,7 +135,6 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.generator.EventType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -101,24 +143,32 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.SqlTypes;
 
-import jakarta.persistence.AssociationOverride;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.CheckConstraint;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Index;
-import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.UniqueConstraint;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -1265,17 +1315,8 @@ public class XmlAnnotationHelper {
 		}
 
 		if ( jaxbCustomSql.getResultCheck() != null ) {
-			annotation.check( interpretResultCheckStyle( jaxbCustomSql.getResultCheck() ) );
+			annotation.verify( jaxbCustomSql.getResultCheck().expectationClass() );
 		}
-	}
-
-	@SuppressWarnings({ "deprecation", "removal" })
-	private static ResultCheckStyle interpretResultCheckStyle(ExecuteUpdateResultCheckStyle style) {
-		return switch ( style ) {
-			case NONE -> ResultCheckStyle.NONE;
-			case COUNT -> ResultCheckStyle.COUNT;
-			case PARAM -> ResultCheckStyle.PARAM;
-		};
 	}
 
 	static void applyIdClass(

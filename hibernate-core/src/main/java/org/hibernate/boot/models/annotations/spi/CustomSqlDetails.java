@@ -6,8 +6,6 @@ package org.hibernate.boot.models.annotations.spi;
 
 import java.lang.annotation.Annotation;
 
-import org.hibernate.annotations.ResultCheckStyle;
-
 /**
  * Commonality for annotations which define custom insert, update and delete SQL
  *
@@ -26,7 +24,7 @@ public interface CustomSqlDetails extends Annotation {
 
 	void table(String value);
 
-	ResultCheckStyle check();
+	java.lang.Class<? extends org.hibernate.jdbc.Expectation> verify();
 
-	void check(ResultCheckStyle resultCheckStyle);
+	void verify(java.lang.Class<? extends org.hibernate.jdbc.Expectation> value);
 }

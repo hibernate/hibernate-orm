@@ -4,11 +4,10 @@
  */
 package org.hibernate.orm.test.sql.check;
 
-
 /**
  * An entity which is expected to be mapped to each database using stored
  * procedures which return "affected row counts"; in other words, using
- * {@link org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle#PARAM}.
+ * {@link org.hibernate.boot.jaxb.ResultCheckStyle#PARAM}.
  *
  * @author Steve Ebersole
  */

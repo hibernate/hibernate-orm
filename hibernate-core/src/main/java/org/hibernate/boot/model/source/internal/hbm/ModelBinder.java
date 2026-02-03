@@ -4,16 +4,6 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.CascadeType;
@@ -21,7 +11,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.internal.FkSecondPass;
@@ -36,8 +25,53 @@ import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
-import org.hibernate.boot.model.source.spi.*;
+import org.hibernate.boot.model.source.spi.AnyMappingSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.model.source.spi.AttributeRole;
+import org.hibernate.boot.model.source.spi.AttributeSource;
+import org.hibernate.boot.model.source.spi.Caching;
+import org.hibernate.boot.model.source.spi.CascadeStyleSource;
+import org.hibernate.boot.model.source.spi.ColumnSource;
+import org.hibernate.boot.model.source.spi.CompositeIdentifierSource;
+import org.hibernate.boot.model.source.spi.EmbeddableSource;
+import org.hibernate.boot.model.source.spi.EntityHierarchySource;
+import org.hibernate.boot.model.source.spi.EntitySource;
+import org.hibernate.boot.model.source.spi.FilterSource;
+import org.hibernate.boot.model.source.spi.ForeignKeyContributingSource;
+import org.hibernate.boot.model.source.spi.HibernateTypeSource;
+import org.hibernate.boot.model.source.spi.IdentifierSourceAggregatedComposite;
+import org.hibernate.boot.model.source.spi.IdentifierSourceNonAggregatedComposite;
+import org.hibernate.boot.model.source.spi.IdentifierSourceSimple;
+import org.hibernate.boot.model.source.spi.InLineViewSource;
+import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
+import org.hibernate.boot.model.source.spi.NaturalIdMutability;
+import org.hibernate.boot.model.source.spi.Orderable;
+import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceBasic;
+import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceEmbedded;
+import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToAny;
+import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToMany;
+import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceOneToMany;
+import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToAnySource;
+import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToManySource;
+import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceBasic;
+import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceEmbedded;
+import org.hibernate.boot.model.source.spi.PluralAttributeSequentialIndexSource;
+import org.hibernate.boot.model.source.spi.PluralAttributeSource;
+import org.hibernate.boot.model.source.spi.RelationalValueSource;
+import org.hibernate.boot.model.source.spi.RelationalValueSourceContainer;
+import org.hibernate.boot.model.source.spi.SecondaryTableSource;
+import org.hibernate.boot.model.source.spi.SingularAttributeSource;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceAny;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceBasic;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceManyToOne;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceOneToOne;
+import org.hibernate.boot.model.source.spi.SingularAttributeSourceToOne;
+import org.hibernate.boot.model.source.spi.Sortable;
+import org.hibernate.boot.model.source.spi.TableSource;
+import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
@@ -98,12 +132,22 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
 import static org.hibernate.boot.model.source.internal.hbm.NamedQueryBinder.processNamedNativeQuery;
 import static org.hibernate.boot.model.source.internal.hbm.NamedQueryBinder.processNamedQuery;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1232,38 +1276,34 @@ public class ModelBinder {
 	private static void bindCustomSql(PluralAttributeSource source, Collection binding) {
 		final var customSqlInsert = source.getCustomSqlInsert();
 		if ( customSqlInsert != null ) {
-			binding.setCustomSQLInsert(
-					customSqlInsert.sql(),
-					customSqlInsert.callable(),
-					customSqlInsert.checkStyle()
-			);
+			binding.setCustomSQLInsert( customSqlInsert.sql(), customSqlInsert.callable() );
+			if ( customSqlInsert.checkStyle() != null ) {
+				binding.setInsertExpectation( customSqlInsert.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlUpdate = source.getCustomSqlUpdate();
 		if ( customSqlUpdate != null ) {
-			binding.setCustomSQLUpdate(
-					customSqlUpdate.sql(),
-					customSqlUpdate.callable(),
-					customSqlUpdate.checkStyle()
-			);
+			binding.setCustomSQLUpdate( customSqlUpdate.sql(), customSqlUpdate.callable() );
+			if ( customSqlUpdate.checkStyle() != null ) {
+				binding.setUpdateExpectation( customSqlUpdate.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlDelete = source.getCustomSqlDelete();
 		if ( customSqlDelete != null ) {
-			binding.setCustomSQLDelete(
-					customSqlDelete.sql(),
-					customSqlDelete.callable(),
-					customSqlDelete.checkStyle()
-			);
+			binding.setCustomSQLDelete( customSqlDelete.sql(), customSqlDelete.callable() );
+			if ( customSqlDelete.checkStyle() != null ) {
+				binding.setDeleteExpectation( customSqlDelete.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlDeleteAll = source.getCustomSqlDeleteAll();
 		if ( customSqlDeleteAll != null ) {
-			binding.setCustomSQLDeleteAll(
-					customSqlDeleteAll.sql(),
-					customSqlDeleteAll.callable(),
-					customSqlDeleteAll.checkStyle()
-			);
+			binding.setCustomSQLDeleteAll( customSqlDeleteAll.sql(), customSqlDeleteAll.callable() );
+			if ( customSqlDeleteAll.checkStyle() != null ) {
+				binding.setDeleteAllExpectation( customSqlDeleteAll.checkStyle().expectationSupplier() );
+			}
 		}
 	}
 
@@ -2709,29 +2749,26 @@ public class ModelBinder {
 			PersistentClass entityDescriptor) {
 		final var customSqlInsert = entitySource.getCustomSqlInsert();
 		if ( customSqlInsert != null ) {
-			entityDescriptor.setCustomSQLInsert(
-					customSqlInsert.sql(),
-					customSqlInsert.callable(),
-					customSqlInsert.checkStyle()
-			);
+			entityDescriptor.setCustomSQLInsert( customSqlInsert.sql(), customSqlInsert.callable() );
+			if ( customSqlInsert.checkStyle() != null ) {
+				entityDescriptor.setInsertExpectation( customSqlInsert.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlUpdate = entitySource.getCustomSqlUpdate();
 		if ( customSqlUpdate != null ) {
-			entityDescriptor.setCustomSQLUpdate(
-					customSqlUpdate.sql(),
-					customSqlUpdate.callable(),
-					customSqlUpdate.checkStyle()
-			);
+			entityDescriptor.setCustomSQLUpdate( customSqlUpdate.sql(), customSqlUpdate.callable() );
+			if ( customSqlUpdate.checkStyle() != null ) {
+				entityDescriptor.setUpdateExpectation( customSqlUpdate.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlDelete = entitySource.getCustomSqlDelete();
 		if ( customSqlDelete != null ) {
-			entityDescriptor.setCustomSQLDelete(
-					customSqlDelete.sql(),
-					customSqlDelete.callable(),
-					customSqlDelete.checkStyle()
-			);
+			entityDescriptor.setCustomSQLDelete( customSqlDelete.sql(), customSqlDelete.callable() );
+			if ( customSqlDelete.checkStyle() != null ) {
+				entityDescriptor.setDeleteExpectation( customSqlDelete.checkStyle().expectationSupplier() );
+			}
 		}
 
 		entityDescriptor.setLoaderName( entitySource.getCustomLoaderName() );
@@ -2742,29 +2779,26 @@ public class ModelBinder {
 			Join secondaryTable) {
 		final var customSqlInsert = secondaryTableSource.getCustomSqlInsert();
 		if ( customSqlInsert != null ) {
-			secondaryTable.setCustomSQLInsert(
-					customSqlInsert.sql(),
-					customSqlInsert.callable(),
-					customSqlInsert.checkStyle()
-			);
+			secondaryTable.setCustomSQLInsert( customSqlInsert.sql(), customSqlInsert.callable() );
+			if ( customSqlInsert.checkStyle() != null ) {
+				secondaryTable.setInsertExpectation( customSqlInsert.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlUpdate = secondaryTableSource.getCustomSqlUpdate();
 		if ( customSqlUpdate != null ) {
-			secondaryTable.setCustomSQLUpdate(
-					customSqlUpdate.sql(),
-					customSqlUpdate.callable(),
-					customSqlUpdate.checkStyle()
-			);
+			secondaryTable.setCustomSQLUpdate( customSqlUpdate.sql(), customSqlUpdate.callable() );
+			if ( customSqlUpdate.checkStyle() != null ) {
+				secondaryTable.setUpdateExpectation( customSqlUpdate.checkStyle().expectationSupplier() );
+			}
 		}
 
 		final var customSqlDelete = secondaryTableSource.getCustomSqlDelete();
 		if ( customSqlDelete != null ) {
-			secondaryTable.setCustomSQLDelete(
-					customSqlDelete.sql(),
-					customSqlDelete.callable(),
-					customSqlDelete.checkStyle()
-			);
+			secondaryTable.setCustomSQLDelete( customSqlDelete.sql(), customSqlDelete.callable() );
+			if ( customSqlDelete.checkStyle() != null ) {
+				secondaryTable.setDeleteExpectation( customSqlDelete.checkStyle().expectationSupplier() );
+			}
 		}
 	}
 

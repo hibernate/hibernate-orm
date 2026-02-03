@@ -72,9 +72,9 @@
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='ResultCheckStyleEnum']">
-			<jaxb:javaType name="org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle"
-					parseMethod="org.hibernate.boot.jaxb.hbm.internal.ExecuteUpdateResultCheckStyleConverter.fromXml"
-					printMethod="org.hibernate.boot.jaxb.hbm.internal.ExecuteUpdateResultCheckStyleConverter.toXml" />
+			<jaxb:javaType name="org.hibernate.boot.jaxb.ResultCheckStyle"
+					parseMethod="org.hibernate.boot.jaxb.hbm.internal.ResultCheckStyleConverter.fromXml"
+					printMethod="org.hibernate.boot.jaxb.hbm.internal.ResultCheckStyleConverter.toXml" />
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='OptimisticLockStyleEnum']">

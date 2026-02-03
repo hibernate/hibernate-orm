@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
@@ -34,7 +33,6 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
@@ -595,10 +593,9 @@ public abstract sealed class Collection
 		this.queryCacheLayout = queryCacheLayout;
 	}
 
-	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
-		this.insertExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLInsert() {
@@ -609,10 +606,9 @@ public abstract sealed class Collection
 		return customInsertCallable;
 	}
 
-	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
-		this.updateExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLUpdate() {
@@ -623,10 +619,9 @@ public abstract sealed class Collection
 		return customUpdateCallable;
 	}
 
-	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
-		this.deleteExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDelete() {
@@ -637,13 +632,9 @@ public abstract sealed class Collection
 		return customDeleteCallable;
 	}
 
-	public void setCustomSQLDeleteAll(
-			String customSQLDeleteAll,
-			boolean callable,
-			ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable) {
 		this.customSQLDeleteAll = customSQLDeleteAll;
 		this.customDeleteAllCallable = callable;
-		this.deleteAllExpectation = expectationConstructor( checkStyle );
 	}
 
 	public String getCustomSQLDeleteAll() {

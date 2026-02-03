@@ -2982,7 +2982,7 @@
     <xsd:simpleType name="custom-sql-result-check-type">
         <xsd:annotation>
             <xsd:documentation>
-                org.hibernate.annotations.ResultCheckStyle enum values
+                org.hibernate.boot.jaxb.ResultCheckStyle enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">

@@ -71,14 +71,6 @@ public @interface SQLInsert {
 	Class<? extends Expectation> verify() default Expectation.class;
 
 	/**
-	 * A {@link ResultCheckStyle} used to verify that the operation was successful.
-	 *
-	 * @deprecated use {@link #verify()} with an {@link Expectation} class
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	ResultCheckStyle check() default ResultCheckStyle.NONE;
-
-	/**
 	 * The name of the table affected by the insert statement. Required when the
 	 * statement affects a {@linkplain jakarta.persistence.SecondaryTable secondary
 	 * table} of an entity. Not required for collections nor when the insert statement

@@ -2,21 +2,21 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.jaxb.mapping.internal;
+package org.hibernate.boot.jaxb.hbm.internal;
 
 import org.hibernate.boot.jaxb.ResultCheckStyle;
 
 /**
- * JAXB marshaling for {@link ResultCheckStyle}
+ * JAXB marshaling for the ExecuteUpdateResultCheckStyle enum
  *
  * @author Steve Ebersole
  */
-public class ResultCheckStyleMarshalling {
+public class ResultCheckStyleConverter {
 	public static ResultCheckStyle fromXml(String name) {
-		return name == null ? null : ResultCheckStyle.valueOf( name );
+		return ResultCheckStyle.fromExternalName( name );
 	}
 
 	public static String toXml(ResultCheckStyle style) {
-		return style == null ? null : style.name();
+		return style.externalName();
 	}
 }

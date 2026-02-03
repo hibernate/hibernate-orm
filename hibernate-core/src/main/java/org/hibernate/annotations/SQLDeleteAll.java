@@ -43,14 +43,6 @@ public @interface SQLDeleteAll {
 	Class<? extends Expectation> verify() default Expectation.class;
 
 	/**
-	 * A {@link ResultCheckStyle} used to verify that the operation was successful.
-	 *
-	 * @deprecated use {@link #verify()} with an {@link Expectation} class
-	 */
-	@Deprecated(since = "6.5", forRemoval = true)
-	ResultCheckStyle check() default ResultCheckStyle.NONE;
-
-	/**
 	 * The name of the table affected. Never required.
 	 *
 	 * @return the name of the secondary table

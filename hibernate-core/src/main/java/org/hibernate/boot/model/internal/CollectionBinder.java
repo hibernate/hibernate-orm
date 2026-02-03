@@ -4,22 +4,82 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Supplier;
-
+import jakarta.persistence.Access;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.ExcludedFromVersioning;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Bag;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJavaClass;
+import org.hibernate.annotations.CollectionIdJavaType;
+import org.hibernate.annotations.CollectionIdJdbcType;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionType;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.HQLSelect;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.ListIndexBase;
+import org.hibernate.annotations.ListIndexJavaType;
+import org.hibernate.annotations.ListIndexJdbcType;
+import org.hibernate.annotations.ListIndexJdbcTypeCode;
+import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyJavaType;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.MapKeyType;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
+import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.annotations.Synchronize;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -59,26 +119,15 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.OrderColumn;
-import jakarta.persistence.UniqueConstraint;
+import java.lang.annotation.Annotation;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Supplier;
 
 import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
@@ -113,7 +162,6 @@ import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPrope
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
-import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -1216,11 +1264,7 @@ public abstract class CollectionBinder {
 
 		final var sqlInsert = property.getDirectAnnotationUsage( SQLInsert.class );
 		if ( sqlInsert != null ) {
-			collection.setCustomSQLInsert(
-					sqlInsert.sql().trim(),
-					sqlInsert.callable(),
-					fromResultCheckStyle( sqlInsert.check() )
-			);
+			collection.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
 			final var verifier = sqlInsert.verify();
 			if ( verifier != Expectation.class ) {
 				collection.setInsertExpectation( getDefaultSupplier( verifier ) );
@@ -1229,11 +1273,7 @@ public abstract class CollectionBinder {
 
 		final var sqlUpdate = property.getDirectAnnotationUsage( SQLUpdate.class );
 		if ( sqlUpdate != null ) {
-			collection.setCustomSQLUpdate(
-					sqlUpdate.sql().trim(),
-					sqlUpdate.callable(),
-					fromResultCheckStyle( sqlUpdate.check() )
-			);
+			collection.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
 			final var verifier = sqlUpdate.verify();
 			if ( verifier != Expectation.class ) {
 				collection.setUpdateExpectation( getDefaultSupplier( verifier ) );
@@ -1242,11 +1282,7 @@ public abstract class CollectionBinder {
 
 		final var sqlDelete = property.getDirectAnnotationUsage( SQLDelete.class );
 		if ( sqlDelete != null ) {
-			collection.setCustomSQLDelete(
-					sqlDelete.sql().trim(),
-					sqlDelete.callable(),
-					fromResultCheckStyle( sqlDelete.check() )
-			);
+			collection.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
 			final var verifier = sqlDelete.verify();
 			if ( verifier != Expectation.class ) {
 				collection.setDeleteExpectation( getDefaultSupplier( verifier ) );
@@ -1255,11 +1291,7 @@ public abstract class CollectionBinder {
 
 		final var sqlDeleteAll = property.getDirectAnnotationUsage( SQLDeleteAll.class );
 		if ( sqlDeleteAll != null ) {
-			collection.setCustomSQLDeleteAll(
-					sqlDeleteAll.sql().trim(),
-					sqlDeleteAll.callable(),
-					fromResultCheckStyle( sqlDeleteAll.check() )
-			);
+			collection.setCustomSQLDeleteAll( sqlDeleteAll.sql().trim(), sqlDeleteAll.callable() );
 			final var verifier = sqlDeleteAll.verify();
 			if ( verifier != Expectation.class ) {
 				collection.setDeleteAllExpectation( getDefaultSupplier( verifier ) );

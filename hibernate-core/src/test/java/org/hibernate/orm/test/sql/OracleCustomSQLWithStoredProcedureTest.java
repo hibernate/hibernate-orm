@@ -4,24 +4,22 @@
  */
 package org.hibernate.orm.test.sql;
 
-import java.sql.Statement;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import org.hibernate.Session;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.OracleDialect;
-
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -86,7 +84,7 @@ public class OracleCustomSQLWithStoredProcedureTest {
 	@Entity(name = "Person")
 	@SQLInsert(
 			sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, 1) ",
-			check = ResultCheckStyle.COUNT
+			verify = Expectation.RowCount.class
 	)
 	//tag::sql-sp-custom-crud-example[]
 	@SQLDelete(

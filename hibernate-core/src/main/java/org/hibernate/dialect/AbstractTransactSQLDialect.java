@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
@@ -26,6 +27,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.internal.TransactSQLLockingClauseStrategy;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
@@ -33,6 +35,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
@@ -373,5 +377,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		jdbcTypeRegistry.addDescriptor( JsonAsStringJdbcType.NVARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptor( XmlAsStringJdbcType.NVARCHAR_INSTANCE );
 	}
 }

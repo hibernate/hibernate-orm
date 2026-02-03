@@ -10,13 +10,12 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
@@ -133,35 +132,19 @@ public interface BootstrapContext {
 	ArchiveDescriptorFactory getArchiveDescriptorFactory();
 
 	/**
-	 * Access to the options to be used for scanning.
-	 *
-	 * @return The scan options
-	 */
-	ScanOptions getScanOptions();
-
-	/**
-	 * Access to the environment for scanning.
-	 *
-	 * @apiNote Consider this temporary; see discussion on {@link ScanEnvironment}.
-	 *
-	 * @return The scan environment
-	 */
-	ScanEnvironment getScanEnvironment();
-
-	/**
-	 * Access to the {@link org.hibernate.boot.archive.scan.spi.Scanner} to be used
+	 * Access to the {@link Scanner} to be used
 	 * for scanning.
 	 * <p>
 	 * Can be:
 	 * <ul>
-	 *     <li>An instance of {@link org.hibernate.boot.archive.scan.spi.Scanner},
+	 *     <li>An instance of {@link Scanner},
 	 *     <li>a {@code Class} reference to the {@code Scanner} implementor, or
 	 *     <li>a string naming the {@code Scanner} implementor.
 	 * </ul>
 	 *
 	 * @return The scanner
 	 */
-	Object getScanner();
+	Object getScanning();
 
 	/**
 	 * Access to the Jandex index passed by call to

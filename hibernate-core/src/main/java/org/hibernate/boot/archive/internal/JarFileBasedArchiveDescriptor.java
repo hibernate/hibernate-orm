@@ -4,41 +4,39 @@
  */
 package org.hibernate.boot.archive.internal;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.ArchiveEntry;
+import org.hibernate.boot.archive.spi.ArchiveException;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
-import org.hibernate.boot.archive.spi.ArchiveContext;
-import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.archive.spi.ArchiveEntry;
-import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
-import org.hibernate.boot.archive.spi.ArchiveException;
-import org.hibernate.boot.archive.spi.InputStreamAccess;
-
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
-/**
- * An {@code ArchiveDescriptor} implementation leveraging the {@link JarFile} API for processing.
- *
- * @author Steve Ebersole
- */
+/// An `ArchiveDescriptor` implementation leveraging the [JarFile] API for processing.
+///
+/// @author Steve Ebersole
 public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
-	/**
-	 * Constructs a JarFileBasedArchiveDescriptor
-	 *
-	 * @param archiveDescriptorFactory The factory creating this
-	 * @param archiveUrl The url to the JAR file
-	 * @param entry The prefix for entries within the JAR url
-	 */
+	/// Constructs a JarFileBasedArchiveDescriptor
+	///
+	/// @param archiveDescriptorFactory The factory creating this
+	/// @param archiveUrl The url to the JAR file
+	/// @param entry The prefix for entries within the JAR url
 	public JarFileBasedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL archiveUrl,
@@ -47,7 +45,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 	}
 
 	@Override
-	public void visitArchive(ArchiveContext context) {
+	public void visitClassEntries(Consumer<ArchiveEntry> entryConsumer) {
 		final JarFile jarFile = resolveJarFileReference();
 		if ( jarFile == null ) {
 			return;
@@ -58,6 +56,9 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			while ( zipEntries.hasMoreElements() ) {
 				final ZipEntry zipEntry = zipEntries.nextElement();
 				final String entryName = extractName( zipEntry );
+				if ( !entryName.endsWith( ".class" ) ) {
+					continue;
+				}
 
 				if ( getEntryBasePrefix() != null && ! entryName.startsWith( getEntryBasePrefix() ) ) {
 					continue;
@@ -79,27 +80,13 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 
 								final String name = extractName( subZipEntry );
 								final String relativeName = extractRelativeName( subZipEntry );
-								final InputStreamAccess inputStreamAccess = buildByteBasedInputStreamAccess( name, jarInputStream );
 
-								final ArchiveEntry entry = new ArchiveEntry() {
-									@Override
-									public String getName() {
-										return name;
-									}
-
-									@Override
-									public String getNameWithinArchive() {
-										return relativeName;
-									}
-
-									@Override
-									public InputStreamAccess getStreamAccess() {
-										return inputStreamAccess;
-									}
-								};
-
-								final ArchiveEntryHandler entryHandler = context.obtainArchiveEntryHandler( entry );
-								entryHandler.handleEntry( entry, context );
+								entryConsumer.accept( new ArchiveEntryImpl(
+										name,
+										relativeName,
+										URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+										buildByteBasedInputStreamAccess( name, jarInputStream )
+								) );
 							}
 
 							subZipEntry = jarInputStream.getNextEntry();
@@ -126,25 +113,12 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 						);
 					}
 
-					final ArchiveEntry entry = new ArchiveEntry() {
-						@Override
-						public String getName() {
-							return name;
-						}
-
-						@Override
-						public String getNameWithinArchive() {
-							return relativeName;
-						}
-
-						@Override
-						public InputStreamAccess getStreamAccess() {
-							return inputStreamAccess;
-						}
-					};
-
-					final ArchiveEntryHandler entryHandler = context.obtainArchiveEntryHandler( entry );
-					entryHandler.handleEntry( entry, context );
+					entryConsumer.accept( new ArchiveEntryImpl(
+							name,
+							relativeName,
+							URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+							inputStreamAccess
+					) );
 				}
 			}
 		}
@@ -155,6 +129,26 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			catch ( Exception ignore ) {
 			}
 		}
+	}
+
+	private JarFile resolveJarFileReference() {
+		try {
+			final String filePart = getArchiveUrl().getFile();
+			if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
+				// unescaped (from the container), keep as is
+				return new JarFile( getArchiveUrl().getFile() );
+			}
+			else {
+				return new JarFile( getArchiveUrl().toURI().getSchemeSpecificPart() );
+			}
+		}
+		catch (IOException e) {
+			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+		}
+		catch (URISyntaxException e) {
+			URL_MESSAGE_LOGGER.logMalformedUrl( getArchiveUrl(), e );
+		}
+		return null;
 	}
 
 	@Override
@@ -185,22 +179,13 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 				);
 			}
 
-			return new ArchiveEntry() {
-				@Override
-				public String getName() {
-					return name;
-				}
 
-				@Override
-				public String getNameWithinArchive() {
-					return relativeName;
-				}
-
-				@Override
-				public InputStreamAccess getStreamAccess() {
-					return inputStreamAccess;
-				}
-			};
+			return new ArchiveEntryImpl(
+					name,
+					relativeName,
+					URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+					inputStreamAccess
+			);
 		}
 		finally {
 			try {
@@ -211,23 +196,24 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 		}
 	}
 
-	private JarFile resolveJarFileReference() {
-		try {
-			final String filePart = getArchiveUrl().getFile();
-			if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
-				// unescaped (from the container), keep as is
-				return new JarFile( getArchiveUrl().getFile() );
+	@Override @NonNull
+	public ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference) {
+		// try it as a relative reference
+		final ArchiveEntry entry = findEntry( jarFileReference );
+		if ( entry != null ) {
+			try {
+				return new NestedJarDescriptor( entry.getUri().toURL() );
 			}
-			else {
-				return new JarFile( getArchiveUrl().toURI().getSchemeSpecificPart() );
+			catch (MalformedURLException e) {
+				throw new ArchiveException( "Unable to convert relative jar-file reference to URL [" + jarFileReference + "]", e );
 			}
 		}
-		catch (IOException e) {
-			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+
+		var standardResolution = ArchiveHelper.standardJarFileReferenceResolution( jarFileReference, archiveDescriptorFactory );
+		if ( standardResolution != null ) {
+			return standardResolution;
 		}
-		catch (URISyntaxException e) {
-			URL_MESSAGE_LOGGER.logMalformedUrl( getArchiveUrl(), e );
-		}
-		return null;
+
+		throw new ArchiveException( "Unable to resolve <jar-file/> reference - " + jarFileReference );
 	}
 }

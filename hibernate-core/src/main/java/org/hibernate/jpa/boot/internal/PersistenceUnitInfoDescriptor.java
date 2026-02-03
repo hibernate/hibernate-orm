@@ -118,6 +118,11 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	@Override
+	public List<String> getAllClassNames() {
+		return persistenceUnitInfo.getAllManagedClassNames();
+	}
+
+	@Override
 	public List<String> getMappingFileNames() {
 		return persistenceUnitInfo.getMappingFileNames();
 	}

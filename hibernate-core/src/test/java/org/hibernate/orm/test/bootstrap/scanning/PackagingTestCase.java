@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -37,12 +29,9 @@ import org.hibernate.orm.test.jpa.pack.externaljar.Scooter;
 import org.hibernate.orm.test.jpa.pack.spacepar.Bug;
 import org.hibernate.orm.test.jpa.pack.various.Airplane;
 import org.hibernate.orm.test.jpa.pack.various.Seat;
-
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -50,6 +39,18 @@ import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.fail;
 
@@ -141,18 +142,34 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		thread.setContextClassLoader( classLoader );
 	}
 
+	protected void forEachDefaultParClass(Consumer<Class<?>> consumer) {
+		consumer.accept( ApplicationServer.class );
+		consumer.accept( Lighter.class );
+		consumer.accept( Money.class );
+		consumer.accept( Mouse.class );
+		consumer.accept( OtherIncrementListener.class );
+		consumer.accept( IncrementListener.class );
+		consumer.accept( Version.class );
+	}
+
+	protected IndexView buildDefaultParIndex() {
+		var indexer = new Indexer();
+		forEachDefaultParClass( (clazz) -> {
+			try {
+				indexer.indexClass( clazz );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+		} );
+		return indexer.complete();
+	}
+
 	protected File buildDefaultPar() {
 		String fileName = "defaultpar.par";
-		JavaArchive archive = ShrinkWrap.create(  JavaArchive.class, fileName );
-		archive.addClasses(
-				ApplicationServer.class,
-				Lighter.class,
-				Money.class,
-				Mouse.class,
-				OtherIncrementListener.class,
-				IncrementListener.class,
-				Version.class
-		);
+		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
+		forEachDefaultParClass( archive::addClass );
+
 		ArchivePath path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addAsResource( "defaultpar/META-INF/orm.xml", path );
 
@@ -252,6 +269,19 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		return testPackage;
 	}
 
+	protected IndexView buildExplodedParIndex() {
+		try {
+			var indexer = new Indexer();
+			indexer.indexClass( Elephant.class );
+			indexer.indexClass( Carpet.class );
+			indexer.index( PackagingTestCase.class.getResourceAsStream( "/org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class" ) );
+			return indexer.complete();
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
+	}
+
 	protected File buildExplodedPar() {
 		String fileName = "explodedpar";
 		JavaArchive archive = ShrinkWrap.create(  JavaArchive.class,fileName );
@@ -262,6 +292,9 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "explodedpar/META-INF/persistence.xml", path );
+
+		path = ArchivePaths.create( "META-INF/orm.xml" );
+		archive.addAsResource( "explodedpar/META-INF/orm.xml", path );
 
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml" );
 		archive.addAsResource( "explodedpar/org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml", path );
@@ -394,18 +427,34 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		return testPackage;
 	}
 
+	protected void forEachWarClass(Consumer<Class<?>> consumer) {
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.ApplicationServer.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.IncrementListener.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.Lighter.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.Money.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.Mouse.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.OtherIncrementListener.class );
+		consumer.accept( org.hibernate.orm.test.jpa.pack.war.Version.class );
+	}
+
+	protected IndexView buildWarIndex() {
+		var indexer = new Indexer();
+		forEachWarClass( aClass -> {
+			try {
+				indexer.indexClass( aClass );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+		} );
+
+		return indexer.complete();
+	}
+
 	protected File buildWar() {
 		String fileName = "war.war";
 		WebArchive archive = ShrinkWrap.create( WebArchive.class, fileName );
-		archive.addClasses(
-				org.hibernate.orm.test.jpa.pack.war.ApplicationServer.class,
-				org.hibernate.orm.test.jpa.pack.war.IncrementListener.class,
-				org.hibernate.orm.test.jpa.pack.war.Lighter.class,
-				org.hibernate.orm.test.jpa.pack.war.Money.class,
-				org.hibernate.orm.test.jpa.pack.war.Mouse.class,
-				org.hibernate.orm.test.jpa.pack.war.OtherIncrementListener.class,
-				org.hibernate.orm.test.jpa.pack.war.Version.class
-		);
+		forEachWarClass( archive::addClass );
 
 		ArchivePath path = ArchivePaths.create( "WEB-INF/classes/META-INF/orm.xml" );
 		archive.addAsResource( "war/WEB-INF/classes/META-INF/orm.xml", path );
@@ -436,9 +485,9 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addAsResource( includeFile );
 
-			File testPackage = new File( packageTargetDir, fileName );
-			archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
-			return testPackage;
+		File testPackage = new File( packageTargetDir, fileName );
+		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
+		return testPackage;
 	}
 
 }

@@ -4,39 +4,40 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import java.util.zip.ZipEntry;
-
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
-import org.hibernate.boot.archive.spi.ArchiveContext;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+import java.util.zip.ZipEntry;
+
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
-/**
- * An {@code ArchiveDescriptor} that works on archives accessible through a {@link JarInputStream}.
- *
- * @implNote This is less efficient implementation than {@link JarFileBasedArchiveDescriptor}.
- *
- * @author Emmanuel Bernard
- * @author Steve Ebersole
- */
+/// An `ArchiveDescriptor` that works on archives accessible through a [JarInputStream].
+///
+/// @implNote This is less efficient implementation than [JarFileBasedArchiveDescriptor].
+///
+/// @author Emmanuel Bernard
+/// @author Steve Ebersole
 public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 
-	/**
-	 * Constructs a JarInputStreamBasedArchiveDescriptor
-	 *
-	 * @param archiveDescriptorFactory The factory creating this
-	 * @param url The url to the JAR file
-	 * @param entry The prefix for entries within the JAR url
-	 */
+	/// Constructs a JarInputStreamBasedArchiveDescriptor
+	///
+	/// @param archiveDescriptorFactory The factory creating this
+	/// @param url The url to the JAR file
+	/// @param entry The prefix for entries within the JAR url
 	public JarInputStreamBasedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL url,
@@ -45,7 +46,7 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 	}
 
 	@Override
-	public void visitArchive(ArchiveContext context) {
+	public void visitClassEntries(Consumer<ArchiveEntry> entryConsumer) {
 		final JarInputStream jarInputStream;
 		try {
 			jarInputStream = new JarInputStream( getArchiveUrl().openStream() );
@@ -60,6 +61,11 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 			JarEntry jarEntry;
 			while ( ( jarEntry = jarInputStream.getNextJarEntry() ) != null ) {
 				final String jarEntryName = jarEntry.getName();
+
+				if ( !jarEntryName.endsWith( ".class" ) ) {
+					continue;
+				}
+
 				if ( getEntryBasePrefix() != null && ! jarEntryName.startsWith( getEntryBasePrefix() ) ) {
 					continue;
 				}
@@ -82,61 +88,56 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 									final String subName = extractName( subZipEntry );
 									final InputStreamAccess inputStreamAccess = buildByteBasedInputStreamAccess( subName, subJarInputStream );
 
-									final ArchiveEntry entry = new ArchiveEntry() {
-										@Override
-										public String getName() {
-											return subName;
-										}
-
-										@Override
-										public String getNameWithinArchive() {
-											return subName;
-										}
-
-										@Override
-										public InputStreamAccess getStreamAccess() {
-											return inputStreamAccess;
-										}
-									};
-
-									context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
+									entryConsumer.accept( new ArchiveEntryImpl( subName, subName, new URI(archiveUrl + "!/" + subName), inputStreamAccess ) );
 								}
+
 								subZipEntry = jarInputStream.getNextJarEntry();
 							}
+						}
+						catch (URISyntaxException e) {
+							throw new ArchiveException(
+									String.format( Locale.ROOT,
+											"Unable to create archive entry URI: %s - %s",
+											archiveUrl,
+											jarEntry.getName()
+									),
+									e
+							);
 						}
 						finally {
 							subJarInputStream.close();
 						}
+					}
+					catch (ArchiveException e) {
+						throw e;
 					}
 					catch (Exception e) {
 						throw new ArchiveException( "Error accessing nested jar", e );
 					}
 				}
 				else {
-					final String entryName = extractName( jarEntry );
-					final InputStreamAccess inputStreamAccess
-							= buildByteBasedInputStreamAccess( entryName, jarInputStream );
+					try {
+						final String entryName = extractName( jarEntry );
+						final InputStreamAccess inputStreamAccess = buildByteBasedInputStreamAccess( entryName, jarInputStream );
 
-					final String relativeName = extractRelativeName( jarEntry );
-
-					final ArchiveEntry entry = new ArchiveEntry() {
-						@Override
-						public String getName() {
-							return entryName;
-						}
-
-						@Override
-						public String getNameWithinArchive() {
-							return relativeName;
-						}
-
-						@Override
-						public InputStreamAccess getStreamAccess() {
-							return inputStreamAccess;
-						}
-					};
-
-					context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
+						final String relativeName = extractRelativeName( jarEntry );
+						entryConsumer.accept( new ArchiveEntryImpl(
+								relativeName,
+								relativeName,
+								new URI( archiveUrl + "!/" + relativeName ),
+								inputStreamAccess
+						) );
+					}
+					catch (URISyntaxException e) {
+						throw new ArchiveException(
+								String.format( Locale.ROOT,
+										"Unable to create archive entry URI: %s - %s",
+										archiveUrl,
+										jarEntry.getName()
+								),
+								e
+						);
+					}
 				}
 			}
 
@@ -187,27 +188,12 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 								if ( ! subZipEntry.isDirectory() ) {
 									final String subName = extractName( subZipEntry );
 									if ( path.equals( subName ) ) {
-										final InputStreamAccess inputStreamAccess = buildByteBasedInputStreamAccess(
+										return new ArchiveEntryImpl(
 												subName,
-												subJarInputStream
+												subName,
+												URI.create("jar:" + getArchiveUrl().toURI() + "!/" + subName),
+												buildByteBasedInputStreamAccess( subName, subJarInputStream )
 										);
-
-										return new ArchiveEntry() {
-											@Override
-											public String getName() {
-												return subName;
-											}
-
-											@Override
-											public String getNameWithinArchive() {
-												return subName;
-											}
-
-											@Override
-											public InputStreamAccess getStreamAccess() {
-												return inputStreamAccess;
-											}
-										};
 									}
 								}
 								subZipEntry = jarInputStream.getNextJarEntry();
@@ -217,36 +203,30 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 							subJarInputStream.close();
 						}
 					}
+					catch (URISyntaxException e) {
+						throw new ArchiveException( "Unable to create archive entry URI: " + jarEntryName, e );
+					}
 					catch (Exception e) {
 						throw new ArchiveException( "Error accessing nested jar", e );
 					}
 				}
 				else if ( path.equals( jarEntryName ) ) {
 					final String entryName = extractName( jarEntry );
-					final InputStreamAccess inputStreamAccess
-							= buildByteBasedInputStreamAccess( entryName, jarInputStream );
-
 					final String relativeName = extractRelativeName( jarEntry );
 
-					return new ArchiveEntry() {
-						@Override
-						public String getName() {
-							return entryName;
-						}
-
-						@Override
-						public String getNameWithinArchive() {
-							return relativeName;
-						}
-
-						@Override
-						public InputStreamAccess getStreamAccess() {
-							return inputStreamAccess;
-						}
-					};
+					try {
+						return new ArchiveEntryImpl(
+								entryName,
+								relativeName,
+								URI.create( "jar:" + getArchiveUrl().toURI() + "!/" + entryName ),
+								buildByteBasedInputStreamAccess( entryName, jarInputStream )
+						);
+					}
+					catch (URISyntaxException e) {
+						throw new ArchiveException( "Unable to create archive entry URI: " + jarEntryName, e );
+					}
 				}
 			}
-
 		}
 		catch (IOException ioe) {
 			throw new ArchiveException(
@@ -263,5 +243,26 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 			}
 		}
 		return null;
+	}
+
+	@Override @NonNull
+	public ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference) {
+		// try it as a relative reference
+		final ArchiveEntry entry = findEntry( jarFileReference );
+		if ( entry != null ) {
+			try {
+				return new NestedJarDescriptor( entry.getUri().toURL() );
+			}
+			catch (MalformedURLException e) {
+				throw new ArchiveException( "Unable to convert relative jar-file reference to URL [" + jarFileReference + "]", e );
+			}
+		}
+
+		var standardResolution = ArchiveHelper.standardJarFileReferenceResolution( jarFileReference, archiveDescriptorFactory );
+		if ( standardResolution != null ) {
+			return standardResolution;
+		}
+
+		throw new ArchiveException( "Unable to resolve <jar-file/> reference - " + jarFileReference );
 	}
 }

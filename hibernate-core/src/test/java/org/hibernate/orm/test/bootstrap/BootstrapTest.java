@@ -665,7 +665,7 @@ public class BootstrapTest {
 
 		@Override
 		public List<String> getMappingFileNames() {
-			return null;
+			return Collections.emptyList();
 		}
 
 		@Override

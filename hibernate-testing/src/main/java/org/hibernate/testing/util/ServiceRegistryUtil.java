@@ -13,6 +13,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 
 public class ServiceRegistryUtil {
@@ -74,6 +75,13 @@ public class ServiceRegistryUtil {
 	public static Map<String, Object> createBaseSettings() {
 		final Map<String, Object> settings = new HashMap<>();
 		ServiceRegistryUtil.applySettings( settings );
+		return settings;
+	}
+
+	public static Map<String, Object> createBaseSettingsWithExport() {
+		final Map<String, Object> settings = new HashMap<>();
+		ServiceRegistryUtil.applySettings( settings );
+		settings.put( SchemaToolingSettings.HBM2DDL_AUTO, "create-drop" );
 		return settings;
 	}
 }

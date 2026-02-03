@@ -5,10 +5,8 @@
 package org.hibernate.boot;
 
 import jakarta.persistence.FetchType;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -154,26 +152,6 @@ public interface MetadataBuilder {
 	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**
-	 * Specify the options to be used in performing scanning.
-	 *
-	 * @param scanOptions The scan options.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#SCANNER_DISCOVERY
-	 */
-	MetadataBuilder applyScanOptions(ScanOptions scanOptions);
-
-	/**
-	 * Consider this temporary as discussed on {@link ScanEnvironment}
-	 *
-	 * @param scanEnvironment The environment for scanning
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	MetadataBuilder applyScanEnvironment(ScanEnvironment scanEnvironment);
-
-	/**
 	 * Specify a particular Scanner instance to use.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#SCANNER}
@@ -185,7 +163,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER
 	 */
-	MetadataBuilder applyScanner(Scanner scanner);
+	MetadataBuilder applyScanning(ScanningProvider scanner);
 
 	/**
 	 * Specify a particular ArchiveDescriptorFactory instance to use in scanning.

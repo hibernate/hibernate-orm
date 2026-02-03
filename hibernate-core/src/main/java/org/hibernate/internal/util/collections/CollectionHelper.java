@@ -383,6 +383,13 @@ public final class CollectionHelper {
 		};
 	}
 
+	public static <O> List<O> combine(Collection<O> list1, Collection<O> list2) {
+		final ArrayList<O> combined = arrayList( list1.size() + list2.size() );
+		combined.addAll( list1 );
+		combined.addAll( list2 );
+		return combined;
+	}
+
 	public static <O> List<O> combine(List<O> list1, List<O> list2) {
 		final ArrayList<O> combined = arrayList( list1.size() + list2.size() );
 		combined.addAll( list1 );

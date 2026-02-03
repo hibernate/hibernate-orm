@@ -77,6 +77,11 @@ public class PersistenceUnitDescriptorAdapter implements PersistenceUnitDescript
 	}
 
 	@Override
+	public List<String> getAllClassNames() {
+		return getManagedClassNames();
+	}
+
+	@Override
 	public boolean isExcludeUnlistedClasses() {
 		return false;
 	}

@@ -4,37 +4,36 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
-import org.hibernate.boot.archive.spi.ArchiveContext;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.function.Consumer;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
-/**
- * An {@code ArchiveDescriptor} for exploded (directory) archives.
- *
- * @author Steve Ebersole
- */
+/// An `ArchiveDescriptor` for exploded (directory) archives.
+///
+/// @author Steve Ebersole
 public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
-	/**
-	 * Constructs an ExplodedArchiveDescriptor
-	 *
-	 * @param archiveDescriptorFactory The factory creating this
-	 * @param archiveUrl The directory URL
-	 * @param entryBasePrefix the base (within the url) that described the prefix for entries within the archive
-	 */
+
+	/// Constructs an ExplodedArchiveDescriptor
+	///
+	/// @param archiveDescriptorFactory The factory creating this
+	/// @param archiveUrl The directory URL
+	/// @param entryBasePrefix the base (within the url) that described the prefix for entries within the archive
 	public ExplodedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL archiveUrl,
@@ -43,52 +42,19 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 	}
 
 	@Override
-	public void visitArchive(ArchiveContext context) {
+	public void visitClassEntries(Consumer<ArchiveEntry> entryConsumer) {
 		final File rootDirectory = resolveRootDirectory();
 		if ( rootDirectory == null ) {
 			return;
 		}
 
 		if ( rootDirectory.isDirectory() ) {
-			processDirectory( rootDirectory, null, context );
+			processDirectory( rootDirectory, null, entryConsumer );
 		}
 		else {
 			//assume zipped file
-			processZippedRoot( rootDirectory, context );
+			processZippedRoot( rootDirectory, entryConsumer );
 		}
-	}
-
-	@Override
-	public @Nullable ArchiveEntry findEntry(String path) {
-		final File rootDirectory = resolveRootDirectory();
-		if ( rootDirectory == null ) {
-			return null;
-		}
-		final File localFile = new File( rootDirectory, path );
-		if ( !localFile.exists() ) {
-			return null;
-		}
-
-		final String name = localFile.getAbsolutePath();
-		final String relativeName = path + localFile.getName();
-		final InputStreamAccess inputStreamAccess = new FileInputStreamAccess( name, localFile );
-
-		return new ArchiveEntry() {
-			@Override
-			public String getName() {
-				return name;
-			}
-
-			@Override
-			public String getNameWithinArchive() {
-				return relativeName;
-			}
-
-			@Override
-			public InputStreamAccess getStreamAccess() {
-				return inputStreamAccess;
-			}
-		};
 	}
 
 	private File resolveRootDirectory() {
@@ -129,7 +95,7 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 	private void processDirectory(
 			File directory,
 			String path,
-			ArchiveContext context) {
+			Consumer<ArchiveEntry> entryConsumer) {
 		if ( directory == null ) {
 			return;
 		}
@@ -147,37 +113,25 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 			}
 
 			if ( localFile.isDirectory() ) {
-				processDirectory( localFile, path + localFile.getName(), context );
+				processDirectory( localFile, path + localFile.getName(), entryConsumer );
+				continue;
+			}
+
+			if ( !localFile.getName().endsWith( ".class" ) ) {
 				continue;
 			}
 
 			final String name = localFile.getAbsolutePath();
 			final String relativeName = path + localFile.getName();
 			final InputStreamAccess inputStreamAccess = new FileInputStreamAccess( name, localFile );
-
-			final ArchiveEntry entry = new ArchiveEntry() {
-				@Override
-				public String getName() {
-					return name;
-				}
-
-				@Override
-				public String getNameWithinArchive() {
-					return relativeName;
-				}
-
-				@Override
-				public InputStreamAccess getStreamAccess() {
-					return inputStreamAccess;
-				}
-			};
-
-			context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
+			entryConsumer.accept( new ArchiveEntryImpl( name, relativeName, localFile.toURI(), inputStreamAccess ) );
 		}
 	}
 
-	private void processZippedRoot(File rootFile, ArchiveContext context) {
-		try (final JarFile jarFile = new JarFile(rootFile)){
+	private void processZippedRoot(File rootFile, Consumer<ArchiveEntry> entryConsumer) {
+		final String entryUriBase = getArchiveUrl().toString();
+
+		try (final JarFile jarFile = new JarFile(rootFile)) {
 			final Enumeration<? extends ZipEntry> entries = jarFile.entries();
 			while ( entries.hasMoreElements() ) {
 				final ZipEntry zipEntry = entries.nextElement();
@@ -186,6 +140,9 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 				}
 
 				final String name = extractName( zipEntry );
+				if ( !name.endsWith(  ".class" ) ) {
+					continue;
+				}
 				final String relativeName = extractRelativeName( zipEntry );
 				final InputStreamAccess inputStreamAccess;
 				try {
@@ -201,28 +158,77 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 					);
 				}
 
-				final ArchiveEntry entry = new ArchiveEntry() {
-					@Override
-					public String getName() {
-						return name;
-					}
-
-					@Override
-					public String getNameWithinArchive() {
-						return relativeName;
-					}
-
-					@Override
-					public InputStreamAccess getStreamAccess() {
-						return inputStreamAccess;
-					}
-				};
-				context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
+				// todo (jpa4) : for now, pass null
+				entryConsumer.accept( new ArchiveEntryImpl(
+						name,
+						relativeName,
+						new URL( "jar:" + entryUriBase + "!/" + relativeName ).toURI(),
+						inputStreamAccess
+				) );
 			}
 		}
 		catch (IOException e) {
 			throw new ArchiveException( "Error accessing jar file [" + rootFile.getAbsolutePath() + "]", e );
 		}
+		catch (URISyntaxException e) {
+			throw new ArchiveException( "Unable to create archive entry URI", e );
+		}
 	}
 
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String relativePath) {
+		final File file = resolveRelativePath( relativePath );
+		if ( file == null ) {
+			return null;
+		}
+		final String name = file.getAbsolutePath();
+		final InputStreamAccess inputStreamAccess = new FileInputStreamAccess( name, file );
+		return new ArchiveEntryImpl( name, relativePath, file.toURI(), inputStreamAccess );
+	}
+
+	private File resolveRelativePath(String relativePath) {
+		final File rootDirectory = resolveRootDirectory();
+		if ( rootDirectory == null ) {
+			return null;
+		}
+
+		final File localFile = new File( rootDirectory, relativePath );
+		if ( !localFile.exists() ) {
+			return null;
+		}
+
+		return localFile;
+	}
+
+	@Override @NonNull
+	public ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference) {
+		// try it as a relative reference
+		final ArchiveEntry entry = findEntry( jarFileReference );
+		if ( entry != null ) {
+			try {
+				return archiveDescriptorFactory.buildArchiveDescriptor( entry.getUri().toURL() );
+			}
+			catch (MalformedURLException e) {
+				throw new ArchiveException( "Unable to convert relative <jar-file/> reference to URL [" + jarFileReference + "]", e );
+			}
+		}
+
+		var standardResolution = ArchiveHelper.standardJarFileReferenceResolution( jarFileReference, archiveDescriptorFactory );
+		if ( standardResolution != null ) {
+			return standardResolution;
+		}
+
+		try {
+			var file = new File( resolveRootDirectory(), jarFileReference );
+			if ( file.exists() ) {
+				return archiveDescriptorFactory.buildArchiveDescriptor( file.toURI().toURL() );
+			}
+		}
+		catch (MalformedURLException e) {
+			throw new ArchiveException( "Unable to convert jar File to URL [" + jarFileReference + "]", e );
+		}
+
+		throw new ArchiveException( "Unable to resolve <jar-file/> reference - " + jarFileReference );
+	}
 }

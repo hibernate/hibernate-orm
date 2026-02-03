@@ -86,7 +86,7 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 
 	@Override
 	public List<String> getAllManagedClassNames() {
-		return List.of();
+		return getManagedClassNames();
 	}
 
 	@Override

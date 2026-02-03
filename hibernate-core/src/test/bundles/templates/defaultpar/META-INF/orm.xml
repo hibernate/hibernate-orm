@@ -34,4 +34,12 @@
             </entity-listener>
         </entity-listeners>
     </entity>
+    <entity class="Mouse">
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
 </entity-mappings>

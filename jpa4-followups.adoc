@@ -3,6 +3,9 @@
 
 Things to do after JPA 4.0 work...
 
+NOTE: See `todo (jpa4)` in source as well...
+
+
 == TCK Tests
 
 For tests to add to the TCK, see -

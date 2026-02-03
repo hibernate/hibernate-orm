@@ -9,6 +9,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
+import org.hibernate.boot.scan.spi.Scanner;
+import org.hibernate.boot.scan.spi.ScanningProvider;
 
 /**
  * Settings related to persistence-units
@@ -110,7 +112,20 @@ public interface PersistenceSettings {
 	String PERSISTENCE_UNIT_NAME = "hibernate.persistenceUnitName";
 
 	/**
-	 * Specifies an implementation of {@link org.hibernate.boot.archive.scan.spi.Scanner},
+	 * Specifies an implementation of {@link ScanningProvider},
+	 * either:
+	 * <ul>
+	 *     <li>an instance of {@code ScanningProvider},
+	 *     <li>a {@link Class} representing a class that implements {@code ScanningProvider}
+	 *     <li>the name of a class that implements {@code ScanningProvider}.
+	 * </ul>
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#applyScanning
+	 */
+	String SCANNING = "hibernate.archive.scanning";
+
+	/**
+	 * Specifies an implementation of {@link Scanner},
 	 * either:
 	 * <ul>
 	 *     <li>an instance of {@code Scanner},
@@ -118,7 +133,9 @@ public interface PersistenceSettings {
 	 *     <li>the name of a class that implements {@code Scanner}.
 	 * </ul>
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyScanner
+	 * @see org.hibernate.boot.MetadataBuilder#applyScanning
+	 *
+	 * @apiNote Generally, prefer {@linkplain #SCANNING} to supply a provider
 	 */
 	String SCANNER = "hibernate.archive.scanner";
 
@@ -130,30 +147,11 @@ public interface PersistenceSettings {
 	 *     <li>a {@link Class} representing a class that implements {@code ArchiveDescriptorFactory}, or
 	 *     <li>the name of a class that implements {@code ArchiveDescriptorFactory}.
 	 * </ul>
-	 * <p>
-	 * See information on {@link org.hibernate.boot.archive.scan.spi.Scanner}
-	 * about expected constructor forms.
 	 *
 	 * @see #SCANNER
-	 * @see org.hibernate.boot.archive.scan.spi.Scanner
 	 * @see org.hibernate.boot.MetadataBuilder#applyArchiveDescriptorFactory
 	 */
 	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
-
-	/**
-	 * Identifies a comma-separated list of values indicating the types of things we should
-	 * autodetect during scanning. Allowable values include:
-	 * <ul>
-	 *     <li>{@code "class"} specifies that {@code .class} files are discovered as managed classes
-	 *     <li>{@code "hbm"} specifies that {@code hbm.xml} files are discovered as mapping files
-	 * </ul>
-	 * When {@code .class} discovery is enabled, the module {@code hibernate-scan-jandex}
-	 * must be added as a dependency, or some other implementation of the service
-	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made available.
-	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyScanOptions
-	 */
-	String SCANNER_DISCOVERY = "hibernate.archive.autodetection";
 
 	/**
 	 * Allows JPA callbacks (via {@link jakarta.persistence.PreUpdate} and friends) to be

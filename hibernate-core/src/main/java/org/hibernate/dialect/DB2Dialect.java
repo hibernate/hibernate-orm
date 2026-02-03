@@ -28,6 +28,8 @@ import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.DB2TemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.DB2StructJdbcType;
@@ -1230,7 +1232,12 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+		return switch ( generatedAs ) {
+			case "transaction start id" -> " not null generated always as transaction start id";
+			case "row start" -> " not null generated always as row begin";
+			case "row end" -> " not null generated always as row end";
+			default -> " generated always as (" + generatedAs + ")";
+		};
 	}
 
 	@Override
@@ -1326,4 +1333,13 @@ public class DB2Dialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return false;
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DB2TemporalTableSupport( this );
+	}
 }

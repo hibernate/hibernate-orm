@@ -61,7 +61,6 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
@@ -3579,6 +3578,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+		final var loadQueryInfluencers = getLoadQueryInfluencers();
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
@@ -3608,18 +3608,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupJoin::applyPredicate,
 				tableGroup,
 				true,
-				getLoadQueryInfluencers().getEnabledFilters(),
+				loadQueryInfluencers.getEnabledFilters(),
 				false,
 				null,
 				this
 		);
 
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction(
-					tableGroup.resolveTableReference( softDeleteMapping.getTableName() )
-			);
-			tableGroupJoin.applyPredicate( softDeleteRestriction );
+		final var auxiliaryMapping = entityDescriptor.getAuxiliaryMapping();
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyPredicate( tableGroupJoin, loadQueryInfluencers );
 		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {

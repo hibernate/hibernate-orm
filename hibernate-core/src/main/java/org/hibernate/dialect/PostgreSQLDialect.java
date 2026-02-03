@@ -30,6 +30,8 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.PostgreSQLTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.PgJdbcHelper;
@@ -914,6 +916,12 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
+		// actually it is allowed for 'generated always as (...) stored'
+		return false;
+	}
+
+	@Override
 	public String generatedAs(String generatedAs) {
 		return getVersion().isSameOrAfter( 18 )
 				? " generated always as (" + generatedAs + ")"
@@ -1671,5 +1679,10 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean causesRollback(SQLException sqlException) {
 		return true;
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new PostgreSQLTemporalTableSupport( this );
 	}
 }

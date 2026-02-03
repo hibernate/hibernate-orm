@@ -149,6 +149,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
+		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
 		// A nonzero batch size forces the use of write-behind
@@ -1387,6 +1388,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionBegin() {
+		super.afterTransactionBegin();
 		afterTransactionBeginEvents();
 	}
 
@@ -1401,6 +1403,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		transactionCompletionCallbacks.afterTransactionCompletion( successful );
 		afterTransactionCompletionEvents( successful );
+		clearTransactionStartInstant();
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}

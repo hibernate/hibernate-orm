@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Internal;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -22,17 +23,19 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
  *
  * @author Steve Ebersole
  */
-public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, SqlExpressible {
+public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, VirtualModelPart, SqlExpressible {
 	String ROLE_NAME = "{soft-delete}";
 
 	/**
 	 * The soft-delete strategy - how to interpret indicator values
 	 */
+	@Internal // only used in tests!
 	SoftDeleteType getSoftDeleteStrategy();
 
 	/**
 	 * The name of the soft-delete indicator column.
 	 */
+	@Internal // only used in tests!
 	String getColumnName();
 
 	/**

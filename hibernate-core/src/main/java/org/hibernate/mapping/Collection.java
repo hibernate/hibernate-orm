@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.persister.state.StateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
@@ -27,8 +28,10 @@ import org.hibernate.usertype.UserCollectionType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -101,8 +104,14 @@ public abstract sealed class Collection
 	private String customSQLDeleteAll;
 	private boolean customDeleteAllCallable;
 
-	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
+
+	private Class<? extends StateManagement> stateManagementType;
+	private Table auxiliaryTable;
+	private boolean partitioned;
+	private Map<String, Column> auxiliaryColumns;
+	private String auxiliaryColumnInPrimaryKey;
+	private boolean primaryKeyDisabled;
 
 	private String loaderName;
 
@@ -177,6 +186,16 @@ public abstract sealed class Collection
 		this.deleteExpectation = original.deleteExpectation;
 		this.deleteAllExpectation = original.deleteAllExpectation;
 		this.loaderName = original.loaderName;
+		this.auxiliaryTable = original.auxiliaryTable;
+		this.auxiliaryColumns = original.auxiliaryColumns == null ? null : new HashMap<>( original.auxiliaryColumns );
+		this.stateManagementType = original.stateManagementType;
+		this.auxiliaryColumnInPrimaryKey = original.auxiliaryColumnInPrimaryKey;
+		this.primaryKeyDisabled = original.primaryKeyDisabled;
+		this.softDeleteStrategy = original.softDeleteStrategy;
+		this.partitioned = original.partitioned;
+		this.queryCacheLayout = original.queryCacheLayout;
+		this.cachedCollectionType = original.cachedCollectionType;
+		this.cachedCollectionSemantics = original.cachedCollectionSemantics;
 	}
 
 	@Override
@@ -562,9 +581,42 @@ public abstract sealed class Collection
 
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
-		if ( !isInverse() ) {
+		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
 			createPrimaryKey();
+			adjustTemporalPrimaryKey();
 		}
+	}
+
+	private void adjustTemporalPrimaryKey() {
+		if ( isAuxiliaryColumnInPrimaryKey() ) {
+			final var primaryKey = collectionTable.getPrimaryKey();
+			if ( primaryKey != null ) {
+				final var startingColumn = getAuxiliaryColumn( auxiliaryColumnInPrimaryKey );
+				if ( startingColumn != null && !primaryKey.containsColumn( startingColumn ) ) {
+					primaryKey.addColumn( startingColumn );
+				}
+			}
+		}
+	}
+
+	@Override
+	public boolean isPrimaryKeyDisabled() {
+		return primaryKeyDisabled;
+	}
+
+	@Override
+	public void setPrimaryKeyDisabled(boolean disabled) {
+		this.primaryKeyDisabled = disabled;
+	}
+
+	@Override
+	public void setAuxiliaryColumnInPrimaryKey(String key) {
+		this.auxiliaryColumnInPrimaryKey = key;
+	}
+
+	@Override
+	public boolean isAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey != null;
 	}
 
 	public String getCacheConcurrencyStrategy() {
@@ -836,7 +888,7 @@ public abstract sealed class Collection
 
 	@Override
 	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
-		this.softDeleteColumn = indicatorColumn;
+		SoftDeletable.super.enableSoftDelete( indicatorColumn, strategy );
 		this.softDeleteStrategy = strategy;
 	}
 
@@ -846,8 +898,18 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public Column getSoftDeleteColumn() {
-		return softDeleteColumn;
+	public Table getMainTable() {
+		return collectionTable;
+	}
+
+	@Override
+	public boolean isMainTablePartitioned() {
+		return partitioned;
+	}
+
+	@Override
+	public void setMainTablePartitioned(boolean partitioned) {
+		this.partitioned = partitioned;
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
@@ -885,5 +947,33 @@ public abstract sealed class Collection
 	@Override
 	public boolean isPartitionKey() {
 		return false;
+	}
+
+	public void setStateManagementType(Class<? extends StateManagement> stateManagementType) {
+		this.stateManagementType = stateManagementType;
+	}
+
+	public Class<? extends StateManagement> getStateManagementType() {
+		return stateManagementType;
+	}
+
+	public Table getAuxiliaryTable() {
+		return auxiliaryTable;
+	}
+
+	public void setAuxiliaryTable(Table auxiliaryTable) {
+		this.auxiliaryTable = auxiliaryTable;
+	}
+
+	public Column getAuxiliaryColumn(String column) {
+		return auxiliaryColumns == null ? null
+				: auxiliaryColumns.get( column );
+	}
+
+	public void addAuxiliaryColumn(String name, Column column) {
+		if ( auxiliaryColumns == null ) {
+			auxiliaryColumns = new HashMap<>();
+		}
+		auxiliaryColumns.put( name, column );
 	}
 }

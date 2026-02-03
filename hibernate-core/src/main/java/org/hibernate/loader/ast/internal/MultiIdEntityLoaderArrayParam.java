@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -103,6 +104,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						session.getLoadQueryInfluencers(),
 						lockOptions,
 						jdbcParameter,
+						new SqlAliasBaseManager(),
 						getSessionFactory()
 				);
 
@@ -163,6 +165,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						session.getLoadQueryInfluencers(),
 						lockOptions,
 						jdbcParameter,
+						new SqlAliasBaseManager(),
 						getSessionFactory()
 				);
 

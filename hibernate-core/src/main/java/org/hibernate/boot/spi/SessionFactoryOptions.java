@@ -20,6 +20,8 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -539,6 +541,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.SessionBuilder#jdbcTimeZone(TimeZone)
 	 */
 	TimeZone getJdbcTimeZone();
+
+	/**
+	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
+	 */
+	TemporalTableStrategy getTemporalTableStrategy();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE

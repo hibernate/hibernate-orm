@@ -17,6 +17,8 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.sql.exec.internal.TemporalParameterBindingsHelper.applyTemporalParameterBindings;
+
 /**
  * @author Steve Ebersole
  */
@@ -35,6 +37,12 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			ExecutionContext executionContext) {
 		final var session = executionContext.getSession();
 		session.autoFlushIfRequired( jdbcMutation.getAffectedTableNames() );
+
+		final var effectiveBindings = applyTemporalParameterBindings(
+				jdbcParameterBindings,
+				jdbcMutation.getParameterBinders(),
+				executionContext.getLoadQueryInfluencers()
+		);
 
 		final var logicalConnection =
 				session.getJdbcCoordinator().getLogicalConnection();
@@ -58,7 +66,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 					parameterBinder.bindParameterValue(
 							preparedStatement,
 							paramBindingPosition++,
-							jdbcParameterBindings,
+							effectiveBindings,
 							executionContext
 					);
 				}

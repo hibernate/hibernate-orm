@@ -15,6 +15,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -117,4 +118,10 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 
 	@Override
 	SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
+
+	@Override
+	SharedSessionBuilderImplementor asOf(Instant instant);
+
+	@Override
+	SharedSessionBuilderImplementor atTransaction(Object transactionId);
 }

@@ -24,7 +24,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -144,9 +143,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		public InsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {
 			mutationTarget.forEachMutableTable( (tableMapping) -> {
-				final int[] tableAttributeIndexes = tableMapping.getAttributeIndexes();
-				for ( int i = 0; i < tableAttributeIndexes.length; i++ ) {
-					if ( values[tableAttributeIndexes[i]] != null ) {
+				for ( int tableAttributeIndex : tableMapping.getAttributeIndexes() ) {
+					if ( values[tableAttributeIndex] != null ) {
 						tablesWithNonNullValues.add( tableMapping );
 						break;
 					}
@@ -205,9 +203,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var operation = mutationGroup.getOperation( position );
 			final var tableDetails = (EntityTableMapping) operation.getTableDetails();
 			if ( tableInclusionChecker.include( tableDetails ) ) {
-				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
-					final int attributeIndex = attributeIndexes[ i ];
+				for ( final int attributeIndex : tableDetails.getAttributeIndexes() ) {
 					if ( propertyInclusions[attributeIndex] ) {
 						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings,
 								attributeMappings.get( attributeIndex ) );
@@ -280,7 +276,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final boolean[] propertiesToInsert = getPropertiesToInsert( values );
+		final boolean[] propertiesToInsert = getPropertiesToInsert( entityPersister(), values );
 		final var insertGroup =
 				generateDynamicInsertSqlGroup( propertiesToInsert, object, session, forceIdentifierBinding );
 		final var mutationExecutor = executor( session, insertGroup, true );
@@ -327,9 +323,9 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * Transform the array of property indexes to an array of booleans,
 	 * true when the property is insertable and non-null
 	 */
-	public boolean[] getPropertiesToInsert(Object[] fields) {
+	static boolean[] getPropertiesToInsert(EntityPersister persister, Object[] fields) {
 		final var notNull = new boolean[fields.length];
-		final var insertable = entityPersister().getPropertyInsertability();
+		final var insertable = persister.getPropertyInsertability();
 		for ( int i = 0; i < fields.length; i++ ) {
 			notNull[i] = insertable[i] && fields[i] != null;
 		}
@@ -375,7 +371,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
+		final var attributeMappings = entityPersister().getAttributeMappings();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -383,9 +379,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			// `attributeIndexes` represents the indexes (relative to `attributeMappings`) of
 			// the attributes mapped to the table
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[ i ];
+			for ( final int attributeIndex : tableMapping.getAttributeIndexes() ) {
 				final var attributeMapping = attributeMappings.get( attributeIndex );
 				if ( attributeInclusions[attributeIndex] ) {
 					attributeMapping.forEachInsertable( insertGroupBuilder );
@@ -398,7 +392,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
 						else if ( isValueGenerationInSql( generator, factory.getJdbcServices().getDialect() ) ) {
-							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+							handleValueGeneration( attributeMapping, insertGroupBuilder,
+									(OnExecutionGenerator) generator );
 						}
 					}
 				}
@@ -407,14 +402,15 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// add the discriminator
 		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
-		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
+		entityPersister().addAuxiliaryToInsertGroup( insertGroupBuilder );
 
 		// add the keys
 		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {
 			final var tableInsertBuilder = (TableInsertBuilder) tableMutationBuilder;
 			final var tableMapping = (EntityTableMapping) tableInsertBuilder.getMutatingTable().getTableMapping();
 			final var keyMapping = tableMapping.getKeyMapping();
-			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
+			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert()
+					&& !forceIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister().getGenerator();
 				if ( generator.referenceColumnsInSql( dialect ) ) {

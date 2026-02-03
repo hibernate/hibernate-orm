@@ -410,6 +410,8 @@ public class BinderHelper {
 		clone.setName( property.getName() );
 		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
 		clone.setOptimisticLocked( property.isOptimisticLocked() );
+		clone.setTemporalExcluded( property.isTemporalExcluded() );
+		clone.setAuditedExcluded( property.isAuditedExcluded() );
 		clone.setOptional( property.isOptional() );
 		clone.setPersistentClass( property.getPersistentClass() );
 		clone.setPropertyAccessorName( property.getPropertyAccessorName() );

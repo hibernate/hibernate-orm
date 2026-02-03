@@ -13,6 +13,7 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -56,8 +57,10 @@ public class CollectionBatchLoaderInPredicate
 			);
 		}
 
+		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
+
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
-		this.sqlAst = LoaderSelectBuilder.createSelect(
+		sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
 				attributeMapping.getKeyDescriptor(),
@@ -66,12 +69,18 @@ public class CollectionBatchLoaderInPredicate
 				influencers,
 				new LockOptions(),
 				jdbcParametersBuilder::add,
+				sqlAliasBaseGenerator,
 				sessionFactory
 		);
 
 		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+		attributeMapping.applyAuxiliaryRestrictions(
+				tableGroup,
+				querySpec::applyPredicate,
+				influencers,
+				sqlAliasBaseGenerator
+		);
 
 		jdbcParameters = jdbcParametersBuilder.build();
 		assert jdbcParameters.size() == sqlBatchSize * keyColumnCount;

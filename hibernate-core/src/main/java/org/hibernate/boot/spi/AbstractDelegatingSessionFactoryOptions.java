@@ -17,6 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.cfg.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -406,6 +407,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public TemporalTableStrategy getTemporalTableStrategy() {
+		return delegate.getTemporalTableStrategy();
 	}
 
 	@Override

@@ -1520,6 +1520,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	boolean hasRowId();
 
+	/**
+	 * The indexes of {@linkplain org.hibernate.annotations.Immutable immutable} attributes of the entity.
+	 */
+	int[] getImmutablePropertyIndexes();
+
 	String[] getSubclassPropertyColumnNames(int i);
 
 	/**

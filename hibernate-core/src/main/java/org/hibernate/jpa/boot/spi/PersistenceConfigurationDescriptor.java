@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Properties;
 
 import jakarta.persistence.FetchType;
+import jakarta.persistence.SchemaManagementAction;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -36,8 +38,16 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	public PersistenceConfigurationDescriptor(PersistenceConfiguration persistenceConfiguration) {
 		this.persistenceConfiguration = persistenceConfiguration;
-		this.properties = CollectionHelper.asProperties( persistenceConfiguration.properties() );
-		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
+		managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
+		properties = CollectionHelper.asProperties( persistenceConfiguration.properties() );
+		final var databaseAction = persistenceConfiguration.schemaManagementDatabaseAction();
+		if ( databaseAction != SchemaManagementAction.NONE ) {
+			properties.put( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, databaseAction.name() );
+		}
+		final var scriptsAction = persistenceConfiguration.getSchemaManagementScriptsAction();
+		if ( scriptsAction != SchemaManagementAction.NONE ) {
+			properties.put( SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, scriptsAction.name() );
+		}
 	}
 
 	@Override

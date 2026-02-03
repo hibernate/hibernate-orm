@@ -15,6 +15,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -270,5 +271,40 @@ public class JPALockTest extends AbstractJPATest {
 					session.remove( session.getReference(item) );
 				}
 		);
+	}
+	/**
+	 * Test that LockModeType.NONE on an non-entity class causes the transaction to be marked for rollback only.
+	 */
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	public void testLockModeTypeNone() {
+		Session s1 = null;
+
+		try {
+			// do the isolated update
+			s1 = sessionFactory().openSession();
+			s1.beginTransaction();
+			try {
+				s1.lock( this, LockMode.NONE );
+				fail("Transaction should have been rolled back");
+			} catch (RuntimeException expected) {
+				assertEquals( s1.getTransaction().getStatus(), TransactionStatus.MARKED_ROLLBACK, "Expected that transaction is marked for rollback only" );
+			}
+
+		}
+		finally {
+			if ( s1 != null ) {
+				try {
+					if ( s1.getTransaction().isActive() ) {
+						s1.getTransaction().rollback();
+					}
+				}
+				finally {
+					if ( s1.isOpen() ) {
+						s1.close();
+					}
+				}
+			}
+		}
 	}
 }

@@ -67,7 +67,7 @@ public class TestCase {
 		}
 		s.flush();
 		s.clear();
-		s.createQuery( "from java.lang.Object", null).getResultList();
+		s.createQuery( "from java.lang.Object", (Class<?>)null).getResultList();
 		tx.commit();
 		s.close();
 		sf.close();

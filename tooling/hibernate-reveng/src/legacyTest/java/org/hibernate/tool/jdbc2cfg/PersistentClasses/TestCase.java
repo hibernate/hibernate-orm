@@ -148,7 +148,7 @@ public class TestCase {
         assertFalse(Hibernate.isInitialized(order) );
         assertFalse(Hibernate.isInitialized(order.getItemsForOrderId() ) );
         
-        order = (Orders) session.createQuery("from " + PACKAGE_NAME + ".Orders", null).getSingleResult();
+        order = (Orders) session.createQuery("from " + PACKAGE_NAME + ".Orders", (Class<?>)null).getSingleResult();
          
         assertFalse(Hibernate.isInitialized(order.getItemsForOrderId() ) );
 		t.commit();

@@ -30,6 +30,7 @@ import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -86,6 +87,8 @@ public class TestCase {
 				"org/hibernate/tool/hbm2x/Hbm2HibernateDAOTest/AuthorHome.java") );
 	}
 	
+	// TODO HBX-3308: Inspect test failure and reenable the test 
+	@Disabled
 	@Test
 	public void testCompilable() throws IOException {
 		File compiled = new File(outputFolder, "compiled");

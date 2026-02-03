@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.internal.NamedHqlSelectionDefinitionImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
@@ -406,7 +406,7 @@ public class Cfg2JavaTool {
     public Map<?, ?> getParameterTypes(NamedHqlQueryDefinition<?> query) {
         Map<?, ?> result;
         try {
-            Field field = NamedHqlQueryDefinitionImpl.class.getDeclaredField("parameterTypes");
+            Field field = NamedHqlSelectionDefinitionImpl.class.getDeclaredField("parameterTypes");
             field.setAccessible(true);
             result = (Map<?, ?>)field.get(query);
             if (result == null) {

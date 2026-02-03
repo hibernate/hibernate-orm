@@ -5,17 +5,23 @@
 package org.hibernate.orm.test.jpa.boot;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
@@ -57,6 +63,44 @@ public class DefaultToOneFetchTypeTests {
 		final Property authorProperty = postDescriptor.getProperty( "author" );
 		final ToOne authorPropertyMapping = (ToOne) authorProperty.getValue();
 		assertThat( authorPropertyMapping.isLazy() ).isEqualTo( expectation);
+	}
+
+	@Test
+	void testDefaultPersistenceConfiguration() {
+		try( final EntityManagerFactory emf = new HibernatePersistenceConfiguration( "unit" )
+				.managedClass( User.class )
+				.managedClass( Post.class )
+				.createEntityManagerFactory() ) {
+			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
+			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
+		}
+	}
+
+	@Test
+	void testLazyPersistenceConfiguration() {
+		try( final EntityManagerFactory emf = new HibernatePersistenceConfiguration( "unit" )
+				.defaultToOneFetchType( FetchType.LAZY )
+				.managedClass( User.class )
+				.managedClass( Post.class )
+				.createEntityManagerFactory() ) {
+			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
+			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
+		}
+	}
+
+	@Test
+	void testEagerPersistenceConfiguration() {
+		try( final EntityManagerFactory emf = new HibernatePersistenceConfiguration( "unit" )
+				.defaultToOneFetchType( FetchType.EAGER )
+				.managedClass( User.class )
+				.managedClass( Post.class )
+				.createEntityManagerFactory() ) {
+			var postDescriptor = emf.unwrap( SessionFactoryImplementor.class ).getMappingMetamodel().getEntityDescriptor( Post.class );
+			final AttributeMapping authorAttribute = postDescriptor.findAttributeMapping( "author" );
+			assertThat( authorAttribute.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
+		}
 	}
 
 	@Entity(name="User")

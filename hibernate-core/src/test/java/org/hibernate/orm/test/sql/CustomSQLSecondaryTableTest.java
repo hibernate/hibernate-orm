@@ -12,12 +12,12 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.Session;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -94,7 +94,7 @@ public class CustomSQLSecondaryTableTest {
 	@SQLInsert(
 			table = "person_details",
 			sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
-			check = ResultCheckStyle.COUNT
+			verify = Expectation.RowCount.class
 	)
 	@SQLDelete(
 			table = "person_details",

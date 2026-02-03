@@ -17,6 +17,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.annotations.ResultCheckStyle.COUNT;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
@@ -112,7 +112,7 @@ public class CollectionLoaderTest {
 
 	//tag::sql-custom-crud-example[]
 	@Entity(name = "Person")
-	@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", check = COUNT)
+	@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", verify = Expectation.RowCount.class)
 	@SQLUpdate(sql = "UPDATE person SET name = ? where id = ? ")
 	@SQLDelete(sql = "UPDATE person SET valid = false WHERE id = ? ")
 	@SQLSelect(sql = "SELECT id, name FROM person WHERE id = ? and valid = true")

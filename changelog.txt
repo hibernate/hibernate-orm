@@ -1,6 +1,39 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.0.CR2 (February 03, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37404
+
+
+** Bug
+    * HHH-20121 NPE when logging loaded values in follow-on locking post action
+    * HHH-20118 Vector operator SQL templates miss parenthesis around
+    * HHH-20107 SparseFloatVector and SparseDoubleVector accept invalid size <= 0
+    * HHH-20103 @ElementCollection mapping should respect @JoinColumn(foreignKey)
+    * HHH-20102 spec says LockTimeoutException + QueryTimeoutException should not be thrown on PostgreSQL
+    * HHH-20101 Error persisting child entity of abstract generic entity
+    * HHH-19715 read-only mode and collections
+
+** Improvement
+    * HHH-20127 Avoid initializing the BigDecimal class when not strictly necessary
+    * HHH-19902 PostgreSQL failed statements mark tx for rollback
+    * HHH-19610 Make GraphParser support treatedSubGraph from root
+
+** New Feature
+    * HHH-19045 Bytecode enhancer should add a default constructor if it's missing
+
+** Sub-task
+    * HHH-20112 Skip concurrent modification related tests
+    * HHH-20111 Avoid harcoded column definition in tests
+    * HHH-20110 Handle TIMESTAMP and NUMERIC column types in Spanner PG
+    * HHH-20109 Handle Column types for Spanner PG
+    * HHH-20108 Fix connection URL in Spanner PG
+    * HHH-20100 Fix Foreign key issue
+    * HHH-20099 Handle ON CONFLICT clause for Spanner
+    * HHH-20098 Support FORWARD_ONLY scrollable resultset
+
 Changes in 7.3.0.CR1 (January 23, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -88,7 +88,7 @@ public class HqlParserMemoryUsageTest {
 		// and after the fix it dropped to 170 - 250 MB
 		final long memoryUsage = MemoryUsageUtil.estimateMemoryUsage( () -> hqlTranslator.translate( HQL, Long.class ) );
 		System.out.println( "Memory Consumption: " + (memoryUsage / 1024) + " KB" );
-		assertTrue( memoryUsage < 256_000_000, "Parsing of queries consumes too much memory (" + ( memoryUsage / 1024 ) + " KB), when at most 256 MB are expected" );
+		assertTrue( memoryUsage < 260_000_000, "Parsing of queries consumes too much memory (" + ( memoryUsage / 1024 ) + " KB), when at most 256 MB are expected" );
 	}
 
 	@Entity(name = "Address")

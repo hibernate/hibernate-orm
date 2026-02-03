@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.NClob;
@@ -49,7 +50,7 @@ public abstract class NClobJdbcType implements JdbcType {
 					try {
 						return javaType.wrap( rs.getNClob( paramIndex ), options );
 					}
-					catch (AbstractMethodError e) {
+					catch ( AbstractMethodError e ) {
 						return javaType.wrap( rs.getClob( paramIndex ), options );
 					}
 				}
@@ -62,7 +63,13 @@ public abstract class NClobJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNClob( index ), options );
+					try {
+						return javaType.wrap( statement.getNClob( index ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						return javaType.wrap( statement.getClob( index ), options );
+					}
 				}
 				else {
 					return javaType.wrap( statement.getClob( index ), options );
@@ -73,7 +80,13 @@ public abstract class NClobJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNClob( name ), options );
+					try {
+						return javaType.wrap( statement.getNClob( name ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						return javaType.wrap( statement.getClob( name ), options );
+					}
 				}
 				else {
 					return javaType.wrap( statement.getClob( name ), options );
@@ -150,7 +163,13 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNString( index, javaType.unwrap( value, String.class, options ) );
+						try {
+							st.setNString( index, javaType.unwrap( value, String.class, options ) );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
+						}
 					}
 					else {
 						st.setString( index, javaType.unwrap( value, String.class, options ) );
@@ -161,7 +180,13 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNString( name, javaType.unwrap( value, String.class, options ) );
+						try {
+							st.setNString( name, javaType.unwrap( value, String.class, options ) );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+						}
 					}
 					else {
 						st.setString( name, javaType.unwrap( value, String.class, options ) );
@@ -196,7 +221,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( rs.getNString( paramIndex ), options );
+						try {
+							return javaType.wrap( rs.getNString( paramIndex ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = rs.getBytes( paramIndex );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( rs.getString( paramIndex ), options );
@@ -207,7 +242,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( statement.getNString( index ), options );
+						try {
+							return javaType.wrap( statement.getNString( index ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = statement.getBytes( index );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( statement.getString( index ), options );
@@ -218,7 +263,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( statement.getNString( name ), options );
+						try {
+							return javaType.wrap( statement.getNString( name ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = statement.getBytes( name );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( statement.getString( name ), options );
@@ -262,7 +317,13 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNClob( name, javaType.unwrap( value, NClob.class, options ) );
+						try {
+							st.setNClob( name, javaType.unwrap( value, NClob.class, options ) );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							st.setClob( name, javaType.unwrap( value, Clob.class, options ) );
+						}
 					}
 					else {
 						st.setClob( name, javaType.unwrap( value, NClob.class, options ) );
@@ -373,7 +434,13 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNString( index, javaType.unwrap( value, String.class, options ) );
+						try {
+							st.setNString( index, javaType.unwrap( value, String.class, options ) );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
+						}
 					}
 					else {
 						st.setString( index, javaType.unwrap( value, String.class, options ) );
@@ -384,7 +451,13 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNString( name, javaType.unwrap( value, String.class, options ) );
+						try {
+							st.setNString( name, javaType.unwrap( value, String.class, options ) );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+						}
 					}
 					else {
 						st.setString( name, javaType.unwrap( value, String.class, options ) );
@@ -420,7 +493,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( rs.getNString( paramIndex ), options );
+						try {
+							return javaType.wrap( rs.getNString( paramIndex ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = rs.getBytes( paramIndex );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( rs.getString( paramIndex ), options );
@@ -431,7 +514,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( statement.getNString( index ), options );
+						try {
+							return javaType.wrap( statement.getNString( index ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = statement.getBytes( index );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( statement.getString( index ), options );
@@ -442,7 +535,17 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return javaType.wrap( statement.getNString( name ), options );
+						try {
+							return javaType.wrap( statement.getNString( name ), options );
+						}
+						// workaround for jTDS driver for Sybase
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = statement.getBytes( name );
+							return javaType.wrap(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
+						}
 					}
 					else {
 						return javaType.wrap( statement.getString( name ), options );

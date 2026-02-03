@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -122,7 +123,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					st.setNString( name, javaType.unwrap( value, String.class, options ) );
+					try {
+						st.setNString( name, javaType.unwrap( value, String.class, options ) );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+					}
 				}
 				else {
 					st.setString( name, javaType.unwrap( value, String.class, options ) );
@@ -163,7 +170,11 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 					}
 					// workaround for jTDS driver for Sybase
 					catch ( AbstractMethodError e ) {
-						return javaType.wrap( rs.getBytes( paramIndex ), options );
+						byte[] bytes = rs.getBytes( paramIndex );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
 					}
 				}
 				else {
@@ -174,7 +185,17 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNString( index ), options );
+					try {
+						return javaType.wrap( statement.getNString( index ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						byte[] bytes = statement.getBytes( index );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
+					}
 				}
 				else {
 					return javaType.wrap( statement.getString( index ), options );
@@ -184,7 +205,17 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNString( name ), options );
+					try {
+						return javaType.wrap( statement.getNString( name ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						byte[] bytes = statement.getBytes( name );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
+					}
 				}
 				else {
 					return javaType.wrap( statement.getString( name ), options );

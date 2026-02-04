@@ -192,6 +192,13 @@ This operates quite differently from the older Hibernate `Session.get()` methods
 Applications which use(d) `Session.get()` should be aware of this change in behavior.
 
 
+[[graph-remove-attribute-node]]
+=== Remove AttributeNode from EntityGraph
+
+Calls to `EntityGraph.removeAttributeNode()` and `EntityGraph.removeAttributeNodes()` now behave in specification compliant way -
+when the graph is used as a "load graph", removing an attribute "suppresses inclusion of an attribute mapped for eager fetching".
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

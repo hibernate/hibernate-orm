@@ -12,7 +12,7 @@ package org.hibernate;
  * <p>
  * An entity is considered <em>transient</em> if it is:
  * <ul>
- * <li>a newly-instantiated instance of an entity class which has
+ * <li>a newly instantiated instance of an entity class which has
  *    never been {@linkplain Session#persist made persistent} in
  *    the database, or
  * <li>an entity instance previously associated with a persistence
@@ -22,7 +22,7 @@ package org.hibernate;
  *
  * @author Gavin King
  */
-public class TransientObjectException extends HibernateException {
+public class TransientObjectException extends UnmanagedObjectException {
 	/**
 	 * Constructs a {@code TransientObjectException} using the supplied message.
 	 *

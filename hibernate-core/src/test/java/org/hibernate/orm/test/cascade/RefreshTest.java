@@ -20,6 +20,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -68,7 +69,7 @@ public class RefreshTest {
 	void testCannotRefreshCascadeDetachedEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 			session -> {
-				assertThrows(IllegalArgumentException.class,
+				assertThrows(DetachedObjectException.class,
 							() -> session.refresh( batch ),
 							"Given entity is not associated with the persistence context"
 				);

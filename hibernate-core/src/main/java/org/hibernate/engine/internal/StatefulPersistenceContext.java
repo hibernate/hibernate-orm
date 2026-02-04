@@ -28,6 +28,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NonUniqueObjectException;
+import org.hibernate.UnmanagedObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -1662,7 +1663,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			final var ee = getEntry( entityOrProxy );
 			if ( ee == null ) {
-				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+				throw new UnmanagedObjectException( "Given entity is not associated with the persistence context" );
 			}
 			return ee.isReadOnly();
 		}

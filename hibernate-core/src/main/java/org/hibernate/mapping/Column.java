@@ -16,6 +16,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -138,8 +139,12 @@ public sealed class Column
 
 	@Internal
 	public Identifier getNameIdentifier(MetadataBuildingContext buildingContext) {
-		return buildingContext.getMetadataCollector().getDatabase()
-				.toIdentifier( getQuotedName() );
+		return getNameIdentifier( buildingContext.getMetadataCollector().getDatabase() );
+	}
+
+	@Internal
+	public Identifier getNameIdentifier(Database database) {
+		return database.toIdentifier( getQuotedName() );
 	}
 
 	public boolean isExplicit() {

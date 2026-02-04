@@ -3084,6 +3084,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * For dropping an index with {@code drop index}, can the phrase
+	 * {@code if exists} be applied before the index name?
+	 */
+	public boolean supportsIfExistsBeforeIndexName() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support modifying the type of an existing column?
 	 */
 	public boolean supportsAlterColumnType() {

@@ -263,6 +263,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return MariaDBSequenceSupport.INSTANCE;
 	}

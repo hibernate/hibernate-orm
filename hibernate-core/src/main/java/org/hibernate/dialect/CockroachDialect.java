@@ -585,6 +585,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}

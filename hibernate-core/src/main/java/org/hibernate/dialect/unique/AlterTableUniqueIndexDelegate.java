@@ -36,7 +36,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 			SqlStringGenerationContext context) {
 		final var dialect = context.getDialect();
 		if ( needsUniqueIndex( uniqueKey, dialect ) ) {
-			final String constraintName = constraintName( uniqueKey, metadata );
+			final String constraintName = constraintName( uniqueKey, metadata.getDatabase() );
 			final var statement =
 					new StringBuilder( dialect.getCreateIndexString( true ) )
 							.append( " " )
@@ -79,7 +79,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 				statement.append( "if exists " );
 			}
 			statement.append( tableName( uniqueKey, context ) ).append( '.' )
-					.append( constraintName( uniqueKey, metadata ) );
+					.append( constraintName( uniqueKey, metadata.getDatabase() ) );
 			return statement.toString();
 		}
 		else {

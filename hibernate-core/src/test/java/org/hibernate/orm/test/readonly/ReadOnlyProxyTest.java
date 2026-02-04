@@ -7,6 +7,7 @@ package org.hibernate.orm.test.readonly;
 import java.math.BigDecimal;
 
 import org.hibernate.CacheMode;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -1151,9 +1152,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.flush();
 		try {
 			s.refresh( dp );
-			fail( "should have thrown IllegalArgumentException" );
+			fail( "should have thrown DetachedObjectException" );
 		}
-		catch (IllegalArgumentException ex) {
+		catch (DetachedObjectException ex) {
 			// expected
 		}
 		finally {
@@ -1177,9 +1178,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertTrue( Hibernate.isInitialized( dpProxyInit ) );
 		try {
 			s.refresh( dpProxyInit );
-			fail( "should have thrown IllegalArgumentException" );
+			fail( "should have thrown DetachedObjectException" );
 		}
-		catch (IllegalArgumentException ex) {
+		catch (DetachedObjectException ex) {
 			// expected
 		}
 		finally {
@@ -1194,9 +1195,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			s.refresh( dpProxy );
 			assertFalse( Hibernate.isInitialized( dpProxy ) );
 			Hibernate.initialize( dpProxy );
-			fail( "should have thrown IllegalArgumentException" );
+			fail( "should have thrown DetachedObjectException" );
 		}
-		catch (IllegalArgumentException ex) {
+		catch (DetachedObjectException ex) {
 			// expected
 		}
 		finally {

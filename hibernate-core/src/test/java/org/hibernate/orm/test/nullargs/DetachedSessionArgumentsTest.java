@@ -7,6 +7,7 @@ package org.hibernate.orm.test.nullargs;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +38,7 @@ class DetachedSessionArgumentsTest {
 				try {
 					c.accept( thing );
 				}
-				catch ( IllegalArgumentException e ) {
+				catch ( DetachedObjectException e ) {
 					assertTrue( e.getMessage().contains( "Given entity is not associated with the persistence context" ) );
 				}
 			} );

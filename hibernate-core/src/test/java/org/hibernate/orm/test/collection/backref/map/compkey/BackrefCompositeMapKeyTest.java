@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.collection.backref.map.compkey;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -132,7 +133,7 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					assertThrows(IllegalArgumentException.class,
+					assertThrows(DetachedObjectException.class,
 								() -> session.lock( prod, LockMode.READ ),
 								"Given entity is not associated with the persistence context"
 					);

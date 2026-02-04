@@ -301,7 +301,7 @@ public class GeneratorAnnotationHelper {
 			BiConsumer<A, Properties> configExtractor,
 			GeneratorCreationContext creationContext,
 			Configurable configurable) {
-		final var properties = new Properties();
+		final var properties = new Properties( creationContext.getDatabase().getDialect().getDefaultProperties() );
 		if ( configBaseline != null ) {
 			configBaseline.accept( properties );
 		}

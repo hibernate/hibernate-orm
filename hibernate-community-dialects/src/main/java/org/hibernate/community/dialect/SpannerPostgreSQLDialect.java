@@ -10,6 +10,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
 import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
 import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
@@ -29,6 +30,8 @@ import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -71,8 +74,17 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = new AlterTableUniqueIndexDelegate( this );
-
 	private final StandardTableExporter SPANNER_TABLE_EXPORTER = new SpannerPostgreSQLTableExporter( this );
+	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerPostgreSQLSequenceSupport(this);
+
+	// This will use a monotonically increasing value that is within the range of a 32-bit integer
+	// as the primary key value. Since Spanner only supports bit-reversed sequences, this option
+	// range of a 32-bit integer.
+	// This workaround that is only intended for testing, and should not be used for primary key
+	// values in production.
+	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spannerpg.use_integer_for_primary_key";
+
+	private boolean useIntegerForPrimaryKey;
 
 	private final LockingSupport SPANNER_LOCKING_SUPPORT =
 			new LockingSupportSimple(
@@ -105,6 +117,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
+	}
+
+	@Override
 	public StandardTableExporter getTableExporter() {
 		return SPANNER_TABLE_EXPORTER;
 	}
@@ -116,7 +134,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return SpannerPostgreSQLSequenceSupport.INSTANCE;
+		return SPANNER_SEQUENCE_SUPPORT;
 	}
 
 	@Override
@@ -223,6 +241,19 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		if ( millis == Timeouts.NO_WAIT_MILLI ) {
 			throw new UnsupportedOperationException( "Spanner does not support no wait." );
 		}
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+
+		this.useIntegerForPrimaryKey = configurationService.getSetting(
+				USE_INTEGER_FOR_PRIMARY_KEY,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 
 	@Override
@@ -475,5 +506,9 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
+	}
+
+	public boolean useIntegerForPrimaryKey() {
+		return useIntegerForPrimaryKey;
 	}
 }

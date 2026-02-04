@@ -82,7 +82,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
@@ -99,7 +100,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
           restore-keys: |
@@ -188,7 +190,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
@@ -205,7 +208,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
           restore-keys: |
@@ -280,7 +284,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
@@ -297,7 +302,8 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/modules-2
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
           restore-keys: |

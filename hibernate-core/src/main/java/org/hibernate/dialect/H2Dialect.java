@@ -717,6 +717,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade ";
 	}

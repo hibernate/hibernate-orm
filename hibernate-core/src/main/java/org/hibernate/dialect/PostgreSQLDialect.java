@@ -818,6 +818,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public String getBeforeDropStatement() {
 		// by default, the Postgres driver reports
 		// NOTICE: table "nonexistent" does not exist, skipping

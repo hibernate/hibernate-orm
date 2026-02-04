@@ -1152,6 +1152,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeTypeName() {
 		return getVersion().isSameOrAfter( 23 );
 	}

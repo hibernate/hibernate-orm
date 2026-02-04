@@ -138,7 +138,7 @@ public class UniqueConstraintDropTest {
 	}
 
 	private boolean checkDropIndex(File scriptFile) throws IOException {
-		String regex = "drop index test_entity_item.uk.*";
+		String regex = "drop index( if exists)? test_entity_item.uk.*";
 		return isMatching( regex, scriptFile );
 	}
 

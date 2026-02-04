@@ -637,12 +637,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeTableName();
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeConstraintName();
+		return getVersion().isSameOrAfter( 16 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override

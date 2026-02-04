@@ -12,6 +12,7 @@ import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.Internal;
+import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.Graph;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
@@ -28,6 +29,34 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
+	/**
+	 * Returns the named node associated with the graph, if one, including
+	 * checks into treated subgraphs.
+	 * Returns the node regardless of {@linkplain AttributeNode#isRemoved()} which
+	 * is important for actually implementing proper spec compliance with regard to
+	 * impact of removed nodes.
+	 *
+	 * @return The named node, or {@code null}.
+	 *
+	 * @see jakarta.persistence.Graph#removeAttributeNode
+	 */
+	<T> AttributeNodeImplementor<T,?,?> findNode(String name);
+
+	/**
+	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
+	 * Used in implementing {@linkplain #findNode(String)}
+	 */
+	<T> AttributeNodeImplementor<T,?,?> getExistingNode(PersistentAttribute<?, ? extends T> attribute);
+
+	/**
+	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
+	 * Used in implementing {@linkplain #findNode(String)}
+	 */
+	<T> AttributeNodeImplementor<T,?,?> getExistingNode(String attributeName);
+
+	@Override
+	GraphImplementor<J> makeCopy(boolean mutable);
+
 	void merge(GraphImplementor<J> other);
 
 	@Internal
@@ -40,9 +69,6 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	@Override
 	@Deprecated(forRemoval = true)
 	SubGraphImplementor<J> makeSubGraph(boolean mutable);
-
-	@Override
-	GraphImplementor<J> makeCopy(boolean mutable);
 
 	@Override
 	List<? extends AttributeNodeImplementor<?,?,?>> getAttributeNodeList();

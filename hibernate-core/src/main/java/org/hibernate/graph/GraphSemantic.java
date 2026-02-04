@@ -4,6 +4,8 @@
  */
 package org.hibernate.graph;
 
+import jakarta.persistence.FindOption;
+
 import java.util.Locale;
 
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
@@ -17,7 +19,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
  *
  * @author Steve Ebersole
  */
-public enum GraphSemantic {
+public enum GraphSemantic implements FindOption {
 	/**
 	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "fetch graph".
 	 * <ul>

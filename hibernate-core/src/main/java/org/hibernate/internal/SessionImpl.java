@@ -605,11 +605,7 @@ public class SessionImpl
 
 	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
 		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
-			throw exception instanceof DetachedObjectException
-					// convert to IllegalArgumentException for backward compatibility
-					// TODO: drop this conversion in Hibernate 8
-					? new IllegalArgumentException( exception )
-					: exception;
+			throw exception;
 		}
 		else if ( exception instanceof MappingException ) {
 			// I believe this is now obsolete everywhere we do it,
@@ -1745,14 +1741,14 @@ public class SessionImpl
 
 	private void checkOwnsProxy(LazyInitializer lazyInitializer) {
 		if ( lazyInitializer.getSession() != this ) {
-			throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
+			throw new DetachedObjectException( "Given proxy is not associated with the persistence context" );
 		}
 	}
 
 	private EntityEntry getEntityEntry(Object object) {
 		final var entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
-			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
 		return entry;
 	}
@@ -2429,8 +2425,10 @@ public class SessionImpl
 		}
 		if ( !contains( entity ) ) {
 			// convert() calls markForRollbackOnly()
-			throw getExceptionConverter()
-					.convert( new IllegalArgumentException( "Given entity is not associated with the persistence context" ) );
+			convertIfJpaBootstrap(
+					new DetachedObjectException( "Given entity is not associated with the persistence context" ),
+					null
+			);
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );

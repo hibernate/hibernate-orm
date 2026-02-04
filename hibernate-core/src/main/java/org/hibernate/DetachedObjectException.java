@@ -6,7 +6,9 @@ package org.hibernate;
 
 /**
  * Thrown if a detached instance of an entity class is passed to
- * a {@link Session} method that expects a managed instance.
+ * a {@link Session} method that expects a managed instance. In
+ * certain cases, this exception is thrown when an instance is
+ * actually transient rather than detached.
  *
  * @author Gavin King
  *

@@ -147,6 +147,12 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
 				this.enabledFetchProfile( enabledFetchProfile.profileName() );
 			}
+			else if ( option instanceof GraphSemantic semantic ) {
+				if ( rootGraph == null ) {
+					throw new IllegalArgumentException( "GraphSemantic option was specified, but no Graph was supplied" );
+				}
+				this.graphSemantic = semantic;
+			}
 			else if ( option instanceof NaturalIdSynchronization naturalIdSynchronization ) {
 				this.naturalIdSynchronization = naturalIdSynchronization;
 			}

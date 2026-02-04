@@ -102,3 +102,10 @@ As an alternative to and eventual replacement for `ParameterizedType`, the new i
 == Check constraints on List order columns
 
 The schema export tooling now automatically generates check constraints on ``@OrderColumn``s.
+
+[[jackson-3-support]]
+== Jackson 3 Support
+
+Support for Jackson 3 JSON and XML ``FormatMapper``s has been added, alongside the existing Jackson 2 support.
+Note that if you have both versions of Jackson in your classpath, Hibernate will default to the older one (Jackson 2).
+This behavior can be overridden by specifying the `hibernate.type.json_format_mapper` and `hibernate.type.xml_format_mapper` configuration properties.

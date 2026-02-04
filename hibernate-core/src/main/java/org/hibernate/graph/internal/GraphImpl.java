@@ -26,12 +26,11 @@ import org.hibernate.query.sqm.SqmPathSource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 /**
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
@@ -70,15 +69,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 	@Override
 	public List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
-		if ( attributeNodes == null ) {
-			return emptyList();
-		}
-		else {
-			// we need to filter out removed nodes
-			return attributeNodes.values().stream()
-					.filter( (node) -> !node.isRemoved() )
-					.collect( toUnmodifiableList());
-		}
+		//noinspection unchecked,rawtypes
+		return (List) getAttributeNodeList();
 	}
 
 
@@ -89,9 +81,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		}
 		else {
 			// we need to filter out removed nodes
-			return attributeNodes.values().stream()
-					.filter( (node) -> !node.isRemoved() )
-					.toList();
+			return attributeNodes.values().stream().filter( (node) -> !node.isRemoved() ).toList();
 		}
 	}
 
@@ -105,7 +95,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 					.entrySet()
 					.stream()
 					.filter( (entry) -> !entry.getValue().isRemoved() )
-					.collect( toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+					.collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
 		}
 	}
 

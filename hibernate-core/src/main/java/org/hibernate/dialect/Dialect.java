@@ -80,6 +80,7 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
@@ -923,7 +924,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append('\'').append( value ).append('\'');
+				QuotingHelper.appendSingleQuoteEscapedString( check, String.valueOf( value ) );
 			}
 			else {
 				check.append( value );

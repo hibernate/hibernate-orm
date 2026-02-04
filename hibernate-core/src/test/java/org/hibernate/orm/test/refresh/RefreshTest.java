@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -83,7 +84,7 @@ public class RefreshTest {
 	@Test
 	public void testRefreshWithNullId(SessionFactoryScope scope) {
 		Assertions.assertThrows(
-				IllegalArgumentException.class,
+				DetachedObjectException.class,
 				() -> {
 					scope.inTransaction(
 							session -> {

@@ -13,7 +13,7 @@ package org.hibernate;
  * @since 7.0
  */
 @Incubating
-public class DetachedObjectException extends HibernateException {
+public class DetachedObjectException extends UnmanagedObjectException {
 	public DetachedObjectException(String message) {
 		super( message );
 	}

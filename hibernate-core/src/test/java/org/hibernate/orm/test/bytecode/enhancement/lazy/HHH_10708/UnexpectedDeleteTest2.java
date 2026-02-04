@@ -7,6 +7,7 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -56,7 +57,7 @@ public class UnexpectedDeleteTest2 {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			assertThrows(IllegalArgumentException.class,
+			assertThrows(DetachedObjectException.class,
 						() -> s.refresh( myBar ),
 						"Given entity is not associated with the persistence context"
 			);

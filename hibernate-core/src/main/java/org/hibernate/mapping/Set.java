@@ -4,9 +4,13 @@
  */
 package org.hibernate.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
@@ -107,6 +111,33 @@ public non-sealed class Set extends Collection {
 						key.addColumn( column );
 					}
 				}
+				key.setName( getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
+						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
+							@Override
+							public Identifier getTableName() {
+								return getTable().getNameIdentifier();
+							}
+
+							@Override
+							public List<Identifier> getColumnNames() {
+								final List<Identifier> list = new ArrayList<>();
+								for ( var c : key.getColumns() ) {
+									list.add( c.getNameIdentifier( getBuildingContext() ) );
+								}
+								return list;
+							}
+
+							@Override
+							public Identifier getUserProvidedIdentifier() {
+								return null;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return Set.this.getBuildingContext();
+							}
+						} )
+						.render( getMetadata().getDatabase().getDialect() ) );
 				if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
 					if ( useUniqueKey ) {
 						collectionTable.addUniqueKey( (UniqueKey) key );

@@ -441,6 +441,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			+ "(" + parent.normalizeCompositePathForLogging( embeddedAttributeName ) + ")";
 	}
 
+	/**
+	 * An embeddable class is a modifiable container
+	 * if the embedded field which references it is
+	 * non-final, or if the container of that embedded
+	 * field is modifiable (recursively).
+	 */
 	@Override
 	public boolean isModifiable() {
 		return isUpdatable;

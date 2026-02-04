@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.orphan;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
@@ -164,7 +165,7 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertThrows(IllegalArgumentException.class,
+					assertThrows(DetachedObjectException.class,
 								() -> session.lock( prod, LockMode.READ ),
 								"Given entity is not associated with the persistence context"
 					);

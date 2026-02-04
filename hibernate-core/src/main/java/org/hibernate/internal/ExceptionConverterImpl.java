@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
@@ -17,6 +16,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.UnmanagedObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
@@ -151,7 +151,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
 		}
-		else if ( exception instanceof DetachedObjectException ) {
+		else if ( exception instanceof UnmanagedObjectException ) {
 			try {
 				session.markForRollbackOnly();
 			}

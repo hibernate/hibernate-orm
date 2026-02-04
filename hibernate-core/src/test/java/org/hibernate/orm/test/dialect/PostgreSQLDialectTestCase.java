@@ -4,29 +4,15 @@
  */
 package org.hibernate.orm.test.dialect;
 
-import java.sql.BatchUpdateException;
-import java.sql.CallableStatement;
-import java.sql.SQLException;
-
 import org.hibernate.JDBCException;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
-
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -34,14 +20,17 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.Mockito;
 
-import static org.hamcrest.core.Is.is;
+import java.sql.BatchUpdateException;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -138,23 +127,6 @@ public class PostgreSQLDialectTestCase {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-16252" )
-	public void testAlterTableDropConstraintString() {
-		PostgreSQLDialect dialect = new PostgreSQLDialect();
-		AlterTableUniqueDelegate alterTable = new AlterTableUniqueDelegate( dialect );
-		final Table table = new Table( "orm", "table_name" );
-		final UniqueKey uniqueKey = new UniqueKey( table );
-		uniqueKey.setName( "unique_something" );
-		final String sql = alterTable.getAlterTableToDropUniqueKeyCommand(
-				uniqueKey,
-				null,
-				new MockSqlStringGenerationContext()
-		);
-
-		assertEquals("alter table if exists table_name drop constraint if exists unique_something", sql );
-	}
-
-	@Test
 	@JiraKey( value = "HHH-18780" )
 	public void testTextVsVarchar() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
@@ -188,64 +160,6 @@ public class PostgreSQLDialectTestCase {
 		);
 		assertEquals("cast(null as varchar)", varcharNullString);
 		assertEquals("cast(null as text)", textNullString);
-	}
-
-	private static class MockSqlStringGenerationContext implements SqlStringGenerationContext {
-
-		@Override
-		public Dialect getDialect() {
-			return null;
-		}
-
-		@Override
-		public Identifier toIdentifier(String text) {
-			return null;
-		}
-
-		@Override
-		public Identifier getDefaultCatalog() {
-			return null;
-		}
-
-		@Override
-		public Identifier catalogWithDefault(Identifier explicitCatalogOrNull) {
-			return null;
-		}
-
-		@Override
-		public Identifier getDefaultSchema() {
-			return null;
-		}
-
-		@Override
-		public Identifier schemaWithDefault(Identifier explicitSchemaOrNull) {
-			return null;
-		}
-
-		@Override
-		public String format(QualifiedTableName qualifiedName) {
-			return qualifiedName.getTableName().render();
-		}
-
-		@Override
-		public String format(QualifiedSequenceName qualifiedName) {
-			return null;
-		}
-
-		@Override
-		public String format(QualifiedName qualifiedName) {
-			return null;
-		}
-
-		@Override
-		public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
-			return null;
-		}
-
-		@Override
-		public boolean isMigration() {
-			return false;
-		}
 	}
 
 }

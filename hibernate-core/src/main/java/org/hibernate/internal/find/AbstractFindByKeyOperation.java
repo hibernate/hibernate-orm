@@ -148,6 +148,12 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 			else if ( option instanceof NaturalIdSynchronization naturalIdSynchronization ) {
 				this.naturalIdSynchronization = naturalIdSynchronization;
 			}
+			else if ( option instanceof GraphSemantic graphSemanticOption ) {
+				if ( rootGraph == null ) {
+					throw new IllegalArgumentException( "GraphSemantic option was specified, but no Graph was supplied" );
+				}
+				this.graphSemantic = graphSemanticOption;
+			}
 			else if ( option instanceof FindMultipleOption findMultipleOption ) {
 				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
 			}

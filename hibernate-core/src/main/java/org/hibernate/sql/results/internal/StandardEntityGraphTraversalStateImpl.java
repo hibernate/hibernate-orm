@@ -56,32 +56,41 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 
 		final GraphImplementor<?> previousContextRoot = currentGraphContext;
 		final AttributeNodeImplementor<?,?,?> attributeNode = appliesTo( fetchParent )
-				? currentGraphContext.findAttributeNode( fetchable.getFetchableName() )
+				? currentGraphContext.findNode( fetchable.getFetchableName() )
 				: null;
 
 		currentGraphContext = null;
 		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
-			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
-			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
-			final Class<?> subgraphMapKey;
-			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
-				if ( exploreKeySubgraph ) {
-					subgraphMap = attributeNode.getKeySubGraphs();
-					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
-				}
-				else {
-					subgraphMap = attributeNode.getSubGraphs();
-					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
-				}
+			if ( attributeNode.isRemoved() ) {
+				fetchStrategy = graphSemantic == GraphSemantic.LOAD
+						? new FetchStrategy( FetchTiming.DELAYED, false )
+						: null;
 			}
 			else {
-				assert !exploreKeySubgraph;
-				subgraphMap = attributeNode.getSubGraphs();
-				subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
-			}
-			if ( subgraphMap != null && subgraphMapKey != null ) {
-				currentGraphContext = subgraphMap.get( subgraphMapKey );
+				fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
+				final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
+				final Class<?> subgraphMapKey;
+				if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					if ( exploreKeySubgraph ) {
+						subgraphMap = attributeNode.getKeySubGraphs();
+						subgraphMapKey = getEntityCollectionPartJavaClass(
+								pluralAttributeMapping.getIndexDescriptor() );
+					}
+					else {
+						subgraphMap = attributeNode.getSubGraphs();
+						subgraphMapKey = getEntityCollectionPartJavaClass(
+								pluralAttributeMapping.getElementDescriptor() );
+					}
+				}
+				else {
+					assert !exploreKeySubgraph;
+					subgraphMap = attributeNode.getSubGraphs();
+					subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
+				}
+				if ( subgraphMap != null && subgraphMapKey != null ) {
+					currentGraphContext = subgraphMap.get( subgraphMapKey );
+				}
 			}
 		}
 		else if ( graphSemantic == GraphSemantic.FETCH ) {

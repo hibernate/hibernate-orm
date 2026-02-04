@@ -45,12 +45,24 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	protected final DomainType<E> valueGraphType;
 	protected final SimpleDomainType<K> keyGraphType;
 
+	protected boolean removed;
 	protected SubGraphImplementor<E> valueSubgraph;
 	protected SubGraphImplementor<K> keySubgraph;
 
 	@Override
 	public Attribute<?, J> getAttribute() {
 		return attribute;
+	}
+
+	@Override
+	public boolean isRemoved() {
+		return removed;
+	}
+
+	@Override
+	public AttributeNodeImplementor<J, E, K> markRemoved(boolean removed) {
+		this.removed = removed;
+		return this;
 	}
 
 	static <J> AttributeNodeImpl<J,?,?> create(

@@ -5,12 +5,17 @@
 package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.MappingException;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
 
 public class SpannerPostgreSQLSequenceSupport extends PostgreSQLSequenceSupport {
 
-	public static final SequenceSupport INSTANCE = new SpannerPostgreSQLSequenceSupport();
+	private final SpannerPostgreSQLDialect dialect;
+
+	public SpannerPostgreSQLSequenceSupport(SpannerPostgreSQLDialect dialect) {
+		super();
+		this.dialect = dialect;
+	}
 
 	@Override
 	public String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
@@ -25,5 +30,14 @@ public class SpannerPostgreSQLSequenceSupport extends PostgreSQLSequenceSupport 
 	@Override
 	public String getRestartSequenceString(String sequenceName, long startWith) {
 		return "alter sequence " + sequenceName + " restart counter with " + startWith;
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		var nextValString = super.getSelectSequenceNextValString( sequenceName );
+		if (dialect.useIntegerForPrimaryKey()) {
+			nextValString = "spanner.bit_reverse(" + nextValString + ", true)";
+		}
+		return nextValString;
 	}
 }

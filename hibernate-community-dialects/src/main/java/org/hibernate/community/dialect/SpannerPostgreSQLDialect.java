@@ -29,6 +29,8 @@ import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -71,8 +73,15 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = new AlterTableUniqueIndexDelegate( this );
-
 	private final StandardTableExporter SPANNER_TABLE_EXPORTER = new SpannerPostgreSQLTableExporter( this );
+	private final SequenceSupport SEQUENCE_SUPPORT = new SpannerPostgreSQLSequenceSupport(this);
+
+	// This will use integer column for primary key. Since Spanner supports only bit_reverse, we will try
+	// to undo bit reverse to generate the integer column. Spanner doesn't indent to support this. This is a temporary
+	// workaround for tests. This should not be used for production environments.
+	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spannerpg.use_integer_for_primary_key";
+
+	private boolean useIntegerForPrimaryKey;
 
 	private final LockingSupport SPANNER_LOCKING_SUPPORT =
 			new LockingSupportSimple(
@@ -116,7 +125,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return SpannerPostgreSQLSequenceSupport.INSTANCE;
+		return SEQUENCE_SUPPORT;
 	}
 
 	@Override
@@ -223,6 +232,18 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		if ( millis == Timeouts.NO_WAIT_MILLI ) {
 			throw new UnsupportedOperationException( "Spanner does not support no wait." );
 		}
+	}
+
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+
+		this.useIntegerForPrimaryKey = configurationService.getSetting(
+				USE_INTEGER_FOR_PRIMARY_KEY,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 
 	@Override
@@ -475,5 +496,9 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
+	}
+
+	public boolean useIntegerForPrimaryKey() {
+		return useIntegerForPrimaryKey;
 	}
 }

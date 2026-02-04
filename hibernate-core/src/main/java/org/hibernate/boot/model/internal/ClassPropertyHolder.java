@@ -524,6 +524,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return false;
 	}
 
+	/**
+	 * An entity class is not a modifiable container.
+	 */
 	@Override
 	public boolean isModifiable() {
 		return false; //TODO: is this correct?

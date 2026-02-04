@@ -1748,7 +1748,7 @@ public class SessionImpl
 	private EntityEntry getEntityEntry(Object object) {
 		final var entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
-			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
+			throw new UnmanagedObjectException( "Given entity is not associated with the persistence context" );
 		}
 		return entry;
 	}
@@ -2426,7 +2426,7 @@ public class SessionImpl
 		if ( !contains( entity ) ) {
 			// convert() calls markForRollbackOnly()
 			convertIfJpaBootstrap(
-					new DetachedObjectException( "Given entity is not associated with the persistence context" ),
+					new UnmanagedObjectException( "Given entity is not associated with the persistence context" ),
 					null
 			);
 		}

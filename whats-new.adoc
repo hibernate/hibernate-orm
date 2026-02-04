@@ -102,3 +102,24 @@ As an alternative to and eventual replacement for `ParameterizedType`, the new i
 == Check constraints on List order columns
 
 The schema export tooling now automatically generates check constraints on ``@OrderColumn``s.
+
+[[jackson-3-support]]
+== Jackson 3 Support
+
+Jackson 3 support is added alongside the existing Jackson 2 support.
+The automatic detection order now includes Jackson 3.
+
+JSON order is now:
+
+- Jackson 2 with OSON
+- Jackson 2
+- Jackson 3
+- Jakarta JSON B
+
+XML order is now:
+
+- Jackson 2
+- Jackson 3
+- JAXB
+
+OSON doesn't support Jackson 3 right now, so it isn't included at this moment.

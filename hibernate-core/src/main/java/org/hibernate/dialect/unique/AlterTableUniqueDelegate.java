@@ -7,6 +7,7 @@ package org.hibernate.dialect.unique;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.NamingHelper;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
@@ -34,9 +35,8 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 		this.dialect = dialect;
 	}
 
-	static String constraintName(UniqueKey uniqueKey, Metadata metadata) {
+	static String constraintName(UniqueKey uniqueKey, Database database) {
 		final String uniqueKeyName = uniqueKey.getName();
-		final var database = metadata.getDatabase();
 		if ( uniqueKeyName == null ) {
 			final List<Identifier> columnIdentifiers = new ArrayList<>();
 			for ( var column : uniqueKey.getColumns() ) {
@@ -73,7 +73,7 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 			UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		return dialect.getAlterTableString( tableName( uniqueKey, context ) )
-				+ " add constraint " + constraintName( uniqueKey, metadata )
+				+ " add constraint " + constraintName( uniqueKey, metadata.getDatabase() )
 				+ " " + uniqueConstraintSql( uniqueKey );
 	}
 
@@ -104,7 +104,7 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
 		final String tableName = tableName( uniqueKey, context );
-		final String constraintName = constraintName( uniqueKey, metadata );
+		final String constraintName = constraintName( uniqueKey, metadata.getDatabase() );
 		final var command = new StringBuilder( dialect.getAlterTableString( tableName ) );
 		command.append( ' ' );
 		command.append( dialect.getDropUniqueKeyString() );

@@ -18,7 +18,14 @@
 
 package org.hibernate.tool.hbm2x.Hbm2HibernateDAOTest;
 
-import jakarta.persistence.Persistence;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.Version;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
@@ -30,16 +37,10 @@ import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import jakarta.persistence.Persistence;
 
 /**
  * @author max
@@ -87,8 +88,6 @@ public class TestCase {
 				"org/hibernate/tool/hbm2x/Hbm2HibernateDAOTest/AuthorHome.java") );
 	}
 	
-	// TODO HBX-3308: Inspect test failure and reenable the test 
-	@Disabled
 	@Test
 	public void testCompilable() throws IOException {
 		File compiled = new File(outputFolder, "compiled");

@@ -147,6 +147,8 @@ tasks.withType( JavaCompile ).configureEach {
     options.forkOptions.memoryMaximumSize = '896m'
 
     options.compilerArgs += [
+            // Limit observable modules to prevent accidental dependency on java.desktop (HHH-20148) and other non essential modules
+            '--limit-modules', 'java.base,java.compiler,java.instrument,java.management,java.naming,java.rmi,java.sql,java.transaction.xa,java.xml,jdk.compiler,jdk.jfr,java.sql.rowset',
             // disable adding @Generated annotation in the logger impls to make
             // the logging annotation processor create the same sources each time.
             "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"

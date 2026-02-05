@@ -166,6 +166,10 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyNoopImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
@@ -1420,7 +1424,11 @@ public class HbmXmlTransformer {
 		basic.setName( hbmProp.getName() );
 		basic.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		basic.setFetch( FetchType.EAGER );
-		basic.setAttributeAccessor( hbmProp.getAccess() );
+		transferAccess(
+				hbmProp.getAccess() ,
+				basic::setAccess,
+				basic::setAttributeAccessor
+		);
 		basic.setOptimisticLock( hbmProp.isOptimisticLock() );
 
 		applyBasicTypeMapping(
@@ -1615,14 +1623,22 @@ public class HbmXmlTransformer {
 			JaxbHbmCompositeAttributeType hbmComponent) {
 		final var embedded = new JaxbEmbeddedImpl();
 		embedded.setName( hbmComponent.getName() );
-		embedded.setAttributeAccessor( hbmComponent.getAccess() );
+		transferAccess(
+				hbmComponent.getAccess(),
+				embedded::setAccess,
+				embedded::setAttributeAccessor
+		);
 		embedded.setTarget( jaxbEmbeddable.getName() );
 		return embedded;
 	}
 
 	private void transferOneToOne(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo, JaxbAttributesContainer attributes) {
 		final var oneToOne = new JaxbOneToOneImpl();
-		oneToOne.setAttributeAccessor( hbmOneToOne.getAccess() );
+		transferAccess(
+				hbmOneToOne.getAccess(),
+				oneToOne::setAccess,
+				oneToOne::setAttributeAccessor
+		);
 		oneToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		oneToOne.setCascade( convertCascadeType( hbmOneToOne.getCascade() ) );
 		oneToOne.setOrphanRemoval( isOrphanRemoval( hbmOneToOne.getCascade() ) );
@@ -1669,7 +1685,11 @@ public class HbmXmlTransformer {
 		}
 		transferFetchable( hbmNode.getLazy(), hbmNode.getFetch(), hbmNode.getOuterJoin(), null, jaxbManyToOne );
 
-		jaxbManyToOne.setAttributeAccessor( hbmNode.getAccess() );
+		transferAccess(
+				hbmNode.getAccess(),
+				jaxbManyToOne::setAccess,
+				jaxbManyToOne::setAttributeAccessor
+		);
 		jaxbManyToOne.setCascade( convertCascadeType( hbmNode.getCascade() ) );
 
 		if ( isNotEmpty( hbmNode.getPropertyRef() ) ) {
@@ -1723,7 +1743,11 @@ public class HbmXmlTransformer {
 		final var target = new JaxbAnyMappingImpl();
 
 		target.setName( source.getName() );
-		target.setAttributeAccessor( source.getAccess() );
+		transferAccess(
+				source.getAccess(),
+				target::setAccess,
+				target::setAttributeAccessor
+		);
 		target.setOptimisticLock( source.isOptimisticLock() );
 		target.setOptional( propertyInfo.bootModelProperty().isOptional() );
 
@@ -1841,7 +1865,11 @@ public class HbmXmlTransformer {
 
 	private void transferCollectionCommonInfo(PluralAttributeInfo source, JaxbPluralAttribute target) {
 		target.setName( source.getName() );
-		target.setAttributeAccessor( source.getAccess() );
+		transferAccess(
+				source.getAccess(),
+				target::setAccess,
+				target::setAttributeAccessor
+		);
 		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
 		target.setFetch( convert( source.getLazy() ) );
 
@@ -2530,7 +2558,11 @@ public class HbmXmlTransformer {
 			Property identifierProperty,
 			BasicValue basicValue) {
 		target.setName( source.getName() );
-		target.setAttributeAccessor( source.getAccess() );
+		transferAccess(
+				source.getAccess(),
+				target::setAccess,
+				target::setAttributeAccessor
+		);
 
 		applyBasicTypeMapping( basicValue, target, source.getTypeAttribute(), source.getType(), null,null );
 
@@ -2586,15 +2618,31 @@ public class HbmXmlTransformer {
 			String hbmAccess,
 			Consumer<AccessType> accessTypeConsumer,
 			Consumer<String> propertyAccessConsumer) {
-		if ( AccessType.PROPERTY.name().equalsIgnoreCase( hbmAccess ) ) {
-			accessTypeConsumer.accept( AccessType.PROPERTY );
+		if( hbmAccess == null ) {
+			return;
 		}
-		else if ( AccessType.FIELD.name().equals( hbmAccess ) ) {
-			accessTypeConsumer.accept( AccessType.FIELD );
-		}
-		else {
-			if ( propertyAccessConsumer != null ) {
-				propertyAccessConsumer.accept( hbmAccess );
+		switch ( hbmAccess.toLowerCase( Locale.ROOT )) {
+			case "field" -> accessTypeConsumer.accept( AccessType.FIELD );
+			case "property" -> accessTypeConsumer.accept( AccessType.PROPERTY );
+			case "mixed" -> {
+				if ( propertyAccessConsumer != null ) {
+					propertyAccessConsumer.accept( PropertyAccessStrategyMixedImpl.class.getName() );
+				}
+			}
+			case "noop" -> {
+				if ( propertyAccessConsumer != null ) {
+					propertyAccessConsumer.accept( PropertyAccessStrategyNoopImpl.class.getName() );
+				}
+			}
+			case "map" -> {
+				if ( propertyAccessConsumer != null ) {
+					propertyAccessConsumer.accept( PropertyAccessStrategyMapImpl.class.getName() );
+				}
+			}
+			case "embedded" -> {
+				if ( propertyAccessConsumer != null ) {
+					propertyAccessConsumer.accept( PropertyAccessStrategyEmbeddedImpl.class.getName() );
+				}
 			}
 		}
 	}

@@ -210,7 +210,39 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
-		return x == y;
+		if ( x == y ) {
+			return true;
+		}
+
+		if ( x == null || y == null ) {
+			return false;
+		}
+
+		final var xLazy = extractLazyInitializer( x );
+		final var yLazy = extractLazyInitializer( y );
+
+		final Object xImpl = xLazy != null ? xLazy.getImplementation() : x;
+		final Object yImpl = yLazy != null ? yLazy.getImplementation() : y;
+
+		if ( xImpl == yImpl ) {
+			return true;
+		}
+
+		final var xPersister = guessEntityPersister( xImpl, typeConfiguration.getSessionFactory() );
+		final var yPersister = guessEntityPersister( yImpl, typeConfiguration.getSessionFactory() );
+
+		if ( xPersister == null || yPersister == null ) {
+			return false;
+		}
+
+		if ( !Objects.equals( xPersister.getEntityName(), yPersister.getEntityName() ) ) {
+			return false;
+		}
+
+		final Object xId = xPersister.getIdentifier( xImpl );
+		final Object yId = yPersister.getIdentifier( yImpl );
+
+		return Objects.equals( xId, yId );
 	}
 
 	@Override

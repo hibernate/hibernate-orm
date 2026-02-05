@@ -89,7 +89,6 @@ plugins {
 }
 
 tasks.register("transformHbmXml", TransformHbmXmlTask) { 
-    group = "hibernate"
     source = fileTree("path/to/your/xml/mappings") {
         include "**/*.hbm.xml"
     }

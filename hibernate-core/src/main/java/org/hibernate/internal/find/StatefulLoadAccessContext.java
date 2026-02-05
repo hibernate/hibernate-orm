@@ -2,25 +2,28 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.loader.internal;
+package org.hibernate.internal.find;
 
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 
-/**
- * Context for loader-access objects.
- */
+/// Context for performing load operations from [stateful sessions][SessionImplementor].
+///
+/// @author Steve Ebersole
 @Incubating
-@Internal
-public interface LoadAccessContext {
+public interface StatefulLoadAccessContext extends LoadAccessContext {
 	/**
 	 * The session from which the load originates
 	 */
 	SessionImplementor getSession();
+
+	@Override
+	default SessionImplementor getEntityHandler() {
+		return getSession();
+	}
 
 	/**
 	 * Callback to check whether the session is "active"

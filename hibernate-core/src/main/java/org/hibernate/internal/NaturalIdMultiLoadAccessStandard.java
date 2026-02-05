@@ -23,7 +23,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
-import org.hibernate.loader.internal.LoadAccessContext;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.List;
@@ -139,7 +139,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private StatefulFindMultipleByKeyOperation<T> buildOperation() {
 		return new StatefulFindMultipleByKeyOperation<T>(
 				entityDescriptor,
-				(LoadAccessContext) session,
+				(StatefulLoadAccessContext) session,
 				KeyType.NATURAL,
 				batchSize == null ? null : new BatchSize( batchSize ),
 				SessionCheckMode.ENABLED,

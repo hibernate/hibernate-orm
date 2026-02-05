@@ -939,6 +939,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<T> T getReference(T object);
 
+	///
+	<T> T getReference(Class<T> entityType, Object key, GetReferenceOption... options);
+
 	/// Create an [IdentifierLoadAccess] instance to retrieve an instance of the given
 	/// entity type by its primary key.
 	///

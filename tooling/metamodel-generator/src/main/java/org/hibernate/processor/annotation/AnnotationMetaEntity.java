@@ -67,7 +67,7 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.AccessType;
 
-import static java.beans.Introspector.decapitalize;
+import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElse;

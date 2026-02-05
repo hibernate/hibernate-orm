@@ -43,7 +43,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.StandardLocation;
-import java.beans.Introspector;
+import static org.hibernate.processor.util.StringUtil.decapitalize;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -1109,7 +1109,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			else if (name.startsWith("is")) {
 				name = name.substring(2);
 			}
-			return Introspector.decapitalize(name);
+			return decapitalize(name);
 		}
 		else {
 			return name;

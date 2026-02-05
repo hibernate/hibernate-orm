@@ -39,7 +39,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static java.beans.Introspector.decapitalize;
+import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;

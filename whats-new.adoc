@@ -17,3 +17,14 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 
 Support for Jakarta Persistence has been moved to version 4.0.
 See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.
+
+[[get-ref-option]]
+== GetReferenceOption
+
+8.0 adds a new `GetReferenceOption` which can be used with overloaded forms of `Session.getReference()`.  The main use case for this is the ability to perform `Session.getReference()` based on natural-id (`KeyType#NATURAL`) -
+
+[source,java]
+----
+var isbn = ...;
+var book = session.getReference(Book.class, isbn, NATURAL);
+----

@@ -2271,7 +2271,8 @@ public class SessionImpl
 		checkOpen();
 
 		try {
-			return byId( entityName ).getReference( id );
+			var operation = new StatefulGetReferenceOperation<>( requireEntityPersister( entityName ), this );
+			return operation.performGetReference( id );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
@@ -2298,7 +2299,18 @@ public class SessionImpl
 
 	@Override
 	public <T> T getReference(Class<T> entityType, Object key, GetReferenceOption... options) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		checkOpen();
+
+		try {
+			var operation = new StatefulGetReferenceOperation<T>( requireEntityPersister( entityType ), this, options );
+			return operation.performGetReference( key );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override

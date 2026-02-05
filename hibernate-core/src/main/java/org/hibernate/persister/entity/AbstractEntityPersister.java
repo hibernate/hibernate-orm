@@ -5284,9 +5284,11 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		final Type type = tupleAttrDefinition.getType();
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
-		final String[] attrColumnExpression = type instanceof BasicType<?> && bootProperty.getSelectables().get( 0 ).isFormula()
-				? propertyColumnFormulaTemplates[ propertyIndex ]
-				: getPropertyColumnNames( propertyIndex ) ;
+		final String[] attrColumnExpression =
+				type instanceof BasicType<?>
+				&& bootProperty.getSelectables().get( 0 ).isFormula()
+						? propertyColumnFormulaTemplates[ propertyIndex ]
+						: getPropertyColumnNames( propertyIndex ) ;
 		return generateNonIdAttributeMapping(
 				tupleAttrDefinition.getName(),
 				type,

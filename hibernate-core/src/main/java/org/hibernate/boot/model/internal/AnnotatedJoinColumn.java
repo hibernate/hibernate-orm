@@ -11,7 +11,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 
@@ -380,21 +382,27 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	/**
 	 * Used for {@code mappedBy} cases.
 	 */
-	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
-		initMappingColumn(
-				//column.getName(),
-				column.getQuotedName(),
-				null,
-				column.getLength(),
-				column.getPrecision(),
-				column.getScale(),
-				column.getTemporalPrecision(),
-				column.getArrayLength(),
-				getMappingColumn().isNullable(),
-				column.getSqlType(),
-				getMappingColumn().isUnique(),
-				false //We do copy no strategy here
-		);
+	public void linkValueUsingCopy(Selectable selectable, SimpleValue value) {
+		if ( selectable instanceof  Column column ) {
+			initMappingColumn(
+					//column.getName(),
+					column.getQuotedName(),
+					null,
+					column.getLength(),
+					column.getPrecision(),
+					column.getScale(),
+					column.getTemporalPrecision(),
+					column.getArrayLength(),
+					getMappingColumn().isNullable(),
+					column.getSqlType(),
+					getMappingColumn().isUnique(),
+					false //We do copy no strategy here
+			);
+		}
+		else if ( selectable instanceof Formula formula ) {
+			setFormula( formula.getFormula() );
+			bind();
+		}
 		linkWithValue( value );
 	}
 

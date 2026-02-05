@@ -179,6 +179,15 @@ query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
 which collapses duplicate results according to value equality.
 
+=== Final fields of entities
+
+A `final` field of an entity is now treated as if it were annotated `@Immutable`,
+that is, it is excluded from dirty checking and from SQL `UPDATE` statements.
+In order to eliminate the possibility of "silent" changes in behavior, attempts
+to modify the value of a `final` fields using the `merge()` method are rejected.
+If a field of an entity can actually be updated via `merge()`, the field must be
+declared non-`final`.
+
 [[session-get]]
 === Session.get
 

@@ -19,7 +19,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +61,6 @@ public class JoinColumnOrFormulaTest {
 
 	@Test
 	@JiraKey(value = "HHH-9897")
-	@FailureExpected(jiraKey = "HHH-9897")
 	public void testUseOfJoinColumnOrFormula() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( A.class )

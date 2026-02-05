@@ -28,6 +28,7 @@ import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
@@ -832,13 +833,15 @@ public class TableBinder {
 			PersistentClass associatedClass,
 			String mappedByProperty) {
 		final var firstColumn = joinColumns.getJoinColumns().get(0);
-		for ( var column: mappedByColumns( associatedClass, mappedByProperty ) ) {
-			firstColumn.overrideFromReferencedColumnIfNecessary( column );
-			firstColumn.linkValueUsingAColumnCopy( column, value);
+		for ( var selectable: mappedByColumns( associatedClass, mappedByProperty ) ) {
+			if ( selectable instanceof Column column ) {
+				firstColumn.overrideFromReferencedColumnIfNecessary( column );
+			}
+			firstColumn.linkValueUsingCopy( selectable, value );
 		}
 	}
 
-	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
+	private static List<Selectable> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
 		final var value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
 		if ( value instanceof Collection collection ) {
 			final var element = collection.getElement();
@@ -846,13 +849,13 @@ public class TableBinder {
 				throw new AnnotationException( "Both sides of the bidirectional association '"
 						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
 			}
-			return element.getColumns();
+			return element.getSelectables();
 		}
 		else if ( value instanceof Any any ) {
-			return any.getKeyDescriptor().getColumns();
+			return any.getKeyDescriptor().getSelectables();
 		}
 		else {
-			return value.getColumns();
+			return value.getSelectables();
 		}
 	}
 

@@ -35,7 +35,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -2667,7 +2666,7 @@ public abstract class CollectionBinder {
 		final var mappedByProperty = targetEntity.getRecursiveProperty( mappedBy );
 		final var firstColumn = joinColumns.getJoinColumns().get(0);
 		for ( var selectable: mappedByColumns( targetEntity, mappedByProperty ) ) {
-			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value);
+			firstColumn.linkValueUsingCopy( selectable, value );
 		}
 		final var manyToOne = (ManyToOne) value;
 		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );

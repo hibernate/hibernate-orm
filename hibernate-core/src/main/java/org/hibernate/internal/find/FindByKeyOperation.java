@@ -13,6 +13,7 @@ package org.hibernate.internal.find;
 ///
 /// @author Steve Ebersole
 public interface FindByKeyOperation<T> {
+
 	/// Perform the find operation for the given key.
 	///
 	/// @param key The primary or natural key by which to load the entity.

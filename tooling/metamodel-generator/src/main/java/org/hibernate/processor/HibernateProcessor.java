@@ -71,7 +71,13 @@ import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.HQL;
+import static org.hibernate.processor.util.Constants.JD_DELETE;
+import static org.hibernate.processor.util.Constants.JD_FIND;
+import static org.hibernate.processor.util.Constants.JD_INSERT;
+import static org.hibernate.processor.util.Constants.JD_QUERY;
 import static org.hibernate.processor.util.Constants.JD_REPOSITORY;
+import static org.hibernate.processor.util.Constants.JD_SAVE;
+import static org.hibernate.processor.util.Constants.JD_UPDATE;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPH;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPHS;
@@ -473,16 +479,13 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 			else {
-				for ( Element member : typeElement.getEnclosedElements() ) {
-					if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
-						context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-						final AnnotationMetaEntity metaEntity =
-								AnnotationMetaEntity.create( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										primaryEntity );
-						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-						break;
-					}
+				if ( isImplicitRepository( typeElement ) ) {
+					context.logMessage( Diagnostic.Kind.OTHER, "Processing implicit repository class '" + element + "'" );
+					final AnnotationMetaEntity metaEntity =
+							AnnotationMetaEntity.create( typeElement, context,
+									parentMetadata( parent, context::getMetaEntity ),
+									primaryEntity );
+					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {
 					final NonManagedMetamodel metaEntity =
@@ -495,7 +498,6 @@ public class HibernateProcessor extends AbstractProcessor {
 										parentMetadata( parent, context::getDataMetaEntity ) );
 						context.addDataMetaEntity( dataMetaEntity.getQualifiedName(), dataMetaEntity );
 					}
-
 				}
 			}
 		}
@@ -506,6 +508,18 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private boolean isImplicitRepository(TypeElement typeElement) {
+		if ( AnnotationMetaEntity.isPanache2Repository( typeElement ) ) {
+			return true;
+		}
+		for ( Element member : typeElement.getEnclosedElements() ) {
+			if ( hasAnnotation( member, HQL, SQL, FIND, JD_QUERY, JD_FIND, JD_DELETE, JD_INSERT, JD_SAVE, JD_UPDATE ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void createMetaModelClasses() {

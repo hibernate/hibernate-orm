@@ -1330,6 +1330,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder.applyTempClassLoader( tempClassLoader );
 		}
 
+		metamodelBuilder.applyDefaultToOneFetchType( persistenceUnit.getDefaultToOneFetchType() );
+
 		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
 		metamodelBuilder.applyScanOptions( getScanOptions() );
 

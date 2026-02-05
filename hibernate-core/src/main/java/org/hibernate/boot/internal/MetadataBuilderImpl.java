@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.RegionFactory;
@@ -277,6 +278,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+		options.mappingDefaults.toOnesAreLazyByDefault = defaultToOneFetchType == FetchType.LAZY;
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder applyBasicType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
@@ -499,6 +506,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private String implicitCatalogName;
 		private boolean implicitlyQuoteIdentifiers;
 
+		private boolean toOnesAreLazyByDefault = false;
+
 		private AccessType implicitCacheAccessType;
 		private CollectionClassification implicitListClassification;
 
@@ -598,8 +607,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		@Override
 		public boolean areEntitiesImplicitlyLazy() {
-			// for now, just hard-code
-			return false;
+			return toOnesAreLazyByDefault;
 		}
 
 		@Override

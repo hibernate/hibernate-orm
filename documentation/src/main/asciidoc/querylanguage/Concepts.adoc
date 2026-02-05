@@ -500,13 +500,6 @@ For example, the simplest query in HQL has no `select` clause at all:
 from Book
 ----
 
-But we don't necessarily _recommend_ leaving off the `select` list.
-
-[NOTE]
-====
-HQL doesn't require a `select` clause, but JPQL _does_.
-====
-
 Naturally, the previous query may be written with a `select` clause:
 
 [source, hql]
@@ -533,7 +526,7 @@ for (Book book: books) {
 ----
 // result type Object[], both Book and Author selected
 List<Object[]> booksWithAuthors =
-       session.createQuery("from Book join authors", Book.class, Object[].class)
+       session.createQuery("from Book join authors", Object[].class)
             .getResultList();
 for (var bookWithAuthor: booksWithAuthors) {
     Book book = (Book) bookWithAuthor[0];
@@ -787,5 +780,3 @@ alias
 ----
 
 Where the list of ``selection``s in an `instantiation` is essentially a nested projection list.
-
-

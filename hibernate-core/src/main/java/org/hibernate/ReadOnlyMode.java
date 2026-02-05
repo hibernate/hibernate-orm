@@ -18,7 +18,7 @@ import jakarta.persistence.FindOption;
  *
  * @author Gavin King
  */
-public enum ReadOnlyMode implements FindOption {
+public enum ReadOnlyMode implements FindOption, GetReferenceOption {
 	/**
 	 * Specifies that an entity should be loaded in read-only mode.
 	 * <p>

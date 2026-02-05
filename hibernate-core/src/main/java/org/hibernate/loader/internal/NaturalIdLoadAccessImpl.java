@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 import java.util.LinkedHashMap;
@@ -29,7 +30,7 @@ public class NaturalIdLoadAccessImpl<T>
 
 	private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
 
-	public NaturalIdLoadAccessImpl(LoadAccessContext context, EntityMappingType entityDescriptor) {
+	public NaturalIdLoadAccessImpl(StatefulLoadAccessContext context, EntityMappingType entityDescriptor) {
 		super( context, entityDescriptor );
 	}
 

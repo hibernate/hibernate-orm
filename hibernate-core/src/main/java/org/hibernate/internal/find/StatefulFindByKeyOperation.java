@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -43,14 +42,14 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 ///
 /// @author Steve Ebersole
 public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T> {
-	private final LoadAccessContext loadAccessContext;
+	private final StatefulLoadAccessContext loadAccessContext;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// options
 
 	public StatefulFindByKeyOperation(
 			@NonNull EntityPersister entityDescriptor,
-			@NonNull LoadAccessContext loadAccessContext,
+			@NonNull StatefulLoadAccessContext loadAccessContext,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<?> rootGraph,
 			@Nullable LockOptions defaultLockOptions,
@@ -130,7 +129,7 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 		} );
 	}
 
-	private T withOptions(LoadAccessContext loadAccessContext, Supplier<T> action) {
+	private T withOptions(StatefulLoadAccessContext loadAccessContext, Supplier<T> action) {
 		final var session = loadAccessContext.getSession();
 
 		final var sessionCacheMode = session.getCacheMode();
@@ -175,7 +174,7 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 
 	private Object getCachedNaturalIdResolution(
 			Object normalizedNaturalIdValue,
-			LoadAccessContext loadAccessContext) {
+			StatefulLoadAccessContext loadAccessContext) {
 		loadAccessContext.checkOpenOrWaitingForAutoClose();
 		loadAccessContext.pulseTransactionCoordinator();
 

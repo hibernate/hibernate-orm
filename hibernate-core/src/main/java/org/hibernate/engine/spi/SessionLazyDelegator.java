@@ -28,6 +28,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
+import org.hibernate.GetReferenceOption;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LobHelper;
@@ -346,6 +347,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T getReference(T object) {
 		return this.lazySession.get().getReference( object );
+	}
+
+	@Override
+	public <T> T getReference(Class<T> entityType, Object key, GetReferenceOption... options) {
+		return this.lazySession.get().getReference( entityType, key, options );
 	}
 
 	@Override

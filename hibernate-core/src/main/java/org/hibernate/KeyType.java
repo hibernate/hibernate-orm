@@ -10,12 +10,13 @@ import jakarta.persistence.FindOption;
 ///
 /// @see jakarta.persistence.EntityManager#find
 /// @see Session#findMultiple
+/// @see Session#getReference(Class, Object, GetReferenceOption...)
 ///
 /// @since 7.3
 ///
 /// @author Steve Ebersole
 /// @author Gavin King
-public enum KeyType implements FindOption {
+public enum KeyType implements FindOption, GetReferenceOption {
 	/// Indicates to find by the entity's identifier.  The default.
 	///
 	/// @see jakarta.persistence.Id

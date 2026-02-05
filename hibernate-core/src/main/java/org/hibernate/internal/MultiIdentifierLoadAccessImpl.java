@@ -25,7 +25,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
-import org.hibernate.loader.internal.LoadAccessContext;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
@@ -178,7 +178,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private StatefulFindMultipleByKeyOperation<T> buildOperation() {
 		return new StatefulFindMultipleByKeyOperation<T>(
 				entityPersister,
-				(LoadAccessContext) session,
+				(StatefulLoadAccessContext) session,
 				KeyType.IDENTIFIER,
 				batchSize,
 				sessionCheckMode,

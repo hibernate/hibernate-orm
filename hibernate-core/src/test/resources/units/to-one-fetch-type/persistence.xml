@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<persistence version="8.0" xmlns="http://www.hibernate.org/xsd/orm/configuration"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <persistence-unit name="default-fetch">
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$User</class>
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$Post</class>
+    </persistence-unit>
+
+    <persistence-unit name="eager-fetch">
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$User</class>
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$Post</class>
+        <default-to-one-fetch-type>EAGER</default-to-one-fetch-type>
+    </persistence-unit>
+
+    <persistence-unit name="lazy-fetch">
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$User</class>
+        <class>org.hibernate.orm.test.jpa.boot.DefaultToOneFetchTypeTests$Post</class>
+        <default-to-one-fetch-type>LAZY</default-to-one-fetch-type>
+    </persistence-unit>
+</persistence>

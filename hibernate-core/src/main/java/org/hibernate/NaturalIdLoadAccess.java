@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -35,9 +36,10 @@ import java.util.Optional;
  * @see org.hibernate.annotations.NaturalId
  * @see SimpleNaturalIdLoadAccess
  *
- * @deprecated (since 7.3) Use {@linkplain Session#find} with {@linkplain KeyType#NATURAL} instead.
+ * @deprecated Use {@linkplain Session#find} or {@linkplain Session#getReference}
+ * with {@linkplain KeyType#NATURAL} instead.
  */
-@Deprecated
+@Deprecated(since = "7.3")
 public interface NaturalIdLoadAccess<T> {
 
 	/**
@@ -222,7 +224,11 @@ public interface NaturalIdLoadAccess<T> {
 	 * non-existence would be an actual error.
 	 *
 	 * @return the persistent instance or proxy
+	 *
+	 * @deprecated Use {@linkplain Session#getReference(Class, Object, KeyType)} instead,
+	 * with {@linkplain KeyType#NATURAL} as an option.
 	 */
+	@Deprecated
 	T getReference();
 
 	/**
@@ -233,7 +239,13 @@ public interface NaturalIdLoadAccess<T> {
 	 * method never returns an uninitialized instance.
 	 *
 	 * @return The persistent instance or {@code null}
+	 *
+	 * @deprecated Use one of {@linkplain Session#find(Class, Object, FindOption...)},
+	 * {@linkplain Session#find(String, Object, FindOption...)}, or
+	 * {@linkplain Session#find(EntityGraph, Object, FindOption...)} instead
+	 * with {@linkplain KeyType#NATURAL} as an option.
 	 */
+	@Deprecated
 	T load();
 
 	/**

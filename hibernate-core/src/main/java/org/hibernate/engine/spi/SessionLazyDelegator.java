@@ -30,6 +30,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.KeyType;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -346,6 +347,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T getReference(T object) {
 		return this.lazySession.get().getReference( object );
+	}
+
+	@Override
+	public <T> T getReference(Class<T> entityType, Object key, KeyType keyType) {
+		return this.lazySession.get().getReference( entityType, key, keyType );
 	}
 
 	@Override

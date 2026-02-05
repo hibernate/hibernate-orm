@@ -1,8 +1,8 @@
+:version: 8.0
 = What's New in {version}
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 7.4
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -11,3 +11,9 @@
 Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+
+[[jpa4]]
+== Jakarta Persistence 4.0
+
+Support for Jakarta Persistence has been moved to version 4.0.
+See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.

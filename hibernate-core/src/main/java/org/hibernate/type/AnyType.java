@@ -241,9 +241,45 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
+			throws HibernateException {
+		if ( isSame( old, current ) ) {
+			return false;
+		}
+		final String oldEntityName =
+				old == null ? null : session.bestGuessEntityName( old );
+		final String currentEntityName =
+				current == null ? null : session.bestGuessEntityName( current );
+
+		if ( !Objects.equals( oldEntityName, currentEntityName ) ) {
+			return true;
+		}
+
+		final Object oldId = old == null ? null : getIdentifier( oldEntityName, old, session );
+		final Object newId = current == null ? null : getIdentifier( currentEntityName, current, session );
+
+		return identifierType.isDirty( oldId, newId, session );
+	}
+
+	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return isDirty( old, current, session );
+		if ( isSame( old, current ) ) {
+			return false;
+		}
+		final String oldEntityName =
+				old == null ? null : session.bestGuessEntityName( old );
+		final String currentEntityName =
+				current == null ? null : session.bestGuessEntityName( current );
+
+		final boolean[] idCheckable = new boolean[checkable.length - 1];
+		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
+
+		final Object oldId = old == null ? null : getIdentifier( oldEntityName, old, session );
+		final Object newId = current == null ? null : getIdentifier( currentEntityName, current, session );
+
+		return (checkable[0] && !Objects.equals( oldEntityName, currentEntityName ))
+			|| identifierType.isDirty( oldId, newId, idCheckable, session );
 	}
 
 	@Override
@@ -387,17 +423,21 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		};
 	}
 
-	private Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
+	private Object getIdentifier(String entityName, Object value, SharedSessionContractImplementor session) {
 		try {
-			return getEntityIdentifierIfNotUnsaved(
-					session.bestGuessEntityName( value ),
-					value,
-					session
-			);
+			return getEntityIdentifierIfNotUnsaved( entityName, value, session );
 		}
 		catch (TransientObjectException toe) {
 			return null;
 		}
+	}
+
+	private Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
+		return getIdentifier(
+				session.bestGuessEntityName( value ),
+				value,
+				session
+		);
 	}
 
 	@Override

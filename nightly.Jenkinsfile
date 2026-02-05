@@ -146,8 +146,8 @@ stage('Build') {
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
-								case "cockroachdb_23_2":
-									sh "./docker_db.sh cockroachdb_23_2"
+								case "cockroachdb":
+									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}

@@ -4,12 +4,12 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import java.beans.BeanInfo;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.internal.util.beans.BeanInfo;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.query.sqm.sql.internal.InstantiationException;
 import org.hibernate.sql.results.graph.DomainResultAssembler;

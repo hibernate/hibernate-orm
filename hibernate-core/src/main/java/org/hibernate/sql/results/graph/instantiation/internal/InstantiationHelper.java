@@ -5,12 +5,12 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.internal.util.beans.BeanInfo;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.beans.PropertyDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import java.beans.BeanInfo;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;

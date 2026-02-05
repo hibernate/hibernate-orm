@@ -939,6 +939,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<T> T getReference(T object);
 
+	/// Return a reference to the persistent instance of the given `entityType` with the
+	/// given `key` using the specified `options`.
+	///
+	/// @param keyType Whether the given `key` should be treated as an [identifier][KeyType#IDENTIFIER]
+	///  or [natural-identifier][KeyType#NATURAL].
+	<T> T getReference(Class<T> entityType, Object key, KeyType keyType);
+
 	/// Create an [IdentifierLoadAccess] instance to retrieve an instance of the given
 	/// entity type by its primary key.
 	///

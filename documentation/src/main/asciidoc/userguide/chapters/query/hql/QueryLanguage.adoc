@@ -117,12 +117,6 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-select-simplest-example]
 ----
 ====
 
-We don't necessarily _recommend_ leaving off the `select` list.
-
-[NOTE]
-====
-HQL doesn't require a `select` clause, but JPQL _does_.
-
 Naturally, the previous query may be written with a `select` clause:
 
 [source, java, indent=0]

@@ -35,6 +35,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ConcreteProxyWithSealedClassesTest {
 
 	@Test
+	void getFind(EntityManagerFactoryScope scope) {
+		var id = scope.fromTransaction( entityManager -> {
+			Actor actor = new Postman();
+			entityManager.persist( actor );
+			return actor.id;
+		} );
+		scope.inTransaction( entityManager -> {
+			Actor actor = entityManager.find( Actor.class, id );
+			assertThat( actor ).isInstanceOf( Postman.class );
+		} );
+	}
+
+	@Test
 	void getReference(EntityManagerFactoryScope scope) {
 		var id = scope.fromTransaction( entityManager -> {
 			Actor actor = new Postman();

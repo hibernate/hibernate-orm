@@ -1,8 +1,8 @@
+:version: 8.0
 = What's New in {version}
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 7.4
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -12,115 +12,8 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
-[[temporal-audited]]
-== Temporal and Audited Data
+[[jpa4]]
+== Jakarta Persistence 4.0
 
-As an incubating feature, this release introduces the brand new and extremely powerful `StateManagement` SPI along with:
-
-- The `@Temporal` annotation, for mapping temporal data and querying based on temporal effectivity, and
-- The `@Audited` annotation, for mapping data with modifications tracked in a separate audit log.
-
-Temporal data may be mapped to:
-
-- database-native temporal tables (when provided by the underlying RDBMS),
-- a single table with effectivity columns (which might be partitioned into current and historical partitions), or
-- a table holding currently effective data, and a second table holding historical data with effectivity.
-
-The mapping strategy is transparent to client code.
-
-Historical temporal data may be queried at a given effective data/time.
-
-Audited data is mapped to a regular table along with an audit log which is backward compatible with Hibernate Envers.
-Optionally, the application may provide a `@Changelog` entity tracking information about each changeset.
-The `AuditLog` object may be used to query the audit log.
-
-For examples and more details, see link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#temporal-data[Temporal data] and link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#audit-logs[Audit logs] in _A Short Guide to Hibernate 7_.
-
-[[limit-fetch-join]]
-== Limits and Fetch Joins
-
-It is now perfectly safe to combine a HQL `limit` or pagination using `setMaxResults()` with a collection `join fetch`, on any database which supports limits and offsets inside subqueries (which includes all the supported databases except Sybase ASE).
-Similarly, it's now safe to use a collection `join fetch` with `getResultStream()` or `scroll()`.
-
-In Hibernate 6, and in previous versions of Hibernate 7, the combination of limits/pagination with a many-valued fetch join forced Hibernate to fall back to applying the limit _in the JVM_, which usually exhibited terrible performance characteristics.
-This problem is finally solved.
-
-To recover the previous behavior, using the query hint `org.hibernate.limitInMemory`.
-Use of this hint will almost certainly harm performance.
-
-[[refresh-session]]
-== `CacheMode.REFRESH_SESSION`
-
-The new `REFRESH_SESSION` mode, which may be
-
-- passed as an option to `EntityManager.find()` or
-- requested via `SelectionQuery.setCacheMode()`
-
-specifies that entities returned in a query result set should be efficiently refreshed in the first-level cache, as if they had been passed to `EntityManager.refresh()`, overwriting the current state held in the persistence context.
-
-[[reveng]]
-== Reverse Engineering
-
-The reverse engineering module, previously part of the standalone Hibernate Tools project, is now integrated directly into Hibernate ORM. It is available as plugins for Gradle, Maven, and Ant.
-
-The reverse engineering plugins can generate:
-
-- Java entity classes
-- DAO classes
-- `hbm.xml` mapping files
-- `mapping.xml` mapping files
-- `hibernate.cfg.xml` configuration files
-- DDL scripts
-- HTML documentation
-
-The process is customizable via XML configuration files and custom strategy classes.
-
-See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Guide for details.
-
-See link:https://in.relation.to/2026/05/04/hibernate-tools-moves-to-orm/[the dedicated blog post] for the motivation and migration hints.
-
-[[transform-hbm]]
-== HBM XML Transformation
-
-The Maven plugin now includes a `transformHbm` goal that transforms legacy `hbm.xml` mapping files into ORM `mapping.xml` files. This does not involve reverse engineering from a database -- it converts existing HBM mappings.
-
-See the link:{userGuideBase}#tooling-maven-transformhbm[HBM XML Transformation] section in the User Guide for details.
-
-[[any-join]]
-== Joins and Join Fetching for `@Any` and `@ManyToAny`
-
-Discriminated association mappings may now:
-
-- be used freely in HQL joins and treated joins.
-- be fetched using a join.
-
-The joining and fetching semantics for `@Any` and `@ManyToAny` are aligned with `@ManyToOne` and `@ManyToMany` respectively.
-
-Join fetching may be requested using `join fetch` in HQL, or using an `EntityGraph`.
-
-Also, the `cascade` member was added to `@Any` and `@ManyToAny` as a replacement for the deprecated `@Cascade` annotation.
-
-[[join-formula]]
-== `@OneToMany` with `@JoinFormula`
-
-Mappings combining `@OneToMany` and `@JoinFormula` now function correctly.
-
-[[post-insert-generated-pk]]
-== Database-generated Columns within Primary Keys
-
-A database-generated column (for example, an identity column) may now form part of a composite primary key.
-
-[[package-level-nationalized]]
-== Package-level `@Nationalized`
-
-The `@Nationalized` annotation may now be placed on a package descriptor, acting as a default for every character-typed attribute of every entity or embeddable belonging to the package.
-
-[[java-services]]
-== New Services
-
-The SPI interfaces `BatchBuilder`, `StatisticsFactory`, `MutationExecutorService`, and `SchemaManagementTool` are now Java services, allowing customization via the service loader mechanism.
-
-[[spanner-postgres-dialect]]
-== Support for Google Cloud Spanner PostgreSQL-compatible Dialect
-
-The dialect for Google Cloud Spanner's PostgreSQL-compatible interface (`SpannerPostgreSQLDialect`) is now fully integrated into Hibernate ORM Core, and is officially tested and supported out of the box.
+Support for Jakarta Persistence has been moved to version 4.0.
+See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.

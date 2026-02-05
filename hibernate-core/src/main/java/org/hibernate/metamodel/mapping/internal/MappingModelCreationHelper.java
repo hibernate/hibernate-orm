@@ -931,28 +931,13 @@ public class MappingModelCreationHelper {
 			final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
-			final PropertyAccess declaringKeyPropertyAccess;
-			if ( inversePropertyAccess == null ) {
-				// So far, OneToOne mappings are only supported based on the owner's PK
-				if ( bootValueMapping instanceof OneToOne ) {
-					final EntityIdentifierMapping identifierMapping =
-							attributeMapping.findContainingEntityMapping().getIdentifierMapping();
-					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
-				}
-				else {
-					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
-							attributeMapping.getPropertyAccess(),
-							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
-					);
-				}
-			}
-			else {
-				declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
-						inversePropertyAccess,
-						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
-				);
-			}
-			final SelectablePath parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
+			final PropertyAccess declaringKeyPropertyAccess = getDeclaringKeyPropertyAccess(
+					attributeMapping,
+					bootValueMapping,
+					inversePropertyAccess,
+					(PropertyBasedMapping) simpleFkTarget
+			);
+			final var parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
 			final SelectableMapping keySelectableMapping;
 			int i = 0;
 			final Value value = bootProperty.getValue();
@@ -1027,6 +1012,33 @@ public class MappingModelCreationHelper {
 		}
 
 		return true;
+	}
+
+	private static PropertyAccess getDeclaringKeyPropertyAccess(
+			ToOneAttributeMapping attributeMapping,
+			ToOne bootValueMapping,
+			PropertyAccess inversePropertyAccess,
+			PropertyBasedMapping simpleFkTarget) {
+		if ( inversePropertyAccess == null ) {
+			if ( bootValueMapping instanceof OneToOne ) {
+				final var identifierMapping = attributeMapping.findContainingEntityMapping().getIdentifierMapping();
+				// Check if the identifier is a single-column or "aggregated" composite identifier,
+				// otherwise it is a "non-aggregated" composite identifier
+				if ( identifierMapping instanceof PropertyBasedMapping propertyIdentifierMapping ) {
+					return propertyIdentifierMapping.getPropertyAccess();
+				}
+			}
+			return new ChainedPropertyAccessImpl(
+					attributeMapping.getPropertyAccess(),
+					simpleFkTarget.getPropertyAccess()
+			);
+		}
+		else {
+			return new ChainedPropertyAccessImpl(
+					inversePropertyAccess,
+					simpleFkTarget.getPropertyAccess()
+			);
+		}
 	}
 
 	/**

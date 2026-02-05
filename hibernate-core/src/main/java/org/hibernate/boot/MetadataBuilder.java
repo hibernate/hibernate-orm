@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
@@ -279,6 +280,11 @@ public interface MetadataBuilder {
 	MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled);
 
 	/**
+	 * Defines a default fetch-type for to-one associations.
+	 */
+	MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType);
+
+	/**
 	 * Specify an additional or overridden basic type mapping.
 	 *
 	 * @param type The type addition or override.
@@ -427,4 +433,5 @@ public interface MetadataBuilder {
 	 * @return The built metadata.
 	 */
 	Metadata build();
+
 }

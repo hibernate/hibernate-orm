@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
@@ -146,6 +147,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	@Override
 	public MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled) {
 		delegate.enableGlobalNationalizedCharacterDataSupport( enabled );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+		delegate.applyDefaultToOneFetchType( defaultToOneFetchType );
 		return getThis();
 	}
 

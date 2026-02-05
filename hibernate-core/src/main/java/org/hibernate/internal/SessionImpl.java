@@ -43,6 +43,7 @@ import org.hibernate.internal.find.FindByKeyOperation;
 import org.hibernate.internal.find.Helper;
 import org.hibernate.internal.find.StatefulFindByKeyOperation;
 import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
+import org.hibernate.internal.find.StatefulGetReferenceOperation;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateHints;
@@ -52,7 +53,7 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.loader.internal.IdentifierLoadAccessImpl;
-import org.hibernate.loader.internal.LoadAccessContext;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -153,7 +154,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class SessionImpl
 		extends AbstractSharedSessionContract
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
-				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
+				TransactionCoordinatorBuilder.Options, WrapperOptions, StatefulLoadAccessContext {
 
 	private transient ActionQueue actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
@@ -1755,21 +1756,6 @@ public class SessionImpl
 		return entry;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public <T> T getReference(T object) {
-		checkOpen();
-		final var lazyInitializer = extractLazyInitializer( object );
-		if ( lazyInitializer != null ) {
-			return (T) getReference( lazyInitializer.getPersistentClass(),
-					lazyInitializer.getInternalIdentifier() );
-		}
-		else {
-			final var persister = getEntityPersister( null, object );
-			return (T) getReference( persister.getMappedClass(),
-					persister.getIdentifier(object, this) );
-		}
-	}
-
 	@Override
 	public String guessEntityName(Object object) {
 		checkOpenOrWaitingForAutoClose();
@@ -2272,7 +2258,8 @@ public class SessionImpl
 		checkOpen();
 
 		try {
-			return byId( entityClass ).getReference( id );
+			var operation = new StatefulGetReferenceOperation<T>( requireEntityPersister( entityClass ), this, KeyType.IDENTIFIER );
+			return operation.performGetReference( id );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
@@ -2287,7 +2274,39 @@ public class SessionImpl
 		checkOpen();
 
 		try {
-			return byId( entityName ).getReference( id );
+			var operation = new StatefulGetReferenceOperation<>( requireEntityPersister( entityName ), this, KeyType.IDENTIFIER );
+			return operation.performGetReference( id );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public <T> T getReference(T object) {
+		checkOpen();
+		final var lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			return (T) getReference( lazyInitializer.getPersistentClass(),
+					lazyInitializer.getInternalIdentifier() );
+		}
+		else {
+			final var persister = getEntityPersister( null, object );
+			return (T) getReference( persister.getMappedClass(),
+					persister.getIdentifier(object, this) );
+		}
+	}
+
+	@Override
+	public <T> T getReference(Class<T> entityType, Object key, KeyType keyType) {
+		checkOpen();
+
+		try {
+			var operation = new StatefulGetReferenceOperation<T>( requireEntityPersister( entityType ), this, keyType );
+			return operation.performGetReference( key );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

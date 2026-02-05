@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -36,7 +37,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 // Hibernate Reactive extends this class: see ReactiveIdentifierLoadAccessImpl
 public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
-	private final LoadAccessContext context;
+	private final StatefulLoadAccessContext context;
 	private final EntityPersister entityPersister;
 
 	private LockOptions lockOptions;
@@ -47,7 +48,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
-	public IdentifierLoadAccessImpl(LoadAccessContext context, EntityPersister entityPersister) {
+	public IdentifierLoadAccessImpl(StatefulLoadAccessContext context, EntityPersister entityPersister) {
 		this.context = context;
 		this.entityPersister = entityPersister;
 	}
@@ -268,7 +269,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
 		return graphSemantic;
 	}
 
-	protected LoadAccessContext getContext() {
+	protected StatefulLoadAccessContext getContext() {
 		return context;
 	}
 

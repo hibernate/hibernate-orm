@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
@@ -42,7 +43,8 @@ import org.hibernate.graph.GraphSemantic;
 ///
 /// @see Session#byId
 ///
-/// @deprecated Use forms of [Session#find] accepting [jakarta.persistence.FindOption]} instead.
+/// @deprecated Use forms of [Session#find] accepting [jakarta.persistence.FindOption]}
+/// or [Session#getReference(Class, Object, KeyType)] instead.
 @Deprecated(since = "7.1", forRemoval = true)
 public interface IdentifierLoadAccess<T> {
 
@@ -172,7 +174,10 @@ public interface IdentifierLoadAccess<T> {
 	 * @param id The identifier for which to obtain a reference
 	 *
 	 * @return the persistent instance or proxy
+	 *
+	 * @deprecated Use {@linkplain Session#getReference(Class, Object, KeyType)} instead.
 	 */
+	@Deprecated
 	T getReference(Object id);
 
 	/**
@@ -184,7 +189,12 @@ public interface IdentifierLoadAccess<T> {
 	 * @param id The identifier
 	 *
 	 * @return The persistent instance or {@code null}
+	 *
+	 * @deprecated Use one of {@linkplain Session#find(Class, Object, FindOption...)},
+	 * {@linkplain Session#find(String, Object, FindOption...)}, or
+	 * {@linkplain Session#find(EntityGraph, Object, FindOption...)} instead.
 	 */
+	@Deprecated
 	T load(Object id);
 
 	/**

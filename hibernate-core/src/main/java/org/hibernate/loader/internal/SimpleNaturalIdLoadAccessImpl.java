@@ -18,6 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -37,7 +38,7 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 
 	private final boolean hasSimpleNaturalId;
 
-	public SimpleNaturalIdLoadAccessImpl(LoadAccessContext context, EntityMappingType entityDescriptor) {
+	public SimpleNaturalIdLoadAccessImpl(StatefulLoadAccessContext context, EntityMappingType entityDescriptor) {
 		super( context, entityDescriptor );
 		hasSimpleNaturalId = entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 	}

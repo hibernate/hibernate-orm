@@ -2155,7 +2155,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							context.addNonnullAnnotation(),
-							jakartaDataRepository,
+							true, // @Delete queries are only defined by JD, so assume JD semantics
 							fullReturnType(method)
 					)
 			);

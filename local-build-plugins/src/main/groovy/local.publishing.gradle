@@ -7,12 +7,6 @@ plugins {
     id "maven-publish"
 }
 
-// Disable Gradle module metadata publishing until we know what we want.
-// https://docs.gradle.org/6.0.1/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
-tasks.withType(GenerateModuleMetadata).configureEach {
-    enabled = false
-}
-
 if ( !project.description ) {
     project.description = "The Hibernate ORM $project.name module"
 }

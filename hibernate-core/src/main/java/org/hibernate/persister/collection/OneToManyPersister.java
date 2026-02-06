@@ -65,7 +65,6 @@ import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
-import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_VALUE_SETTER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -517,7 +516,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				0,
 				jdbcValueBindings,
 				null,
-				DEFAULT_RESTRICTOR,
+				(valueIndex, bindings, noop, value, jdbcValueMapping) -> {
+					if ( !jdbcValueMapping.isFormula() ) {
+						bindings.bindValue( value, jdbcValueMapping, ParameterUsage.RESTRICT );
+					}
+				},
 				session
 		);
 		pluralAttribute.getElementDescriptor().decompose(
@@ -541,7 +544,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
 				new TableUpdateBuilderStandard<>( this, tableReference, getFactory(), sqlWhereString );
 		final var attributeMapping = getAttributeMapping();
-		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder );
+		attributeMapping.getKeyDescriptor().getKeyPart().forEachUpdatable( updateBuilder );
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			indexDescriptor.forEachUpdatable( updateBuilder );
@@ -566,7 +569,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				0,
 				jdbcValueBindings,
 				null,
-				DEFAULT_VALUE_SETTER,
+				(valueIndex, bindings, noop, value, jdbcValueMapping) -> {
+					if ( jdbcValueMapping.isUpdateable() && !jdbcValueMapping.isFormula() ) {
+						bindings.bindValue( value, jdbcValueMapping, ParameterUsage.SET );
+					}
+				},
 				session
 		);
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();

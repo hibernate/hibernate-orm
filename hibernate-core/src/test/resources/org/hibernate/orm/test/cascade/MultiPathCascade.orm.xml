@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+    <package>org.hibernate.orm.test.cascade</package>
+    <entity class="A">
+        <table name="HB_A"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="data">
+                <column name="data" nullable="false"/>
+            </basic>
+            <one-to-many name="hs" target-entity="H" mapped-by="a">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-one name="g" target-entity="G" mapped-by="a">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="G">
+        <table name="HB_G"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="data">
+                <column name="data" nullable="false"/>
+            </basic>
+            <many-to-one name="a" target-entity="A">
+                <join-column name="aId" unique="true" nullable="true"/>
+            </many-to-one>
+            <many-to-many name="hs" target-entity="H" mapped-by="gs">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="H">
+        <table name="HB_H"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="native"/>
+            </id>
+            <basic name="data">
+                <column name="data" nullable="false"/>
+            </basic>
+            <many-to-one name="a" target-entity="A">
+                <join-column name="a_fk"/>
+            </many-to-one>
+            <many-to-many name="gs" target-entity="G">
+                <join-table name="HB_G_H">
+                    <join-column name="h_fk"/>
+                    <inverse-join-column name="g_fk"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

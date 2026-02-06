@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.sql.ast.spi.AbstractSqlAstTranslator.getCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 
 /**
  * HANA json_value function.

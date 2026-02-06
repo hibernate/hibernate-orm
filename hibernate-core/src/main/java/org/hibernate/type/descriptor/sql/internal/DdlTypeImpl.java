@@ -107,7 +107,8 @@ public class DdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		if ( length == null && precision == null ) {
+		if ( length == null && precision == null
+				|| jdbcType.isInteger() ) {  // workaround for ordinal enums represented as TINYINT(255)
 			return getCastTypeName( jdbcType, javaType );
 		}
 		else {

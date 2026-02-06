@@ -72,6 +72,11 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	@Override
+	public boolean useLengthsInCasts() {
+		return true;
+	}
+
+	@Override
 	public String aggregateComponentCustomReadExpression(
 			String template,
 			String placeholder,

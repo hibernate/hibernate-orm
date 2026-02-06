@@ -147,6 +147,11 @@ public class MySQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
+	/**
+	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
+	 */
+	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
+
 	private final MySQLStorageEngine storageEngine;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
@@ -364,12 +369,21 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		final CapacityDependentDdlType.Builder varcharBuilder =
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+				CHAR,
+				false,
+				columnType( CHAR ),
+				"char($l)",
+				castType( CHAR ),
+				this
+		) );
+
+		final var varcharBuilder =
 				CapacityDependentDdlType.builder(
 								VARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( CLOB ),
-								columnType( CHAR ),
+								this::charCastType,
 								castType( CHAR ),
 								this
 						)
@@ -382,12 +396,12 @@ public class MySQLDialect extends Dialect {
 
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
-		final CapacityDependentDdlType.Builder nvarcharBuilder =
+		final var nvarcharBuilder =
 				CapacityDependentDdlType.builder(
 								NVARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( NCLOB ),
-								columnType( NCHAR ),
+								this::charCastType,
 								castType( NCHAR ),
 								this
 						)
@@ -398,7 +412,7 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final CapacityDependentDdlType.Builder varbinaryBuilder =
+		final var varbinaryBuilder =
 				CapacityDependentDdlType.builder(
 								VARBINARY,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
@@ -432,7 +446,7 @@ public class MySQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( CLOB,
-								columnType( CLOB ), castType( CHAR ), this )
+								columnType( CLOB ),  castType( CHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -448,8 +462,17 @@ public class MySQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) {
+			@Override
+			public String getCastTypeName(Long length) {
+				return length == null ? "char" : charCastType( length.intValue() );
+			}
+		} );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	private String charCastType(int length) {
+		return length > MAX_CHAR_SIZE ? "char" : "char(" + length + ")";
 	}
 
 	@Override

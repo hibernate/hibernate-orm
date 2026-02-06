@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false" 
+	package="org.hibernate.tool.hbm2x.hbm2hbmxml.DynamicComponentTest">
+
+    <class name="Glarch"
+    	table="`glarchez`"
+    	proxy="GlarchProxy"
+    	dynamic-update="true">
+
+        <!--cache-->
+        <id type="string" column="tha_key" length="32">
+            <generator class="uuid"/>
+        </id>
+        <version name="version"/>
+        <many-to-one name="next" column="next_" class="Glarch"/>
+        <dynamic-component name="dynaBean">
+        	<property name="foo" type="string"/>
+        	<property name="bar" type="integer"/>
+        </dynamic-component>
+        <list name="strings">
+            <key column="glarch_key"/>
+            <index column="`indx_`"/>
+            <element type="string" column="`tha_stryng`"/>
+        </list>
+        <list name="fooComponents" lazy="true" cascade="all">
+            <key column="glarch_key"/>
+            <index column="tha_indecks"/>
+            <composite-element class="FooComponent">
+                <property name="name" column="name_"/>
+                <property name="count" column="count_"/>
+                <nested-composite-element name="subcomponent" class="FooComponent">
+                    <property name="name" column="x_"/>
+                    <property name="count" column="y_"/>
+                </nested-composite-element>
+                <many-to-one name="fee" cascade="all" outer-join="true"/>
+            </composite-element>
+        </list>
+        <array name="proxyArray" element-class="GlarchProxy">
+        	<key column="array_key"/>
+        	<index column="array_indecks"/>
+        	<one-to-many class="Glarch"/>
+        </array>
+    </class>
+    
+     <class name="Fee" table="`the fees`">
+        <id type="string" name="key" column="id_" length="64" unsaved-value="null">
+            <generator class="uuid"/>
+        </id>
+        <property name="fi"/>
+        <many-to-one name="anotherFee"/>
+        <component name="compon" update="false">
+        	<property name="name"/>
+        	<property name="null" column="null_prop"/>
+        </component>
+    </class>
+
+</hibernate-mapping>

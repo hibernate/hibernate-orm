@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates 
+  
+     (1) composite keys and many-to-one associations on 
+         composite keys
+      
+     (2) use of insert="false" update="false" on an
+         association mapping, when the foreign key is
+         also part of the primary key
+     
+-->
+
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2JavaTest">
+
+    <class name="LineItem">
+    	
+    	<composite-id name="id" 
+    		class="LineItemId">
+    		<key-property name="customerId" length="10" type="string"/>
+    		<key-property name="orderNumber" type="int"/>
+    		<key-property name="productId" length="10" type="string"/>
+    	</composite-id>
+    	
+    	<property name="quantity" type="int"/>
+    	
+    	<many-to-one name="order"
+    		insert="false"
+			update="false" 
+			not-null="true" 
+			class="Order">
+			<column name="customerId"/>
+			<column name="orderNumber"/>
+		</many-to-one>
+    	
+    	<many-to-one name="product"
+    		insert="false"
+			update="false" 
+			not-null="true"
+			column="productId"
+			class="Product"/>
+			
+    </class>
+ 	
+
+</hibernate-mapping>

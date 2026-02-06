@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+
+ <!-- a empty one is valid and means select everything without considering schema/catalog/table -->
+ <schema-selection/>
+ 
+ <!-- Only for something matching in schema OVRTEST -->
+ <schema-selection match-schema="OVRTEST"/>
+
+ <!-- Only for something matching in catalog UBERCATALOG and schema OVRTEST -->
+ <schema-selection match-catalog="UBERCATALOG" match-schema="OVRTEST"/>
+
+ <!-- .* is valid, will be translated into % -->
+ <schema-selection match-catalog="PUBLIC.*" match-schema="OVRTEST" match-table=".*"/> 
+
+</hibernate-reverse-engineering>

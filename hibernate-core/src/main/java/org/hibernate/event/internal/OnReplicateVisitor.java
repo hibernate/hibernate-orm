@@ -10,8 +10,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
 /**
- * When an entity is passed to replicate(), and there is an existing row, we must
- * inspect all its collections and
+ * When an entity is passed to {@link org.hibernate.Session#replicate}, and there
+ * is an existing row, we must inspect all its collections and:
  * <ol>
  * <li> associate any uninitialized PersistentCollections with this session
  * <li> associate any initialized PersistentCollections with this session, using the

@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -691,26 +692,62 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean reassociateIfUninitializedProxy(Object value) throws MappingException {
-		if ( !Hibernate.isInitialized( value ) ) {
-			// could be a proxy
-			final var lazyInitializer = extractLazyInitializer( value );
-			if ( lazyInitializer != null ) {
-				reassociateProxy( lazyInitializer, asHibernateProxy( value ) );
-				return true;
-			}
-			// or an uninitialized enhanced entity ("bytecode proxy")
-			if ( isPersistentAttributeInterceptable( value ) ) {
-				final var bytecodeProxy = asPersistentAttributeInterceptable( value );
-				final var interceptor =
-						(BytecodeLazyAttributeInterceptor)
-								bytecodeProxy.$$_hibernate_getInterceptor();
-				if ( interceptor != null ) {
-					interceptor.setSession( getSession() );
-				}
-				return true;
-			}
+		if ( Hibernate.isInitialized( value ) ) {
+			return false;
 		}
-		return false;
+		// could be a proxy
+		final var lazyInitializer = extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			final boolean uninitialized = lazyInitializer.isUninitialized();
+			if ( uninitialized ) {
+				reassociateProxy( lazyInitializer, asHibernateProxy( value ) );
+			}
+			return uninitialized;
+		}
+		// or an uninitialized enhanced entity ("bytecode proxy")
+		else if ( isPersistentAttributeInterceptable( value ) ) {
+			final var interceptor =
+					(BytecodeLazyAttributeInterceptor)
+							asPersistentAttributeInterceptable( value )
+									.$$_hibernate_getInterceptor();
+			final boolean uninitialized =
+					interceptor instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+							&& !enhancementInterceptor.isInitialized();
+			if ( uninitialized ) {
+				interceptor.setSession( getSession() );
+			}
+			return uninitialized;
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean isUninitializedProxy(Object value) throws MappingException {
+		// could be a proxy
+		final var lazyInitializer = extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.getSession() != session ) {
+				throw new DetachedObjectException( "Given proxy does not belong to this persistence context" );
+			}
+			return lazyInitializer.isUninitialized();
+		}
+		// or an uninitialized enhanced entity ("bytecode proxy")
+		else if ( isPersistentAttributeInterceptable( value ) ) {
+			final var interceptor =
+					(BytecodeLazyAttributeInterceptor)
+							asPersistentAttributeInterceptable( value )
+									.$$_hibernate_getInterceptor();
+			if ( interceptor != null && interceptor.getLinkedSession() != session ) {
+				throw new DetachedObjectException( "Given proxy does not belong to this persistence context" );
+			}
+			return interceptor instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+				&& !enhancementInterceptor.isInitialized();
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -755,7 +792,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final var lazyInitializer = extractLazyInitializer( maybeProxy );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
-				throw new PersistentObjectException( "object was an uninitialized proxy for "
+				throw new PersistentObjectException( "Object was an uninitialized proxy for "
 														+ lazyInitializer.getEntityName() );
 			}
 			//unwrap the object and return
@@ -765,6 +802,34 @@ class StatefulPersistenceContext implements PersistenceContext {
 			return maybeProxy;
 		}
 	}
+
+	@Override
+	public Object unproxyLoadingIfNecessary(final Object maybeProxy) throws HibernateException {
+		final var lazyInitializer = extractLazyInitializer( maybeProxy );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.getSession() != session ) {
+				throw new DetachedObjectException( "Given proxy does not belong to this persistence context" );
+			}
+			//initialize + unwrap the object and return it
+			return lazyInitializer.getImplementation();
+		}
+		else if ( isPersistentAttributeInterceptable( maybeProxy ) ) {
+			final var interceptor =
+					asPersistentAttributeInterceptable( maybeProxy )
+							.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				if ( lazinessInterceptor.getLinkedSession() != session ) {
+					throw new DetachedObjectException( "Given proxy does not belong to this persistence context" );
+				}
+				lazinessInterceptor.forceInitialize( maybeProxy, null );
+			}
+			return maybeProxy;
+		}
+		else {
+			return maybeProxy;
+		}
+	}
+
 
 	@Override
 	public Object unproxyAndReassociate(final Object maybeProxy) throws HibernateException {

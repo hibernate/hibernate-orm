@@ -322,8 +322,9 @@ public final class Cascade {
 				if ( child == null || loadedValue != null && child != loadedValue ) {
 					EntityEntry valueEntry = persistenceContext.getEntry( loadedValue );
 					if ( valueEntry == null && isHibernateProxy( loadedValue ) ) {
-						// un-proxy and re-associate for cascade operation
+						// unproxy and reassociate for cascade operation
 						// useful for @OneToOne defined as FetchType.LAZY
+						//TODO: what should really happen here???
 						loadedValue = persistenceContext.unproxyAndReassociate( loadedValue );
 						valueEntry = persistenceContext.getEntry( loadedValue );
 						// HHH-11965

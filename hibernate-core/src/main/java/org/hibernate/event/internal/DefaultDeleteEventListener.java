@@ -5,6 +5,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.CacheMode;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -166,7 +167,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	private void deleteDetachedEntity(
 			DeleteEvent event, DeleteContext transientEntities, Object entity, EntityPersister persister, EventSource source) {
 		if ( source.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
 		final Object id = persister.getIdentifier( entity, source );
 		if ( id == null ) {
@@ -182,18 +183,19 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 			new OnUpdateVisitor( source, id, entity ).process( entity, persister );
 
-			final var persistenceContext = source.getPersistenceContextInternal();
-			final var entityEntry = persistenceContext.addEntity(
-					entity,
-					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
-					persister.getValues( entity ),
-					key,
-					version,
-					LockMode.NONE,
-					true,
-					persister,
-					false
-			);
+			final var entityEntry =
+					source.getPersistenceContextInternal()
+							.addEntity(
+									entity,
+									persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+									persister.getValues( entity ),
+									key,
+									version,
+									LockMode.NONE,
+									true,
+									persister,
+									false
+							);
 			persister.afterReassociate( entity, source );
 
 			delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
@@ -524,7 +526,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
-			// cascade-delete to many-to-one AFTER the parent was deleted
+			// cascade delete to many-to-one AFTER the parent was deleted
 			Cascade.cascade(
 					CascadingActions.REMOVE,
 					CascadePoint.BEFORE_INSERT_AFTER_DELETE,

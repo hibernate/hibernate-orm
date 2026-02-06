@@ -296,6 +296,12 @@ public interface PersistenceContext {
 	 */
 	Object unproxy(Object maybeProxy);
 
+	@Incubating
+	Object unproxyLoadingIfNecessary(final Object maybeProxy);
+
+	@Incubating
+	boolean isUninitializedProxy(Object value);
+
 	/**
 	 * Possibly unproxy the given reference and reassociate it with the current session.
 	 *

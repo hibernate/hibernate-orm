@@ -1897,9 +1897,7 @@ public abstract class CollectionBinder {
 		final var key = new DependantValue( buildingContext, collection.getCollectionTable(), keyValue );
 		key.setTypeName( null );
 		joinColumns.checkPropertyConsistency();
-		final var columns = joinColumns.getColumns();
-		key.setNullable( columns.isEmpty() || columns.get(0).isNullable() );
-		key.setUpdateable( columns.isEmpty() || columns.get(0).isUpdatable() );
+		setCollectionKeyNullableUpdatable( joinColumns, key );
 		key.setOnDeleteAction( onDeleteAction );
 		collection.setKey( key );
 
@@ -1943,6 +1941,25 @@ public abstract class CollectionBinder {
 		}
 
 		return key;
+	}
+
+	private static void setCollectionKeyNullableUpdatable(AnnotatedJoinColumns joinColumns, DependantValue key) {
+		final var columns = joinColumns.getColumns();
+		if ( columns.isEmpty() ) {
+			key.setNullable( true );
+			key.setUpdateable( true );
+		}
+		else {
+			for ( var column : columns ) {
+				if ( !column.isFormula() ) {
+					key.setNullable( column.isNullable() );
+					key.setUpdateable( column.isUpdatable() );
+					return;
+				}
+			}
+			key.setNullable( true );
+			key.setUpdateable( false );
+		}
 	}
 
 	private static void handleForeignKey(

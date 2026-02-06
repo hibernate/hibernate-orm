@@ -410,30 +410,21 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
 			SqlAstCreationState creationState) {
-		final var lhsTableReference = targetSideTableGroup.resolveTableReference(
-				targetSideTableGroup.getNavigablePath(),
-				targetSide.getModelPart().getContainingTableExpression()
-		);
-		final var rhsTableKeyReference = keySideTableGroup.resolveTableReference(
-				null,
-				keySide.getModelPart().getContainingTableExpression()
-		);
-
+		final var lhsTableReference =
+				targetSideTableGroup.resolveTableReference( targetSideTableGroup.getNavigablePath(),
+						targetSide.getModelPart().getContainingTableExpression() );
+		final var rhsTableKeyReference =
+				keySideTableGroup.resolveTableReference( null,
+						keySide.getModelPart().getContainingTableExpression() );
 		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );
 	}
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		if ( !(predicate instanceof ComparisonPredicate comparisonPredicate) ) {
-			return false;
-		}
-		if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
-			return false;
-		}
-		final var lhsExpr = comparisonPredicate.getLeftHandExpression();
-		final var rhsExpr = comparisonPredicate.getRightHandExpression();
-		if ( lhsExpr instanceof ColumnReference lhsColumnRef
-				&& rhsExpr instanceof ColumnReference rhsColumnRef ) {
+		if ( predicate instanceof ComparisonPredicate comparisonPredicate
+				&& comparisonPredicate.getOperator() == ComparisonOperator.EQUAL
+				&& comparisonPredicate.getLeftHandExpression() instanceof ColumnReference lhsColumnRef
+				&& comparisonPredicate.getRightHandExpression() instanceof ColumnReference rhsColumnRef ) {
 			final String lhs = lhsColumnRef.getColumnExpression();
 			final String rhs = rhsColumnRef.getColumnExpression();
 			final String keyExpression = keySide.getModelPart().getSelectionExpression();
@@ -441,9 +432,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return lhs.equals( keyExpression ) && rhs.equals( targetExpression )
 				|| lhs.equals( targetExpression ) && rhs.equals( keyExpression );
 		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	@Override

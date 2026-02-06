@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -36,7 +37,7 @@ public interface MappingModelCreationLogging extends BasicLogger {
 
 	Logger MAPPING_MODEL_CREATION_LOGGER = Logger.getLogger( LOGGER_NAME );
 	MappingModelCreationLogging MAPPING_MODEL_CREATION_MESSAGE_LOGGER =
-			Logger.getMessageLogger( MethodHandles.lookup(), MappingModelCreationLogging.class, LOGGER_NAME );
+			Logger.getMessageLogger( MethodHandles.lookup(), MappingModelCreationLogging.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message(id = 90005701, value = "Wrapping up metadata context...")

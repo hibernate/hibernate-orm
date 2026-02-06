@@ -13,6 +13,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 /// Logger for DomainResult related messages. This includes messages related to:
 /// * creation of the DomainResult / Fetch nodes
@@ -31,7 +32,7 @@ public interface ResultsLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".results";
 
 	Logger RESULTS_LOGGER = Logger.getLogger( LOGGER_NAME );
-	ResultsLogger RESULTS_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ResultsLogger.class, LOGGER_NAME );
+	ResultsLogger RESULTS_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ResultsLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	// todo (6.0) : make sure sql result processing classes use this logger
 

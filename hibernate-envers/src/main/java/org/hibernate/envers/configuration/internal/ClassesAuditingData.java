@@ -38,7 +38,8 @@ public class ClassesAuditingData {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			EnversMessageLogger.class,
-			ClassesAuditingData.class.getName()
+			ClassesAuditingData.class.getName(),
+			Locale.ROOT
 	);
 
 	private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<>();

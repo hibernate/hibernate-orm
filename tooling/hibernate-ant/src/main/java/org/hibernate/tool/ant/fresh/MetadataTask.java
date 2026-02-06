@@ -96,27 +96,15 @@ public class MetadataTask {
 	
 	private Properties getProperties() {
 		Properties result = new Properties();
-		if (this.propertyFile != null) { 
-			FileInputStream is = null;
-			try {
-				is = new FileInputStream(propertyFile);
-				result.load(is);
-			} 
-			catch (FileNotFoundException e) {
-				throw new BuildException(propertyFile + " not found.", e);					
-			} 
-			catch (IOException e) {
-				throw new BuildException("Problem while loading " + propertyFile, e);				
-			}
-			finally {
-				if (is != null) {
-					try {
-						is.close();
-					} 
-					catch (IOException e) { /** ignore **/ }
-				}
-			}
-		} 
+		if (this.propertyFile != null) {
+            try (FileInputStream is = new FileInputStream(propertyFile)) {
+                result.load(is);
+            } catch (FileNotFoundException e) {
+                throw new BuildException(propertyFile + " not found.", e);
+            } catch (IOException e) {
+                throw new BuildException("Problem while loading " + propertyFile, e);
+            }
+        }
 	    return result;
 	}
 	

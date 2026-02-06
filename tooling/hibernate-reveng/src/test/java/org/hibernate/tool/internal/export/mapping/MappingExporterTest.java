@@ -246,7 +246,6 @@ public class MappingExporterTest {
         assertTrue(simpleMappingXmlFile.exists());
         String mappingXml = Files.readString(simpleMappingXmlFile.toPath());
         assertTrue(mappingXml.contains("entity-mappings"));
-        System.out.println(mappingXml);
     }
 
     @Test

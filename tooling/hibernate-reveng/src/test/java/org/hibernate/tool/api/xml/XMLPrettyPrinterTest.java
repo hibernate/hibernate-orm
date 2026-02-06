@@ -18,6 +18,7 @@
 package org.hibernate.tool.api.xml;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -32,10 +33,10 @@ public class XMLPrettyPrinterTest {
 	private static final String XML_BEFORE = "<foo><bar>foobar</bar></foo>";
 	
 	private static final String XML_AFTER = 
-			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-			"<foo>\n" +
-	        "    <bar>foobar</bar>\n" +
-			"</foo>\n";
+			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" 	+ System.lineSeparator() +
+			"<foo>" 														+ System.lineSeparator() +
+	        "    <bar>foobar</bar>" 										+ System.lineSeparator() +
+			"</foo>"														+ System.lineSeparator();
 	
 	private static final String XML_COMMENT = "<!-- Just a comment! -->";
 	

@@ -192,12 +192,12 @@ public class ExamplesTestIT {
     private static void overwriteHibernateProperties() throws Exception {
         File hibernatePropertiesFile = new File(baseFolder, "common/hibernate.properties");
         String hibernatePropertiesFileContents =
-                "hibernate.connection.driver_class=org.h2.Driver\n" +
-                        "hibernate.connection.url=" + constructJdbcConnectionString() + "\n" +
-                        "hibernate.connection.username=\n" +
-                        "hibernate.connection.password=\n" +
-                        "hibernate.default_catalog=TEST\n" +
-                        "hibernate.default_schema=PUBLIC\n";
+                "hibernate.connection.driver_class=org.h2.Driver"               + System.lineSeparator() +
+                "hibernate.connection.url=" + constructJdbcConnectionString()   + System.lineSeparator() +
+                "hibernate.connection.username="                                + System.lineSeparator() +
+                "hibernate.connection.password="                                + System.lineSeparator() +
+                "hibernate.default_catalog=TEST"                                + System.lineSeparator() +
+                "hibernate.default_schema=PUBLIC"                               + System.lineSeparator();
         Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents);
     }
 
@@ -215,7 +215,7 @@ public class ExamplesTestIT {
     }
 
     private static String constructJdbcConnectionString() {
-        return "jdbc:h2:" + baseFolder.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+        return "jdbc:h2:" + baseFolder.getAbsolutePath().replace("\\", "/") + "/database/test;AUTO_SERVER=TRUE";
     }
 
     private static File determineBaseFolder() throws Exception {

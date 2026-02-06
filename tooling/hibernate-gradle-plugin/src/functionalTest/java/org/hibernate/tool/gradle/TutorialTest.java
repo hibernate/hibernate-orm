@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import org.hibernate.tool.it.gradle.TestTemplate;
 
+import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.GradleRunner;
+
 public class TutorialTest extends TestTemplate {
 
 	@BeforeEach

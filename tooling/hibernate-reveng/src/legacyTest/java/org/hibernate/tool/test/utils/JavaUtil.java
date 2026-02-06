@@ -22,6 +22,7 @@ import javax.tools.ToolProvider;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,7 @@ public class JavaUtil {
 			URL url = codeSource.getLocation();
 			if (url != null) {
 				try {
-					result = url.toURI().getPath();
+					result = new File(url.toURI()).getAbsolutePath();
 				}
 				catch (URISyntaxException e) {
 					throw new IllegalArgumentException( "Unexpected path to a Jar file: " + url, e );

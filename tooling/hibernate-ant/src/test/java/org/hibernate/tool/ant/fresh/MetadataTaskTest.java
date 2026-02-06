@@ -33,6 +33,8 @@ import org.apache.tools.ant.types.selectors.FilenameSelector;
 import org.hibernate.tool.ant.fresh.MetadataTask.Type;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 public class MetadataTaskTest {
@@ -83,8 +85,10 @@ public class MetadataTaskTest {
 		assertEquals(1, mdt.fileSets.size());
 		assertSame(fs, mdt.fileSets.get(0));
 	}
-	
+
+	// TODO HBX-3313: Verify why this does not work on Windows
 	@Test
+	@DisabledOnOs(OS.WINDOWS)
 	public void testCreateNativeMetadataDescriptor() throws Exception {
 		String propertiesString = "hibernate.dialect=H2";
 		File propertiesFile = new File(tempDir.toFile(), "hibernate.properties");

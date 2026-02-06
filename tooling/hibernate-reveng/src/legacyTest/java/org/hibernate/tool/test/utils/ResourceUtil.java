@@ -51,12 +51,11 @@ public class ResourceUtil {
 		return result;
 	}
 
-  public static File resolveResourceFile(Class<?> testClass, String resourceName) {
-    String path = testClass.getPackage().getName().replace('.', File.separatorChar);
-    URL resourceUrl = testClass.getClassLoader().getResource(path + File.separatorChar
-        + resourceName);
-      assert resourceUrl != null;
-      return new File(resourceUrl.getFile());
+    public static File resolveResourceFile(Class<?> testClass, String resourceName) {
+        String path = testClass.getPackage().getName().replace('.', '/');
+        URL resourceUrl = testClass.getClassLoader().getResource(path + "/" + resourceName);
+        assert resourceUrl != null;
+        return new File(resourceUrl.getFile());
     }
 	
 	private static String getRelativeResourcesRoot(Class<?> testClass) {

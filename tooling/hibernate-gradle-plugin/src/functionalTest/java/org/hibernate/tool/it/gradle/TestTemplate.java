@@ -108,12 +108,12 @@ public class TestTemplate {
         File hibernatePropertiesFile = new File(getProjectDir(), "app/src/main/resources/hibernate.properties");
         StringBuffer hibernatePropertiesFileContents = new StringBuffer();
         hibernatePropertiesFileContents
-                .append("hibernate.connection.driver_class=org.h2.Driver\n")
-                .append("hibernate.connection.url=" + constructJdbcConnectionString() + "\n")
-                .append("hibernate.connection.username=\n")
-                .append("hibernate.connection.password=\n")
-                .append("hibernate.default_catalog=TEST\n")
-                .append("hibernate.default_schema=PUBLIC\n");
+                .append("hibernate.connection.driver_class=org.h2.Driver").append(System.lineSeparator())
+                .append("hibernate.connection.url=").append(constructJdbcConnectionString()).append(System.lineSeparator())
+                .append("hibernate.connection.username=").append(System.lineSeparator())
+                .append("hibernate.connection.password=").append(System.lineSeparator())
+                .append("hibernate.default_catalog=TEST").append(System.lineSeparator())
+                .append("hibernate.default_schema=PUBLIC").append(System.lineSeparator());
         Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents.toString());
         assertTrue(hibernatePropertiesFile.exists());
     }
@@ -143,19 +143,20 @@ public class TestTemplate {
     }
 
     protected String constructJdbcConnectionString() {
-        return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+        String testFolderPath = getProjectDir().getAbsolutePath().replace('\\', '/') + "/database/test";
+        return "jdbc:h2:" + testFolderPath + ";AUTO_SERVER=TRUE";
     }
 
     protected void addH2DatabaseDependencyLine(StringBuffer gradleBuildFileContents) {
         int pos = gradleBuildFileContents.indexOf("dependencies {");
         pos = gradleBuildFileContents.indexOf("}", pos);
-        gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");
+        gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + System.lineSeparator());
     }
 
     protected void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
         int pos = gradleBuildFileContents.indexOf("plugins {");
         pos = gradleBuildFileContents.indexOf("}", pos);
-        gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + "\n");
+        gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + System.lineSeparator());
     }
 
     protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
@@ -163,7 +164,7 @@ public class TestTemplate {
         if (extension != null) {
             int pos = gradleBuildFileContents.indexOf("dependencies {");
             pos = gradleBuildFileContents.indexOf("}", pos);
-            gradleBuildFileContents.insert(pos + 1, "\n\n" + extension);
+            gradleBuildFileContents.insert(pos + 1, System.lineSeparator() + System.lineSeparator() + extension);
         }
     }
 

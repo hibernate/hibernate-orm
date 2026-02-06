@@ -23,30 +23,30 @@ import org.hibernate.bytecode.spi.ClassTransformer;
 ///   - from the Jakarta EE container as an instance of
 ///     [jakarta.persistence.spi.PersistenceUnitInfo]
 ///   - in an SE environment, parsed by Hibernate itself
+///   - [org.hibernate.jpa.HibernatePersistenceConfiguration]
 ///
 /// @see jakarta.persistence.spi.PersistenceUnitInfo
 /// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl
 ///
 /// @author Steve Ebersole
 public interface PersistenceUnitDescriptor {
+
+	/// The persistence unit name.
+	///
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitName()
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getName
+	String getName();
+
 	/// The root url for the persistence unit.
 	///
 	/// @implNote When Hibernate performs scanning, this URL is used as the base for scanning.
 	URL getPersistenceUnitRootUrl();
-
-	/// The persistence unit name.
-	///
-	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getName
-	String getName();
 
 	/// The explicitly specified provider class name, or `null` if not specified.
 	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceProviderClassName
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getProvider
 	String getProviderClassName();
-
-	/// Whether the use of identifier quoting is in effect for this whole persistence unit.
-	boolean isUseQuotedIdentifiers();
 
 	/// Whether scanning for classes should be performed.  If not, the list of classes available is limited to:
 	///   - classes listed in [#getManagedClassNames()]
@@ -57,35 +57,47 @@ public interface PersistenceUnitDescriptor {
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#isExcludeUnlistedClasses
 	boolean isExcludeUnlistedClasses();
 
+	/// Default fetching to be applied to to-one mappings when {@linkplain FetchType#DEFAULT none} is specified.
+	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getDefaultToOneFetchType()
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getDefaultToOneFetchType
+	/// @see jakarta.persistence.OneToOne#fetch()
+	/// @see jakarta.persistence.ManyToOne#fetch()
 	///
 	/// @since 8.0
 	FetchType getDefaultToOneFetchType();
 
-	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getTransactionType()
-	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getTransactionType
-	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
+	/// Whether the use of identifier quoting is in effect for this whole persistence unit.
+	boolean isUseQuotedIdentifiers();
 
-	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getValidationMode
-	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getValidationMode
-	ValidationMode getValidationMode();
-
-	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getSharedCacheMode
-	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getSharedCacheMode
-	SharedCacheMode getSharedCacheMode();
-
+	/// Names of classes explicitly listed in the persistence-unit.
+	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getManagedClassNames
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getClasses
 	List<String> getManagedClassNames();
 
+	/// Names of all classes in the persistence-unit - explicitly listed, listed in mapping XML and discovered.
+	///
+	/// @apiNote This is not supported for all implementors / scenarios.  In such cases, it simply returns {@link #getManagedClassNames()}.
+	///
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getAllManagedClassNames()
+	List<String> getAllClassNames();
+
+	/// Names of mapping-files explicitly listed in the persistence-unit.
+	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getMappingFileNames
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getMappingFiles
 	List<String> getMappingFileNames();
 
+	/// Names of JAR files explicitly listed in the persistence-unit.
+	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getJarFiles
 	List<URL> getJarFileUrls();
+
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getTransactionType()
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getTransactionType
+	PersistenceUnitTransactionType getPersistenceUnitTransactionType();
 
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getNonJtaDataSource
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getNonJtaDataSource
@@ -94,6 +106,14 @@ public interface PersistenceUnitDescriptor {
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getJtaDataSource
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getJtaDataSource
 	Object getJtaDataSource();
+
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getValidationMode
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getValidationMode
+	ValidationMode getValidationMode();
+
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getSharedCacheMode
+	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getSharedCacheMode
+	SharedCacheMode getSharedCacheMode();
 
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getProperties
 	/// @see org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getPropertyContainer

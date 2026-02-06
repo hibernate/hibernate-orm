@@ -4,55 +4,49 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.persistence.FetchType;
-import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.spi.ClassTransformer;
-
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
-import jakarta.persistence.PersistenceUnitTransactionType;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-
 import static org.hibernate.boot.archive.internal.ArchiveHelper.getURLFromPath;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
-/**
- * Describes the information gleaned from a {@code <persistence-unit/>}
- * element in a {@code persistence.xml} file whether parsed directly by
- * Hibernate or passed to us by an EE container as an instance of
- * {@link PersistenceUnitInfo}.
- * <p>
- * Easier to consolidate both views into a single contract and extract
- * information through that shared contract.
- *
- * @author Steve Ebersole
- */
+/// [PersistenceUnitDescriptor] implementation describing the information
+/// gleaned from a `<persistence-unit/>` element in a `persistence.xml` when
+/// Hibernate itself parses the `persistence.xml` file.
+///
+/// @author Steve Ebersole
 public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor {
 	private final URL persistenceUnitRootUrl;
 
 	private String name;
-	private Object nonJtaDataSource;
-	private Object jtaDataSource;
 	private String providerClassName;
-	private PersistenceUnitTransactionType transactionType;
-	private boolean useQuotedIdentifiers;
+
 	private boolean excludeUnlistedClasses;
-	private ValidationMode validationMode;
 	private FetchType defaultToOneFetchType;
-	private SharedCacheMode sharedCacheMode;
-
-	private final Properties properties = new Properties();
-
+	private boolean useQuotedIdentifiers;
 	private final List<String> classes = new ArrayList<>();
 	private final List<String> mappingFiles = new ArrayList<>();
 	private final List<URL> jarFileUrls = new ArrayList<>();
+
+	private PersistenceUnitTransactionType transactionType;
+	private Object nonJtaDataSource;
+	private Object jtaDataSource;
+
+	private ValidationMode validationMode;
+	private SharedCacheMode sharedCacheMode;
+
+	private final Properties properties = new Properties();
 
 	public ParsedPersistenceXmlDescriptor(URL persistenceUnitRootUrl) {
 		this.persistenceUnitRootUrl = persistenceUnitRootUrl;
@@ -168,6 +162,11 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 
 	@Override
 	public List<String> getManagedClassNames() {
+		return classes;
+	}
+
+	@Override
+	public List<String> getAllClassNames() {
 		return classes;
 	}
 

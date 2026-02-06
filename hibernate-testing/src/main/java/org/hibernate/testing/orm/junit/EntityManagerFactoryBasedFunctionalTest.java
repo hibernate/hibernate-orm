@@ -239,6 +239,11 @@ public class EntityManagerFactoryBasedFunctionalTest
 		}
 
 		@Override
+		public List<String> getAllClassNames() {
+			return getManagedClassNames();
+		}
+
+		@Override
 		public List<String> getMappingFileNames() {
 			return null;
 		}

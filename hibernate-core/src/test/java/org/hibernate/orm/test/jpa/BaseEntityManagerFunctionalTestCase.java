@@ -154,6 +154,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
+		public List<String> getAllClassNames() {
+			return null;
+		}
+
+		@Override
 		public List<String> getMappingFileNames() {
 			return null;
 		}

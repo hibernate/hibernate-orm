@@ -383,7 +383,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 	}
 
-	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
+	protected static final MarkerObject UNKNOWN = MarkerObject.UNKNOWN;
 
 	protected Object readElementByIndex(final Object index) {
 		if ( !initialized ) {

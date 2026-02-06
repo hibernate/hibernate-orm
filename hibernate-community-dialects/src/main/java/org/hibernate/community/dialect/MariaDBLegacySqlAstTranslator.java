@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -20,7 +19,6 @@ import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -397,17 +395,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	private boolean supportsWindowFunctions() {
 		return dialect.getVersion().isSameOrAfter( 10, 2 );
-	}
-
-	@Override
-	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
-		if ( sqlType != null ) {
-			appendSql( sqlType );
-		}
-		else {
-			super.visitCastTarget( castTarget );
-		}
 	}
 
 	@Override

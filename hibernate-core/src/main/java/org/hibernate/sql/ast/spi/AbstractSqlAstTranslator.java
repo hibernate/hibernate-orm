@@ -14,6 +14,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -206,9 +207,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -6955,45 +6953,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
-	}
-
-	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
-		}
-		else {
-			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
-			if ( ddlType == null ) {
-				// this may happen when selecting a null value like `SELECT null from ...`
-				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
-				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
-			}
-
-			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
-		}
-	}
-
-	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
-		}
-		else {
-			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
-			if ( ddlType == null ) {
-				// this may happen when selecting a null value like `SELECT null from ...`
-				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
-				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
-			}
-
-			return ddlType.getCastTypeName( castTargetSize, expressionType, ddlTypeRegistry );
-		}
+		appendSql( DdlTypeHelper.getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
 	}
 
 	@Override

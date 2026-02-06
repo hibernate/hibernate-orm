@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -404,7 +405,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
-		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
+		final String sqlType = DdlTypeHelper.getCastTypeName( castTarget, factory.getTypeConfiguration() );
 		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
 	}
 

@@ -358,6 +358,10 @@ public sealed class Column
 						ddlTypeRegistry
 				);
 				sqlTypeLob = descriptor.isLob( size );
+				// TODO: this is rubbish (could not find another way)
+				if ( dialect.getAggregateSupport().useLengthsInCasts() ) {
+					length = size.getLength();
+				}
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(

@@ -401,7 +401,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 		else if ( selectable instanceof Formula formula ) {
 			setFormula( formula.getFormula() );
-			bind();
+			initMappingFormula();
 		}
 		linkWithValue( value );
 	}

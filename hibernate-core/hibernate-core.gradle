@@ -102,7 +102,7 @@ jar {
 }
 
 ext {
-    jaxbTargetDir = project.file( "${buildDir}/generated/sources/xjc/main" )
+    jaxbTargetDir = project.layout.buildDirectory.dir("generated/sources/xjc/main").get().asFile
 }
 
 sourceSets {
@@ -144,11 +144,11 @@ versionInjection {
     into( 'org.hibernate.Version', 'initVersion' )
 }
 
-task copyBundleResourcesXml (type: Copy) {
+tasks.register('copyBundleResourcesXml', Copy) {
     inputs.property( "db", db )
     inputs.property( "dbHost", dbHost )
     ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
+        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
         // Escape
         bundleTokens = [
                 'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
@@ -159,7 +159,7 @@ task copyBundleResourcesXml (type: Copy) {
                 'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
                 'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
         ]
-        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+        ext.bundleTokens['buildDirName'] = project.relativePath( layout.buildDirectory.asFile.get() )
     }
 
     from('src/test/bundles/templates') {
@@ -173,13 +173,13 @@ task copyBundleResourcesXml (type: Copy) {
     }
 }
 
-task copyBundleResourcesNonXml (type: Copy) {
+tasks.register('copyBundleResourcesNonXml', Copy) {
     inputs.property( "db", db )
     ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
+        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
         // Escape
         bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+        ext.bundleTokens['buildDirName'] = project.relativePath(layout.buildDirectory.asFile.get())
     }
 
     from('src/test/bundles/templates') {
@@ -193,7 +193,7 @@ task copyBundleResourcesNonXml (type: Copy) {
     }
 }
 
-task copyBundleResources (type: Copy) {
+tasks.register('copyBundleResources', Copy) {
     inputs.property( "db", db )
     dependsOn tasks.copyBundleResourcesXml
     dependsOn tasks.copyBundleResourcesNonXml
@@ -208,7 +208,8 @@ sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-task testJar(type: Jar, dependsOn: testClasses) {
+tasks.register('testJar', Jar) {
+    dependsOn testClasses
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )
     from sourceSets.test.output
@@ -234,9 +235,9 @@ tasks.register( "generateAnnotationClasses", JavaCompile ) {
     destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
 }
 
-task generateEnversStaticMetamodel(
-        type: JavaCompile,
-        description: "Generate the Hibernate Envers revision entity static metamodel classes." ) {
+tasks.register('generateEnversStaticMetamodel', JavaCompile) {
+    description = "Generate the Hibernate Envers revision entity static metamodel classes."
+
     source = sourceSets.main.java
     // we only want to include these specific classes for metamodel generation.
     // if envers adds any additional revision entity classes, they must be listed here.
@@ -253,10 +254,10 @@ task generateEnversStaticMetamodel(
     ]
 
     // put static metamodel classes back out to the source tree since they're version controlled.
-    destinationDirectory = new File( "${projectDir}/src/main/java" )
+    destinationDirectory = layout.projectDirectory.dir("src/main/java").asFile
 }
 
-tasks.withType( Test.class ).each { test ->
+tasks.withType( Test.class ).configureEach { test ->
     test.systemProperty 'file.encoding', 'utf-8'
     // Allow creating a function in HSQLDB for this Java method
     test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'

@@ -36,12 +36,15 @@ public class SettingsDocGenerationTask extends DefaultTask {
 
 	private final RegularFileProperty outputFile;
 
+	private final OrmBuildDetails buildDetails;
+
 	@Inject
 	public SettingsDocGenerationTask(SettingsDocExtension dslExtension, Project project) {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( "Collects descriptions of Hibernate configuration properties in preparation for inclusion in the User Guide" );
 
-		getInputs().property( "ormVersion", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
+		buildDetails = getProject().getExtensions().getByType( OrmBuildDetails.class );
+		getInputs().property( "ormVersion", buildDetails.getHibernateVersion() );
 
 		javadocDirectory = project.getObjects().directoryProperty();
 		javadocDirectory.convention( dslExtension.getJavadocDirectory() );
@@ -88,7 +91,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 	public void generateSettingsDocumentation() {
 		final String publishedJavadocUrl = publishedDocsUrl.get()
 				+ "/"
-				+ getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersionFamily()
+				+ buildDetails.getHibernateVersionFamily()
 				+ "/javadocs/";
 
 		AsciiDocWriter.writeToFile(
@@ -98,8 +101,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 						sections.getAsMap(),
 						publishedJavadocUrl
 				),
-				outputFile.get(),
-				getProject()
+				outputFile.get()
 		);
 	}
 }

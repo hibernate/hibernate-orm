@@ -40,8 +40,8 @@ plugins {
 // Releasing
 
 tasks.register( 'releasePrepare' ) {
-	group "release-prepare"
-	description "Scripted release 'Release Prepare' stage.  " +
+	group = "release-prepare"
+	description = "Scripted release 'Release Prepare' stage.  " +
 			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
 			"Sub-projects register their own `releasePrepare` to hook into this stage."
 	// See `:release:releasePrepare` which does a lot of heavy lifting here

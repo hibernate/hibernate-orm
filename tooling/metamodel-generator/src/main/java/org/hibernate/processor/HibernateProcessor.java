@@ -407,13 +407,13 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			processElement( element, null );
+			processElement( element, null, null);
 		}
 	}
 
-	private void processElement(Element element, @Nullable Element parent) {
+	private void processElement(Element element, @Nullable Element parent, @Nullable TypeElement primaryEntity) {
 		try {
-			inspectRootElement(element, parent, null);
+			inspectRootElement(element, parent, primaryEntity);
 		}
 		catch ( ProcessLaterException processLaterException ) {
 			if ( element instanceof TypeElement typeElement ) {
@@ -502,9 +502,11 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		}
 		if ( isClassRecordOrInterfaceType( element ) ) {
+			// Any repository nested in an entity gets an automatic primary entity of the enclosing entity for Quarkus Panache 2
+			TypeElement newPrimaryEntity = isEntityOrEmbeddable( element ) && element instanceof TypeElement ? (TypeElement) element : null;
 			for ( final Element child : element.getEnclosedElements() ) {
 				if ( isClassRecordOrInterfaceType( child ) ) {
-					processElement( child, element );
+					processElement( child, element, newPrimaryEntity );
 				}
 			}
 		}
@@ -673,7 +675,6 @@ public class HibernateProcessor extends AbstractProcessor {
 				final TypeElement typeElement = (TypeElement) element;
 				indexEntityName( typeElement );
 				indexEnumFields( typeElement );
-				indexQueryInterfaces( typeElement );
 
 				final String qualifiedName = typeElement.getQualifiedName().toString();
 				final Metamodel alreadyExistingMetaEntity =
@@ -728,14 +729,6 @@ public class HibernateProcessor extends AbstractProcessor {
 		return element.getEnclosingElement().getEnclosedElements()
 				.stream().anyMatch(e -> e.getSimpleName()
 						.contentEquals('_' + element.getSimpleName().toString()));
-	}
-
-	private void indexQueryInterfaces(TypeElement typeElement) {
-		for ( Element element : typeElement.getEnclosedElements() ) {
-			if( element.getKind() == ElementKind.INTERFACE ) {
-				inspectRootElement( element, typeElement, typeElement );
-			}
-		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

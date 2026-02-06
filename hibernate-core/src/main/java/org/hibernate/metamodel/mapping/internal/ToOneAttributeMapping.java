@@ -162,6 +162,7 @@ public class ToOneAttributeMapping
 
 	private final Cardinality cardinality;
 	private final boolean hasJoinTable;
+	private final boolean hasMapsId;
 	/*
 	Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
 	It may be null if the referenced property is a non-entity.
@@ -190,6 +191,7 @@ public class ToOneAttributeMapping
 		targetKeyPropertyName = original.targetKeyPropertyName;
 		cardinality = original.cardinality;
 		hasJoinTable = original.hasJoinTable;
+		hasMapsId = original.hasMapsId;
 		bidirectionalAttributePath = original.bidirectionalAttributePath;
 		declaringTableGroupProducer = original.declaringTableGroupProducer;
 		isKeyTableNullable = original.isKeyTableNullable;
@@ -278,6 +280,7 @@ public class ToOneAttributeMapping
 
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		isNullable = bootValue.isNullable();
+		hasMapsId = bootValue.hasMapsId();
 		isLazy = navigableRole.getParent().getParent() == null
 					&& declaringEntityPersister.getBytecodeEnhancementMetadata()
 							.getLazyAttributesMetadata()
@@ -720,6 +723,7 @@ public class ToOneAttributeMapping
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 		this.cardinality = original.cardinality;
 		this.hasJoinTable = original.hasJoinTable;
+		this.hasMapsId = original.hasMapsId;
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
@@ -2479,6 +2483,10 @@ public class ToOneAttributeMapping
 
 	public boolean hasNotFoundAction() {
 		return notFoundAction != null;
+	}
+
+	public boolean hasMapsId() {
+		return hasMapsId;
 	}
 
 	@Override

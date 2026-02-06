@@ -134,6 +134,8 @@ Such changes typically do not impact programs using a relational schema managed 
 
 Columns mapped by `@Version` fields are now declared `not null` by default.
 
+`Map` values in `@ElementCollection` are now declared `not null` by default.
+
 [[dependency-changes]]
 == Changes in Dependencies
 

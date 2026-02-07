@@ -112,15 +112,19 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 			}
 		} );
 		appendSql(") ");
-		renderNewRowAlias();
+		if ( optionalTableUpdate.getValueBindings().stream()
+				.anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			renderNewRowAlias();
+		}
 	}
 
 	protected void renderNewRowAlias() {
 	}
 
 	protected void renderOnDuplicateKeyUpdate(OptionalTableUpdate optionalTableUpdate) {
-		if  ( !optionalTableUpdate.getValueBindings().isEmpty() ) {
-			appendSql( "on duplicate key update " );
+		appendSql( "on duplicate key update " );
+		if ( optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
 			class BindingProcessor implements BiConsumer<Integer, ColumnValueBinding> {
 				boolean first = true;
 				@Override
@@ -140,6 +144,14 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 				}
 			}
 			optionalTableUpdate.forEachValueBinding( new BindingProcessor() );
+		}
+		else {
+			final String keyColName =
+					optionalTableUpdate.getKeyBindings().get( 0 )
+							.getColumnReference().getColumnExpression();
+			appendSql( keyColName );
+			appendSql( "=" );
+			appendSql( keyColName );
 		}
 	}
 

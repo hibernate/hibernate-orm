@@ -37,24 +37,23 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	 */
 	public MergeOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
 		renderMergeStatement( optionalTableUpdate );
-
 		return new MergeOperation(
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
-				// Without value bindings, the upsert may have an update count of 0
-				optionalTableUpdate.getValueBindings().isEmpty()
-						? new Expectation.OptionalRowCount()
-						: new Expectation.RowCount(),
+				expectation( optionalTableUpdate ),
 				getParameterBinders()
 		);
 	}
 
-//	@Override
-//	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-//		renderMergeStatement(tableUpdate);
-//	}
-//
+	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		return optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
+				? new Expectation.RowCount()
+				// Without updatable bindings, the merge affects 0 rows when matched
+				: new Expectation.OptionalRowCount();
+	}
+
 	/**
 	 * Renders the OptionalTableUpdate as a MERGE query.
 	 *
@@ -230,7 +229,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		if ( !valueBindings.isEmpty() ) {
+		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
 			renderWhenMatched( optimisticLockBindings );
 			appendSql( " then update set " );
 			boolean first = true;

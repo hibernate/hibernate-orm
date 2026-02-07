@@ -1037,7 +1037,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| isPanache2Repository( type );
 	}
 
-	private boolean isPanache2Repository(TypeElement type) {
+	public static boolean isPanache2Repository(TypeElement type) {
 		return implementsInterface( type, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE )
 			|| implementsInterface( type, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE )
 			|| implementsInterface( type, PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE )
@@ -2197,7 +2197,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							sessionType[0],
 							sessionType[1],
 							context.addNonnullAnnotation(),
-							jakartaDataRepository,
+							true, // @Delete queries are only defined by JD, so assume JD semantics
 							fullReturnType( method )
 					)
 			);

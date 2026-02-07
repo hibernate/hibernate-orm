@@ -71,6 +71,9 @@ import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.HQL;
+import static org.hibernate.processor.util.Constants.JD_DELETE;
+import static org.hibernate.processor.util.Constants.JD_FIND;
+import static org.hibernate.processor.util.Constants.JD_QUERY;
 import static org.hibernate.processor.util.Constants.JD_REPOSITORY;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPH;
@@ -402,13 +405,13 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			processElement( element, null );
+			processElement( element, null, null);
 		}
 	}
 
-	private void processElement(Element element, @Nullable Element parent) {
+	private void processElement(Element element, @Nullable Element parent, @Nullable TypeElement primaryEntity) {
 		try {
-			inspectRootElement(element, parent, null);
+			inspectRootElement(element, parent, primaryEntity);
 		}
 		catch ( ProcessLaterException processLaterException ) {
 			if ( element instanceof TypeElement typeElement ) {
@@ -474,16 +477,13 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 			else {
-				for ( Element member : typeElement.getEnclosedElements() ) {
-					if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
-						context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-						final AnnotationMetaEntity metaEntity =
-								AnnotationMetaEntity.create( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										primaryEntity );
-						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-						break;
-					}
+				if ( isImplicitRepository( typeElement ) ) {
+					context.logMessage( Diagnostic.Kind.OTHER, "Processing implicit repository class '" + element + "'" );
+					final AnnotationMetaEntity metaEntity =
+							AnnotationMetaEntity.create( typeElement, context,
+									parentMetadata( parent, context::getMetaEntity ),
+									primaryEntity );
+					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {
 					final NonManagedMetamodel metaEntity =
@@ -496,17 +496,30 @@ public class HibernateProcessor extends AbstractProcessor {
 										parentMetadata( parent, context::getDataMetaEntity ) );
 						context.addDataMetaEntity( dataMetaEntity.getQualifiedName(), dataMetaEntity );
 					}
-
 				}
 			}
 		}
 		if ( isClassRecordOrInterfaceType( element ) ) {
+			// Any repository nested in an entity gets an automatic primary entity of the enclosing entity for Quarkus Panache 2
+			TypeElement newPrimaryEntity = isEntityOrEmbeddable( element ) && element instanceof TypeElement ? (TypeElement) element : null;
 			for ( final Element child : element.getEnclosedElements() ) {
 				if ( isClassRecordOrInterfaceType( child ) ) {
-					processElement( child, element );
+					processElement( child, element, newPrimaryEntity );
 				}
 			}
 		}
+	}
+
+	private boolean isImplicitRepository(TypeElement typeElement) {
+		if ( AnnotationMetaEntity.isPanache2Repository( typeElement ) ) {
+			return true;
+		}
+		for ( Element member : typeElement.getEnclosedElements() ) {
+			if ( hasAnnotation( member, HQL, SQL, FIND, JD_QUERY, JD_FIND, JD_DELETE ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void createMetaModelClasses() {
@@ -660,7 +673,6 @@ public class HibernateProcessor extends AbstractProcessor {
 				final TypeElement typeElement = (TypeElement) element;
 				indexEntityName( typeElement );
 				indexEnumFields( typeElement );
-				indexQueryInterfaces( typeElement );
 
 				final String qualifiedName = typeElement.getQualifiedName().toString();
 				final Metamodel alreadyExistingMetaEntity =
@@ -715,14 +727,6 @@ public class HibernateProcessor extends AbstractProcessor {
 		return element.getEnclosingElement().getEnclosedElements()
 				.stream().anyMatch(e -> e.getSimpleName()
 						.contentEquals('_' + element.getSimpleName().toString()));
-	}
-
-	private void indexQueryInterfaces(TypeElement typeElement) {
-		for ( Element element : typeElement.getEnclosedElements() ) {
-			if( element.getKind() == ElementKind.INTERFACE ) {
-				inspectRootElement( element, typeElement, typeElement );
-			}
-		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

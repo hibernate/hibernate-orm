@@ -41,11 +41,9 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachInsertable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( ! selectableMapping.isInsertable() || selectableMapping.isFormula() ) {
-						return;
+					if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
+						consumer.accept( selectionIndex, selectableMapping );
 					}
-
-					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -53,11 +51,9 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachNonFormula(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isFormula() ) {
-						return;
+					if ( !selectableMapping.isFormula() ) {
+						consumer.accept( selectionIndex, selectableMapping );
 					}
-
-					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -65,11 +61,9 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachUpdatable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( ! selectableMapping.isUpdateable() || selectableMapping.isFormula() ) {
-						return;
+					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
+						consumer.accept( selectionIndex, selectableMapping );
 					}
-
-					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}

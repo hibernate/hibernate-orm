@@ -215,8 +215,8 @@ public class SqmMutationStrategyHelper {
 	}
 
 	public static boolean isId(JdbcMappingContainer type) {
-		return type instanceof EntityIdentifierMapping || type instanceof AttributeMapping attributeMapping
-														&& isPartOfId( attributeMapping );
+		return type instanceof EntityIdentifierMapping
+			|| type instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping );
 	}
 
 	public static boolean isPartOfId(AttributeMapping attributeMapping) {

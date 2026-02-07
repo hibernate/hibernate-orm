@@ -104,9 +104,11 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 				tableExpression,
 				resolve
 		);
+
 		if ( tableReference != null ) {
 			return tableReference;
 		}
+
 		if ( indexTableGroup != null && ( navigablePath == null || indexTableGroup.getNavigablePath().isParent( navigablePath ) ) ) {
 			final TableReference indexTableReference = indexTableGroup.getTableReference(
 					navigablePath,
@@ -117,15 +119,18 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 				return indexTableReference;
 			}
 		}
-		if ( elementTableGroup != null && ( navigablePath == null || elementTableGroup.getNavigablePath().isParent( navigablePath ) ) ) {
+
+		if ( elementTableGroup != null ) {
 			final TableReference elementTableReference = elementTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
 					resolve
 			);
-			return elementTableReference;
+			if ( elementTableReference != null ) {
+				return elementTableReference;
+			}
 		}
+
 		return null;
 	}
-
 }

@@ -38,9 +38,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				// Without value bindings, the upsert may have an update count of 0
-				optionalTableUpdate.getValueBindings().isEmpty()
-						? new Expectation.OptionalRowCount()
-						: new Expectation.RowCount(),
+				expectation( optionalTableUpdate ),
 				getParameterBinders()
 		);
 
@@ -50,6 +48,14 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 				upsertOperation,
 				optionalTableUpdate
 		);
+	}
+
+	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		return optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
+				? new Expectation.RowCount()
+				// Without updatable bindings, the merge affects 0 rows when matched
+				: new Expectation.OptionalRowCount();
 	}
 
 	protected void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
@@ -197,7 +203,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		if ( !valueBindings.isEmpty() ) {
+		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
 			appendSql( "when matched then update set " );
 			boolean first = true;
 			for ( int i = 0; i < valueBindings.size(); i++ ) {

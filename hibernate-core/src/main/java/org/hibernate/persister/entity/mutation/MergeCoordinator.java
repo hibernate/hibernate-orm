@@ -6,6 +6,8 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
@@ -25,6 +27,31 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 	@Override
 	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
 		return new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
+	}
+
+	@Override
+	protected boolean isColumnIncludedInSet(SelectableMapping selectable) {
+		return selectable.isUpdateable() || selectable.isInsertable();
+	}
+
+	private static boolean isInsertableOrUpdatable(AttributeMapping attribute) {
+		final var attributeMetadata = attribute.getAttributeMetadata();
+		return attributeMetadata.isUpdatable()
+			|| attributeMetadata.isInsertable();
+	}
+
+	@Override
+	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+		return (position, attribute) -> isInsertableOrUpdatable( attribute );
+	}
+
+	@Override
+	protected boolean includeInStaticUpdate(
+			int index,
+			AttributeMapping attribute,
+			boolean[] propertyUpdateability) {
+		return isInsertableOrUpdatable( attribute )
+			|| super.includeInStaticUpdate( index, attribute, propertyUpdateability );
 	}
 
 	@Override

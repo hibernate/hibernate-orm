@@ -277,15 +277,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						entityPersister()
 				);
 
-		final InclusionChecker inclusionChecker = (position, attribute) -> attributeUpdateability[position];
-
 		final var valuesAnalysis = analyzeUpdateValues(
 				entity,
 				values,
 				oldVersion,
 				incomingOldValues,
 				dirtyAttributeIndexes,
-				inclusionChecker,
+				createInclusionChecker( attributeUpdateability ),
 				lockingChecker,
 				dirtinessChecker,
 				rowId,
@@ -716,13 +714,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void processSet(UpdateValuesAnalysisImpl analysis, SelectableMapping selectable, boolean needsDynamicUpdate) {
-		if ( selectable != null && !selectable.isFormula() && selectable.isUpdateable() ) {
+		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( selectable ) ) {
 			final var tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 			if ( needsDynamicUpdate ) {
 				analysis.getTablesNeedingDynamicUpdate().add( tableMapping );
 			}
 		}
+	}
+
+	protected boolean isColumnIncludedInSet(SelectableMapping selectable) {
+		return selectable.isUpdateable();
+	}
+
+	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+		return (position, attribute) -> attributeUpdateability[position];
 	}
 
 	private void processLock(
@@ -1617,7 +1623,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private MutationOperationGroup buildStaticUpdateGroup() {
+	protected MutationOperationGroup buildStaticUpdateGroup() {
 		final var persister = entityPersister();
 		final var valuesAnalysis = analyzeUpdateValues(
 				null,
@@ -1625,10 +1631,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				null,
-				(index,attribute) ->
-						isValueGenerated( attribute.getGenerator() )
-								&& isValueGenerationInSql( attribute.getGenerator(), dialect() )
-						|| persister.getPropertyUpdateability()[index],
+				(index, attribute) -> includeInStaticUpdate( index, attribute, persister.getPropertyUpdateability() ),
 				(index,attribute) ->
 						switch ( persister.optimisticLockStyle() ) {
 							case ALL -> true;
@@ -1668,6 +1671,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// build the mutation-group (SQL AST) and convert it into a jdbc-operations (SQL String, etc) group
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
+	}
+
+	protected boolean includeInStaticUpdate(
+			int index,
+			AttributeMapping attribute,
+			boolean[] propertyUpdateability) {
+		return isValueGenerated( attribute.getGenerator() )
+				&& isValueGenerationInSql( attribute.getGenerator(), dialect() )
+			|| propertyUpdateability[index];
 	}
 
 	private MutationOperationGroup buildVersionUpdateGroup() {

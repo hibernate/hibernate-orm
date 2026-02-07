@@ -13,6 +13,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
@@ -771,4 +772,39 @@ public class EmbeddedTest {
 		);
 	}
 
+	@Test @FailureExpected // FIX ME!
+	public void testUpsert(SessionFactoryScope scope) {
+		Person person = new Person();
+		person.id = 12;
+		Address a = new Address();
+		Country c = new Country();
+		Country bornCountry = new Country();
+		c.setIso2( "DM" );
+		c.setName( "Matt Damon Land" );
+		bornCountry.setIso2( "US" );
+		bornCountry.setName( "United States of America" );
+
+		a.address1 = "colorado street";
+		a.city = "Springfield";
+		a.country = c;
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
+
+		scope.inStatelessTransaction( session -> session.upsert( person ) );
+
+		scope.inTransaction( session -> {
+			Person p = session.get( Person.class, person.id );
+			assertNotNull( p );
+			assertNotNull( p.address );
+			assertEquals( "Springfield", p.address.city );
+			assertEquals( (Integer) 1, p.address.formula );
+
+			assertNotNull( p.address.country );
+			assertEquals( "DM", p.address.country.getIso2() );
+			assertNotNull( p.bornIn );
+			assertEquals( "US", p.bornIn.getIso2() );
+			assertEquals( (Integer) 2, p.addressBis.formula );
+		} );
+	}
 }

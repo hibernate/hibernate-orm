@@ -13,7 +13,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
@@ -772,7 +771,7 @@ public class EmbeddedTest {
 		);
 	}
 
-	@Test @FailureExpected // FIX ME!
+	@Test
 	public void testUpsert(SessionFactoryScope scope) {
 		Person person = new Person();
 		person.id = 12;

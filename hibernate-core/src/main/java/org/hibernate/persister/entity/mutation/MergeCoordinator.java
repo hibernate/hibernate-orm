@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
@@ -27,7 +28,28 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 
 	@Override
 	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
-		return new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
+		final TableMergeBuilder<O> tableUpdateBuilder =
+				new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
+		addDiscriminatorValueIfNeeded( tableUpdateBuilder, tableMapping );
+		return tableUpdateBuilder;
+	}
+
+	private void addDiscriminatorValueIfNeeded(
+			AbstractTableUpdateBuilder<?> tableUpdateBuilder,
+			EntityTableMapping tableMapping) {
+		final var discriminatorMapping = entityPersister().getDiscriminatorMapping();
+		if ( discriminatorMapping != null
+				&& discriminatorMapping.hasPhysicalColumn()
+				&& tableMapping.getTableName().equals( discriminatorMapping.getContainingTableExpression() ) ) {
+			final Object discriminatorValue = entityPersister().getDiscriminatorValue();
+			if ( discriminatorValue != DiscriminatorHelper.NULL_DISCRIMINATOR
+				&& discriminatorValue != DiscriminatorHelper.NOT_NULL_DISCRIMINATOR ) {
+				tableUpdateBuilder.addValueColumn(
+						entityPersister().getDiscriminatorSQLValue(),
+						discriminatorMapping
+				);
+			}
+		}
 	}
 
 	@Override
@@ -130,5 +152,10 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 			}
 		}
 		return updateValuesAnalysis;
+	}
+
+	@Override
+	public String toString() {
+		return "MergeCoordinator(" + entityPersister().getEntityName() + ")";
 	}
 }

@@ -227,7 +227,9 @@ public class SqmMutationStrategyHelper {
 
 	public static void forEachSelectableMapping(String prefix, ModelPart modelPart, BiConsumer<String, SelectableMapping> consumer) {
 		if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
-			if ( basicModelPart.isInsertable() ) {
+			if ( basicModelPart.isInsertable()
+					|| modelPart instanceof AttributeMapping attributeMapping
+							&& isPartOfId( attributeMapping ) ) {
 				consumer.accept( prefix, basicModelPart );
 			}
 		}

@@ -776,6 +776,14 @@ public abstract sealed class Collection
 	}
 
 	@Override
+	public void setNonInsertable() {
+	}
+
+	@Override
+	public void setNonUpdatable() {
+	}
+
+	@Override
 	public boolean hasAnyUpdatableColumns() {
 		return false;
 	}

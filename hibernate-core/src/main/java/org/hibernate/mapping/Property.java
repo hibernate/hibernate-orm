@@ -132,12 +132,17 @@ public class Property implements Serializable, MetaAttributable {
 		return value;
 	}
 
+	public void resetInsertable(boolean insertable) {
+		setInsertable( insertable );
+		if ( !insertable ) {
+			value.setNonInsertable();
+		}
+	}
+
 	public void resetUpdateable(boolean updateable) {
 		setUpdatable( updateable );
-		final boolean[] columnUpdateability = getValue().getColumnUpdateability();
-		final int columnSpan = getColumnSpan();
-		for ( int i = 0; i < columnSpan; i++ ) {
-			columnUpdateability[i] = updateable;
+		if ( !updateable ) {
+			value.setNonUpdatable();
 		}
 	}
 

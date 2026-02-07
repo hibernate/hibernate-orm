@@ -546,6 +546,26 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
+	public void setNonUpdatable() {
+		for ( var property : properties ) {
+			property.getValue().setNonUpdatable();
+		}
+		if ( isPolymorphic() ) {
+			getDiscriminator().setNonUpdatable();
+		}
+	}
+
+	@Override
+	public void setNonInsertable() {
+		for ( var property : properties ) {
+			property.getValue().setNonInsertable();
+		}
+		if ( isPolymorphic() ) {
+			getDiscriminator().setNonInsertable();
+		}
+	}
+
+	@Override
 	public boolean hasAnyUpdatableColumns() {
 		for ( var property : properties ) {
 			if ( property.getValue().hasAnyUpdatableColumns() ) {

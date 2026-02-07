@@ -466,8 +466,8 @@ public class PropertyBinder {
 		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Immutable.class ) ) {
 			updatable = false;
 		}
-		property.setInsertable( insertable );
-		property.setUpdatable( updatable );
+		property.resetInsertable( insertable );
+		property.resetUpdateable( updatable );
 	}
 
 	private void handleOptional(Property property) {

@@ -886,6 +886,16 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	public void setNonInsertable() {
+		insertability.replaceAll( current -> false );
+	}
+
+	@Override
+	public void setNonUpdatable() {
+		updatability.replaceAll( current -> false );
+	}
+
+	@Override
 	public boolean hasAnyUpdatableColumns() {
 		for ( int i = 0; i < updatability.size(); i++ ) {
 			if ( updatability.get( i ) ) {

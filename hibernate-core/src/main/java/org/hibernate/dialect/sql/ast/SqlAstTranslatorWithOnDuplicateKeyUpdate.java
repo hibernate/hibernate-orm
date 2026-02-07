@@ -20,6 +20,7 @@ import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 /**
  * @author Jan Schatteman
@@ -105,8 +106,10 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 		}
 
 		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-			appendSql( ',' );
-			columnValueBinding.getValueExpression().accept( this );
+			if ( columnValueBinding.isAttributeInsertable() ) {
+				appendSql( ',' );
+				columnValueBinding.getValueExpression().accept( this );
+			}
 		} );
 		appendSql(") ");
 		renderNewRowAlias();
@@ -118,15 +121,25 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 	protected void renderOnDuplicateKeyUpdate(OptionalTableUpdate optionalTableUpdate) {
 		if  ( !optionalTableUpdate.getValueBindings().isEmpty() ) {
 			appendSql( "on duplicate key update " );
-			optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-				final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
-				if ( columnPosition > 0 ) {
-					appendSql( ',' );
+			class BindingProcessor implements BiConsumer<Integer, ColumnValueBinding> {
+				boolean first = true;
+				@Override
+				public void accept(Integer columnPosition, ColumnValueBinding columnValueBinding) {
+					if ( columnValueBinding.isAttributeUpdatable() ) {
+						final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
+						if ( first ) {
+							first = false;
+						}
+						else {
+							appendSql( ',' );
+						}
+						appendSql( columnName );
+						append( " = " );
+						renderUpdateValue( columnValueBinding );
+					}
 				}
-				appendSql( columnName );
-				append( " = " );
-				renderUpdateValue( columnValueBinding );
-			} );
+			}
+			optionalTableUpdate.forEachValueBinding( new BindingProcessor() );
 		}
 	}
 

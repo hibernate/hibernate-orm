@@ -185,6 +185,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -958,6 +959,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
 					)
 			);
+		}
+	}
+
+	protected void renderColumnWrite(ColumnValueBinding selectionBinding) {
+		final ColumnWriteFragment valueExpression = selectionBinding.getValueExpression();
+		if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
+			valueExpression.accept( this );
+		}
+		else {
+			renderCasted( valueExpression );
 		}
 	}
 

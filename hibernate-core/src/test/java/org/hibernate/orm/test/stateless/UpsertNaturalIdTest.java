@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.stateless;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.NaturalId;
@@ -12,7 +13,10 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = UpsertNaturalIdTest.Natural.class)
@@ -23,17 +27,26 @@ class UpsertNaturalIdTest {
 		natural.id = 69;
 		natural.code = "000";
 		natural.text = "Lorem ipsum";
+		natural.uuid = UUID.randomUUID();
 		scope.inStatelessTransaction( s -> {
 			s.upsert( natural );
 		} );
 		scope.inStatelessTransaction( s -> {
-			assertEquals("000", s.get( Natural.class, 69 ).code);
+			Natural nat = s.get( Natural.class, 69 );
+			assertEquals("000", nat.code);
+			assertEquals( "Lorem ipsum", nat.text );
+			assertNotNull( nat.uuid );
 		} );
 		scope.inStatelessTransaction( s -> {
+			natural.uuid = null;
+			natural.text = "Lorem ipsum dolor sit amet";
 			s.upsert( natural );
 		} );
 		scope.inStatelessTransaction( s -> {
-			assertEquals("000", s.get( Natural.class, 69 ).code);
+			Natural nat = s.get( Natural.class, 69 );
+			assertEquals("000", nat.code);
+			assertEquals( "Lorem ipsum dolor sit amet", nat.text );
+			assertNotNull( nat.uuid );
 		} );
 	}
 	@Entity
@@ -41,5 +54,7 @@ class UpsertNaturalIdTest {
 		@Id long id;
 		@NaturalId String code;
 		String text;
+		@Column(updatable = false)
+		UUID uuid;
 	}
 }

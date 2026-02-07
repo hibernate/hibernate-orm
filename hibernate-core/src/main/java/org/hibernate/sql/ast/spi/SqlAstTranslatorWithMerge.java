@@ -12,7 +12,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.MergeOperation;
 
@@ -159,13 +158,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	}
 
 	protected void renderMergeUsingQuerySelection(ColumnValueBinding selectionBinding) {
-		final ColumnWriteFragment valueExpression = selectionBinding.getValueExpression();
-		if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
-			valueExpression.accept( this );
-		}
-		else {
-			renderCasted( valueExpression );
-		}
+		renderColumnWrite( selectionBinding );
 		appendSql( " " );
 		appendSql( selectionBinding.getColumnReference().getColumnExpression() );
 	}
@@ -205,11 +198,13 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			valuesList.append( ", " );
 			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			appendSql( valueBinding.getColumnReference().getColumnExpression() );
-			valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			if ( valueBinding.isAttributeInsertable() ) {
+				appendSql( ", " );
+				valuesList.append( ", " );
+				appendSql( valueBinding.getColumnReference().getColumnExpression() );
+				valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			}
 		}
 
 		appendSql( ") values (" );
@@ -238,14 +233,20 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		if ( !valueBindings.isEmpty() ) {
 			renderWhenMatched( optimisticLockBindings );
 			appendSql( " then update set " );
+			boolean first = true;
 			for ( int i = 0; i < valueBindings.size(); i++ ) {
 				final ColumnValueBinding binding = valueBindings.get( i );
-				if ( i > 0 ) {
-					appendSql( ", " );
+				if ( binding.isAttributeUpdatable() ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appendSql( ", " );
+					}
+					binding.getColumnReference().appendColumnForWrite( this, null );
+					appendSql( "=" );
+					binding.getColumnReference().appendColumnForWrite( this, "s" );
 				}
-				binding.getColumnReference().appendColumnForWrite( this, null );
-				appendSql( "=" );
-				binding.getColumnReference().appendColumnForWrite( this, "s" );
 			}
 		}
 	}

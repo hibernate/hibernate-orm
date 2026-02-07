@@ -6,6 +6,7 @@ package org.hibernate.sql.model.ast;
 
 import java.util.Objects;
 
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
@@ -18,10 +19,14 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 public class ColumnValueBinding {
 	private final ColumnReference columnReference;
 	private final ColumnWriteFragment valueExpression;
+	private final boolean attributeInsertable;
+	private final boolean attributeUpdatable;
 
 	public ColumnValueBinding(ColumnReference columnReference, ColumnWriteFragment valueExpression) {
 		this.columnReference = columnReference;
 		this.valueExpression = valueExpression;
+		this.attributeInsertable = determineAttributeInsertable( valueExpression );
+		this.attributeUpdatable = determineAttributeUpdatable( valueExpression );
 	}
 
 	public ColumnReference getColumnReference() {
@@ -30,6 +35,26 @@ public class ColumnValueBinding {
 
 	public ColumnWriteFragment getValueExpression() {
 		return valueExpression;
+	}
+
+	public boolean isAttributeInsertable() {
+		return attributeInsertable;
+	}
+
+	public boolean isAttributeUpdatable() {
+		return attributeUpdatable;
+	}
+
+	private static boolean determineAttributeInsertable(ColumnWriteFragment valueExpression) {
+		return valueExpression == null
+			|| !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
+			|| selectableMapping.isInsertable();
+	}
+
+	private static boolean determineAttributeUpdatable(ColumnWriteFragment valueExpression) {
+		return valueExpression == null
+			|| !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
+			|| selectableMapping.isUpdateable();
 	}
 
 	@Override

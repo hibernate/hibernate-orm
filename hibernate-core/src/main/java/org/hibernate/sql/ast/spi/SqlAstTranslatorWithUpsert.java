@@ -13,7 +13,6 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.DeleteOrUpsertOperation;
 import org.hibernate.sql.model.jdbc.UpsertOperation;
@@ -112,32 +111,20 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		appendSql( " values (" );
 
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			if ( i > 0 ) {
 				appendSql( ", " );
 				columnList.append( ", " );
 			}
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			columnList.append( keyBinding.getColumnReference().getColumnExpression() );
-			final ColumnWriteFragment valueExpression = keyBinding.getValueExpression();
-			if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
-				valueExpression.accept( this );
-			}
-			else {
-				renderCasted( valueExpression );
-			}
+			renderColumnWrite( keyBinding );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			appendSql( ", " );
 			columnList.append( ", " );
 			final ColumnValueBinding valueBinding = valueBindings.get( i );
 			columnList.append( valueBinding.getColumnReference().getColumnExpression() );
-			final ColumnWriteFragment valueExpression = valueBinding.getValueExpression();
-			if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
-				valueExpression.accept( this );
-			}
-			else {
-				renderCasted( valueExpression );
-			}
+			renderColumnWrite( valueBinding );
 		}
 
 		appendSql( ") " );
@@ -192,11 +179,13 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			valuesList.append( ", " );
 			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			appendSql( valueBinding.getColumnReference().getColumnExpression() );
-			valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			if ( valueBinding.isAttributeInsertable() ) {
+				appendSql( ", " );
+				valuesList.append( ", " );
+				appendSql( valueBinding.getColumnReference().getColumnExpression() );
+				valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			}
 		}
 
 		appendSql( ") values (" );
@@ -210,14 +199,20 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 
 		if ( !valueBindings.isEmpty() ) {
 			appendSql( "when matched then update set " );
+			boolean first = true;
 			for ( int i = 0; i < valueBindings.size(); i++ ) {
 				final ColumnValueBinding binding = valueBindings.get( i );
-				if ( i > 0 ) {
-					appendSql( ", " );
+				if ( binding.isAttributeUpdatable() ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appendSql( ", " );
+					}
+					binding.getColumnReference().appendColumnForWrite( this, "t" );
+					appendSql( "=" );
+					binding.getColumnReference().appendColumnForWrite( this, "s" );
 				}
-				binding.getColumnReference().appendColumnForWrite( this, "t" );
-				appendSql( "=" );
-				binding.getColumnReference().appendColumnForWrite( this, "s" );
 			}
 			renderMatchedWhere( optimisticLockBindings );
 		}

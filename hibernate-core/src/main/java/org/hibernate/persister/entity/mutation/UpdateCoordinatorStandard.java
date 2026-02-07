@@ -564,22 +564,25 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return EMPTY_INT_ARRAY;
 	}
 
+	public boolean[] getPropertyUpdateability() {
+		return entityPersister().getPropertyUpdateability();
+	}
+
 	/**
 	 * Transform the array of property indexes to an array of booleans for each attribute,
 	 * true when the property is dirty
 	 */
 	protected boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final var persister = entityPersister();
-		final var updateability = persister.getPropertyUpdateability();
 		if ( dirtyProperties == null ) {
-			return updateability;
+			return getPropertyUpdateability();
 		}
 		else {
+			final var updateability = persister.getPropertyUpdateability();
+			final var insertability = persister.getPropertyInsertability();
 			final var propsToUpdate = new boolean[persister.getNumberOfAttributeMappings()];
 			for ( int property: dirtyProperties ) {
-				if ( updateability[property] ) {
-					propsToUpdate[property] = true;
-				}
+				propsToUpdate[property] = includeProperty( insertability, updateability, property );
 			}
 			if ( persister.isVersioned() ) {
 				final var versionAttribute = persister.getVersionMapping().getVersionAttribute();
@@ -596,6 +599,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 			return propsToUpdate;
 		}
+	}
+
+	protected boolean includeProperty(boolean[] insertability, boolean[] updateability, int property) {
+		return updateability[property];
 	}
 
 	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
@@ -628,8 +635,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				forceDynamicUpdate
 		);
 
-		final var propertyUpdateability = persister.getPropertyUpdateability();
-
 		for ( int attributeIndex = 0; attributeIndex < attributeMappings.size(); attributeIndex++ ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
 			analysis.startingAttribute( attributeMapping );
@@ -651,7 +656,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 					// In this case we check for exactly DirtynessStatus.DIRTY so to not log warnings when the user didn't get it wrong:
 					if ( analysis.currentAttributeAnalysis.getDirtynessStatus() == AttributeAnalysis.DirtynessStatus.DIRTY ) {
-						if ( !propertyUpdateability[attributeIndex] ) {
+						if ( !includeProperty( persister.getPropertyInsertability(), persister.getPropertyUpdateability(), attributeIndex ) ) {
 							CORE_LOGGER.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
@@ -879,7 +884,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private static void decomposeAttributeMapping(
+	private void decomposeAttributeMapping(
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableMapping,
@@ -891,7 +896,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				jdbcValueBindings,
 				tableMapping,
 				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
-					if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
+					if ( !jdbcMapping.isFormula() && isColumnIncludedInSet( jdbcMapping ) ) {
 						bindings.bindValue(
 								jdbcValue,
 								table.getTableName(),
@@ -1257,9 +1262,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					|| dirtinessChecker == null
 					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 			if ( includeInSet ) {
-				attributeMapping.forEachUpdatable( tableUpdateBuilder );
+				forEachUpdatable( attributeMapping, tableUpdateBuilder );
 			}
 		}
+	}
+
+	protected void forEachUpdatable(AttributeMapping attributeMapping, TableUpdateBuilder<?> tableUpdateBuilder) {
+		attributeMapping.forEachUpdatable( tableUpdateBuilder );
 	}
 
 	private boolean needsValueGeneration(Object entity, SharedSessionContractImplementor session, Generator generator) {

@@ -9,7 +9,7 @@ import jakarta.persistence.FindOption;
 import java.util.List;
 
 /**
- * Specify a batch size, that is, how many entities should be
+ * Specifies a batch size, that is, how many entities should be
  * fetched in each request to the database, for an invocation of
  * {@link Session#findMultiple(Class, List, FindOption...)}.
  * <ul>

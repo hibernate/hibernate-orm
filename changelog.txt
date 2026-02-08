@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.16.Final (February 08, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37570
+
+
+** Bug
+    * HHH-20119 Values return by Enum Converter are not escaped in CREATE TABLE query
+    * HHH-20065 Subsequent StatelessSession#insertMultiple calls lead to pending batches
+
 Changes in 7.1.15.Final (February 01, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

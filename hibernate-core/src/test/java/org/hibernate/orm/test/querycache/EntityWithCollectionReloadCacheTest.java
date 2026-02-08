@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -414,6 +416,7 @@ public class EntityWithCollectionReloadCacheTest {
 		private UUID id;
 
 		@Column( name = "name_col" )
+		@Access( AccessType.FIELD )
 		private String name;
 
 		@Id

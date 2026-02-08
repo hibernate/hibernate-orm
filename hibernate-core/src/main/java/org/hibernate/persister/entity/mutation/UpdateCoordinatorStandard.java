@@ -781,7 +781,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(position, attribute) -> AttributeAnalysis.DirtynessStatus.CONSIDER_LIKE_DIRTY,
 				session
 		);
-		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
+		// no snapshot when called from StatelessSession.update()
+		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
+				session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(
@@ -967,7 +969,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								: AttributeAnalysis.DirtynessStatus.NOT_DIRTY,
 				session
 		);
-		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
+		// no snapshot when called from StatelessSession.update()
+		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
+				session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(

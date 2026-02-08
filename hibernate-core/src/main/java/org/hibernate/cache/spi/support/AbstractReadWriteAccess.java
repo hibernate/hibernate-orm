@@ -107,6 +107,25 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			Object key,
 			Object value,
 			Object version) {
+		return doPutFromLoad( session, key, value, version, false );
+	}
+
+	@Override
+	public final boolean putFromLoad(
+			SharedSessionContractImplementor session,
+			Object key,
+			Object value,
+			Object version,
+			boolean minimalPutOverride) {
+		return doPutFromLoad( session, key, value, version, minimalPutOverride );
+	}
+
+	private boolean doPutFromLoad(
+			SharedSessionContractImplementor session,
+			Object key,
+			Object value,
+			Object version,
+			boolean minimalPutOverride) {
 		try {
 			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
@@ -116,12 +135,30 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			writeLock.lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			if ( isWritable( session, version, item ) ) {
-				getStorageAccess().putIntoCache(
-						key,
-						new Item( value, version, session.getCacheTransactionSynchronization().getCachingTimestamp() ),
-						session
-				);
-				return true;
+				if ( minimalPutOverride && version == null && item != null ) {
+					// we didn't have a version to check, so we don't know for
+					// sure whether the cached item is stale, but 'minimal puts'
+					// is enabled, so we just assume it's not stale
+					if ( traceEnabled ) {
+						L2CACHE_LOGGER.tracef(
+								"Cache put-from-load skipped due to minimal-put [region='%s' (%s), key='%s']",
+								getRegion().getName(),
+								getAccessType(),
+								key
+						);
+					}
+					return false;
+				}
+				else {
+					getStorageAccess().putIntoCache(
+							key,
+							new Item( value, version,
+									session.getCacheTransactionSynchronization()
+											.getCachingTimestamp() ),
+							session
+					);
+					return true;
+				}
 			}
 			else {
 				if ( traceEnabled ) {
@@ -147,17 +184,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 									version, getVersionComparator() );
 	}
 
+	/**
+	 * @deprecated No longer called
+	 */
+	@Deprecated(since = "7.4")
 	protected abstract AccessedDataClassification getAccessedDataClassification();
-
-	@Override
-	public final boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version,
-			boolean minimalPutOverride) {
-		return putFromLoad( session, key, value, version );
-	}
 
 	@Override
 	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) {

@@ -33,6 +33,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 		this.keysFactory = keysFactory;
 	}
 
+	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.NATURAL_ID;

@@ -127,17 +127,16 @@ public abstract class AbstractMutationCoordinator {
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
 			OnExecutionGenerator generator) {
-		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+		final var columnValues =
+				writePropertyValue
+						? null
+						: generator.getReferencedColumnValues( dialect() );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
-			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
-			final ColumnValuesTableMutationBuilder tableUpdateBuilder =
-					mutationGroupBuilder.findTableDetailsBuilder( tableName );
-			tableUpdateBuilder.addValueColumn(
-					writePropertyValue ? "?" : columnValues[j],
-					mapping
-			);
+			final ColumnValuesTableMutationBuilder<?> tableUpdateBuilder =
+					mutationGroupBuilder.findTableDetailsBuilder(
+							entityPersister.physicalTableNameForMutation( mapping ) );
+			tableUpdateBuilder.addValueColumn( writePropertyValue ? "?" : columnValues[j], mapping );
 		} );
 	}
 

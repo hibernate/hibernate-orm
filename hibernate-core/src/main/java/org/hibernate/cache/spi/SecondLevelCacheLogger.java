@@ -5,6 +5,7 @@
 package org.hibernate.cache.spi;
 
 import org.hibernate.Internal;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -15,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.UUID;
 
 import static org.hibernate.cfg.CacheSettings.CACHE_REGION_FACTORY;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -273,4 +275,117 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			id = NAMESPACE + 34
 	)
 	void generatingNaturalIdAccess(String role, String accessType);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "DomainDataRegion created [%s]; key-factory = %s",
+			id = NAMESPACE + 35
+	)
+	void domainDataRegionCreated(String regionName, CacheKeysFactory keyFactory);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Clearing cache data map [region='%s']",
+			id = NAMESPACE + 36
+	)
+	void clearingCacheDataMap(String regionName);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Getting cached data from region ['%s' (%s)] by key [%s]",
+			id = NAMESPACE + 37
+	)
+	void gettingCachedData(String regionName, AccessType accessType, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cache miss: region = '%s', key = '%s'",
+			id = NAMESPACE + 38
+	)
+	void cacheMiss(String regionName, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cache hit: region = '%s', key = '%s'",
+			id = NAMESPACE + 39
+	)
+	void cacheHit(String regionName, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cache hit, but item is unreadable/invalid: region = '%s', key = '%s'",
+			id = NAMESPACE + 40
+	)
+	void cacheHitUnreadable(String regionName, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Caching data from load [region='%s' (%s)] : key[%s] -> value[%s]",
+			id = NAMESPACE + 41
+	)
+	void cachingDataFromLoad(String regionName, AccessType accessType, Object key, Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cache put-from-load skipped due to minimal-put [region='%s' (%s), key='%s']",
+			id = NAMESPACE + 42
+	)
+	void cachePutFromLoadSkippedDueToMinimalPut(String regionName, AccessType accessType, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cache put-from-load [region='%s' (%s), key='%s', value='%s'] failed due to being non-writable",
+			id = NAMESPACE + 43
+	)
+	void cachePutFromLoadFailedNonWritable(String regionName, AccessType accessType, Object key, Object value);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Locking cache item [region='%s' (%s)] : '%s' (timeout=%s, version=%s)",
+			id = NAMESPACE + 44
+	)
+	void lockingCacheItem(String regionName, AccessType accessType, Object key, long timeout, Object version);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Unlocking cache item [region='%s' (%s)] : %s",
+			id = NAMESPACE + 45
+	)
+	void unlockingCacheItem(String regionName, AccessType accessType, Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cached entry expired: %s",
+			id = NAMESPACE + 46
+	)
+	void cachedEntryExpired(Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Checking readability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s'",
+			id = NAMESPACE + 47
+	)
+	void checkingReadWriteItemReadability(long timestamp, Object version, long txTimestamp);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Checking writeability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s', newVersion='%s'",
+			id = NAMESPACE + 48
+	)
+	void checkingReadWriteItemWriteability(long timestamp, Object version, long txTimestamp, Object newVersion);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Checking writeability of read-write cache lock [timeout='%s', lockId='%s', version='%s', sourceUuid=%s, multiplicity='%s', unlockTimestamp='%s'] : txTimestamp='%s', newVersion='%s'",
+			id = NAMESPACE + 49
+	)
+	void checkingReadWriteLockWriteability(
+			long timeout,
+			long lockId,
+			Object version,
+			UUID sourceUuid,
+			int multiplicity,
+			long unlockTimestamp,
+			long txTimestamp,
+			Object newVersion);
 }

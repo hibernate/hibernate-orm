@@ -61,36 +61,32 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 */
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
-		if ( traceEnabled ) {
-			L2CACHE_LOGGER.tracef( "Getting cached data from region ['%s' (%s)] by key [%s]",
-					getRegion().getName(), getAccessType(), key );
-		}
-		try {
-			readLock.lock();
-			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
-			if ( item == null ) {
-				if ( traceEnabled ) {
-					L2CACHE_LOGGER.tracef( "Cache miss: region = '%s', key = '%s'",
-							getRegion().getName(), key );
-				}
-				return null;
+			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+			if ( traceEnabled ) {
+				L2CACHE_LOGGER.gettingCachedData( getRegion().getName(), getAccessType(), key );
 			}
+			try {
+				readLock.lock();
+				final var item = (Lockable) getStorageAccess().getFromCache( key, session );
+				if ( item == null ) {
+					if ( traceEnabled ) {
+						L2CACHE_LOGGER.cacheMiss( getRegion().getName(), key );
+					}
+					return null;
+				}
 
-			if ( isReadable( session, item ) ) {
-				if ( traceEnabled ) {
-					L2CACHE_LOGGER.tracef( "Cache hit: region = '%s', key = '%s'",
-							getRegion().getName(), key );
+				if ( isReadable( session, item ) ) {
+					if ( traceEnabled ) {
+						L2CACHE_LOGGER.cacheHit( getRegion().getName(), key );
+					}
+					return item.getValue();
 				}
-				return item.getValue();
-			}
-			else {
-				if ( traceEnabled ) {
-					L2CACHE_LOGGER.tracef( "Cache hit, but item is unreadable/invalid: region = '%s', key = '%s'",
-							getRegion().getName(), key );
+				else {
+					if ( traceEnabled ) {
+						L2CACHE_LOGGER.cacheHitUnreadable( getRegion().getName(), key );
+					}
+					return null;
 				}
-				return null;
-			}
 		}
 		finally {
 			readLock.unlock();
@@ -129,8 +125,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		try {
 			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
-				L2CACHE_LOGGER.tracef( "Caching data from load [region='%s' (%s)] : key[%s] -> value[%s]",
-						getRegion().getName(), getAccessType(), key, value );
+				L2CACHE_LOGGER.cachingDataFromLoad( getRegion().getName(), getAccessType(), key, value );
 			}
 			writeLock.lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -140,8 +135,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 					// sure whether the cached item is stale, but 'minimal puts'
 					// is enabled, so we just assume it's not stale
 					if ( traceEnabled ) {
-						L2CACHE_LOGGER.tracef(
-								"Cache put-from-load skipped due to minimal-put [region='%s' (%s), key='%s']",
+						L2CACHE_LOGGER.cachePutFromLoadSkippedDueToMinimalPut(
 								getRegion().getName(),
 								getAccessType(),
 								key
@@ -162,10 +156,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			}
 			else {
 				if ( traceEnabled ) {
-					L2CACHE_LOGGER.tracef(
-							"Cache put-from-load [region='%s' (%s), key='%s', value='%s'] failed due to being non-writable",
-							getAccessType(),
+					L2CACHE_LOGGER.cachePutFromLoadFailedNonWritable(
 							getRegion().getName(),
+							getAccessType(),
 							key,
 							value
 					);
@@ -196,8 +189,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			writeLock.lock();
 			final long timeout = nextTimestamp() + getTimeout();
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-				L2CACHE_LOGGER.tracef( "Locking cache item [region='%s' (%s)] : '%s' (timeout=%s, version=%s)",
-						getRegion().getName(), getAccessType(), key, timeout, version );
+				L2CACHE_LOGGER.lockingCacheItem( getRegion().getName(), getAccessType(), key, timeout, version );
 			}
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
 			final var lock = lock( item, version, timeout );
@@ -219,8 +211,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
 		try {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-				L2CACHE_LOGGER.tracef( "Unlocking cache item [region='%s' (%s)] : %s",
-						getRegion().getName(), getAccessType(), key );
+				L2CACHE_LOGGER.unlockingCacheItem( getRegion().getName(), getAccessType(), key );
 			}
 			writeLock.lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -251,7 +242,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 
 	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key) {
 		L2CACHE_LOGGER.softLockedCacheExpired( getRegion().getName(), key );
-		L2CACHE_LOGGER.tracef( "Cached entry expired: %s", key );
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.cachedEntryExpired( key );
+		}
 		final var regionFactory = getRegion().getRegionFactory();
 		// create a new lock that times out immediately
 		long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
@@ -334,12 +327,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		@Override
 		public boolean isReadable(long txTimestamp) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-				L2CACHE_LOGGER.tracef(
-						"Checking readability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s'",
-						(Object) timestamp,
-						version,
-						txTimestamp
-				);
+				L2CACHE_LOGGER.checkingReadWriteItemReadability( timestamp, version, txTimestamp );
 			}
 
 			return txTimestamp > timestamp;
@@ -348,13 +336,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-				L2CACHE_LOGGER.tracef(
-						"Checking writeability of read-write cache item [timestamp='%s', version='%s'] : txTimestamp='%s', newVersion='%s'",
-						timestamp,
-						version,
-						txTimestamp,
-						newVersion
-				);
+				L2CACHE_LOGGER.checkingReadWriteItemWriteability( timestamp, version, txTimestamp, newVersion );
 			}
 
 			return version != null && versionComparator.compare( version, newVersion ) < 0;
@@ -421,8 +403,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-				L2CACHE_LOGGER.tracef(
-						"Checking writeability of read-write cache lock [timeout='%s', lockId='%s', version='%s', sourceUuid=%s, multiplicity='%s', unlockTimestamp='%s'] : txTimestamp='%s', newVersion='%s'",
+				L2CACHE_LOGGER.checkingReadWriteLockWriteability(
 						timeout,
 						lockId,
 						version,

@@ -50,7 +50,23 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		return getStorageAccess().getFromCache( key, session );
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		if ( traceEnabled ) {
+			L2CACHE_LOGGER.tracef( "Getting cached data from region ['%s' (%s)] by key [%s]",
+					region.getName(), getAccessType(), key );
+		}
+		final Object item = getStorageAccess().getFromCache( key, session );
+		if ( traceEnabled ) {
+			if ( item == null ) {
+				L2CACHE_LOGGER.tracef( "Cache miss: region = '%s', key = '%s'",
+						region.getName(), key );
+			}
+			else {
+				L2CACHE_LOGGER.tracef( "Cache hit: region = '%s', key = '%s'",
+						region.getName(), key );
+			}
+		}
+		return item;
 	}
 
 	@Override
@@ -59,6 +75,10 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object key,
 			Object value,
 			Object version) {
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.tracef( "Caching data from load [region='%s' (%s)] : key[%s] -> value[%s]",
+					region.getName(), getAccessType(), key, value );
+		}
 		getStorageAccess().putFromLoad( key, value, session );
 		return true;
 	}
@@ -71,6 +91,14 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object version,
 			boolean minimalPutOverride) {
 		if ( minimalPutOverride && getStorageAccess().contains( key ) ) {
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.tracef(
+						"Cache put-from-load skipped due to minimal-put [region='%s' (%s), key='%s']",
+						region.getName(),
+						getAccessType(),
+						key
+				);
+			}
 			return false;
 		}
 		else {

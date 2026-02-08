@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.4.Final (February 08, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37571
+
+
+** Bug
+    * HHH-20119 Values return by Enum Converter are not escaped in CREATE TABLE query
+    * HHH-20065 Subsequent StatelessSession#insertMultiple calls lead to pending batches
+
+** Improvement
+    * HHH-20115 Pass a ROOT locale to loggers to avoid unnecessary class lookups
+
 Changes in 7.2.3.Final (February 01, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

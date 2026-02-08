@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
@@ -17,13 +18,14 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
-
 import jakarta.persistence.Access;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
@@ -72,15 +74,11 @@ public class InheritanceState {
 	}
 
 	private void extractInheritanceType(ClassDetails classDetails) {
+		final boolean isMappedSuperclass = classDetails.hasDirectAnnotationUsage( MappedSuperclass.class );
+		setEmbeddableSuperclass( isMappedSuperclass );
+		final var defaultInheritanceType = isMappedSuperclass ? null : SINGLE_TABLE;
 		final var inheritance = classDetails.getDirectAnnotationUsage( Inheritance.class );
-		final var mappedSuperclass = classDetails.getDirectAnnotationUsage( MappedSuperclass.class );
-		if ( mappedSuperclass != null ) {
-			setEmbeddableSuperclass( true );
-			setType( inheritance == null ? null : inheritance.strategy() );
-		}
-		else {
-			setType( inheritance == null ? SINGLE_TABLE : inheritance.strategy() );
-		}
+		setType( inheritance != null ? inheritance.strategy() : defaultInheritanceType );
 	}
 
 	public boolean hasTable() {
@@ -250,38 +248,149 @@ public class InheritanceState {
 	}
 
 	private AccessType determineDefaultAccessType() {
-		for ( var candidate = classDetails; candidate != null;
-				candidate = candidate.getSuperClass() ) {
-			if ( noSuperclass( candidate.getSuperClass() )
-					&& isEntityOrMappedSuperclass( candidate )
-					&& candidate.hasDirectAnnotationUsage( Access.class ) ) {
-				return getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
+
+		// first consider cases very well-defined in the spec
+
+		if ( classDetails != null && classDetails.hasDirectAnnotationUsage( Access.class ) ) {
+			return getAccessStrategy( classDetails.getDirectAnnotationUsage( Access.class ).value() );
+		}
+
+		final var idAccessType = determineAccessTypeFromId( classDetails );
+		if ( idAccessType != null ) {
+			return idAccessType;
+		}
+
+		// next consider the current class
+
+		final var memberAccessType = determineAccessTypeFromMembers( classDetails );
+		if ( memberAccessType != null ) {
+			return memberAccessType;
+		}
+
+		// next consider the root class of the hierarchy
+
+		final var rootEntity = getRootEntity();
+		if ( rootEntity != null ) {
+			if ( rootEntity.hasDirectAnnotationUsage( Access.class ) ) {
+				return getAccessStrategy( rootEntity.getDirectAnnotationUsage( Access.class ).value() );
+			}
+
+			final var rootMemberAccessType = determineAccessTypeFromMembers( rootEntity );
+			if ( rootMemberAccessType != null ) {
+				return rootMemberAccessType;
 			}
 		}
-		// Guess from identifier.
-		// FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations,
-		// but without an explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
-		for ( var candidate = classDetails; !noSuperclass( candidate );
+
+		// as an absolute last resort, fall back to looking at mapped superclasses
+
+		for ( var candidate = classDetails.getSuperClass();
+				candidate != null && !isObjectClass( candidate );
 				candidate = candidate.getSuperClass() ) {
-			if ( isEntityOrMappedSuperclass( candidate ) ) {
-				for ( var method : candidate.getMethods() ) {
-					if ( method.getMethodKind() == MethodDetails.MethodKind.GETTER
-							&& hasIdAnnotation( method ) ) {
-						return AccessType.PROPERTY;
-					}
+			if ( isMappedSuperclass( candidate ) ) {
+				if ( candidate.hasDirectAnnotationUsage( Access.class ) ) {
+					return getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
 				}
-				for ( var field : candidate.getFields() ) {
-					if ( hasIdAnnotation( field ) ) {
-						return AccessType.FIELD;
-					}
+				final var accessType = determineAccessTypeFromMembers( candidate );
+				if ( accessType != null ) {
+					return accessType;
 				}
 			}
 		}
+
 		throw new AnnotationException(
 				"Entity '" + classDetails.getName() + "' has no identifier"
 						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)"
 		);
 	}
+
+	private static AccessType determineAccessTypeFromId(ClassDetails accessTypeSource) {
+		for ( var candidate = accessTypeSource; !noSuperclass( candidate );
+			candidate = candidate.getSuperClass() ) {
+			if ( isEntityOrMappedSuperclass( candidate )
+					&& !candidate.hasDirectAnnotationUsage( Access.class ) ) {
+				for ( var method : candidate.getMethods() ) {
+					if ( method.getMethodKind() == MethodDetails.MethodKind.GETTER
+							&& hasIdAnnotation( method )
+							&& canBeUsedToInferAccessType( method )	) {
+						return AccessType.PROPERTY;
+					}
+				}
+				for ( var field : candidate.getFields() ) {
+					if ( hasIdAnnotation( field )
+							&& canBeUsedToInferAccessType( field )	 ) {
+						return AccessType.FIELD;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private ClassDetails getRootEntity() {
+		ClassDetails rootEntity = null;
+		for ( var candidate = classDetails; candidate != null && !isObjectClass( candidate );
+				candidate = candidate.getSuperClass() ) {
+			if ( isEntity( candidate ) ) {
+				rootEntity = candidate;
+			}
+		}
+		return rootEntity;
+	}
+
+	private static AccessType determineAccessTypeFromMembers(ClassDetails classDetails) {
+		for ( var field : classDetails.getFields() ) {
+			if ( canBeUsedToInferAccessType( field )
+					&& hasMappingAnnotation( field ) ) {
+				return AccessType.FIELD;
+			}
+		}
+
+		for ( var method : classDetails.getMethods() ) {
+			if ( method.getMethodKind() == MethodDetails.MethodKind.GETTER
+					&& canBeUsedToInferAccessType( method )
+					&& hasMappingAnnotation( method ) ) {
+				return AccessType.PROPERTY;
+			}
+		}
+
+		return null;
+	}
+
+	private static boolean canBeUsedToInferAccessType(MemberDetails memberDetails) {
+		return memberDetails.isPersistable()
+			&& !memberDetails.hasDirectAnnotationUsage( Access.class )
+			&& !memberDetails.hasDirectAnnotationUsage( Transient.class );
+	}
+
+	private static boolean hasMappingAnnotation(MemberDetails memberDetails) {
+		final var annotations = memberDetails.getDirectAnnotationUsages();
+		if ( annotations == null || annotations.isEmpty() ) {
+			return false;
+		}
+
+		for ( var annotation : annotations ) {
+			final var annotationType = annotation.annotationType();
+			final var annotationName = annotationType.getName();
+			if ( annotationName.startsWith( "jakarta.persistence." )
+					&& !IGNORED_PERSISTENCE_ANNOTATIONS.contains( annotationName ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static final Set<String> IGNORED_PERSISTENCE_ANNOTATIONS = Set.of(
+			"jakarta.persistence.PostLoad",
+			"jakarta.persistence.PostPersist",
+			"jakarta.persistence.PostRemove",
+			"jakarta.persistence.PostUpdate",
+			"jakarta.persistence.PrePersist",
+			"jakarta.persistence.PreRemove",
+			"jakarta.persistence.PreUpdate",
+			"jakarta.persistence.Transient",
+			"jakarta.persistence.Access"
+	);
 
 	private static boolean noSuperclass(ClassDetails candidate) {
 		return candidate == null || isObjectClass( candidate );

@@ -185,6 +185,9 @@ public class ResultsHelper {
 
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
+			final boolean minimalPutsEnabled =
+					factory.getSessionFactoryOptions().isMinimalPutsEnabled()
+							&& session.getCacheMode() != CacheMode.REFRESH;
 			final var eventListenerManager = session.getEventListenerManager();
 			final var eventMonitor = session.getEventMonitor();
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -196,8 +199,7 @@ public class ResultsHelper {
 						cacheKey,
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
 						version,
-						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-						&& session.getCacheMode() != CacheMode.REFRESH
+						minimalPutsEnabled
 				);
 			}
 			finally {

@@ -70,7 +70,12 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object value,
 			Object version,
 			boolean minimalPutOverride) {
-		return putFromLoad( session, key, value, version );
+		if ( minimalPutOverride && getStorageAccess().contains( key ) ) {
+			return false;
+		}
+		else {
+			return putFromLoad( session, key, value, version );
+		}
 	}
 
 	private static final SoftLock REGION_LOCK = new SoftLock() {

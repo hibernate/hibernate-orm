@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
+import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
@@ -1755,6 +1756,9 @@ public class EntityInitializerImpl
 			Object version,
 			EntityDataAccess cacheAccess,
 			Object cacheKey, CacheEntry cacheEntry) {
+		final boolean minimalPutsEnabled =
+				session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
+						&& session.getCacheMode() != CacheMode.REFRESH;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean cacheContentChanged = false;
 		final var eventMonitor = session.getEventMonitor();
@@ -1766,8 +1770,7 @@ public class EntityInitializerImpl
 					cacheKey,
 					data.concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 					version,
-					//useMinimalPuts( session, entityEntry )
-					false
+					minimalPutsEnabled
 			);
 		}
 		finally {

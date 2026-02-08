@@ -15,6 +15,7 @@ public class Building {
 
 	public Long height;
 
+	@ManyToOne(optional = false)
 	private Room room;
 
 	public Long getHeight() {
@@ -25,7 +26,6 @@ public class Building {
 		this.height = height;
 	}
 
-	@ManyToOne(optional = false)
 	public Room getRoom() {
 		return room;
 	}

@@ -8,7 +8,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -22,7 +21,6 @@ import jakarta.persistence.OneToMany;
 public class Luggage implements Serializable {
 	private Integer id;
 	private String owner;
-	@Column(name = "`type`")
 	private String type;
 	private Set<Clothes> hasInside = new HashSet<>();
 

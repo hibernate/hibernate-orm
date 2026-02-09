@@ -395,6 +395,7 @@ public class StatelessSessionImpl
 	@Override
 	public Object insert(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		try {
 			return doInsert( entityName, entity );
 		}
@@ -581,6 +582,7 @@ public class StatelessSessionImpl
 	@Override
 	public void delete(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		try {
 			doDelete( entityName, entity );
 		}
@@ -684,6 +686,7 @@ public class StatelessSessionImpl
 	@Override
 	public void update(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		try {
 			doUpdate( entityName, entity );
 		}
@@ -854,6 +857,7 @@ public class StatelessSessionImpl
 	@Override
 	public void upsert(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		try {
 			doUpsert( entityName, entity );
 		}

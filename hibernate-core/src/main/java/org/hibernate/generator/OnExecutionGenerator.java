@@ -63,10 +63,30 @@ public interface OnExecutionGenerator extends Generator {
 	boolean referenceColumnsInSql(Dialect dialect);
 
 	/**
+	 * Determines if the columns whose values are generated are included in the column list
+	 * of the SQL {@code insert} or {@code update} statement for the given event type.
+	 * <p>
+	 * The default implementation delegates to {@link #referenceColumnsInSql(Dialect)}.
+	 */
+	default boolean referenceColumnsInSql(Dialect dialect, EventType eventType) {
+		return referenceColumnsInSql( dialect );
+	}
+
+	/**
 	 * Determines if the property values are written to JDBC as the argument of a JDBC {@code ?}
 	 * parameter.
 	 */
 	boolean writePropertyValue();
+
+	/**
+	 * Determines if the property values are written to JDBC as the argument of a JDBC {@code ?}
+	 * parameter for the given event type.
+	 * <p>
+	 * The default implementation delegates to {@link #writePropertyValue()}.
+	 */
+	default boolean writePropertyValue(EventType eventType) {
+		return writePropertyValue();
+	}
 
 	/**
 	 * A SQL expression indicating how to calculate the generated values when the mapped columns
@@ -82,6 +102,24 @@ public interface OnExecutionGenerator extends Generator {
 	 * @return The column value to be used in the generated SQL statement.
 	 */
 	String[] getReferencedColumnValues(Dialect dialect);
+
+	/**
+	 * A SQL expression indicating how to calculate the generated values when the mapped columns
+	 * are included in the SQL statement for the given event type.
+	 * <p>
+	 * The default implementation delegates to {@link #getReferencedColumnValues(Dialect)}.
+	 */
+	default String[] getReferencedColumnValues(Dialect dialect, EventType eventType) {
+		return getReferencedColumnValues( dialect );
+	}
+
+	/**
+	 * Indicates which columns should be included in SQL for the given event type.
+	 * A {@code null} return value indicates that all columns are included.
+	 */
+	default boolean[] getColumnInclusions(Dialect dialect, EventType eventType) {
+		return null;
+	}
 
 	/**
 	 * The {@link InsertGeneratedIdentifierDelegate} used to retrieve the generated value if this

@@ -57,6 +57,7 @@ public class JoinFormulaNativeQueryTest {
 		);
 		assertThat( resultList ).hasSize( 2 );
 		assertThat( resultList.get( 0 ).getAce() ).isEqualTo( 1L );
+		assertThat( resultList.get( 1 ).getAce() ).isEqualTo( 1L );
 	}
 
 	@Test
@@ -67,17 +68,20 @@ public class JoinFormulaNativeQueryTest {
 		assertThat( resultList ).hasSize( 1 );
 		assertThat( resultList.get( 0 ).getLatestComment() ).isNotNull();
 		assertThat( resultList.get( 0 ).getLatestComment().getId() ).isEqualTo( 2L );
+		assertThat( resultList.get( 0 ).getOldestComment() ).isNotNull();
+		assertThat( resultList.get( 0 ).getOldestComment().getId() ).isEqualTo( 1L );
 	}
 
 	@Test
-	@FailureExpected
 	public void testNativeQueryFormula(EntityManagerFactoryScope scope) {
 		//noinspection unchecked
 		List<Comment> resultList = scope.fromTransaction( entityManager ->
-				entityManager.createNativeQuery( "SELECT c.* FROM comment c", Comment.class ).getResultList()
+				entityManager.createNativeQuery( "SELECT c.*, (SELECT 1 FROM DUAL) as ace FROM comment c",
+						Comment.class ).getResultList()
 		);
 		assertThat( resultList ).hasSize( 2 );
 		assertThat( resultList.get( 0 ).getAce() ).isEqualTo( 1L );
+		assertThat( resultList.get( 1 ).getAce() ).isEqualTo( 1L );
 	}
 
 	@Test
@@ -85,11 +89,20 @@ public class JoinFormulaNativeQueryTest {
 	public void testNativeQueryJoinFormula(EntityManagerFactoryScope scope) {
 		//noinspection unchecked
 		List<Post> resultList = scope.fromTransaction( entityManager ->
-				entityManager.createNativeQuery( "SELECT p.* FROM post p", Post.class ).getResultList()
+				entityManager.createNativeQuery(
+						"""
+								SELECT p.*,
+								(SELECT c.id FROM comment c WHERE c.post_id = p.id ORDER BY c.id ASC LIMIT 1) as oldestComment,
+								(SELECT c.id FROM comment c WHERE c.post_id = p.id ORDER BY c.id DESC LIMIT 1) as latestComment
+								FROM post p
+								""",
+						Post.class ).getResultList()
 		);
 		assertThat( resultList ).hasSize( 1 );
 		assertThat( resultList.get( 0 ).getLatestComment() ).isNotNull();
 		assertThat( resultList.get( 0 ).getLatestComment().getId() ).isEqualTo( 2L );
+		assertThat( resultList.get( 0 ).getOldestComment() ).isNotNull();
+		assertThat( resultList.get( 0 ).getOldestComment().getId() ).isEqualTo( 1L );
 	}
 
 	@Entity(name = "Post")
@@ -103,6 +116,10 @@ public class JoinFormulaNativeQueryTest {
 		@JoinFormula("(SELECT c.id FROM comment c WHERE c.post_id = id ORDER BY c.id DESC LIMIT 1)")
 		private Comment latestComment;
 
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinFormula("(SELECT c.id FROM comment c WHERE c.post_id = id ORDER BY c.id ASC LIMIT 1)")
+		private Comment oldestComment;
+
 		public Long getId() {
 			return id;
 		}
@@ -114,6 +131,10 @@ public class JoinFormulaNativeQueryTest {
 		public Comment getLatestComment() {
 			return latestComment;
 		}
+
+		public Comment getOldestComment() {
+			return oldestComment;
+		}
 	}
 
 	@Entity(name = "Comment")
@@ -123,11 +144,11 @@ public class JoinFormulaNativeQueryTest {
 		@Id
 		private Long id;
 
+		@Formula("(SELECT 1 FROM DUAL)")
+		private Long ace;
+
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Post post;
-
-		@Formula("(SELECT 1 FROM dual)")
-		private Long ace;
 
 		public Long getId() {
 			return id;
@@ -148,6 +169,7 @@ public class JoinFormulaNativeQueryTest {
 		public void setPost(Post post) {
 			this.post = post;
 		}
+
 	}
 
 }

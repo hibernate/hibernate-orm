@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
 		annotatedClasses = {
-				MixedTypeEmbeddableGeneratorsTest.Event.class,
-				MixedTypeEmbeddableGeneratorsTest.History.class,
+				MixedTypeEmbeddableGeneratorsTest2.Event.class,
+				MixedTypeEmbeddableGeneratorsTest2.History.class,
 		}
 )
 @SessionFactory( useCollectingStatementInspector = true )
@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				provider = MutableClockSettingProvider.class
 		)
 )
-class MixedTypeEmbeddableGeneratorsTest {
+class MixedTypeEmbeddableGeneratorsTest2 {
 
 	private MutableClock clock;
 
@@ -65,7 +65,7 @@ class MixedTypeEmbeddableGeneratorsTest {
 			session.persist( event );
 		} );
 
-		assertEquals( "insert into Event (created,updated,name,id) values (%s,?,?,?)"
+		assertEquals( "insert into Event (created,updated,name,id) values (?,%s,?,?)"
 						.formatted( getDialect( scope ).currentTimestamp() ),
 				statementInspector.getSqlQueries().get( 0 ) );
 
@@ -84,7 +84,8 @@ class MixedTypeEmbeddableGeneratorsTest {
 			event.name = "concert";
 		} );
 
-		assertEquals( "update Event set updated=?,name=? where id=?",
+		assertEquals( "update Event set created=?,updated=%s,name=? where id=?"
+						.formatted( getDialect( scope ).currentTimestamp() ),
 				statementInspector.getSqlQueries().get( 1 ) );
 
 		scope.inTransaction( session -> {
@@ -108,10 +109,10 @@ class MixedTypeEmbeddableGeneratorsTest {
 
 	@Embeddable
 	public static class History {
-		@CreationTimestamp(source = SourceType.DB)
+		@CreationTimestamp(source = SourceType.VM)
 		public LocalDateTime created;
 
-		@UpdateTimestamp(source = SourceType.VM)
+		@UpdateTimestamp(source = SourceType.DB)
 		public LocalDateTime updated;
 	}
 

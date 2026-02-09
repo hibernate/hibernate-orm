@@ -26,8 +26,11 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.util.ReflectHelper;
@@ -702,22 +705,26 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
-		final var generator =
-				new CompositeNestedGeneratedValueGenerator(
-						new StandardGenerationContextLocator( rootClass.getEntityName() ),
-						getType()
-				);
 		final var properties = getProperties();
+		final List<Generator> generators = new ArrayList<>( properties.size() );
+		final int columnSpan = getColumnSpan();
+		String[] columnValues = null;
+		boolean[] columnInclusions = null;
+		boolean[] generatedOnExecutionColumns = null;
+		int columnIndex = 0;
+		final List<GenerationPlan> generationPlans = new ArrayList<>();
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final var property = properties.get( i );
+			final int span = property.getColumnSpan();
+			Generator propertyGenerator = null;
 			if ( property.getValue().isSimpleValue() ) {
 				final var value = (SimpleValue) property.getValue();
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
 					// skip any 'assigned' generators, they would have been
 					// handled by the StandardGenerationContextLocator
-					if ( value.createGenerator( dialect, rootClass, property, defaults )
-							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
-						generator.addGeneratedValuePlan( new ValueGenerationPlan(
+					propertyGenerator = value.createGenerator( dialect, rootClass, property, defaults );
+					if ( propertyGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+						generationPlans.add( new ValueGenerationPlan(
 								beforeExecutionGenerator,
 								getType().isMutable()
 										? injector( property, getAttributeDeclarer( rootClass ) )
@@ -725,11 +732,76 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 								i
 						) );
 					}
-					else {
-						throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+					else if ( !( propertyGenerator instanceof OnExecutionGenerator ) ) {
+						throw new IdentifierGenerationException(
+								"Unsupported identifier generator for composite id: " + propertyGenerator.getClass().getName()
+						);
 					}
 				}
 			}
+			generators.add( propertyGenerator );
+
+			if ( propertyGenerator instanceof OnExecutionGenerator onExecutionGenerator
+					&& propertyGenerator.generatedOnExecution() ) {
+				if ( columnValues == null ) {
+					columnValues = new String[columnSpan];
+					columnInclusions = new boolean[columnSpan];
+					generatedOnExecutionColumns = new boolean[columnSpan];
+					for ( int j = 0; j < columnSpan; j++ ) {
+						columnValues[j] = "?";
+						columnInclusions[j] = true;
+					}
+				}
+				for ( int j = 0; j < span; j++ ) {
+					generatedOnExecutionColumns[columnIndex + j] = true;
+				}
+				if ( onExecutionGenerator.getEventTypes().contains( EventType.INSERT ) ) {
+					if ( !onExecutionGenerator.referenceColumnsInSql( dialect, EventType.INSERT ) ) {
+						for ( int j = 0; j < span; j++ ) {
+							columnInclusions[columnIndex + j] = false;
+						}
+					}
+					else if ( onExecutionGenerator.writePropertyValue( EventType.INSERT ) ) {
+						// leave default parameter markers in place
+					}
+					else {
+						final String[] referencedColumnValues =
+								onExecutionGenerator.getReferencedColumnValues( dialect, EventType.INSERT );
+						if ( referencedColumnValues == null ) {
+							throw new IdentifierGenerationException(
+									"Generated column values were not provided for composite id property: "
+											+ property.getName()
+							);
+						}
+						if ( referencedColumnValues.length != span ) {
+							throw new IdentifierGenerationException(
+									"Mismatch between generated column values and column count for composite id property: "
+											+ property.getName()
+							);
+						}
+						System.arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
+					}
+				}
+				else if ( !onExecutionGenerator.allowMutation() ) {
+					for ( int j = 0; j < span; j++ ) {
+						columnInclusions[columnIndex + j] = false;
+					}
+				}
+			}
+			columnIndex += span;
+		}
+
+		final var generator =
+				new CompositeNestedGeneratedValueGenerator(
+						new StandardGenerationContextLocator( rootClass.getEntityName() ),
+						(ComponentType) getType(),
+						generators,
+						columnValues,
+						columnInclusions,
+						generatedOnExecutionColumns
+				);
+		for ( var plan : generationPlans ) {
+			generator.addGeneratedValuePlan( plan );
 		}
 		return generator;
 	}
@@ -817,7 +889,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 	}
 
-	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
+	public static class ValueGenerationPlan implements GenerationPlan {
 		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
 		private final int propertyIndex;

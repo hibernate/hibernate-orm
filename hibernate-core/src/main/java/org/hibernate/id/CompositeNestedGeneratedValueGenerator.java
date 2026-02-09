@@ -12,11 +12,19 @@ import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 
+import static org.hibernate.action.internal.EntityIdentityInsertAction.defaultedPrimitiveIds;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
@@ -51,7 +59,7 @@ import static org.hibernate.generator.EventType.INSERT;
  */
 @Internal
 public class CompositeNestedGeneratedValueGenerator
-		implements IdentifierGenerator, IdentifierGeneratorAggregator, Serializable {
+		implements IdentifierGenerator, IdentifierGeneratorAggregator, OnExecutionGenerator, Serializable {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
@@ -105,69 +113,122 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private final CompositeType compositeType;
+	private final ComponentType componentType;
 	private final List<GenerationPlan> generationPlans = new ArrayList<>();
+	private final List<Generator> generators;
+	private final String[] columnValues;
+	private final boolean[] columnInclusions;
+	private final boolean[] generatedOnExecutionColumns;
+	private final boolean hasOnExecutionGenerators;
+	private final boolean hasIncludedColumns;
+	private final boolean needsValueBinding;
+	private final boolean hasAssignedValues;
 
 	public CompositeNestedGeneratedValueGenerator(
 			GenerationContextLocator generationContextLocator,
-			CompositeType compositeType) {
-		this.generationContextLocator = generationContextLocator;
-		this.compositeType = compositeType;
+			ComponentType componentType) {
+		this( generationContextLocator, componentType,
+				List.of(), null, null, null );
 	}
 
 	// Used by Hibernate Reactive
 	public CompositeNestedGeneratedValueGenerator(
 			GenerationContextLocator generationContextLocator,
-			CompositeType compositeType,
+			ComponentType componentType,
 			List<GenerationPlan> generationPlans) {
-		this.generationContextLocator = generationContextLocator;
-		this.compositeType = compositeType;
+		this( generationContextLocator, componentType,
+				List.of(), null, null, null );
 		this.generationPlans.addAll( generationPlans );
+	}
+
+	public CompositeNestedGeneratedValueGenerator(
+			GenerationContextLocator generationContextLocator,
+			ComponentType componentType,
+			List<Generator> generators,
+			String[] columnValues,
+			boolean[] columnInclusions,
+			boolean[] generatedOnExecutionColumns) {
+		this.generationContextLocator = generationContextLocator;
+		this.componentType = componentType;
+		this.generators = generators == null ? List.of() : new ArrayList<>( generators );
+		this.columnValues = columnValues;
+		this.columnInclusions = columnInclusions;
+		this.generatedOnExecutionColumns = generatedOnExecutionColumns;
+		this.hasOnExecutionGenerators = hasOnExecutionGenerators( this.generators );
+		this.hasIncludedColumns = hasIncludedColumns( columnInclusions );
+		this.needsValueBinding = needsValueBinding( columnValues, columnInclusions );
+		this.hasAssignedValues = generators.stream()
+				.anyMatch( g -> g == null || g instanceof org.hibernate.generator.Assigned );
 	}
 
 	public void addGeneratedValuePlan(GenerationPlan plan) {
 		generationPlans.add( plan );
 	}
 
+	public boolean hasAssignedValues() {
+		return hasAssignedValues;
+	}
+
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object object) {
-		final Object context = generationContextLocator.locateGenerationContext( session, object );
-		final List<Object> generatedValues = generatedValues( session, object, context );
+		final Object context = resolveGenerationContext( session, object );
+		final var generatedValues = generatedValues( session, object, context );
 		if ( generatedValues != null) {
-			final Object[] values = compositeType.getPropertyValues( context );
+			final var values = componentType.getPropertyValues( context );
 			for ( int i = 0; i < generatedValues.size(); i++ ) {
 				values[generationPlans.get( i ).getPropertyIndex()] = generatedValues.get( i );
 			}
-			return compositeType.replacePropertyValues( context, values, session );
+			return componentType.replacePropertyValues( context, values, session );
 		}
 		else {
 			return context;
 		}
 	}
 
+	private Object resolveGenerationContext(SharedSessionContractImplementor session, Object object) {
+		final Object context = generationContextLocator.locateGenerationContext( session, object );
+		return context != null ? context : instantiateEmptyComposite();
+	}
+
+	private Object instantiateEmptyComposite() {
+		final var mappingModelPart = componentType.getMappingModelPart();
+		final var embeddable = mappingModelPart.getEmbeddableTypeDescriptor();
+		return embeddable.getRepresentationStrategy().getInstantiator()
+				.instantiate( () -> defaultedPrimitiveIds( embeddable, embeddable ) );
+	}
+
 	private List<Object> generatedValues(SharedSessionContractImplementor session, Object object, Object context) {
-		final List<Object> generatedValues =
-				compositeType.isMutable()
-						? null
-						: new ArrayList<>( generationPlans.size() );
+		final boolean mutable = componentType.isMutable();
+		final List<Object> generatedValues = mutable ? null : new ArrayList<>( generationPlans.size() );
 		for ( var generationPlan : generationPlans ) {
-			final var generator = generationPlan.getGenerator();
-			if ( !generator.generatedBeforeExecution( object, session ) ) {
-				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
-			}
-			final Object currentValue =
-					generator.allowAssignedIdentifiers()
-							? compositeType.getPropertyValue( context, generationPlan.getPropertyIndex(), session )
-							: null;
-			final Object generated = generator.generate( session, object, currentValue, INSERT );
-			if ( generatedValues != null ) {
-				generatedValues.add( generated );
-			}
-			else {
-				generationPlan.getInjector().set( context, generated );
+			final Object value = generatedValue( session, object, context, generationPlan, mutable );
+			if ( !mutable ) {
+				generatedValues.add( value );
 			}
 		}
 		return generatedValues;
+	}
+
+	private Object generatedValue(
+			SharedSessionContractImplementor session,
+			Object object,
+			Object context,
+			GenerationPlan generationPlan,
+			boolean inject) {
+		final var generator = generationPlan.getGenerator();
+		final Object existingValue =
+				componentType.getPropertyValue( context, generationPlan.getPropertyIndex(), session );
+		if ( generator.generatedBeforeExecution( object, session ) ) {
+			final Object currentValue = generator.allowAssignedIdentifiers() ? existingValue : null;
+			final Object generatedValue = generator.generate( session, object, currentValue, INSERT );
+			if ( inject ) {
+				generationPlan.getInjector().set( context, generatedValue );
+			}
+			return generatedValue;
+		}
+		else {
+			return existingValue;
+		}
 	}
 
 	@Override
@@ -184,6 +245,84 @@ public class CompositeNestedGeneratedValueGenerator
 		}
 	}
 
+	@Override
+	public boolean generatedOnExecution() {
+		return hasOnExecutionGenerators;
+	}
+
+	@Override
+	public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
+		for ( var generator : generators ) {
+			if ( generator instanceof OnExecutionGenerator
+					&& generator.generatesOnInsert()
+					&& generator.generatedOnExecution( entity, session ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
+		for ( var generator : generators ) {
+			if ( generator instanceof BeforeExecutionGenerator
+					&& generator.generatesOnInsert()
+					&& generator.generatedBeforeExecution( entity, session ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return hasIncludedColumns;
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect, EventType eventType) {
+		return eventType == EventType.INSERT && hasIncludedColumns;
+	}
+
+	@Override
+	public boolean writePropertyValue() {
+		return needsValueBinding;
+	}
+
+	@Override
+	public boolean writePropertyValue(EventType eventType) {
+		return eventType == EventType.INSERT && needsValueBinding;
+	}
+
+	@Override
+	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
+		for ( var generator : generators ) {
+			if ( generator instanceof PostInsertIdentifierGenerator postInsertIdentifierGenerator ) {
+				final InsertGeneratedIdentifierDelegate delegate =
+						postInsertIdentifierGenerator.getGeneratedIdentifierDelegate( persister );
+				if ( delegate != null ) {
+					return delegate;
+				}
+			}
+		}
+		return OnExecutionGenerator.super.getGeneratedIdentifierDelegate( persister );
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return columnValues;
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect, EventType eventType) {
+		return eventType == EventType.INSERT ? columnValues : null;
+	}
+
+	@Override
+	public boolean[] getColumnInclusions(Dialect dialect, EventType eventType) {
+		return eventType == EventType.INSERT ? columnInclusions : null;
+	}
+
 	// Used by Hibernate Reactive
 	public List<GenerationPlan> getGenerationPlans() {
 		return generationPlans;
@@ -195,7 +334,44 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	// Used by Hibernate Reactive
-	public CompositeType getCompositeType() {
-		return compositeType;
+	public CompositeType getComponentType() {
+		return componentType;
+	}
+
+	public boolean[] getGeneratedOnExecutionColumnInclusions() {
+		return generatedOnExecutionColumns;
+	}
+
+	private static boolean hasOnExecutionGenerators(List<Generator> generators) {
+		for ( var generator : generators ) {
+			if ( generator instanceof OnExecutionGenerator
+					&& generator.generatesOnInsert() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean hasIncludedColumns(boolean[] columnInclusions) {
+		if ( columnInclusions != null ) {
+			for ( boolean columnInclusion : columnInclusions ) {
+				if ( columnInclusion ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	private static boolean needsValueBinding(String[] columnValues, boolean[] columnInclusions) {
+		if ( columnValues != null && columnInclusions != null ) {
+			for ( int i = 0; i < columnValues.length; i++ ) {
+				if ( columnInclusions[i] && "?".equals( columnValues[i] ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

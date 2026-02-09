@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.idgen.userdefined;
+package org.hibernate.orm.test.idgen.mixed;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;

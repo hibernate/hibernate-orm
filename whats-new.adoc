@@ -90,7 +90,7 @@ It requires a JDBC `DataSource` which correctly implements the method `getConnec
 [[no-default-constructor]]
 == Entities and embeddables with no default constructor
 
-JPA requires that entity cand embeddable classes have a default constructor (a constructor with no parameters).
+JPA requires that entity and embeddable classes have a default constructor (a constructor with no parameters).
 The bytecode enhancer now automatically adds a default constructor to any `@Entity`, `@MappedSuperclass`, or `@Embeddable` class which does not come equipped with one.
 
 [[annotation-based-user-type]]

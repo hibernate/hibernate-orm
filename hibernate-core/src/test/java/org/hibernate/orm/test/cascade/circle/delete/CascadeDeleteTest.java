@@ -38,7 +38,7 @@ public class CascadeDeleteTest {
 	public void testDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createSelectionQuery( "from Person", Person.class )
+					session.createSelectionQuery( "from CircularPerson", Person.class )
 							.list().forEach( session::remove );
 				}
 		);

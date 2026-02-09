@@ -167,19 +167,19 @@ public abstract class AbstractMutationCoordinator {
 			MutationGroupBuilder mutationGroupBuilder,
 			OnExecutionGenerator generator,
 			EventType eventType) {
-		final boolean writePropertyValue = generator.writePropertyValue( eventType );
 		final var dialect = dialect();
-		final var columnValues =
-				writePropertyValue
-						? null
-						: generator.getReferencedColumnValues( dialect, eventType );
+		final var columnValues = generator.getReferencedColumnValues( dialect, eventType );
 		final var columnInclusions = generator.getColumnInclusions( dialect, eventType );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
 			if ( columnInclusions == null || columnInclusions[j] ) {
 				final ColumnValuesTableMutationBuilder<?> tableUpdateBuilder =
 						mutationGroupBuilder.findTableDetailsBuilder(
 								entityPersister.physicalTableNameForMutation( mapping ) );
-				tableUpdateBuilder.addValueColumn( writePropertyValue ? "?" : columnValues[j], mapping );
+				final String columnValue =
+						columnValues != null && columnValues[j] != null
+								? columnValues[j]
+								: "?";
+				tableUpdateBuilder.addValueColumn( columnValue, mapping );
 			}
 		} );
 	}

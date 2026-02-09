@@ -123,7 +123,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *
 	 * @apiNote This is used for generating composite values with mixed event timings.
 	 * User-written generators usually implement {@link #getReferencedColumnValues(Dialect)}
-	 * 
+	 *
 	 * @since 7.4
 	 */
 	@Incubating

@@ -46,7 +46,8 @@ class CompositeGeneratorBuilder {
 		generators.add( generator );
 
 		if ( generator != null && generator.generatesSometimes() ) {
-			if ( generator instanceof OnExecutionGenerator ) {
+			if ( generator instanceof OnExecutionGenerator
+					&& generator.generatedOnExecution() ) {
 				hadOnExecutionGeneration = true;
 			}
 			if ( generator instanceof BeforeExecutionGenerator ) {
@@ -113,7 +114,8 @@ class CompositeGeneratorBuilder {
 			if ( generator != null ) {
 				mutable = mutable || generator.allowMutation();
 			}
-			if ( generator instanceof OnExecutionGenerator onExecutionGenerator ) {
+			if ( generator instanceof OnExecutionGenerator onExecutionGenerator
+					&& generator.generatedOnExecution() ) {
 				final var generatorEventTypes = generator.getEventTypes();
 				for ( var eventType : eventTypes ) {
 					final var details = columnValueDetailsByEvent.get( eventType );

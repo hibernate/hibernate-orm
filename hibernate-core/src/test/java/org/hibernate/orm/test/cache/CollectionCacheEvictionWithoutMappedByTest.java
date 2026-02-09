@@ -149,7 +149,7 @@ public class CollectionCacheEvictionWithoutMappedByTest {
 		} );
 	}
 
-	@Entity(name = "People")
+	@Entity(name = "CachedPeople")
 	@Table(name = "people_group")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -163,7 +163,7 @@ public class CollectionCacheEvictionWithoutMappedByTest {
 		private List<Person> people = new ArrayList<Person>();
 	}
 
-	@Entity(name = "Person")
+	@Entity(name = "CachedPerson")
 	@Table(name = "person")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

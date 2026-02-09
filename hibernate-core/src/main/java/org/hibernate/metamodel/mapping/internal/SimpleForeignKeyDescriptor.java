@@ -30,6 +30,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -372,9 +373,19 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
+		final SelectableMapping modifiedSelectableMapping;
+		if ( selectableMapping.isFormula() && navigablePath.getParent() != null && sqlExpressionResolver instanceof DomainResultCreationState ) {
+			modifiedSelectableMapping = SelectableMappingImpl.withSelectablePath(
+					selectableMapping,
+					new SelectablePath( navigablePath.getParent().getLocalName() )
+			);
+		}
+		else {
+			modifiedSelectableMapping = selectableMapping;
+		}
 		final var javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
 		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
+				sqlExpressionResolver.resolveSqlExpression( tableReference, modifiedSelectableMapping ),
 				javaType,
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getTypeConfiguration()

@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,7 +84,6 @@ public class JoinFormulaNativeQueryTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void testNativeQueryJoinFormula(EntityManagerFactoryScope scope) {
 		//noinspection unchecked
 		List<Post> resultList = scope.fromTransaction( entityManager ->

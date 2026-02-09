@@ -174,6 +174,8 @@ public class XmlParserHelper {
 
 		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
 		try {
+			sf.setProperty( javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+			sf.setProperty( javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 			return sf.newSchema( schemaUrl );
 		}
 		catch ( SAXException e ) {

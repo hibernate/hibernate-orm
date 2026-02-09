@@ -14,6 +14,8 @@ import org.hibernate.internal.util.xml.XsdException;
 
 import org.xml.sax.SAXException;
 
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD;
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
@@ -80,8 +82,10 @@ public class LocalXsdResolver {
 		try {
 			final var schemaStream = url.openStream();
 			try {
-				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
-						.newSchema( new StreamSource( url.openStream() ) );
+				final SchemaFactory schemaFactory = SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_DTD, "" );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_SCHEMA, "" );
+				return schemaFactory.newSchema( new StreamSource( url.openStream() ) );
 			}
 			catch ( SAXException | IOException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaResourceName + "]", e, schemaResourceName );

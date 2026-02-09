@@ -12,6 +12,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.xml.XsdException;
 
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD;
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
@@ -159,8 +161,10 @@ public class JaxbCfgProcessor {
 		try {
 			final var schemaStream = url.openStream();
 			try {
-				return SchemaFactory.newInstance( schemaLanguage )
-						.newSchema( new StreamSource( url.openStream() ) );
+				final SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_DTD, "" );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_SCHEMA, "" );
+				return schemaFactory.newSchema( new StreamSource( url.openStream() ) );
 			}
 			catch ( SAXException | IOException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );

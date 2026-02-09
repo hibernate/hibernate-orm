@@ -10,6 +10,8 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD;
+import static javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA;
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
@@ -48,8 +50,10 @@ public class LocalSchemaLocator {
 		try {
 			final var schemaStream = schemaUrl.openStream();
 			try {
-				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
-						.newSchema( new StreamSource( schemaUrl.openStream() ) );
+				final SchemaFactory schemaFactory = SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_DTD, "" );
+				schemaFactory.setProperty( ACCESS_EXTERNAL_SCHEMA, "" );
+				return schemaFactory.newSchema( new StreamSource( schemaUrl.openStream() ) );
 			}
 			catch ( Exception e ) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );

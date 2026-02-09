@@ -67,23 +67,35 @@ public interface OnExecutionGenerator extends Generator {
 	 * of the SQL {@code insert} or {@code update} statement for the given event type.
 	 * <p>
 	 * The default implementation delegates to {@link #referenceColumnsInSql(Dialect)}.
+	 *
+	 * @apiNote This is used for generating composite values with mixed event timings.
+	 * User-written generators usually implement {@link #referenceColumnsInSql(Dialect)}
+	 *
+	 * @since 7.4
 	 */
+	@Incubating
 	default boolean referenceColumnsInSql(Dialect dialect, EventType eventType) {
 		return referenceColumnsInSql( dialect );
 	}
 
 	/**
-	 * Determines if the property values are written to JDBC as the argument of a JDBC {@code ?}
-	 * parameter.
+	 * Determines if the property values are written to JDBC as the argument of a JDBC
+	 * {@code ?} parameter.
 	 */
 	boolean writePropertyValue();
 
 	/**
-	 * Determines if the property values are written to JDBC as the argument of a JDBC {@code ?}
-	 * parameter for the given event type.
+	 * Determines if the property values are written to JDBC as the argument of a JDBC
+	 * {@code ?} parameter for the given event type.
 	 * <p>
 	 * The default implementation delegates to {@link #writePropertyValue()}.
+	 *
+	 * @apiNote This is used for generating composite values with mixed event timings.
+	 * User-written generators usually implement {@link #writePropertyValue()}
+	 *
+	 * @since 7.4
 	 */
+	@Incubating
 	default boolean writePropertyValue(EventType eventType) {
 		return writePropertyValue();
 	}
@@ -108,7 +120,13 @@ public interface OnExecutionGenerator extends Generator {
 	 * are included in the SQL statement for the given event type.
 	 * <p>
 	 * The default implementation delegates to {@link #getReferencedColumnValues(Dialect)}.
+	 *
+	 * @apiNote This is used for generating composite values with mixed event timings.
+	 * User-written generators usually implement {@link #getReferencedColumnValues(Dialect)}
+	 * 
+	 * @since 7.4
 	 */
+	@Incubating
 	default String[] getReferencedColumnValues(Dialect dialect, EventType eventType) {
 		return getReferencedColumnValues( dialect );
 	}
@@ -116,7 +134,12 @@ public interface OnExecutionGenerator extends Generator {
 	/**
 	 * Indicates which columns should be included in SQL for the given event type.
 	 * A {@code null} return value indicates that all columns are included.
+	 *
+	 * @apiNote This is used for generating composite values with mixed event timings.
+	 *
+	 * @since 7.4
 	 */
+	@Incubating
 	default boolean[] getColumnInclusions(Dialect dialect, EventType eventType) {
 		return null;
 	}

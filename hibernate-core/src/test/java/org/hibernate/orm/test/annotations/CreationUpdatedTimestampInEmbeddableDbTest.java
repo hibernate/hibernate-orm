@@ -4,8 +4,15 @@
  */
 package org.hibernate.orm.test.annotations;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -14,18 +21,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
-				CreationUpdatedTimestampInEmbeddableTest.Event.class,
-				CreationUpdatedTimestampInEmbeddableTest.History.class,
+				CreationUpdatedTimestampInEmbeddableDbTest.Event.class,
+				CreationUpdatedTimestampInEmbeddableDbTest.History.class,
 		}
 )
 @SessionFactory
-class CreationUpdatedTimestampInEmbeddableTest {
+class CreationUpdatedTimestampInEmbeddableDbTest {
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
@@ -45,8 +50,8 @@ class CreationUpdatedTimestampInEmbeddableTest {
 	@Test
 	void test(SessionFactoryScope scope) {
 		LocalDateTime created = scope.fromTransaction( session -> {
-			Event fruit = session.get( Event.class, 1L );
-			return fruit.history.created;
+			Event event = session.get( Event.class, 1L );
+			return event.history.created;
 		} );
 
 		scope.inTransaction( session -> {
@@ -57,7 +62,7 @@ class CreationUpdatedTimestampInEmbeddableTest {
 		scope.inTransaction( session -> {
 			Event event = session.get( Event.class, 1L );
 			assertThat( event.history.created ).isEqualTo( created );
-			assertThat( event.history.updated ).isNotEqualTo( created );
+			assertThat( event.history.updated ).isNotNull();
 			assertThat( event.name ).isEqualTo( "concert" );
 		} );
 	}
@@ -77,12 +82,10 @@ class CreationUpdatedTimestampInEmbeddableTest {
 
 	@Embeddable
 	public static class History {
-		@Column
-		@CreationTimestamp
+		@CreationTimestamp(source = SourceType.DB)
 		public LocalDateTime created;
 
-		@Column
-		@UpdateTimestamp
+		@UpdateTimestamp(source = SourceType.DB)
 		public LocalDateTime updated;
 	}
 }

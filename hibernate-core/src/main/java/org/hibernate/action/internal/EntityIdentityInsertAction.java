@@ -14,9 +14,11 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * The action for performing entity insertions when entity is using {@code IDENTITY} column identifier generation
@@ -83,7 +85,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			final GeneratedValues generatedValues;
 			try {
 				generatedValues = persister.getInsertCoordinator().insert( instance, state, session );
-				generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+				generatedId =
+						generatedValues == null
+								? null
+								: generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 				success = true;
 			}
 			finally {
@@ -96,8 +101,18 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 					persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
 				}
 			}
+			if ( generatedId == null && generatedValues != null ) {
+				final Object compositeId =
+						compositeGeneratedId( persister, instance, generatedValues, session );
+				if ( compositeId != null ) {
+					generatedId = compositeId;
+				}
+			}
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( generatedId, instance, state, generatedValues, session );
+			}
+			if ( generatedId == null ) {
+				generatedId = persister.getIdentifier( instance, session );
 			}
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
@@ -159,6 +174,83 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		}
 		getEventListenerGroups().eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
+	}
+
+	private static Object compositeGeneratedId(
+			EntityPersister persister,
+			Object entity,
+			GeneratedValues generatedValues,
+			SharedSessionContractImplementor session) {
+		if ( persister.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier ) {
+			final var idMapping = compositeIdentifier.getMappedIdEmbeddableTypeDescriptor();
+			final var generatedMapping = compositeIdentifier.getEmbeddableTypeDescriptor();
+			final Object currentId = persister.getIdentifier( entity, session );
+			if ( currentId == null ) {
+				final var values = defaultedPrimitiveIds( generatedMapping, idMapping );
+				if ( unpackGeneratedValues( generatedValues, generatedMapping, values ) ) {
+					return idMapping.getRepresentationStrategy()
+							.getInstantiator().instantiate( () -> values );
+				}
+				else {
+					return null;
+				}
+			}
+			else {
+				final var values = idMapping.getValues( currentId );
+				if ( unpackGeneratedValues( generatedValues, generatedMapping, values ) ) {
+					idMapping.setValues( currentId, values );
+					return currentId;
+				}
+				else {
+					return null;
+				}
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * To instantiate a composite id class with primitive fields,
+	 * via an {@link EmbeddableInstantiator}, we need to assign
+	 * their Java default values.
+	 */
+	public static Object[] defaultedPrimitiveIds(
+			EmbeddableMappingType generatedMapping,
+			EmbeddableMappingType idMapping) {
+		final int attributeCount = generatedMapping.getNumberOfAttributeMappings();
+		final var values = new Object[attributeCount];
+		for ( int i = 0; i < attributeCount; i++ ) {
+			final var attribute = idMapping.getAttributeMapping( i );
+			if ( attribute.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
+				values[i] = attribute.getJavaType().getDefaultValue();
+			}
+		}
+		return values;
+	}
+
+	private static boolean unpackGeneratedValues(
+			GeneratedValues generatedValues,
+			EmbeddableMappingType generatedMapping,
+			Object[] values) {
+		final int attributeCount =
+				generatedMapping.getNumberOfAttributeMappings();
+		boolean updated = false;
+		for ( int i = 0; i < attributeCount; i++ ) {
+			final var basicPart =
+					generatedMapping.getAttributeMapping( i )
+							.asBasicValuedModelPart();
+			if ( basicPart != null ) {
+				final Object generatedValue =
+						generatedValues.getGeneratedValue( basicPart );
+				if ( generatedValue != null ) {
+					values[i] = generatedValue;
+					updated = true;
+				}
+			}
+		}
+		return updated;
 	}
 
 	PostInsertEvent newPostInsertEvent() {

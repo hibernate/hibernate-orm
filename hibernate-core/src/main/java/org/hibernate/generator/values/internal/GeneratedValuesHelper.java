@@ -22,7 +22,11 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -204,7 +208,12 @@ public class GeneratedValuesHelper {
 						parentNavigablePath.append( basicModelPart.getSelectableName() ),
 						basicModelPart,
 						tableGroup,
-						supportsArbitraryValues ? i : null
+						// For composite identifiers we may expand generated identifier parts even when
+						// supportsArbitraryValues is false; in that case, rely on positional ordering
+						// instead of column name resolution.
+						supportsArbitraryValues || !basicModelPart.isEntityIdentifierMapping()
+								? i
+								: null
 				) );
 			}
 			else {
@@ -235,19 +244,32 @@ public class GeneratedValuesHelper {
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
 		if ( timing == EventType.INSERT ) {
-			final var generatedProperties =
-					supportsArbitraryValues
-							? persister.getInsertGeneratedProperties()
-							: List.of( persister.getIdentifierMapping() );
+			if ( !supportsArbitraryValues ) {
+				final var identifierMapping = persister.getIdentifierMapping();
+				if ( identifierMapping instanceof CompositeIdentifierMapping compositeIdentifier ) {
+					final var generator = persister.getGenerator();
+					if ( generator instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
+						final boolean[] generatedColumns =
+								compositeGenerator.getGeneratedOnExecutionColumnInclusions();
+						if ( generatedColumns != null ) {
+							return generatedIdentifierModelParts( compositeIdentifier, generatedColumns );
+						}
+					}
+				}
+				return List.of( identifierMapping );
+			}
+			final var generatedProperties = persister.getInsertGeneratedProperties();
+			final var expandedProperties =
+					expandCompositeIdentifierGeneratedParts( persister, generatedProperties );
 			if ( persister.getRowIdMapping() != null && supportsRowId ) {
 				final List<ModelPart> newList =
-						new ArrayList<>( generatedProperties.size() + 1 );
-				newList.addAll( generatedProperties );
+						new ArrayList<>( expandedProperties.size() + 1 );
+				newList.addAll( expandedProperties );
 				newList.add( persister.getRowIdMapping() );
 				return unmodifiableList( newList );
 			}
 			else {
-				return generatedProperties;
+				return expandedProperties;
 			}
 		}
 		else {
@@ -301,6 +323,112 @@ public class GeneratedValuesHelper {
 			return new UniqueKeySelectingDelegate( persister, getNaturalIdPropertyNames( persister ), timing );
 		}
 		return null;
+	}
+
+	private static List<? extends ModelPart> generatedIdentifierModelParts(
+			CompositeIdentifierMapping compositeIdentifier,
+			boolean[] generatedColumns) {
+		final List<ModelPart> modelParts = new ArrayList<>();
+		collectGeneratedIdParts(
+				compositeIdentifier.getEmbeddableTypeDescriptor(),
+				generatedColumns,
+				0,
+				modelParts
+		);
+		return modelParts;
+	}
+
+	private static List<? extends ModelPart> expandCompositeIdentifierGeneratedParts(
+			EntityPersister persister,
+			List<? extends ModelPart> generatedProperties) {
+		if ( !generatedProperties.isEmpty()
+				&& persister.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier
+				&& persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
+			final boolean[] generatedColumns =
+					compositeGenerator.getGeneratedOnExecutionColumnInclusions();
+			if ( generatedColumns != null ) {
+				return needsExpansion( generatedProperties )
+						? expand( generatedProperties, compositeIdentifier, generatedColumns )
+						: generatedProperties;
+			}
+		}
+		return generatedProperties;
+	}
+
+	private static List<ModelPart> expand(
+			List<? extends ModelPart> generatedProperties,
+			CompositeIdentifierMapping compositeIdentifier,
+			boolean[] generatedColumns) {
+		final List<ModelPart> expanded = new ArrayList<>( generatedProperties.size() );
+		for ( var part : generatedProperties ) {
+			if ( part.isEntityIdentifierMapping()
+					&& part instanceof CompositeIdentifierMapping ) {
+				expanded.addAll( generatedIdentifierModelParts( compositeIdentifier, generatedColumns ) );
+			}
+			else {
+				expanded.add( part );
+			}
+		}
+		return expanded;
+	}
+
+	private static boolean needsExpansion(List<? extends ModelPart> generatedProperties) {
+		for ( var part : generatedProperties ) {
+			if ( part.isEntityIdentifierMapping()
+					&& part instanceof CompositeIdentifierMapping ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static int collectGeneratedIdParts(
+			EmbeddableMappingType embeddableMapping,
+			boolean[] generatedColumns,
+			int offset,
+			List<ModelPart> modelParts) {
+		final var attributeMappings = embeddableMapping.getAttributeMappings();
+		int position = offset;
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final var attributeMapping = attributeMappings.get( i );
+			final int span = attributeMapping.getJdbcTypeCount();
+			if ( hasGeneratedColumns( generatedColumns, position, span ) ) {
+				final var basicPart = attributeMapping.asBasicValuedModelPart();
+				if ( basicPart != null ) {
+					modelParts.add( basicPart );
+					position += span;
+				}
+				else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddablePart ) {
+					position = collectGeneratedIdParts(
+							embeddablePart.getEmbeddableTypeDescriptor(),
+							generatedColumns,
+							position,
+							modelParts
+					);
+				}
+				else {
+					throw new UnsupportedOperationException(
+							"Unsupported generated ModelPart: " + attributeMapping.getPartName()
+					);
+				}
+			}
+			else {
+				position += span;
+			}
+		}
+		return position;
+	}
+
+	private static boolean hasGeneratedColumns(boolean[] generatedColumns, int start, int span) {
+		if ( generatedColumns != null ) {
+			final int end = Math.min( generatedColumns.length, start + span );
+			for ( int i = start; i < end; i++ ) {
+				if ( generatedColumns[i] ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static boolean supportsReturning(Dialect dialect, EventType timing) {

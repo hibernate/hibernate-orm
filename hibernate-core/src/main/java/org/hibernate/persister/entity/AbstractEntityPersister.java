@@ -872,13 +872,18 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
-		try {
-			final var identifierType = (BasicType<?>) getIdentifierType();
-			final int idTypeCode = identifierType.getJdbcType().getDdlTypeCode();
-			return dialect.getIdentityColumnSupport()
-					.getIdentitySelectString( getTableName(0), getKeyColumns(0)[0], idTypeCode );
+		if ( getIdentifierType() instanceof BasicType<?> identifierType ) {
+			try {
+				return dialect.getIdentityColumnSupport()
+						.getIdentitySelectString( getTableName( 0 ), getKeyColumns( 0 )[0],
+								identifierType.getJdbcType().getDdlTypeCode() );
+			}
+			catch (MappingException ex) {
+				// no proper IdentityColumnSupport in the dialect
+				return null;
+			}
 		}
-		catch (MappingException ex) {
+		else {
 			return null;
 		}
 	}

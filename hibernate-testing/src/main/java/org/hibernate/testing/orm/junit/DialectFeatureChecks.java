@@ -683,6 +683,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof MySQLDialect && !(dialect instanceof MariaDBDialect)
+					|| dialect instanceof SpannerDialect
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect

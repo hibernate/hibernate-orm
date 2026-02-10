@@ -6,6 +6,7 @@ package org.hibernate.orm.test.type.temporal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SpannerDialect;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -82,6 +83,11 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 
 	protected final B add(ZoneId defaultJvmTimeZone, D testData) {
 		for ( Class<? extends AbstractRemappingH2Dialect> remappingDialectClass : remappingDialectClasses ) {
+			if ( forcedJdbcTimeZone != null && dialect instanceof SpannerDialect ) {
+				// Spanner TIMESTAMP represents an absolute instant and is always interpreted as UTC;
+				// using a different JDBC timezone can produce undesired results when reading/writing values, so we skip these tests.
+				continue;
+			}
 			addParam( defaultJvmTimeZone, forcedJdbcTimeZone, remappingDialectClass, testData );
 		}
 
@@ -106,6 +112,11 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 	}
 
 	protected Iterable<? extends ZoneId> getHibernateJdbcTimeZonesToTest() {
+		if ( dialect instanceof SpannerDialect ) {
+			// Spanner TIMESTAMP represents an absolute instant and is always interpreted as UTC.
+			// To avoid undesired timezone conversions, do not override the JDBC timezone, or explicitly use UTC.
+			return List.of( ZoneId.of( "UTC" ) );
+		}
 		return Arrays.asList( Timezones.ZONE_GMT, Timezones.ZONE_OSLO );
 	}
 

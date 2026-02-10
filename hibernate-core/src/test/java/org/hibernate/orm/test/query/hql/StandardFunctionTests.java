@@ -15,6 +15,7 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.SpannerDialect;
 
 import org.hamcrest.number.IsCloseTo;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -400,6 +401,8 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "spanner timestamp_add/timestamp_diff doesn't support year/month")
 	public void testIntervalAddExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -436,6 +439,8 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "spanner timestamp_add/timestamp_diff doesn't support year/month")
 	public void testIntervalSubExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -571,6 +576,7 @@ public class StandardFunctionTests {
 			reason = "unsupported binary operator: <date> - <timestamp(6)>")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Intervals or datetimes are incompatible for the operation")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

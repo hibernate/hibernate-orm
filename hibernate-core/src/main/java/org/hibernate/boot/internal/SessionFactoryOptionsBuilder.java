@@ -1168,11 +1168,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isUseNativeTemporalTablesEnabled() {
-		return useNativeTemporalTables;
-	}
-
-	@Override
 	@Deprecated(forRemoval = true)
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delayBatchFetchLoaderCreations;

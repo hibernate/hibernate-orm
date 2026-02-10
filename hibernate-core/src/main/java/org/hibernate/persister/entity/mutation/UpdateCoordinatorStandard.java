@@ -693,8 +693,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean restrictToTemporalExcluded,
 			SharedSessionContractImplementor session) {
 
-		final var generator = restrictToTemporalExcluded
-							  && !entityPersister().isPropertyTemporalExcluded( attributeIndex )
+		final var generator =
+				restrictToTemporalExcluded
+						&& !entityPersister().isPropertyTemporalExcluded( attributeIndex )
 				? null
 				: attributeMapping.getGenerator();
 		final boolean generatesOnUpdate =

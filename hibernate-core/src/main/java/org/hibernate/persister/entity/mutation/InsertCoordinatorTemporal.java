@@ -27,7 +27,9 @@ public class InsertCoordinatorTemporal extends InsertCoordinatorStandard {
 	@Override
 	protected void decomposeForInsert(
 			MutationExecutor mutationExecutor,
-			Object id, Object[] values,
+			Object id,
+			Object[] values,
+			Object object,
 			MutationOperationGroup mutationGroup,
 			boolean[] propertyInclusions,
 			TableInclusionChecker tableInclusionChecker,
@@ -35,6 +37,7 @@ public class InsertCoordinatorTemporal extends InsertCoordinatorStandard {
 		super.decomposeForInsert(
 				mutationExecutor,
 				id, values,
+				object,
 				mutationGroup,
 				propertyInclusions,
 				tableInclusionChecker,

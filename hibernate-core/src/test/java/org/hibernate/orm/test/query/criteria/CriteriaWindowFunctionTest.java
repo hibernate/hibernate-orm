@@ -285,6 +285,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix bug when a parameter is used inside of sum() that has an over() clause")
 	public void testSumWithFilterAndWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

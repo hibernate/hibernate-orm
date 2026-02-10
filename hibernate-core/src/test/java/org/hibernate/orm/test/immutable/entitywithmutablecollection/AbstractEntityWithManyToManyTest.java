@@ -6,7 +6,6 @@ package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 
 import java.util.Iterator;
 
-import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -28,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -167,10 +165,6 @@ public abstract class AbstractEntityWithManyToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					assertThrows(IllegalArgumentException.class,
-								() -> s.lock( c, LockMode.NONE ),
-								"Given entity is not associated with the persistence context"
-					);
 					Plan p = new Plan( "plan" );
 					p.addContract( s.get(Contract.class, c.getId()) );
 					s.persist( p );

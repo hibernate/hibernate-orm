@@ -8,8 +8,6 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -20,6 +18,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * ResultBuilder for scalar results defined via:<ul>
@@ -40,7 +40,6 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			String explicitColumnName,
 			BasicValuedMapping explicitType,
 			JavaType<?> explicitJavaType) {
-		//noinspection unchecked
 		assert explicitType == null
 			|| explicitType.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass()
 				.isAssignableFrom( explicitJavaType.getJavaTypeClass() );
@@ -65,7 +64,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final var creationStateImpl = impl( domainResultCreationState );
 		final int jdbcPosition =
 				explicitColumnName != null
 						? jdbcResultsMetadata.resolveColumnPosition( explicitColumnName )
@@ -74,7 +73,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				explicitColumnName != null
 						? explicitColumnName
 						: jdbcResultsMetadata.resolveColumnName( jdbcPosition );
-		final SqlSelection sqlSelection =
+		final var sqlSelection =
 				sqlSelection( jdbcResultsMetadata, creationStateImpl, columnName, jdbcPosition );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -90,25 +89,13 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl,
 			String columnName, int jdbcPosition) {
-		final TypeConfiguration typeConfiguration = creationStateImpl.getCreationContext().getTypeConfiguration();
+		final var typeConfiguration = creationStateImpl.getCreationContext().getTypeConfiguration();
 		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnName ),
-						processingState -> {
-							final BasicValuedMapping basicType;
-							if ( explicitType != null ) {
-								basicType = explicitType;
-							}
-							else {
-								basicType = jdbcResultsMetadata.resolveType(
-										jdbcPosition,
-										explicitJavaType,
-										typeConfiguration
-								);
-							}
-							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
-						}
+						createColumnReferenceKey( columnName ),
+						processingState ->
+								new ResultSetMappingSqlSelection( jdbcPositionToValuesArrayPosition( jdbcPosition ),
+										basicType( jdbcResultsMetadata, jdbcPosition, typeConfiguration ) )
 				),
 				explicitJavaType,
 				null,
@@ -116,18 +103,28 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		);
 	}
 
+	private BasicValuedMapping basicType(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int jdbcPosition,
+			TypeConfiguration typeConfiguration) {
+		return explicitType == null
+				? jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, typeConfiguration )
+				: explicitType;
+	}
+
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderBasicValuedStandard that ) ) {
 			return false;
 		}
-		final CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
-		return Objects.equals( explicitColumnName, that.explicitColumnName )
-			&& Objects.equals( explicitType, that.explicitType )
-			&& Objects.equals( explicitJavaType, that.explicitJavaType );
+		else {
+			return Objects.equals( explicitColumnName, that.explicitColumnName )
+				&& Objects.equals( explicitType, that.explicitType )
+				&& Objects.equals( explicitJavaType, that.explicitJavaType );
+		}
 }
 
 	@Override

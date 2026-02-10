@@ -14,6 +14,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 /**
  * @author Andrea Boriero
  */
@@ -37,6 +39,17 @@ public class QueryParametersValidationTest {
 		scope.inTransaction( (session) ->
 				session.createQuery( "from EntityWithBasicArray e where e.strings = :p" )
 						.setParameter( "p", new String[]{null, "something"} )
+		);
+	}
+
+	@Test
+	public void testSetParameterWithArrayWithNullElementWrongType(SessionFactoryScope scope) {
+		// SimpleEntity#id is of type Integer
+		assertThrows( IllegalArgumentException.class, () ->
+				scope.inTransaction( (session) ->
+						session.createQuery( "from EntityWithBasicArray e where e.strings = :p" )
+								.setParameter( "p", new Integer[]{null, 1} )
+				)
 		);
 	}
 

@@ -65,12 +65,12 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 
 	@Override
 	public SqmSingularJoin<O, T> copy(SqmCopyContext context) {
-		final SqmSingularJoin<O, T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmSingularJoin<O, T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmSingularJoin<>(
 						lhsCopy,

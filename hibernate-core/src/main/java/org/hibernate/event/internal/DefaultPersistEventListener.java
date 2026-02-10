@@ -18,8 +18,10 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import static org.hibernate.event.internal.EventUtil.getLoggableName;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -62,7 +64,7 @@ public class DefaultPersistEventListener
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				if ( lazyInitializer.getSession() != event.getSession() ) {
-					throw new PersistentObjectException( "uninitialized proxy passed to persist()" );
+					throw new PersistentObjectException( "Uninitialized proxy passed to persist()" );
 				}
 			}
 			else {
@@ -81,7 +83,7 @@ public class DefaultPersistEventListener
 		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
 				throw new PersistentObjectException( "Detached entity passed to persist: "
-						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
+										+ getLoggableName( event.getEntityName(), entity) );
 			case PERSISTENT:
 				entityIsPersistent( event, createCache );
 				break;
@@ -95,17 +97,15 @@ public class DefaultPersistEventListener
 				entityIsDeleted( event, createCache );
 				break;
 			default:
-				throw new ObjectDeletedException(
-						"Deleted entity passed to persist",
-						null,
-						EventUtil.getLoggableName( event.getEntityName(), entity )
-				);
+				throw new ObjectDeletedException( "Deleted entity passed to persist", null,
+										getLoggableName( entityName, entity ) );
 		}
 	}
 
 	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {
-		if ( event.getEntityName() != null ) {
-			return event.getEntityName();
+		final String explicitEntityName = event.getEntityName();
+		if ( explicitEntityName != null ) {
+			return explicitEntityName;
 		}
 		else {
 			// changes event.entityName by side effect!
@@ -119,14 +119,13 @@ public class DefaultPersistEventListener
 		final var source = event.getSession();
 		final String entityName = event.getEntityName();
 		//TODO: check that entry.getIdentifier().equals(requestedId)
-		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
+		final Object entity = assertInitialized( event.getObject() );
+		final var persister = source.getEntityPersister( entityName, entity );
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-			final var persister = source.getEntityPersister( entityName, entity );
 			EVENT_LISTENER_LOGGER.ignoringPersistentInstance(
 					infoString( entityName, persister.getIdentifier( entity ) ) );
 		}
 		if ( createCache.add( entity ) ) {
-			final var persister = source.getEntityPersister( entityName, entity );
 			justCascade( createCache, source, entity, persister );
 		}
 	}
@@ -139,21 +138,20 @@ public class DefaultPersistEventListener
 
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
 		EVENT_LISTENER_LOGGER.persistingTransientInstance();
-		final var source = event.getSession();
-		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
+		final Object entity = assertInitialized( event.getObject() );
 		if ( createCache.add( entity ) ) {
+			final var source = event.getSession();
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
 		}
 	}
 
 	private void entityIsDeleted(PersistEvent event, PersistContext createCache) {
 		final var source = event.getSession();
-		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
+		final Object entity = assertInitialized( event.getObject() );
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-			final Object id = persister.getIdentifier( entity, source );
 			EVENT_LISTENER_LOGGER.unschedulingEntityDeletion(
-					infoString( persister, id, source.getFactory() ) );
+					infoString( persister, persister.getIdentifier( entity, source ), source.getFactory() ) );
 		}
 		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );

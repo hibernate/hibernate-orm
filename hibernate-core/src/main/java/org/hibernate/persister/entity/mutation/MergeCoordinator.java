@@ -6,10 +6,14 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 
 /**
  * Specialized {@link UpdateCoordinator} for {@code merge into}.
@@ -24,7 +28,84 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 
 	@Override
 	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
-		return new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
+		final TableMergeBuilder<O> tableUpdateBuilder =
+				new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
+		addDiscriminatorValueIfNeeded( tableUpdateBuilder, tableMapping );
+		return tableUpdateBuilder;
+	}
+
+	private void addDiscriminatorValueIfNeeded(
+			AbstractTableUpdateBuilder<?> tableUpdateBuilder,
+			EntityTableMapping tableMapping) {
+		final var discriminatorMapping = entityPersister().getDiscriminatorMapping();
+		if ( discriminatorMapping != null
+				&& discriminatorMapping.hasPhysicalColumn()
+				&& tableMapping.getTableName().equals( discriminatorMapping.getContainingTableExpression() ) ) {
+			final Object discriminatorValue = entityPersister().getDiscriminatorValue();
+			if ( discriminatorValue != DiscriminatorHelper.NULL_DISCRIMINATOR
+				&& discriminatorValue != DiscriminatorHelper.NOT_NULL_DISCRIMINATOR ) {
+				tableUpdateBuilder.addValueColumn(
+						entityPersister().getDiscriminatorSQLValue(),
+						discriminatorMapping
+				);
+			}
+		}
+	}
+
+	@Override
+	protected boolean isColumnIncludedInSet(SelectableMapping selectable) {
+		return selectable.isUpdateable() || selectable.isInsertable();
+	}
+
+	private static boolean isInsertableOrUpdatable(AttributeMapping attribute) {
+		final var attributeMetadata = attribute.getAttributeMetadata();
+		return attributeMetadata.isUpdatable()
+			|| attributeMetadata.isInsertable();
+	}
+
+	@Override
+	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+		return (position, attribute) -> isInsertableOrUpdatable( attribute );
+	}
+
+	@Override
+	protected boolean includeInStaticUpdate(
+			int index,
+			AttributeMapping attribute,
+			boolean[] propertyUpdateability) {
+		return isInsertableOrUpdatable( attribute )
+			|| super.includeInStaticUpdate( index, attribute, propertyUpdateability );
+	}
+
+	@Override
+	protected boolean includeProperty(boolean[] insertability, boolean[] updateability, int property) {
+		return insertability[property] || updateability[property];
+	}
+
+	@Override
+	public boolean[] getPropertyUpdateability(Object entity) {
+		final boolean[] updateability = super.getPropertyUpdateability( entity );
+		final boolean[] insertability = entityPersister().getPropertyInsertability();
+		final var result = new boolean[updateability.length];
+		for ( int i = 0; i < updateability.length; i++ ) {
+			result[i] = updateability[i] || insertability[i];
+		}
+		return result;
+	}
+
+	@Override
+	public boolean[] getPropertyUpdateability() {
+		final boolean[] updateability = entityPersister().getPropertyUpdateability();
+		final boolean[] insertability = entityPersister().getPropertyInsertability();
+		final var result = new boolean[updateability.length];
+		for ( int i = 0; i < updateability.length; i++ ) {
+			result[i] = updateability[i] || insertability[i];
+		}
+		return result;
+	}
+	@Override
+	protected void forEachUpdatable(AttributeMapping attributeMapping, TableUpdateBuilder<?> tableUpdateBuilder) {
+		attributeMapping.forEachSelectable( tableUpdateBuilder );
 	}
 
 	@Override
@@ -71,5 +152,10 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 			}
 		}
 		return updateValuesAnalysis;
+	}
+
+	@Override
+	public String toString() {
+		return "MergeCoordinator(" + entityPersister().getEntityName() + ")";
 	}
 }

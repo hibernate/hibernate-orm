@@ -34,7 +34,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
  * JPA-style event listener with support for resolving callback methods from
  * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, ModelsContext) XML}
  * or from {@linkplain #from(JpaEventListenerStyle, ClassDetails) annotation}.
- * <p/>
+ * <p>
  * Represents a global entity listener defined in the persistence unit
  *
  * @see JaxbPersistenceUnitDefaultsImpl#getEntityListenerContainer()

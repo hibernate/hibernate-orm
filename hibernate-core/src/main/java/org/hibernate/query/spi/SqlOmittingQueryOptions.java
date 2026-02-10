@@ -16,7 +16,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
  *
  * @author Christian Beikov
  */
-@Internal
+@Internal // used by Hibernate Reactive
 public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	private final boolean omitLimit;

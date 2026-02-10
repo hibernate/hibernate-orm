@@ -100,6 +100,7 @@ public class BasicHibernateAnnotationsTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testVersioning(SessionFactoryScope scope) {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );

@@ -11,7 +11,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 
@@ -73,7 +75,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
 		final String path = qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
-		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
+		final var overrides = propertyHolder.getOverriddenJoinColumn( path );
 		if ( overrides != null ) {
 			//TODO: relax this restriction
 			throw new AnnotationException( "Property '" + path
@@ -334,7 +336,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		setLogicalColumnName( columnName );
 		setImplicit( true );
 		setReferencedColumn( logicalReferencedColumn );
-		final Column mappingColumn = getMappingColumn();
+		final var mappingColumn = getMappingColumn();
 		initMappingColumn(
 				columnName,
 				null,
@@ -363,7 +365,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			// the name of the @MapsId annotation, but
 			// it's better than just having two different
 			// column names which disagree
-			final Column column = parent.resolveMapsId().getValue().getColumns().get( columnIndex );
+			final var column = parent.resolveMapsId().getValue().getColumns().get( columnIndex );
 //			return column.getQuotedName();
 			if ( column.isExplicit() ) {
 				throw new AnnotationException( "Association '" + parent.getPropertyName()
@@ -380,21 +382,27 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	/**
 	 * Used for {@code mappedBy} cases.
 	 */
-	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
-		initMappingColumn(
-				//column.getName(),
-				column.getQuotedName(),
-				null,
-				column.getLength(),
-				column.getPrecision(),
-				column.getScale(),
-				column.getTemporalPrecision(),
-				column.getArrayLength(),
-				getMappingColumn().isNullable(),
-				column.getSqlType(),
-				getMappingColumn().isUnique(),
-				false //We do copy no strategy here
-		);
+	public void linkValueUsingCopy(Selectable selectable, SimpleValue value) {
+		if ( selectable instanceof  Column column ) {
+			initMappingColumn(
+					//column.getName(),
+					column.getQuotedName(),
+					null,
+					column.getLength(),
+					column.getPrecision(),
+					column.getScale(),
+					column.getTemporalPrecision(),
+					column.getArrayLength(),
+					getMappingColumn().isNullable(),
+					column.getSqlType(),
+					getMappingColumn().isUnique(),
+					false //We do copy no strategy here
+			);
+		}
+		else if ( selectable instanceof Formula formula ) {
+			setFormula( formula.getFormula() );
+			initMappingFormula();
+		}
 		linkWithValue( value );
 	}
 
@@ -429,7 +437,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 * @param column the referenced column.
 	 */
 	public void overrideFromReferencedColumnIfNecessary(Column column) {
-		final Column mappingColumn = getMappingColumn();
+		final var mappingColumn = getMappingColumn();
 		if ( mappingColumn != null ) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not
@@ -458,7 +466,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	@Override
 	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
 		if ( isNotEmpty( columnName ) ) {
-			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+			getMappingColumn().setName(
+					processColumnName( columnName, applyNamingStrategy, isNotEmpty( columnName ) ) );
 			return true;
 		}
 		else {

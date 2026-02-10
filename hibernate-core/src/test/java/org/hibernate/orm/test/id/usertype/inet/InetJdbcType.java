@@ -17,11 +17,11 @@ public class InetJdbcType extends PostgreSQLInetJdbcType {
 	public static final InetJdbcType INSTANCE = new InetJdbcType();
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Inet.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Inet.class );
 	}
 
 	@Override

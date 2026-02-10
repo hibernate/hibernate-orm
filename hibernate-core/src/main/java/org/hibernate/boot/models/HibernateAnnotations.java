@@ -159,10 +159,6 @@ public interface HibernateAnnotations {
 			ColumnDefault.class,
 			ColumnDefaultAnnotation.class
 	);
-	OrmAnnotationDescriptor<Columns,ColumnsAnnotation> COLUMNS = new OrmAnnotationDescriptor<>(
-			Columns.class,
-			ColumnsAnnotation.class
-	);
 	OrmAnnotationDescriptor<ColumnTransformers,ColumnTransformersAnnotation> COLUMN_TRANSFORMERS = new OrmAnnotationDescriptor<>(
 			ColumnTransformers.class,
 			ColumnTransformersAnnotation.class
@@ -474,6 +470,10 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<NaturalIdCache, NaturalIdCacheAnnotation> NATURAL_ID_CACHE = new OrmAnnotationDescriptor<>(
 			NaturalIdCache.class,
 			NaturalIdCacheAnnotation.class
+	);
+	OrmAnnotationDescriptor<NaturalIdClass, NaturalIdClassAnnotation> NATURAL_ID_CLASS = new OrmAnnotationDescriptor<>(
+			NaturalIdClass.class,
+			NaturalIdClassAnnotation.class
 	);
 	OrmAnnotationDescriptor<NotFound, NotFoundAnnotation> NOT_FOUND = new OrmAnnotationDescriptor<>(
 			NotFound.class,

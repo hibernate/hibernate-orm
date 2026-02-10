@@ -19,12 +19,20 @@ import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static java.lang.Byte.toUnsignedInt;
+import static java.lang.Integer.toHexString;
+
 /**
  * Descriptor for {@code Byte[]} handling, which disallows {@code null} elements.
- * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and wants to map to {@link SqlTypes#VARBINARY}.
+ * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and
+ * wants to map to {@link SqlTypes#VARBINARY}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This kind of mapping is no longer required by the JPA specification.
+ * It makes more sense to use {@code byte[]} to represent {@code VARBINARY}.
  */
+@Deprecated(since = "7.3")
 public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public static final ByteArrayJavaType INSTANCE = new ByteArrayJavaType();
 
@@ -35,7 +43,12 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 
 	@Override
 	public boolean isInstance(Object value) {
-		return value instanceof byte[];
+		return value instanceof Byte[];
+	}
+
+	@Override
+	public Byte[] cast(Object value) {
+		return (Byte[]) value;
 	}
 
 	@Override
@@ -57,22 +70,22 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
 		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
-		return descriptor instanceof AdjustableJdbcType
-				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+		return descriptor instanceof AdjustableJdbcType jdbcType
+				? jdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;
 	}
 
 	@Override
 	public String toString(Byte[] bytes) {
-		final StringBuilder buf = new StringBuilder();
+		final var string = new StringBuilder();
 		for ( Byte aByte : bytes ) {
-			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
+			final String hexStr = toHexString( toUnsignedInt( aByte ) );
 			if ( hexStr.length() == 1 ) {
-				buf.append( '0' );
+				string.append( '0' );
 			}
-			buf.append( hexStr );
+			string.append( hexStr );
 		}
-		return buf.toString();
+		return string.toString();
 	}
 	@Override
 	public Byte[] fromString(CharSequence string) {
@@ -82,7 +95,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( string.length() % 2 != 0 ) {
 			throw new IllegalArgumentException( "The string is not a valid string representation of a binary content." );
 		}
-		Byte[] bytes = new Byte[string.length() / 2];
+		final var bytes = new Byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			final String hexStr = string.subSequence( i * 2, (i + 1) * 2 ).toString();
 			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
@@ -90,26 +103,25 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		return bytes;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Byte[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Byte[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) unwrapBytes( value );
+			return type.cast( unwrapBytes( value ) );
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
-			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
+			return type.cast( new ByteArrayInputStream( unwrapBytes( value ) ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new ArrayBackedBinaryStream( unwrapBytes( value ) );
+			return type.cast( new ArrayBackedBinaryStream( unwrapBytes( value ) ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );
+			return type.cast( options.getLobCreator().createBlob( unwrapBytes( value ) ) );
 		}
 
 		throw unknownUnwrap( type );
@@ -144,7 +156,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( bytes == null ) {
 			return null;
 		}
-		final Byte[] result = new Byte[bytes.length];
+		final var result = new Byte[bytes.length];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			result[i] = bytes[i];
 		}
@@ -155,7 +167,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( bytes == null ) {
 			return null;
 		}
-		final byte[] result = new byte[bytes.length];
+		final var result = new byte[bytes.length];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			result[i] = bytes[i];
 		}

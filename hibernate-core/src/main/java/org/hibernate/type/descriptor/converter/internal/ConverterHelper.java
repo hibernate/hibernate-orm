@@ -11,8 +11,8 @@ import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 
-import static org.hibernate.internal.util.GenericsHelper.extractClass;
-import static org.hibernate.internal.util.GenericsHelper.extractParameterizedType;
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /**
  * @author Gavin King
@@ -21,28 +21,34 @@ import static org.hibernate.internal.util.GenericsHelper.extractParameterizedTyp
 public class ConverterHelper {
 	public static <X, Y> BasicValueConverter<X, Y> createValueConverter(
 			AttributeConverter<X,Y> converter, JavaTypeRegistry registry) {
-		final var converterType = extractParameterizedType( converter.getClass(), AttributeConverter.class );
-		final var typeArguments = converterType.getActualTypeArguments();
-		final var domainJavaClass = extractClass( typeArguments[0] );
-		final var relationalJavaClass = extractClass( typeArguments[1] );
+		final var typeArguments =
+				typeArguments( AttributeConverter.class,
+						converter.getClass() );
+		@SuppressWarnings("unchecked") // perfectly safe
+		final var domainJavaClass = (Class<X>) erasedType( typeArguments[0] );
+		@SuppressWarnings("unchecked") // perfectly safe
+		final var relationalJavaClass = (Class<Y>) erasedType( typeArguments[1] );
 		return new AttributeConverterInstance<>(
 				converter,
-				registry.getDescriptor( domainJavaClass ),
-				registry.getDescriptor( relationalJavaClass )
+				registry.resolveDescriptor( domainJavaClass ),
+				registry.resolveDescriptor( relationalJavaClass )
 		);
 	}
 
 	public static <X, Y> JpaAttributeConverter<X, Y> createJpaAttributeConverter(
 			ManagedBean<? extends AttributeConverter<X,Y>> bean, JavaTypeRegistry registry) {
-		final var converterType = extractParameterizedType( bean.getBeanClass(), AttributeConverter.class );
-		final var typeArguments = converterType.getActualTypeArguments();
-		final var domainJavaClass = extractClass( typeArguments[0] );
-		final var relationalJavaClass = extractClass( typeArguments[1] );
+		final var typeArguments =
+				typeArguments( AttributeConverter.class,
+						bean.getBeanClass() );
+		@SuppressWarnings("unchecked") // perfectly safe
+		final var domainJavaClass = (Class<X>) erasedType( typeArguments[0] );
+		@SuppressWarnings("unchecked") // perfectly safe
+		final var relationalJavaClass = (Class<Y>) erasedType( typeArguments[1] );
 		return new AttributeConverterBean<>(
 				bean,
 				registry.resolveDescriptor( bean.getBeanClass() ),
-				registry.getDescriptor( domainJavaClass ),
-				registry.getDescriptor( relationalJavaClass )
+				registry.resolveDescriptor( domainJavaClass ),
+				registry.resolveDescriptor( relationalJavaClass )
 		);
 	}
 }

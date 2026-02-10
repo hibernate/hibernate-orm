@@ -33,10 +33,10 @@ public final class SubSequence implements CharSequence {
 
 	@Override
 	public CharSequence subSequence(int start, int end) {
-		if ( start < 0 || start >= length ) {
+		if ( start < 0 || start > length ) {
 			throw new StringIndexOutOfBoundsException( start );
 		}
-		if ( end > length ) {
+		if ( end < start || end > length ) {
 			throw new StringIndexOutOfBoundsException( end );
 		}
 		return sequence.subSequence( this.start + start, this.start + end );

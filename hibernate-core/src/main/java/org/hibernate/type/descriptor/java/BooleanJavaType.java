@@ -10,6 +10,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Character.toUpperCase;
 import static org.hibernate.internal.util.CharSequenceHelper.regionMatchesIgnoreCase;
 
@@ -28,6 +29,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	private final char characterValueFalse;
 
 	private final char characterValueTrueLC;
+	private final char characterValueFalseLC;
 
 	private final String stringValueTrue;
 	private final String stringValueFalse;
@@ -42,6 +44,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		this.characterValueFalse = toUpperCase( characterValueFalse );
 
 		characterValueTrueLC = Character.toLowerCase( characterValueTrue );
+		characterValueFalseLC = Character.toLowerCase( characterValueFalse );
 
 		stringValueTrue = String.valueOf( characterValueTrue );
 		stringValueFalse = String.valueOf( characterValueFalse );
@@ -59,12 +62,17 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 
 	@Override
 	public Boolean fromString(CharSequence string) {
-		return Boolean.valueOf( string.toString() );
+		return parseBoolean( string.toString() );
 	}
 
 	@Override
 	public boolean isInstance(Object value) {
 		return value instanceof Boolean;
+	}
+
+	@Override
+	public Boolean cast(Object value) {
+		return (Boolean) value;
 	}
 
 	@Override
@@ -76,32 +84,31 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		};
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Boolean value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Boolean.class.isAssignableFrom( type ) || type == Object.class ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
-			return (X) toByte( value );
+			return type.cast( toByte( value ) );
 		}
 		if ( Short.class.isAssignableFrom( type ) ) {
-			return (X) toShort( value );
+			return type.cast( toShort( value ) );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) toInteger( value );
+			return type.cast( toInteger( value ) );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) toLong( value );
+			return type.cast( toLong( value ) );
 		}
 		if ( Character.class.isAssignableFrom( type ) ) {
-			return (X) Character.valueOf( value ? characterValueTrue : characterValueFalse );
+			return type.cast( value ? characterValueTrue : characterValueFalse );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) (value ? stringValueTrue : stringValueFalse);
+			return type.cast( (value ? stringValueTrue : stringValueFalse) );
 		}
 		throw unknownUnwrap( type );
 	}
@@ -118,21 +125,45 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 			return number.intValue() != 0;
 		}
 		if (value instanceof Character character) {
-			return isTrue( character );
+			if ( isTrue( character ) ) {
+				return true;
+			}
+			if ( isFalse( character ) ) {
+				return false;
+			}
+			throw new IllegalArgumentException( "Cannot convert Character value '" + character + "' to Boolean" );
 		}
 		if (value instanceof String string) {
-			return isTrue( string );
+			if ( isTrue( string ) ) {
+				return true;
+			}
+			if ( isFalse( string ) ) {
+				return false;
+			}
+			throw new IllegalArgumentException( "Cannot convert value '" + string + "' to Boolean" );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	private boolean isTrue(String strValue) {
-		return strValue != null && !strValue.isEmpty() && isTrue( strValue.charAt(0) );
+		return strValue != null
+			&& !strValue.isEmpty()
+			&& isTrue( strValue.charAt(0) );
+	}
+
+	private boolean isFalse(String strValue) {
+		return strValue != null
+			&& ( strValue.isEmpty() || isFalse( strValue.charAt(0) ) );
 	}
 
 	private boolean isTrue(char charValue) {
 		return charValue == characterValueTrue
 			|| charValue == characterValueTrueLC;
+	}
+
+	private boolean isFalse(char charValue) {
+		return charValue == characterValueFalse
+			|| charValue == characterValueFalseLC;
 	}
 
 	public int toInt(Boolean value) {
@@ -194,18 +225,18 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<Boolean, ?> converter, Dialect dialect) {
 		if ( converter != null ) {
 			if ( jdbcType.isString() ) {
-				final Object falseValue = converter.toRelationalValue( false );
-				final Object trueValue = converter.toRelationalValue( true );
-				final String[] values = getPossibleStringValues( converter, falseValue, trueValue );
-				return dialect.getCheckCondition( columnName, values );
+				return dialect.getCheckCondition( columnName,
+						getPossibleStringValues( converter,
+								converter.toRelationalValue( false ),
+								converter.toRelationalValue( true ) ) );
 			}
 			else if ( jdbcType.isInteger() ) {
 				@SuppressWarnings("unchecked")
 				final var numericConverter = (BasicValueConverter<Boolean, ? extends Number>) converter;
-				final Number falseValue = numericConverter.toRelationalValue( false );
-				final Number trueValue = numericConverter.toRelationalValue( true );
-				final Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
-				return dialect.getCheckCondition( columnName, values );
+				return dialect.getCheckCondition( columnName,
+						getPossibleNumericValues( numericConverter,
+								numericConverter.toRelationalValue( false ),
+								numericConverter.toRelationalValue( true ) ) );
 			}
 		}
 		return null;
@@ -221,7 +252,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		catch ( NullPointerException ignored ) {
 		}
-		final Long[] values = new Long[nullValue != null ? 3 : 2];
+		final var values = new Long[nullValue != null ? 3 : 2];
 		values[0] = falseValue != null ? falseValue.longValue() : null;
 		values[1] = trueValue != null ? trueValue.longValue() : null;
 		if ( nullValue != null ) {
@@ -240,7 +271,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		catch ( NullPointerException ignored ) {
 		}
-		final String[] values = new String[nullValue != null ? 3 : 2];
+		final var values = new String[nullValue != null ? 3 : 2];
 		values[0] = falseValue != null ? falseValue.toString() : null;
 		values[1] = trueValue != null ? trueValue.toString() : null;
 		if ( nullValue != null ) {

@@ -33,7 +33,7 @@ public class InformationExtractorPostgreSQLImpl extends InformationExtractorJdbc
 	@Override
 	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
 		final String tableSchema = schema == null ? null : schema.getText();
-		try ( var preparedStatement = getExtractionContext().getJdbcConnection().prepareStatement( getIndexesSql( tableSchema ) )) {
+		try ( var preparedStatement = getConnection().prepareStatement( getIndexesSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
 				preparedStatement.setString( 1, tableSchema );
 			}

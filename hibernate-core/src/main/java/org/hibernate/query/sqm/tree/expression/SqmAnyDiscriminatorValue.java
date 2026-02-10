@@ -43,7 +43,7 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 
 	@Override
 	public SqmAnyDiscriminatorValue<T> copy(SqmCopyContext context) {
-		final SqmAnyDiscriminatorValue<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

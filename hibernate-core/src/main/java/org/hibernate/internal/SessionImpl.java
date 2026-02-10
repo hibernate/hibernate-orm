@@ -41,8 +41,9 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.find.FindByKeyOperation;
+import org.hibernate.internal.find.FindMultipleByKeyOperation;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -86,7 +87,6 @@ import java.util.Set;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
@@ -158,8 +158,8 @@ public class SessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, LoadAccessContext {
 
-	// Defaults to null which means the properties are the default
-	// as defined in FastSessionServices#defaultSessionProperties
+	// Defaults to null, meaning the properties
+	// are the default properties of the factory.
 	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
@@ -191,8 +191,6 @@ public class SessionImpl
 			actionQueue = createActionQueue();
 			eventListenerGroups = factory.getEventListenerGroups();
 
-			flushMode = options.getInitialSessionFlushMode();
-
 			autoClear = options.shouldAutoClear();
 			autoClose = options.shouldAutoClose();
 
@@ -202,13 +200,10 @@ public class SessionImpl
 
 			loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
 
-			// NOTE : pulse() already handles auto-join-ability correctly
+			// NOTE: pulse() already handles auto-join-ability correctly
 			getTransactionCoordinator().pulse();
 
-			// do not override explicitly set flush mode ( SessionBuilder#flushMode() )
-			if ( getHibernateFlushMode() == null ) {
-				setHibernateFlushMode( getInitialFlushMode() );
-			}
+			flushMode = getInitialFlushMode( options );
 
 			setUpMultitenancy( factory, loadQueryInfluencers );
 
@@ -247,10 +242,16 @@ public class SessionImpl
 		}
 	}
 
-	private FlushMode getInitialFlushMode() {
-		return properties == null
-				? getSessionFactoryOptions().getInitialSessionFlushMode()
-				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
+	private FlushMode getInitialFlushMode(SessionCreationOptions options) {
+		final var initialSessionFlushMode = options.getInitialSessionFlushMode();
+		if ( initialSessionFlushMode != null ) {
+			return initialSessionFlushMode;
+		}
+		else {
+			return properties == null
+					? getSessionFactoryOptions().getInitialSessionFlushMode()
+					: ConfigurationHelper.getFlushMode( properties.get( HINT_FLUSH_MODE ), FlushMode.AUTO );
+		}
 	}
 
 	protected PersistenceContext createPersistenceContext(SessionCreationOptions options) {
@@ -351,7 +352,6 @@ public class SessionImpl
 	private void internalClear() {
 		persistenceContext.clear();
 		actionQueue.clear();
-
 		eventListenerGroups.eventListenerGroup_CLEAR
 				.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
 	}
@@ -392,7 +392,7 @@ public class SessionImpl
 				else {
 					// In the JPA bootstrap, if the session is closed
 					// before the transaction commits, we just mark the
-					// session as closed, and set waitingForAutoClose.
+					// session as closed and set waitingForAutoClose.
 					// This method will be called a second time from
 					// afterTransactionCompletion when the transaction
 					// commits, and the session will be closed for real.
@@ -405,10 +405,12 @@ public class SessionImpl
 			}
 		}
 		finally {
-			// E.g. when we are in the JTA context the session can get closed while the transaction is still active
-			// and JTA will call the AfterCompletion itself. Hence, we don't want to clear out the action queue callbacks at this point:
-			if ( !getTransactionCoordinator().isTransactionActive() && actionQueue.hasAfterTransactionActions() ) {
-				SESSION_LOGGER.warn( "Closing session with unprocessed clean up bulk operations, forcing their execution" );
+			// E.g. When we are in the JTA context, the session can get closed while the
+			// transaction is still active and JTA will call the AfterCompletion itself.
+			// Hence, we don't want to clear out the action queue callbacks at this point:
+			if ( !getTransactionCoordinator().isTransactionActive()
+					&& actionQueue.hasAfterTransactionActions() ) {
+				SESSION_LOGGER.closingSessionWithUnprocessedBulkOperations();
 				actionQueue.executePendingBulkOperationCleanUpActions();
 			}
 			final var statistics = getSessionFactory().getStatistics();
@@ -489,8 +491,8 @@ public class SessionImpl
 			return false;
 		}
 		else {
-			// JPA technically requires that this be a PersistentUnityTransactionType#JTA to work,
-			// but we do not assert that here:
+			// JPA requires PersistentUnitTransactionType.JTA,
+			// for this, but we do not assert that here:
 			return isAutoCloseSessionEnabled();
 			//  && getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
 		}
@@ -557,7 +559,9 @@ public class SessionImpl
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
 		final Object result = persistenceContext.getEntity( key );
 		if ( result == null ) {
-			final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
+			final Object newObject =
+					getInterceptor()
+							.getEntity( key.getEntityName(), key.getIdentifier() );
 			if ( newObject != null ) {
 				lock( newObject, LockMode.NONE );
 			}
@@ -624,7 +628,6 @@ public class SessionImpl
 
 	private void fireLock(final LockEvent lockEvent) {
 		checkOpen();
-		checkEntityManaged( lockEvent.getEntityName(), lockEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( lockEvent.getLockMode() );
@@ -642,7 +645,11 @@ public class SessionImpl
 
 	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
 		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
-			throw exception;
+			throw exception instanceof DetachedObjectException
+					// convert to IllegalArgumentException for backward compatibility
+					// TODO: drop this conversion in Hibernate 8
+					? new IllegalArgumentException( exception )
+					: exception;
 		}
 		else if ( exception instanceof MappingException ) {
 			// I believe this is now obsolete everywhere we do it,
@@ -870,8 +877,8 @@ public class SessionImpl
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
 			final var entityEntry = persistenceContext.getEntry( entity );
-			final String entityInfo = entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() );
-			SESSION_LOGGER.removeOrphanBeforeUpdates( timing, entityInfo );
+			SESSION_LOGGER.removeOrphanBeforeUpdates( timing,
+					entityEntry == null ? entityName : infoString( entityName, entityEntry.getId() ) );
 		}
 	}
 
@@ -928,80 +935,46 @@ public class SessionImpl
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
-	private <T> void setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
-		CacheStoreMode storeMode = getCacheStoreMode();
-		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
-		LockOptions lockOptions = copySessionLockOptions();
-		int batchSize = -1;
-		for ( FindOption option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				storeMode = cacheStoreMode;
-			}
-			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-				retrieveMode = cacheRetrieveMode;
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				storeMode = cacheMode.getJpaStoreMode();
-				retrieveMode = cacheMode.getJpaRetrieveMode();
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				lockOptions.setLockMode( lockMode );
-			}
-			else if ( option instanceof LockOptions lockOpts ) {
-				lockOptions = lockOpts;
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setLockScope( pessimisticLockScope );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
-			}
-			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
-				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
-			}
-			else if ( option instanceof ReadOnlyMode ) {
-				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
-			}
-			else if ( option instanceof BatchSize batchSizeOption ) {
-				batchSize = batchSizeOption.batchSize();
-			}
-			else if ( option instanceof SessionCheckMode ) {
-				loadAccess.enableSessionCheck( option == SessionCheckMode.ENABLED );
-			}
-			else if ( option instanceof OrderingMode ) {
-				loadAccess.enableOrderedReturn( option == OrderingMode.ORDERED );
-			}
-			else if ( option instanceof RemovalsMode ) {
-				loadAccess.enableReturnOfDeletedEntities( option == RemovalsMode.INCLUDE );
-			}
-		}
-		loadAccess.with( lockOptions )
-				.with( interpretCacheMode( storeMode, retrieveMode ) )
-				.withBatchSize( batchSize );
+	@Override
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> keys, FindOption... options) {
+		//noinspection unchecked
+		return findMultiple(
+				requireEntityPersister( entityType ),
+				loadQueryInfluencers.getEffectiveEntityGraph().getSemantic(),
+				(RootGraphImplementor<E>) loadQueryInfluencers.getEffectiveEntityGraph().getGraph(),
+				(List<Object>) keys,
+				options
+		);
+	}
+
+	private <E> List<E> findMultiple(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<E> rootGraph,
+			List<Object> keys,
+			FindOption... options) {
+		final var operation = new FindMultipleByKeyOperation<E>(
+				entityDescriptor,
+				lockOptions,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+		return operation.performFind( keys, graphSemantic, rootGraph, this );
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
-		final var loadAccess = byMultipleIds( entityType );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		return loadAccess.multiLoad( ids );
-	}
-
-	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
-		final var rootGraph = (RootGraph<E>) entityGraph;
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> keys, FindOption... options) {
+		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
 		final var type = rootGraph.getGraphedType();
-		final MultiIdentifierLoadAccess<E> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byMultipleIds( type.getTypeName() );
-					case POJO -> byMultipleIds( type.getJavaType() );
-				};
-		loadAccess.withLoadGraph( rootGraph );
-		setMultiIdentifierLoadAccessOptions( options, loadAccess );
-		return loadAccess.multiLoad( ids );
+		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return findMultiple( entityDescriptor, GraphSemantic.LOAD, rootGraph, (List<Object>) keys, options );
 	}
 
 	@Override
@@ -1128,6 +1101,7 @@ public class SessionImpl
 			event.setReadOnly( readOnly );
 			event.setLockOptions( lockOptions );
 			event.setAssociationFetch( false );
+			event.validate();
 			return event;
 		}
 	}
@@ -1308,7 +1282,6 @@ public class SessionImpl
 
 	private void fireRefresh(final RefreshEvent refreshEvent) {
 		checkOpen();
-		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			checkTransactionNeededForLock( refreshEvent.getLockMode() );
@@ -1327,7 +1300,6 @@ public class SessionImpl
 	private void fireRefresh(final RefreshContext refreshedAlready, final RefreshEvent refreshEvent) {
 		// called from cascades
 		checkOpenOrWaitingForAutoClose();
-		checkEntityManaged( refreshEvent.getEntityName(), refreshEvent.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_REFRESH
@@ -1336,12 +1308,6 @@ public class SessionImpl
 		}
 		finally {
 			delayedAfterCompletion();
-		}
-	}
-
-	private void checkEntityManaged(String entityName, Object entity) {
-		if ( !isManaged( entity ) ) {
-			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 	}
 
@@ -1552,7 +1518,8 @@ public class SessionImpl
 	@Override
 	public void forceFlush(EntityKey key) {
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
-			SESSION_LOGGER.flushingToForceDeletion( infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
+			SESSION_LOGGER.flushingToForceDeletion(
+					infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
@@ -2123,7 +2090,7 @@ public class SessionImpl
 			return true;
 		}
 		else {
-			final TransactionStatus status = currentTransaction.getStatus();
+			final var status = currentTransaction.getStatus();
 			return status == TransactionStatus.ACTIVE
 				|| status == TransactionStatus.COMMITTING;
 		}
@@ -2189,13 +2156,13 @@ public class SessionImpl
 					.load( primaryKey );
 		}
 		catch ( FetchNotFoundException e ) {
-			// This may happen if the entity has an associations mapped with
+			// This may happen if the entity has an association mapped with
 			// @NotFound(action = NotFoundAction.EXCEPTION) and this associated
 			// entity is not found
 			throw e;
 		}
 		catch ( EntityFilterException e ) {
-			// This may happen if the entity has an associations which is
+			// This may happen if the entity has an association which is
 			// filtered by a FilterDef and this associated entity is not found
 			throw e;
 		}
@@ -2251,81 +2218,24 @@ public class SessionImpl
 		}
 	}
 
-	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
-		CacheStoreMode storeMode = getCacheStoreMode();
-		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
-		LockOptions lockOptions = copySessionLockOptions();
-		for ( FindOption option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				storeMode = cacheStoreMode;
-			}
-			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-				retrieveMode = cacheRetrieveMode;
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				storeMode = cacheMode.getJpaStoreMode();
-				retrieveMode = cacheMode.getJpaRetrieveMode();
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				lockOptions.setLockMode( lockMode );
-			}
-			else if ( option instanceof LockOptions lockOpts ) {
-				lockOptions = lockOpts;
-			}
-			else if ( option instanceof Locking.Scope lockScope ) {
-				lockOptions.setScope( lockScope );
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
-			}
-			else if ( option instanceof Locking.FollowOn followOn ) {
-				lockOptions.setFollowOnStrategy( followOn );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeout( timeout );
-			}
-			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
-				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );
-			}
-			else if ( option instanceof ReadOnlyMode ) {
-				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
-			}
-			else if ( option instanceof FindMultipleOption findMultipleOption ) {
-				throw new IllegalArgumentException( "Option '" + findMultipleOption + "' can only be used in 'findMultiple()'" );
-			}
-		}
-		if ( lockOptions.getLockMode().isPessimistic() ) {
-			if ( lockOptions.getTimeOut() == WAIT_FOREVER_MILLI ) {
-				final Object factoryHint = getFactory().getProperties().get( HINT_SPEC_LOCK_TIMEOUT );
-				if ( factoryHint != null ) {
-					lockOptions.setTimeOut( Timeouts.fromHint( factoryHint ) );
-				}
-			}
-		}
-		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+	@Override
+	public <T> T find(Class<T> entityClass, Object key, FindOption... options) {
+		//noinspection unchecked
+		return (T) byKey( requireEntityPersister( entityClass ), options ).performFind( key, this );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.load( primaryKey );
-	}
-
-	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		final var graph = (RootGraph<T>) entityGraph;
+	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... options) {
+		final var graph = (RootGraphImplementor<T>) entityGraph;
 		final var type = graph.getGraphedType();
-		final IdentifierLoadAccessImpl<T> loadAccess =
-				switch ( type.getRepresentationMode() ) {
-					case MAP -> byId( type.getTypeName() );
-					case POJO -> byId( type.getJavaType() );
-				};
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.withLoadGraph( graph ).load( primaryKey );
+
+		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersister( type.getJavaType() );
+			case MAP -> requireEntityPersister( type.getTypeName() );
+		};
+
+		//noinspection unchecked
+		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, options ).performFind( key, this );
 	}
 
 	// Hibernate Reactive may need to use this
@@ -2388,16 +2298,34 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key) {
+		return byKey( requireEntityPersister( entityName ) ).performFind( key, this );
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<?> loadAccess = byId( entityName );
-		setLoadAccessOptions( options, loadAccess );
-		return loadAccess.load( primaryKey );
+	public Object find(String entityName, Object key, FindOption... options) {
+		return byKey( requireEntityPersister( entityName ), options ).performFind( key, this );
+	}
+
+	private <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityDescriptor, null, null, options );
+	}
+
+	private <T> FindByKeyOperation<T> byKey(
+			EntityPersister entityDescriptor,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraph,
+			FindOption... options) {
+		return new FindByKeyOperation<>(
+				entityDescriptor,
+				graphSemantic,
+				rootGraph,
+				lockOptions,
+				getCacheMode(),
+				isReadOnly(),
+				getFactory(),
+				options
+		);
 	}
 
 	@Override
@@ -2577,25 +2505,22 @@ public class SessionImpl
 	@Override
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
-
-		if ( !( value instanceof Serializable ) ) {
-			SESSION_LOGGER.nonSerializableProperty( propertyName );
-			return;
-		}
-
 		if ( propertyName == null ) {
 			SESSION_LOGGER.nullPropertyKey();
-			return;
 		}
-
-		// store property for future reference:
-		if ( properties == null ) {
-			properties = computeCurrentProperties();
+		else if ( !(value instanceof Serializable) ) {
+			SESSION_LOGGER.nonSerializableProperty( propertyName );
 		}
-		properties.put( propertyName, value );
-
-		// now actually update the setting, if it's one which affects this Session
-		interpretProperty( propertyName, value );
+		else {
+			// store property for future reference
+			if ( properties == null ) {
+				properties = getInitialProperties();
+			}
+			properties.put( propertyName, value );
+			// now actually update the setting if
+			// it's one that affects this Session
+			interpretProperty( propertyName, value );
+		}
 	}
 
 	private void interpretProperty(String propertyName, Object value) {
@@ -2658,7 +2583,7 @@ public class SessionImpl
 		}
 	}
 
-	private Map<String, Object> computeCurrentProperties() {
+	private Map<String, Object> getInitialProperties() {
 		final var map = new HashMap<>( getDefaultProperties() );
 		//The FLUSH_MODE is always set at Session creation time,
 		//so it needs special treatment to not eagerly initialize this Map:
@@ -2668,10 +2593,15 @@ public class SessionImpl
 
 	@Override
 	public Map<String, Object> getProperties() {
-		if ( properties == null ) {
-			properties = computeCurrentProperties();
-		}
-		return unmodifiableMap( properties );
+		// EntityManager Javadoc implies that the
+		// returned map should be a mutable copy,
+		// not an unmodifiable map. There's no
+		// good reason to cache the initial
+		// properties, since we have to copy them
+		// each time this method is called.
+		return properties == null
+				? getInitialProperties()
+				: new HashMap<>( properties );
 	}
 
 	@Override
@@ -2780,23 +2710,24 @@ public class SessionImpl
 	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
-				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.map( entry -> entityType.cast( entry.getValue().getManagedObject() ) )
 				.toList();
 	}
 
 	@Override
 	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
-		final String entityName = ( (EntityDomainType<E>) entityType ).getHibernateEntityName();
+		final var entityDomainType = (EntityDomainType<E>) entityType;
+		final String entityName = entityDomainType.getHibernateEntityName();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
-				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.map( entry -> entityType.getJavaType().cast( entry.getValue().getManagedObject() ) )
 				.toList();
 	}
 
 	/**
-	 * Used by JDK serialization...
+	 * Used by JDK serialization
 	 *
-	 * @param oos The output stream to which we are being written...
+	 * @param oos The output stream to which we are being written
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 */
@@ -2815,9 +2746,9 @@ public class SessionImpl
 	}
 
 	/**
-	 * Used by JDK serialization...
+	 * Used by JDK serialization
 	 *
-	 * @param ois The input stream from which we are being read...
+	 * @param ois The input stream from which we are being read
 	 *
 	 * @throws IOException Indicates a general IO stream exception
 	 * @throws ClassNotFoundException Indicates a class resolution issue
@@ -2837,7 +2768,7 @@ public class SessionImpl
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
-		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
+		// Instead, look up the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) )
 					.afterDeserialize( getFactory() );

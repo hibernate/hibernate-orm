@@ -212,7 +212,7 @@ public class AttributeFactory {
 	public static DomainType<?> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		return switch ( typeContext.getValueClassification() ) {
 			case BASIC -> basicDomainType( typeContext, context );
-			case ENTITY -> entityDomainType (typeContext, context );
+			case ENTITY -> entityDomainType( typeContext, context );
 			case EMBEDDABLE -> embeddableDomainType( typeContext, context );
 			default -> throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
 		};
@@ -367,7 +367,7 @@ public class AttributeFactory {
 			final var descriptor = value.getJpaAttributeConverterDescriptor();
 			if ( descriptor != null ) {
 				return context.getJavaTypeRegistry().resolveDescriptor(
-						descriptor.getRelationalValueResolvedType().getErasedType()
+						descriptor.getRelationalValueResolvedType()
 				);
 			}
 		}
@@ -699,7 +699,7 @@ public class AttributeFactory {
 	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
 		final String propertyName = property.getName();
 		return !propertyName.equals( declaringEntity.getIdentifierPropertyName() )
-			&& declaringEntity.findAttributeMapping( propertyName ) == null
+			&& declaringEntity.findAttributeMapping( propertyName ) == null && !property.isGeneric()
 				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
 				? resolveVirtualIdentifierMember( property, declaringEntity )
 				: getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );

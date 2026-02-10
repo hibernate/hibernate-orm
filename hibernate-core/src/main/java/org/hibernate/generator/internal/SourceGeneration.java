@@ -16,7 +16,6 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.java.JavaType;
 
 
-import java.lang.reflect.Member;
 import java.util.EnumSet;
 
 import static org.hibernate.generator.internal.CurrentTimestampGeneration.getCurrentTimestamp;
@@ -45,7 +44,7 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 	private final JavaType<?> propertyType;
 	private final CurrentTimestampGeneration.GeneratorDelegate valueGenerator;
 
-	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
+	public SourceGeneration(Source annotation, GeneratorCreationContext context) {
 		this( annotation.value(), context.getProperty().getType().getReturnedClass(), context );
 	}
 

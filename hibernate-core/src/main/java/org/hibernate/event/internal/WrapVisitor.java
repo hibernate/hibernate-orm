@@ -22,7 +22,7 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 import static org.hibernate.persister.entity.AbstractEntityPersister.getCollectionKey;
 
 /**
- * Wrap collections in a Hibernate collection wrapper.
+ * Wrap collections in {@linkplain PersistentCollection collection wrappers}.
  *
  * @author Gavin King
  */
@@ -103,7 +103,12 @@ public class WrapVisitor extends ProxyVisitor {
 										collectionInstance =
 												persister.getCollectionSemantics()
 														.instantiateWrapper( key, persister, session );
-										persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+										persistenceContext.addUninitializedCollection(
+												persister,
+												collectionInstance,
+												key,
+												entry.isReadOnly()
+										);
 										persistenceContext.getCollectionEntry( collectionInstance ).setDoremove( true );
 									}
 								}

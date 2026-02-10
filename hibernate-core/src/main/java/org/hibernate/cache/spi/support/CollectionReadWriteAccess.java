@@ -23,7 +23,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public class CollectionReadWriteAccess extends AbstractReadWriteAccess implements CollectionDataAccess {
-	private final Comparator<?> versionComparator;
+	private final Comparator<Object> versionComparator;
 	private final CacheKeysFactory keysFactory;
 
 	public CollectionReadWriteAccess(
@@ -36,6 +36,7 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 		this.versionComparator = config.getOwnerVersionComparator();
 	}
 
+	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.COLLECTION;
@@ -61,7 +62,7 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	}
 
 	@Override
-	protected Comparator<?> getVersionComparator() {
+	protected Comparator<Object> getVersionComparator() {
 		return versionComparator;
 	}
 

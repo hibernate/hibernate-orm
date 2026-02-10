@@ -4,8 +4,6 @@
  */
 package org.hibernate.type.internal;
 
-import java.util.Locale;
-
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
@@ -25,14 +23,9 @@ public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> i
 
 	public BasicTypeImpl(JavaType<J> jtd, JdbcType std) {
 		super( std, jtd );
-		name = String.format(
-				Locale.ROOT,
-				"%s@%s(%s,%s)",
-				EXTERNALIZED_PREFIX,
-				++count,
-				jtd.getJavaTypeClass().getName(),
-				std.getDefaultSqlTypeCode()
-		);
+		count++;
+		name = EXTERNALIZED_PREFIX + '@' + count + '(' + jtd.getJavaTypeClass()
+				.getName() + ',' + std.getDefaultSqlTypeCode() + ')';
 	}
 
 	@Override

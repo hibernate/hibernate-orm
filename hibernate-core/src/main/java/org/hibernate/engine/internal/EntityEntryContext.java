@@ -161,14 +161,13 @@ class EntityEntryContext {
 	private ManagedEntity getAssociatedManagedEntity(Object entity) {
 		if ( isManagedEntity( entity ) ) {
 			final var managedEntity = asManagedEntity( entity );
-			if ( managedEntity.$$_hibernate_getEntityEntry() == null ) {
-				// it is not associated
-				return null;
-			}
 			final var entityEntry =
 					(EntityEntryImpl)
 							managedEntity.$$_hibernate_getEntityEntry();
-
+			if ( entityEntry == null ) {
+				// it is not associated
+				return null;
+			}
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
 						? managedEntity // it is associated
@@ -449,12 +448,14 @@ class EntityEntryContext {
 		var managedEntity = head;
 		while ( managedEntity != null ) {
 			// so we know whether or not to build a ManagedEntityImpl on deserialize
-			oos.writeBoolean( managedEntity == managedEntity.$$_hibernate_getEntityInstance() );
-			oos.writeObject( managedEntity.$$_hibernate_getEntityInstance() );
+			final var instance = managedEntity.$$_hibernate_getEntityInstance();
+			oos.writeBoolean( managedEntity == instance );
+			oos.writeObject( instance );
 			// we need to know which implementation of EntityEntry is being serialized
-			oos.writeInt( managedEntity.$$_hibernate_getEntityEntry().getClass().getName().length() );
-			oos.writeChars( managedEntity.$$_hibernate_getEntityEntry().getClass().getName() );
-			managedEntity.$$_hibernate_getEntityEntry().serialize( oos );
+			final var entry = managedEntity.$$_hibernate_getEntityEntry();
+			oos.writeInt( entry.getClass().getName().length() );
+			oos.writeChars( entry.getClass().getName() );
+			entry.serialize( oos );
 			managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 		}
 	}

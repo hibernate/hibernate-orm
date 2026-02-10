@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.proxy;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LazyInitializationException;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,7 +22,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel(
 		annotatedClasses = {
@@ -71,24 +69,17 @@ public class DetachedProxyAsQueryParameterTest {
 		scope.inSession(
 				session -> {
 					session.createQuery(
-									"select d from Department d where d = :department" )
+							"select d from Department d where d = :department" )
 							.setParameter( "department", employee.getDepartment() ).list();
 				}
 		);
 
 
-		assertThrows(
-				LazyInitializationException.class, () -> {
-					scope.inSession(
-							session -> {
-								// In order to validate the parameter and check that it is an instance of SpecialDepartment
-								// the Department proxy have to be initialized but being a detached instance
-								// a LazyInitializationException is thrown
-								session.createQuery(
-										"select d from SpecialDepartment d where d = :department"
-								).setParameter( "department", employee.getDepartment() ).list();
-							}
-					);
+		scope.inSession(
+				session -> {
+					session.createQuery(
+							"select d from SpecialDepartment d where d = :department" )
+							.setParameter( "department", employee.getDepartment() ).list();
 				}
 		);
 	}

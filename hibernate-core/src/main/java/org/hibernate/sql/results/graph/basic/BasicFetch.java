@@ -15,7 +15,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.UnfetchedBasicPartResultAssembler;
 import org.hibernate.sql.results.graph.UnfetchedResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -41,7 +40,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
 			FetchTiming fetchTiming,
-			DomainResultCreationState creationState,
 			boolean unwrapRowProcessingState) {
 		//noinspection unchecked
 		this(
@@ -52,7 +50,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 				(BasicValueConverter<T, ?>) valuedMapping.getJdbcMapping().getValueConverter(),
 				fetchTiming,
 				true,
-				creationState,
 				false,
 				unwrapRowProcessingState
 		);
@@ -66,7 +63,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
-			DomainResultCreationState creationState,
 			boolean coerceResultType,
 			boolean unwrapRowProcessingState) {
 		this.navigablePath = fetchablePath;
@@ -74,23 +70,18 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
-		@SuppressWarnings("unchecked") final JavaType<T> javaType = (JavaType<T>) valuedMapping.getJavaType();
+		@SuppressWarnings("unchecked")
+		final var javaType = (JavaType<T>) valuedMapping.getJavaType();
 		// lazy basic attribute
 		if ( fetchTiming == FetchTiming.DELAYED && valuesArrayPosition == -1 ) {
-			if ( canBasicPartFetchBeDelayed ) {
-				this.assembler = new UnfetchedResultAssembler<>( javaType );
-			}
-			else {
-				this.assembler = new UnfetchedBasicPartResultAssembler( javaType );
-			}
+			this.assembler = canBasicPartFetchBeDelayed
+					? new UnfetchedResultAssembler<>( javaType )
+					: new UnfetchedBasicPartResultAssembler<>( javaType );
 		}
 		else {
-			if (coerceResultType) {
-				this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
-			}
-			else {
-				this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
-			}
+			this.assembler = coerceResultType
+					? new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState )
+					: new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
 		}
 	}
 
@@ -146,8 +137,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
-		if ( assembler instanceof BasicResultAssembler ) {
-			valueIndexes.set( ( (BasicResultAssembler<T>) assembler ).valuesArrayPosition );
+		if ( assembler instanceof BasicResultAssembler<T> basicResultAssembler ) {
+			valueIndexes.set( basicResultAssembler.valuesArrayPosition );
 		}
 	}
 }

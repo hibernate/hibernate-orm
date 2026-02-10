@@ -49,14 +49,14 @@ public class TimeJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		return typeConfiguration.getCurrentBaseSqlTypeIndicators().preferJdbcDatetimeTypes()
-				? javaTypeRegistry.getDescriptor( Time.class )
-				: javaTypeRegistry.getDescriptor( LocalTime.class );
+				? javaTypeRegistry.resolveDescriptor( Time.class )
+				: javaTypeRegistry.resolveDescriptor( LocalTime.class );
 	}
 
 	@Override

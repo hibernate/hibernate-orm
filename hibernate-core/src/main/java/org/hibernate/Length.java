@@ -42,6 +42,8 @@ public final class Length {
 	 * For example, {@code @Column(length=LONG)} results
 	 * in the column type:
 	 * <table>
+	 * <caption>Column type per database</caption>
+	 * <tr><td><b>Column type</b></td><td><b>Database</b></td></tr>
 	 * <tr><td>{@code varchar(32600)}</td><td>on h2, Db2, and PostgreSQL</td>
 	 * <tr><td>{@code text}</td><td>on MySQL</td>
 	 * <tr><td>{@code clob}</td><td>on Oracle</td>
@@ -63,6 +65,8 @@ public final class Length {
 	 * For example, {@code @Column(length=LONG16)} results
 	 * in the column type:
 	 * <table>
+	 * <caption>Column type per database</caption>
+	 * <tr><td><b>Column type</b></td><td><b>Database</b></td></tr>
 	 * <tr><td>{@code varchar(32767)}</td><td>on h2 and PostgreSQL</td>
 	 * <tr><td>{@code text}</td><td>on MySQL</td>
 	 * <tr><td>{@code clob}</td><td>on Oracle and Db2</td>
@@ -85,6 +89,8 @@ public final class Length {
 	 * For example, {@code @Column(length=LONG32)} results
 	 * in the column type:
 	 * <table>
+	 * <caption>Column type per database</caption>
+	 * <tr><td><b>Column type</b></td><td><b>Database</b></td></tr>
 	 * <tr><td>{@code text}</td><td>on PostgreSQL</td>
 	 * <tr><td>{@code longtext}</td><td>on MySQL</td>
 	 * <tr><td>{@code clob}</td><td>on h2, Oracle, and Db2</td>

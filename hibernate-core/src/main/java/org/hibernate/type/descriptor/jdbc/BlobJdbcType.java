@@ -45,11 +45,11 @@ public abstract class BlobJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Blob.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Blob.class );
 	}
 
 	@Override

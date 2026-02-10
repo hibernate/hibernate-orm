@@ -80,11 +80,11 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 
 	@Override
 	public SqmTreatedSingularJoin<O, T, S> copy(SqmCopyContext context) {
-		final SqmTreatedSingularJoin<O, T, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedSingularJoin<O, T, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedSingularJoin<>(
 						getNavigablePath(),

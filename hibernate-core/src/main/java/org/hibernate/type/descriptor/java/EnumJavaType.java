@@ -96,28 +96,31 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( String.class.equals( type ) ) {
-			return (X) toName( value );
+			return type.cast( toName( value ) );
 		}
 		else if ( Long.class.equals( type ) ) {
-			return (X) toLong( value );
+			return type.cast( toLong( value ) );
 		}
 		else if ( Integer.class.equals( type ) ) {
-			return (X) toInteger( value );
+			return type.cast( toInteger( value ) );
 		}
 		else if ( Short.class.equals( type ) ) {
-			return (X) toShort( value );
+			return type.cast( toShort( value ) );
 		}
 		else if ( Byte.class.equals( type ) ) {
-			return (X) toByte( value );
+			return type.cast( toByte( value ) );
 		}
-		return (X) value;
+		else if ( type.isInstance( value )) {
+			return type.cast( value );
+		}
+		else {
+			throw unknownUnwrap( type );
+		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -140,8 +143,14 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		else if ( value instanceof Number number ) {
 			return fromLong( number.longValue() );
 		}
+		else if ( getJavaType().isInstance( value ) ) {
+			return (T) value;
+		}
+		else if ( isInstance( value ) ) {
+			return cast( value );
+		}
 		else {
-		return (T) value;
+			throw unknownWrap( value.getClass() );
 		}
 	}
 

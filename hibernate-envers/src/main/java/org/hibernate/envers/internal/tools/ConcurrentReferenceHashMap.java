@@ -75,7 +75,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@code Hashtable} in programs that rely on its thread safety but not on
  * its synchronization details.
  * <p>
- * <p>
  * Retrieval operations (including {@code get}) generally do not block, so
  * may overlap with update operations (including {@code put} and
  * {@code remove}). Retrievals reflect the results of the most recently
@@ -87,7 +86,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * iterator/enumeration. They do <em>not</em> throw
  * {@link java.util.ConcurrentModificationException}. However, iterators are designed to
  * be used by only one thread at a time.
- * <p>
  * <p>
  * The allowed concurrency among update operations is guided by the optional
  * {@code concurrencyLevel} constructor argument (default {@code 16}),
@@ -105,14 +103,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * possible, it is a good idea to provide estimates of expected table sizes in
  * constructors.
  * <p>
- * <p>
  * This class and its views and iterators implement all of the <em>optional</em>
  * methods of the {@link Map} and {@link Iterator} interfaces.
  * <p>
- * <p>
  * Like {@link java.util.Hashtable} but unlike {@link java.util.HashMap}, this class does
  * <em>not</em> allow {@code null} to be used as a key or value.
- * <p>
  * <p>
  * This class is a member of the <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.

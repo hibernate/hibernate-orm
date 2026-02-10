@@ -6,14 +6,10 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
@@ -26,7 +22,6 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.CacheableSqmInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -78,6 +73,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createMatchingIdsIntoIdTableInsert;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable;
+import static org.hibernate.sql.ast.tree.predicate.Predicate.combinePredicates;
 
 /**
 * @author Steve Ebersole
@@ -114,24 +116,22 @@ public class TableBasedUpdateHandler
 		this.forceDropAfterUse = forceDropAfterUse;
 		this.sessionUidAccess = sessionUidAccess;
 
-		final TemporaryTableSessionUidColumn sessionUidColumn = idTable.getSessionUidColumn();
-		if ( sessionUidColumn == null ) {
-			this.sessionUidParameter = null;
-		}
-		else {
-			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
-		}
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();
-		final EntityPersister entityDescriptor =
+		final var sessionUidColumn = idTable.getSessionUidColumn();
+		this.sessionUidParameter =
+				sessionUidColumn == null
+						? null
+						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
+		final var sessionFactory = getSessionFactory();
+		final var domainModel = sessionFactory.getMappingMetamodel();
+		final var entityDescriptor =
 				domainModel.getEntityDescriptor( sqmUpdate.getTarget().getEntityName() );
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( rootEntityName );
+		final var rootEntityDescriptor = domainModel.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 
-		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
+		final var converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,
 				sqmUpdate,
 				sqmUpdate.getTarget(),
@@ -142,9 +142,9 @@ public class TableBasedUpdateHandler
 				sessionFactory.getSqlTranslationEngine()
 		);
 
-		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();
+		final var updatingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
+		final var hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
 				updatingTableGroup.getNavigablePath(),
 				hierarchyRootTableName
 		);
@@ -154,14 +154,14 @@ public class TableBasedUpdateHandler
 		// visit the set-clause using our special converter, collecting
 		// information about the assignments
 
-		final List<Assignment> assignments = converterDelegate.visitSetClause( sqmUpdate.getSetClause() );
+		final var assignments = converterDelegate.visitSetClause( sqmUpdate.getSetClause() );
 		converterDelegate.addVersionedAssignment( assignments::add, sqmUpdate );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
-		final PredicateCollector predicateCollector = new PredicateCollector(
+		final var predicateCollector = new PredicateCollector(
 				converterDelegate.visitWhereClause( sqmUpdate.getWhereClause() )
 		);
 
@@ -181,36 +181,26 @@ public class TableBasedUpdateHandler
 		// cross-reference the TableReference by alias.  The TableGroup already
 		// cross-references it by name, bu the ColumnReference only has the alias
 
-		final Map<String, TableReference> tableReferenceByAlias = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		final Map<String, TableReference> tableReferenceByAlias =
+				mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 		collectTableReference( updatingTableGroup.getPrimaryTableReference(), tableReferenceByAlias::put );
 		for ( int i = 0; i < updatingTableGroup.getTableReferenceJoins().size(); i++ ) {
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
-		final Predicate suppliedPredicate;
-		if ( softDeleteMapping != null ) {
-			final NamedTableReference rootTableReference = (NamedTableReference) updatingTableGroup.resolveTableReference(
-					updatingTableGroup.getNavigablePath(),
-					entityDescriptor.getIdentifierTableDetails().getTableName()
-			);
-			suppliedPredicate = Predicate.combinePredicates(
-					predicateCollector.getPredicate(),
-					softDeleteMapping.createNonDeletedRestriction( rootTableReference )
-			);
-		}
-		else {
-			suppliedPredicate = predicateCollector.getPredicate();
-		}
+		final var softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		final var suppliedPredicate =
+				suppliedPredicate( softDeleteMapping, updatingTableGroup, entityDescriptor, predicateCollector );
 
-		Map<TableReference, List<Assignment>> assignmentsByTable = mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
-
+		final Map<TableReference, List<Assignment>> assignmentsByTable =
+				mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
 		this.domainParameterXref = domainParameterXref;
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, converterDelegate );
-		this.resolvedParameterMappingModelTypes = converterDelegate.getSqmParameterMappingModelExpressibleResolutions();
+		this.resolvedParameterMappingModelTypes =
+				converterDelegate.getSqmParameterMappingModelExpressibleResolutions();
 
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -223,13 +213,9 @@ public class TableBasedUpdateHandler
 				context.getSession()
 		);
 		if ( sessionUidParameter != null ) {
-			jdbcParameterBindings.addBinding(
-					sessionUidParameter,
-					new JdbcParameterBindingImpl(
-							idTable.getSessionUidColumn().getJdbcMapping(),
-							UUID.fromString( sessionUidAccess.apply( context.getSession() ) )
-					)
-			);
+			jdbcParameterBindings.addBinding( sessionUidParameter,
+					new JdbcParameterBindingImpl( idTable.getSessionUidColumn().getJdbcMapping(),
+							UUID.fromString( sessionUidAccess.apply( context.getSession() ) ) ) );
 		}
 
 
@@ -237,35 +223,24 @@ public class TableBasedUpdateHandler
 		// segment the assignments by table-reference
 
 		for ( int i = 0; i < assignments.size(); i++ ) {
-			final Assignment assignment = assignments.get( i );
-			final List<ColumnReference> assignmentColumnRefs = assignment.getAssignable().getColumnReferences();
-
+			final var assignment = assignments.get( i );
+			final var assignmentColumnRefs = assignment.getAssignable().getColumnReferences();
 			TableReference assignmentTableReference = null;
-
 			for ( int c = 0; c < assignmentColumnRefs.size(); c++ ) {
-				final ColumnReference columnReference = assignmentColumnRefs.get( c );
-				final TableReference tableReference = resolveTableReference(
-						columnReference,
-						tableReferenceByAlias
-				);
-
+				final var columnReference = assignmentColumnRefs.get( c );
+				final var tableReference = resolveTableReference( columnReference, tableReferenceByAlias );
 				if ( assignmentTableReference != null && assignmentTableReference != tableReference ) {
-					throw new SemanticException( "Assignment referred to columns from multiple tables: " + assignment.getAssignable() );
+					throw new SemanticException( "Assignment referred to columns from multiple tables: "
+													+ assignment.getAssignable() );
 				}
-
 				assignmentTableReference = tableReference;
 			}
-
-			List<Assignment> assignmentsForTable = assignmentsByTable.get( assignmentTableReference );
-			if ( assignmentsForTable == null ) {
-				assignmentsForTable = new ArrayList<>();
-				assignmentsByTable.put( assignmentTableReference, assignmentsForTable );
-			}
-			assignmentsForTable.add( assignment );
+			assignmentsByTable.computeIfAbsent( assignmentTableReference, k -> new ArrayList<>() )
+					.add( assignment );
 		}
 
-		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
-		this.matchingIdsIntoIdTableInsert = ExecuteWithTemporaryTableHelper.createMatchingIdsIntoIdTableInsert(
+		final var executionContext = omittingLockingAndPaging( context );
+		this.matchingIdsIntoIdTableInsert = createMatchingIdsIntoIdTableInsert(
 				converterDelegate,
 				suppliedPredicate,
 				idTable,
@@ -274,7 +249,7 @@ public class TableBasedUpdateHandler
 				executionContext
 		);
 
-		final QuerySpec idTableSubQuery = ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec(
+		final var idTableSubQuery = createIdTableSelectQuerySpec(
 				idTable,
 				sessionUidParameter,
 				entityDescriptor,
@@ -298,9 +273,29 @@ public class TableBasedUpdateHandler
 		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
 	}
 
+	private static Predicate suppliedPredicate(
+			SoftDeleteMapping softDeleteMapping,
+			TableGroup updatingTableGroup,
+			EntityPersister entityDescriptor,
+			PredicateCollector predicateCollector) {
+		if ( softDeleteMapping != null ) {
+			final var rootTableReference =
+					(NamedTableReference)
+							updatingTableGroup.resolveTableReference(
+									updatingTableGroup.getNavigablePath(),
+									entityDescriptor.getIdentifierTableDetails().getTableName()
+							);
+			return combinePredicates( predicateCollector.getPredicate(),
+					softDeleteMapping.createNonDeletedRestriction( rootTableReference ) );
+		}
+		else {
+			return predicateCollector.getPredicate();
+		}
+	}
+
 	@Override
 	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -314,13 +309,9 @@ public class TableBasedUpdateHandler
 				context.getSession()
 		);
 		if ( sessionUidParameter != null ) {
-			jdbcParameterBindings.addBinding(
-					sessionUidParameter,
-					new JdbcParameterBindingImpl(
-							idTable.getSessionUidColumn().getJdbcMapping(),
-							UUID.fromString( sessionUidAccess.apply( context.getSession() ) )
-					)
-			);
+			jdbcParameterBindings.addBinding( sessionUidParameter,
+					new JdbcParameterBindingImpl( idTable.getSessionUidColumn().getJdbcMapping(),
+							UUID.fromString( sessionUidAccess.apply( context.getSession() ) ) ) );
 		}
 		return jdbcParameterBindings;
 	}
@@ -330,11 +321,9 @@ public class TableBasedUpdateHandler
 		if ( matchingIdsIntoIdTableInsert.jdbcOperation().dependsOnParameterBindings() ) {
 			return true;
 		}
-		for ( TableUpdater updater : tableUpdaters ) {
-			if ( updater.jdbcUpdate.dependsOnParameterBindings() ) {
-				return true;
-			}
-			if ( updater.jdbcInsert != null && updater.jdbcInsert.dependsOnParameterBindings() ) {
+		for ( var updater : tableUpdaters ) {
+			if ( updater.jdbcUpdate.dependsOnParameterBindings()
+				|| updater.jdbcInsert != null && updater.jdbcInsert.dependsOnParameterBindings() ) {
 				return true;
 			}
 		}
@@ -346,7 +335,7 @@ public class TableBasedUpdateHandler
 		if ( !matchingIdsIntoIdTableInsert.jdbcOperation().isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 			return false;
 		}
-		for ( TableUpdater updater : tableUpdaters ) {
+		for ( var updater : tableUpdaters ) {
 			if ( !updater.jdbcUpdate.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				return false;
 			}
@@ -361,7 +350,8 @@ public class TableBasedUpdateHandler
 	protected TableReference resolveTableReference(
 			ColumnReference columnReference,
 			Map<String, TableReference> tableReferenceByAlias) {
-		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
+		final var tableReferenceByQualifier =
+				tableReferenceByAlias.get( columnReference.getQualifier() );
 		if ( tableReferenceByQualifier != null ) {
 			return tableReferenceByQualifier;
 		}
@@ -395,24 +385,28 @@ public class TableBasedUpdateHandler
 		// set ...
 		// where `keyExpression` in ( `idTableSubQuery` )
 
-		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+		final var updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
 				true
 		);
 
-		final List<Assignment> assignments = assignmentsByTable.get( updatingTableReference );
+		final var assignments = assignmentsByTable.get( updatingTableReference );
 		if ( assignments == null || assignments.isEmpty() ) {
 			// no assignments for this table - skip it
 			return null;
 		}
 
-		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
-		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getJdbcServices();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory();
+		final var dmlTableReference =
+				resolveUnionTableReference( updatingTableReference, tableExpression );
+		final var sqlAstTranslatorFactory =
+				executionContext.getSession().getFactory()
+						.getJdbcServices().getJdbcEnvironment()
+						.getSqlAstTranslatorFactory();
 
-		final Expression keyExpression =
-				resolveMutatingTableKeyExpression( tableExpression, tableKeyColumnVisitationSupplier );
+		final var keyExpression =
+				resolveMutatingTableKeyExpression( tableExpression,
+						tableKeyColumnVisitationSupplier );
 		return new TableUpdater(
 				createTableUpdate(
 						idTableSubQuery,
@@ -438,7 +432,7 @@ public class TableBasedUpdateHandler
 	}
 
 	protected boolean isTableOptional(String tableExpression) {
-		final EntityPersister entityPersister = getEntityDescriptor().getEntityPersister();
+		final var entityPersister = getEntityDescriptor().getEntityPersister();
 		for ( int i = 0; i < entityPersister.getTableSpan(); i++ ) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) )
 				&& entityPersister.isNullableTable( i ) ) {
@@ -459,7 +453,7 @@ public class TableBasedUpdateHandler
 			JdbcParameterBindings firstJdbcParameterBindings,
 			ExecutionContext executionContext) {
 
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
+		final var sessionFactory = executionContext.getSession().getFactory();
 		// Execute a query in the form -
 		//
 		// insert into <target> (...)
@@ -474,42 +468,46 @@ public class TableBasedUpdateHandler
 		// Create a new QuerySpec for the "insert source" select query.  This
 		// is mostly a copy of the incoming `idTableSubQuery` along with the
 		// NOT-EXISTS predicate
-		final QuerySpec insertSourceSelectQuerySpec = makeInsertSourceSelectQuerySpec( idTableSubQuery );
+		final var insertSourceSelectQuerySpec = makeInsertSourceSelectQuerySpec( idTableSubQuery );
 
 		// create the `select 1 ...` sub-query and apply the not-exists predicate
-		final QuerySpec existsSubQuerySpec = createExistsSubQuerySpec( targetTableExpression, tableKeyColumnVisitationSupplier, idTableSubQuery, sessionFactory );
 		insertSourceSelectQuerySpec.applyPredicate(
 				new ExistsPredicate(
-						existsSubQuerySpec,
+						createExistsSubQuerySpec(
+								targetTableExpression,
+								tableKeyColumnVisitationSupplier,
+								idTableSubQuery,
+								sessionFactory
+						),
 						true,
-						sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class )
+						sessionFactory.getTypeConfiguration()
+								.getBasicTypeForJavaType( Boolean.class )
 				)
 		);
 
 		// Collect the target column references from the key expressions
 		final List<ColumnReference> targetColumnReferences = new ArrayList<>();
-		if ( targetTableKeyExpression instanceof SqlTuple ) {
+		if ( targetTableKeyExpression instanceof SqlTuple sqlTuple ) {
+			final var expressions = sqlTuple.getExpressions();
 			//noinspection unchecked
-			targetColumnReferences.addAll( (Collection<? extends ColumnReference>) ( (SqlTuple) targetTableKeyExpression ).getExpressions() );
+			targetColumnReferences.addAll( (Collection<? extends ColumnReference>) expressions );
 		}
 		else {
 			targetColumnReferences.add( (ColumnReference) targetTableKeyExpression );
 		}
 
 		// And transform assignments to target column references and selections
-		for ( Assignment assignment : assignments ) {
+		for ( var assignment : assignments ) {
 			targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
-			insertSourceSelectQuerySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( assignment.getAssignedValue() )
-			);
+			insertSourceSelectQuerySpec.getSelectClause()
+					.addSqlSelection( new SqlSelectionImpl( assignment.getAssignedValue() ) );
 		}
 
-		final InsertSelectStatement insertSqlAst = new InsertSelectStatement( targetTableReference );
+		final var insertSqlAst = new InsertSelectStatement( targetTableReference, getEntityDescriptor() );
 		insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 		insertSqlAst.setSourceSelectStatement( insertSourceSelectQuerySpec );
 
-		return sqlAstTranslatorFactory
-				.buildMutationTranslator( sessionFactory, insertSqlAst )
+		return sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, insertSqlAst )
 				.translate( firstJdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
@@ -518,29 +516,22 @@ public class TableBasedUpdateHandler
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			SessionFactoryImplementor sessionFactory) {
-		final NamedTableReference existsTableReference = new NamedTableReference(
-				targetTableExpression,
-				"dml_"
-		);
+		final var existsTableReference =
+				new NamedTableReference( targetTableExpression, "dml_" );
 
 		// Prepare a not exists sub-query to avoid violating constraints
-		final QuerySpec existsSubQuerySpec = new QuerySpec( false );
-		existsSubQuerySpec.getSelectClause().addSqlSelection(
-				new SqlSelectionImpl(
-						new QueryLiteral<>(
-								1,
-								sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
-						)
-				)
-		);
-		existsSubQuerySpec.getFromClause().addRoot( new TableGroupImpl(
-				null,
-				null,
-				existsTableReference,
-				getEntityDescriptor()
-		) );
+		final var existsSubQuerySpec = new QuerySpec( false );
+		existsSubQuerySpec.getSelectClause()
+				.addSqlSelection( new SqlSelectionImpl(
+						new QueryLiteral<>( 1,
+								sessionFactory.getTypeConfiguration()
+										.getBasicTypeForJavaType( Integer.class ) )
+				) );
+		existsSubQuerySpec.getFromClause()
+				.addRoot( new TableGroupImpl( null, null,
+						existsTableReference, getEntityDescriptor() ) );
 
-		final TableKeyExpressionCollector existsKeyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
+		final var existsKeyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
 		tableKeyColumnVisitationSupplier.get().accept( (columnIndex, selection) -> {
 			assert selection.getContainingTableExpression().equals( targetTableExpression );
 			existsKeyColumnCollector.apply( new ColumnReference( existsTableReference, selection ) );
@@ -556,11 +547,13 @@ public class TableBasedUpdateHandler
 	}
 
 	protected static QuerySpec makeInsertSourceSelectQuerySpec(QuerySpec idTableSubQuery) {
-		final QuerySpec idTableQuerySpec = new QuerySpec( true );
-		for ( TableGroup root : idTableSubQuery.getFromClause().getRoots() ) {
+		final var idTableQuerySpec = new QuerySpec( true );
+		final var fromClause = idTableSubQuery.getFromClause();
+		for ( var root : fromClause.getRoots() ) {
 			idTableQuerySpec.getFromClause().addRoot( root );
 		}
-		for ( SqlSelection sqlSelection : idTableSubQuery.getSelectClause().getSqlSelections() ) {
+		final var selectClause = idTableSubQuery.getSelectClause();
+		for ( var sqlSelection : selectClause.getSqlSelections() ) {
 			idTableQuerySpec.getSelectClause().addSqlSelection( sqlSelection );
 		}
 		idTableQuerySpec.applyPredicate( idTableSubQuery.getWhereClauseRestrictions() );
@@ -575,27 +568,21 @@ public class TableBasedUpdateHandler
 			SqlAstTranslatorFactory sqlAstTranslatorFactory,
 			JdbcParameterBindings firstJdbcParameterBindings,
 			Expression keyExpression) {
-		final UpdateStatement sqlAst = new UpdateStatement(
-				dmlTableReference,
-				assignments,
-				new InSubQueryPredicate( keyExpression, idTableSubQuery, false )
-		);
-
-		return sqlAstTranslatorFactory
-				.buildMutationTranslator( executionContext.getSession().getFactory(), sqlAst )
+		final var sqlAst =
+				new UpdateStatement( dmlTableReference, assignments,
+						new InSubQueryPredicate( keyExpression, idTableSubQuery, false ) );
+		return sqlAstTranslatorFactory.buildMutationTranslator( executionContext.getSession().getFactory(), sqlAst )
 				.translate( firstJdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
 	protected Expression resolveMutatingTableKeyExpression(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
-		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
-
+		final var keyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
 		tableKeyColumnVisitationSupplier.get().accept(
 				(columnIndex, selection) -> {
 					assert selection.getContainingTableExpression().equals( tableExpression );
 					keyColumnCollector.apply( new ColumnReference( (String) null, selection ) );
 				}
 		);
-
 		return keyColumnCollector.buildKeyExpression();
 	}
 
@@ -605,7 +592,7 @@ public class TableBasedUpdateHandler
 			return sqlSelections.get( 0 ).getExpression();
 		}
 		final List<Expression> expressions = new ArrayList<>( sqlSelections.size() );
-		for ( SqlSelection sqlSelection : sqlSelections ) {
+		for ( var sqlSelection : sqlSelections ) {
 			expressions.add( sqlSelection.getExpression() );
 		}
 		return new SqlTuple( expressions, null );
@@ -632,20 +619,20 @@ public class TableBasedUpdateHandler
 			);
 		}
 
-		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
-		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
+		final var executionContext = omittingLockingAndPaging( context );
+		performBeforeTemporaryTableUseActions(
 				idTable,
 				temporaryTableStrategy,
 				executionContext
 		);
 
 		try {
-			final int rows = ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable(
+			final int rows = saveIntoTemporaryTable(
 					matchingIdsIntoIdTableInsert.jdbcOperation(),
 					jdbcParameterBindings,
 					executionContext
 			);
-			for ( TableUpdater tableUpdater : tableUpdaters ) {
+			for ( var tableUpdater : tableUpdaters ) {
 				updateTable(
 						tableUpdater,
 						rows,
@@ -656,7 +643,7 @@ public class TableBasedUpdateHandler
 			return rows;
 		}
 		finally {
-			ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
+			performAfterTemporaryTableUseActions(
 					idTable,
 					sessionUidAccess,
 					getAfterUseAction(),
@@ -670,36 +657,31 @@ public class TableBasedUpdateHandler
 			int expectedUpdateCount,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
-		if ( tableUpdater == null ) {
-			// no assignments for this table - skip it
-			return;
+		if ( tableUpdater != null ) {
+			final int updateCount =
+					executeMutation( tableUpdater.jdbcUpdate, jdbcParameterBindings, executionContext );
+			if ( updateCount != expectedUpdateCount ) {// If the table is optional, execute an insert
+				if ( tableUpdater.jdbcInsert != null ) {
+					final int insertCount =
+							executeMutation( tableUpdater.jdbcInsert, jdbcParameterBindings, executionContext );
+					assert insertCount + updateCount == expectedUpdateCount;
+				}
+			}
+			// Else we are done when the update count matches
 		}
-		final int updateCount = executeMutation( tableUpdater.jdbcUpdate, jdbcParameterBindings, executionContext );
-
-		// We are done when the update count matches
-		if ( updateCount == expectedUpdateCount ) {
-			return;
-		}
-
-		// If the table is optional, execute an insert
-		if ( tableUpdater.jdbcInsert != null ) {
-			final int insertCount = executeMutation( tableUpdater.jdbcInsert, jdbcParameterBindings, executionContext );
-			assert insertCount + updateCount == expectedUpdateCount;
-		}
+		// Else no assignments for this table - skip it
 	}
 
 	private int executeMutation(JdbcOperationQueryMutation jdbcUpdate, JdbcParameterBindings jdbcParameterBindings, ExecutionContext executionContext) {
-		return executionContext.getSession().getFactory().getJdbcServices().getJdbcMutationExecutor().execute(
-				jdbcUpdate,
-				jdbcParameterBindings,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {
-				},
-				executionContext
-		);
+		return executionContext.getSession().getFactory().getJdbcServices()
+				.getJdbcMutationExecutor().execute(
+						jdbcUpdate,
+						jdbcParameterBindings,
+						sql -> executionContext.getSession().getJdbcCoordinator()
+								.getStatementPreparer().prepareStatement( sql ),
+						(integer, preparedStatement) -> {},
+						executionContext
+				);
 	}
 
 	protected record TableUpdater(

@@ -9,7 +9,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -38,7 +37,7 @@ public class OrmAnnotationHelper {
 	}
 
 	public static void forEachOrmAnnotation(Class<?> declarer, Consumer<AnnotationDescriptor<?>> consumer) {
-		for ( Field field : declarer.getFields() ) {
+		for ( var field : declarer.getFields() ) {
 			if ( AnnotationDescriptor.class.isAssignableFrom( field.getType() ) ) {
 				try {
 					consumer.accept( (AnnotationDescriptor<?>) field.get( null ) );
@@ -58,8 +57,7 @@ public class OrmAnnotationHelper {
 	}
 
 	public static <V, A extends Annotation> V extractJdkValue(A jdkAnnotation, AttributeDescriptor<V> attributeDescriptor, ModelsContext modelContext) {
-		return attributeDescriptor
-				.getTypeDescriptor()
+		return attributeDescriptor.getTypeDescriptor()
 				.createJdkValueExtractor( modelContext )
 				.extractValue( jdkAnnotation, attributeDescriptor, modelContext );
 	}
@@ -71,10 +69,10 @@ public class OrmAnnotationHelper {
 
 	public static List<Annotation> extractAnnotationTypeAnnotations(Class<? extends Annotation> annotationType) {
 		final ArrayList<Annotation> result = new ArrayList<>();
-		final Annotation[] annotationTypeAnnotations = annotationType.getAnnotations();
+		final var annotationTypeAnnotations = annotationType.getAnnotations();
 		for ( int i = 0; i < annotationTypeAnnotations.length; i++ ) {
-			final Annotation annotationTypeAnnotation = annotationTypeAnnotations[i];
-			final Class<? extends Annotation> annotationTypeAnnotationType = annotationTypeAnnotation.annotationType();
+			final var annotationTypeAnnotation = annotationTypeAnnotations[i];
+			final var annotationTypeAnnotationType = annotationTypeAnnotation.annotationType();
 
 			// skip a few well-know ones that are irrelevant
 			if ( annotationTypeAnnotationType == Repeatable.class

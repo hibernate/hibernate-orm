@@ -37,8 +37,8 @@ public class OptimizerFactory {
 		}
 
 		try {
-			final var ctor = optimizerClass.getConstructor( CTOR_SIG );
-			return ctor.newInstance( returnClass, incrementSize );
+			return optimizerClass.getConstructor( CTOR_SIG )
+					.newInstance( returnClass, incrementSize );
 		}
 		catch ( Throwable ignore ) {
 			OPTIMIZER_MESSAGE_LOGGER.unableToInstantiateOptimizer( descriptor.getExternalName() );

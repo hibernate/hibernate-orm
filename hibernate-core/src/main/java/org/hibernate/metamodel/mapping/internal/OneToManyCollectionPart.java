@@ -160,7 +160,8 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		if ( mapKeyPropertyName != null ) {
 			final var elementPart =
 					(EntityCollectionPart)
-							getCollectionDescriptor().getAttributeMapping().getElementDescriptor();
+							getCollectionDescriptor().getAttributeMapping()
+									.getElementDescriptor();
 			if ( elementPart.getAssociatedEntityMappingType().findAttributeMapping( mapKeyPropertyName )
 							instanceof ToOneAttributeMapping toOne ) {
 				final var mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
@@ -180,7 +181,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			}
 		}
 
-		return new TableGroupJoin( navigablePath, joinType, elementTableGroup, null );
+		return new TableGroupJoin( navigablePath, joinType, elementTableGroup );
 	}
 
 	@Override
@@ -234,14 +235,16 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		if ( pluralAttribute == null ) {
 			return false;
 		}
-
-		final var foreignKey = pluralAttribute.getKeyDescriptor();
-		if ( foreignKey == null ) {
-			return false;
+		else {
+			final var foreignKey = pluralAttribute.getKeyDescriptor();
+			if ( foreignKey == null ) {
+				return false;
+			}
+			else {
+				fetchAssociationKey = foreignKey.getAssociationKey();
+				return true;
+			}
 		}
-
-		fetchAssociationKey = foreignKey.getAssociationKey();
-		return true;
 	}
 
 	@Override

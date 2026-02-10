@@ -32,11 +32,11 @@ public class SqmCorrelatedDerivedRoot<T> extends SqmCorrelatedRoot<T> implements
 
 	@Override
 	public SqmCorrelatedDerivedRoot<T> copy(SqmCopyContext context) {
-		final SqmCorrelatedDerivedRoot<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedDerivedRoot<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedDerivedRoot<>( getCorrelationParent().copy( context ) )
 		);

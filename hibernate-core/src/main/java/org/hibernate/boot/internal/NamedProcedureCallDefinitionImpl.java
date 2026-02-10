@@ -20,7 +20,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
-import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.results.ResultSetMapping;
@@ -29,6 +28,8 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 
+import static org.hibernate.procedure.internal.Util.resolveResultSetMappingClasses;
+import static org.hibernate.procedure.internal.Util.resolveResultSetMappingNames;
 import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 
 /**
@@ -96,7 +97,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		final ResultSetMapping resultSetMapping = buildResultSetMapping( registeredName, sessionFactory );
 
 		if ( specifiesResultClasses ) {
-			Util.resolveResultSetMappingClasses(
+			resolveResultSetMappingClasses(
 					resultClasses,
 					resultSetMapping,
 					collectedQuerySpaces::add,
@@ -104,7 +105,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 			);
 		}
 		else if ( specifiesResultSetMappings ) {
-			Util.resolveResultSetMappingNames(
+			resolveResultSetMappingNames(
 					resultSetMappings,
 					resultSetMapping,
 					collectedQuerySpaces::add,

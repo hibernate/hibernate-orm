@@ -32,13 +32,13 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 
 	@Override
 	public NonAggregatedCompositeSimplePath<T> copy(SqmCopyContext context) {
-		final NonAggregatedCompositeSimplePath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmPath<?> lhsCopy = getLhs().copy( context );
-		final NonAggregatedCompositeSimplePath<T> path = context.registerCopy(
+		final var lhsCopy = getLhs().copy( context );
+		final var path = context.registerCopy(
 				this,
 				new NonAggregatedCompositeSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),

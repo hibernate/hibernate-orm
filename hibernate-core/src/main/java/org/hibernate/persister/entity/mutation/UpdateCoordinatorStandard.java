@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
@@ -277,15 +278,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						entityPersister()
 				);
 
-		final InclusionChecker inclusionChecker = (position, attribute) -> attributeUpdateability[position];
-
 		final var valuesAnalysis = analyzeUpdateValues(
 				entity,
 				values,
 				oldVersion,
 				incomingOldValues,
 				dirtyAttributeIndexes,
-				inclusionChecker,
+				createInclusionChecker( attributeUpdateability ),
 				lockingChecker,
 				dirtinessChecker,
 				rowId,
@@ -442,15 +441,26 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			|| entityMetamodel.hasPreUpdateGeneratedProperties();
 	}
 
-	private static boolean isValueGenerated(Generator generator) {
+	private static boolean isValueGenerationOnUpdateInSql(Generator generator, Dialect dialect) {
 		return generator != null
-			&& generator.generatesOnUpdate()
-			&& generator.generatedOnExecution();
+			&& generator.generatedOnExecution()
+			&& generator.getEventTypes().contains( EventType.UPDATE )
+			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect, EventType.UPDATE );
 	}
 
-	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
-		assert isValueGenerated( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect );
+	private static boolean isGeneratedOnExecution(
+			Generator generator,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		if ( generator instanceof OnExecutionGenerator
+				&& generator.getEventTypes().contains( EventType.UPDATE ) ) {
+			return session != null && entity != null
+					? generator.generatedOnExecution( entity, session )
+					: generator.generatedOnExecution();
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -566,22 +576,25 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return EMPTY_INT_ARRAY;
 	}
 
+	public boolean[] getPropertyUpdateability() {
+		return entityPersister().getPropertyUpdateability();
+	}
+
 	/**
 	 * Transform the array of property indexes to an array of booleans for each attribute,
 	 * true when the property is dirty
 	 */
 	protected boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final var persister = entityPersister();
-		final var updateability = persister.getPropertyUpdateability();
 		if ( dirtyProperties == null ) {
-			return updateability;
+			return getPropertyUpdateability();
 		}
 		else {
+			final var updateability = persister.getPropertyUpdateability();
+			final var insertability = persister.getPropertyInsertability();
 			final var propsToUpdate = new boolean[persister.getNumberOfAttributeMappings()];
 			for ( int property: dirtyProperties ) {
-				if ( updateability[property] ) {
-					propsToUpdate[property] = true;
-				}
+				propsToUpdate[property] = includeProperty( insertability, updateability, property );
 			}
 			if ( persister.isVersioned() ) {
 				final var versionAttribute = persister.getVersionMapping().getVersionAttribute();
@@ -598,6 +611,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 			return propsToUpdate;
 		}
+	}
+
+	protected boolean includeProperty(boolean[] insertability, boolean[] updateability, int property) {
+		return updateability[property];
 	}
 
 	protected UpdateValuesAnalysisImpl analyzeUpdateValues(
@@ -630,8 +647,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				forceDynamicUpdate
 		);
 
-		final var propertyUpdateability = persister.getPropertyUpdateability();
-
 		for ( int attributeIndex = 0; attributeIndex < attributeMappings.size(); attributeIndex++ ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
 			analysis.startingAttribute( attributeMapping );
@@ -653,7 +668,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 					// In this case we check for exactly DirtynessStatus.DIRTY so to not log warnings when the user didn't get it wrong:
 					if ( analysis.currentAttributeAnalysis.getDirtynessStatus() == AttributeAnalysis.DirtynessStatus.DIRTY ) {
-						if ( !propertyUpdateability[attributeIndex] ) {
+						if ( !includeProperty( persister.getPropertyInsertability(), persister.getPropertyUpdateability(), attributeIndex ) ) {
 							CORE_LOGGER.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
@@ -679,11 +694,24 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 
 		final var generator = attributeMapping.getGenerator();
-		final boolean generated = isValueGenerated( generator );
+		final boolean generatesOnUpdate =
+				generator != null && generator.getEventTypes().contains( EventType.UPDATE );
 		final boolean needsDynamicUpdate =
-				generated && session != null && generator.generatedBeforeExecution( entity, session );
-		final boolean generatedInSql = generated && isValueGenerationInSql( generator, dialect );
-		if ( generatedInSql && !needsDynamicUpdate && !( (OnExecutionGenerator) generator ).writePropertyValue() ) {
+				generatesOnUpdate
+						&& session != null
+						&& generator.generatedBeforeExecution( entity, session )
+						// Only force dynamic update when the generator can switch to on-execution mode.
+						&& generator.generatedOnExecution();
+		final boolean generatedOnExecution =
+				generatesOnUpdate
+						&& isGeneratedOnExecution( generator, entity, session );
+		final boolean generatedInSql =
+				generatedOnExecution
+						&& generator instanceof OnExecutionGenerator
+						&& requiresValueGeneration( (OnExecutionGenerator) generator, dialect, EventType.UPDATE, generatedOnExecution );
+		if ( generatedInSql
+				&& !needsDynamicUpdate
+				&& !( (OnExecutionGenerator) generator ).writePropertyValue( EventType.UPDATE ) ) {
 			analysis.registerValueGeneratedInSqlNoWrite();
 		}
 
@@ -716,13 +744,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void processSet(UpdateValuesAnalysisImpl analysis, SelectableMapping selectable, boolean needsDynamicUpdate) {
-		if ( selectable != null && !selectable.isFormula() && selectable.isUpdateable() ) {
+		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( selectable ) ) {
 			final var tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 			if ( needsDynamicUpdate ) {
 				analysis.getTablesNeedingDynamicUpdate().add( tableMapping );
 			}
 		}
+	}
+
+	protected boolean isColumnIncludedInSet(SelectableMapping selectable) {
+		return selectable.isUpdateable();
+	}
+
+	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+		return (position, attribute) -> attributeUpdateability[position];
 	}
 
 	private void processLock(
@@ -760,6 +796,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final var mutationExecutor = executor( session, staticUpdateGroup, false );
 
 		decomposeForUpdate(
+				entity,
 				id,
 				rowId,
 				values,
@@ -770,7 +807,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(position, attribute) -> AttributeAnalysis.DirtynessStatus.CONSIDER_LIKE_DIRTY,
 				session
 		);
-		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
+		// no snapshot when called from StatelessSession.update()
+		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
+				session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(
@@ -789,6 +828,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	protected void decomposeForUpdate(
+			Object entity,
 			Object id,
 			Object rowId,
 			Object[] values,
@@ -807,6 +847,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				final int[] attributeIndexes = tableMapping.getAttributeIndexes();
 				for ( int i = 0; i < attributeIndexes.length; i++ ) {
 					decomposeAttributeForUpdate(
+							entity,
 							values,
 							valuesAnalysis,
 							dirtinessChecker,
@@ -828,6 +869,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void decomposeAttributeForUpdate(
+			Object entity,
 			Object[] values,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			DirtinessChecker dirtinessChecker,
@@ -844,7 +886,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( attributeAnalysis.includeInSet() ) {
 					// apply the new values
 					if ( includeInSet( dirtinessChecker, attributeIndex, attributeMapping, attributeAnalysis ) ) {
-						decomposeAttributeMapping( session, jdbcValueBindings, tableMapping, attributeMapping, values[attributeIndex] );
+						decomposeAttributeMapping(
+								session,
+								jdbcValueBindings,
+								tableMapping,
+								attributeMapping,
+								values[attributeIndex],
+								entity
+						);
 					}
 				}
 
@@ -873,19 +922,40 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private static void decomposeAttributeMapping(
+	private void decomposeAttributeMapping(
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableMapping,
 			AttributeMapping attributeMapping,
-			Object values) {
+			Object values,
+			Object entity) {
+		final var generator = attributeMapping.getGenerator();
+		final boolean generatedOnExecution =
+				isGeneratedOnExecution( generator, entity, session );
+		final var onExecutionGenerator =
+				generator instanceof OnExecutionGenerator executionGenerator && generatedOnExecution
+						&& generator.getEventTypes().contains( EventType.UPDATE )
+								? executionGenerator
+								: null;
+		final String[] columnValues =
+				onExecutionGenerator == null ? null
+						: onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.UPDATE );
+		final boolean[] columnInclusions =
+				onExecutionGenerator == null ? null
+						: onExecutionGenerator.getColumnInclusions( dialect(), EventType.UPDATE );
+		final boolean bindAllValues =
+				onExecutionGenerator != null
+						&& onExecutionGenerator.writePropertyValue( EventType.UPDATE )
+						&& columnValues == null;
 		attributeMapping.decompose(
 				values,
 				0,
 				jdbcValueBindings,
 				tableMapping,
 				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
-					if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
+					if ( !jdbcMapping.isFormula()
+							&& isColumnIncludedInSet( jdbcMapping )
+							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
 						bindings.bindValue(
 								jdbcValue,
 								table.getTableName(),
@@ -896,6 +966,24 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				},
 				session
 		);
+	}
+
+	private static boolean shouldBindValue(
+			OnExecutionGenerator onExecutionGenerator,
+			String[] columnValues,
+			boolean[] columnInclusions,
+			boolean bindAllValues,
+			int valueIndex) {
+		if ( onExecutionGenerator == null ) {
+			return true;
+		}
+		else if ( columnInclusions != null && !columnInclusions[valueIndex] ) {
+			return false;
+		}
+		else {
+			return bindAllValues
+				|| columnValues != null && "?".equals( columnValues[valueIndex] );
+		}
 	}
 
 	private boolean includeInSet(
@@ -944,6 +1032,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final var mutationExecutor = executor( session, dynamicUpdateGroup, true );
 
 		decomposeForUpdate(
+				entity,
 				id,
 				rowId,
 				values,
@@ -956,7 +1045,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								: AttributeAnalysis.DirtynessStatus.NOT_DIRTY,
 				session
 		);
-		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
+		// no snapshot when called from StatelessSession.update()
+		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
+				session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(
@@ -1240,7 +1331,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final var generator = attributeMapping.getGenerator();
 		if ( needsValueGeneration( entity, session, generator ) ) {
-			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
+			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator, EventType.UPDATE );
 		}
 		else if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attributeMapping) {
@@ -1251,15 +1342,27 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					|| dirtinessChecker == null
 					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).isDirty();
 			if ( includeInSet ) {
-				attributeMapping.forEachUpdatable( tableUpdateBuilder );
+				forEachUpdatable( attributeMapping, tableUpdateBuilder );
 			}
 		}
 	}
 
+	protected void forEachUpdatable(AttributeMapping attributeMapping, TableUpdateBuilder<?> tableUpdateBuilder) {
+		attributeMapping.forEachUpdatable( tableUpdateBuilder );
+	}
+
 	private boolean needsValueGeneration(Object entity, SharedSessionContractImplementor session, Generator generator) {
-		return isValueGenerated( generator )
-			&& (session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
-			&& isValueGenerationInSql( generator, dialect );
+		if ( generator instanceof OnExecutionGenerator onExecutionGenerator ) {
+			final boolean generatedOnExecution =
+					session == null || entity == null
+							? generator.generatedOnExecution()
+							: generator.generatedOnExecution( entity, session );
+			return generatedOnExecution
+				&& requiresValueGeneration( onExecutionGenerator, dialect, EventType.UPDATE, true );
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -1617,7 +1720,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private MutationOperationGroup buildStaticUpdateGroup() {
+	protected MutationOperationGroup buildStaticUpdateGroup() {
 		final var persister = entityPersister();
 		final var valuesAnalysis = analyzeUpdateValues(
 				null,
@@ -1625,10 +1728,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				null,
-				(index,attribute) ->
-						isValueGenerated( attribute.getGenerator() )
-								&& isValueGenerationInSql( attribute.getGenerator(), dialect() )
-						|| persister.getPropertyUpdateability()[index],
+				(index, attribute) -> includeInStaticUpdate( index, attribute, persister.getPropertyUpdateability() ),
 				(index,attribute) ->
 						switch ( persister.optimisticLockStyle() ) {
 							case ALL -> true;
@@ -1668,6 +1768,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// build the mutation-group (SQL AST) and convert it into a jdbc-operations (SQL String, etc) group
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
+	}
+
+	protected boolean includeInStaticUpdate(
+			int index,
+			AttributeMapping attribute,
+			boolean[] propertyUpdateability) {
+		return isValueGenerationOnUpdateInSql( attribute.getGenerator(), dialect() )
+			|| propertyUpdateability[index];
 	}
 
 	private MutationOperationGroup buildVersionUpdateGroup() {

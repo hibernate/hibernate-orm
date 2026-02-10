@@ -15,6 +15,7 @@ import jakarta.persistence.Parameter;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
+import static org.hibernate.query.ResultListTransformer.uniqueResultTransformer;
 
 /**
  * Implementation of SingleIdEntityLoader for cases where the application has
@@ -44,6 +45,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 		final var query = namedQueryMemento.toQuery( session, mappedJavaType.getJavaTypeClass() );
 		query.setParameter( (Parameter<Object>) query.getParameters().iterator().next(), pkValue );
 		query.setQueryFlushMode( QueryFlushMode.NO_FLUSH );
+		query.setResultListTransformer( uniqueResultTransformer() );
 		return query.uniqueResult();
 	}
 

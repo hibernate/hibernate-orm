@@ -18,8 +18,8 @@ pluginManagement {
 plugins {
     id 'org.hibernate.orm.build.env-settings'
     id 'org.hibernate.orm.build.jdks-settings'
-    id 'com.gradle.develocity' version '4.0.2'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.3'
+    id 'com.gradle.develocity' version '4.3'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.4.0'
 }
 
 dependencyResolutionManagement {
@@ -36,7 +36,7 @@ dependencyResolutionManagement {
 			}
             // Needed for the SNAPSHOT versions of Jakarta Persistence
             maven {
-                url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
+                url "https://central.sonatype.com/repository/maven-snapshots/"
             }
 		}
 
@@ -78,11 +78,11 @@ dependencyResolutionManagement {
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.17.8"
             def checkerFrameworkVersion = version "checkerFramework", "3.52.0"
-            def classmateVersion = version "classmate", "1.7.1"
             def geolatteVersion = version "geolatte", "1.10"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
             def jandexVersion = version "jandex", "3.3.2"
             def jacksonVersion = version "jackson", "2.19.4"
+            def jackson3Version = version "jackson3", "3.0.3"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
@@ -113,11 +113,13 @@ dependencyResolutionManagement {
             library( "hibernateModels", "org.hibernate.models", "hibernate-models" ).versionRef( hibernateModelsVersion )
             library( "hibernateModelsJandex", "org.hibernate.models", "hibernate-models-jandex" ).versionRef( hibernateModelsVersion )
             library( "jandex", "io.smallrye", "jandex" ).versionRef( jandexVersion )
-            library( "classmate", "com.fasterxml", "classmate" ).versionRef( classmateVersion )
 
             library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
             library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )
             library( "jacksonJsr310", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).versionRef( jacksonVersion )
+
+            library( "jackson3", "tools.jackson.core", "jackson-databind" ).versionRef( jackson3Version )
+            library( "jackson3Xml", "tools.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jackson3Version )
 
             library( "agroal", "io.agroal", "agroal-api" ).versionRef( agroalVersion )
             library( "agroalPool", "io.agroal", "agroal-pool" ).versionRef( agroalVersion )
@@ -224,12 +226,12 @@ dependencyResolutionManagement {
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.17.1.0" )
             def firebirdVersion = version "firebird", "6.0.3"
             def hanaVersion = version "hana", "2.26.11"
-            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.3" )
+            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.4" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.4" )
             def informixVersion = version "informix", "15.0.0.2"
             def mariadbVersion = version "mariadb", "3.5.5"
             def mssqlVersion = version "mssql", "13.2.1.jre11"
-            def mysqlVersion = version "mysql", "9.5.0"
+            def mysqlVersion = version "mysql", "9.6.0"
             def oracleVersion = version "oracle", "23.26.0.0.0"
             def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.4"
             def pgsqlVersion = version "pgsql", "42.7.8"
@@ -239,6 +241,7 @@ dependencyResolutionManagement {
             def teradataVersion = version "teradata",  "20.00.00.51"
             def tidbVersion = version "tidb", mysqlVersion
             def altibaseVersion = version "altibase", "7.3.0.1.1"
+            def spannerVersion = version "spanner", "2.35.1"
 
             library( "h2", "com.h2database", "h2" ).versionRef( h2Version )
             library( "h2gis", "org.orbisgis", "h2gis" ).versionRef( h2gisVersion )
@@ -264,6 +267,7 @@ dependencyResolutionManagement {
             library( "informix", "com.ibm.informix", "jdbc" ).versionRef( informixVersion )
             library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).versionRef( firebirdVersion )
             library( "altibase", "com.altibase", "altibase-jdbc" ).versionRef( altibaseVersion )
+            library( "spanner", "com.google.cloud", "google-cloud-spanner-jdbc" ).versionRef( spannerVersion )
         }
         mavenLibs {
             def mavenCoreVersion = version "mavenCore", "3.9.9"
@@ -357,6 +361,9 @@ project(':hibernate-maven-plugin').projectDir = new File(rootProject.projectDir,
 
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
+
+include 'hibernate-assistant'
+project(':hibernate-assistant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-assistant")
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

@@ -18,7 +18,7 @@ See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
 
 == Building from sources
 
-The build requires at least JDK 21, and produces Java 17 bytecode.
+The build requires at least JDK 25, and produces Java 17 bytecode.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.
@@ -87,39 +87,18 @@ a JVM system prop (`-D`) or as a Gradle project property (`-P`). Examples below 
 project property approach.
 
 ----
-gradle clean build -Pdb=pgsql
+gradle clean build -Pdb=pgsql_ci
 ----
 
 To run a test from your IDE, you need to ensure the property expansions happen.
 Use the following command:
 
 ----
-gradle clean compile -Pdb=pgsql
+gradle clean compile -Pdb=pgsql_ci
 ----
 
 __NOTE: If you are running tests against a JDBC driver that is not available via Maven central be sure to
 add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server__
-
-=== Running database-specific tests from the IDE using "profiles"
-
-You can run any test on any particular database that is configured in a `databases.gradle` profile.
-
-All you have to do is run the following command:
-
-----
-./gradlew setDataBase -Pdb=pgsql
-----
-
-or you can use the shortcut version: 
-
-----
-./gradlew sDB -Pdb=pgsql
-----
-
-You can do this from the module which you are interested in testing or from the `hibernate-orm` root folder.
-
-Afterward, just pick any test from the IDE and run it as usual. Hibernate will pick the database configuration from the `hibernate.properties`
-file that was set up by the `setDataBase` Gradle task.
 
 === Starting test databases locally as docker containers
 

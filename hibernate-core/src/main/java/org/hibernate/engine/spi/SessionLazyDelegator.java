@@ -886,17 +886,15 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> cls) {
-		if ( cls.isAssignableFrom( Session.class ) ) {
-			//noinspection unchecked
-			return (T) this;
-		}
-		return this.lazySession.get().unwrap( cls );
+	public <T> T unwrap(Class<T> type) {
+		return type.isAssignableFrom( Session.class )
+				? type.cast( this )
+				: lazySession.get().unwrap( type );
 	}
 
 	@Override
 	public Object getDelegate() {
-		return this.lazySession.get().getDelegate();
+		return lazySession.get().getDelegate();
 	}
 
 	@Override

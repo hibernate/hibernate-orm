@@ -78,11 +78,11 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 
 	@Override
 	public SqmTreatedSetJoin<O, T, S> copy(SqmCopyContext context) {
-		final SqmTreatedSetJoin<O, T, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedSetJoin<O, T, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedSetJoin<>(
 						getNavigablePath(),

@@ -24,7 +24,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
@@ -42,6 +41,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.addPrefixedPropertyNames;
+import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.addPrefixedPropertyPaths;
 import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.findMapsIdPropertyName;
 
 /**
@@ -188,18 +189,15 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final TableGroup partTableGroup = resolveTableGroup( navigablePath, creationState );
+		final var partTableGroup = resolveTableGroup( navigablePath, creationState );
 		return associatedEntityTypeDescriptor.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-
-		// should be an instance of the associated entity
-		return getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
+		return value == null ? null
+				// should be an instance of the associated entity
+				: getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
 	}
 
 
@@ -214,11 +212,10 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		final var associationKey = resolveFetchAssociationKey();
 		final boolean added = creationState.registerVisitedAssociationKey( associationKey );
 
-		final var partTableGroup = resolveTableGroup( fetchablePath, creationState );
 		final var fetch = buildEntityFetchJoined(
 				fetchParent,
 				this,
-				partTableGroup,
+				resolveTableGroup( fetchablePath, creationState ),
 				fetchablePath,
 				creationState
 		);
@@ -271,23 +268,16 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
 		final var fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		return fromClauseAccess.resolveTableGroup( fetchablePath, (np) -> {
-			final var parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
+		return fromClauseAccess.resolveTableGroup( fetchablePath, navigablePath -> {
+			final var parentTableGroup =
+					(PluralTableGroup)
+							fromClauseAccess.getTableGroup( navigablePath.getParent() );
 			return switch ( nature ) {
 				case ELEMENT -> parentTableGroup.getElementTableGroup();
-				case INDEX -> resolveIndexTableGroup( parentTableGroup, fetchablePath, fromClauseAccess, creationState );
-				default -> throw new IllegalStateException( "Could not find table group for: " + np );
+				case INDEX -> parentTableGroup.getIndexTableGroup();
+				default -> throw new IllegalStateException( "Could not find table group for: " + navigablePath );
 			};
-
 		} );
-	}
-
-	private TableGroup resolveIndexTableGroup(
-			PluralTableGroup collectionTableGroup,
-			NavigablePath fetchablePath,
-			FromClauseAccess fromClauseAccess,
-			DomainResultCreationState creationState) {
-		return collectionTableGroup.getIndexTableGroup();
 	}
 
 
@@ -316,7 +306,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				getEntityMappingType()
 						.createPrimaryTableReference( sqlAliasBase, creationState );
 
-		final TableGroup tableGroup = new StandardTableGroup(
+		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				this,
@@ -383,13 +373,13 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				if ( propertyType instanceof ComponentType compositeType
 						&& compositeType.isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
-					ToOneAttributeMapping.addPrefixedPropertyPaths(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							compositeType.getPropertyNames()[0],
 							compositeType.getSubtypes()[0],
 							creationProcess.getCreationContext().getSessionFactory()
 					);
-					ToOneAttributeMapping.addPrefixedPropertyNames(
+					addPrefixedPropertyNames(
 							targetKeyPropertyNames,
 							EntityIdentifierMapping.ID_ROLE_NAME,
 							propertyType,
@@ -397,7 +387,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					);
 				}
 				else {
-					ToOneAttributeMapping.addPrefixedPropertyPaths(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							null,
 							propertyType,
@@ -406,7 +396,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				}
 			}
 			else {
-				ToOneAttributeMapping.addPrefixedPropertyPaths(
+				addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						entityBinding.getIdentifierProperty().getName(),
 						propertyType,
@@ -422,7 +412,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				targetKeyPropertyNames.add( referencedPropertyName.substring( 0, dotIndex ) );
 			}
 			// todo (PropertyMapping) : the problem here is timing.  this needs to be delayed.
-			ToOneAttributeMapping.addPrefixedPropertyPaths(
+			addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					referencedPropertyName,
 					elementTypeDescriptor.getEntityPersister().getPropertyType( referencedPropertyName ),
@@ -436,13 +426,13 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					&& compositeType.isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-				ToOneAttributeMapping.addPrefixedPropertyPaths(
+				addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						compositeType.getPropertyNames()[0],
 						compositeType.getSubtypes()[0],
 						creationProcess.getCreationContext().getSessionFactory()
 				);
-				ToOneAttributeMapping.addPrefixedPropertyNames(
+				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						propertyType,
@@ -457,7 +447,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				final String mapsIdAttributeName =
 						findMapsIdPropertyName( elementTypeDescriptor, referencedPropertyName );
 				if ( mapsIdAttributeName != null ) {
-					ToOneAttributeMapping.addPrefixedPropertyPaths(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							mapsIdAttributeName,
 							elementTypeDescriptor.getEntityPersister().getIdentifierType(),
@@ -465,7 +455,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					);
 				}
 				else {
-					ToOneAttributeMapping.addPrefixedPropertyPaths(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							null,
 							propertyType,

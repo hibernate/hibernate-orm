@@ -19,12 +19,12 @@ public abstract class AbstractNaturalIdMapping implements NaturalIdMapping {
 
 	private final NavigableRole role;
 
-	public AbstractNaturalIdMapping(EntityMappingType declaringType, boolean mutable) {
+	public AbstractNaturalIdMapping(
+			EntityMappingType declaringType,
+			boolean mutable) {
 		this.declaringType = declaringType;
 		this.mutable = mutable;
-
 		this.cachesAccess = declaringType.getEntityPersister().getNaturalIdCacheAccessStrategy();
-
 		this.role = declaringType.getNavigableRole().append( PART_NAME );
 	}
 

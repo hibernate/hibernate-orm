@@ -98,7 +98,22 @@ class AuxiliaryTest {
 		assertPresenceOfNameFieldInMetamodelFor(
 				Book.class,
 				"GRAPH_ENTITY_GRAPH",
-				"Missing fetch profile attribute."
+				"Missing graph attribute."
+		);
+		assertPresenceOfFieldInMetamodelFor(
+				Book.class,
+				"_entityGraph",
+				"Missing graph attribute."
+		);
+		assertPresenceOfNameFieldInMetamodelFor(
+				Book.class,
+				"GRAPH_BOOK",
+				"Missing defaulted graph attribute."
+		);
+		assertPresenceOfFieldInMetamodelFor(
+				Book.class,
+				"_Book",
+				"Missing defaulted graph attribute."
 		);
 		assertPresenceOfMethodInMetamodelFor(
 				Book.class,

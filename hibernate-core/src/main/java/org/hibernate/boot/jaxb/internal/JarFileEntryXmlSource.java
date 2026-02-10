@@ -14,9 +14,7 @@ import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -44,13 +42,11 @@ public class JarFileEntryXmlSource {
 			MappingBinder mappingBinder,
 			Consumer<Binding<? extends JaxbBindableMappingDescriptor>> consumer) {
 		JAXB_LOGGER.tracef( "Seeking mapping documents in jar file: %s", jar.getName() );
-
-		final Origin origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
-
-		try ( JarFile jarFile = new JarFile(jar) ) {
-			final Enumeration<JarEntry> entries = jarFile.entries();
+		final var origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
+		try ( var jarFile = new JarFile( jar ) ) {
+			final var entries = jarFile.entries();
 			while ( entries.hasMoreElements() ) {
-				final JarEntry jarEntry = entries.nextElement();
+				final var jarEntry = entries.nextElement();
 				if ( jarEntry.getName().endsWith(".hbm.xml") ) {
 					JAXB_LOGGER.tracef( "Found 'hbm.xml' mapping in jar: %s", jarEntry.getName() );
 					consumer.accept( fromJarEntry( jarFile, jarEntry, origin, mappingBinder ) );

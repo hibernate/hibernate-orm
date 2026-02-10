@@ -63,7 +63,7 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmOver<T> copy(SqmCopyContext context) {
-		final SqmOver<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

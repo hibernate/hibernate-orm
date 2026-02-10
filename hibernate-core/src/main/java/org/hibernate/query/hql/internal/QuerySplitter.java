@@ -78,7 +78,7 @@ public class QuerySplitter {
 		final SqmCopyContext context = SqmCopyContext.noParamCopyContext();
 		// Copy the statement replacing the root's unmapped polymorphic reference with
 		// the concrete mapped descriptor entity domain type.
-		final SqmRoot<?> path = context.registerCopy(
+		final var path = context.registerCopy(
 				unmappedPolymorphicReference,
 				new SqmRoot<>(
 						mappedDescriptor,

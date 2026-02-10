@@ -4,10 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
-import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
@@ -45,6 +43,8 @@ import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
 import static org.hibernate.boot.model.internal.EntityBinder.bindEntityClass;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.registerGlobalGenerators;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
@@ -258,9 +258,9 @@ public final class AnnotationBinder {
 	}
 
 	private static void detectMappedSuperclassProblems(ClassDetails annotatedClass) {
-		if ( annotatedClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+		if ( isMappedSuperclass( annotatedClass ) ) {
 			// @Entity and @MappedSuperclass on the same class leads to NPE down the road
-			if ( annotatedClass.hasDirectAnnotationUsage( Entity.class ) ) {
+			if ( isEntity( annotatedClass ) ) {
 				throw new AnnotationException( "Type '" + annotatedClass.getName()
 						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
 			}
@@ -430,8 +430,7 @@ public final class AnnotationBinder {
 				.addRegisteredConversion( new RegisteredConversion(
 						registration.domainType(),
 						registration.converter(),
-						registration.autoApply(),
-						context
+						registration.autoApply()
 				) );
 	}
 

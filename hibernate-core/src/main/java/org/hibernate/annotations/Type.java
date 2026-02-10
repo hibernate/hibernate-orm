@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -31,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * BigDecimal amount;
  * </pre>
  * <p>
- * we may define an annotation type:
+ * we may define a custom annotation type:
  * <pre>
  * &#64;Retention(RUNTIME)
  * &#64;Target({METHOD,FIELD})
@@ -46,6 +47,27 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </pre>
  * <p>
  * which is much cleaner.
+ * <p>
+ * An implementation of {@link UserType} applied via a custom annotation
+ * may declare a constructor which accepts the annotation instance,
+ * allowing the annotation to be used to configure the type.
+ * <pre>
+ * &#64;Retention(RUNTIME)
+ * &#64;Target({METHOD,FIELD})
+ * &#64;Type(MonetaryAmountUserType.class)
+ * public @interface MonetaryAmount {
+ *     public Currency currency();
+ * }
+ * </pre>
+ * <pre>
+ * public class MonetaryAmountUserType implements UserType&lt;Amount&gt; {
+ *     private final Currency currency;
+ *     public MonetaryAmountUserType(MonetaryAmount annotation) {
+ *         currency = annotation.currency();
+ *     }
+ *     ...
+ * }
+ * </pre>
  * <p>
  * The use of a {@code UserType} is usually mutually exclusive with the
  * compositional approach of {@link JavaType} and {@link JdbcType}.
@@ -64,9 +86,14 @@ public @interface Type {
 
 	/**
 	 * Parameters to be injected into the custom type after it is
-	 * instantiated. The {@link UserType} implementation must implement
+	 * instantiated. The {@link UserType} implementation may implement
 	 * {@link org.hibernate.usertype.ParameterizedType} to receive the
-	 * parameters.
+	 * parameters, or it may obtain them via
+	 * {@link UserTypeCreationContext#getParameters()}.
+	 *
+	 * @apiNote A better approach is to declare a custom annotation type,
+	 * as described {@linkplain Type above}, and specify parameters in a
+	 * type safe way as members of the custom annotation.
 	 */
 	Parameter[] parameters() default {};
 }

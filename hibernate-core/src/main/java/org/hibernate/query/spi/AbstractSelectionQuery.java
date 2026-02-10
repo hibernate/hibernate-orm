@@ -147,7 +147,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public List<R> list() {
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -174,22 +174,32 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
-
 		final var session = getSession();
 		final var options = getQueryOptions();
-
 		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
 		prepareForExecution();
+		prepareSessionFlushMode( session );
+		prepareSessionCacheMode( session );
+	}
 
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionFlushMode(SharedSessionContractImplementor session) {
 		assert sessionFlushMode == null;
-		assert sessionCacheMode == null;
-
 		final var effectiveFlushMode = getQueryOptions().getFlushMode();
 		if ( effectiveFlushMode != null && session instanceof SessionImplementor statefulSession ) {
 			sessionFlushMode = statefulSession.getHibernateFlushMode();
 			statefulSession.setHibernateFlushMode( effectiveFlushMode );
 		}
+	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void prepareSessionCacheMode(SharedSessionContractImplementor session) {
+		assert sessionCacheMode == null;
 		final var effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = session.getCacheMode();
@@ -292,19 +302,11 @@ public abstract class AbstractSelectionQuery<R>
 
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
 		final int size = list.size();
-		if ( size == 0 ) {
-			return null;
-		}
-		else {
-			final T first = list.get( 0 );
-			// todo (6.0) : add a setting here to control whether to perform this validation or not
-			for ( int i = 1; i < size; i++ ) {
-				if ( list.get( i ) != first ) {
-					throw new NonUniqueResultException( list.size() );
-				}
-			}
-			return first;
-		}
+		return switch ( size ) {
+			case 0 -> null;
+			case 1 -> list.get( 0 );
+			default -> throw new NonUniqueResultException( size );
+		};
 	}
 
 	@Override

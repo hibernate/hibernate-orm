@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -14,6 +15,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public class PreCollectionRemoveEvent extends AbstractCollectionEvent {
 
+	@Internal
 	public PreCollectionRemoveEvent(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
@@ -28,11 +30,13 @@ public class PreCollectionRemoveEvent extends AbstractCollectionEvent {
 		);
 	}
 
+	@Internal
 	public PreCollectionRemoveEvent(
+			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
 			Object id,
 			String entityName,
 			Object loadedOwner) {
-		super( collection, entityName, loadedOwner, id );
+		super( collectionPersister, collection, entityName, loadedOwner, id );
 	}
 }

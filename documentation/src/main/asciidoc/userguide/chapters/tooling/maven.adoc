@@ -20,7 +20,7 @@ for more details on the available parameters.
 
 .Apply the Bytecode Enhancement plugin
 ====
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 include::extras/maven-example.pom[]
 ----
@@ -159,14 +159,14 @@ even when accessing entity fields directly..
 
 
 [[tooling-maven-modelgen]]
-==== Static Metamodel Generation
+==== Annotation processor for static metamodel and repositories
 
-Static metamodel generation should be integrated into a maven project through the annotation processor
+<<tooling-modelgen,Static metamodel and repository>> generation should be integrated into a maven project through the annotation processor
 paths of the maven compiler plugin.
 
 .Integrate the metamodel generator
 ====
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 include::extras/maven-example-metamodel.pom[]
 ----

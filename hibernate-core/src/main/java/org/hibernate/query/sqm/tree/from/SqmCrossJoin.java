@@ -9,7 +9,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -35,7 +34,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
  *         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
  *         side.  To properly handle the type parameters in the hierarchy we would need to
  *         change this to accept type parameter for the left-handle side as well.
- *         <p/>
+ *         <p>
  *         Another option is to not make it a join as in `SqmJoin`.  Instead, model it
  *         as a root with its predicate(s) added to an internal `SqmPredicateCollection` (ansi join predicate)
  *         or to the query where clause (theta joins).
@@ -93,11 +92,11 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	@Override
 	public SqmCrossJoin<T> copy(SqmCopyContext context) {
-		final SqmCrossJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCrossJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCrossJoin<>(
 						getNavigablePath(),
@@ -145,7 +144,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
+		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),

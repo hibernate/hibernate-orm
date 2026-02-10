@@ -11,7 +11,6 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.FetchSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -51,7 +50,6 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
@@ -71,7 +69,6 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -85,7 +82,6 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -100,6 +96,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -149,6 +146,11 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class MySQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
+
+	/**
+	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
+	 */
+	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
 
 	private final MySQLStorageEngine storageEngine;
 
@@ -223,7 +225,7 @@ public class MySQLDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
-		storageEngine = createStorageEngine( Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE ) );
+		storageEngine = createStorageEngine( Environment.getProperties().getProperty( STORAGE_ENGINE ) );
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
@@ -351,7 +353,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// MySQL 5.7 brings JSON native support with a dedicated datatype
 		// https://dev.mysql.com/doc/refman/5.7/en/json.html
@@ -367,12 +369,21 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		final CapacityDependentDdlType.Builder varcharBuilder =
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+				CHAR,
+				false,
+				columnType( CHAR ),
+				"char($l)",
+				castType( CHAR ),
+				this
+		) );
+
+		final var varcharBuilder =
 				CapacityDependentDdlType.builder(
 								VARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( CLOB ),
-								columnType( CHAR ),
+								this::charCastType,
 								castType( CHAR ),
 								this
 						)
@@ -385,12 +396,12 @@ public class MySQLDialect extends Dialect {
 
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
-		final CapacityDependentDdlType.Builder nvarcharBuilder =
+		final var nvarcharBuilder =
 				CapacityDependentDdlType.builder(
 								NVARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( NCLOB ),
-								columnType( NCHAR ),
+								this::charCastType,
 								castType( NCHAR ),
 								this
 						)
@@ -401,7 +412,7 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final CapacityDependentDdlType.Builder varbinaryBuilder =
+		final var varbinaryBuilder =
 				CapacityDependentDdlType.builder(
 								VARBINARY,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
@@ -435,7 +446,7 @@ public class MySQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( CLOB,
-								columnType( CLOB ), castType( CHAR ), this )
+								columnType( CLOB ),  castType( CHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -451,8 +462,17 @@ public class MySQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) {
+			@Override
+			public String getCastTypeName(Long length) {
+				return length == null ? "char" : charCastType( length.intValue() );
+			}
+		} );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	private String charCastType(int length) {
+		return length > MAX_CHAR_SIZE ? "char" : "char(" + length + ")";
 	}
 
 	@Override
@@ -589,6 +609,8 @@ public class MySQLDialect extends Dialect {
 		super.initializeFunctionRegistry(functionContributions);
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.soundex();
 		functionFactory.radians();
@@ -640,11 +662,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.makedateMaketime();
 		functionFactory.localtimeLocaltimestamp();
 
-		final BasicTypeRegistry basicTypeRegistry =
-				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-
-		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-
 		// pi() produces a value with 7 digits unless we're explicit
 		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
@@ -673,6 +690,24 @@ public class MySQLDialect extends Dialect {
 
 		functionFactory.listagg_groupConcat();
 
+		registerJsonFunctions( functionFactory );
+
+		functionFactory.unnest_emulated();
+
+		// TODO: which one is correct??
+		functionFactory.regexpLike_regexp();
+		functionFactory.regexpLike();
+
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+		}
+
+		functionFactory.hex( "hex(?1)" );
+		functionFactory.sha( "unhex(sha2(?1, 256))" );
+		functionFactory.md5( "unhex(md5(?1))" );
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.jsonValue_mysql();
 		functionFactory.jsonQuery_mysql();
 		functionFactory.jsonExists_mysql();
@@ -687,19 +722,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_mysql();
 		functionFactory.jsonArrayAppend_mysql();
 		functionFactory.jsonArrayInsert_mysql();
-		functionFactory.regexpLike_regexp();
-
-		functionFactory.unnest_emulated();
 		functionFactory.jsonTable_mysql();
-		functionFactory.regexpLike();
-
-		if ( supportsRecursiveCTE() ) {
-			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
-		}
-
-		functionFactory.hex( "hex(?1)" );
-		functionFactory.sha( "unhex(sha2(?1, 256))" );
-		functionFactory.md5( "unhex(md5(?1))" );
 	}
 
 	/**
@@ -716,7 +739,7 @@ public class MySQLDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
 		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
@@ -960,7 +983,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
-		final StringBuilder type = new StringBuilder();
+		final var type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
 		for ( String value : values ) {

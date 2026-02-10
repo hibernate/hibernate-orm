@@ -77,8 +77,6 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -87,10 +85,8 @@ import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -217,11 +213,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	private static Integer getCompatibilityLevel(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet resultSet =
-						statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery(
+							"SELECT compatibility_level FROM sys.databases where name = db_name();" ) ) {
 				if ( resultSet.next() ) {
 					return resultSet.getInt( 1 );
 				}
@@ -283,7 +279,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
@@ -362,11 +358,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		final BasicTypeRegistry basicTypeRegistry =
+		final var basicTypeRegistry =
 				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
-		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final var dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final var timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		final var timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
@@ -444,37 +440,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		if ( getVersion().isSameOrAfter( 13 ) ) {
-			functionFactory.jsonValue_sqlserver();
-			functionFactory.jsonQuery_sqlserver();
-			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonSet_sqlserver();
-			functionFactory.jsonRemove_sqlserver();
-			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonArrayInsert_sqlserver();
-			functionFactory.jsonTable_sqlserver();
-		}
 
-		functionFactory.xmlelement_sqlserver();
-		functionFactory.xmlcomment_sqlserver();
-		functionFactory.xmlforest_sqlserver();
-		functionFactory.xmlconcat_sqlserver();
-		functionFactory.xmlpi_sqlserver();
-		functionFactory.xmlquery_sqlserver();
-		functionFactory.xmlexists_sqlserver();
-		functionFactory.xmlagg_sqlserver();
-		functionFactory.xmltable_sqlserver();
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
 
 		functionFactory.unnest_sqlserver();
 
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
-			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
-			functionFactory.jsonObjectAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();
@@ -498,6 +471,39 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.md5( "hashbytes('MD5', ?1)" );
 		if ( getVersion().isSameOrAfter( 17 ) ) {
 			functionFactory.regexpLike_predicateFunction();
+		}
+	}
+
+	private static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement_sqlserver();
+		functionFactory.xmlcomment_sqlserver();
+		functionFactory.xmlforest_sqlserver();
+		functionFactory.xmlconcat_sqlserver();
+		functionFactory.xmlpi_sqlserver();
+		functionFactory.xmlquery_sqlserver();
+		functionFactory.xmlexists_sqlserver();
+		functionFactory.xmlagg_sqlserver();
+		functionFactory.xmltable_sqlserver();
+	}
+
+	private void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			functionFactory.jsonValue_sqlserver();
+			functionFactory.jsonQuery_sqlserver();
+			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonSet_sqlserver();
+			functionFactory.jsonRemove_sqlserver();
+			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayInsert_sqlserver();
+			functionFactory.jsonTable_sqlserver();
+		}
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObjectAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
 		}
 	}
 
@@ -631,12 +637,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeTableName();
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSameOrAfter( 16 ) || super.supportsIfExistsBeforeConstraintName();
+		return getVersion().isSameOrAfter( 16 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -748,7 +759,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		final StringBuilder buffer =
+		final var buffer =
 				new StringBuilder( sql.length() + hints.length() + 12 );
 		final int pos = sql.indexOf( ';' );
 		if ( pos > -1 ) {
@@ -1100,7 +1111,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getCreateIndexTail(boolean unique, List<Column> columns) {
 		if ( unique ) {
-			final StringBuilder tail = new StringBuilder();
+			final var tail = new StringBuilder();
 			for ( Column column : columns ) {
 				if ( column.isNullable() ) {
 					tail.append( tail.isEmpty() ? " where " : " and " )

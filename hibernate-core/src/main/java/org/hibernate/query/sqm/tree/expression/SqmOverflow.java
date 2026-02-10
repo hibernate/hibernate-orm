@@ -30,7 +30,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmOverflow<T> copy(SqmCopyContext context) {
-		final SqmOverflow<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

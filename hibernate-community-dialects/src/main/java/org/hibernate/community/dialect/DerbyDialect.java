@@ -671,7 +671,7 @@ public class DerbyDialect extends Dialect {
 						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 	}

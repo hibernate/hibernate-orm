@@ -86,11 +86,11 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	private void execute(StringBuilder declaration) {
 		declaration
-				.append("\t\t\t.executeUpdate()");
-		if ( isReactive() ) {
-			if ( fullReturnType.endsWith("<java.lang.Void>") ) {}
+				.append(".executeUpdate()");
+		if ( isReactive()
+				&& fullReturnType.endsWith("<java.lang.Void>") ) {
 			declaration
-					.append(".replaceWithVoid()");
+					.append( ".replaceWithVoid()" );
 		}
 	}
 

@@ -32,11 +32,6 @@ public class MapEntryJavaType extends AbstractClassJavaType<Map.Entry> {
 	}
 
 	@Override
-	public Map.Entry fromString(CharSequence string) {
-		throw new UnsupportedOperationException( "Unsupported attempt create Map.Entry from String" );
-	}
-
-	@Override
 	public <X> X unwrap(Map.Entry value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException( "Unsupported attempt to unwrap Map.Entry value" );
 	}

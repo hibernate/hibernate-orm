@@ -34,6 +34,7 @@ public interface BasicJavaType<T> extends JavaType<T> {
 
 	@Override
 	default T fromString(CharSequence string) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Type " + getTypeName()
+						+ " does not support conversion from String");
 	}
 }

@@ -37,7 +37,7 @@ import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
  * to {@link Time} values.  This capability is shared with
  * {@link JdbcDateJavaType} and {@link JdbcTimestampJavaType}.
  */
-public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
+public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 	public static final JdbcTimeJavaType INSTANCE = new JdbcTimeJavaType();
 
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
@@ -52,19 +52,17 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 
 	public JdbcTimeJavaType() {
-		super( Date.class, TimeMutabilityPlan.INSTANCE );
+		super( Time.class, TimeMutabilityPlan.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
 
 	@Override
-	public Class<Date> getJavaType() {
-		// wrong, but needed for backward compatibility
-		//noinspection unchecked, rawtypes
-		return (Class) java.sql.Time.class;
+	public Class<Time> getJavaType() {
+		return java.sql.Time.class;
 	}
 
 	@Override
@@ -75,7 +73,12 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public int extractHashCode(Date value) {
+	public Time cast(Object value) {
+		return (Time) value;
+	}
+
+	@Override
+	public int extractHashCode(Time value) {
 		final var calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		int hashCode = 1;
@@ -87,7 +90,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public boolean areEqual(Date one, Date another) {
+	public boolean areEqual(Time one, Time another) {
 		if ( one == another ) {
 			return true;
 		}
@@ -112,60 +115,46 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date coerce(Object value, CoercionContext coercionContext) {
+	public Time coerce(Object value) {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public Object unwrap(Date value, Class type, WrapperOptions options) {
+	public <X> X unwrap(Time value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			final Time time = value instanceof java.sql.Time
-					? (java.sql.Time) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
-			final var localTime = time.toLocalTime();
-			long millis = time.getTime() % 1000;
-			if ( millis == 0 ) {
-				return localTime;
-			}
-			if ( millis < 0 ) {
-				// The milliseconds for a Time could be negative,
-				// which usually means the time is in a different time zone
-				millis += 1_000L;
-			}
-			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+			return type.cast( unwrapLocalTime( value ) );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return value instanceof Time
-					? value
-					: new Time( value.getTime() % 86_400_000 );
+			return type.cast( value );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return value;
+			// SHOULD THROW!
+//			throw new IllegalArgumentException( "Illegal attempt to treat 'java.sql.Time' as 'java.sql.Date'" );
+			return type.cast( value );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return value.getTime();
+			return type.cast( value.getTime() );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return toString( value );
+			return type.cast( toString( value ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final var gregorianCalendar = new GregorianCalendar();
 			gregorianCalendar.setTimeInMillis( value.getTime() );
-			return gregorianCalendar;
+			return type.cast( gregorianCalendar );
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( value.getTime() );
+			return type.cast( new java.sql.Timestamp( value.getTime() ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
@@ -175,8 +164,22 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownUnwrap( type );
 	}
 
+	private static LocalTime unwrapLocalTime(Time value) {
+		final var localTime = value.toLocalTime();
+		long millis = value.getTime() % 1000;
+		if ( millis == 0 ) {
+			return localTime;
+		}
+		if ( millis < 0 ) {
+			// The milliseconds for a Time could be negative,
+			// which usually means the time is in a different time zone
+			millis += 1_000L;
+		}
+		return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+	}
+
 	@Override
-	public Date wrap(Object value, WrapperOptions options) {
+	public Time wrap(Object value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -186,11 +189,11 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( value instanceof Date date ) {
-			return new Time( date.getTime() % 86_400_000 );
+			return toTime( date );
 		}
 
 		if ( value instanceof LocalTime localTime ) {
-			final Time time = Time.valueOf( localTime );
+			final var time = Time.valueOf( localTime );
 			if ( localTime.getNano() == 0 ) {
 				return time;
 			}
@@ -209,18 +212,23 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	@Override
-	public String toString(Date value) {
-		if ( value instanceof java.sql.Time time ) {
-			return LITERAL_FORMATTER.format( time.toLocalTime() );
-		}
-		else {
-			return LITERAL_FORMATTER.format( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
-		}
+	static Time toTime(Date date) {
+		return new Time( date.getTime() % 86_400_000 );
+	}
+
+	private static LocalTime fromDate(Date value) {
+		return value instanceof Time time
+				? time.toLocalTime()
+				: LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
 	}
 
 	@Override
-	public Date fromString(CharSequence string) {
+	public String toString(Time value) {
+		return LITERAL_FORMATTER.format( fromDate( value ) );
+	}
+
+	@Override
+	public Time fromString(CharSequence string) {
 		try {
 			final var temporalAccessor = LITERAL_FORMATTER.parse( string );
 			final var localTime = LocalTime.from( temporalAccessor );
@@ -234,10 +242,10 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
+	public Time fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
 			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			return java.sql.Time.valueOf( temporalAccessor.query( LocalTime::from ) );
+			return Time.valueOf( temporalAccessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
@@ -245,13 +253,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Time time ) {
-			LITERAL_FORMATTER.formatTo( time.toLocalTime(), sb );
-		}
-		else {
-			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
-		}
+	public void appendEncodedString(SqlAppender sb, Time value) {
+		LITERAL_FORMATTER.formatTo( fromDate( value ), sb );
 	}
 
 	@Override
@@ -268,17 +271,15 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<Time> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-
-	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
+	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Time> {
 		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
 
 		@Override
-		public Date deepCopyNotNull(Date value) {
+		public Time deepCopyNotNull(Time value) {
 			return new Time( value.getTime() );
 		}
 	}

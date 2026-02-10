@@ -194,6 +194,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 			statement = new UpdateStatement(
 					updateStatement,
 					updateStatement.getTargetTable(),
+					updateStatement.getMutationTarget(),
 					updateStatement.getFromClause(),
 					updateStatement.getAssignments(),
 					Predicate.combinePredicates(
@@ -216,6 +217,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 			statement = new DeleteStatement(
 					deleteStatement,
 					deleteStatement.getTargetTable(),
+					deleteStatement.getMutationTarget(),
 					deleteStatement.getFromClause(),
 					Predicate.combinePredicates(
 							deleteStatement.getRestriction(),

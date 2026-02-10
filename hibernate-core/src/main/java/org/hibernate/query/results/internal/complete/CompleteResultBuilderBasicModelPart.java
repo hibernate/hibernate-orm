@@ -7,7 +7,6 @@ package org.hibernate.query.results.internal.complete;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -16,6 +15,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * CompleteResultBuilder for basic-valued ModelParts
@@ -62,9 +62,10 @@ public class CompleteResultBuilderBasicModelPart
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final TableReference tableReference = tableReference( creationStateImpl );
-		final SqlSelection sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
+		final var creationStateImpl = impl( domainResultCreationState );
+		final var sqlSelection =
+				sqlSelection( jdbcResultsMetadata, creationStateImpl,
+						tableReference( creationStateImpl ) );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
@@ -80,7 +81,7 @@ public class CompleteResultBuilderBasicModelPart
 			DomainResultCreationStateImpl creationStateImpl,
 			TableReference tableReference) {
 		return creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableReference,
@@ -96,22 +97,23 @@ public class CompleteResultBuilderBasicModelPart
 	private TableReference tableReference(DomainResultCreationStateImpl creationStateImpl) {
 		return creationStateImpl.getFromClauseAccess()
 				.getTableGroup( navigablePath.getParent() )
-				.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
+				.resolveTableReference( navigablePath, modelPart,
+						modelPart.getContainingTableExpression() );
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderBasicModelPart that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
-		return navigablePath.equals( that.navigablePath )
-				&& modelPart.equals( that.modelPart )
-				&& columnAlias.equals( that.columnAlias );
+		else {
+			return navigablePath.equals( that.navigablePath )
+					&& modelPart.equals( that.modelPart )
+					&& columnAlias.equals( that.columnAlias );
+		}
 	}
 
 	@Override

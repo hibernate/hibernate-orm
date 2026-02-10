@@ -70,7 +70,7 @@ public class ParameterIsNullTest {
 			}
 			catch (Exception e) {
 				assertThat( e ).isInstanceOf( IllegalArgumentException.class );
-				assertThat( e.getMessage() ).contains( "Parameter value", "did not match expected type" );
+				assertThat( e.getMessage() ).contains( "Argument to query parameter has an incompatible type", "is not assignable to" );
 			}
 		} );
 	}

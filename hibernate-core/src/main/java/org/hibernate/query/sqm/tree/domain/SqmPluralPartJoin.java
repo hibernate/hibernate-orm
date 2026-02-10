@@ -67,12 +67,12 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 
 	@Override
 	public SqmPluralPartJoin<O, T> copy(SqmCopyContext context) {
-		final SqmPluralPartJoin<O, T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmPluralPartJoin<O, T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmPluralPartJoin<>(
 						lhsCopy,

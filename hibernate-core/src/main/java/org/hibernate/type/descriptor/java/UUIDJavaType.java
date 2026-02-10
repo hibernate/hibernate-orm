@@ -33,6 +33,11 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 	}
 
 	@Override
+	public UUID cast(Object value) {
+		return (UUID) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}
@@ -63,19 +68,18 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		return super.getDefaultSqlLength( dialect, jdbcType );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(UUID value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( UUID.class.isAssignableFrom( type ) ) {
-			return (X) PassThroughTransformer.INSTANCE.transform( value );
+			return type.cast( PassThroughTransformer.INSTANCE.transform( value ) );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) ToStringTransformer.INSTANCE.transform( value );
+			return type.cast( ToStringTransformer.INSTANCE.transform( value ) );
 		}
 		if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) ToBytesTransformer.INSTANCE.transform( value );
+			return type.cast( ToBytesTransformer.INSTANCE.transform( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

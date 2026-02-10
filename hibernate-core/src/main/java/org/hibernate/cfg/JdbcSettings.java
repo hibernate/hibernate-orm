@@ -303,6 +303,20 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String AUTOCOMMIT = "hibernate.connection.autocommit";
 
 	/**
+	 * Controls the login timeout in seconds for JDBC connections obtained
+	 * from any {@link ConnectionProvider} implementation which respects
+	 * this setting.
+	 * <p>
+	 * If this setting is not explicitly specified, Hibernate does not modify
+	 * the login timeout of the JDBC {@link java.sql.DriverManager}.
+	 *
+	 * @see java.sql.DriverManager#setLoginTimeout(int)
+	 *
+	 * @since 7.3
+	 */
+	String LOGIN_TIMEOUT = "hibernate.connection.login_timeout";
+
+	/**
 	 * Indicates that connections obtained from the configured {@link ConnectionProvider} have
 	 * {@linkplain java.sql.Connection#getAutoCommit auto-commit} already disabled when they
 	 * are acquired.
@@ -541,7 +555,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 
 	/**
 	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} is allowed during bootstrap.
-	 * <p/>
+	 * <p>
 	 * Allowable options are defined by {@linkplain JdbcMetadataOnBoot}.  For configuration, any of the
 	 * following forms are accepted: <ul>
 	 *     <li>an instance of {@linkplain JdbcMetadataOnBoot}</li>

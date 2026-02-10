@@ -1,6 +1,153 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.0.CR2 (February 03, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37404
+
+
+** Bug
+    * HHH-20121 NPE when logging loaded values in follow-on locking post action
+    * HHH-20118 Vector operator SQL templates miss parenthesis around
+    * HHH-20107 SparseFloatVector and SparseDoubleVector accept invalid size <= 0
+    * HHH-20103 @ElementCollection mapping should respect @JoinColumn(foreignKey)
+    * HHH-20102 spec says LockTimeoutException + QueryTimeoutException should not be thrown on PostgreSQL
+    * HHH-20101 Error persisting child entity of abstract generic entity
+    * HHH-19715 read-only mode and collections
+
+** Improvement
+    * HHH-20127 Avoid initializing the BigDecimal class when not strictly necessary
+    * HHH-19902 PostgreSQL failed statements mark tx for rollback
+    * HHH-19610 Make GraphParser support treatedSubGraph from root
+
+** New Feature
+    * HHH-19045 Bytecode enhancer should add a default constructor if it's missing
+
+** Sub-task
+    * HHH-20112 Skip concurrent modification related tests
+    * HHH-20111 Avoid harcoded column definition in tests
+    * HHH-20110 Handle TIMESTAMP and NUMERIC column types in Spanner PG
+    * HHH-20109 Handle Column types for Spanner PG
+    * HHH-20108 Fix connection URL in Spanner PG
+    * HHH-20100 Fix Foreign key issue
+    * HHH-20099 Handle ON CONFLICT clause for Spanner
+    * HHH-20098 Support FORWARD_ONLY scrollable resultset
+
+Changes in 7.3.0.CR1 (January 23, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/35980
+
+
+** Bug
+    * HHH-20095 New SchemaValidator nullability check should only consider explicitly declared nullability
+    * HHH-20088 HbmXmlTransform does not consider the <set >, <map>, <list>, <bag> and <array> outer-join value to determine the fetch mode. 
+    * HHH-20087 NPE with StatelessSession + Bean Validation
+    * HHH-20079 HbmXmlTransform does not create <sql-join-table-restriction> for ManyToMany attributes
+    * HHH-20072 Javadoc cannot be generated without Jackson 3 dependencies
+    * HHH-20069 `DB2iDialect.rowId` causes an error in merge queries
+    * HHH-20055 <synchronize> is ignored in orm.xml
+    * HHH-20041 DB2 for z IN tuple list predicate performs badly
+    * HHH-20037 MappedSuperClasses can be enhanced more than once resulting in Duplicate annotation interface org...EnhancementInfo Exception
+    * HHH-20032 SubSequence.subSequence violates CharSequence contract for start == end == length()
+    * HHH-20027 Fix failing parsing of PostgreSQL canonical lock_timeout formats (0, ms, s, min, h)
+    * HHH-20021 Binding GregorianCalendar parameter fails with "Type registration was corrupted"
+    * HHH-20015 Hibernate Maven Plugin 7.x does not include maven project dependencies in the enhancement classpath
+    * HHH-20006 Outcome of getSingleResult changed since 6.0
+    * HHH-20002 Ensure physical JDBC connection is released when closing LogicalConnectionManagedImpl
+    * HHH-19999 Caching APIs use Comparator<?> for version comparison in Hibernate ORM 7.2.0.Final
+    * HHH-19932 NullPointerException in SqmInterpretationsKey::toString
+    * HHH-19929 DB2iDialect problem with supportsRowValueConstructorSyntaxInInSubQuery
+    * HHH-19861 EntityNotFoundException when using @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED) on FK fields
+    * HHH-19390 obsolete documentation for bytecode enhancer
+    * HHH-19192 Bulk delete of owner with soft-delete element-collection physically deletes the collection rows
+    * HHH-18835 AssertionError when executing insert-select
+    * HHH-18040 MySQL update/delete statement issue with subqueries
+    * HHH-12678 PersistentClass.checkColumnDuplication fails for columns with same name from distinct tables
+    * HHH-12100 Misleading exception message in JTASessionContext
+    * HHH-9035 Globally quoted identifiers and id class not working properly with quoted join columns error Unable to find logical column name from physical name JobPositon+id in table JOB+Position
+    * HHH-7287 Problem in caching proper natural-id-values when obtaining result by naturalIdQuery
+
+** Deprecation
+    * HHH-20073 deprecate ByteArrayJavaType and CharacterArrayJavaType
+
+** Improvement
+    * HHH-20076 @Version columns should be NOT NULL
+    * HHH-20059 TiDB: don't propagate readonly to server
+    * HHH-20058 TiDB: Enable shared lock promotion
+    * HHH-20054 Optimize BasicTypeImpl allocation
+    * HHH-20030 FilterImpl: cache validate() results and harden deserialization restore
+    * HHH-20026 Stop hibernate-maven-plugin execution on errors
+    * HHH-20025 Align Generator with UserType
+    * HHH-20017 Refactor AnnotationBasedGenerator to align with AnnotationBasedUserType
+    * HHH-20013 remove dependency to Classmate
+    * HHH-20012 Update the TiDBDialect
+    * HHH-20011 Upgrade minmum version supported for cockroach and upgrade db testing to 25
+    * HHH-20009 docker_db.sh fails to start PostgreSQL 17 and 18 on Apple Silicon (ARM64)
+    * HHH-19997 Update TiDB testing environment
+    * HHH-19992 auto-generate check constraint on @OrderColumn
+    * HHH-19950 Alternative to pre-set parameters offered for deprecated DynamicParameterizedType
+    * HHH-19919 Indexed collection initializers should resolveInstance instead of resolveKey
+    * HHH-19897 Hibernate Envers audited associations mapped-by non-audited ones
+    * HHH-19890 Support a FormatMapper for Jackson3
+    * HHH-19867 Add support for Oracle 26ai in OTP
+    * HHH-19804 Documentation should recommend `annotationProcessorPathsUseDepMgmt` in maven-compiler-plugin when using hibernate-processor
+    * HHH-18984 Remove deprecated Gradle API usage in Hibernate Gradle Plugin
+    * HHH-18461 Improve dialects to generate sql contains offset clause if first result of native query is explicit 0
+    * HHH-14584 Allow PhysicalNamingStrategy implementations to detect when a name is implicit or explicit
+    * HHH-7202 Early detection of bad targetEntity
+    * HHH-6882 Expose CollectionPersister from AbstractCollectionEvent
+    * HHH-6598 Immutable entities should not have up-to-date checks performed on a flush
+
+** New Feature
+    * HHH-20060 TenantCredentialsMapper
+    * HHH-20029 hibernate.connection.login_timeout
+    * HHH-19993 Introduce UserTypeCreationContext and AnnotationBasedUserType
+    * HHH-19989 RemovalsMode.EXCLUDE
+    * HHH-19978 Support type variable members also in abstract entities
+    * HHH-19880 Move Hibernate Tools' `hibernate-assistant` module to Hibernate ORM
+    * HHH-19826 Add array_reverse and array_sort functions
+    * HHH-19541 "exists" queries
+    * HHH-18998 Supply UserType and UserCollectionType with type-safe config via annotation
+    * HHH-17657 Support named enum types on h2
+    * HHH-16383 NaturalIdClass
+
+** Sub-task
+    * HHH-20091 Fix CTE Rendering Syntax for Spanner
+    * HHH-20086 Handle no escape character in Spanner PG dialect
+    * HHH-20066 Support only JSON Aggregation for Spanner PG Dialect
+    * HHH-20050 Create Spanner PostgreSQL dialect
+    * HHH-20045 Add support to create unique index when unique column is not supported
+    * HHH-20038 Fixes for SpannerDialect-3
+    * HHH-20034 Fixes for SpannerDialect-2
+    * HHH-20033 Introduce Dialect#getSetOperatorSqlString to support Spanner's explicit DISTINCT requirement
+    * HHH-20003 Spanner temporary table exporter
+    * HHH-19991 Fixes for SpannerDialect 
+    * HHH-19983 Config for running tests on Spanner emualtor 
+
+Changes in 7.2.0.CR4 (December 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/36476
+
+
+** Bug
+    * HHH-19980 In JTA after-completion callbacks may get ignored
+    * HHH-19979 processor should handle @NamedEntityGraph with defaulted name
+    * HHH-19975 Calling entityManager.find(clazz, id) with null id throws NullPointerException
+    * HHH-19972 OptionalTableUpdateOperation can fail on PostgreSQL < 15 and CockroachDB
+    * HHH-19963 Wrong references in entity fields with circular associations
+    * HHH-19958 `<generated>` tag in orm.xml is not implemented
+    * HHH-19955 Thread-safety issue in EntityEntryContext resulting in NullPointerException for Session.contains() calls.
+    * HHH-19843 Bean Validation may fail on operations with stateless session
+    * HHH-18871 Nested NativeQuery mappings causing 'Could not locate TableGroup' exception after migration
+    * HHH-18217 StatelessSession.upsert() for entity with all-null non-id fields, or no non-id field
+
+** Improvement
+    * HHH-19943 Comparison of generic nested EmbeddedId's fails for JPQL and Criteria API
+    * HHH-19215 Extends Dialect#addQueryHints to support straight_join syntax
+
 Changes in 7.2.0.CR3 (November 25, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

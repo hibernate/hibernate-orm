@@ -29,7 +29,7 @@
  * <p>
  * We now present a couple of example configuration files.
  *
- * <h3>Example JPA configuration file</h3>
+ * <h2>Example JPA configuration file</h2>
  *
  * The following JPA configuration may be specified in a file named {@code persistence.xml}:
  *

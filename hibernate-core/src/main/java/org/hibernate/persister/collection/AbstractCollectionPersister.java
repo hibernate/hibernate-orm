@@ -177,6 +177,8 @@ public abstract class AbstractCollectionPersister
 
 	// columns
 	protected final String[] keyColumnNames;
+	protected final String[] keyFormulaTemplates;
+	protected final String[] keyFormulas;
 	protected final String[] indexColumnNames;
 	protected final String[] indexFormulaTemplates;
 	protected final String[] indexFormulas;
@@ -297,6 +299,8 @@ public abstract class AbstractCollectionPersister
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 
+		final var typeConfiguration = creationContext.getTypeConfiguration();
+
 		// KEY
 
 		final var key = collectionBootDescriptor.getKey();
@@ -304,16 +308,19 @@ public abstract class AbstractCollectionPersister
 		keyType = key.getType();
 		final int keySpan = key.getColumnSpan();
 		keyColumnNames = new String[keySpan];
+		keyFormulaTemplates = new String[keySpan];
+		keyFormulas = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
 		for ( var selectable: key.getSelectables() ) {
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnAliases[k] = selectable.getAlias( dialect, table );
-			if ( selectable instanceof Column column ) {
-				keyColumnNames[k] = column.getQuotedName( dialect );
+			if ( selectable instanceof Formula formula ) {
+				keyFormulaTemplates[k] = formula.getTemplate( dialect, typeConfiguration );
+				keyFormulas[k] = formula.getFormula();
 			}
-			else {
-				throw new MappingException( "Collection keys may not contain formulas: " + navigableRole.getFullPath() );
+			else if ( selectable instanceof Column column ) {
+				keyColumnNames[k] = column.getQuotedName( dialect );
 			}
 			k++;
 		}
@@ -333,8 +340,6 @@ public abstract class AbstractCollectionPersister
 		// Defer this after the element persister was determined,
 		// because it's needed in OneToManyPersister.getTableName()
 		spaces[0] = getTableName();
-
-		final var typeConfiguration = creationContext.getTypeConfiguration();
 
 		final int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -1013,6 +1018,7 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
+				.addRestriction( keyFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
@@ -1026,8 +1032,9 @@ public abstract class AbstractCollectionPersister
 			return new SimpleSelect( getFactory() )
 					.setTableName( getTableName() )
 					.addRestriction( getKeyColumnNames() )
+					.addRestriction( getKeyFormulas() )
 					.addRestriction( getIndexColumnNames() )
-					.addRestriction( indexFormulas )
+					.addRestriction( getIndexFormulas() )
 					.addWhereToken( sqlWhereString )
 					.addColumn( "1" )
 					.toStatementString();
@@ -1039,8 +1046,9 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
+				.addRestriction( getKeyFormulas() )
 				.addRestriction( getElementColumnNames() )
-				.addRestriction( elementFormulas )
+				.addRestriction( getElementFormulas() )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
@@ -1056,6 +1064,18 @@ public abstract class AbstractCollectionPersister
 
 	public String[] getKeyColumnNames() {
 		return keyColumnNames;
+	}
+
+	public String[] getKeyFormulas() {
+		return keyFormulas;
+	}
+
+	public String[] getElementFormulas() {
+		return elementFormulas;
+	}
+
+	public String[] getIndexFormulas() {
+		return indexFormulas;
 	}
 
 	@Override

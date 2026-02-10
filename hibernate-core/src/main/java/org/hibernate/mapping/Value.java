@@ -12,6 +12,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
@@ -52,6 +53,13 @@ public interface Value extends Serializable {
 	List<Column> getColumns();
 
 	/**
+	 * Does the mapping involve at least one column?
+	 *
+	 * @since 7.3
+	 */
+	boolean hasColumns();
+
+	/**
 	 * Same as {@link #getSelectables()} except it returns the PK for the
 	 * non-owning side of a one-to-one association.
 	 */
@@ -78,9 +86,7 @@ public interface Value extends Serializable {
 
 	private JdbcMapping getType(MappingContext factory, Type elementType, int index) {
 		if ( elementType instanceof CompositeType compositeType ) {
-			final Type[] subtypes = compositeType.getSubtypes();
-			for ( int i = 0; i < subtypes.length; i++ ) {
-				final Type subtype = subtypes[i];
+			for ( final var subtype : compositeType.getSubtypes() ) {
 				final int columnSpan =
 						subtype instanceof EntityType entityType
 								? getIdType( entityType ).getColumnSpan( factory )
@@ -107,7 +113,7 @@ public interface Value extends Serializable {
 	}
 
 	private Type getIdType(EntityType entityType) {
-		final PersistentClass entityBinding =
+		final var entityBinding =
 				getBuildingContext().getMetadataCollector()
 						.getEntityBinding( entityType.getAssociatedEntityName() );
 		return entityType.isReferenceToPrimaryKey()
@@ -145,16 +151,23 @@ public interface Value extends Serializable {
 	boolean isSame(Value other);
 
 	boolean[] getColumnInsertability();
+
 	boolean hasAnyInsertableColumns();
 
 	boolean[] getColumnUpdateability();
+
 	boolean hasAnyUpdatableColumns();
+
+	void setNonUpdatable();
+	void setNonInsertable();
 
 	@Incubating
 	default MetadataBuildingContext getBuildingContext() {
 		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
 	}
+
 	ServiceRegistry getServiceRegistry();
+
 	Value copy();
 
 	boolean isColumnInsertable(int index);
@@ -177,14 +190,28 @@ public interface Value extends Serializable {
 	 * @param owner the owner of this value, used just for error reporting
 	 */
 	@Internal
-	default void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+	default void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
 		for ( int i = 0; i < getSelectables().size(); i++ ) {
-			final Selectable selectable = getSelectables().get( i );
-			if ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) {
-				final Column col = (Column) selectable;
-				if ( !distinctColumns.add( col.getName() ) ) {
+			if ( getSelectables().get( i ) instanceof Column column
+					&& ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) ) {
+				final var primaryTable = getTable();
+				final Identifier catalog;
+				final Identifier schema;
+				final Identifier table;
+				if ( primaryTable != null ) {
+					catalog = primaryTable.getCatalogIdentifier();
+					schema = primaryTable.getSchemaIdentifier();
+					table = primaryTable.getNameIdentifier();
+				}
+				else {
+					catalog = null;
+					schema = null;
+					table = null;
+				}
+				final var columnName = column.getNameIdentifier( getBuildingContext() );
+				if ( !distinctColumns.add( new QualifiedColumnName( catalog, schema, table, columnName ) ) ){
 					throw new MappingException(
-							"Column '" + col.getName()
+							"Column '" + column.getName()
 									+ "' is duplicated in mapping for " + owner
 									+ " (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
 					);

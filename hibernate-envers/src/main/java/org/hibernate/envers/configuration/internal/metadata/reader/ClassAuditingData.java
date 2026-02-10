@@ -18,7 +18,7 @@ import org.hibernate.mapping.PersistentClass;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
- * @author Hern&aacut;n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * @author Chris Cranford
  */
 public class ClassAuditingData implements AuditedPropertiesHolder {

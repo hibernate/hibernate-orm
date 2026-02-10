@@ -501,13 +501,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			EventType<T> eventType) {
 		final var eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
 		for ( String listenerImpl : splitAtCommas( listeners ) ) {
-			@SuppressWarnings("unchecked")
-			T listener = (T) instantiate( listenerImpl, classLoaderService );
-			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
+			final var listener = instantiate( listenerImpl, classLoaderService );
+			final var baseListenerInterface = eventType.baseListenerInterface();
+			if ( !baseListenerInterface.isInstance( listener ) ) {
 				throw new HibernateException( "Event listener '" + listenerImpl
-						+ "' must implement '" + eventType.baseListenerInterface().getName() + "'");
+						+ "' must implement '" + baseListenerInterface.getName() + "'");
 			}
-			eventListenerGroup.appendListener( listener );
+			eventListenerGroup.appendListener( baseListenerInterface.cast( listener ) );
 		}
 	}
 

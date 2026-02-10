@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
+
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 

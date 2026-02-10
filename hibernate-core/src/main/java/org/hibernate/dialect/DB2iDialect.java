@@ -114,7 +114,8 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? DB2iSequenceSupport.INSTANCE : NoSequenceSupport.INSTANCE;
+				? DB2iSequenceSupport.INSTANCE
+				: NoSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -133,7 +134,8 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isSameOrAfter(7, 3)
-				? FetchLimitHandler.INSTANCE : LegacyDB2LimitHandler.INSTANCE;
+				? FetchLimitHandler.INSTANCE
+				: LegacyDB2LimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -154,13 +156,9 @@ public class DB2iDialect extends DB2Dialect {
 		};
 	}
 
-	// I speculate that this is a correct implementation of rowids for DB2 for i,
-	// just on the basis of the DB2 docs, but I currently have no way to test it
-	// Note that the implementation inherited from DB2Dialect for LUW will not work!
-
 	@Override
 	public String rowId(String rowId) {
-		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
+		return rowId;
 	}
 
 	@Override

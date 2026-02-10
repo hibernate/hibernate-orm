@@ -1830,6 +1830,33 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testParameterArithmetic(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select :dt + 1 day" )
+							.setParameter( "dt", LocalDateTime.now() )
+							.getSingleResult();
+					assertEquals( 2,
+							session.createQuery( "select :i + 1" )
+									.setParameter( "i", 1)
+									.getSingleResult() );
+					assertEquals( 3,
+							session.createQuery( "select 1 + :i" )
+									.setParameter( "i", 2)
+									.getSingleResult() );
+					assertEquals( "hello world",
+							session.createQuery( "select :greet || ' world'" )
+									.setParameter( "greet", "hello")
+									.getSingleResult() );
+					assertEquals( "hello world",
+							session.createQuery( "select 'hello ' || :name" )
+									.setParameter( "name", "world")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -5,10 +5,6 @@
 package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
 import java.math.BigDecimal;
-import java.util.List;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
@@ -24,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -38,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
 )
 @SessionFactory
+@SuppressWarnings("deprecation")
 public class DiscriminatorTest {
 
 	@AfterEach
@@ -87,8 +85,9 @@ public class DiscriminatorTest {
 					assertThat( s.createQuery( "from Person p where p.class = Customer" ).list().size(), is( 1 ) );
 					s.clear();
 
-					List<Customer> customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
-					for ( Customer c : customers ) {
+					var customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
+					for ( var customer : customers ) {
+						var c = (Customer) customer;
 						assertTrue( Hibernate.isInitialized( c.getSalesperson() ) );
 						assertThat( c.getSalesperson().getName(), is( "Mark" ) );
 					}
@@ -96,7 +95,8 @@ public class DiscriminatorTest {
 					s.clear();
 
 					customers = s.createQuery( "from Customer" ).list();
-					for ( Customer c : customers ) {
+					for ( var customer : customers ) {
+						var c = (Customer) customer;
 						assertFalse( Hibernate.isInitialized( c.getSalesperson() ) );
 						assertThat( c.getSalesperson().getName(), is( "Mark" ) );
 					}
@@ -164,22 +164,22 @@ public class DiscriminatorTest {
 					q.setSalary( new BigDecimal( 1000 ) );
 					s.persist( q );
 
-					List result = s.createQuery( "from Person where salary > 100" ).list();
-					assertEquals( result.size(), 1 );
+					var result = s.createQuery( "from Person where salary > 100" ).list();
+					assertEquals( 1, result.size() );
 					assertSame( result.get( 0 ), q );
 
 					result = s.createQuery( "from Person where salary > 100 or name like 'E%'" ).list();
-					assertEquals( result.size(), 2 );
+					assertEquals( 2, result.size() );
 
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
-					Root<Person> root = criteria.from( Person.class );
+					var criteriaBuilder = s.getCriteriaBuilder();
+					var criteria = criteriaBuilder.createQuery( Person.class );
+					var root = criteria.from( Person.class );
 					criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 					result = s.createQuery( criteria ).list();
 //					result = s.createCriteria(Person.class)
 //							.add( Property.forName( "salary").gt( new BigDecimal( 100) ) )
 //							.list();
-					assertEquals( result.size(), 1 );
+					assertEquals( 1, result.size() );
 					assertSame( result.get( 0 ), q );
 
 					//TODO: make this work:
@@ -210,14 +210,14 @@ public class DiscriminatorTest {
 				s -> {
 					// load the superclass proxy.
 					Person pLoad = s.getReference( Person.class, e.getId() );
-					assertTrue( pLoad instanceof HibernateProxy );
+					assertInstanceOf( HibernateProxy.class, pLoad );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
-					Root<Person> root = criteria.from( Person.class );
+					var criteriaBuilder = s.getCriteriaBuilder();
+					var criteria = criteriaBuilder.createQuery( Person.class );
+					var root = criteria.from( Person.class );
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), e.getId() ) );
 					Person pCriteria = s.createQuery( criteria ).uniqueResult();
 //		Person pCriteria = ( Person ) s.createCriteria( Person.class )
@@ -237,14 +237,14 @@ public class DiscriminatorTest {
 				s -> {
 					// load the superclass proxy.
 					Person pLoad = s.getReference( Person.class, e.getId() );
-					assertTrue( pLoad instanceof HibernateProxy );
+					assertInstanceOf( HibernateProxy.class, pLoad );
 					Person pGet = s.get( Person.class, e.getId() );
 					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Employee> criteria = criteriaBuilder.createQuery( Employee.class );
-					Root<Employee> root = criteria.from( Employee.class );
+					var criteriaBuilder = s.getCriteriaBuilder();
+					var criteria = criteriaBuilder.createQuery( Employee.class );
+					var root = criteria.from( Employee.class );
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), e.getId() ) );
 					Employee pCriteria = s.createQuery( criteria ).uniqueResult();
 //		Person pCriteria = ( Person ) s.createCriteria( Person.class )
@@ -281,16 +281,16 @@ public class DiscriminatorTest {
 				s -> {
 					// load the superclass proxy.
 					Person pLoad = s.getReference( Person.class, e.getId() );
-					assertTrue( pLoad instanceof HibernateProxy );
+					assertInstanceOf( HibernateProxy.class, pLoad );
 					// evict the proxy
 					s.evict( pLoad );
 					Employee pGet = (Employee) s.get( Person.class, e.getId() );
 					Employee pQuery = (Employee) s.createQuery( "from Person where id = :id" )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
-					Root<Person> root = criteria.from( Person.class );
+					var criteriaBuilder = s.getCriteriaBuilder();
+					var criteria = criteriaBuilder.createQuery( Person.class );
+					var root = criteria.from( Person.class );
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), e.getId() ) );
 
 					Employee pCriteria = (Employee) s.createQuery( criteria ).uniqueResult();

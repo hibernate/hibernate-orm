@@ -116,6 +116,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * And then use the {@code @TimePeriod} annotation to apply our {@code UserType}:
  * <pre>&#64;TimePeriod Period period;</pre>
  * <p>
+ * The {@code @TimePeriod} annotation might even have members:
+ * <pre>&#64;TimePeriod(precision=DAYS) Period period;</pre>
+ * <p>
+ * In this case, the implementation of {@code UserType} may declare a constructor
+ * which accepts the annotation type, and use the values assigned to the members
+ * to customize its behavior.
+ * <p>
  * Finally, we could ask for our custom type to be used by default:
  * <pre>&#64;TypeRegistration(basicClass = Period.class, userType = PeriodType.class)</pre>
  * <p>
@@ -142,7 +149,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * <p>
  * A {@code UserType} is much more useful when the persistent attribute
  * type is mutable. For example:
- * <p>
  * <pre>
  * public class BitSetUserType implements UserType&lt;BitSet&gt; {
  *
@@ -206,9 +212,23 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *     }
  * }
  * </pre>
+ * Every implementor of {@code UserType} must be immutable.
  * <p>
- * Every implementor of {@code UserType} must be immutable and must
- * declare a public default constructor.
+ * A custom type may receive parameters from its type annotation.
+ * The custom type may either:
+ * <ul>
+ * <li>implement {@link AnnotationBasedUserType}, and receive the
+ *     annotation as an argument to
+ *     {@link AnnotationBasedUserType#initialize},
+ * <li>declare a constructor with the same signature as
+ *     {@link AnnotationBasedUserType#initialize},
+ * <li>declare a constructor which accepts just the annotation instance,
+ *     or
+ * <li>declare a constructor which accepts just the {@link UserTypeCreationContext},
+ *     or
+ * <li>declare only a default constructor, in which case it does not
+ *     receive parameters.
+ * </ul>
  * <p>
  * A custom type implemented as a {@code UserType} is treated as a
  * non-composite value, and does not have persistent attributes which
@@ -235,6 +255,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.CustomType
+ * @see org.hibernate.usertype.AnnotationBasedUserType
  *
  * @see org.hibernate.annotations.Type
  * @see org.hibernate.annotations.TypeRegistration
@@ -448,8 +469,9 @@ public interface UserType<J> {
 	 * @see org.hibernate.Cache
 	 */
 	default J assemble(Serializable cached, Object owner) {
-		if ( returnedClass().isInstance( cached) ) {
-			return deepCopy( (J) cached );
+		final var returnedClass = returnedClass();
+		if ( returnedClass.isInstance( cached ) ) {
+			return deepCopy( returnedClass.cast( cached ) );
 		}
 		else {
 			throw new UnsupportedOperationException( "User-defined type '"

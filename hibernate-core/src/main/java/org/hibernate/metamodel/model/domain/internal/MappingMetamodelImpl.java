@@ -35,6 +35,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -58,7 +59,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.metamodel.EmbeddableType;
@@ -113,12 +113,12 @@ public class MappingMetamodelImpl
 	// - ignoring Hibernate's representation mode (entity mode), the Class
 	// object for an entity (or mapped superclass) always refers to the same
 	// JPA EntityType and Hibernate EntityPersister. The problem arises with
-	// embeddables. For an embeddable, as with the rest of its metamodel,
+	// embeddables. For an embeddable type, as with the rest of its metamodel,
 	// Hibernate combines the embeddable's relational/mapping while JPA does
 	// not. This is perfectly consistent with each paradigm. But it results
 	// in a mismatch since JPA expects a single "type descriptor" for a
-	// given embeddable class while Hibernate incorporates the
-	// relational/mapping info so we have a "type descriptor" for each usage
+	// given embeddable class, while Hibernate incorporates the
+	// relational/mapping info, so we have a "type descriptor" for each usage
 	// of that embeddable type. (Think embeddable versus embedded.)
 	//
 	// To account for this, we track both paradigms here.
@@ -258,11 +258,9 @@ public class MappingMetamodelImpl
 		for ( final var model : collectionBindings ) {
 			final String role = model.getRole();
 			final var persister =
-					persisterFactory.createCollectionPersister(
-							model,
+					persisterFactory.createCollectionPersister( model,
 							cacheImplementor.getCollectionRegionAccess( new NavigableRole( role ) ),
-							modelCreationContext
-					);
+							modelCreationContext );
 			collectionPersisterMap.put( role, persister );
 			if ( persister.getIndexType() instanceof org.hibernate.type.EntityType entityType ) {
 				registerEntityParticipant( entityType, persister );
@@ -360,32 +358,29 @@ public class MappingMetamodelImpl
 
 	@Override
 	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
-		var entityPersister = entityPersisterMap.get( entityJavaType.getName() );
-		if ( entityPersister == null ) {
-			final String mappedEntityName = entityProxyInterfaceMap.get( entityJavaType );
-			if ( mappedEntityName != null ) {
-				entityPersister = entityPersisterMap.get( mappedEntityName );
-			}
-		}
-		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( entityJavaType );
-		}
-		return entityPersister;
+		return getEntityPersister( entityJavaType );
 	}
 
 	@Override @Deprecated(forRemoval = true) @SuppressWarnings( "removal" )
 	public EntityPersister locateEntityDescriptor(Class<?> byClass) {
-		var entityPersister = entityPersisterMap.get( byClass.getName() );
-		if ( entityPersister == null ) {
+		return getEntityPersister( byClass );
+	}
+
+	private EntityPersister getEntityPersister(Class<?> byClass) {
+		final var entityPersister = entityPersisterMap.get( byClass.getName() );
+		if ( entityPersister != null ) {
+			return entityPersister;
+		}
+		else {
 			final String mappedEntityName = entityProxyInterfaceMap.get( byClass );
 			if ( mappedEntityName != null ) {
-				entityPersister = entityPersisterMap.get( mappedEntityName );
+				final var persister = entityPersisterMap.get( mappedEntityName );
+				if ( persister != null ) {
+					return persister;
+				}
 			}
-		}
-		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( byClass );
 		}
-		return entityPersister;
 	}
 
 	@Override
@@ -419,12 +414,12 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+	public @Nullable ManagedDomainType<?> findManagedType(@Nullable String typeName) {
 		return jpaMetamodel.findManagedType( typeName );
 	}
 
 	@Override
-	public <X> ManagedDomainType<X> managedType(String typeName) {
+	public ManagedDomainType<?> managedType(String typeName) {
 		return jpaMetamodel.managedType( typeName );
 	}
 
@@ -449,12 +444,12 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
+	public EntityDomainType<?> getHqlEntityReference(String entityName) {
 		return jpaMetamodel.getHqlEntityReference( entityName );
 	}
 
 	@Override
-	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+	public EntityDomainType<?> resolveHqlEntityReference(String entityName) {
 		return jpaMetamodel.resolveHqlEntityReference( entityName );
 	}
 
@@ -489,8 +484,8 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> T getJavaConstant(String className, String fieldName) {
-		return jpaMetamodel.getJavaConstant( className, fieldName );
+	public <E> E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass) {
+		return jpaMetamodel.getJavaConstant( className, fieldName, javaTypeClass );
 	}
 
 	@Override
@@ -644,21 +639,21 @@ public class MappingMetamodelImpl
 	public <T> @Nullable BindableType<T> resolveParameterBindType(Class<T> javaType) {
 		final var typeConfiguration = getTypeConfiguration();
 
-		final BasicType<T> basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
+		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
 		// For enums, we simply don't know the exact mapping if there is no basic type registered
 		if ( basicType != null || javaType.isEnum() ) {
 			return basicType;
 		}
 
-		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaType );
+		final var managedType = jpaMetamodel.findManagedType( javaType );
 		if ( managedType != null ) {
-			return (BindableType<T>) managedType;
+			return (SqmManagedDomainType<T>) managedType;
 		}
 
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<T> javaTypeDescriptor = javaTypeRegistry.findDescriptor( javaType );
+		final var javaTypeDescriptor = javaTypeRegistry.findDescriptor( javaType );
 		if ( javaTypeDescriptor != null ) {
-			final JdbcType recommendedJdbcType =
+			final var recommendedJdbcType =
 					javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
 				return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, recommendedJdbcType );
@@ -685,30 +680,38 @@ public class MappingMetamodelImpl
 			return null;
 		}
 
-		final Class<T> clazz = unproxiedClass( bindValue );
-
-		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
-		Class<? super T> c = clazz;
-		do {
-			final BindableType<? super T> type = resolveParameterBindType( c );
-			if ( type != null ) {
-				return type;
-			}
-			c = c.getSuperclass();
+		final var clazz = unproxiedClass( bindValue );
+		// Resolve the superclass bindable type if necessary,
+		// as we don't register types for e.g. Inet4Address
+		var type = searchSupertypesForBindableType( clazz );
+		if ( type != null ) {
+			return type;
 		}
-		while ( c != Object.class );
 
 		if ( clazz.isEnum() ) {
 			return null; //createEnumType( (Class) clazz );
 		}
 		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
 			final var parameterBindType = resolveParameterBindType( Serializable.class );
-			//noinspection unchecked
+			//noinspection unchecked (completely safe)
 			return (BindableType<? super T>) parameterBindType;
 		}
 		else {
 			return null;
 		}
+	}
+
+	private <T> @Nullable BindableType<? super T> searchSupertypesForBindableType(Class<T> clazz) {
+		Class<? super T> c = clazz;
+		do {
+			final var type = resolveParameterBindType( c );
+			if ( type != null ) {
+				return type;
+			}
+			c = c.getSuperclass();
+		}
+		while ( c != Object.class );
+		return null;
 	}
 
 	private static <T> Class<T> unproxiedClass(T bindValue) {

@@ -33,7 +33,6 @@ import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -152,8 +151,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
-		// a nonzero batch size forces use of write-behind
-		// therefore ignore the value of hibernate.jdbc.batch_size
+		// A nonzero batch size forces the use of write-behind
+		// Therefore, ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
 	}
 
@@ -187,6 +186,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				insert( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -294,7 +294,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreRecreate( collection, id, entityName, entity );
+						firePreRecreate( descriptor, collection, id, entityName, entity );
 						final var event = eventMonitor.beginCollectionRecreateEvent();
 						boolean success = false;
 						try {
@@ -307,7 +307,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.recreateCollection( role );
 						}
-						firePostRecreate( collection, id, entityName, entity );
+						firePostRecreate( descriptor, collection, id, entityName, entity );
 					} );
 		}
 	}
@@ -327,6 +327,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				delete( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -371,8 +372,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreRemove( collection, id, entityName, entity );
-						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
+						firePreRemove( descriptor, collection, id, entityName, entity );
+						final var event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
 							descriptor.remove( id, this );
@@ -381,7 +382,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						finally {
 							eventMonitor.completeCollectionRemoveEvent( event, id, role, success, this );
 						}
-						firePostRemove( collection, id, entityName, entity );
+						firePostRemove( descriptor, collection, id, entityName, entity );
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.removeCollection( role );
 						}
@@ -405,6 +406,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				update( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -459,8 +461,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			forEachOwnedCollection( entity, id, persister,
 					(descriptor, collection) -> {
 						final String role = descriptor.getRole();
-						firePreUpdate( collection, id, entityName, entity );
-						final DiagnosticEvent event = eventMonitor.beginCollectionRemoveEvent();
+						firePreUpdate( descriptor, collection, id, entityName, entity );
+						final var event = eventMonitor.beginCollectionRemoveEvent();
 						boolean success = false;
 						try {
 							// TODO: can we do better here?
@@ -471,7 +473,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						finally {
 							eventMonitor.completeCollectionRemoveEvent( event, id, role, success, this );
 						}
-						firePostUpdate( collection, id, entityName, entity );
+						firePostUpdate( descriptor, collection, id, entityName, entity );
 						if ( statistics.isStatisticsEnabled() ) {
 							statistics.updateCollection( role );
 						}
@@ -492,6 +494,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				upsert( null, entity );
 			}
+			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -668,44 +671,74 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreRecreate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreRecreate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRecreateEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionRecreateEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreUpdate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreUpdate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionUpdateEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionUpdateEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePreRemove(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePreRemove(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRemoveEvent( collection, id, entityName, owner ),
+				() -> new PreCollectionRemoveEvent( collectionPersister, collection, id, entityName, owner ),
 				PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostRecreate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostRecreate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRecreateEvent( collection, id, entityName, owner ),
+				() -> new PostCollectionRecreateEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostUpdate(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostUpdate(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionUpdateEvent( collection, id, entityName, owner ),
+				() -> new PostCollectionUpdateEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
-	protected void firePostRemove(PersistentCollection<?> collection, Object id, String entityName, Object owner) {
+	protected void firePostRemove(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object owner) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRemoveEvent(  collection, id, entityName, owner ),
+				() -> new PostCollectionRemoveEvent( collectionPersister, collection, id, entityName, owner ),
 				PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
@@ -961,6 +994,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		final Object result =
 				getLoadQueryInfluencers()
+						// TODO: This is wrong. StatelessSession is not supposed
+						//       to be affected by cascade = REFRESH. Fix in H8.
 						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
 								() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
@@ -1032,25 +1067,26 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final var persister = requireEntityPersister( entityName );
 		final var entityKey = generateEntityKey( id, persister );
 
-		// first, try to load it from the temp PC associated to this SS
+		// First, try to load it from the temporary PersistenceContext
 		final var persistenceContext = getPersistenceContext();
 		final var holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null && holder.getEntity() != null ) {
-			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
-			// containing eager fetches via join fetch
+			// We found it in the temporary persistence context.
+			// Should indicate we are in the midst of processing a
+			// result set containing eager fetches via join fetch.
 			return holder.getEntity();
 		}
 
 		if ( !eager ) {
-			// caller did not request forceful eager loading, see if we can create
-			// some form of proxy
+			// The caller did not request forceful eager loading;
+			// see if we can create some form of proxy.
 
 			// first, check to see if we can use "bytecode proxies"
-
 			final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				// if the entity defines a HibernateProxy factory, see if there is an
-				// existing proxy associated with the PC - and if so, use it
+				// If the entity defines a HibernateProxy factory,
+				// see if there is an existing proxy associated with
+				// the persistence context - and if so, use it
 				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
 					final Object proxy = holder == null ? null : holder.getProxy();
 
@@ -1063,9 +1099,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
 					}
 
-					// specialized handling for entities with subclasses with a HibernateProxy factory
+					// Specialized handling for entities with subclasses with
+					// a HibernateProxy factory.
 					if ( persister.hasSubclasses() ) {
-						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
+						// Entities with subclasses that define a ProxyFactory
+						// can create a HibernateProxy.
 						SESSION_LOGGER.creatingHibernateProxyToHonorLaziness();
 						return createProxy( entityKey );
 					}
@@ -1074,8 +1112,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				else if ( !persister.hasSubclasses() ) {
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
-				// The entity will get loaded below.
+				// If we get here, then the entity class has subclasses and there
+				// is no HibernateProxy factory. The entity will be loaded below.
 			}
 			else {
 				if ( persister.hasProxy() ) {
@@ -1087,14 +1125,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		// otherwise immediately materialize it
+		// Otherwise, immediately materialize it.
 		return internalLoadGet( entityName, id, persistenceContext );
 	}
 
 	// For Hibernate Reactive
 	protected Object internalLoadGet(String entityName, Object id, PersistenceContext persistenceContext) {
-		// IMPLEMENTATION NOTE: increment/decrement the load count before/after getting the value
-		//                      to ensure that #get does not clear the PersistenceContext.
+		// Increment/decrement the load count before/after getting the value
+		// to ensure that #get does not clear the PersistenceContext.
 		persistenceContext.beforeLoad();
 		try {
 			return get( entityName, id );

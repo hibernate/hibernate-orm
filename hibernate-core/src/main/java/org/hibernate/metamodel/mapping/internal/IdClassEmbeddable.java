@@ -34,6 +34,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
+
 /**
  * EmbeddableMappingType implementation describing an {@link jakarta.persistence.IdClass}
  */
@@ -128,7 +130,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
 		this.representationStrategy = new IdClassRepresentationStrategy( this, false, () -> {
-			final String[] attributeNames = new String[inverseMappingType.getNumberOfAttributeMappings()];
+			final var attributeNames = new String[inverseMappingType.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < attributeNames.length; i++ ) {
 				attributeNames[i] = inverseMappingType.getAttributeMapping( i ).getAttributeName();
 			}
@@ -137,7 +139,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
-				"IdClassEmbeddable(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
+				"IdClassEmbeddable("
+						+ inverseMappingType.getNavigableRole().getFullPath()
+						+ ".{inverse})#finishInitialization",
 				() -> inverseInitializeCallback(
 						declaringTableGroupProducer,
 						selectableMappings,
@@ -332,7 +336,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						throw new IllegalAttributeType( "An IdClass cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
+				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
 				this::addAttribute,
 				() -> {
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings

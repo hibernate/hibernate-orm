@@ -31,8 +31,8 @@ import java.util.List;
  * <p>
  * Furthermore, the basic operations of a stateless session do not have
  * corresponding {@linkplain jakarta.persistence.CascadeType cascade types},
- * and so an operation performed via a stateless session never cascades to
- * associated instances.
+ * and so an operation performed on one entity via a stateless session never
+ * cascades to associated entities.
  * <p>
  * The basic operations of a stateless session are {@link #get(Class, Object)},
  * {@link #insert(Object)}, {@link #update(Object)}, {@link #delete(Object)},
@@ -97,7 +97,9 @@ public interface StatelessSession extends SharedSessionContract {
 	Object insert(Object entity);
 
 	/**
-	 * Insert multiple records.
+	 * Insert multiple records in the same order as the entity
+	 * instances representing the new records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of transient instances to be inserted
 	 *
@@ -130,7 +132,9 @@ public interface StatelessSession extends SharedSessionContract {
 	void update(Object entity);
 
 	/**
-	 * Update multiple records.
+	 * Update multiple records in the same order as the entity
+	 * instances representing the records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of detached instances to be updated
 	 *
@@ -161,7 +165,9 @@ public interface StatelessSession extends SharedSessionContract {
 	void delete(Object entity);
 
 	/**
-	 * Delete multiple records.
+	 * Delete multiple records in the same order as the entity
+	 * instances representing the records occur in the given
+	 * list.
 	 *
 	 * @param entities a list of detached instances to be deleted
 	 *
@@ -206,9 +212,11 @@ public interface StatelessSession extends SharedSessionContract {
 	void upsert(Object entity);
 
 	/**
-	 * Perform an upsert, that is, to insert the record if it does
-	 * not exist, or update the record if it already exists, for
-	 * each given record.
+	 * Upsert multiple records, that is, for a given record,
+	 * insert the record if it does not exist or update the
+	 * record if it already exists, in the same order as the
+	 * entity instances representing the records occur in
+	 * the given list.
 	 *
 	 * @param entities a list of detached instances and new
 	 *                 instances with assigned identifiers

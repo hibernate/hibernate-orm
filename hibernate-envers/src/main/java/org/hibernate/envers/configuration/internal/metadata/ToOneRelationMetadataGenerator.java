@@ -4,10 +4,14 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.util.Locale;
+
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.RelationTargetNotFoundAction;
+import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
+import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -62,7 +66,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -115,19 +120,29 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 			throw new EnversMappingException( "An audited relation to a non-audited entity " + entityName + "!" );
 		}
 
+		final var referencedEntityName = propertyValue.getReferencedEntityName();
+		final var propertyName = propertyAuditingData.getName();
+		checkMappedByAudited(
+				entityName,
+				propertyName,
+				referencedEntityName,
+				owningReferencePropertyName,
+				getMetadataBuildingContext().getClassesAuditingData().getClassAuditingData( referencedEntityName )
+		);
+
 		final String lastPropertyPrefix = MappingTools.createToOneRelationPrefix( owningReferencePropertyName );
-		final String referencedEntityName = propertyValue.getReferencedEntityName();
 
 		// Generating the id mapper for the relation
 		final IdMapper ownedIdMapper = ownedIdMapping.getIdMapper().prefixMappedProperties( lastPropertyPrefix );
 
 		// Storing information about this relation
-		getAuditedEntityConfiguration( entityName ).addToOneNotOwningRelation(
-				propertyAuditingData.getName(),
+		configuration.addToOneNotOwningRelation(
+				propertyName,
 				owningReferencePropertyName,
 				referencedEntityName,
 				ownedIdMapper,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// Adding mapper for the id
@@ -142,6 +157,31 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 						getMetadataBuildingContext().getServiceRegistry()
 				)
 		);
+	}
+
+	private static void checkMappedByAudited(
+			String entityName,
+			String associationName,
+			String referencedEntityName,
+			String referencedPropertyName,
+			AuditedPropertiesHolder propertiesHolder) {
+		final var split = referencedPropertyName.split( "\\.", 2 );
+		final var auditingData = propertiesHolder.getPropertyAuditingData( split[0] );
+		if ( auditingData == null ) {
+			throw new EnversMappingException( String.format(
+					Locale.ROOT,
+					"Could not resolve mapped by property [%s] for association [%s.%s] in the referenced entity [%s],"
+							+ " please ensure that the association is audited on both sides.",
+					referencedPropertyName,
+					entityName,
+					associationName,
+					referencedEntityName
+			) );
+		}
+		else if ( split.length > 1 ) {
+			// mapped by is a nested component property
+			checkMappedByAudited( entityName, associationName, referencedEntityName, split[1], (ComponentAuditingData) auditingData );
+		}
 	}
 
 	void addOneToOnePrimaryKeyJoinColumn(
@@ -170,7 +210,8 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				MappingTools.ignoreNotFound( value )
+				MappingTools.ignoreNotFound( value ),
+				isRelationNotAudited( propertyAuditingData )
 		);
 
 		// Adding mapper for the id

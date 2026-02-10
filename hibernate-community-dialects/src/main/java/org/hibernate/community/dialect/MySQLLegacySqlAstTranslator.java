@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -17,7 +16,6 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -44,6 +42,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  * A SQL AST translator for MySQL.
  *
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
@@ -367,17 +366,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
-		if ( sqlType != null ) {
-			appendSql( sqlType );
-		}
-		else {
-			super.visitCastTarget( castTarget );
-		}
-	}
-
-	@Override
 	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
 		// MySQL can't cope with NUL characters in the position function, so we use a like predicate instead
 		haystack.accept( this );
@@ -393,5 +381,64 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
 						? determineColumnReferenceQualifier( column )
 						: null );
+	}
+
+	private boolean needsDmlSubqueryWrapper() {
+		final Statement statement = getStatement();
+		return statement instanceof DeleteStatement || statement instanceof UpdateStatement;
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		final boolean needsParenthesis = !statement.getQueryPart().isRoot();
+		if ( needsParenthesis && needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.visitSelectStatement( statement );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitSelectStatement( statement );
+		}
+	}
+
+	@Override
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderFetchFirstRow() {
+		appendSql( " limit 1" );
 	}
 }

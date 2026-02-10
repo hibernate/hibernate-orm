@@ -53,15 +53,9 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 	}
 
 	private static <T> MutabilityPlan<T> createMutabilityPlan(Class<T> type) {
-		if ( type.isAnnotationPresent( Immutable.class ) ) {
-			return ImmutableMutabilityPlan.instance();
-		}
-		return (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE;
-	}
-
-	@Override
-	public boolean isInstance(Object value) {
-		return value instanceof Serializable;
+		return type.isAnnotationPresent( Immutable.class )
+				? ImmutableMutabilityPlan.instance()
+				: (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE;
 	}
 
 	@Override
@@ -97,31 +91,29 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		return PrimitiveByteArrayJavaType.INSTANCE.extractHashCode( toBytes( value ) );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		else if ( type.isInstance( value ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( byte[].class.isAssignableFrom( type ) ) {
-			return (X) toBytes( value );
+			return type.cast( toBytes( value ) );
 		}
 		else if ( InputStream.class.isAssignableFrom( type ) ) {
-			return (X) new ByteArrayInputStream( toBytes( value ) );
+			return type.cast( new ByteArrayInputStream( toBytes( value ) ) );
 		}
 		else if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
+			return type.cast( new ArrayBackedBinaryStream( toBytes( value ) ) );
 		}
 		else if ( Blob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createBlob( toBytes( value ) );
+			return type.cast( options.getLobCreator().createBlob( toBytes( value ) ) );
 		}
 
 		throw unknownUnwrap( type );
 	}
 
-	@SuppressWarnings("unchecked")
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -140,8 +132,8 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 				throw new HibernateException( e );
 			}
 		}
-		else if ( getJavaTypeClass().isInstance( value ) ) {
-			return (T) value;
+		else if ( isInstance( value ) ) {
+			return cast( value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -150,8 +142,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		return SerializationHelper.serialize( value );
 	}
 
-	@SuppressWarnings("unchecked")
 	protected T fromBytes(byte[] bytes) {
-		return (T) SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() );
+		return cast( SerializationHelper.deserialize( bytes, getJavaTypeClass().getClassLoader() ) );
 	}
 }

@@ -43,7 +43,6 @@ dependencies {
         runtime libs.byteBuddy
         runtime libs.byteBuddyAgent
         runtime libs.jandex
-        runtime libs.classmate
 
         runtime jakartaLibs.jaxb
         runtime jakartaLibs.jaxbApi

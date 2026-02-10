@@ -33,6 +33,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 		this.keysFactory = keysFactory;
 	}
 
+	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.NATURAL_ID;
@@ -44,7 +45,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	protected Comparator<?> getVersionComparator() {
+	protected Comparator<Object> getVersionComparator() {
 		// natural id has no comparator
 		return null;
 	}

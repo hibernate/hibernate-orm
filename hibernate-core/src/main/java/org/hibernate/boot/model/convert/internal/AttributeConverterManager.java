@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,13 +13,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -26,8 +27,8 @@ import org.hibernate.models.spi.MemberDetails;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveAttributeType;
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
+import static org.hibernate.internal.util.GenericsHelper.actualMemberType;
 import static org.hibernate.internal.util.StringHelper.join;
 
 /**
@@ -39,7 +40,7 @@ import static org.hibernate.internal.util.StringHelper.join;
 public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
-	private Map<Class<?>, RegisteredConversion> registeredConversionsByDomainType;
+	private Map<Type, RegisteredConversion> registeredConversionsByDomainType;
 
 	public RegisteredConversion findRegisteredConversion(Class<?> domainType) {
 		return registeredConversionsByDomainType == null ? null : registeredConversionsByDomainType.get( domainType );
@@ -52,7 +53,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		}
 
 		if ( registeredConversionsByDomainType != null ) {
-			final Class<?> domainType = descriptor.getDomainValueResolvedType().getErasedType();
+			final var domainType = descriptor.getDomainValueResolvedType();
 			final var registeredConversion = registeredConversionsByDomainType.get( domainType );
 			if ( registeredConversion != null ) {
 				// we can skip registering the converter, the RegisteredConversion will always take precedence
@@ -79,12 +80,12 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		}
 	}
 
-	public void addRegistration(RegisteredConversion conversion, BootstrapContext context) {
+	public void addRegistration(RegisteredConversion conversion) {
 		if ( registeredConversionsByDomainType == null ) {
 			registeredConversionsByDomainType = new ConcurrentHashMap<>();
 		}
 
-		final Class<?> domainType = getDomainType( conversion, context );
+		final var domainType = getDomainType( conversion );
 		checkNotOverriding( conversion, domainType );
 		// See if we have a matching entry in attributeConverterDescriptorsByClass.
 		// If so, remove it. The conversion being registered will always take precedence.
@@ -98,7 +99,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		registeredConversionsByDomainType.put( domainType, conversion );
 	}
 
-	private void checkNotOverriding(RegisteredConversion conversion, Class<?> domainType) {
+	private void checkNotOverriding(RegisteredConversion conversion, Type domainType) {
 		// make sure we are not overriding a previous conversion registration
 		final var existingRegistration = registeredConversionsByDomainType.get( domainType );
 		if ( existingRegistration != null ) {
@@ -113,11 +114,10 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		}
 	}
 
-	private static Class<?> getDomainType(RegisteredConversion conversion, BootstrapContext context) {
+	private static Type getDomainType(RegisteredConversion conversion) {
 		// the registration did not define an explicit domain-type, so inspect the converter
 		return conversion.getExplicitDomainType().equals( void.class )
-				? resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() )
-						.get( 0 ).getErasedType()
+				? typeArguments( AttributeConverter.class, conversion.getConverterType() )[0]
 				: conversion.getExplicitDomainType();
 	}
 
@@ -149,21 +149,19 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 				attributeMember,
 				ConversionSite.ATTRIBUTE,
 				(autoApplyDescriptor) ->
-						autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( attributeMember, context ),
-				context
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( attributeMember, context )
 		);
 	}
 
 	private ConverterDescriptor<?,?> locateMatchingConverter(
 			MemberDetails memberDetails,
 			ConversionSite conversionSite,
-			Function<AutoApplicableConverterDescriptor, ConverterDescriptor<?,?>> matcher,
-			MetadataBuildingContext context) {
+			Function<AutoApplicableConverterDescriptor, ConverterDescriptor<?,?>> matcher) {
 		if ( registeredConversionsByDomainType != null ) {
 			// we had registered conversions - see if any of them match and, if so, use that conversion
-			final var resolveAttributeType = resolveAttributeType( memberDetails, context );
+			final var resolveAttributeType = actualMemberType( memberDetails );
 			final var registrationForDomainType =
-					registeredConversionsByDomainType.get( resolveAttributeType.getErasedType() );
+					registeredConversionsByDomainType.get( resolveAttributeType );
 			if ( registrationForDomainType != null ) {
 				return registrationForDomainType.isAutoApply()
 						? registrationForDomainType.getConverterDescriptor()
@@ -217,7 +215,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			if ( BOOT_LOGGER.isTraceEnabled() ) {
 				BOOT_LOGGER.checkingAutoApplyAttributeConverter(
 						descriptor.getAttributeConverterClass().getName(),
-						descriptor.getDomainValueResolvedType().getSignature(),
+						descriptor.getDomainValueResolvedType().getTypeName(),
 						conversionSite.getSiteDescriptor(),
 						memberDetails.getDeclaringType().getName(),
 						memberDetails.getName(),
@@ -240,8 +238,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 				attributeMember,
 				ConversionSite.COLLECTION_ELEMENT,
 				(autoApplyDescriptor) ->
-						autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( attributeMember, context ),
-				context
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( attributeMember, context )
 		);
 	}
 
@@ -253,8 +250,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 				attributeMember,
 				ConversionSite.MAP_KEY,
 				(autoApplyDescriptor) ->
-						autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( attributeMember, context ),
-				context
+						autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( attributeMember, context )
 		);
 	}
 

@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 abstract class AbstractTransactionCompletionProcessQueue<T extends CompletionCallback> {
 	SharedSessionContractImplementor session;
-	// Concurrency handling required when transaction completion process is dynamically registered
-	// inside event listener (HHH-7478).
+	// Concurrency handling required when the transaction completion process
+	// is dynamically registered inside an event listener (HHH-7478).
 	ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
 
 	AbstractTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {

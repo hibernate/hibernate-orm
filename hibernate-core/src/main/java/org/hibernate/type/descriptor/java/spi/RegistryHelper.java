@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -36,27 +37,37 @@ public class RegistryHelper {
 			Type javaType,
 			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
 			TypeConfiguration typeConfiguration) {
-		return createTypeDescriptor(
-				javaType,
-				(javaTypeClass) -> {
-					MutabilityPlan<J> mutabilityPlan = determineMutabilityPlan( javaType, typeConfiguration );
-					if ( mutabilityPlan == null ) {
-						mutabilityPlan = fallbackMutabilityPlanResolver.get();
-					}
-					return mutabilityPlan;
-				}
-		);
+		return createTypeDescriptor( determineJavaTypeClass( javaType ),
+				javaTypeClass -> mutabilityPlan( javaTypeClass, fallbackMutabilityPlanResolver, typeConfiguration ) );
 	}
 
-	public <J> MutabilityPlan<J> determineMutabilityPlan(Type javaType, TypeConfiguration typeConfiguration) {
-		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
+	public <J> JavaType<J> createTypeDescriptor(
+			Class<J> javaType,
+			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
+			TypeConfiguration typeConfiguration) {
+		return createTypeDescriptor( javaType,
+				javaTypeClass -> mutabilityPlan( javaTypeClass, fallbackMutabilityPlanResolver, typeConfiguration ) );
+	}
 
+	private <J> MutabilityPlan<J> mutabilityPlan(
+			Class<J> javaTypeClass,
+			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
+			TypeConfiguration typeConfiguration) {
+		var mutabilityPlan = determineMutabilityPlan( javaTypeClass, typeConfiguration );
+		return mutabilityPlan == null ? fallbackMutabilityPlanResolver.get() : mutabilityPlan;
+	}
+
+	public MutabilityPlan<?> determineMutabilityPlan(Type javaType, TypeConfiguration typeConfiguration) {
+		return determineMutabilityPlan( determineJavaTypeClass( javaType ), typeConfiguration );
+	}
+
+	public <J> MutabilityPlan<J> determineMutabilityPlan(Class<J> javaTypeClass, TypeConfiguration typeConfiguration) {
 		if ( javaTypeClass.isAnnotationPresent( Immutable.class ) ) {
 			return ImmutableMutabilityPlan.instance();
 		}
 
 		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
-			final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
+			final var annotation = javaTypeClass.getAnnotation( Mutability.class );
 			return typeConfiguration.createMutabilityPlan( annotation.value() );
 		}
 
@@ -67,29 +78,26 @@ public class RegistryHelper {
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
 			return (MutabilityPlan<J>) SerializableJavaType.SerializableMutabilityPlan.INSTANCE;
 		}
-
 		return null;
 	}
 
-	private  <J> JavaType<J> createTypeDescriptor(
-			Type javaType,
-			Function<Class<J>,MutabilityPlan<J>> mutabilityPlanResolver) {
-		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
-
+	private <J> BasicJavaType<J> createTypeDescriptor(
+			Class<J> javaTypeClass,
+			Function<Class<J>, MutabilityPlan<J>> mutabilityPlanResolver) {
 		if ( javaTypeClass.isEnum() ) {
 			// enums are unequivocally immutable
 			//noinspection rawtypes, unchecked
 			return new EnumJavaType( javaTypeClass );
 		}
 
-		final MutabilityPlan<J> plan = mutabilityPlanResolver.apply( javaTypeClass );
+		final var plan = mutabilityPlanResolver.apply( javaTypeClass );
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
 			//noinspection rawtypes, unchecked
 			return new SerializableJavaType( javaTypeClass, plan );
 		}
 
-		return new UnknownBasicJavaType<>( javaType, plan );
+		return new UnknownBasicJavaType<>( javaTypeClass, plan );
 	}
 
 	private <J> Class<J> determineJavaTypeClass(Type javaType) {

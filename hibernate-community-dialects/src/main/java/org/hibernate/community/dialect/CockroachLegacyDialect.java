@@ -141,6 +141,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * A {@linkplain Dialect SQL dialect} for CockroachDB.
  *
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class CockroachLegacyDialect extends Dialect {
 
@@ -405,7 +406,7 @@ public class CockroachLegacyDialect extends Dialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 
@@ -485,6 +486,8 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace();
 		functionFactory.arrayTrim_unnest();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_unnest();
 		functionFactory.arrayFill_cockroachdb();
 		functionFactory.arrayToString_postgresql();
 

@@ -7,12 +7,18 @@ package org.hibernate.orm.test.mapping.identifier;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.KeyType;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -54,6 +60,29 @@ public class SimpleNaturalIdTest {
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
 		});
+	}
+
+	@Test
+	void testLoading(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (entityManager) -> {
+			//tag::naturalid-loading-example
+			var book = entityManager.find( Book.class,
+					"978-9730228236",
+					KeyType.NATURAL,
+					LockMode.PESSIMISTIC_WRITE,
+					Timeout.seconds( 1 ) );
+			var books = entityManager.unwrap( Session.class ).findMultiple( Book.class,
+					List.of("978-9730228236"),
+					KeyType.NATURAL,
+					LockMode.PESSIMISTIC_WRITE,
+					Timeout.seconds( 1 ) );
+			//end::naturalid-loading-example
+		} );
+	}
+
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope scope) {
+		scope.dropData();
 	}
 
 	//tag::naturalid-simple-basic-attribute-mapping-example[]

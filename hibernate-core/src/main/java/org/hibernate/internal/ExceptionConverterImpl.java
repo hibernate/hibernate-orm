@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
@@ -96,8 +97,13 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		else if ( exception instanceof SnapshotIsolationException ) {
 			return new OptimisticLockException( exception.getMessage(), exception );
 		}
-		else if ( exception instanceof org.hibernate.QueryTimeoutException ) {
-			final var converted = new QueryTimeoutException( exception.getMessage(), exception );
+		else if ( exception instanceof org.hibernate.QueryTimeoutException queryTimeoutException ) {
+			final var converted =
+					isMarkedForRollback( queryTimeoutException )
+							// per spec, we must throw this exception if the tx was aborted
+							? new PersistenceException( exception.getMessage(), exception )
+							// per spec, we only throw this exception if the tx is not aborted
+							: new QueryTimeoutException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -140,6 +146,16 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
+		}
+		else if ( exception instanceof DetachedObjectException ) {
+			try {
+				session.markForRollbackOnly();
+			}
+			catch (Exception ne) {
+				//we do not want the subsequent exception to swallow the original one
+				CORE_LOGGER.unableToMarkForRollbackOnDetachedObjectException( ne );
+			}
+			throw new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof TransactionSerializationException ) {
 			final var converted = new RollbackException( exception.getMessage(), exception );
@@ -211,9 +227,12 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new OptimisticLockException( message, lockException, entity );
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
-			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
+			// assume a lock timeout occurred if a timeout or NO WAIT was specified
+			return !isMarkedForRollback( lockException.getCause() )
+				&& hasTimeout( lockOptions )
+					// per spec, we only throw this exception if the tx is not aborted
 					? new LockTimeoutException( message, lockException, entity )
+					// per spec, we must throw this exception if the tx was aborted
 					: new PessimisticLockException( message, lockException, entity );
 		}
 		else {
@@ -223,15 +242,31 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 
 	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
 		final String message = exception.getMessage();
+		final boolean markedForRollback = isMarkedForRollback( exception );
 		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
-			return new LockTimeoutException( message, exception );
+			return markedForRollback
+					// per spec, we must throw this exception if the tx was aborted
+					? new PessimisticLockException( message, exception )
+					// per spec, we only throw this exception if the tx is not aborted
+					: new LockTimeoutException( message, exception );
 		}
 		else {
-			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
+			// assume a lock timeout occurred if a timeout or NO WAIT was specified
+			return !markedForRollback && hasTimeout( lockOptions )
+					// per spec, we only throw this exception if the tx is not aborted
 					? new LockTimeoutException( message, exception )
+					// per spec, we must throw this exception if the tx was aborted
 					: new PessimisticLockException( message, exception );
 		}
+	}
+
+	private static boolean hasTimeout(LockOptions lockOptions) {
+		return lockOptions != null
+			&& lockOptions.getTimeout().milliseconds() > -1;
+	}
+
+	private boolean isMarkedForRollback(JDBCException exception) {
+		return session.getJdbcServices().getDialect().causesRollback( exception.getSQLException() );
 	}
 
 	private void rollbackIfNecessary(PersistenceException persistenceException) {

@@ -11,6 +11,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -105,7 +106,6 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
-import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -252,7 +252,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
@@ -694,19 +693,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return creationContext.getTypeConfiguration();
 	}
 
+	private SessionFactoryOptions getSessionFactoryOptions() {
+		// TODO : FIX ME
+		return creationContext.getSessionFactory().getSessionFactoryOptions();
+	}
+
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForUuid() {
-		return creationContext.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -862,6 +866,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new UpdateStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					entityDescriptor,
 					fromClause,
 					assignments,
 					combinePredicates(
@@ -1126,6 +1131,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new DeleteStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					entityDescriptor,
 					fromClause,
 					combinePredicates(
 							suppliedPredicate,
@@ -1193,6 +1199,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					entityDescriptor,
 					emptyList()
 			);
 			additionalInsertValues = visitInsertionTargetPaths(
@@ -1294,6 +1301,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final InsertSelectStatement insertStatement = new InsertSelectStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					entityDescriptor,
 					emptyList()
 			);
 
@@ -1632,12 +1640,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
-		final CteContainer oldCteContainer = cteContainer;
-		final CteContainer cteContainer = this.visitCteContainer( statement );
-		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
+		final var oldCteContainer = cteContainer;
+		final var cteContainer = this.visitCteContainer( statement );
+		final var oldSqmStatement = this.currentSqmStatement;
 
 		this.currentSqmStatement = statement;
-		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
+		final var queryPart = visitQueryPart( statement.getQueryPart() );
 		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : emptyList();
 		try {
 			return new SelectStatement( cteContainer, queryPart, domainResults );
@@ -1651,30 +1659,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
-		final SqmDynamicInstantiationTarget<?> instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
-		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaType<?> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
-
-		final DynamicInstantiation<?> dynamicInstantiation =
-				new DynamicInstantiation<>( instantiationNature, targetTypeDescriptor );
-
-		for ( SqmDynamicInstantiationArgument<?> sqmArgument : sqmDynamicInstantiation.getArguments() ) {
+		final var instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
+		final var dynamicInstantiation =
+				new DynamicInstantiation<>( instantiationTarget.getNature(),
+						interpretInstantiationTarget( instantiationTarget ) );
+		for ( var sqmArgument : sqmDynamicInstantiation.getArguments() ) {
 			if ( sqmArgument.getSelectableNode() instanceof SqmPath<?> sqmPath ) {
 				prepareForSelection( sqmPath );
 			}
-			final DomainResultProducer<?> argumentResultProducer = (DomainResultProducer<?>) sqmArgument.accept( this );
-
-			dynamicInstantiation.addArgument( sqmArgument.getAlias(), argumentResultProducer, this );
+			dynamicInstantiation.addArgument( sqmArgument.getAlias(),
+					(DomainResultProducer<?>) sqmArgument.accept( this ) );
 		}
-
 		dynamicInstantiation.complete();
-
 		return dynamicInstantiation;
 	}
 
-	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<X> instantiationTarget) {
+	private JavaType<?> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
 		return getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
-				.getDescriptor( switch ( instantiationTarget.getNature() ) {
+				.resolveDescriptor( switch ( instantiationTarget.getNature() ) {
 					case LIST -> List.class;
 					case MAP -> Map.class;
 					default -> instantiationTarget.getJavaType();
@@ -3598,8 +3600,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3678,8 +3679,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				queryPartTableGroup.getNavigablePath(),
 				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
-				queryPartTableGroup,
-				null
+				queryPartTableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3713,8 +3713,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				tableGroup.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -3746,8 +3745,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				tableGroup.getNavigablePath(),
 				correspondingSqlJoinType,
-				tableGroup,
-				null
+				tableGroup
 		);
 		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
@@ -5812,10 +5810,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// so we allow coercion between the number types
 		else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
 				&& value instanceof Number ) {
-			return valueConverter.getRelationalJavaType().coerce(
-					value,
-					creationContext::getTypeConfiguration
-			);
+			return valueConverter.getRelationalJavaType().coerce( value );
 		}
 		else {
 			throw new SemanticException(
@@ -7825,17 +7820,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							this
 					)
 			);
+			subQuerySpec.applyPredicate(
+					new ComparisonPredicate(
+							toSingleExpression( subQuerySpec.getSelectClause().getSqlSelections(), lhs ),
+							ComparisonOperator.EQUAL,
+							lhs
+					)
+			);
+			subQuerySpec.getSelectClause().getSqlSelections().clear();
+			subQuerySpec.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl( new QueryLiteral<>( 1, basicType( Integer.class ) ) )
+			);
 		}
 		finally {
 			popProcessingStateStack();
 		}
 
-		return new InSubQueryPredicate(
-				lhs,
+		return new ExistsPredicate(
 				new SelectStatement( subQuerySpec ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
+	}
+
+	private Expression toSingleExpression(List<SqlSelection> sqlSelections, Expression inferenceSource) {
+		assert !sqlSelections.isEmpty();
+
+		if ( sqlSelections.size() == 1 ) {
+			return sqlSelections.get( 0 ).getExpression();
+		}
+		else {
+			final var expressions = new ArrayList<Expression>( sqlSelections.size() );
+			for ( SqlSelection sqlSelection : sqlSelections ) {
+				expressions.add( sqlSelection.getExpression() );
+			}
+			return new SqlTuple( expressions, (MappingModelExpressible<?>) inferenceSource.getExpressionType() );
+		}
 	}
 
 	@Override

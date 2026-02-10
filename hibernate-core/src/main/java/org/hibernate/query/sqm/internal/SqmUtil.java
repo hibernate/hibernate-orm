@@ -71,6 +71,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -858,14 +859,14 @@ public class SqmUtil {
 		}
 	}
 
-	public static SqmSortSpecification sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
+	public static SqmSortSpecification sortSpecification(AbstractSqmSelectQuery<?> sqm, Order<?> order) {
 		final var items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		final var selected = selectedNode( sqm, order ); // does validation by side effect!
 		return createSortSpecification( sqm, order, items, selected );
 	}
 
 	private static SqmSortSpecification createSortSpecification(
-			SqmSelectStatement<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
+			AbstractSqmSelectQuery<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
 		final var builder = sqm.nodeBuilder();
 		if ( order.entityClass() == null ) {
 			// ordering by an element of the select list
@@ -898,7 +899,7 @@ public class SqmUtil {
 		}
 	}
 
-	private static SqmSelectableNode<?> selectedNode(SqmSelectStatement<?> sqm, Order<?> order) {
+	private static SqmSelectableNode<?> selectedNode(AbstractSqmSelectQuery<?> sqm, Order<?> order) {
 		final int element = order.element();
 		if ( element < 1) {
 			throw new IllegalQueryOperationException("Cannot order by element " + element
@@ -961,7 +962,7 @@ public class SqmUtil {
 	}
 
 	public static <X> SqmPredicate restriction(
-			SqmSelectStatement<X> sqmStatement,
+			AbstractSqmSelectQuery<X> sqmStatement,
 			Class<X> resultType,
 			Restriction<? super X> restriction) {
 		//noinspection unchecked

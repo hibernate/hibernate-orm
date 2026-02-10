@@ -88,9 +88,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 		final boolean shouldSelect;
 		if ( fetchable instanceof ToOneAttributeMapping toOne ) {
 			// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
-			shouldSelect = selected && !creationState.isAssociationKeyVisited(
-					toOne.getForeignKeyDescriptor().getAssociationKey()
-			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() )
+			shouldSelect = selected
+					&& !creationState.isAssociationKeyVisited( toOne.getForeignKeyDescriptor().getAssociationKey() )
+					&& !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() )
 					&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( getNavigablePath().getLocalName() );
 		}
 		else {

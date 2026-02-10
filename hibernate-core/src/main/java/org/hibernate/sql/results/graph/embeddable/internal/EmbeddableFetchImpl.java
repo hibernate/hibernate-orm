@@ -13,11 +13,8 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -34,7 +31,6 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.type.BasicType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -66,13 +62,15 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		this.fetchTiming = fetchTiming;
 		this.hasTableGroup = hasTableGroup;
 
-		this.tableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+
+		this.tableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
 				np -> {
-					final TableGroup lhsTableGroup = creationState.getSqlAstCreationState()
-							.getFromClauseAccess()
-							.findTableGroup( fetchParent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = getReferencedMappingContainer().createTableGroupJoin(
+					final TableGroup lhsTableGroup =
+							sqlAstCreationState.getFromClauseAccess()
+									.findTableGroup( fetchParent.getNavigablePath() );
+					final var tableGroupJoin = getReferencedMappingContainer().createTableGroupJoin(
 							getNavigablePath(),
 							lhsTableGroup,
 							null,
@@ -80,7 +78,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 							SqlAstJoinType.INNER,
 							true,
 							false,
-							creationState.getSqlAstCreationState()
+							sqlAstCreationState
 					);
 					lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
@@ -89,14 +87,17 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 		this.discriminatorFetch = creationState.visitEmbeddableDiscriminatorFetch( this, false );
 		if ( fetchContainer.getAggregateMapping() != null ) {
-			final TableReference tableReference = tableGroup.resolveTableReference(
+			final var tableReference = tableGroup.resolveTableReference(
 					fetchContainer.getAggregateMapping().getContainingTableExpression() );
-			final Expression aggregateExpression = creationState.getSqlAstCreationState().getSqlExpressionResolver()
-					.resolveSqlExpression( tableReference, fetchContainer.getAggregateMapping() );
-			final BasicType<Boolean> booleanType = creationState.getSqlAstCreationState().getCreationContext()
-					.getTypeConfiguration().getBasicTypeForJavaType( Boolean.class );
-			this.nullIndicatorResult = new NullnessPredicate( aggregateExpression, false, booleanType )
-					.createDomainResult( null, creationState );
+			final var aggregateExpression =
+					sqlAstCreationState.getSqlExpressionResolver()
+							.resolveSqlExpression( tableReference, fetchContainer.getAggregateMapping() );
+			final var booleanType =
+					sqlAstCreationState.getCreationContext().getTypeConfiguration()
+							.getBasicTypeForJavaType( Boolean.class );
+			this.nullIndicatorResult =
+					new NullnessPredicate( aggregateExpression, false, booleanType )
+							.createDomainResult( null, creationState );
 		}
 		else {
 			this.nullIndicatorResult = null;
@@ -153,8 +154,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	@Override
 	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		if ( fetchable instanceof TableGroupProducer ) {
-			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
-				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
+			for ( var tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+				final var navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
 						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable
@@ -195,8 +196,10 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 
 	@Override
 	public boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
-		// We use managedType here since this fetch could correspond to an entity type if the embeddable is an id-class
-		return GraphHelper.appliesTo( graphImplementor, metamodel.managedType( getResultJavaType().getTypeName() ) );
+		// We use managedType here since this fetch could correspond
+		// to an entity type if the embeddable is an @IdClass
+		return GraphHelper.appliesTo( graphImplementor,
+				metamodel.managedType( getResultJavaType().getTypeName() ) );
 	}
 
 	@Override

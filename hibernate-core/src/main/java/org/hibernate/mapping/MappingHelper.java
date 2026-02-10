@@ -16,6 +16,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -75,9 +76,10 @@ public final class MappingHelper {
 		if ( type instanceof ParameterizedType parameterizedType ) {
 			parameterizedType.setParameterValues( parameters == null ? EMPTY_PROPERTIES : parameters );
 		}
-		else if ( parameters != null && !parameters.isEmpty() ) {
+		else if ( parameters != null && !parameters.isEmpty()
+				&& !( type instanceof AnnotationBasedUserType<?,?> ) ) {
 			throw new MappingException( "'UserType' implementation '" + type.getClass().getName()
-					+ "' does not implement 'ParameterizedType' but parameters were provided" );
+					+ "' does not implement 'ParameterizedType' or 'AnnotationBasedUserType' but parameters were provided" );
 		}
 	}
 
@@ -102,11 +104,11 @@ public final class MappingHelper {
 	}
 
 	public static void checkPropertyColumnDuplication(
-			Set<String> distinctColumns,
+			Set<QualifiedColumnName> distinctColumns,
 			List<Property> properties,
 			String owner) throws MappingException {
 		for ( var property : properties ) {
-			if ( property.isUpdatable() || property.isInsertable() ) {
+			if ( ( property.isUpdatable() || property.isInsertable() ) && !property.isGenericSpecialization() ) {
 				property.getValue().checkColumnDuplication( distinctColumns, owner );
 			}
 		}

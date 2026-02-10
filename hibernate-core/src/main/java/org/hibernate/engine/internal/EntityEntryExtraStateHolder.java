@@ -36,13 +36,13 @@ class EntityEntryExtraStateHolder implements EntityEntryExtraState {
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public <T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType) {
 		if ( next == null ) {
 			return null;
 		}
-		if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
-			return (T) next;
+		if ( extraStateType.isInstance( next ) ) {
+			return extraStateType.cast( next );
 		}
 		else {
 			return next.getExtraState( extraStateType );

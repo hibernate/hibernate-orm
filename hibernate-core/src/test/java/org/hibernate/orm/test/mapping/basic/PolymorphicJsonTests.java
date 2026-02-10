@@ -50,6 +50,13 @@ public abstract class PolymorphicJsonTests {
 		}
 	}
 
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.JSON_FORMAT_MAPPER, value = "jackson3"))
+	public static class Jackson3 extends PolymorphicJsonTests {
+
+		public Jackson3() {
+		}
+	}
+
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(

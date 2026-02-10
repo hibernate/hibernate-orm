@@ -4,10 +4,10 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.spi.ClassmateContext;
+
+import java.lang.reflect.Type;
 
 /**
  * Factory for {@link org.hibernate.boot.model.convert.spi.ConverterDescriptor}.
@@ -17,39 +17,35 @@ import org.hibernate.boot.spi.ClassmateContext;
 public class ConverterDescriptors {
 
 	public static <X,Y> ConverterDescriptor<X,Y> of(
-			AttributeConverter<X,Y> converterInstance, ClassmateContext classmateContext) {
-		return new InstanceBasedConverterDescriptor<>( converterInstance, null, classmateContext );
+			AttributeConverter<X,Y> converterInstance) {
+		return new InstanceBasedConverterDescriptor<>( converterInstance, null );
 	}
 
 	public static <X,Y> ConverterDescriptor<X,Y> of(
-			AttributeConverter<X,Y> converterInstance, boolean autoApply, ClassmateContext classmateContext) {
-		return new InstanceBasedConverterDescriptor<>( converterInstance, autoApply, classmateContext );
-	}
-
-	public static <X,Y> ConverterDescriptor<X,Y> of(
-			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
-			Boolean autoApply, boolean overrideable, ClassmateContext classmateContext) {
-		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterType =
-				(Class<? extends AttributeConverter<X, Y>>) converterClass;
-		return new ClassBasedConverterDescriptor<>( converterType, autoApply, classmateContext, overrideable );
+			AttributeConverter<X,Y> converterInstance, boolean autoApply) {
+		return new InstanceBasedConverterDescriptor<>( converterInstance, autoApply );
 	}
 
 	public static <X,Y> ConverterDescriptor<X,Y> of(
 			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
-			ClassmateContext classmateContext) {
+			Boolean autoApply, boolean overrideable) {
 		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterType =
-				(Class<? extends AttributeConverter<X, Y>>) converterClass;
-		return new ClassBasedConverterDescriptor<>( converterType, null, classmateContext, false );
+		final var converterType = (Class<? extends AttributeConverter<X, Y>>) converterClass;
+		return new ClassBasedConverterDescriptor<>( converterType, autoApply, overrideable );
+	}
+
+	public static <X,Y> ConverterDescriptor<X,Y> of(
+			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass) {
+		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
+		final var converterType = (Class<? extends AttributeConverter<X, Y>>) converterClass;
+		return new ClassBasedConverterDescriptor<>( converterType, null, false );
 	}
 
 	public static <X,Y> ConverterDescriptor<X,Y> of(
 			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
-			ResolvedType domainTypeToMatch, ResolvedType relationalType, boolean autoApply) {
+			Type domainTypeToMatch, Type relationalType, boolean autoApply) {
 		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
-		final Class<? extends AttributeConverter<X, Y>> converterClass =
-				(Class<? extends AttributeConverter<X, Y>>) converterType;
+		final var converterClass = (Class<? extends AttributeConverter<X, Y>>) converterType;
 		return new ConverterDescriptorImpl<>( converterClass, domainTypeToMatch, relationalType, autoApply );
 	}
 }

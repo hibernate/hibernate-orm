@@ -85,6 +85,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -97,7 +98,6 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -106,7 +106,6 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -160,14 +159,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
-/**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
- * <p>
- * Please refer to the
- * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
- *
- * @author Gavin King
- */
+/// A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
+///
+/// Please refer to the
+/// <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
+///
+/// @author Gavin King
+/// @author Yoobin Yoon
 public class PostgreSQLDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
 
@@ -175,12 +173,11 @@ public class PostgreSQLDialect extends Dialect {
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( jdbcType.isXml() ) {
-				// Requires the use of xmltable which is not supported in check constraints
-				return;
+			final var jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( !jdbcType.isXml() ) {
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
+			// Otherwise requires the use of XMLTABLE which is not supported in check constraints
 		}
 	};
 
@@ -275,7 +272,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
@@ -373,7 +370,8 @@ public class PostgreSQLDialect extends Dialect {
 				// PostgreSQL names array types by prepending an underscore to the base name
 				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					final Integer sqlTypeCode =
+							resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -381,7 +379,7 @@ public class PostgreSQLDialect extends Dialect {
 								ColumnTypeInformation.EMPTY
 						);
 					}
-					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					final var elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
 					if ( elementDescriptor != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -392,7 +390,7 @@ public class PostgreSQLDialect extends Dialect {
 				}
 				break;
 			case STRUCT:
-				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
 						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
 				);
@@ -424,7 +422,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		StringBuilder type = new StringBuilder();
+		final var type = new StringBuilder();
 		type.append( "create type " )
 				.append( name )
 				.append( " as enum (" );
@@ -463,12 +461,10 @@ public class PostgreSQLDialect extends Dialect {
 		return "current_timestamp";
 	}
 
-	/**
-	 * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK}
-	 * numbered from 0 to 6. This isn't consistent with what most other
-	 * databases do, so here we adjust the result by generating
-	 * {@code (extract(dow,arg)+1))}.
-	 */
+	/// The `extract()` function returns [TemporalUnit#DAY_OF_WEEK]
+	/// numbered from 0 to 6. This isn't consistent with what most other
+	/// databases do, so here we adjust the result by generating
+	/// `(extract(dow,arg)+1))`.
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
@@ -487,14 +483,12 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
-	/**
-	 * {@code microsecond} is the smallest unit for an {@code interval},
-	 * and the highest precision for a {@code timestamp}, so we could
-	 * use it as the "native" precision, but it's more convenient to use
-	 * whole seconds (with the fractional part), since we want to use
-	 * {@code extract(epoch from ...)} in our emulation of
-	 * {@code timestampdiff()}.
-	 */
+	/// `microsecond` is the smallest unit for an `interval`,
+	/// and the highest precision for a `timestamp`, so we could
+	/// use it as the "native" precision, but it's more convenient to use
+	/// whole seconds (with the fractional part), since we want to use
+	/// `extract(epoch from ...)` in our emulation of
+	/// `timestampdiff()`.
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1_000_000_000; //seconds
@@ -558,6 +552,7 @@ public class PostgreSQLDialect extends Dialect {
 		super.initializeFunctionRegistry( functionContributions );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -606,31 +601,60 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
-		functionFactory.array_postgresql();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_postgresql();
-		functionFactory.arrayPositions_postgresql();
-		functionFactory.arrayLength_cardinality();
-		functionFactory.arrayConcat_postgresql();
-		functionFactory.arrayPrepend_postgresql();
-		functionFactory.arrayAppend_postgresql();
-		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayIntersects_postgresql();
-		functionFactory.arrayGet_bracket();
-		functionFactory.arraySet_unnest();
-		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_unnest( true );
-		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace();
-		if ( getVersion().isSameOrAfter( 14 ) ) {
-			functionFactory.arrayTrim_trim_array();
-		}
-		else {
-			functionFactory.arrayTrim_unnest();
-		}
-		functionFactory.arrayFill_postgresql();
-		functionFactory.arrayToString_postgresql();
 
+		registerArrayFunctions( functionFactory );
+		registerJsonFunction( functionFactory );
+		registerXmlFunctions( functionFactory );
+
+		functionFactory.makeDateTimeTimestamp();
+		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+
+		if ( !supportsMinMaxOnUuid() ) {
+			functionRegistry.register( "min", new PostgreSQLMinMaxFunction( "min" ) );
+			functionRegistry.register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+		}
+
+		// Postgres uses # instead of ^ for XOR
+		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1#?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		functionRegistry.register(
+				"round", new PostgreSQLTruncRoundFunction( "round", true )
+		);
+		functionRegistry.register(
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
+
+		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
+		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "sha256(?1)" );
+		functionFactory.md5( "decode(md5(?1), 'hex')" );
+
+		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
+	}
+
+	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_postgresql();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable( true );
+	}
+
+	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
 		if ( getVersion().isSameOrAfter( 17 ) ) {
 			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
@@ -667,51 +691,41 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_postgresql();
 		functionFactory.jsonArrayAppend_postgresql( true );
 		functionFactory.jsonArrayInsert_postgresql();
+	}
 
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_postgresql();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable( true );
-
-		functionFactory.makeDateTimeTimestamp();
-		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
-
-		if ( !supportsMinMaxOnUuid() ) {
-			functionContributions.getFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
-			functionContributions.getFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
+	protected void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
 		}
-
-		// Postgres uses # instead of ^ for XOR
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
-				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-				.register();
-
-		functionContributions.getFunctionRegistry().register(
-				"round", new PostgreSQLTruncRoundFunction( "round", true )
-		);
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
-		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
-		functionFactory.dateTrunc();
-
-		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
-		functionFactory.generateSeries( null, "ordinality", false );
-
-		functionFactory.hex( "encode(?1, 'hex')" );
-		functionFactory.sha( "sha256(?1)" );
-		functionFactory.md5( "decode(md5(?1), 'hex')" );
-
-		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			functionFactory.arrayReverse();
+			functionFactory.arraySort();
+		}
+		else {
+			functionFactory.arrayReverse_unnest();
+			functionFactory.arraySort_unnest();
+		}
+		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override
@@ -719,51 +733,49 @@ public class PostgreSQLDialect extends Dialect {
 		return "ordinality";
 	}
 
-	/**
-	 * Whether PostgreSQL supports {@code min(uuid)}/{@code max(uuid)},
-	 * which it doesn't by default. Since the emulation does not perform well,
-	 * this method may be overridden by any user who ensures that aggregate
-	 * functions for handling uuids exist in the database.
-	 * <p>
-	 * The following definitions can be used for this purpose:
-	 * <code><pre>
-	 * create or replace function min(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return least($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate min(uuid) (
-	 *     sfunc = min,
-	 *     stype = uuid,
-	 *     combinefunc = min,
-	 *     parallel = safe,
-	 *     sortop = operator (&lt;)
-	 *     );
-	 *
-	 * create or replace function max(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return greatest($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate max(uuid) (
-	 *     sfunc = max,
-	 *     stype = uuid,
-	 *     combinefunc = max,
-	 *     parallel = safe,
-	 *     sortop = operator (&gt;)
-	 *     );
-	 * </pre></code>
-	 */
+	/// Whether PostgreSQL supports `min(uuid)`/`max(uuid)`,
+	/// which it doesn't by default. Since the emulation does not perform well,
+	/// this method may be overridden by any user who ensures that aggregate
+	/// functions for handling uuids exist in the database.
+	///
+	/// The following definitions can be used for this purpose:
+	/// ```sql
+	/// create or replace function min(uuid, uuid)
+	///     returns uuid
+	///     immutable parallel safe
+	///     language plpgsql as
+	/// $$
+	/// begin
+	///     return least($1, $2);
+	/// end
+	/// $$;
+	///
+	/// create aggregate min(uuid) (
+	///     sfunc = min,
+	///     stype = uuid,
+	///     combinefunc = min,
+	///     parallel = safe,
+	///     sortop = operator (&lt;)
+	///     );
+	///
+	/// create or replace function max(uuid, uuid)
+	///     returns uuid
+	///     immutable parallel safe
+	///     language plpgsql as
+	/// $$
+	/// begin
+	///     return greatest($1, $2);
+	/// end
+	/// $$;
+	///
+	/// create aggregate max(uuid) (
+	///     sfunc = max,
+	///     stype = uuid,
+	///     combinefunc = max,
+	///     parallel = safe,
+	///     sortop = operator (&gt;)
+	///     );
+	/// ```
 	protected boolean supportsMinMaxOnUuid() {
 		return false;
 	}
@@ -802,6 +814,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
 		return true;
 	}
 
@@ -934,12 +951,13 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
-		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-		final String castTypeName = ddlTypeRegistry
-				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
-				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final var jdbcMapping = sqlType.getJdbcMapping();
+		final String castTypeName =
+				ddlTypeRegistry.getDescriptor( jdbcMapping.getJdbcType().getDdlTypeCode() )
+						.getCastTypeName( sqlType.toSize(), (SqlExpressible) jdbcMapping, ddlTypeRegistry );
 		// PostgreSQL assumes a plain null literal in the select statement to be of type text,
-		// which can lead to issues in e.g. the union subclass strategy, so do a cast
+		// which can lead to issues in, for example, the union subclass strategy, so do a cast.
 		return "cast(null as " + castTypeName + ")";
 	}
 
@@ -1035,10 +1053,8 @@ public class PostgreSQLDialect extends Dialect {
 		return EXTRACTOR;
 	}
 
-	/**
-	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Originally contributed by Denny Bartelt.
-	 */
+	/// Constraint-name extractor for Postgres constraint violation exceptions.
+	/// Originally contributed by Denny Bartelt.
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
@@ -1463,11 +1479,9 @@ public class PostgreSQLDialect extends Dialect {
 		contributePostgreSQLTypes(typeContributions, serviceRegistry);
 	}
 
-	/**
-	 * Allow for extension points to override this only
-	 */
+	/// Allow for extension points to override this only
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, see:
 		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
@@ -1539,9 +1553,7 @@ public class PostgreSQLDialect extends Dialect {
 		return postgresqlTableExporter;
 	}
 
-	/**
-	 * @return {@code true}, but only because we can "batch" truncate
-	 */
+	/// @return `true`, but only because we can "batch" truncate
 	@Override
 	public boolean canBatchTruncate() {
 		return true;
@@ -1582,13 +1594,10 @@ public class PostgreSQLDialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		if ( supportsMerge ) {
-			return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
-					.createMergeOperation( optionalTableUpdate );
-		}
-		else {
-			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
-		}
+		return supportsMerge
+				? new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+						.createMergeOperation( optionalTableUpdate )
+				: new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	@Override
@@ -1662,5 +1671,10 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		return true;
 	}
 }

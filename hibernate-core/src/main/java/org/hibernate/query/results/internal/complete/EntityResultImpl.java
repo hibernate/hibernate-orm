@@ -10,9 +10,7 @@ import java.util.function.Function;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -25,11 +23,12 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityResultImpl implements EntityResult, InitializerProducer<EntityResultImpl> {
+public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer<EntityResultImpl<E>> {
 	private final NavigablePath navigablePath;
 	private final EntityValuedModelPart entityValuedModelPart;
 
@@ -46,20 +45,20 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 			EntityValuedModelPart entityValuedModelPart,
 			String resultAlias,
 			LockMode lockMode,
-			Function<EntityResultImpl, BasicFetch<?>> discriminatorFetchBuilder,
+			Function<EntityResultImpl<E>, BasicFetch<?>> discriminatorFetchBuilder,
 			DomainResultCreationState creationState) {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
 
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		if ( resultAlias != null ) {
 			sqlAstCreationState.registerLockMode( resultAlias, lockMode );
 		}
-		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				np ->
-						entityValuedModelPart.getEntityMappingType().getEntityPersister()
+		sqlAstCreationState.getFromClauseAccess()
+				.resolveTableGroup( navigablePath,
+						path -> entityValuedModelPart.getEntityMappingType()
+								.getEntityPersister()
 								.createRootTableGroup(
 										true,
 										navigablePath,
@@ -68,7 +67,7 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 										() -> p -> {},
 										sqlAstCreationState
 								)
-		);
+				);
 
 		this.identifierFetch = creationState.visitIdentifierFetch( this );
 		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );
@@ -120,7 +119,7 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
-		final EntityPersister entityPersister = entityValuedModelPart.getEntityMappingType().getEntityPersister();
+		final var entityPersister = entityValuedModelPart.getEntityMappingType().getEntityPersister();
 		identifierFetch.collectValueIndexesToCache( valueIndexes );
 		if ( !entityPersister.useShallowQueryCacheLayout() ) {
 			if ( discriminatorFetch != null ) {
@@ -134,7 +133,12 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 	}
 
 	@Override
-	public EntityAssembler createResultAssembler(InitializerParent parent, AssemblerCreationState creationState) {
+	public JavaType<E> getResultJavaType() {
+		return (JavaType<E>) EntityResult.super.getResultJavaType();
+	}
+
+	@Override
+	public EntityAssembler<E> createResultAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityAssembler<>( getResultJavaType(),
 				creationState.resolveInitializer( this, parent, this )
 						.asEntityInitializer() );
@@ -142,7 +146,7 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 
 	@Override
 	public Initializer<?> createInitializer(
-			EntityResultImpl resultGraphNode,
+			EntityResultImpl<E> resultGraphNode,
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
 		return resultGraphNode.createInitializer( parent, creationState );

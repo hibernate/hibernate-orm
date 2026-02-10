@@ -27,7 +27,7 @@ public class DatabaseServicePlugin implements Plugin<Project> {
 				DatabaseService.class,
 				spec -> spec.getMaxParallelUsages().set( 1 )
 		);
-		final String database = (String) project.getProperties().get( "db" );
+		final String database = (String) project.findProperty( "db" );
 
 		// H2 and HSQLDB are in-memory, so there is no sharing that needs to be avoided
 		if ( database != null && !"h2".equals( database ) && !"hsqldb".equals( database ) ) {

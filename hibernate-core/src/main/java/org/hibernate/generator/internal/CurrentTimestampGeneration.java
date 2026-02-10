@@ -4,7 +4,6 @@
  */
 package org.hibernate.generator.internal;
 
-import java.lang.reflect.Member;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -25,6 +24,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -39,8 +39,8 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ClockHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -86,29 +86,44 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	private static final ConcurrentHashMap<Key, GeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
-	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
-		delegate = getGeneratorDelegate( annotation.source(), member, context );
+	public CurrentTimestampGeneration(CurrentTimestamp annotation, GeneratorCreationContext context) {
+		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = fromArray( annotation.event() );
 		propertyType = getPropertyType( context );
+		if ( eventTypes.contains( EventType.INSERT ) ) {
+			notNull( context );
+		}
 	}
 
-	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {
-		delegate = getGeneratorDelegate( annotation.source(), member, context );
+	public CurrentTimestampGeneration(CreationTimestamp annotation, GeneratorCreationContext context) {
+		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_ONLY;
 		propertyType = getPropertyType( context );
+		notNull( context );
 	}
 
-	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
-		delegate = getGeneratorDelegate( annotation.source(), member, context );
+	public CurrentTimestampGeneration(UpdateTimestamp annotation, GeneratorCreationContext context) {
+		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_AND_UPDATE;
 		propertyType = getPropertyType( context );
+		notNull( context );
+	}
+
+	private static void notNull(GeneratorCreationContext context) {
+		final var property = context.getProperty();
+		property.setOptional( false );
+		final var columns = property.getColumns();
+		if ( columns.size() != 1 ) {
+			throw new MappingException( "CurrentTimestampGeneration requires exactly one column" );
+		}
+		columns.get( 0 ).setNullable( false );
 	}
 
 	private static GeneratorDelegate getGeneratorDelegate(
 			SourceType source,
-			Member member,
+			Type type,
 			GeneratorCreationContext context) {
-		return getGeneratorDelegate( source, ReflectHelper.getPropertyType( member ), context );
+		return getGeneratorDelegate( source, type.getReturnedClass(), context );
 	}
 
 	static GeneratorDelegate getGeneratorDelegate(

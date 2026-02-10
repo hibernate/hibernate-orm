@@ -396,7 +396,7 @@ public abstract sealed class Collection
 
 	private void checkColumnDuplication() throws MappingException {
 		final String owner = "collection '" + getReferencedPropertyName() + "'";
-		final HashSet<String> cols = new HashSet<>();
+		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		getKey().checkColumnDuplication( cols, owner );
 		if ( isIndexed() ) {
 			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );
@@ -422,6 +422,11 @@ public abstract sealed class Collection
 	@Override
 	public int getColumnSpan() {
 		return 0;
+	}
+
+	@Override
+	public boolean hasColumns() {
+		return false;
 	}
 
 	@Override
@@ -768,6 +773,14 @@ public abstract sealed class Collection
 	@Override
 	public boolean[] getColumnUpdateability() {
 		return EMPTY_BOOLEAN_ARRAY;
+	}
+
+	@Override
+	public void setNonInsertable() {
+	}
+
+	@Override
+	public void setNonUpdatable() {
 	}
 
 	@Override

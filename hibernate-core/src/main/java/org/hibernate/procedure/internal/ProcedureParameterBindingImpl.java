@@ -14,10 +14,10 @@ import org.hibernate.query.internal.QueryParameterBindingImpl;
  *
  * @author Steve Ebersole
  */
-public class ProcedureParameterBindingImpl<T>
+class ProcedureParameterBindingImpl<T>
 		extends QueryParameterBindingImpl<T>
 		implements ProcedureParameterBinding<T> {
-	public ProcedureParameterBindingImpl(
+	ProcedureParameterBindingImpl(
 			ProcedureParameterImplementor<T> queryParameter,
 			SessionFactoryImplementor sessionFactory) {
 		super( queryParameter, sessionFactory );

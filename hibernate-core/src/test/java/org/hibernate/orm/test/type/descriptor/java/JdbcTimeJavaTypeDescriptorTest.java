@@ -8,9 +8,7 @@ import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.util.Date;
 
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -25,7 +23,7 @@ public class JdbcTimeJavaTypeDescriptorTest {
 	@Test
 	@JiraKey("HHH-17229")
 	public void testUnwrap() {
-		final JavaType<Date> javaType = JdbcTimeJavaType.INSTANCE;
+		final var javaType = JdbcTimeJavaType.INSTANCE;
 
 		final Time sqlTime = new Time(
 				LocalDate.EPOCH.atTime( LocalTime.of( 0, 1, 2, 0 ) )

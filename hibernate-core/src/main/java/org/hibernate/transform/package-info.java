@@ -6,7 +6,7 @@
 /**
  * Defines strategies for post-processing criteria query
  * results into a form convenient to the application.
- * <p>
+ *
  * @apiNote This entire package is considered deprecated.  Use
  * {@link org.hibernate.query.TupleTransformer} and/or
  * {@link org.hibernate.query.ResultListTransformer}

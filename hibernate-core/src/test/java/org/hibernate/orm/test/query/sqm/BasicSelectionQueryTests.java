@@ -13,17 +13,17 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.SelectionQuery;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = BasicSelectionQueryTests.DummyEntity.class
 )
 @SessionFactory
-@SkipForDialect( dialectClass = HANADialect.class, reason = "HANA does not support scrollable results")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBackwardsScrollableResultSets.class)
 public class BasicSelectionQueryTests {
 	@Test
 	public void typedEntitySelectTest(SessionFactoryScope scope) {

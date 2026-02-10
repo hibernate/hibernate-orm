@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.NONE;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.getSupportedContextualLobTypes;
-import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_LOGGER;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESSAGE_LOGGER;
 
 /**
@@ -79,7 +78,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 					: new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
 		}
 		else {
-			LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
+			LOB_MESSAGE_LOGGER.fallingBackToNonContextual();
 			return NonContextualLobCreator.INSTANCE;
 		}
 	}

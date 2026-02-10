@@ -78,7 +78,7 @@ public class WithClauseJoinRewriteTest {
 			this.name = name;
 		}
 
-		@ManyToMany( targetEntity = AbstractConfigurationObject.class, fetch = FetchType.LAZY, cascade = {} )
+		@ManyToMany(fetch = FetchType.LAZY, cascade = {})
 		public Set<ConfigurationObject> getUses () {
 			return uses;
 		}
@@ -87,7 +87,7 @@ public class WithClauseJoinRewriteTest {
 			this.uses = uses;
 		}
 
-		@ManyToMany ( targetEntity = AbstractConfigurationObject.class, fetch = FetchType.LAZY, mappedBy = "uses", cascade = {} )
+		@ManyToMany(fetch = FetchType.LAZY, mappedBy = "uses", cascade = {})
 		public Set<ConfigurationObject> getUsedBy () {
 			return usedBy;
 		}

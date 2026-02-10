@@ -756,7 +756,7 @@ public class MySQLLegacyDialect extends Dialect {
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 	}

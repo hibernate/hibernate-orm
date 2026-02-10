@@ -473,7 +473,9 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
-			case SECOND -> getVersion().isBefore( 11, 70 ) ?	"to_number(to_char(?2,'%S%F3'))" : "to_number(to_char(?2,'%S.%F3'))";
+			case SECOND -> getVersion().isBefore( 11, 70 )
+					? "to_number(to_char(?2,'%S%F3'))"
+					: "to_number(to_char(?2,'%S.%F3'))";
 			case MINUTE -> "to_number(to_char(?2,'%M'))";
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
@@ -543,7 +545,8 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getTruncateTableStatement(String tableName) {
-		return super.getTruncateTableStatement( tableName ) + " reuse storage"
+		return super.getTruncateTableStatement( tableName )
+				+ " reuse storage"
 				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
 	}
 
@@ -778,7 +781,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select sysdate" + (getVersion().isBefore( 12, 10 ) ? " from informix.systables where tabid=1" : "");
+		return getVersion().isBefore( 12, 10 )
+				? "select sysdate from informix.systables where tabid=1"
+				: "select sysdate";
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -1128,7 +1133,7 @@ public class InformixDialect extends Dialect {
 						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
-								.getDescriptor( Object.class )
+								.resolveDescriptor( Object.class )
 				)
 		);
 	}
@@ -1194,6 +1199,8 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
-		return getVersion().isSameOrAfter( 12,10 ) ? DmlTargetColumnQualifierSupport.TABLE_ALIAS : DmlTargetColumnQualifierSupport.NONE;
+		return getVersion().isSameOrAfter( 12,10 )
+				? DmlTargetColumnQualifierSupport.TABLE_ALIAS
+				: DmlTargetColumnQualifierSupport.NONE;
 	}
 }

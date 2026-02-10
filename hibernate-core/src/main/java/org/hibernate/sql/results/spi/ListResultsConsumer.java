@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -20,7 +19,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -150,11 +148,11 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		rowReader.startLoading( rowProcessingState );
 
 		RuntimeException ex = null;
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		persistenceContext.beforeLoad();
 		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
-			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
+			final var domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
 					rowReader.getResultJavaTypes(),
 					session.getTypeConfiguration()
@@ -162,7 +160,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
 			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
-			final Results<R> results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
+			final var results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
 			final int readRows = readRows( rowProcessingState, rowReader, isEntityResultType, results );
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
@@ -209,13 +207,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			boolean isEntityResultType,
 			JavaType<R> domainResultJavaType,
 			int initialCollectionSize) {
-		if ( isEntityResultType
-			&& ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) ) {
-			return new EntityResult<>( domainResultJavaType, initialCollectionSize );
-		}
-		else {
-			return new Results<>( domainResultJavaType, initialCollectionSize );
-		}
+		return isEntityResultType && isAllowOrFilter()
+				? new EntityResult<>( domainResultJavaType, initialCollectionSize )
+				: new Results<>( domainResultJavaType, initialCollectionSize );
+	}
+
+	private boolean isAllowOrFilter() {
+		return uniqueSemantic == UniqueSemantic.ALLOW
+			|| uniqueSemantic == UniqueSemantic.FILTER;
 	}
 
 	private int readRows(
@@ -223,17 +222,18 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			RowReader<R> rowReader,
 			boolean isEntityResultType,
 			Results<R> results) {
-		if ( uniqueSemantic == UniqueSemantic.FILTER
-				|| uniqueSemantic == UniqueSemantic.ASSERT && rowReader.hasCollectionInitializers()
-				|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
-			return readUnique( rowProcessingState, rowReader, results );
-		}
-		else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
-			return readUniqueAssert( rowProcessingState, rowReader, results );
-		}
-		else {
-			return read( rowProcessingState, rowReader, results );
-		}
+		return switch ( uniqueSemantic ) {
+			case FILTER ->
+					readUnique( rowProcessingState, rowReader, results );
+			case ASSERT -> rowReader.hasCollectionInitializers()
+					? readUnique( rowProcessingState, rowReader, results )
+					: readUniqueAssert( rowProcessingState, rowReader, results );
+			case ALLOW -> isEntityResultType
+					? readUnique( rowProcessingState, rowReader, results )
+					: read( rowProcessingState, rowReader, results );
+			case NONE, NEVER ->
+					read( rowProcessingState, rowReader, results );
+		};
 	}
 
 	private static <R> int read(
@@ -283,35 +283,32 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		return readRows;
 	}
 
+	@SuppressWarnings("unchecked") //TODO: fix the unchecked casts
 	private JavaType<R> resolveDomainResultJavaType(
 			Class<R> domainResultResultJavaType,
 			List<@Nullable JavaType<?>> resultJavaTypes,
 			TypeConfiguration typeConfiguration) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
 		if ( domainResultResultJavaType != null ) {
-			final JavaType<R> resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
+			final var resultJavaType = javaTypeRegistry.resolveDescriptor( domainResultResultJavaType );
 			// Could be that the user requested a more general type than the actual type,
 			// so resolve the most concrete type since this type is used to determine equality of objects
-			if ( resultJavaTypes.size() == 1 && isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
-				//noinspection unchecked
+			if ( resultJavaTypes.size() == 1
+					&& isMoreConcrete( resultJavaType, resultJavaTypes.get( 0 ) ) ) {
 				return (JavaType<R>) resultJavaTypes.get( 0 );
 			}
 			return resultJavaType;
 		}
 
 		if ( resultJavaTypes.size() == 1 ) {
-			final JavaType<?> firstJavaType = resultJavaTypes.get( 0 );
-			if ( firstJavaType == null ) {
-				return javaTypeRegistry.getDescriptor( Object.class );
-			}
-			else {
-				//noinspection unchecked
-				return (JavaType<R>) firstJavaType;
-			}
+			final var firstJavaType = resultJavaTypes.get( 0 );
+			return firstJavaType == null
+					? (JavaType<R>) javaTypeRegistry.resolveDescriptor( Object.class )
+					: (JavaType<R>) firstJavaType;
 		}
 		else {
-			return javaTypeRegistry.getDescriptor( Object[].class );
+			return (JavaType<R>) javaTypeRegistry.resolveDescriptor( Object[].class );
 		}
 	}
 

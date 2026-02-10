@@ -88,7 +88,7 @@ public interface SqmPathSource<J>
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
 	default SqmPathSource<?> getSubPathSource(String name, boolean subtypes) {
-		final SqmPathSource<?> subPathSource = findSubPathSource( name, subtypes );
+		final var subPathSource = findSubPathSource( name, subtypes );
 		if ( subPathSource == null ) {
 			throw new PathElementException(
 					String.format(

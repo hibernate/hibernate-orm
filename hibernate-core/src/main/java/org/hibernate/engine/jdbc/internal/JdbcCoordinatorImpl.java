@@ -293,14 +293,29 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				JDBC_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
+				JDBC_LOGGER.skippingAggressiveRelease( "manually disabled" );
 			}
 			else if ( hasRegisteredResources() ) {
-				JDBC_LOGGER.trace( "Skipping aggressive release due to registered resources" );
+				JDBC_LOGGER.skippingAggressiveRelease( "registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();
 			}
+		}
+	}
+
+	/**
+	 * Notification that a {@link SQLException} has occurred
+	 * while executing a JDBC {@linkplain java.sql.Statement}
+	 * or {@link java.sql.PreparedStatement}. This gives us a
+	 * chance to mark the current transaction as rollback-only
+	 * on those databases where exceptions always cause the
+	 * transaction to be marked for rollback (PostgreSQL).
+	 */
+	@Override
+	public void afterFailedStatementExecution(SQLException sqlException) {
+		if ( jdbcServices.getDialect().causesRollback( sqlException ) ) {
+			getLogicalConnection().markRollbackOnly();
 		}
 	}
 
@@ -332,6 +347,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			return result;
 		}
 		catch ( SQLException e ) {
+			afterFailedStatementExecution( e );
 			throw sqlExceptionHelper().convert( e, "Error executing work" );
 		}
 	}

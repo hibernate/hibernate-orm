@@ -29,7 +29,7 @@ public enum AccessType {
 	/**
 	 * Read and write access. Data may be added, removed and mutated.
 	 * A "soft" lock on the cached item is used to manage concurrent
-	 * access during mutation.
+	 * access during mutation. Requires a version to be useful.
 	 */
 	READ_WRITE,
 	/**

@@ -15,7 +15,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
@@ -25,7 +24,7 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
-import org.hibernate.binder.TypeBinder;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -65,10 +64,13 @@ import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.bui
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -237,6 +239,15 @@ public class EmbeddableBinder {
 		}
 	}
 
+	static boolean isEmbedded(MemberDetails memberDetails) {
+		final var elementType = memberDetails.getElementType();
+		return elementType != null && isEmbedded( memberDetails, elementType );
+	}
+
+	public static boolean isEmbeddable(ClassDetails type) {
+		return type.hasDirectAnnotationUsage( Embeddable.class );
+	}
+
 	private static Component bindOverriddenEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,
@@ -316,17 +327,7 @@ public class EmbeddableBinder {
 						.getMetaAnnotated( TypeBinderType.class,
 								context.getBootstrapContext().getModelsContext() );
 		for ( var metaAnnotated : metaAnnotatedAnnotations ) {
-			final var binderType = metaAnnotated.annotationType().getAnnotation( TypeBinderType.class );
-			try {
-				//noinspection rawtypes
-				final TypeBinder binder = binderType.binder().getDeclaredConstructor().newInstance();
-				//noinspection unchecked
-				binder.bind( metaAnnotated, context, embeddable );
-			}
-			catch (Exception e) {
-				throw new AnnotationException(
-						"error processing @TypeBinderType annotation '" + metaAnnotated + "'", e );
-			}
+			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), embeddable, context );
 		}
 	}
 
@@ -822,7 +823,7 @@ public class EmbeddableBinder {
 		if ( superClass == null ) {
 			return false;
 		}
-		else if ( superClass.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+		else if ( isMappedSuperclass( superClass ) ) {
 			return true;
 		}
 		else if ( isIdClass ) {
@@ -1101,7 +1102,7 @@ public class EmbeddableBinder {
 			MemberDetails property,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
-		if ( property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+		if ( isEmbeddedId( property ) ) {
 			// we don't allow custom instantiators for composite ids
 			return null;
 		}
@@ -1167,12 +1168,11 @@ public class EmbeddableBinder {
 
 			//prepare column name structure
 			boolean isExplicitReference = true;
-			final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+			final var columns = joinColumns.getJoinColumns();
 			final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
 			for ( var joinColumn : columns ) {
 				if ( !joinColumn.isReferenceImplicit() ) {
-					//JPA 2 requires referencedColumnNames to be case-insensitive
-					columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase( Locale.ROOT), joinColumn );
+					columnByReferencedName.put( normalizedColumnName( joinColumn ), joinColumn );
 				}
 			}
 			//try default column orientation
@@ -1185,25 +1185,38 @@ public class EmbeddableBinder {
 
 			final var index = new MutableInteger();
 			for ( var referencedProperty : referencedComponent.getProperties() ) {
-				final Property property;
-				if ( referencedProperty.isComposite() ) {
-					property = createComponentProperty(
-							isExplicitReference,
-							columnByReferencedName,
-							index,
-							referencedProperty
-					);
-				}
-				else {
-					property = createSimpleProperty(
-							referencedPersistentClass,
-							isExplicitReference,
-							columnByReferencedName,
-							index,
-							referencedProperty
-					);
-				}
-				embeddable.addProperty( property );
+				embeddable.addProperty( createProperty(
+						referencedProperty,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedPersistentClass
+				) );
+			}
+		}
+
+		private Property createProperty(
+				Property referencedProperty,
+				boolean isExplicitReference,
+				Map<String, AnnotatedJoinColumn> columnByReferencedName,
+				MutableInteger index,
+				PersistentClass referencedPersistentClass) {
+			if ( referencedProperty.isComposite() ) {
+				return createComponentProperty(
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
+			}
+			else {
+				return createSimpleProperty(
+						referencedPersistentClass,
+						isExplicitReference,
+						columnByReferencedName,
+						index,
+						referencedProperty
+				);
 			}
 		}
 
@@ -1308,16 +1321,17 @@ public class EmbeddableBinder {
 					if ( selectable instanceof org.hibernate.mapping.Column column ) {
 						final AnnotatedJoinColumn joinColumn;
 						final String logicalColumnName;
+						final String referenceName;
 						if ( isExplicitReference ) {
 							logicalColumnName = column.getName();
-							//JPA 2 requires referencedColumnNames to be case-insensitive
-							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase( Locale.ROOT ) );
+							referenceName = normalizedColumnName( column );
 						}
 						else {
 							logicalColumnName = null;
-							joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
+							referenceName = String.valueOf( index.get() );
 							index.getAndIncrement();
 						}
+						joinColumn = columnByReferencedName.get( referenceName );
 						if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
 							throw new AnnotationException(
 									"Property '" + propertyName
@@ -1359,5 +1373,27 @@ public class EmbeddableBinder {
 			mappingColumn.setScale( column.getScale() );
 			mappingColumn.setArrayLength( column.getArrayLength() );
 		}
+	}
+
+	private static String normalizedColumnName(AnnotatedJoinColumn joinColumn) {
+		final Identifier referencedColumn =
+				joinColumn.getBuildingContext().getObjectNameNormalizer()
+						.normalizeIdentifierQuoting( joinColumn.getReferencedColumn() );
+		return referencedColumn.isQuoted()
+				? referencedColumn.getText()
+				//CLAIM: "JPA 2 requires referencedColumnNames to be case-insensitive"
+				//FACT: In fact, the spec doesn't say anything of the sort anywhere!
+				//      But changing this would not be backward compatible (2026)
+				: referencedColumn.getText().toLowerCase( Locale.ROOT );
+	}
+
+	private static String normalizedColumnName(org.hibernate.mapping.Column column) {
+		final String logicalColumnName = column.getName();
+		return column.isQuoted()
+				? logicalColumnName
+				//CLAIM: "JPA 2 requires referencedColumnNames to be case-insensitive"
+				//FACT: In fact, the spec doesn't say anything of the sort anywhere!
+				//      But changing this would not be backward compatible (2026)
+				: logicalColumnName.toLowerCase( Locale.ROOT );
 	}
 }

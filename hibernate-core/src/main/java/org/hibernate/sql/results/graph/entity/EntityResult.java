@@ -11,5 +11,5 @@ import org.hibernate.sql.results.graph.DomainResult;
  *
  * @author Steve Ebersole
  */
-public interface EntityResult extends EntityResultGraphNode, DomainResult {
+public interface EntityResult<E> extends EntityResultGraphNode, DomainResult<E> {
 }

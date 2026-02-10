@@ -110,8 +110,6 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.sql.CallableStatement;
@@ -123,7 +121,6 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.join;
@@ -179,6 +176,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Steve Ebersole
  * @author Gavin King
  * @author Loïc Lefèvre
+ * @author Yoobin Yoon
  */
 public class OracleDialect extends Dialect {
 
@@ -293,10 +291,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var typeConfiguration = functionContributions.getTypeConfiguration();
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry = functionContributions.getFunctionRegistry();
+
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.cosh();
@@ -344,18 +344,18 @@ public class OracleDialect extends Dialect {
 		//Oracle has had coalesce() since 9.0.1
 		functionFactory.coalesce();
 
-		functionContributions.getFunctionRegistry()
+		functionRegistry
 				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-		functionContributions.getFunctionRegistry()
+		functionRegistry
 				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
-		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
+		functionRegistry.registerBinaryTernaryPattern(
 				"locate",
 				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
@@ -370,16 +370,65 @@ public class OracleDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		// Oracle has a regular aggregate function named stats_mode
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
-		functionContributions.getFunctionRegistry().register(
+		functionRegistry.register(
 				"trunc",
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 
+		registerArrayFunctions( functionFactory );
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
+
+		functionFactory.unnest_oracle();
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
+		functionFactory.md5( "standard_hash(?1, 'MD5')" );
+
+		functionRegistry.register(
+				"extract",
+				new OracleExtractFunction( this, typeConfiguration )
+		);
+		functionFactory.regexpLike_predicateFunction();
+	}
+
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_oracle();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable_oracle();
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_oracle();
+		functionFactory.jsonQuery_oracle();
+		functionFactory.jsonExists_oracle();
+		functionFactory.jsonObject_oracle( true );
+		functionFactory.jsonArray_oracle();
+		functionFactory.jsonArrayAgg_oracle();
+		functionFactory.jsonObjectAgg_oracle();
+		functionFactory.jsonSet_oracle();
+		functionFactory.jsonRemove_oracle();
+		functionFactory.jsonReplace_oracle();
+		functionFactory.jsonInsert_oracle();
+		functionFactory.jsonMergepatch_oracle();
+		functionFactory.jsonArrayAppend_oracle();
+		functionFactory.jsonArrayInsert_oracle();
+		functionFactory.jsonTable_oracle();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.array_oracle();
 		functionFactory.arrayAggregate_jsonArrayagg();
 		functionFactory.arrayPosition_oracle();
@@ -397,47 +446,10 @@ public class OracleDialect extends Dialect {
 		functionFactory.arraySlice_oracle();
 		functionFactory.arrayReplace_oracle();
 		functionFactory.arrayTrim_oracle();
+		functionFactory.arrayReverse_oracle();
+		functionFactory.arraySort_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
-
-		functionFactory.jsonValue_oracle();
-		functionFactory.jsonQuery_oracle();
-		functionFactory.jsonExists_oracle();
-		functionFactory.jsonObject_oracle( true );
-		functionFactory.jsonArray_oracle();
-		functionFactory.jsonArrayAgg_oracle();
-		functionFactory.jsonObjectAgg_oracle();
-		functionFactory.jsonSet_oracle();
-		functionFactory.jsonRemove_oracle();
-		functionFactory.jsonReplace_oracle();
-		functionFactory.jsonInsert_oracle();
-		functionFactory.jsonMergepatch_oracle();
-		functionFactory.jsonArrayAppend_oracle();
-		functionFactory.jsonArrayInsert_oracle();
-
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_oracle();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable_oracle();
-
-		functionFactory.unnest_oracle();
-		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
-		functionFactory.jsonTable_oracle();
-
-		functionFactory.hex( "rawtohex(?1)" );
-		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
-		functionFactory.md5( "standard_hash(?1, 'MD5')" );
-
-		functionContributions.getFunctionRegistry().register(
-				"extract",
-				new OracleExtractFunction( this, typeConfiguration )
-		);
-		functionFactory.regexpLike_predicateFunction();
 	}
 
 	/**
@@ -651,7 +663,7 @@ public class OracleDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		switch ( unit ) {
 			case YEAR:
 				pattern.append( ADD_YEAR_EXPRESSION );
@@ -694,7 +706,7 @@ public class OracleDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final boolean hasTimePart = toTemporalType != TemporalType.DATE || fromTemporalType != TemporalType.DATE;
 		switch ( unit ) {
 			case YEAR:
@@ -839,7 +851,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "SYS.XMLTYPE", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
@@ -997,7 +1009,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
@@ -1079,7 +1091,7 @@ public class OracleDialect extends Dialect {
 		);
 
 		if ( getVersion().isSameOrAfter(23) ) {
-			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+			final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 			jdbcTypeRegistry.addDescriptor( OracleEnumJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( OracleOrdinalEnumJdbcType.INSTANCE );
 		}
@@ -1136,6 +1148,11 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
 		return getVersion().isSameOrAfter( 23 );
 	}
 
@@ -1426,7 +1443,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	private String statementType(String sql) {
-		final Matcher matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
+		final var matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
 		if ( matcher.matches() && matcher.groupCount() == 1 ) {
 			return matcher.group(1);
 		}
@@ -1773,7 +1790,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		final StringBuilder domain = new StringBuilder();
+		final var domain = new StringBuilder();
 		domain.append( "create domain " )
 				.append( name )
 				.append( " as enum (" );
@@ -1793,7 +1810,7 @@ public class OracleDialect extends Dialect {
 	 * @return the DDL command to create that enum
 	 */
 	public static String[] getCreateVarcharEnumTypeCommand(String name, String[] values) {
-		final StringBuilder domain = new StringBuilder();
+		final var domain = new StringBuilder();
 		domain.append( "create domain " )
 				.append( name )
 				.append( " as enum (" );

@@ -8,15 +8,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.MissingSqlSelectionException;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
@@ -73,37 +70,21 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final var creationStateImpl = impl( domainResultCreationState );
 
-		final String mappedTable = referencedModelPart.getContainingTableExpression();
+		final var tableReference =
+				creationStateImpl.getFromClauseAccess()
+						.getTableGroup( parent.getNavigablePath() )
+						.resolveTableReference( navigablePath, referencedModelPart,
+								referencedModelPart.getContainingTableExpression() );
 
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, referencedModelPart, mappedTable );
+		final int jdbcPosition = jdbcPosition( jdbcResultsMetadata, creationStateImpl );
+		final String selectedAlias =
+				selectionAlias == null
+						? jdbcResultsMetadata.resolveColumnName( jdbcPosition )
+						: selectionAlias;
 
-		final String selectedAlias;
-		final int jdbcPosition;
-		if ( selectionAlias != null ) {
-			try {
-				jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
-			}
-			catch (Exception e) {
-				throw new MissingSqlSelectionException(
-						"ResultSet mapping specified selected-alias `" + selectionAlias
-								+ "` which was not part of the ResultSet",
-						e
-				);
-			}
-			selectedAlias = selectionAlias;
-		}
-		else {
-			if ( ! creationStateImpl.arePositionalSelectionsAllowed() ) {
-				throw new AssertionFailure( "Positional SQL selection resolution not allowed" );
-			}
-			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
-			selectedAlias = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
-		}
-
-		final JdbcMapping jdbcMapping =
+		final var jdbcMapping =
 				referencedModelPart instanceof DiscriminatorMapping discriminatorMapping
 						? discriminatorMapping.getUnderlyingJdbcMapping()
 						: referencedModelPart.getJdbcMapping();
@@ -125,19 +106,40 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 		);
 	}
 
+	private int jdbcPosition(JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationStateImpl creationStateImpl) {
+		if ( selectionAlias != null ) {
+			try {
+				return jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
+			}
+			catch (Exception e) {
+				throw new MissingSqlSelectionException(
+						"ResultSet mapping specified selected alias '" + selectionAlias
+								+ "' which was not part of the ResultSet",
+						e
+				);
+			}
+		}
+		else {
+			if ( !creationStateImpl.arePositionalSelectionsAllowed() ) {
+				throw new AssertionFailure( "Positional SQL selection resolution not allowed" );
+			}
+			return creationStateImpl.getNumberOfProcessedSelections() + 1;
+		}
+	}
+
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteFetchBuilderBasicPart that ) ) {
 			return false;
 		}
-
-		final CompleteFetchBuilderBasicPart that = (CompleteFetchBuilderBasicPart) o;
-		return navigablePath.equals( that.navigablePath )
-			&& referencedModelPart.equals( that.referencedModelPart )
-			&& Objects.equals( selectionAlias, that.selectionAlias );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& referencedModelPart.equals( that.referencedModelPart )
+				&& Objects.equals( selectionAlias, that.selectionAlias );
+		}
 	}
 
 	@Override

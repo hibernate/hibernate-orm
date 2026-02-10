@@ -9,8 +9,6 @@ import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -21,7 +19,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
@@ -49,13 +46,13 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 			NavigablePath fetchPath,
 			EmbeddableValuedFetchable fetchable,
 			DomainResultCreationStateImpl creationStateImpl) {
-		final Function<Fetchable, FetchBuilder> fetchBuilderResolver =
+		final var fetchBuilderResolver =
 				creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final int size = fetchable.getNumberOfFetchables();
 		final Map<Fetchable, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
-			final Fetchable subFetchable = fetchable.getFetchable( i );
-			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
+			final var subFetchable = fetchable.getFetchable( i );
+			final var explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
 			fetchBuilders.put( subFetchable,
 					explicitFetchBuilder == null
 							? implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
@@ -72,7 +69,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		}
 		else {
 			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
-			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
+			for ( var entry : original.fetchBuilders.entrySet() ) {
 				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
 			}
 		}
@@ -89,7 +86,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState creationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
+		final var creationStateImpl = impl( creationState );
 
 		// make sure the TableGroup is available
 		tableGroup( parent, fetchPath, creationStateImpl );
@@ -119,10 +116,10 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				fetchPath,
 				navigablePath -> {
-					final TableGroup parentTableGroup =
+					final var parentTableGroup =
 							creationStateImpl.getFromClauseAccess()
 									.getTableGroup( parent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
+					final var tableGroupJoin = fetchable.createTableGroupJoin(
 							fetchPath,
 							parentTableGroup,
 							null,
@@ -139,18 +136,18 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitFetchBuilderEmbeddable that ) ) {
 			return false;
 		}
-
-		final ImplicitFetchBuilderEmbeddable that = (ImplicitFetchBuilderEmbeddable) o;
-		return fetchPath.equals( that.fetchPath )
-			&& fetchable.equals( that.fetchable )
-			&& fetchBuilders.equals( that.fetchBuilders );
+		else {
+			return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable )
+				&& fetchBuilders.equals( that.fetchBuilders );
+		}
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	@Override
 	public NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
-		try ( var preparedStatement = getExtractionContext().getJdbcConnection().prepareStatement( getForeignKeysSql( tableSchema ) )) {
+		try ( var preparedStatement = getConnection().prepareStatement( getForeignKeysSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
 				preparedStatement.setString( 1, tableSchema );
 			}
@@ -67,7 +67,7 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	@Override
 	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
-		try ( var preparedStatement = getExtractionContext().getJdbcConnection().prepareStatement( getIndexesSql( tableSchema ) )) {
+		try ( var preparedStatement = getConnection().prepareStatement( getIndexesSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
 				preparedStatement.setString( 1, tableSchema );
 			}
@@ -107,7 +107,7 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	@Override
 	public NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
-		try ( var preparedStatement = getExtractionContext().getJdbcConnection().prepareStatement( getPrimaryKeysSql( tableSchema ) )) {
+		try ( var preparedStatement = getConnection().prepareStatement( getPrimaryKeysSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
 				preparedStatement.setString( 1, tableSchema );
 			}

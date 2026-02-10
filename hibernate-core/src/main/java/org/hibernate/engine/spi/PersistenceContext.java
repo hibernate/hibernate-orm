@@ -16,6 +16,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ProxyUtil;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -293,8 +294,12 @@ public interface PersistenceContext {
 	 * Get the entity instance underlying the given proxy, throwing
 	 * an exception if the proxy is uninitialized. If the given object
 	 * is not a proxy, simply return the argument.
+	 * @deprecated No longer used
 	 */
-	Object unproxy(Object maybeProxy);
+	@Deprecated(since = "7.2", forRemoval = true)
+	default Object unproxy(Object maybeProxy) {
+		return ProxyUtil.assertInitialized( maybeProxy );
+	}
 
 	/**
 	 * Possibly unproxy the given reference and reassociate it with the current session.
@@ -378,7 +383,18 @@ public interface PersistenceContext {
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id);
+	void addUninitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id,
+			boolean readOnly);
+
+	default void addUninitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id) {
+		addUninitializedCollection( persister, collection, id, false );
+	}
 
 	/**
 	 * add a detached uninitialized collection
@@ -396,9 +412,7 @@ public interface PersistenceContext {
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	void addInitializedDetachedCollection(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection);
+	void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection<?> collection);
 
 	/**
 	 * Replaces a directly accessible collection with the given one
@@ -415,7 +429,15 @@ public interface PersistenceContext {
 	CollectionEntry addInitializedCollection(
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
-			Object id);
+			Object id,
+			boolean readOnly);
+
+	default CollectionEntry addInitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id) {
+		return addInitializedCollection( persister, collection, id, false );
+	}
 
 	/**
 	 * Get the collection instance associated with the {@code CollectionKey}

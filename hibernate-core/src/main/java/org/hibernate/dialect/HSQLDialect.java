@@ -77,6 +77,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
  * @author Christoph Sturm
  * @author Phillip Baird
  * @author Fred Toussi
+ * @author Yoobin Yoon
  */
 public class HSQLDialect extends Dialect {
 
@@ -197,25 +198,8 @@ public class HSQLDialect extends Dialect {
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		functionFactory.rownum();
 		functionFactory.listagg_groupConcat();
-		functionFactory.array_hsql();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_hsql();
-		functionFactory.arrayPositions_hsql();
-		functionFactory.arrayLength_cardinality();
-		functionFactory.arrayConcat_operator();
-		functionFactory.arrayPrepend_operator();
-		functionFactory.arrayAppend_operator();
-		functionFactory.arrayContains_hsql();
-		functionFactory.arrayIntersects_hsql();
-		functionFactory.arrayGet_unnest();
-		functionFactory.arraySet_hsql();
-		functionFactory.arrayRemove_hsql();
-		functionFactory.arrayRemoveIndex_unnest( false );
-		functionFactory.arraySlice_unnest();
-		functionFactory.arrayReplace_unnest();
-		functionFactory.arrayTrim_trim_array();
-		functionFactory.arrayFill_hsql();
-		functionFactory.arrayToString_hsql();
+
+		registerArrayFunctions( functionFactory );
 
 		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
 			functionFactory.jsonObject_hsqldb();
@@ -236,6 +220,30 @@ public class HSQLDialect extends Dialect {
 
 		functionFactory.hex( "hex(?1)" );
 		functionFactory.regexpLike_hsql();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_hsql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_hsql();
+		functionFactory.arrayPositions_hsql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_hsql();
+		functionFactory.arrayIntersects_hsql();
+		functionFactory.arrayGet_unnest();
+		functionFactory.arraySet_hsql();
+		functionFactory.arrayRemove_hsql();
+		functionFactory.arrayRemoveIndex_unnest( false );
+		functionFactory.arraySlice_unnest();
+		functionFactory.arrayReplace_unnest();
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_hsql();
+		functionFactory.arrayFill_hsql();
+		functionFactory.arrayToString_hsql();
 	}
 
 	/**
@@ -333,7 +341,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {
 			case NANOSECOND:
@@ -363,7 +371,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		final boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {

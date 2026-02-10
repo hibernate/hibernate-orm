@@ -11,7 +11,6 @@ import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -76,11 +75,11 @@ public class SqmEntityJoin<L,R>
 
 	@Override
 	public SqmEntityJoin<L,R> copy(SqmCopyContext context) {
-		final SqmEntityJoin<L,R> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmEntityJoin<L,R> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmEntityJoin<>(
 						getNavigablePath(),
@@ -210,7 +209,7 @@ public class SqmEntityJoin<L,R>
 	}
 
 	public SqmEntityJoin<L,R> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
+		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmEntityJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),

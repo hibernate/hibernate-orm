@@ -46,7 +46,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 
 	@Override
 	public SqmJpaCriteriaParameterWrapper<T> copy(SqmCopyContext context) {
-		final SqmJpaCriteriaParameterWrapper<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

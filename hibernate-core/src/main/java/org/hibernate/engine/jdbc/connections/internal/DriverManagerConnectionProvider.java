@@ -9,7 +9,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Database;
@@ -30,6 +29,7 @@ import org.hibernate.service.spi.Stoppable;
 import static org.hibernate.cfg.JdbcSettings.AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DRIVER;
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
+import static org.hibernate.cfg.JdbcSettings.LOGIN_TIMEOUT;
 import static org.hibernate.cfg.JdbcSettings.POOL_SIZE;
 import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
@@ -45,6 +45,7 @@ import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionI
 import static org.hibernate.internal.log.ConnectionInfoLogger.CONNECTION_INFO_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
@@ -83,7 +84,7 @@ public class DriverManagerConnectionProvider
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
 		CONNECTION_INFO_LOGGER.usingHibernateBuiltInConnectionPool();
-		final PooledConnections pool = buildPool( configurationValues, serviceRegistry );
+		final var pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		state = new PoolState( pool, validationInterval );
 	}
@@ -92,17 +93,22 @@ public class DriverManagerConnectionProvider
 		// connection settings
 		final String url = jdbcUrl( configuration );
 		final String driverClassName = getString( DRIVER, configuration );
-		final Properties connectionProps = getConnectionProperties( configuration );
+		final var connectionProps = getConnectionProperties( configuration );
 		final boolean autoCommit = getBoolean( AUTOCOMMIT, configuration );  // default autocommit to false
 		final Integer isolation = extractIsolation( configuration );
 		final String initSql = getString( INIT_SQL, configuration );
+		final Integer loginTimeout = getInteger( LOGIN_TIMEOUT, configuration );
 
 		// pool settings
 		final int minSize = getInt( MIN_SIZE, configuration, 1 );
 		final int maxSize = getInt( POOL_SIZE, configuration, 20 );
 		final int initialSize = getInt( INITIAL_SIZE, configuration, minSize );
 
-		final Driver driver = loadDriver( driverClassName, serviceRegistry, url );
+		if ( loginTimeout!= null ) {
+			DriverManager.setLoginTimeout( loginTimeout );
+		}
+
+		final var driver = loadDriver( driverClassName, serviceRegistry, url );
 		if ( driver == null ) {
 			//we're hoping that the driver is already loaded
 			logAvailableDrivers();
@@ -322,10 +328,9 @@ public class DriverManagerConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class ) ) {
-			return (T) this;
+			return unwrapType.cast( this );
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

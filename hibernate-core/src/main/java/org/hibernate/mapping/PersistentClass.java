@@ -315,6 +315,7 @@ public abstract sealed class PersistentClass
 
 	public abstract KeyValue getIdentifier();
 
+	@Override
 	public abstract Property getVersion();
 
 	public abstract Property getDeclaredVersion();
@@ -325,8 +326,8 @@ public abstract sealed class PersistentClass
 
 	public abstract boolean isPolymorphic();
 
+	@Override
 	public abstract boolean isVersioned();
-
 
 	public boolean isCached() {
 		return isCached;
@@ -361,6 +362,8 @@ public abstract sealed class PersistentClass
 	public abstract boolean isDiscriminatorInsertable();
 
 	public abstract List<Property> getPropertyClosure();
+
+	public abstract List<Property> getAllPropertyClosure();
 
 	public abstract List<Table> getTableClosure();
 
@@ -722,6 +725,23 @@ public abstract sealed class PersistentClass
 	}
 
 	public int getPropertyClosureSpan() {
+		int span = 0;
+		for ( Property property : properties ) {
+			if ( !property.isGeneric() ) {
+				span += 1;
+			}
+		}
+		for ( var join : joins ) {
+			for ( Property property : join.getProperties() ) {
+				if ( !property.isGeneric() ) {
+					span += 1;
+				}
+			}
+		}
+		return span;
+	}
+
+	public int getAllPropertyClosureSpan() {
 		int span = properties.size();
 		for ( var join : joins ) {
 			span += join.getPropertySpan();
@@ -754,6 +774,23 @@ public abstract sealed class PersistentClass
 	 * @return A list over the "normal" properties.
 	 */
 	public List<Property> getProperties() {
+		final ArrayList<Property> list = new ArrayList<>();
+		for ( Property property : properties ) {
+			if ( !property.isGeneric() ) {
+				list.add( property );
+			}
+		}
+		for ( var join : joins ) {
+			for ( Property property : join.getProperties() ) {
+				if ( !property.isGeneric() ) {
+					list.add( property );
+				}
+			}
+		}
+		return list;
+	}
+
+	public List<Property> getAllProperties() {
 		final ArrayList<List<Property>> list = new ArrayList<>();
 		list.add( properties );
 		for ( var join : joins ) {
@@ -871,7 +908,7 @@ public abstract sealed class PersistentClass
 
 	protected void checkColumnDuplication() {
 		final String owner = "entity '" + getEntityName() + "'";
-		final HashSet<String> cols = new HashSet<>();
+		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
@@ -950,6 +987,7 @@ public abstract sealed class PersistentClass
 		return false;
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		return identifierMapper;
 	}

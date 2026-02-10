@@ -33,7 +33,7 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 		this.argumentReaders = argumentReaders;
 
 		final Set<String> aliases = new HashSet<>();
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			if ( argumentReader.getAlias() == null ) {
 				throw new IllegalStateException( "alias for Map dynamic instantiation argument cannot be null" );
 			}
@@ -60,20 +60,16 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 	public Map<?,?> assemble(
 			RowProcessingState rowProcessingState) {
 		final HashMap<String,Object> result = new HashMap<>();
-
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
-			result.put(
-					argumentReader.getAlias(),
-					argumentReader.assemble( rowProcessingState )
-			);
+		for ( var argumentReader : argumentReaders ) {
+			result.put( argumentReader.getAlias(),
+					argumentReader.assemble( rowProcessingState ) );
 		}
-
 		return result;
 	}
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			argumentReader.resolveState( rowProcessingState );
 		}
 	}

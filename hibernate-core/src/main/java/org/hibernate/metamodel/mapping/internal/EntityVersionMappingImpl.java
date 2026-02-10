@@ -294,7 +294,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState,
 				!sqlSelection.isVirtual()
 		);
 	}
@@ -306,7 +305,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
-
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,

@@ -130,7 +130,6 @@ public class CteTable {
 			idName = "id";
 		}
 		final List<CteColumn> columns = new ArrayList<>( persistentClass.getIdentifier().getColumnSpan() );
-		final Metadata metadata = persistentClass.getIdentifier().getBuildingContext().getMetadataCollector();
 		forEachCteColumn( idName, persistentClass.getIdentifier(), columns::add );
 		return new CteTable( cteName, columns );
 	}

@@ -78,11 +78,11 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 
 	@Override
 	public SqmTreatedListJoin<O, T, S> copy(SqmCopyContext context) {
-		final SqmTreatedListJoin<O, T, S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedListJoin<O, T, S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedListJoin<>(
 						getNavigablePath(),

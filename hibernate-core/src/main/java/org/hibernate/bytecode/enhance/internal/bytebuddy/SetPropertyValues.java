@@ -15,6 +15,7 @@ import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -24,8 +25,9 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.List;
+
+import static java.lang.reflect.Modifier.isFinal;
 
 public class SetPropertyValues implements ByteCodeAppender {
 
@@ -50,8 +52,8 @@ public class SetPropertyValues implements ByteCodeAppender {
 			MethodVisitor methodVisitor,
 			Implementation.Context implementationContext,
 			MethodDescription instrumentedMethod) {
-		final boolean persistentAttributeInterceptable = PersistentAttributeInterceptable.class.isAssignableFrom(
-				clazz );
+		final boolean persistentAttributeInterceptable =
+				PersistentAttributeInterceptable.class.isAssignableFrom( clazz );
 		final boolean compositeOwner = CompositeOwner.class.isAssignableFrom( clazz );
 		Label currentLabel = null;
 		Label nextLabel = new Label();
@@ -114,24 +116,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 						)
 				);
 			}
-			final Class<?> type;
-			if ( setterMember instanceof Method setter ) {
-				type = setter.getParameterTypes()[0];
-			}
-			else if ( setterMember instanceof Field field ) {
-				type = field.getType();
-			}
-			else {
-				final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) setterMember;
-				final Member underlyingMember = foreignPackageMember.getMember();
-				if ( underlyingMember instanceof Method setter ) {
-					type = setter.getParameterTypes()[0];
-				}
-				else {
-					final Field field = (Field) underlyingMember;
-					type = field.getType();
-				}
-			}
+			final var type = setterTypee( setterMember );
 			if ( type.isPrimitive() ) {
 				PrimitiveUnboxingDelegate.forReferenceType( constants.TypeObject )
 						.assignUnboxedTo(
@@ -142,56 +127,9 @@ public class SetPropertyValues implements ByteCodeAppender {
 						.apply( methodVisitor, implementationContext );
 			}
 			else {
-				methodVisitor.visitTypeInsn(
-						Opcodes.CHECKCAST,
-						Type.getInternalName( type )
-				);
+				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( type ) );
 			}
-			if ( setterMember instanceof Method setter ) {
-				methodVisitor.visitMethodInsn(
-						setter.getDeclaringClass().isInterface() ?
-								Opcodes.INVOKEINTERFACE :
-								Opcodes.INVOKEVIRTUAL,
-						Type.getInternalName( setter.getDeclaringClass() ),
-						setter.getName(),
-						Type.getMethodDescriptor( setter ),
-						setter.getDeclaringClass().isInterface()
-				);
-				if ( setter.getReturnType() != void.class ) {
-					// Setters could return something which we have to ignore
-					switch ( setter.getReturnType().getTypeName() ) {
-						case "long":
-						case "double":
-							methodVisitor.visitInsn( Opcodes.POP2 );
-							break;
-						default:
-							methodVisitor.visitInsn( Opcodes.POP );
-							break;
-					}
-				}
-			}
-			else if ( setterMember instanceof Field field ) {
-				methodVisitor.visitFieldInsn(
-						Opcodes.PUTFIELD,
-						Type.getInternalName( field.getDeclaringClass() ),
-						field.getName(),
-						Type.getDescriptor( type )
-				);
-			}
-			else {
-				final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) setterMember;
-				methodVisitor.visitMethodInsn(
-						Opcodes.INVOKESTATIC,
-						Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
-						"set_" + setterMember.getName(),
-						Type.getMethodDescriptor(
-								Type.getType( void.class ),
-								Type.getType( foreignPackageMember.getMember().getDeclaringClass() ),
-								Type.getType( type )
-						),
-						false
-				);
-			}
+			visitSetter( methodVisitor, setterMember, type );
 			if ( enhanced ) {
 				final boolean compositeTracker = CompositeTracker.class.isAssignableFrom( type );
 				boolean alreadyHasFrame = false;
@@ -201,7 +139,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 				//
 				// Final classes that don't already implement the interface never need to be checked.
 				// This helps a bit with common final types which otherwise would have to be checked a lot.
-				if ( compositeOwner && (compositeTracker || !Modifier.isFinal( type.getModifiers() )) ) {
+				if ( compositeOwner && (compositeTracker || !isFinal( type.getModifiers() )) ) {
 					// Push values array on stack
 					methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
 					methodVisitor.visitLdcInsn( index );
@@ -221,20 +159,15 @@ public class SetPropertyValues implements ByteCodeAppender {
 						methodVisitor.visitJumpInsn( Opcodes.IFNULL, compositeTrackerFalseLabel );
 					}
 					else {
+						compositeTrackerType = constants.internalName_CompositeTracker;
 						// If we don't know for sure, we do an instanceof check
-						methodVisitor.visitTypeInsn(
-								Opcodes.INSTANCEOF,
-								compositeTrackerType = constants.internalName_CompositeTracker
-						);
+						methodVisitor.visitTypeInsn( Opcodes.INSTANCEOF, compositeTrackerType );
 						isInterface = true;
 						methodVisitor.visitJumpInsn( Opcodes.IFEQ, compositeTrackerFalseLabel );
 					}
 
 					// Load the tracker on which we will call $$_hibernate_setOwner
-					methodVisitor.visitTypeInsn(
-							Opcodes.CHECKCAST,
-							compositeTrackerType
-					);
+					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, compositeTrackerType );
 					methodVisitor.visitLdcInsn( propertyNames[index] );
 					// Load the owner and cast it to the owner class, as we know it implements CompositeOwner
 					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
@@ -249,7 +182,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 					);
 
 					// Skip the cleanup
-					final Label compositeTrackerEndLabel = new Label();
+					final var compositeTrackerEndLabel = new Label();
 					methodVisitor.visitJumpInsn( Opcodes.GOTO, compositeTrackerEndLabel );
 
 					// Here is the cleanup section for the false branch
@@ -295,7 +228,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 					);
 
 					// Jump to the false label if the instanceof check fails
-					final Label instanceofFalseLabel = new Label();
+					final var instanceofFalseLabel = new Label();
 					methodVisitor.visitJumpInsn( Opcodes.IFEQ, instanceofFalseLabel );
 
 					// Cast to the subtype, so we can mark the property as initialized
@@ -315,7 +248,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 					);
 
 					// Skip the cleanup
-					final Label instanceofEndLabel = new Label();
+					final var instanceofEndLabel = new Label();
 					methodVisitor.visitJumpInsn( Opcodes.GOTO, instanceofEndLabel );
 
 					// Here is the cleanup section for the false branch
@@ -361,5 +294,78 @@ public class SetPropertyValues implements ByteCodeAppender {
 		}
 		methodVisitor.visitInsn( Opcodes.RETURN );
 		return new Size( 4, instrumentedMethod.getStackSize() );
+	}
+
+	private static void visitSetter(MethodVisitor methodVisitor, Member setterMember, Class<?> type) {
+		if ( setterMember instanceof Method setter ) {
+			final var declaringClass = setter.getDeclaringClass();
+			methodVisitor.visitMethodInsn(
+					declaringClass.isInterface()
+							? Opcodes.INVOKEINTERFACE
+							: Opcodes.INVOKEVIRTUAL,
+					Type.getInternalName( declaringClass ),
+					setter.getName(),
+					Type.getMethodDescriptor( setter ),
+					declaringClass.isInterface()
+			);
+			final var returnType = setter.getReturnType();
+			if ( returnType != void.class ) {
+				// Setters could return something which we have to ignore
+				switch ( returnType.getTypeName() ) {
+					case "long":
+					case "double":
+						methodVisitor.visitInsn( Opcodes.POP2 );
+						break;
+					default:
+						methodVisitor.visitInsn( Opcodes.POP );
+						break;
+				}
+			}
+		}
+		else if ( setterMember instanceof Field field ) {
+			methodVisitor.visitFieldInsn(
+					Opcodes.PUTFIELD,
+					Type.getInternalName( field.getDeclaringClass() ),
+					field.getName(),
+					Type.getDescriptor( type )
+			);
+		}
+		else if ( setterMember instanceof ForeignPackageMember foreignPackageMember ) {
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKESTATIC,
+					Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
+					"set_" + setterMember.getName(),
+					Type.getMethodDescriptor(
+							Type.getType( void.class ),
+							Type.getType( foreignPackageMember.getMember().getDeclaringClass() ),
+							Type.getType( type )
+					),
+					false
+			);
+		}
+	}
+
+	private static @NonNull Class<?> setterTypee(Member setterMember) {
+		if ( setterMember instanceof Method setter ) {
+			return setter.getParameterTypes()[0];
+		}
+		else if ( setterMember instanceof Field field ) {
+			return field.getType();
+		}
+		else if ( setterMember instanceof ForeignPackageMember foreignPackageMember ) {
+			final var underlyingMember = foreignPackageMember.getMember();
+			if ( underlyingMember instanceof Method setter ) {
+				return setter.getParameterTypes()[0];
+			}
+			else if ( underlyingMember instanceof Field field ) {
+				return field.getType();
+			}
+			else {
+				throw new AssertionError( "Unknown underlying member type" );
+			}
+		}
+		else {
+			throw new AssertionError( "Unknown setter member type" );
+		}
 	}
 }

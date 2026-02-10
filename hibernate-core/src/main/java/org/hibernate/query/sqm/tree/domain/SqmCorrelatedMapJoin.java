@@ -50,11 +50,11 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 
 	@Override
 	public SqmCorrelatedMapJoin<L, K, V> copy(SqmCopyContext context) {
-		final SqmCorrelatedMapJoin<L, K, V> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedMapJoin<L, K, V> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedMapJoin<>(
 						getLhs().copy( context ),

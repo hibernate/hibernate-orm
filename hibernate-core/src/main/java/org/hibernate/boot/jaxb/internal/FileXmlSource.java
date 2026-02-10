@@ -33,7 +33,7 @@ public class FileXmlSource {
 		final String filePath = file.getPath();
 		JAXB_LOGGER.tracef( "Reading mappings from file: %s", filePath );
 
-		final Origin origin = new Origin( SourceType.FILE, filePath );
+		final var origin = new Origin( SourceType.FILE, filePath );
 
 		if ( !file.exists() ) {
 			throw new MappingNotFoundException( origin );

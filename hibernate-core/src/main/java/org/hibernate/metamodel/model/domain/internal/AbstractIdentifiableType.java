@@ -34,8 +34,6 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
-import org.jboss.logging.Logger;
-
 import static java.util.Collections.emptyList;
 
 /**
@@ -114,14 +112,15 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SqmSingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
 		final var id = findIdAttribute();
 		if ( id != null ) {
 			checkType( id, javaType );
 		}
-		return (SqmSingularPersistentAttribute<? super J, Y>) id;
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var castId = (SqmSingularPersistentAttribute<? super J, Y>) id;
+		return castId;
 	}
 
 	private void ensureNoIdClass() {
@@ -148,8 +147,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
-			final JavaType<?> attributeJavaType = attribute.getAttributeJavaType();
-			if ( !( attributeJavaType instanceof PrimitiveJavaType<?> primitiveJavaType )
+			if ( !( attribute.getAttributeJavaType() instanceof PrimitiveJavaType<?> primitiveJavaType )
 					|| primitiveJavaType.getPrimitiveClass() != javaType ) {
 				throw new IllegalArgumentException(
 						String.format(
@@ -165,14 +163,15 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SqmSingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
 		ensureNoIdClass();
 		if ( id == null ) {
 			throw new IllegalArgumentException( "The id attribute is not declared on this type [" + getTypeName() + "]" );
 		}
 		checkType( id, javaType );
-		return (SqmSingularPersistentAttribute<J, Y>) id;
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var castId = (SqmSingularPersistentAttribute<J, Y>) id;
+		return castId;
 	}
 
 	@Override
@@ -226,14 +225,16 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J, ?>> attributeConsumer) {
 		if ( nonAggregatedIdAttributes != null ) {
 			nonAggregatedIdAttributes.forEach( attributeConsumer );
 		}
-		else if ( getSuperType() != null ) {
-			//noinspection rawtypes
-			getSuperType().visitIdClassAttributes( (Consumer) attributeConsumer );
+		else {
+			final var superType = getSuperType();
+			if ( superType != null ) {
+				//noinspection rawtypes, unchecked
+				superType.visitIdClassAttributes( (Consumer) attributeConsumer );
+			}
 		}
 	}
 
@@ -247,14 +248,15 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getVersion(Class<Y> javaType) {
 		if ( hasVersionAttribute() ) {
 			final var version = findVersionAttribute();
 			if ( version != null ) {
 				checkType( version, javaType );
 			}
-			return (SingularPersistentAttribute<? super J, Y>) version;
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var castVersion = (SingularPersistentAttribute<? super J, Y>) version;
+			return castVersion;
 		}
 		else {
 			return null;
@@ -288,19 +290,25 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<J, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
 		checkType( versionAttribute, javaType );
-		return (SingularPersistentAttribute<J, Y>) versionAttribute;
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var castVersion = (SingularPersistentAttribute<J, Y>) versionAttribute;
+		return castVersion;
 	}
 
 	private void checkDeclaredVersion() {
-		if ( versionAttribute == null || ( getSuperType() != null && getSuperType().hasVersionAttribute() )) {
+		if ( versionAttribute == null || supertypeDeclaresVersion() ) {
 			throw new IllegalArgumentException(
 					"The version attribute is not declared by this type [" + getJavaType() + "]"
 			);
 		}
+	}
+
+	private boolean supertypeDeclaresVersion() {
+		final var superType = getSuperType();
+		return superType != null && superType.hasVersionAttribute();
 	}
 
 //	@Override
@@ -341,7 +349,7 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyNonAggregatedIdAttributes(
-				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
+				Set<? extends SingularPersistentAttribute<? super J, ?>> idAttributes,
 				EmbeddableDomainType<?> idClassType) {
 			if ( id != null ) {
 				throw new IllegalArgumentException( "`AbstractIdentifiableType#id` already set on call to `#applyNonAggregatedIdAttribute`" );
@@ -360,9 +368,8 @@ public abstract class AbstractIdentifiableType<J>
 					nonAggregatedIdAttributes.add( (SqmSingularPersistentAttribute<? super J, ?>) idAttribute );
 					if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
 						@SuppressWarnings("unchecked")
-						// Safe, because we know it's declared  by this type
-						final PersistentAttribute<J, ?> declaredAttribute =
-								(PersistentAttribute<J, ?>) idAttribute;
+						// Safe, because we know it's declared by this type
+						final var declaredAttribute = (PersistentAttribute<J, ?>) idAttribute;
 						addAttribute( declaredAttribute );
 					}
 				}
@@ -402,11 +409,7 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	private static final Logger LOG = Logger.getLogger( AbstractIdentifiableType.class );
-
 	private SqmPathSource<?> interpretIdDescriptor() {
-		LOG.tracef( "Interpreting domain-model identifier descriptor" );
-
 		final var superType = getSuperType();
 		if ( superType != null ) {
 			final var idDescriptor = superType.getIdentifierDescriptor();
@@ -425,11 +428,10 @@ public abstract class AbstractIdentifiableType<J>
 		else {
 			if ( isIdMappingRequired() ) {
 				throw new UnsupportedMappingException(
-						"Could not build SqmPathSource for entity identifier : " + getTypeName() );
+						"Could not build SqmPathSource for entity identifier: " + getTypeName() );
 			}
 			return null;
 		}
-
 	}
 
 	private AbstractSqmPathSource<?> compositePathSource() {

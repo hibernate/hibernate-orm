@@ -94,6 +94,11 @@ public class OneToMany implements Value {
 	}
 
 	@Override
+	public boolean hasColumns() {
+		return associatedClass.getKey().hasColumns();
+	}
+
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.JOIN;
 	}
@@ -201,6 +206,14 @@ public class OneToMany implements Value {
 	@Override
 	public boolean hasAnyUpdatableColumns() {
 		return false;
+	}
+
+	@Override
+	public void setNonInsertable() {
+	}
+
+	@Override
+	public void setNonUpdatable() {
 	}
 
 	public NotFoundAction getNotFoundAction() {

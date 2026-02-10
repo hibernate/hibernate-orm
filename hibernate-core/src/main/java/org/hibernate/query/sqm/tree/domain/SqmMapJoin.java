@@ -55,12 +55,12 @@ public class SqmMapJoin<L, K, V>
 
 	@Override
 	public SqmMapJoin<L, K, V> copy(SqmCopyContext context) {
-		final SqmMapJoin<L, K, V> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final SqmFrom<?, L> lhsCopy = getLhs().copy( context );
-		final SqmMapJoin<L, K, V> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmMapJoin<>(
 						lhsCopy,

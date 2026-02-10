@@ -12,7 +12,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -84,7 +83,7 @@ public class OracleServerConfiguration {
 	public static OracleServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 
 		// default to the dialect-specific configuration settings
-		final Map<String, Object> configuration = info.getConfigurationValues();
+		final var configuration = info.getConfigurationValues();
 		final boolean defaultExtended = getBoolean( ORACLE_EXTENDED_STRING_SIZE, configuration );
 		final boolean defaultAutonomous =  getBoolean( ORACLE_AUTONOMOUS_DATABASE, configuration );
 		final boolean defaultContinuity = getBoolean( ORACLE_APPLICATION_CONTINUITY, configuration );
@@ -114,8 +113,8 @@ public class OracleServerConfiguration {
 			majorVersion = databaseMetaData.getDriverMajorVersion();
 			minorVersion = databaseMetaData.getDriverMinorVersion();
 			try {
-				final Connection connection = databaseMetaData.getConnection(); // we should not close this
-				try ( final Statement statement = connection.createStatement() ) {
+				final var connection = databaseMetaData.getConnection(); // we should not close this
+				try ( final var statement = connection.createStatement() ) {
 					applicationContinuity = determineApplicationContinuity( connection, statement );
 					autonomous = isAutonomous( statement );
 					extended = isExtended( statement );
@@ -132,11 +131,11 @@ public class OracleServerConfiguration {
 	}
 
 	private static boolean isExtended(Statement statement) {
-		try (final ResultSet resultSet =
+		try ( final var resultSet =
 					statement.executeQuery( "select property_value from database_properties "
-													+ "where property_name = 'MAX_STRING_SIZE'" )) {
+													+ "where property_name = 'MAX_STRING_SIZE'" ) ) {
 			return resultSet.next()
-					&& "EXTENDED".equalsIgnoreCase( resultSet.getString( 1 ) );
+				&& "EXTENDED".equalsIgnoreCase( resultSet.getString( 1 ) );
 		}
 		catch (SQLException ex) {
 			return false;
@@ -162,7 +161,7 @@ public class OracleServerConfiguration {
 			final Long totalRequestsBefore = (Long) getTotalRequests.invoke( before );
 			final Long protectedCallsBefore = (Long) getTotalProtectedCalls.invoke( before );
 
-			try ( final ResultSet resultSet = statement.executeQuery("select 1") ) {
+			try ( final var resultSet = statement.executeQuery("select 1") ) {
 				resultSet.next();
 			}
 

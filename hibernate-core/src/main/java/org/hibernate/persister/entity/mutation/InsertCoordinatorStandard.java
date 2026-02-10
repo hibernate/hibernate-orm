@@ -20,11 +20,11 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -170,6 +170,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				mutationExecutor,
 				id,
 				values,
+				object,
 				staticInsertGroup,
 				entityPersister().getPropertyInsertability(),
 				tableInclusionChecker,
@@ -194,6 +195,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			MutationExecutor mutationExecutor,
 			Object id,
 			Object[] values,
+			Object object,
 			MutationOperationGroup mutationGroup,
 			boolean[] propertyInclusions,
 			TableInclusionChecker tableInclusionChecker,
@@ -205,12 +207,17 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var operation = mutationGroup.getOperation( position );
 			final var tableDetails = (EntityTableMapping) operation.getTableDetails();
 			if ( tableInclusionChecker.include( tableDetails ) ) {
-				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
-					final int attributeIndex = attributeIndexes[ i ];
+				for ( final int attributeIndex : tableDetails.getAttributeIndexes() ) {
 					if ( propertyInclusions[attributeIndex] ) {
-						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings,
-								attributeMappings.get( attributeIndex ) );
+						final var attributeMapping = attributeMappings.get( attributeIndex );
+						decomposeAttribute(
+								values[attributeIndex],
+								session,
+								jdbcValueBindings,
+								attributeMapping,
+								attributeMapping.getGenerator(),
+								object
+						);
 					}
 				}
 			}
@@ -252,15 +259,35 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object value,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
-			AttributeMapping mapping) {
+			AttributeMapping mapping,
+			Generator generator,
+			Object entity) {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
+			final boolean generatedOnExecution =
+					isGeneratedOnExecution( generator, entity, session );
+			final var onExecutionGenerator =
+					generator instanceof OnExecutionGenerator executionGenerator && generatedOnExecution
+							&& generator.getEventTypes().contains( EventType.INSERT )
+									? executionGenerator
+									: null;
+			final String[] columnValues =
+					onExecutionGenerator == null ? null
+							: onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.INSERT );
+			final boolean[] columnInclusions =
+					onExecutionGenerator == null ? null
+							: onExecutionGenerator.getColumnInclusions( dialect(), EventType.INSERT );
+			final boolean bindAllValues =
+					onExecutionGenerator != null
+							&& onExecutionGenerator.writePropertyValue( EventType.INSERT )
+							&& columnValues == null;
 			mapping.decompose(
 					value,
 					0,
 					jdbcValueBindings,
 					null,
 					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-						if ( selectableMapping.isInsertable() ) {
+						if ( selectableMapping.isInsertable()
+								&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
 							bindings.bindValue(
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
@@ -271,6 +298,39 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					},
 					session
 			);
+		}
+	}
+
+	private static boolean shouldBindValue(
+			OnExecutionGenerator onExecutionGenerator,
+			String[] columnValues,
+			boolean[] columnInclusions,
+			boolean bindAllValues,
+			int valueIndex) {
+		if ( onExecutionGenerator == null ) {
+			return true;
+		}
+		else if ( columnInclusions != null && !columnInclusions[valueIndex] ) {
+			return false;
+		}
+		else {
+			return bindAllValues
+				|| columnValues != null && "?".equals( columnValues[valueIndex] );
+		}
+	}
+
+	private static boolean isGeneratedOnExecution(
+			Generator generator,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		if ( generator instanceof OnExecutionGenerator
+				&& generator.getEventTypes().contains( EventType.INSERT ) ) {
+			return session != null && entity != null
+					? generator.generatedOnExecution( entity, session )
+					: generator.generatedOnExecution();
+		}
+		else {
+			return false;
 		}
 	}
 
@@ -286,7 +346,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		final var mutationExecutor = executor( session, insertGroup, true );
 		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 		final var tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
-		decomposeForInsert( mutationExecutor, id, values, insertGroup, propertiesToInsert, tableInclusionChecker, session );
+		decomposeForInsert( mutationExecutor, id, values, object, insertGroup, propertiesToInsert, tableInclusionChecker, session );
 		try {
 			return mutationExecutor.execute(
 					object,
@@ -375,7 +435,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
+		final var attributeMappings = entityPersister().getAttributeMappings();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
@@ -387,19 +447,23 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			for ( int i = 0; i < attributeIndexes.length; i++ ) {
 				final int attributeIndex = attributeIndexes[ i ];
 				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( attributeInclusions[attributeIndex] ) {
+				final var generator = attributeMapping.getGenerator();
+				final boolean generatedOnExecution =
+						isGeneratedOnExecution( generator, object, session );
+				if ( generatedOnExecution && generator instanceof OnExecutionGenerator onExecutionGenerator
+						&& requiresValueGeneration( onExecutionGenerator, dialect(), EventType.INSERT, generatedOnExecution ) ) {
+					if ( needsValueBinding( onExecutionGenerator, dialect(), generatedOnExecution ) ) {
+						attributeInclusions[attributeIndex] = true;
+					}
+					handleValueGeneration( attributeMapping, insertGroupBuilder, onExecutionGenerator, EventType.INSERT );
+				}
+				else if ( attributeInclusions[attributeIndex] ) {
 					attributeMapping.forEachInsertable( insertGroupBuilder );
 				}
-				else {
-					final var generator = attributeMapping.getGenerator();
-					if ( isValueGenerated( generator ) ) {
-						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
-							attributeInclusions[attributeIndex] = true;
-							attributeMapping.forEachInsertable( insertGroupBuilder );
-						}
-						else if ( isValueGenerationInSql( generator, factory.getJdbcServices().getDialect() ) ) {
-							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
-						}
+				else if ( generator != null && generator.generatesOnInsert() ) {
+					if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
+						attributeInclusions[attributeIndex] = true;
+						attributeMapping.forEachInsertable( insertGroupBuilder );
 					}
 				}
 			}
@@ -417,8 +481,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister().getGenerator();
-				if ( generator.referenceColumnsInSql( dialect ) ) {
-					final String[] columnValues = generator.getReferencedColumnValues( dialect );
+				if ( generator.referenceColumnsInSql( dialect, EventType.INSERT ) ) {
+					final String[] columnValues = generator.getReferencedColumnValues( dialect, EventType.INSERT );
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
 						assert keyMapping.getColumnCount() == 1;
@@ -432,15 +496,29 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private static boolean isValueGenerated(Generator generator) {
-		return generator != null
-			&& generator.generatesOnInsert()
-			&& generator.generatedOnExecution();
-	}
-
-	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
-		assert isValueGenerated( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect );
+	private static boolean needsValueBinding(
+			OnExecutionGenerator generator,
+			Dialect dialect,
+			boolean generatedOnExecution) {
+		if ( generatedOnExecution && generator.getEventTypes().contains( EventType.INSERT ) ) {
+			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, EventType.INSERT );
+			final String[] columnValues = generator.getReferencedColumnValues( dialect, EventType.INSERT );
+			if ( columnValues != null ) {
+				for ( int i = 0; i < columnValues.length; i++ ) {
+					if ( (columnInclusions == null || columnInclusions[i])
+							&& "?".equals( columnValues[i] ) ) {
+						return true;
+					}
+				}
+				return false;
+			}
+			else {
+				return generator.writePropertyValue( EventType.INSERT );
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**

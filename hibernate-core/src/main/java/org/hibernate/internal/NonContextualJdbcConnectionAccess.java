@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import org.hibernate.HibernateException;
 import org.hibernate.SessionEventListener;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -42,6 +44,19 @@ class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Seriali
 		final var connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
+			final Object tenantIdentifier = session.getTenantIdentifierValue();
+			if ( tenantIdentifier != null ) {
+				final var tenantCredentialsMapper = getTenantCredentialsMapper();
+				if ( tenantCredentialsMapper != null ) {
+					if ( readOnly ) {
+						throw new HibernateException( "Credentials-based multitenancy not supported with read-only replicas" );
+					}
+					return connectionProvider.getConnection(
+							tenantCredentialsMapper.user( tenantIdentifier ),
+							tenantCredentialsMapper.password( tenantIdentifier )
+					);
+				}
+			}
 			return readOnly
 					? connectionProvider.getReadOnlyConnection()
 					: connectionProvider.getConnection();
@@ -50,6 +65,11 @@ class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Seriali
 			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, null );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
+	}
+
+	private TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
+		return session.getSessionFactory().getSessionFactoryOptions()
+				.getTenantCredentialsMapper();
 	}
 
 	@Override

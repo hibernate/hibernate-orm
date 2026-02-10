@@ -47,7 +47,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	@Override
 	public SelfRenderingSqmAggregateFunction<T> copy(SqmCopyContext context) {
-		final SelfRenderingSqmAggregateFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

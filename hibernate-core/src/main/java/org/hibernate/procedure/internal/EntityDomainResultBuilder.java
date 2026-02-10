@@ -19,25 +19,20 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 /**
  * @author Christian Beikov
  */
-public class EntityDomainResultBuilder implements ResultBuilder {
+class EntityDomainResultBuilder implements ResultBuilder {
 
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
 
-	public EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
+	EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		if ( discriminatorMapping == null ) {
-			this.discriminatorFetchBuilder = null;
-		}
-		else {
-			this.discriminatorFetchBuilder = new ImplicitFetchBuilderBasic(
-					navigablePath,
-					discriminatorMapping
-			);
-		}
+		final var discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		this.discriminatorFetchBuilder =
+				discriminatorMapping == null
+						? null
+						: new ImplicitFetchBuilderBasic( navigablePath, discriminatorMapping );
 	}
 
 	@Override
@@ -51,12 +46,12 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 
-		return new EntityResultImpl(
+		return new EntityResultImpl<>(
 				navigablePath,
 				entityDescriptor,
 				null,
@@ -77,16 +72,16 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof EntityDomainResultBuilder that ) ) {
 			return false;
 		}
-
-		final EntityDomainResultBuilder that = (EntityDomainResultBuilder) o;
-		return entityDescriptor.equals( that.entityDescriptor );
+		else {
+			return entityDescriptor.equals( that.entityDescriptor );
+		}
 	}
 
 	@Override

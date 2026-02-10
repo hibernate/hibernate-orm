@@ -46,12 +46,12 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getJavaTypeRegistry()
-				.getDescriptor( length != null && length == 1 ? Character.class : String.class );
+				.resolveDescriptor( length != null && length == 1 ? Character.class : String.class );
 	}
 
 	@Override

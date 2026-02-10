@@ -53,8 +53,8 @@ public class SkipAutoCommitTest extends EntityManagerFactoryBasedFunctionalTest 
 		};
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
+	protected Map<String, Object> getConfig() {
+		Map<String, Object> config = super.getConfig();
 
 		config.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
 		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );

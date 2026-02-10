@@ -31,10 +31,13 @@ public class InputStreamXmlSource {
 	public static Binding<? extends JaxbBindableMappingDescriptor> fromStream(
 			InputStream inputStream,
 			MappingBinder mappingBinder) {
-		JAXB_LOGGER.trace( "reading mappings from InputStream" );
-
-		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-		return fromStream( inputStream, origin, false, mappingBinder );
+		JAXB_LOGGER.readingMappingsFromInputStream();
+		return fromStream(
+				inputStream,
+				new Origin( SourceType.INPUT_STREAM, null ),
+				false,
+				mappingBinder
+		);
 	}
 
 	/**
@@ -61,8 +64,8 @@ public class InputStreamXmlSource {
 				try {
 					stream.close();
 				}
-				catch ( IOException ignore ) {
-					JAXB_LOGGER.trace( "Was unable to close input stream" );
+				catch ( IOException ioe ) {
+					JAXB_LOGGER.unableToCloseInputStream( ioe );
 				}
 			}
 		}

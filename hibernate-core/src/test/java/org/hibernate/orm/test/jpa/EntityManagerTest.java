@@ -62,8 +62,8 @@ public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 	}
 
 	@Override
-	public Map<Class, String> getCachedClasses() {
-		Map<Class, String> result = new HashMap<>();
+	public Map<Class<?>, String> getCachedClasses() {
+		Map<Class<?>, String> result = new HashMap<>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
@@ -307,13 +307,11 @@ public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 	@Test
 	public void testGetProperties() {
 		inEntityManager( entityManager -> {
-			Map<String, Object> properties = entityManager.getProperties();
-			assertNotNull( properties );
-			assertThrows(
-					UnsupportedOperationException.class,
-					() -> properties.put( "foo", "bar" )
-			);
-			assertTrue( properties.containsKey( HibernateHints.HINT_FLUSH_MODE ) );
+			assertNotNull( entityManager.getProperties() );
+			assertTrue( entityManager.getProperties().containsKey( HibernateHints.HINT_FLUSH_MODE ) );
+			// according to Javadoc, getProperties() returns mutable copy
+			entityManager.getProperties().put( "foo", "bar" );
+			assertFalse( entityManager.getProperties().containsKey( "foo" ) );
 		} );
 	}
 

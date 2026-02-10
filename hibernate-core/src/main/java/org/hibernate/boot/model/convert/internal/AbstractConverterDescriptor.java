@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -12,11 +11,13 @@ import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
+import java.lang.reflect.Type;
+
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /**
  * @author Steve Ebersole
@@ -24,19 +25,18 @@ import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveC
 abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X,Y> {
 	private final Class<? extends AttributeConverter<X,Y>> converterClass;
 
-	private final ResolvedType domainType;
-	private final ResolvedType jdbcType;
+	private final Type domainType;
+	private final Type jdbcType;
 
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
 	AbstractConverterDescriptor(
 			Class<? extends AttributeConverter<X, Y>> converterClass,
-			Boolean forceAutoApply,
-			ClassmateContext classmateContext) {
+			Boolean forceAutoApply) {
 		this.converterClass = converterClass;
-		final var converterParamTypes = resolveConverterClassParamTypes( converterClass, classmateContext );
-		domainType = converterParamTypes.get( 0 );
-		jdbcType = converterParamTypes.get( 1 );
+		final var converterParamTypes = typeArguments( AttributeConverter.class, converterClass );
+		domainType = converterParamTypes[0];
+		jdbcType = converterParamTypes[1];
 		autoApplicableDescriptor = resolveAutoApplicableDescriptor( converterClass, forceAutoApply );
 	}
 
@@ -55,7 +55,7 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 		}
 		else {
 			// otherwise, look at the converter's @Converter annotation
-			final Converter annotation = converterClass.getAnnotation( Converter.class );
+			final var annotation = converterClass.getAnnotation( Converter.class );
 			return annotation != null && annotation.autoApply();
 		}
 	}
@@ -66,12 +66,12 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 	}
 
 	@Override
-	public ResolvedType getDomainValueResolvedType() {
+	public Type getDomainValueResolvedType() {
 		return domainType;
 	}
 
 	@Override
-	public ResolvedType getRelationalValueResolvedType() {
+	public Type getRelationalValueResolvedType() {
 		return jdbcType;
 	}
 
@@ -93,12 +93,12 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 
 	@SuppressWarnings("unchecked")
 	private Class<Y> getRelationalClass() {
-		return (Class<Y>) getRelationalValueResolvedType().getErasedType();
+		return (Class<Y>) erasedType( getRelationalValueResolvedType() );
 	}
 
 	@SuppressWarnings("unchecked")
 	private Class<X> getDomainClass() {
-		return (Class<X>) getDomainValueResolvedType().getErasedType();
+		return (Class<X>) erasedType( getDomainValueResolvedType() );
 	}
 
 	protected abstract ManagedBean<? extends AttributeConverter<X,Y>>

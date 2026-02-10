@@ -16,8 +16,8 @@ public class SchemaCreateDropWithHbm2DdlCharsetNameTest extends
 		SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 	@Override
-	protected Map getConfig() {
-		Map settings = super.getConfig();
+	protected Map<String, Object> getConfig() {
+		Map<String, Object> settings = super.getConfig();
 		settings.put( AvailableSettings.HBM2DDL_CHARSET_NAME, "ISO-8859-1" );
 		return settings;
 	}

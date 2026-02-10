@@ -38,7 +38,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	}
 
 	@Override
-	public J extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+	public J extract(ResultSet rs, int paramIndex, WrapperOptions options)
+			throws SQLException {
 		final J value = doExtract( rs, paramIndex, options );
 		if ( value == null || rs.wasNull() ) {
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
@@ -71,10 +72,12 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	 *
 	 * @throws SQLException Indicates a problem access the result set
 	 */
-	protected abstract J doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException;
+	protected abstract J doExtract(ResultSet rs, int paramIndex, WrapperOptions options)
+			throws SQLException;
 
 	@Override
-	public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
+	public J extract(CallableStatement statement, int paramIndex, WrapperOptions options)
+			throws SQLException {
 		final J value = doExtract( statement, paramIndex, options );
 		if ( value == null || statement.wasNull() ) {
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
@@ -109,10 +112,12 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	 *
 	 * @throws SQLException Indicates a problem accessing the parameter value
 	 */
-	protected abstract J doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
+	protected abstract J doExtract(CallableStatement statement, int index, WrapperOptions options)
+			throws SQLException;
 
 	@Override
-	public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+	public J extract(CallableStatement statement, String paramName, WrapperOptions options)
+			throws SQLException {
 		final J value = doExtract( statement, paramName, options );
 		if ( value == null || statement.wasNull() ) {
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
@@ -151,5 +156,6 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	 *
 	 * @throws SQLException Indicates a problem accessing the parameter value
 	 */
-	protected abstract J doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException;
+	protected abstract J doExtract(CallableStatement statement, String name, WrapperOptions options)
+			throws SQLException;
 }

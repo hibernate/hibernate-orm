@@ -19,7 +19,9 @@ import jakarta.persistence.TemporalType;
 @Incubating
 public interface TemporalJavaType<T> extends BasicJavaType<T> {
 
-	static int resolveJdbcTypeCode(TemporalType requestedTemporalPrecision) {
+	static int resolveJdbcTypeCode(
+			@SuppressWarnings("deprecation")
+			TemporalType requestedTemporalPrecision) {
 		return switch ( requestedTemporalPrecision ) {
 			case DATE -> Types.DATE;
 			case TIME -> Types.TIME;
@@ -27,7 +29,9 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 		};
 	}
 
-	static Class<?> resolveJavaTypeClass(TemporalType requestedTemporalPrecision) {
+	static Class<?> resolveJavaTypeClass(
+			@SuppressWarnings("deprecation")
+			TemporalType requestedTemporalPrecision) {
 		return switch ( requestedTemporalPrecision ) {
 			case DATE -> java.sql.Date.class;
 			case TIME -> java.sql.Time.class;
@@ -38,14 +42,15 @@ public interface TemporalJavaType<T> extends BasicJavaType<T> {
 	/**
 	 * The precision represented by this type
 	 */
+	@SuppressWarnings("deprecation")
 	TemporalType getPrecision();
 
 	/**
 	 * Resolve the appropriate TemporalJavaType for the given precision
 	 * "relative" to this type.
 	 */
-	<X> TemporalJavaType<X> resolveTypeForPrecision(
-			TemporalType precision,
+	TemporalJavaType<T> resolveTypeForPrecision(
+			@SuppressWarnings("deprecation") TemporalType precision,
 			TypeConfiguration typeConfiguration);
 
 	@Override

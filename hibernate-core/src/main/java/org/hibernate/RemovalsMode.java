@@ -18,7 +18,7 @@ import java.util.List;
  * The default is {@link #REPLACE}.
  *
  * @see org.hibernate.Session#findMultiple(Class, List, FindOption...)
- * @see org.hibernate.Session#findMultiple(EntityGraph, List , FindOption...)
+ * @see org.hibernate.Session#findMultiple(EntityGraph, List, FindOption...)
  *
  * @since 7.2
  */
@@ -31,5 +31,15 @@ public enum RemovalsMode implements FindMultipleOption {
 	/**
 	 * The default.  Removed entities are replaced with {@code null} in the load result.
 	 */
-	REPLACE
+	REPLACE,
+	/**
+	 * Removed entities are excluded from the load result.
+	 * <p>
+	 * This option is incompatible with {@link OrderingMode#ORDERED}.
+	 * It must be used in conjunction with {@link OrderingMode#UNORDERED}
+	 * and {@link SessionCheckMode#ENABLED}.
+	 *
+	 * @since 7.3
+	 */
+	EXCLUDE
 }

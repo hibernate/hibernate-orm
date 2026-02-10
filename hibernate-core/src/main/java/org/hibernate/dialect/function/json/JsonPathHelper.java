@@ -248,7 +248,7 @@ public class JsonPathHelper {
 	}
 
 	public static String toJsonPath(List<JsonPathElement> pathElements, int start, int end) {
-		final StringBuilder jsonPath = new StringBuilder();
+		final var jsonPath = new StringBuilder();
 		jsonPath.append( "$" );
 		for ( int i = start; i < end; i++ ) {
 			final JsonPathElement jsonPathElement = pathElements.get( i );

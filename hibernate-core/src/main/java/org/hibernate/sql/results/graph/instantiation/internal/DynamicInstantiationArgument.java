@@ -6,7 +6,6 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
@@ -26,9 +25,9 @@ public class DynamicInstantiationArgument<T> {
 	}
 
 	public ArgumentDomainResult<T> buildArgumentDomainResult(DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
-				.getCurrentProcessingState()
-				.getSqlExpressionResolver();
+		final var sqlExpressionResolver =
+				creationState.getSqlAstCreationState().getCurrentProcessingState()
+						.getSqlExpressionResolver();
 		if ( sqlExpressionResolver instanceof BaseSqmToSqlAstConverter.SqmAliasedNodeCollector ) {
 			if ( !( argumentResultProducer instanceof DynamicInstantiation<?> ) ) {
 				( (BaseSqmToSqlAstConverter.SqmAliasedNodeCollector) sqlExpressionResolver ).next();

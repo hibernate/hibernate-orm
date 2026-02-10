@@ -6,7 +6,7 @@ package org.hibernate.orm.test.jpa.lock;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.engine.spi.ActionQueue;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -37,7 +37,7 @@ public class OptimisticLockTests {
 		assertThat( created.getVersion() ).isEqualTo( 0 );
 
 		final Lockable locked = sessions.fromTransaction( (session) -> {
-			final ActionQueue actionQueue = session.unwrap( SessionImplementor.class ).getActionQueue();
+			final ActionQueue actionQueue = session.unwrap( EventSource.class ).getActionQueue();
 			assertThat( actionQueue.hasBeforeTransactionActions() ).isFalse();
 
 			final Lockable loaded = session.createQuery( "from Lockable", Lockable.class )

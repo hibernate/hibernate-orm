@@ -355,7 +355,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private void preamble(StringBuilder declaration) {
 		declaration
 				.append("\n@Override\npublic ")
-				.append(parameterTypeBopunds())
+				.append(parameterTypeBounds())
 				.append(returnType())
 				.append(' ')
 				.append(methodName)
@@ -372,7 +372,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append(" {\n");
 	}
 
-	private String parameterTypeBopunds() {
+	private String parameterTypeBounds() {
 		if ( method.getTypeParameters().isEmpty() ) {
 			return "";
 		}

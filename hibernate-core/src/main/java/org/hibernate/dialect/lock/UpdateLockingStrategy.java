@@ -35,7 +35,7 @@ public class UpdateLockingStrategy extends AbstractPessimisticUpdateLockingStrat
 	public UpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		super( lockable, lockMode );
 		if ( lockMode.lessThan( LockMode.WRITE ) ) {
-			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
+			throw new HibernateException( "Lock mode " + lockMode + " not valid for locking via 'update' statement" );
 		}
 	}
 

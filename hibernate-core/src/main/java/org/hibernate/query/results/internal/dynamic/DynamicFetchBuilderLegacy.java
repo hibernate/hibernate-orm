@@ -19,7 +19,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -39,6 +38,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * @author Steve Ebersole
@@ -164,9 +164,11 @@ public class DynamicFetchBuilderLegacy
 			return null;
 		}
 		else {
-			final Map<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>( this.fetchBuilderMap.size() );
+			final Map<Fetchable, FetchBuilder> fetchBuilderMap =
+					new HashMap<>( this.fetchBuilderMap.size() );
 			for ( var entry : this.fetchBuilderMap.entrySet() ) {
-				fetchBuilderMap.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
+				fetchBuilderMap.put( entry.getKey(),
+						entry.getValue().cacheKeyInstance() );
 			}
 			return fetchBuilderMap;
 		}
@@ -182,7 +184,8 @@ public class DynamicFetchBuilderLegacy
 		final var ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
 		final var tableGroup = tableGroup( fetchPath, ownerTableGroup, creationState );
 		if ( lockMode != null ) {
-			domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
+			domainResultCreationState.getSqlAstCreationState()
+					.registerLockMode( tableAlias, lockMode );
 		}
 		if ( columnNames != null ) {
 			if ( fetchable instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
@@ -202,8 +205,8 @@ public class DynamicFetchBuilderLegacy
 				);
 			}
 			else {
-				final ForeignKeyDescriptor keyDescriptor = getForeignKeyDescriptor( fetchable );
 				if ( !columnNames.isEmpty() ) {
+					final var keyDescriptor = getForeignKeyDescriptor( fetchable );
 					keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
 								resolveSqlSelection(
 										columnNames.get( selectionIndex ),
@@ -220,7 +223,9 @@ public class DynamicFetchBuilderLegacy
 					);
 				}
 			}
-			// We process the fetch builder such that it contains a resultBuilderEntity before calling this method in ResultSetMappingProcessor
+			// We process the fetch builder such that it contains a
+			// resultBuilderEntity before calling this method in
+			// ResultSetMappingProcessor
 			if ( resultBuilderEntity != null ) {
 				return resultBuilderEntity.buildFetch(
 						parent,
@@ -233,13 +238,7 @@ public class DynamicFetchBuilderLegacy
 		}
 		try {
 			creationState.pushExplicitFetchMementoResolver(
-					fetchable -> {
-						if ( fetchable != null ) {
-							return findFetchBuilder( fetchable );
-						}
-						return null;
-					}
-			);
+					fetchable -> fetchable == null ? null : findFetchBuilder( fetchable ) );
 			return parent.generateFetchableFetch(
 					fetchable,
 					parent.resolveNavigablePath( fetchable ),
@@ -305,7 +304,7 @@ public class DynamicFetchBuilderLegacy
 			DomainResultCreationState domainResultCreationState) {
 		final var creationStateImpl = impl( domainResultCreationState );
 		creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableReference,
@@ -314,7 +313,8 @@ public class DynamicFetchBuilderLegacy
 				),
 				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext().getTypeConfiguration()
 		);
 	}
 
@@ -363,22 +363,22 @@ public class DynamicFetchBuilderLegacy
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicFetchBuilderLegacy that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicFetchBuilderLegacy) o;
-		return tableAlias.equals( that.tableAlias )
-			&& ownerTableAlias.equals( that.ownerTableAlias )
-			&& fetchable.equals( that.fetchable )
-			&& lockMode.equals( that.lockMode )
-			&& Objects.equals( columnNames, that.columnNames )
-			&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
-			&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
+		else {
+			return tableAlias.equals( that.tableAlias )
+				&& ownerTableAlias.equals( that.ownerTableAlias )
+				&& fetchable.equals( that.fetchable )
+				&& lockMode.equals( that.lockMode )
+				&& Objects.equals( columnNames, that.columnNames )
+				&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
+				&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
+		}
 	}
 
 	@Override

@@ -45,7 +45,7 @@ public class SqmLiteralEmbeddableType<T>
 
 	@Override
 	public SqmLiteralEmbeddableType<T> copy(SqmCopyContext context) {
-		final SqmLiteralEmbeddableType<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

@@ -266,14 +266,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				creationState
 		);
 
-		final var join = new TableGroupJoin(
-				navigablePath,
-				joinType,
-				lazyTableGroup,
-				null
-		);
+		final var join = new TableGroupJoin( navigablePath, joinType, lazyTableGroup );
 
-		lazyTableGroup.setTableGroupInitializerCallback( (partTableGroup) -> {
+		lazyTableGroup.setTableGroupInitializerCallback( partTableGroup -> {
 			// `partTableGroup` is the association table group
 			join.applyPredicate(
 					foreignKey.generateJoinPredicate(
@@ -322,7 +317,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext().getSessionFactory(),
+				creationState.getCreationContext()
+						// TODO: FIXME
+						.getSessionFactory(),
 				lhs
 		);
 

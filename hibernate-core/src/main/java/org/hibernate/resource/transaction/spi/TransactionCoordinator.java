@@ -131,8 +131,9 @@ public interface TransactionCoordinator {
 		void markRollbackOnly();
 
 		default boolean isActive() {
-			final TransactionStatus status = getStatus();
-			return status == ACTIVE || status == MARKED_ROLLBACK;
+			final var status = getStatus();
+			return status == ACTIVE
+				|| status == MARKED_ROLLBACK;
 		}
 
 		default boolean isActiveAndNoMarkedForRollback() {

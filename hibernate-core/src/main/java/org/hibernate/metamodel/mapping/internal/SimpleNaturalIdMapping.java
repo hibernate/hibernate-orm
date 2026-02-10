@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.Dialect;
@@ -34,7 +35,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 
@@ -42,10 +42,9 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
  * Single-attribute NaturalIdMapping implementation
  */
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
-		implements JavaType.CoercionContext, BasicValuedMapping {
+		implements BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
 	private final SessionFactoryImplementor sessionFactory;
-	private final TypeConfiguration typeConfiguration;
 
 	public SimpleNaturalIdMapping(
 			SingularAttributeMapping attribute,
@@ -54,7 +53,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		super( declaringType, attribute.getAttributeMetadata().isUpdatable() );
 		this.attribute = attribute;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		this.typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 	}
 
 	public SingularAttributeMapping getAttribute() {
@@ -107,18 +105,23 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	@Override
+	public boolean isNormalized(Object incoming) {
+		return incoming == null || getJavaType().getJavaTypeClass().isInstance( incoming );
+	}
+
+	@Override
 	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue != null ) {
 			final var naturalIdValueClass = naturalIdValue.getClass();
+			// be flexible - allow a single-valued array
 			if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
-				// be flexible
 				final var values = (Object[]) naturalIdValue;
 				if ( values.length == 1 ) {
 					naturalIdValue = values[0];
 				}
 			}
 
-			if ( !getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+			if ( !getJavaType().isInstance( naturalIdValue ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								Locale.ROOT,
@@ -143,10 +146,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 		final Object normalizedValue = normalizedValue( incoming );
 		return isLoadByIdComplianceEnabled()
 				? normalizedValue
-				: getJavaType().coerce( normalizedValue, this );
+				: getJavaType().coerce( normalizedValue );
 	}
 
 	private Object normalizedValue(Object incoming) {
+		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
+
 		if ( incoming instanceof Map<?,?> valueMap ) {
 			assert valueMap.size() == 1;
 			assert valueMap.containsKey( getAttribute().getAttributeName() );
@@ -168,6 +173,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	@Override
 	public List<SingularAttributeMapping> getNaturalIdAttributes() {
 		return Collections.singletonList( attribute );
+	}
+
+	@Override
+	@Nullable
+	public Class<?> getNaturalIdClass() {
+		return null;
 	}
 
 	@Override
@@ -293,11 +304,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	private Dialect getDialect() {
 		return sessionFactory.getJdbcServices().getDialect();
-	}
-
-	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
 	}
 
 	@Override

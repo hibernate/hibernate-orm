@@ -47,7 +47,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public SqmEnumLiteral<E> copy(SqmCopyContext context) {
-		final SqmEnumLiteral<E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

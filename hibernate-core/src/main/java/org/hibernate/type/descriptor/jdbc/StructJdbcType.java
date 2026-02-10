@@ -104,17 +104,13 @@ public class StructJdbcType implements StructuredJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		if ( embeddableMappingType == null ) {
-			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Object[].class );
-		}
-		else {
-			//noinspection unchecked
-			return (JavaType<T>) embeddableMappingType.getMappedJavaType();
-		}
+		return embeddableMappingType == null
+				? typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class )
+				: embeddableMappingType.getMappedJavaType();
 	}
 
 	@Override
@@ -208,8 +204,7 @@ public class StructJdbcType implements StructuredJdbcType {
 						StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, jdbcValues.clone(), jdbcValues );
 					}
 					wrapRawJdbcValues( embeddableMappingType, jdbcValues, 0, options );
-					//noinspection unchecked
-					return (X) jdbcValues;
+					return javaType.cast( jdbcValues );
 				}
 				assert embeddableMappingType != null && embeddableMappingType.getJavaType() == getJavaType();
 				final StructAttributeValues attributeValues = getAttributeValues(
@@ -218,8 +213,7 @@ public class StructJdbcType implements StructuredJdbcType {
 						jdbcValues,
 						options
 				);
-				//noinspection unchecked
-				return (X) instantiate( embeddableMappingType, attributeValues );
+				return javaType.cast( instantiate( embeddableMappingType, attributeValues ) );
 			}
 		};
 	}

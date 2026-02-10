@@ -143,7 +143,7 @@ public abstract class AbstractCompositeIdentifierMapping
 				null,
 				creationState
 		);
-		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
+		return new TableGroupJoin( navigablePath, joinType, tableGroup );
 	}
 
 	@Override

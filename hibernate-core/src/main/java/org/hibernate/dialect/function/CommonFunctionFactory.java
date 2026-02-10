@@ -54,7 +54,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.*;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+import static org.hibernate.sql.ast.SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
 
 /**
  * Enumeratoes common function template definitions.
@@ -62,6 +65,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class CommonFunctionFactory {
 
@@ -308,20 +312,43 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
-	private void trunc(TruncFunction.DatetimeTrunc datetimeTrunc) {
-		trunc( "trunc(?1)", "trunc(?1,?2)", datetimeTrunc, null );
-	}
-
 	public void trunc() {
-		trunc( null );
+		trunc( "trunc(?1)", "trunc(?1,?2)", null, null );
 	}
 
+	/**
+	 * H2, DB2
+	 */
 	public void trunc_dateTrunc() {
-		trunc( TruncFunction.DatetimeTrunc.DATE_TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.DATE_TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
+	/**
+	 * HSQL
+	 */
 	public void trunc_dateTrunc_trunc() {
-		trunc( TruncFunction.DatetimeTrunc.TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**
@@ -848,7 +875,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "md5" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -856,7 +883,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "initcap" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -889,28 +916,28 @@ public class CommonFunctionFactory {
 	public void bitand() {
 		functionRegistry.namedDescriptorBuilder( "bitand" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitor() {
 		functionRegistry.namedDescriptorBuilder( "bitor" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitxor() {
 		functionRegistry.namedDescriptorBuilder( "bitxor" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
 	public void bitnot() {
 		functionRegistry.namedDescriptorBuilder( "bitnot" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -920,25 +947,25 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_bitAndOrXorNot() {
 		functionRegistry.namedDescriptorBuilder( "bit_and" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitand", "bit_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitor", "bit_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_xor" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitxor", "bit_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bit_not" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitnot", "bit_not" );
 	}
@@ -949,25 +976,25 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_binAndOrXorNot() {
 		functionRegistry.namedDescriptorBuilder( "bin_and" )
 				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitand", "bin_and" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_or" )
 				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitor", "bin_or" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_xor" )
 				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitxor", "bin_xor" );
 
 		functionRegistry.namedDescriptorBuilder( "bin_not" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "bitnot", "bin_not" );
 	}
@@ -978,22 +1005,22 @@ public class CommonFunctionFactory {
 	public void bitandorxornot_operator() {
 		functionRegistry.patternDescriptorBuilder( "bitand", "(?1&?2)" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitor", "(?1|?2)" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitxor", "(?1^?2)" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.patternDescriptorBuilder( "bitnot", "~?1" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1003,12 +1030,12 @@ public class CommonFunctionFactory {
 	public void bitAndOr() {
 		functionRegistry.namedAggregateDescriptorBuilder( "bit_and" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 
 		//MySQL has it but how is that even useful?
@@ -1558,7 +1585,7 @@ public class CommonFunctionFactory {
 	public void coalesce() {
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1568,7 +1595,7 @@ public class CommonFunctionFactory {
 	public void coalesce_value() {
 		functionRegistry.namedDescriptorBuilder( "value" )
 				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.registerAlternateKey( "coalesce", "value" );
 	}
@@ -1576,7 +1603,7 @@ public class CommonFunctionFactory {
 	public void nullif() {
 		functionRegistry.namedDescriptorBuilder( "nullif" )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1968,12 +1995,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1981,12 +2008,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least", "min" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "max" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -1994,12 +2021,12 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "least", "minvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "maxvalue" )
 				.setMinArgumentCount( 2 )
 				.setParameterTypes(COMPARABLE, COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
 
@@ -2008,14 +2035,14 @@ public class CommonFunctionFactory {
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "min" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(COMPARABLE)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "sum" )
@@ -2186,19 +2213,19 @@ public class CommonFunctionFactory {
 		functionRegistry.namedWindowDescriptorBuilder( "first_value" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "last_value" )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( ANY )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value" )
 				.register();
 		functionRegistry.namedWindowDescriptorBuilder( "nth_value" )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( ANY, INTEGER )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
+				.setArgumentTypeResolver( IMPLIED_RESULT_TYPE )
 				.setArgumentListSignature( "ANY value, INTEGER nth" )
 				.register();
 	}
@@ -2404,7 +2431,8 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void timestampaddAndDiff(Dialect dialect, SqlAstNodeRenderingMode timestampRenderingMode) {
+	public void timestampaddAndDiff(Dialect dialect) {
+		// disallow plain parameter for timestamps argument since databases reject it
 		functionRegistry.register(
 				"timestampadd",
 				new TimestampaddFunction(
@@ -2412,7 +2440,7 @@ public class CommonFunctionFactory {
 						typeConfiguration,
 						SqlAstNodeRenderingMode.DEFAULT,
 						SqlAstNodeRenderingMode.DEFAULT,
-						timestampRenderingMode
+						NO_PLAIN_PARAMETER
 				)
 		);
 		functionRegistry.register(
@@ -2421,8 +2449,8 @@ public class CommonFunctionFactory {
 						dialect,
 						typeConfiguration,
 						SqlAstNodeRenderingMode.DEFAULT,
-						timestampRenderingMode,
-						timestampRenderingMode
+						NO_PLAIN_PARAMETER,
+						NO_PLAIN_PARAMETER
 				)
 		);
 	}
@@ -3204,7 +3232,7 @@ public class CommonFunctionFactory {
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.composite(
 								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, INTEGER ),
-								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+								IMPLIED_RESULT_TYPE
 						)
 				)
 				.setArgumentListSignature( "(ARRAY array, INTEGER start, INTEGER end)" )
@@ -3233,7 +3261,7 @@ public class CommonFunctionFactory {
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.composite(
 								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, INTEGER ),
-								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+								IMPLIED_RESULT_TYPE
 						)
 				)
 				.setArgumentListSignature( "(ARRAY array, INTEGER start, INTEGER end)" )
@@ -3300,7 +3328,7 @@ public class CommonFunctionFactory {
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.composite(
 								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ),
-								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+								IMPLIED_RESULT_TYPE
 						)
 				)
 				.setArgumentListSignature( "(ARRAY array, INTEGER elementsToRemove)" )
@@ -3319,6 +3347,108 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayTrim_oracle() {
 		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_reverse() function
+	 */
+	public void arrayReverse() {
+		functionRegistry.namedDescriptorBuilder( "array_reverse" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						) )
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY )
+						) )
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+	}
+
+	/**
+	 * array_reverse() emulation for PostgreSQL versions before 18 and HSQLDB
+	 */
+	public void arrayReverse_unnest() {
+		functionRegistry.register( "array_reverse", new PostgreSQLArrayReverseEmulation() );
+	}
+
+	/**
+	 * Oracle array_reverse() function
+	 */
+	public void arrayReverse_oracle() {
+		functionRegistry.register( "array_reverse", new OracleArrayReverseFunction() );
+	}
+
+	/**
+	 * H2 array_reverse() function
+	 */
+	public void arrayReverse_h2(int maximumArraySize) {
+		functionRegistry.register( "array_reverse", new H2ArrayReverseFunction( maximumArraySize ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_sort() function
+	 */
+	public void arraySort() {
+		functionRegistry.namedDescriptorBuilder( "array_sort" )
+				.setArgumentsValidator(
+						new ArgumentTypesValidator(
+								StandardArgumentsValidators.composite(
+										StandardArgumentsValidators.between( 1, 3 ),
+										ArrayArgumentValidator.DEFAULT_INSTANCE
+								),
+								FunctionParameterType.ANY,
+								FunctionParameterType.BOOLEAN,
+								FunctionParameterType.BOOLEAN
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY ),
+								StandardFunctionArgumentTypeResolvers.invariant(
+										typeConfiguration,
+										FunctionParameterType.BOOLEAN
+								),
+								StandardFunctionArgumentTypeResolvers.invariant(
+										typeConfiguration,
+										FunctionParameterType.BOOLEAN
+								)
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array[, boolean descending[, boolean nulls_first]])" )
+				.register();
+	}
+
+	/**
+	 * PostgreSQL array_sort() emulation for versions before 18
+	 */
+	public void arraySort_unnest() {
+		functionRegistry.register( "array_sort", new PostgreSQLArraySortEmulation( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle array_sort() function
+	 */
+	public void arraySort_oracle() {
+		functionRegistry.register( "array_sort", new OracleArraySortFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 array_sort() function
+	 */
+	public void arraySort_h2(int maximumArraySize) {
+		functionRegistry.register( "array_sort", new H2ArraySortFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
+	 * HSQL array_sort() function
+	 */
+	public void arraySort_hsql() {
+		functionRegistry.register( "array_sort", new HSQLArraySortFunction( typeConfiguration ) );
 	}
 
 	/**

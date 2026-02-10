@@ -77,6 +77,10 @@ public interface JdbcLogging extends BasicLogger {
 	void closingUnreleasedBatch(int hashCode);
 
 	@LogMessage(level = DEBUG)
+	@Message(value = "Skipping aggressive release in AFTER_STATEMENT mode (%s)", id = 100010)
+	void skippingAggressiveRelease(String reason);
+
+	@LogMessage(level = DEBUG)
 	@Message(value = """
 			Database:
 				name: %s
@@ -192,4 +196,9 @@ public interface JdbcLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value =  "AutoCommit was initially %s", id = 100047)
 	void initialAutoCommit(boolean wasInitiallyAutoCommit);
+
+
+	@LogMessage(level = TRACE)
+	@Message(value = "ResultSet statement was not registered (on register)", id = 100048)
+	void resultSetStatementWasNotRegistered();
 }

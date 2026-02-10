@@ -33,7 +33,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -236,8 +235,7 @@ public class AnnotatedColumn {
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
 			BOOT_LOGGER.bindingFormula( formulaString );
-			formula = new Formula();
-			formula.setFormula( formulaString );
+			initMappingFormula();
 		}
 		else {
 			initMappingColumn(
@@ -256,7 +254,7 @@ public class AnnotatedColumn {
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
 			}
-			for ( CheckConstraint constraint : checkConstraints ) {
+			for ( var constraint : checkConstraints ) {
 				mappingColumn.addCheckConstraint( constraint );
 			}
 			mappingColumn.setOptions( options );
@@ -273,6 +271,11 @@ public class AnnotatedColumn {
 		}
 	}
 
+	void initMappingFormula() {
+		formula = new Formula();
+		formula.setFormula( formulaString );
+	}
+
 	protected void initMappingColumn(
 			String columnName,
 			String propertyName,
@@ -285,55 +288,49 @@ public class AnnotatedColumn {
 			String sqlType,
 			boolean unique,
 			boolean applyNamingStrategy) {
-		if ( isNotEmpty( formulaString ) ) {
-			formula = new Formula();
-			formula.setFormula( formulaString );
+		mappingColumn = new Column();
+		mappingColumn.setExplicit( !isImplicit );
+		final boolean nameDetermined =
+				inferColumnNameIfPossible( columnName, propertyName, applyNamingStrategy );
+		mappingColumn.setLength( length );
+		if ( precision != null && precision > 0 ) {  //relevant precision
+			mappingColumn.setPrecision( precision );
+			mappingColumn.setScale( scale );
 		}
-		else {
-			mappingColumn = new Column();
-			mappingColumn.setExplicit( !isImplicit );
-			final boolean nameDetermined =
-					inferColumnNameIfPossible( columnName, propertyName, applyNamingStrategy );
-			mappingColumn.setLength( length );
-			if ( precision != null && precision > 0 ) {  //relevant precision
-				mappingColumn.setPrecision( precision );
-				mappingColumn.setScale( scale );
-			}
-			if ( temporalPrecision != null ) {
-				mappingColumn.setTemporalPrecision( temporalPrecision );
-			}
-			mappingColumn.setArrayLength( arrayLength );
-			mappingColumn.setNullable( nullable );
-			mappingColumn.setSqlType( sqlType );
-			mappingColumn.setUnique( unique );
-			// if the column name is not determined, we will assign the
-			// name to the unique key later this method gets called again
-			// from linkValueUsingDefaultColumnNaming() in second pass
-			if ( unique && nameDetermined ) {
-				// assign a unique key name to the column
-				getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
-			}
-			for ( CheckConstraint constraint : checkConstraints ) {
-				mappingColumn.addCheckConstraint( constraint );
-			}
-			mappingColumn.setDefaultValue( defaultValue );
-			mappingColumn.setOptions( options );
-			mappingColumn.setComment( comment );
-
-			if ( writeExpression != null ) {
-				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
-				if ( numberOfJdbcParams != 1 ) {
-					throw new AnnotationException(
-							"Write expression in '@ColumnTransformer' for property '" + propertyName
-							+ "' and column '" + logicalColumnName + "'"
-							+ " must contain exactly one placeholder character ('?')"
-					);
-				}
-			}
-
-			mappingColumn.setResolvedCustomRead( readExpression );
-			mappingColumn.setCustomWrite( writeExpression );
+		if ( temporalPrecision != null ) {
+			mappingColumn.setTemporalPrecision( temporalPrecision );
 		}
+		mappingColumn.setArrayLength( arrayLength );
+		mappingColumn.setNullable( nullable );
+		mappingColumn.setSqlType( sqlType );
+		mappingColumn.setUnique( unique );
+		// if the column name is not determined, we will assign the
+		// name to the unique key later this method gets called again
+		// from linkValueUsingDefaultColumnNaming() in second pass
+		if ( unique && nameDetermined ) {
+			// assign a unique key name to the column
+			getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
+		}
+		for ( var constraint : checkConstraints ) {
+			mappingColumn.addCheckConstraint( constraint );
+		}
+		mappingColumn.setDefaultValue( defaultValue );
+		mappingColumn.setOptions( options );
+		mappingColumn.setComment( comment );
+
+		if ( writeExpression != null ) {
+			final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
+			if ( numberOfJdbcParams != 1 ) {
+				throw new AnnotationException(
+						"Write expression in '@ColumnTransformer' for property '" + propertyName
+						+ "' and column '" + logicalColumnName + "'"
+						+ " must contain exactly one placeholder character ('?')"
+				);
+			}
+		}
+
+		mappingColumn.setResolvedCustomRead( readExpression );
+		mappingColumn.setCustomWrite( writeExpression );
 	}
 
 	public boolean isNameDeferred() {
@@ -351,9 +348,10 @@ public class AnnotatedColumn {
 	 * @return {@code true} if a name could be inferred
 	 */
 	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( !isEmpty( columnName ) || !isEmpty( propertyName ) ) {
-			final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
-			mappingColumn.setName( processColumnName( logicalColumnName, applyNamingStrategy ) );
+		if ( isNotEmpty( columnName ) || isNotEmpty( propertyName ) ) {
+			mappingColumn.setName(
+					processColumnName( resolveLogicalColumnName( columnName, propertyName ),
+							applyNamingStrategy, isNotEmpty( columnName ) ) );
 			return true;
 		}
 		else {
@@ -363,9 +361,10 @@ public class AnnotatedColumn {
 
 	private String resolveLogicalColumnName(String columnName, String propertyName) {
 		final String baseColumnName = isNotEmpty( columnName ) ? columnName : inferColumnName( propertyName );
-		return parent.getPropertyHolder() != null && parent.getPropertyHolder().isComponent()
+		final var propertyHolder = parent.getPropertyHolder();
+		return propertyHolder != null && propertyHolder.isComponent()
 				// see if we need to apply one-or-more @EmbeddedColumnNaming patterns
-				? applyEmbeddedColumnNaming( baseColumnName, (ComponentPropertyHolder) parent.getPropertyHolder() )
+				? applyEmbeddedColumnNaming( baseColumnName, (ComponentPropertyHolder) propertyHolder )
 				: baseColumnName;
 	}
 
@@ -401,11 +400,12 @@ public class AnnotatedColumn {
 		return result;
 	}
 
-	protected String processColumnName(String columnName, boolean applyNamingStrategy) {
+	protected String processColumnName(String columnName, boolean applyNamingStrategy, boolean isExplicit) {
 		if ( applyNamingStrategy ) {
 			final var database = getDatabase();
 			return getPhysicalNamingStrategy()
-					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
+					.toPhysicalColumnName( database.toIdentifier( columnName, isExplicit ),
+							database.getJdbcEnvironment() )
 					.render( database.getDialect() );
 		}
 		else {
@@ -506,7 +506,7 @@ public class AnnotatedColumn {
 			value.addFormula( formula );
 		}
 		else {
-			final Table table = value.getTable();
+			final var table = value.getTable();
 			parent.setTable( table );
 			mappingColumn.setValue( value );
 			value.addColumn( mappingColumn, insertable, updatable );

@@ -30,7 +30,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -46,7 +45,6 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
-	private static final Logger LOG = Logger.getLogger( Table.class );
 	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private final String contributor;
@@ -110,8 +108,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String subselect,
 			boolean isAbstract) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().catalog();
-		this.schema = namespace.getPhysicalName().schema();
+		final var physicalName = namespace.getPhysicalName();
+		this.catalog = physicalName.catalog();
+		this.schema = physicalName.schema();
 		this.name = physicalTableName;
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
@@ -119,8 +118,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public Table(String contributor, Namespace namespace, String subselect, boolean isAbstract) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().catalog();
-		this.schema = namespace.getPhysicalName().schema();
+		final var physicalName = namespace.getPhysicalName();
+		this.catalog = physicalName.catalog();
+		this.schema = physicalName.schema();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}
@@ -247,7 +247,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return null;
 		}
 		else {
-			final Column existing = columns.get( column.getCanonicalName() );
+			final var existing = columns.get( column.getCanonicalName() );
 			return column.equals( existing ) ? existing : null;
 		}
 	}
@@ -276,15 +276,11 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		if ( oldColumn == null ) {
 			if ( primaryKey != null ) {
 				for ( var primaryKeyColumn : primaryKey.getColumns() ) {
-					if ( primaryKeyColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
+					if ( Objects.equals( column.getCanonicalName(),
+							primaryKeyColumn.getCanonicalName() ) ) {
+						// Force the column to be non-null
+						// as it is part of the primary key
 						column.setNullable( false );
-						if ( LOG.isTraceEnabled() ) {
-							LOG.tracef(
-									"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-									column.getCanonicalName(),
-									getNameIdentifier().getCanonicalName()
-							);
-						}
 					}
 				}
 			}
@@ -452,18 +448,21 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public Index getOrCreateIndex(String indexName) {
-		Index index =  indexes.get( indexName );
-		if ( index == null ) {
-			index = new Index();
-			index.setName( indexName );
-			index.setTable( this );
-			indexes.put( indexName, index );
+		final var index =  indexes.get( indexName );
+		if ( index != null ) {
+			return index;
 		}
-		return index;
+		else {
+			final var newIndex = new Index();
+			newIndex.setName( indexName );
+			newIndex.setTable( this );
+			indexes.put( indexName, newIndex );
+			return newIndex;
+		}
 	}
 
 	public Index getIndex(String indexName) {
-		return  indexes.get( indexName );
+		return indexes.get( indexName );
 	}
 
 	public Index addIndex(Index index) {

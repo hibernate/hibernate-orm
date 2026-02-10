@@ -4,8 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.List;
-
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -26,11 +24,13 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.List;
 
 import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.newInstance;
@@ -152,9 +152,9 @@ public class LoaderHelper {
 
 	/**
 	 * Normalize an array of keys (primary, foreign or natural).
-	 * <p/>
+	 * <p>
 	 * If the array is already typed as the key type, {@code keys} is simply returned.
-	 * <p/>
+	 * <p>
 	 * Otherwise, a new typed array is created and the contents copied from {@code keys} to this new array.  If
 	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion} is enabled, the
 	 * values will be coerced to the key type.
@@ -188,7 +188,7 @@ public class LoaderHelper {
 		}
 		else {
 			for ( int i = 0; i < keys.length; i++ ) {
-				typedArray[i] = keyJavaType.coerce( keys[i], session );
+				typedArray[i] = keyJavaType.cast( keyJavaType.coerce( keys[i] ) );
 			}
 		}
 		return typedArray;
@@ -217,7 +217,7 @@ public class LoaderHelper {
 	public static <R,K> List<R> loadByArrayParameter(
 			K[] idsToInitialize,
 			SelectStatement sqlAst,
-			JdbcOperationQuerySelect jdbcOperation,
+			JdbcSelect jdbcOperation,
 			JdbcParameter jdbcParameter,
 			JdbcMapping arrayJdbcMapping,
 			Object entityId,

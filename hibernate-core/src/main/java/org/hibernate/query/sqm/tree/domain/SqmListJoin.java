@@ -55,12 +55,12 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public SqmListJoin<O, E> copy(SqmCopyContext context) {
-		final SqmListJoin<O, E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmListJoin<O, E> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmListJoin<>(
 						lhsCopy,

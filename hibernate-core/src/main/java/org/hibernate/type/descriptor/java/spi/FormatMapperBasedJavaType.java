@@ -65,13 +65,11 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( type.isAssignableFrom( getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( type == String.class ) {
-			//noinspection unchecked
-			return (X) getFormatMapper( typeConfiguration )
-					.toString( value, this, options );
+			return type.cast( getFormatMapper( typeConfiguration )
+					.toString( value, this, options ) );
 		}
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type: " + getTypeName()
@@ -80,9 +78,9 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
-		if ( getJavaTypeClass().isInstance( value ) ) {
-			//noinspection unchecked
-			return (T) value;
+		final var javaTypeClass = getJavaTypeClass();
+		if ( javaTypeClass.isInstance( value ) ) {
+			return javaTypeClass.cast( value );
 		}
 		else if ( value instanceof String string ) {
 			return getFormatMapper( typeConfiguration )

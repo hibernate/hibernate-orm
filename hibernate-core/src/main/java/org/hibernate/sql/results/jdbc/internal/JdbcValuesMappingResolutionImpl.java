@@ -22,7 +22,10 @@ public class JdbcValuesMappingResolutionImpl implements JdbcValuesMappingResolut
 			DomainResultAssembler<?>[] domainResultAssemblers,
 			boolean hasCollectionInitializers,
 			InitializersList initializersList) {
-		this( domainResultAssemblers, getResultInitializers( domainResultAssemblers ), hasCollectionInitializers, initializersList );
+		this( domainResultAssemblers,
+				getResultInitializers( domainResultAssemblers ),
+				hasCollectionInitializers,
+				initializersList );
 	}
 
 	private JdbcValuesMappingResolutionImpl(
@@ -38,7 +41,7 @@ public class JdbcValuesMappingResolutionImpl implements JdbcValuesMappingResolut
 
 	private static Initializer<?>[] getResultInitializers(DomainResultAssembler<?>[] resultAssemblers) {
 		final LinkedHashSet<Initializer<?>> initializers = new LinkedHashSet<>( resultAssemblers.length );
-		for ( DomainResultAssembler<?> resultAssembler : resultAssemblers ) {
+		for ( var resultAssembler : resultAssemblers ) {
 			resultAssembler.forEachResultAssembler( (initializer, list) -> list.add( initializer ), initializers );
 		}
 		return initializers.toArray(Initializer.EMPTY_ARRAY);

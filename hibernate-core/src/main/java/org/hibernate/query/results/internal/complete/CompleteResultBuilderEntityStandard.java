@@ -11,7 +11,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -116,20 +115,18 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
+		final var impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
-
 		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
-
 		try {
 			// we just want it added to the registry
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
-					np -> entityDescriptor.createRootTableGroup(
+					path -> entityDescriptor.createRootTableGroup(
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
@@ -140,7 +137,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 					)
 			);
 
-			return new EntityResultImpl(
+			return new EntityResultImpl<>(
 					navigablePath,
 					entityDescriptor,
 					tableAlias,
@@ -181,15 +178,15 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( o instanceof CompleteResultBuilderEntityStandard that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderEntityStandard that = (CompleteResultBuilderEntityStandard) o;
-		return navigablePath.equals( that.navigablePath )
-			&& entityDescriptor.equals( that.entityDescriptor )
-			&& lockMode == that.lockMode
-			&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
-			&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& entityDescriptor.equals( that.entityDescriptor )
+				&& lockMode == that.lockMode
+				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+		}
 	}
 }

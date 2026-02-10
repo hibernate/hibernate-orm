@@ -74,8 +74,9 @@ public class ModelsHelper {
 	}
 
 	private static void registerPrimitive(Class<?> theClass, ModelsContext buildingContext) {
-		final MutableClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry().as( MutableClassDetailsRegistry.class );
-		classDetailsRegistry.addClassDetails( new JdkClassDetails( theClass, buildingContext ) );
+		buildingContext.getClassDetailsRegistry()
+				.as( MutableClassDetailsRegistry.class )
+				.addClassDetails( new JdkClassDetails( theClass, buildingContext ) );
 
 	}
 
@@ -83,13 +84,15 @@ public class ModelsHelper {
 			String className,
 			ClassDetailsRegistry classDetailsRegistry,
 			Supplier<ClassDetails> classDetailsSupplier) {
-		ClassDetails classDetails = classDetailsRegistry.findClassDetails( className );
+		var classDetails = classDetailsRegistry.findClassDetails( className );
 		if ( classDetails != null ) {
 			return classDetails;
 		}
-		classDetails = classDetailsSupplier.get();
-		classDetailsRegistry.as( MutableClassDetailsRegistry.class )
-				.addClassDetails( className, classDetails );
-		return classDetails;
+		else {
+			classDetails = classDetailsSupplier.get();
+			classDetailsRegistry.as( MutableClassDetailsRegistry.class )
+					.addClassDetails( className, classDetails );
+			return classDetails;
+		}
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.dialect.aggregate;
 import java.util.List;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
@@ -69,6 +70,11 @@ public interface AggregateSupport {
 				),
 				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
 		);
+	}
+
+	@Internal // TODO: find a better way!
+	default boolean useLengthsInCasts() {
+		return false;
 	}
 
 	/**

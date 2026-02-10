@@ -713,7 +713,7 @@ public class HbmXmlTransformer {
 		if ( !hbmImports.isEmpty() ) {
 			final var ormRoot = mappingXmlBinding.getRoot();
 			for ( var hbmImport : hbmImports ) {
-				final JaxbHqlImportImpl ormImport = new JaxbHqlImportImpl();
+				final var ormImport = new JaxbHqlImportImpl();
 				ormRoot.getHqlImports().add( ormImport );
 				ormImport.setClazz( hbmImport.getClazz() );
 				ormImport.setRename( hbmImport.getRename() );
@@ -890,7 +890,8 @@ public class HbmXmlTransformer {
 				query.setQuery( qryString );
 			}
 			else {
-				@SuppressWarnings("unchecked") final var element = (JAXBElement<JaxbHbmQueryParamType>) content;
+				@SuppressWarnings("unchecked")
+				final var element = (JAXBElement<JaxbHbmQueryParamType>) content;
 				final var hbmQueryParam = element.getValue();
 				final var queryParam = new JaxbQueryParamTypeImpl();
 				query.getQueryParam().add( queryParam );
@@ -1759,6 +1760,10 @@ public class HbmXmlTransformer {
 			transferElementInfo( roleBase, source, source.getCompositeElement(), target );
 		}
 
+		if ( isNotEmpty( source.getWhere() ) ) {
+			target.setSqlRestriction( source.getWhere() );
+		}
+
 		return target;
 	}
 
@@ -1837,7 +1842,7 @@ public class HbmXmlTransformer {
 	private void transferCollectionCommonInfo(PluralAttributeInfo source, JaxbPluralAttribute target) {
 		target.setName( source.getName() );
 		target.setAttributeAccessor( source.getAccess() );
-		target.setFetchMode( convert( source.getFetch() ) );
+		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
 		target.setFetch( convert( source.getLazy() ) );
 
 		if ( isNotEmpty( source.getCollectionType() ) ) {
@@ -1999,8 +2004,11 @@ public class HbmXmlTransformer {
 		return value == null ? null : !value;
 	}
 
-	private JaxbPluralFetchModeImpl convert(JaxbHbmFetchStyleWithSubselectEnum fetch) {
+	private JaxbPluralFetchModeImpl convert(JaxbHbmFetchStyleWithSubselectEnum fetch,JaxbHbmOuterJoinEnum outerJoin) {
 		if ( fetch == null ) {
+			if ( outerJoin == JaxbHbmOuterJoinEnum.TRUE ) {
+				return JaxbPluralFetchModeImpl.JOIN;
+			}
 			return null;
 		}
 		else {
@@ -2442,8 +2450,11 @@ public class HbmXmlTransformer {
 			target.getFilters().add( convert( hbmFilter ) );
 		}
 
+		if ( isNotEmpty( manyToMany.getWhere() ) ) {
+			target.setSqlRestriction( manyToMany.getWhere() );
+		}
 		if ( isNotEmpty( hbmCollection.getWhere() ) ) {
-			target.setSqlRestriction( hbmCollection.getWhere() );
+			target.setSqlJoinTableRestriction( hbmCollection.getWhere() );
 		}
 		if ( hbmCollection.getSqlInsert() != null ) {
 			final var jaxbCustomSql = new JaxbCustomSqlImpl();

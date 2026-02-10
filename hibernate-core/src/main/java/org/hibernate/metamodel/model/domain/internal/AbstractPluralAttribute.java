@@ -125,8 +125,9 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public boolean isAssociation() {
-		return getPersistentAttributeType() == PersistentAttributeType.ONE_TO_MANY
-			|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
+		final var persistentAttributeType = getPersistentAttributeType();
+		return persistentAttributeType == PersistentAttributeType.ONE_TO_MANY
+			|| persistentAttributeType == PersistentAttributeType.MANY_TO_MANY;
 	}
 
 	@Override
@@ -147,8 +148,8 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	@SuppressWarnings("unchecked")
 	@Override
 	public SqmPath<E> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
-		// We need an unchecked cast here : PluralPersistentAttribute implements path source with its element type
-		//  but resolving paths from it must produce collection-typed expressions.
+		// We need an unchecked cast here: PluralPersistentAttribute implements PathSource with
+		// its element type, but resolving paths from it must produce collection-typed expressions.
 		return (SqmPath<E>) new SqmPluralValuedSimplePath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				this,

@@ -147,7 +147,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public SqmCteStatement<T> copy(SqmCopyContext context) {
-		final SqmCteStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

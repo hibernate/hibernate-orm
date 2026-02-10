@@ -64,7 +64,10 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	}
 
 	String getObjectCall() {
-		return annotationMetaEntity.isProvidedSessionAccess() ? ".getObject()" : "";
+		return annotationMetaEntity.isProvidedSessionAccess()
+			&& !sessionName.endsWith("()")
+				? ".getObject()"
+				: "";
 	}
 
 	@Override

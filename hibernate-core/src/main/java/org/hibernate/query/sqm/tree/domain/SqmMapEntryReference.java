@@ -56,7 +56,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public SqmMapEntryReference<K, V> copy(SqmCopyContext context) {
-		final SqmMapEntryReference<K, V> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

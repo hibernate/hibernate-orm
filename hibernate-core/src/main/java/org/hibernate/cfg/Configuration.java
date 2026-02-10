@@ -27,7 +27,6 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -95,7 +94,6 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  * These initial properties may be completely discarded by calling
  * {@link #setProperties(Properties)}, or they may be overridden
  * individually by calling {@link #setProperty(String, String)}.
- * <p>
  * <pre>
  * SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations
@@ -146,7 +144,6 @@ public class Configuration {
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
 	final private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
-	private final ClassmateContext classmateContext = new ClassmateContext();
 
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
@@ -1184,7 +1181,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, autoApply, false, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, autoApply, false ) );
 		return this;
 	}
 
@@ -1196,7 +1193,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
-		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass ) );
 		return this;
 	}
 
@@ -1210,7 +1207,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
-		addAttributeConverter( ConverterDescriptors.of( attributeConverter, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter ) );
 		return this;
 	}
 
@@ -1227,7 +1224,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
-		addAttributeConverter( ConverterDescriptors.of( attributeConverter, autoApply, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter, autoApply ) );
 		return this;
 	}
 

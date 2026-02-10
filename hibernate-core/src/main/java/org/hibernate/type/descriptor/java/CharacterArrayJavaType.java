@@ -20,10 +20,15 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * Descriptor for {@code Character[]} handling, which disallows {@code null} elements.
- * This {@link JavaType} is useful if the domain model uses {@code Character[]} and wants to map to {@link SqlTypes#VARCHAR}.
+ * This {@link JavaType} is useful if the domain model uses {@code Character[]} and
+ * wants to map to {@link SqlTypes#VARCHAR}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This kind of mapping is no longer required by the JPA specification. It
+ * makes more sense to use {@code char[]} or {@code String} to represent {@code VARCHAR}.
  */
+@Deprecated(since = "7.3")
 public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	public static final CharacterArrayJavaType INSTANCE = new CharacterArrayJavaType();
 
@@ -35,6 +40,11 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	@Override
 	public boolean isInstance(Object value) {
 		return value instanceof Character[];
+	}
+
+	@Override
+	public Character[] cast(Object value) {
+		return (Character[]) value;
 	}
 
 	@Override
@@ -66,34 +76,33 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
 		final var descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARCHAR ) );
-		return descriptor instanceof AdjustableJdbcType
-				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+		return descriptor instanceof AdjustableJdbcType jdbcType
+				? jdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Character[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Character[].class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) new String( unwrapChars( value ) );
+			return type.cast( new String( unwrapChars( value ) ) );
 		}
 		if ( NClob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createNClob( new String( unwrapChars( value ) ) );
+			return type.cast( options.getLobCreator().createNClob( new String( unwrapChars( value ) ) ) );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
-			return (X) options.getLobCreator().createClob( new String( unwrapChars( value ) ) );
+			return type.cast( options.getLobCreator().createClob( new String( unwrapChars( value ) ) ) );
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
-			return (X) new StringReader( new String( unwrapChars( value ) ) );
+			return type.cast( new StringReader( new String( unwrapChars( value ) ) ) );
 		}
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			return (X) new CharacterStreamImpl( new String( unwrapChars( value ) ) );
+			return type.cast( new CharacterStreamImpl( new String( unwrapChars( value ) ) ) );
 		}
 		throw unknownUnwrap( type );
 	}
@@ -121,7 +130,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 		if ( chars == null ) {
 			return null;
 		}
-		final Character[] result = new Character[chars.length];
+		final var result = new Character[chars.length];
 		for ( int i = 0; i < chars.length; i++ ) {
 			result[i] = chars[i];
 		}
@@ -132,7 +141,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 		if ( chars == null ) {
 			return null;
 		}
-		final char[] result = new char[chars.length];
+		final var result = new char[chars.length];
 		for ( int i = 0; i < chars.length; i++ ) {
 			result[i] = chars[i];
 		}

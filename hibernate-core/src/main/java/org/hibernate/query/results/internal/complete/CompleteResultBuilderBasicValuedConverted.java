@@ -5,14 +5,11 @@
 package org.hibernate.query.results.internal.complete;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -24,6 +21,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * ResultBuilder for scalar results defined via:<ul>
@@ -46,7 +45,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
 		this.underlyingMapping = underlyingMapping;
-		final JavaType<?> relationalType =
+		final var relationalType =
 				underlyingMapping.getJdbcMapping()
 						.getJavaTypeDescriptor();
 		this.valueConverter = new AttributeConverterBean<>(
@@ -72,11 +71,12 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final var creationStateImpl = impl( domainResultCreationState );
 		final String columnName =
 				explicitColumnName != null
 						? explicitColumnName
-				: jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
+						: jdbcResultsMetadata.resolveColumnName(
+								creationStateImpl.getNumberOfProcessedSelections() + 1 );
 		return new BasicResult<>(
 				sqlSelection( jdbcResultsMetadata, resultPosition, creationStateImpl, columnName )
 						.getValuesArrayPosition(),
@@ -94,38 +94,38 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			int resultPosition,
 			DomainResultCreationStateImpl creationStateImpl,
 			String columnName) {
-		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
 		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( columnName ),
+						createColumnReferenceKey( columnName ),
 						processingState -> {
 							final int jdbcPosition =
 									explicitColumnName != null
 											? jdbcResultsMetadata.resolveColumnPosition( explicitColumnName )
 											: resultPosition + 1;
-							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
 				),
 				valueConverter.getRelationalJavaType(),
 				null,
-				sessionFactory.getTypeConfiguration()
+				creationStateImpl.getSessionFactory()
+						.getTypeConfiguration()
 		);
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderBasicValuedConverted<?, ?> that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderBasicValuedConverted<?, ?> that = (CompleteResultBuilderBasicValuedConverted<?, ?>) o;
-		return Objects.equals( explicitColumnName, that.explicitColumnName )
+		else {
+			return Objects.equals( explicitColumnName, that.explicitColumnName )
 				&& underlyingMapping.equals( that.underlyingMapping )
 				&& valueConverter.equals( that.valueConverter );
+		}
 	}
 
 	@Override

@@ -123,4 +123,8 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Connection leak detected: there are %s unclosed connections", id = 10001023)
 	void connectionLeakDetected(int allocationCount);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Could not set login timeout", id = 10001024)
+	void couldNotSetLoginTimeout(@Cause SQLException e);
 }

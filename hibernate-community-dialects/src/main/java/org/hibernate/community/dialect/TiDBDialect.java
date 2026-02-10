@@ -21,6 +21,7 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -28,6 +29,8 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.TIDB_LOCKING_SUPPORT;
@@ -39,8 +42,12 @@ import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.T
  */
 public class TiDBDialect extends MySQLDialect {
 
-	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
+	// 8.0.11 is the first MySQL 8.0 GA release.
+	// See also: https://docs.pingcap.com/tidb/stable/mysql-compatibility/
+	private static final DatabaseVersion VERSION80 = DatabaseVersion.make( 8, 0, 11 );
 
+	// See also: https://www.pingcap.com/tidb-release-support-policy/
+	// v5.4 EOL date: 15 Feb 2026
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 4 );
 
 	public TiDBDialect() {
@@ -58,8 +65,8 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public DatabaseVersion getMySQLVersion() {
-		// For simplicity’s sake, configure MySQL 5.7 compatibility
-		return VERSION57;
+		// For simplicity’s sake, configure MySQL 8.0 compatibility
+		return VERSION80;
 	}
 
 	@Override
@@ -130,11 +137,6 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public LockingSupport getLockingSupport() {
 		return TIDB_LOCKING_SUPPORT;
-	}
-
-	@Override
-	protected boolean supportsForShare() {
-		return false;
 	}
 
 	@Override
@@ -232,5 +234,14 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
+			final TiDBSqlAstTranslator<?> translator = new TiDBSqlAstTranslator<>( factory, optionalTableUpdate, TiDBDialect.this );
+			return translator.createMergeOperation( optionalTableUpdate );
+		}
+		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 }

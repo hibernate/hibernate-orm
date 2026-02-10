@@ -42,6 +42,11 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 	}
 
 	@Override
+	public short[] cast(Object value) {
+		return (short[]) value;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(short[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}
@@ -106,7 +111,7 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 		}
 
 		if ( type.isInstance( value ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		else if ( Object[].class.isAssignableFrom( type ) ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -114,16 +119,15 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 			for ( int i = 0; i < value.length; i++ ) {
 				unwrapped[i] = getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options );
 			}
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 		else if ( type == byte[].class ) {
 			// byte[] can only be requested if the value should be serialized
-			return (X) SerializationHelper.serialize( value );
+			return type.cast( SerializationHelper.serialize( value ) );
 		}
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
-			//noinspection unchecked
-			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) );
+			return type.cast( new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -131,7 +135,7 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 			for ( int i = 0; i < value.length; i++ ) {
 				Array.set( unwrapped, i, getElementJavaType().unwrap( value[i], preferredJavaTypeClass, options ) );
 			}
-			return (X) unwrapped;
+			return type.cast( unwrapped );
 		}
 
 		throw unknownUnwrap( type );

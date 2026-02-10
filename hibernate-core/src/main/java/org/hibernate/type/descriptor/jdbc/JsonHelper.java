@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
@@ -214,8 +215,6 @@ public class JsonHelper {
 	 * @param returnEmbeddable do we return an Embeddable object or array of Objects
 	 * @param options wrappping options
 	 * @return the deserialized value
-	 * @param <X>
-	 * @throws SQLException
 	 */
 	public static <X> X deserialize(
 			EmbeddableMappingType embeddableMappingType,
@@ -380,7 +379,7 @@ public class JsonHelper {
 			//noinspection unchecked
 			final T[] r = a.length >= size
 					? a
-					: (T[]) java.lang.reflect.Array.newInstance( a.getClass().getComponentType(), size );
+					: (T[]) Array.newInstance( a.getClass().getComponentType(), size );
 			for (int i = 0; i < size; i++) {
 				//noinspection unchecked
 				r[i] = (T) array[i];

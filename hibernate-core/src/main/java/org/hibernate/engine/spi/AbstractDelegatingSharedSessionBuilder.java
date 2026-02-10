@@ -47,6 +47,11 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
+	public Session open() {
+		return delegate.open();
+	}
+
+	@Override
 	public SharedSessionBuilder interceptor() {
 		delegate.interceptor();
 		return this;

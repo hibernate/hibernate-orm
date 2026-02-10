@@ -26,7 +26,6 @@ import java.util.function.UnaryOperator;
  *     and therefore also the JDBC transaction, should be shared from parent
  *     to child.
  * </ul>
- * <p>
  * <pre>
  * try (var childSession
  *          = session.sessionWithOptions()
@@ -36,7 +35,6 @@ import java.util.function.UnaryOperator;
  *     ...
  * }
  * </pre>
- * <p>
  * On the other hand, when JTA transaction management is used, all sessions
  * execute within the same transaction. Typically, connection sharing is
  * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.
@@ -48,6 +46,11 @@ import java.util.function.UnaryOperator;
  * @see SessionBuilder
  */
 public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilder {
+	/**
+	 * Open the session.
+	 */
+	@Override
+	Session open();
 
 	@Override
 	SharedSessionBuilder connection();

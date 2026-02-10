@@ -32,7 +32,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 
 	@Override
 	public SqmParameterizedEntityType<T> copy(SqmCopyContext context) {
-		final SqmParameterizedEntityType<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

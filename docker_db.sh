@@ -33,7 +33,7 @@ else
 fi
 
 mysql() {
-    mysql_9_4
+    mysql_9_6
 }
 
 mysql_8_0() {
@@ -59,6 +59,16 @@ mysql_9_2() {
 mysql_9_4() {
     local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
     mysql_setup "9.4" "$init_connect"
+}
+
+mysql_9_5() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.5" "$init_connect"
+}
+
+mysql_9_6() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.6" "$init_connect"
 }
 
 # Generic MySQL function that handles all versions
@@ -129,6 +139,10 @@ mysql_setup() {
     else
         echo "MySQL is ready"
     fi
+
+    # Install components
+    # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.6: SHA1 and MD5.
+    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null
 
     databases=()
     for n in $(seq 1 $DB_COUNT)
@@ -218,13 +232,19 @@ mariadb_setup() {
     echo "MySQL databases were successfully setup"
 }
 
+POSTGRESQL_PLATFORM_OPTION=""
+if [[ "$IS_OSX" == "true" ]]; then
+  # PostGIS images only support amd64, so we force emulation on macOS
+  POSTGRESQL_PLATFORM_OPTION="--platform linux/amd64"
+fi
+
 postgresql() {
   postgresql_18
 }
 
 postgresql_13() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1} \
        -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-13-pgvector'
     postgresql_setup
@@ -232,7 +252,7 @@ postgresql_13() {
 
 postgresql_14() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3} \
        -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-14-pgvector'
     postgresql_setup
@@ -240,7 +260,7 @@ postgresql_14() {
 
 postgresql_15() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-15-pgvector'
     postgresql_setup
@@ -248,7 +268,7 @@ postgresql_15() {
 
 postgresql_16() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector'
     postgresql_setup
@@ -256,7 +276,7 @@ postgresql_16() {
 
 postgresql_17() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector'
     postgresql_setup
@@ -264,7 +284,7 @@ postgresql_17() {
 
 postgresql_18() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:18-3.6} \
+    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_18:-docker.io/postgis/postgis:18-3.6} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-18-pgvector'
     postgresql_setup
@@ -1137,11 +1157,109 @@ hana() {
         sleep 10
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs hana 2>&1)
     done
+    hana_setup
     echo "HANA successfully started"
 }
 
+hana_setup() {
+  databases=()
+  for n in $(seq 1 $DB_COUNT)
+  do
+    databases+=("hibernate_orm_test_${n}")
+  done
+  create_cmd=
+  for i in "${!databases[@]}";do
+    create_cmd+="
+create user ${databases[i]} password H1bernate_test NO FORCE_FIRST_PASSWORD_CHANGE;
+grant create schema to ${databases[i]};"
+  done
+  # The first command seems to be ignored?! So let's just run something useless
+  $CONTAINER_CLI exec hana bash -c "cat <<EOF | /usr/sap/HXE/HDB90/exe/hdbsql -n localhost:39017 -u SYSTEM -p H1bernate_test -stdin
+select 1;
+$create_cmd
+\q
+EOF
+"
+}
+
 cockroachdb() {
-  cockroachdb_24_3
+  cockroachdb_25_4
+}
+
+cockroachdb_25_4() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_25_4:-cockroachdb/cockroach:v25.4.2} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+
+quit
+EOF
+"
+  cockroachdb_setup
+  echo "Cockroachdb successfully started"
+}
+
+cockroachdb_24_1() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_3:-cockroachdb/cockroach:v24.3.3} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+
+quit
+EOF
+"
+  cockroachdb_setup
+  echo "Cockroachdb successfully started"
 }
 
 cockroachdb_24_3() {
@@ -1221,7 +1339,7 @@ EOF
 }
 
 
-cockroachdb_23_1() {
+cockroachdb_23_2() {
   $CONTAINER_CLI rm -f cockroach || true
   LOG_CONFIG="
 sinks:
@@ -1231,7 +1349,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_1:-docker.io/cockroachdb/cockroach:v23.1.28} start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_2:-docker.io/cockroachdb/cockroach:v23.2.28} start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -1282,7 +1400,77 @@ EOF
 }
 
 tidb() {
-  tidb_5_4
+  tidb_8_5
+}
+
+tidb_8_5() {
+    $CONTAINER_CLI rm -f tidb || true
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.4}
+
+    # Wait for TiDB to start
+    OUTPUT=
+    n=0
+    until [ "$n" -gt 15 ]; do
+        OUTPUT=$($CONTAINER_CLI logs tidb 2>&1)
+        if [[ $OUTPUT == *"server is running"* ]]; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for TiDB to start..."
+        sleep 5
+    done
+
+    if [ "$n" -gt 15 ]; then
+        echo "TiDB failed to start after 75 seconds"
+        exit 1
+    else
+        echo "TiDB successfully started"
+    fi
+
+    # Wait for TiDB to accept connections
+    n=0
+    until [ "$n" -gt 10 ]; do
+        if $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
+            mysqladmin -h 127.0.0.1 -P 4000 -uroot ping >/dev/null 2>&1; then
+            break;
+        fi
+        n=$((n+1))
+        echo "Waiting for TiDB to be ready..."
+        sleep 3
+    done
+
+    if [ "$n" -gt 10 ]; then
+        echo "TiDB failed to become ready after 30 seconds"
+        exit 1
+    else
+        echo "TiDB is ready"
+    fi
+
+    # Create databases
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+
+    # Since v7.2
+    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_check_constraint-new-in-v720
+    create_cmd+="SET GLOBAL tidb_enable_check_constraint=ON;"
+
+    # Since v8.3
+    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_shared_lock_promotion-new-in-v830
+    create_cmd+="SET GLOBAL tidb_enable_shared_lock_promotion=ON;"
+
+    create_cmd+="CREATE DATABASE IF NOT EXISTS hibernate_orm_test;"
+    create_cmd+="CREATE USER IF NOT EXISTS 'hibernate_orm_test'@'%' IDENTIFIED BY 'hibernate_orm_test';"
+    create_cmd+="GRANT ALL ON hibernate_orm_test.* TO 'hibernate_orm_test'@'%';"
+    for i in "${!databases[@]}";do
+      create_cmd+="CREATE DATABASE IF NOT EXISTS ${databases[i]}; GRANT ALL ON ${databases[i]}.* TO 'hibernate_orm_test'@'%';"
+    done
+    $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
+        mysql -h 127.0.0.1 -P 4000 -uroot -e "${create_cmd}" 2>/dev/null
+    echo "TiDB databases were successfully setup"
 }
 
 tidb_5_4() {
@@ -1312,7 +1500,36 @@ tidb_5_4() {
 }
 
 informix() {
-  informix_14_10
+  informix_15
+}
+
+informix_15() {
+    temp_dir=$(mktemp -d)
+    echo "ALLOW_NEWLINE 1" >$temp_dir/onconfig.mod
+    chmod 777 -R $temp_dir
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_15:-icr.io/informix/informix-developer-edition-database:15.0.0.0}
+    echo "Starting Informix. This can take a few minutes"
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
+        if [[ $OUTPUT == *"Server Started"* ]]; then
+          sleep 15
+          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for Informix to start..."
+        sleep 30
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "Informix failed to start and configure after 5 minutes"
+    else
+      echo "Informix successfully started"
+    fi
 }
 
 informix_14_10() {
@@ -1370,12 +1587,46 @@ informix_12_10() {
     fi
 }
 
+spanner() {
+  spanner_emulator
+}
+
+spanner_emulator() {
+
+  $CONTAINER_CLI rm -f spanner || true
+  # Run emulator (gRPC on 9010, REST on 9020)
+  $CONTAINER_CLI run --name spanner -d \
+    -p 9010:9010 \
+    -p 9020:9020 \
+    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.45}
+
+  # Wait for emulator to be ready (check logs for known messages)
+  n=0
+  until [ "$n" -ge 20 ]; do
+    OUTPUT="$($CONTAINER_CLI logs spanner 2>&1 || true)"
+    if [[ "$OUTPUT" == *"gRPC server listening"* ]] || [[ "$OUTPUT" == *"Cloud Spanner emulator running"* ]]; then
+      echo "Cloud Spanner emulator started."
+      break
+    fi
+    echo "Waiting for Cloud Spanner emulator to start..."
+    n=$((n+1))
+    sleep 3
+  done
+
+  if [ "$n" -ge 20 ]; then
+    echo "Cloud Spanner emulator failed to start after 1 minute"
+    exit 1
+  fi
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_25_4"
+    echo -e "\tcockroachdb_24_3"
     echo -e "\tcockroachdb_24_1"
-    echo -e "\tcockroachdb_23_1"
+    echo -e "\tcockroachdb_23_2"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_spatial"
@@ -1396,6 +1647,8 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_6"
+    echo -e "\tmysql_9_5"
     echo -e "\tmysql_9_4"
     echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_2"
@@ -1413,10 +1666,13 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_13"
     echo -e "\tsybase"
     echo -e "\ttidb"
+    echo -e "\ttidb_8_5"
     echo -e "\ttidb_5_4"
     echo -e "\informix"
     echo -e "\informix_14_10"
     echo -e "\informix_12_10"
+    echo -e "\tspanner"
+    echo -e "\tspanner_emulator"
 else
     ${1}
 fi

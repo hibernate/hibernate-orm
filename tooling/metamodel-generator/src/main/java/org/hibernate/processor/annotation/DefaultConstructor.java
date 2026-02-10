@@ -21,6 +21,13 @@ import static org.hibernate.processor.util.Constants.PRE_DESTROY;
 
 /**
  * Used by the container to instantiate a Jakarta Data repository.
+ * This is a constructor with no parameters, used to instantiate
+ * a repository which then uses field injection to obtain its
+ * dependencies. By contrast, a {@link RepositoryConstructor} has
+ * a parameter which accepts the session as an argument, allowing
+ * direct instantiation or constructor injection. This class is
+ * only needed because {@code @PersistenceUnit} is incompatible
+ * with CDI-style constructor injection.
  *
  * @author Gavin King
  */

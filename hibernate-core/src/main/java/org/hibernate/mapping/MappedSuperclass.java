@@ -49,6 +49,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return getIdentifierProperty() != null;
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return getVersion() != null;
 	}
@@ -63,6 +64,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return superPersistentClass;
 	}
 
+	@Override
 	public List<Property> getDeclaredProperties() {
 		return declaredProperties;
 	}
@@ -109,6 +111,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		this.identifierProperty = prop;
 	}
 
+	@Override
 	public Property getVersion() {
 		//get direct version or the one from the super mappedSuperclass
 		// or the one from the super persistentClass
@@ -132,6 +135,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		this.version = prop;
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		//get direct identifierMapper or the one from the super mappedSuperclass
 		// or the one from the super persistentClass

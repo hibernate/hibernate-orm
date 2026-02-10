@@ -37,7 +37,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -67,7 +66,6 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
@@ -93,7 +91,6 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromNoAnnotation;
-import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
@@ -110,6 +107,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
@@ -266,8 +264,6 @@ public abstract class CollectionBinder {
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
-		final var hibernateCascade = memberDetails.getAnnotationUsage( Cascade.class, modelsContext );
-
 		collectionBinder.setElementColumns( elementColumns(
 				propertyHolder,
 				nullability,
@@ -310,8 +306,7 @@ public abstract class CollectionBinder {
 						oneToManyAnn,
 						manyToManyAnn,
 						elementCollectionAnn,
-						collectionBinder,
-						hibernateCascade
+						collectionBinder
 				)
 		);
 
@@ -325,26 +320,27 @@ public abstract class CollectionBinder {
 			final HashMap<String, IdentifierGeneratorDefinition> availableGenerators = new HashMap<>();
 			visitIdGeneratorDefinitions(
 					memberDetails.getDeclaringType(),
-					definition -> {
-						if ( !definition.getName().isEmpty() ) {
-							availableGenerators.put( definition.getName(), definition );
-						}
-					},
+					definition -> addDefinition( definition, availableGenerators ),
 					context
 			);
 			visitIdGeneratorDefinitions(
 					memberDetails,
-					definition -> {
-						if ( !definition.getName().isEmpty() ) {
-							availableGenerators.put( definition.getName(), definition );
-						}
-					},
+					definition -> addDefinition( definition, availableGenerators ),
 					context
 			);
 			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
 		collectionBinder.bind();
+	}
+
+	private static void addDefinition(
+			IdentifierGeneratorDefinition definition,
+			Map<String, IdentifierGeneratorDefinition> availableGenerators) {
+		final String definitionName = definition.getName();
+		if ( !definitionName.isEmpty() ) {
+			availableGenerators.put( definitionName, definition );
+		}
 	}
 
 	private static NotFoundAction notFoundAction(
@@ -470,8 +466,7 @@ public abstract class CollectionBinder {
 			OneToMany oneToManyAnn,
 			ManyToMany manyToManyAnn,
 			ElementCollection elementCollectionAnn,
-			CollectionBinder collectionBinder,
-			Cascade hibernateCascade) {
+			CollectionBinder collectionBinder) {
 
 		//TODO enhance exception with @ManyToAny and @CollectionOfElements
 		if ( oneToManyAnn != null && manyToManyAnn != null ) {
@@ -488,10 +483,8 @@ public abstract class CollectionBinder {
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( oneToManyAnn.targetEntity() );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes(
-							oneToManyAnn.cascade(), hibernateCascade,
-							oneToManyAnn.orphanRemoval(), context
-					) );
+					aggregateCascadeTypes( oneToManyAnn.cascade(), property,
+							oneToManyAnn.orphanRemoval(), context ) );
 			collectionBinder.setOneToMany( true );
 		}
 		else if ( elementCollectionAnn != null ) {
@@ -508,14 +501,14 @@ public abstract class CollectionBinder {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( manyToManyAnn.targetEntity() );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( manyToManyAnn.cascade(), hibernateCascade, false, context ) );
+					aggregateCascadeTypes( manyToManyAnn.cascade(), property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else if ( property.hasDirectAnnotationUsage( ManyToAny.class ) ) {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( null, hibernateCascade, false, context ) );
+					aggregateCascadeTypes( null, property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {
@@ -562,18 +555,6 @@ public abstract class CollectionBinder {
 		else if ( property.hasDirectAnnotationUsage( Formula.class ) ) {
 			return buildFormulaFromAnnotation(
 					getOverridableAnnotation( property, Formula.class, context ),
-//					comment,
-					nullability,
-					propertyHolder,
-					virtualProperty,
-					entityBinder.getSecondaryTables(),
-					context
-			);
-		}
-		else if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
-			return buildColumnsFromAnnotations(
-					property.getDirectAnnotationUsage( Columns.class ).columns(),
-					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -1442,16 +1423,14 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleFetchProfileOverrides() {
-		property.forEachAnnotationUsage(
-				FetchProfileOverride.class, modelsContext(), (usage) -> {
-					getMetadataCollector().addSecondPass( new FetchSecondPass(
-							usage,
-							propertyHolder,
-							propertyName,
-							buildingContext
-					) );
-				}
-		);
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext(),
+				usage -> getMetadataCollector()
+						.addSecondPass( new FetchSecondPass(
+								usage,
+								propertyHolder,
+								propertyName,
+								buildingContext
+						) ) );
 	}
 
 	private void handleFetch() {
@@ -1661,11 +1640,8 @@ public abstract class CollectionBinder {
 		// for non-inverse one-to-many, with a not-null fk, add a backref!
 		final String entityName = oneToMany.getReferencedEntityName();
 		final var referencedEntity = collector.getEntityBinding( entityName );
-		final Backref backref = new Backref();
-		final String backrefName = '_' + foreignJoinColumns.getPropertyName()
-				+ '_' + foreignJoinColumns.getColumns().get( 0 ).getLogicalColumnName()
-				+ "Backref";
-		backref.setName( backrefName );
+		final var backref = new Backref();
+		backref.setName( backrefName() );
 		backref.setOptional( true );
 		backref.setUpdatable( false );
 		backref.setSelectable( false );
@@ -1673,6 +1649,12 @@ public abstract class CollectionBinder {
 		backref.setEntityName( collection.getOwner().getEntityName() );
 		backref.setValue( collection.getKey() );
 		referencedEntity.addProperty( backref );
+	}
+
+	private String backrefName() {
+		return '_' + foreignJoinColumns.getPropertyName()
+			+ '_' + foreignJoinColumns.getColumns().get( 0 ).getLogicalColumnName()
+			+ "Backref";
 	}
 
 	private void handleJpaOrderBy(Collection collection, PersistentClass associatedClass) {
@@ -1977,88 +1959,43 @@ public abstract class CollectionBinder {
 		final var key = new DependantValue( buildingContext, collection.getCollectionTable(), keyValue );
 		key.setTypeName( null );
 		joinColumns.checkPropertyConsistency();
-		final var columns = joinColumns.getColumns();
-		key.setNullable( columns.isEmpty() || columns.get( 0 ).isNullable() );
-		key.setUpdateable( columns.isEmpty() || columns.get( 0 ).isUpdatable() );
+		setCollectionKeyNullableUpdatable( joinColumns, key );
 		key.setOnDeleteAction( onDeleteAction );
 		collection.setKey( key );
 
 		if ( property != null ) {
-			final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
-			if ( collectionTable != null ) {
+			if ( property.hasDirectAnnotationUsage( CollectionTable.class ) ) {
+				final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
 				final var foreignKey = collectionTable.foreignKey();
-				final var constraintMode = foreignKey.value();
-				if ( constraintMode == NO_CONSTRAINT
-						|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault ) {
-					key.disableForeignKey();
-				}
-				else {
-					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-					key.setForeignKeyOptions( foreignKey.options() );
-					if ( key.getForeignKeyName() == null
-							&& key.getForeignKeyDefinition() == null
-							&& collectionTable.joinColumns().length == 1 ) {
-						final var joinColumn = collectionTable.joinColumns()[0];
-						final var nestedForeignKey = joinColumn.foreignKey();
-						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
-						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
-						key.setForeignKeyOptions( nestedForeignKey.options() );
-					}
-				}
+				handleForeignKey( collectionTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
+			}
+			else if ( property.hasDirectAnnotationUsage( JoinTable.class ) ) {
+				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
+				final var foreignKey = joinTable.foreignKey();
+				handleForeignKey( joinTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
 			}
 			else {
-				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
-				if ( joinTable != null ) {
-					final var foreignKey = joinTable.foreignKey();
-					String foreignKeyName = foreignKey.name();
-					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
-					String foreignKeyOptions = foreignKey.options();
-					ConstraintMode foreignKeyValue = foreignKey.value();
-					final var joinColumnAnnotations = joinTable.joinColumns();
-					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
-						final var joinColumnAnn = joinColumnAnnotations[0];
-						final var joinColumnForeignKey = joinColumnAnn.foreignKey();
-						if ( foreignKeyName.isBlank() ) {
-							foreignKeyName = joinColumnForeignKey.name();
-							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
-							foreignKeyOptions = joinColumnForeignKey.options();
-						}
-						if ( foreignKeyValue != NO_CONSTRAINT ) {
-							foreignKeyValue = joinColumnForeignKey.value();
-						}
-					}
-					if ( foreignKeyValue == NO_CONSTRAINT
-							|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+				final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
+				final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
+				if ( foreignKey != null ) {
+					handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
+				}
+				else {
+					final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
+					final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
+					if ( oneToMany != null
+							&& !oneToMany.mappedBy().isBlank()
+							&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
+						// foreign key should be up to @ManyToOne side
+						// @OnDelete generate "on delete cascade" foreign key
 						key.disableForeignKey();
 					}
 					else {
-						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
-						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
-						key.setForeignKeyOptions( foreignKeyOptions );
-					}
-				}
-				else {
-					final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
-					final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
-					if ( foreignKey != null ) {
-						handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
-					}
-					else {
-						final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
-						final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
-						if ( oneToMany != null
-								&& !oneToMany.mappedBy().isBlank()
-								&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
-							// foreign key should be up to @ManyToOne side
-							// @OnDelete generate "on delete cascade" foreign key
-							key.disableForeignKey();
-						}
-						else {
-							final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-							if ( joinColumn != null ) {
-								handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
-							}
+						final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
+						if ( joinColumn != null ) {
+							handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
 						}
 					}
 				}
@@ -2066,6 +2003,56 @@ public abstract class CollectionBinder {
 		}
 
 		return key;
+	}
+
+	private static void setCollectionKeyNullableUpdatable(AnnotatedJoinColumns joinColumns, DependantValue key) {
+		final var columns = joinColumns.getColumns();
+		if ( columns.isEmpty() ) {
+			key.setNullable( true );
+			key.setUpdateable( true );
+		}
+		else {
+			for ( var column : columns ) {
+				if ( !column.isFormula() ) {
+					key.setNullable( column.isNullable() );
+					key.setUpdateable( column.isUpdatable() );
+					return;
+				}
+			}
+			key.setNullable( true );
+			key.setUpdateable( false );
+		}
+	}
+
+	private static void handleForeignKey(
+			JoinColumn[] joinColumnAnnotations,
+			String foreignKeyName,
+			String foreignKeyDefinition,
+			String foreignKeyOptions,
+			ConstraintMode foreignKeyValue,
+			boolean noConstraintByDefault,
+			DependantValue key) {
+		if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
+			final var joinColumn = joinColumnAnnotations[0];
+			final var nestedForeignKey = joinColumn.foreignKey();
+			if ( foreignKeyName.isBlank() ) {
+				foreignKeyName = nestedForeignKey.name();
+				foreignKeyDefinition = nestedForeignKey.foreignKeyDefinition();
+				foreignKeyOptions = nestedForeignKey.options();
+			}
+			if ( foreignKeyValue != NO_CONSTRAINT ) {
+				foreignKeyValue = nestedForeignKey.value();
+			}
+		}
+		if ( foreignKeyValue == NO_CONSTRAINT
+			|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+			key.disableForeignKey();
+		}
+		else {
+			key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
+			key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+			key.setForeignKeyOptions( foreignKeyOptions );
+		}
 	}
 
 	private static void handleForeignKeyConstraint(
@@ -2568,7 +2555,7 @@ public abstract class CollectionBinder {
 
 	static String targetEntityMessage(TypeDetails elementType) {
 		final String problem =
-				elementType.determineRawClass().hasDirectAnnotationUsage( Entity.class )
+				isEntity( elementType.determineRawClass() )
 						? " which does not belong to the same persistence unit"
 						: " which is not an '@Entity' type";
 		return " targets the type '" + elementType.getName() + "'" + problem;
@@ -2760,9 +2747,9 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final var mappedByProperty = targetEntity.getRecursiveProperty( mappedBy );
-		final var firstColumn = joinColumns.getJoinColumns().get( 0 );
-		for ( var selectable : mappedByColumns( targetEntity, mappedByProperty ) ) {
-			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value );
+		final var firstColumn = joinColumns.getJoinColumns().get(0);
+		for ( var selectable: mappedByColumns( targetEntity, mappedByProperty ) ) {
+			firstColumn.linkValueUsingCopy( selectable, value );
 		}
 		final var manyToOne = (ManyToOne) value;
 		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );

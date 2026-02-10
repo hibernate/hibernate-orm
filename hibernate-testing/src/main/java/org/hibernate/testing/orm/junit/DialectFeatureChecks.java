@@ -7,6 +7,7 @@ package org.hibernate.testing.orm.junit;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -47,6 +48,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -121,6 +123,7 @@ import java.util.function.Supplier;
  *
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ * @author Yoobin Yoon
  */
 abstract public class DialectFeatureChecks {
 	public static class SupportsSequences implements DialectFeatureCheck {
@@ -204,6 +207,13 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsResultSetPositioningOnForwardOnlyCursorCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsResultSetPositionQueryMethodsOnForwardOnlyCursor();
+		}
+	}
+
+	public static class SupportsConcurrentTransactions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// Currently Spanner Emulator doesn't allow concurrent modifications
+			return !(dialect instanceof SpannerPostgreSQLDialect);
 		}
 	}
 
@@ -317,6 +327,13 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect.getLockingSupport().getConnectionLockTimeoutStrategy().getSupportedLevel()
 				!= ConnectionLockTimeoutStrategy.Level.NONE;
+		}
+	}
+
+	public static class SupportsBackwardsScrollableResultSets implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.defaultScrollMode() != ScrollMode.FORWARD_ONLY;
 		}
 	}
 
@@ -965,7 +982,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsUnnest implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return definesSetReturningFunction( dialect, "unnest" );
+			return definesSetReturningFunction( dialect, "unnest" ) && !(dialect instanceof TiDBDialect);
 		}
 	}
 
@@ -977,7 +994,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJsonTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return definesSetReturningFunction( dialect, "json_table" );
+			return definesSetReturningFunction( dialect, "json_table" ) && !(dialect instanceof TiDBDialect);
 		}
 	}
 
@@ -1107,9 +1124,27 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsArrayReverse implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_reverse" );
+		}
+	}
+
+	public static class SupportsArraySort implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_sort" );
+		}
+	}
+
 	public static class SupportsRegexpLike implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "regexp_like" );
+		}
+	}
+
+	public static class SupportsIntervalSecondType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.INTERVAL_SECOND );
 		}
 	}
 
@@ -1282,8 +1317,9 @@ abstract public class DialectFeatureChecks {
 	}
 
 	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
+		@Override
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DerbyDialect );
+			return !(dialect instanceof DerbyDialect);
 		}
 	}
 
@@ -1562,7 +1598,8 @@ abstract public class DialectFeatureChecks {
 				String name,
 				String subselect,
 				boolean isAbstract,
-				MetadataBuildingContext buildingContext) {
+				MetadataBuildingContext buildingContext,
+				boolean isExplicit) {
 			return null;
 		}
 

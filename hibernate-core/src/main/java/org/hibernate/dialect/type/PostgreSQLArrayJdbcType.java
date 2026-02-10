@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -31,62 +30,66 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		@SuppressWarnings("unchecked")
-		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
-		final ValueBinder<X> elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
-		return new BasicBinder<>( javaTypeDescriptor, this ) {
+		return new Binder<>( javaTypeDescriptor,
+				(BasicPluralJavaType<?>) javaTypeDescriptor );
+	}
 
-			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setArray( index, getArray( value, options ) );
+	private class Binder<X,E> extends BasicBinder<X> {
+		private final BasicPluralJavaType<E> pluralJavaType;
+
+		private Binder(JavaType<X> javaType, BasicPluralJavaType<E> pluralJavaType) {
+			super( javaType, PostgreSQLArrayJdbcType.this );
+			this.pluralJavaType = pluralJavaType;
+		}
+
+		@Override
+		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			st.setArray( index, getArray( value, options ) );
+		}
+
+		@Override
+		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+				throws SQLException {
+			final java.sql.Array arr = getArray( value, options );
+			try {
+				st.setObject( name, arr, java.sql.Types.ARRAY );
 			}
-
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				final java.sql.Array arr = getArray( value, options );
-				try {
-					st.setObject( name, arr, java.sql.Types.ARRAY );
-				}
-				catch (SQLException ex) {
-					throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
-				}
+			catch (SQLException ex) {
+				throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
 			}
+		}
 
-			@Override
-			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
-				return ( (PostgreSQLArrayJdbcType) getJdbcType() ).getArray( this, elementBinder, value, options );
-			}
+		@Override
+		public Object[] getBindValue(X value, WrapperOptions options) throws SQLException {
+			final var elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
+			return convertToArray( this, elementBinder, pluralJavaType, value, options );
+		}
 
-			private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {
-				final PostgreSQLArrayJdbcType arrayJdbcType = (PostgreSQLArrayJdbcType) getJdbcType();
-				final Object[] objects;
+		private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {
+			final var session = options.getSession();
+			return session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+					.createArrayOf( getElementTypeName( getJavaType(), session ),
+							elements( value, options, PostgreSQLArrayJdbcType.this ) );
+		}
 
-				final JdbcType elementJdbcType = arrayJdbcType.getElementJdbcType();
-				if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
-					// The PostgreSQL JDBC driver does not support arrays of structs, which contain byte[]
-					final Object[] domainObjects = getJavaType().unwrap(
-							value,
-							Object[].class,
-							options
-					);
-					objects = new Object[domainObjects.length];
-					for ( int i = 0; i < domainObjects.length; i++ ) {
-						if ( domainObjects[i] != null ) {
-							objects[i] = aggregateJdbcType.createJdbcValue( domainObjects[i], options );
-						}
+		private Object[] elements(X value, WrapperOptions options, PostgreSQLArrayJdbcType arrayJdbcType)
+				throws SQLException {
+			final var elementJdbcType = arrayJdbcType.getElementJdbcType();
+			if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+				// The PostgreSQL JDBC driver does not support arrays of structs, which contain byte[]
+				final var domainObjects = getJavaType().unwrap( value, Object[].class, options );
+				final var objects = new Object[domainObjects.length];
+				for ( int i = 0; i < domainObjects.length; i++ ) {
+					if ( domainObjects[i] != null ) {
+						objects[i] = aggregateJdbcType.createJdbcValue( domainObjects[i], options );
 					}
 				}
-				else {
-					objects = arrayJdbcType.getArray( this, elementBinder, value, options );
-				}
-
-				final SharedSessionContractImplementor session = options.getSession();
-				final String typeName = arrayJdbcType.getElementTypeName( getJavaType(), session );
-				return session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
-						.createArrayOf( typeName, objects );
+				return objects;
 			}
-		};
+			else {
+				return getBindValue( value, options );
+			}
+		}
 	}
 
 	@Override

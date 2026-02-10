@@ -308,8 +308,8 @@ public abstract class AbstractDeleteCoordinator
 			applyLocking( version, null, mutationExecutor, session );
 		}
 
-		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-		bindPartitionColumnValueBindings( loadedState, session, jdbcValueBindings );
+		bindPartitionColumnValueBindings( loadedState, session,
+				mutationExecutor.getJdbcValueBindings() );
 
 		applyId( id, rowId, mutationExecutor, staticOperationGroup, session );
 	}

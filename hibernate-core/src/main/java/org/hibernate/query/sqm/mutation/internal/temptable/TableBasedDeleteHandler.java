@@ -6,29 +6,21 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.CacheableSqmInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
@@ -38,13 +30,10 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -55,7 +44,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -68,6 +56,16 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildColumnReferenceExpression;
+import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
+import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.visitCollectionTableDeletes;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createMatchingIdsIntoIdTableInsert;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithoutIdTableHelper.createIdMatchingSubQuerySpec;
 
 /**
 * @author Steve Ebersole
@@ -107,15 +105,13 @@ public class TableBasedDeleteHandler
 
 		this.sessionUidAccess = sessionUidAccess;
 
-		final TemporaryTableSessionUidColumn sessionUidColumn = idTable.getSessionUidColumn();
-		if ( sessionUidColumn == null ) {
-			this.sessionUidParameter = null;
-		}
-		else {
-			this.sessionUidParameter = new SqlTypedMappingJdbcParameter( sessionUidColumn );
-		}
+		final var sessionUidColumn = idTable.getSessionUidColumn();
+		this.sessionUidParameter =
+				sessionUidColumn == null
+						? null
+						: new SqlTypedMappingJdbcParameter( sessionUidColumn );
 
-		final MultiTableSqmMutationConverter converter = new MultiTableSqmMutationConverter(
+		final var converter = new MultiTableSqmMutationConverter(
 				getEntityDescriptor(),
 				sqmDelete,
 				sqmDelete.getTarget(),
@@ -126,14 +122,14 @@ public class TableBasedDeleteHandler
 				getSessionFactory().getSqlTranslationEngine()
 		);
 
-		final EntityPersister entityDescriptor =
+		final var entityDescriptor =
 				getSessionFactory().getMappingMetamodel()
 						.getEntityDescriptor( sqmDelete.getTarget().getEntityName() );
 		final String hierarchyRootTableName = entityDescriptor.getTableName();
 
-		final TableGroup deletingTableGroup = converter.getMutatingTableGroup();
+		final var deletingTableGroup = converter.getMutatingTableGroup();
 
-		final TableReference hierarchyRootTableReference = deletingTableGroup.resolveTableReference(
+		final var hierarchyRootTableReference = deletingTableGroup.resolveTableReference(
 				deletingTableGroup.getNavigablePath(),
 				hierarchyRootTableName
 		);
@@ -144,9 +140,9 @@ public class TableBasedDeleteHandler
 		//		2) we also inspect each ColumnReference that is part of the where-clause to see which
 		//			table it comes from.  if all of the referenced columns (if any at all) are from the root table
 		//			we can perform all of the deletes without using an id-table
-		final Predicate specifiedRestriction = converter.visitWhereClause( sqmDelete.getWhereClause() );
+		final var specifiedRestriction = converter.visitWhereClause( sqmDelete.getWhereClause() );
 
-		final PredicateCollector predicateCollector = new PredicateCollector( specifiedRestriction );
+		final var predicateCollector = new PredicateCollector( specifiedRestriction );
 		entityDescriptor.applyBaseRestrictions(
 				predicateCollector,
 				deletingTableGroup,
@@ -158,7 +154,7 @@ public class TableBasedDeleteHandler
 		);
 
 		converter.pruneTableGroupJoins();
-		final ColumnReferenceCheckingSqlAstWalker walker = new ColumnReferenceCheckingSqlAstWalker(
+		final var walker = new ColumnReferenceCheckingSqlAstWalker(
 				hierarchyRootTableReference.getIdentificationVariable()
 		);
 		if ( predicateCollector.getPredicate() != null ) {
@@ -169,16 +165,17 @@ public class TableBasedDeleteHandler
 		// The intermediate table has a FK to the root table, so we can't delete from the root table first
 		// Deleting from the intermediate table first also isn't possible,
 		// because that is the source for deletion in other tables, hence we need an id table
-		final boolean needsIdTable = !walker.isAllColumnReferencesFromIdentificationVariable()
-									|| entityDescriptor != entityDescriptor.getRootEntityDescriptor();
+		final boolean needsIdTable =
+				!walker.isAllColumnReferencesFromIdentificationVariable()
+						|| entityDescriptor != entityDescriptor.getRootEntityDescriptor();
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
+		final var executionContextAdapter = omittingLockingAndPaging( context );
 
 		this.domainParameterXref = domainParameterXref;
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, converter );
 		this.resolvedParameterMappingModelTypes = converter.getSqmParameterMappingModelExpressibleResolutions();
 
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -200,50 +197,53 @@ public class TableBasedDeleteHandler
 			);
 		}
 
-		this.idTableInsert = !needsIdTable ? null : ExecuteWithTemporaryTableHelper.createMatchingIdsIntoIdTableInsert(
-				converter,
-				predicateCollector.getPredicate(),
-				idTable,
-				sessionUidParameter,
-				jdbcParameterBindings,
-				executionContextAdapter
-		);
+		this.idTableInsert =
+				!needsIdTable
+						? null
+						: createMatchingIdsIntoIdTableInsert(
+								converter,
+								predicateCollector.getPredicate(),
+								idTable,
+								sessionUidParameter,
+								jdbcParameterBindings,
+								executionContextAdapter
+						);
 
 		final ArrayList<JdbcOperationQueryMutation> deletes = new ArrayList<>();
 		final ArrayList<JdbcOperationQueryMutation> collectionTableDeletes = new ArrayList<>();
 		if ( needsIdTable ) {
-			final QuerySpec idTableIdentifierSubQuery = ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec(
+			final var idTableIdentifierSubQuery = createIdTableSelectQuerySpec(
 					idTable,
 					sessionUidParameter,
 					getEntityDescriptor(),
 					executionContextAdapter
 			);
 
-			SqmMutationStrategyHelper.visitCollectionTableDeletes(
+			visitCollectionTableDeletes(
 					getEntityDescriptor(),
 					(tableReference, attributeMapping) -> {
-						final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+						final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
 						final QuerySpec idTableFkSubQuery;
-						if ( fkDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
+						if ( foreignKeyDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
 							idTableFkSubQuery = idTableIdentifierSubQuery;
 						}
 						else {
-							idTableFkSubQuery = ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec(
+							idTableFkSubQuery = createIdTableSelectQuerySpec(
 									idTable,
-									fkDescriptor.getTargetPart(),
+									foreignKeyDescriptor.getTargetPart(),
 									sessionUidParameter,
 									getEntityDescriptor(),
 									executionContextAdapter
 							);
 						}
 						return new InSubQueryPredicate(
-								MappingModelCreationHelper.buildColumnReferenceExpression(
+								buildColumnReferenceExpression(
 										new MutatingTableReferenceGroupWrapper(
 												new NavigablePath( attributeMapping.getRootPathName() ),
 												attributeMapping,
 												(NamedTableReference) tableReference
 										),
-										fkDescriptor,
+										foreignKeyDescriptor,
 										null,
 										getSessionFactory()
 								),
@@ -258,23 +258,26 @@ public class TableBasedDeleteHandler
 			);
 
 			getEntityDescriptor().visitConstraintOrderedTables(
-					(tableExpression, tableKeyColumnVisitationSupplier) -> deletes.add( createTableDeleteUsingIdTable(
-							tableExpression,
-							tableKeyColumnVisitationSupplier,
-							idTableIdentifierSubQuery,
-							executionContextAdapter
-					) )
+					(tableExpression, tableKeyColumnVisitationSupplier) ->
+							deletes.add( createTableDeleteUsingIdTable(
+									tableExpression,
+									tableKeyColumnVisitationSupplier,
+									idTableIdentifierSubQuery,
+									executionContextAdapter
+							) )
 			);
 		}
 		else {
-			final EntityPersister rootEntityPersister = getEntityDescriptor().getEntityPersister();
+			final var rootEntityPersister = getEntityDescriptor().getEntityPersister();
 			final String rootTableName = rootEntityPersister.getTableName();
-			final NamedTableReference rootTableReference = (NamedTableReference) deletingTableGroup.resolveTableReference(
-					deletingTableGroup.getNavigablePath(),
-					rootTableName
-			);
+			final var rootTableReference =
+					(NamedTableReference)
+							deletingTableGroup.resolveTableReference(
+									deletingTableGroup.getNavigablePath(),
+									rootTableName
+							);
 
-			final QuerySpec matchingIdSubQuerySpec = ExecuteWithoutIdTableHelper.createIdMatchingSubQuerySpec(
+			final var matchingIdSubQuerySpec = createIdMatchingSubQuerySpec(
 					deletingTableGroup.getNavigablePath(),
 					rootTableReference,
 					predicateCollector.getPredicate(),
@@ -283,21 +286,21 @@ public class TableBasedDeleteHandler
 					getSessionFactory()
 			);
 
-			SqmMutationStrategyHelper.visitCollectionTableDeletes(
+			visitCollectionTableDeletes(
 					getEntityDescriptor(),
 					(tableReference, attributeMapping) -> {
 						// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
 						if ( predicateCollector.getPredicate() == null ) {
 							return null;
 						}
-						final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+						final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
 						final QuerySpec idSelectFkSubQuery;
 						// todo (6.0): based on the location of the attribute mapping, we could prune the table group of the subquery
-						if ( fkDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
+						if ( foreignKeyDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
 							idSelectFkSubQuery = matchingIdSubQuerySpec;
 						}
 						else {
-							idSelectFkSubQuery = ExecuteWithoutIdTableHelper.createIdMatchingSubQuerySpec(
+							idSelectFkSubQuery = createIdMatchingSubQuerySpec(
 									deletingTableGroup.getNavigablePath(),
 									rootTableReference,
 									predicateCollector.getPredicate(),
@@ -307,13 +310,13 @@ public class TableBasedDeleteHandler
 							);
 						}
 						return new InSubQueryPredicate(
-								MappingModelCreationHelper.buildColumnReferenceExpression(
+								buildColumnReferenceExpression(
 										new MutatingTableReferenceGroupWrapper(
 												new NavigablePath( attributeMapping.getRootPathName() ),
 												attributeMapping,
 												(NamedTableReference) tableReference
 										),
-										fkDescriptor,
+										foreignKeyDescriptor,
 										null,
 										getSessionFactory()
 								),
@@ -330,24 +333,17 @@ public class TableBasedDeleteHandler
 			if ( rootTableReference instanceof UnionTableReference ) {
 				getEntityDescriptor().visitConstraintOrderedTables(
 						(tableExpression, tableKeyColumnVisitationSupplier) -> {
-							final NamedTableReference tableReference = new NamedTableReference(
-									tableExpression,
-									deletingTableGroup.getPrimaryTableReference().getIdentificationVariable()
-							);
-							final QuerySpec idMatchingSubQuerySpec;
-							// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
-							if ( predicateCollector.getPredicate() == null ) {
-								idMatchingSubQuerySpec = null;
-							}
-							else {
-								idMatchingSubQuerySpec = matchingIdSubQuerySpec;
-							}
 							deletes.add( createNonRootTableDeleteWithoutIdTable(
-									tableReference,
+									new NamedTableReference( tableExpression,
+											deletingTableGroup.getPrimaryTableReference()
+													.getIdentificationVariable() ),
 									tableKeyColumnVisitationSupplier,
 									converter.getSqlExpressionResolver(),
-									deletingTableGroup,
-									idMatchingSubQuerySpec,
+									predicateCollector.getPredicate() == null
+											// No need for a predicate if there is no supplied predicate
+											// i.e. this is a full cleanup
+											? null
+											: matchingIdSubQuerySpec,
 									jdbcParameterBindings,
 									executionContextAdapter
 							) );
@@ -358,25 +354,22 @@ public class TableBasedDeleteHandler
 				getEntityDescriptor().visitConstraintOrderedTables(
 						(tableExpression, tableKeyColumnVisitationSupplier) -> {
 							if ( !tableExpression.equals( rootTableName ) ) {
-								final NamedTableReference tableReference = (NamedTableReference) deletingTableGroup.getTableReference(
-										deletingTableGroup.getNavigablePath(),
-										tableExpression,
-										true
-								);
-								final QuerySpec idMatchingSubQuerySpec;
-								// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
-								if ( predicateCollector.getPredicate() == null ) {
-									idMatchingSubQuerySpec = null;
-								}
-								else {
-									idMatchingSubQuerySpec = matchingIdSubQuerySpec;
-								}
+								final var tableReference =
+										(NamedTableReference)
+												deletingTableGroup.getTableReference(
+														deletingTableGroup.getNavigablePath(),
+														tableExpression,
+														true
+												);
 								deletes.add( createNonRootTableDeleteWithoutIdTable(
 										tableReference,
 										tableKeyColumnVisitationSupplier,
 										converter.getSqlExpressionResolver(),
-										deletingTableGroup,
-										idMatchingSubQuerySpec,
+										predicateCollector.getPredicate() == null
+												// No need for a predicate if there is no supplied predicate
+												// i.e. this is a full cleanup
+												? null
+												: matchingIdSubQuerySpec,
 										jdbcParameterBindings,
 										executionContextAdapter
 								) );
@@ -402,41 +395,27 @@ public class TableBasedDeleteHandler
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
-		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
-		final NamedTableReference targetTable = new NamedTableReference(
-				tableExpression,
-				DeleteStatement.DEFAULT_ALIAS,
-				true
-		);
-
+		final var keyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
+		final var targetTable =
+				new NamedTableReference( tableExpression, DeleteStatement.DEFAULT_ALIAS, true );
 		tableKeyColumnVisitationSupplier.get().accept(
 				(columnIndex, selection) -> {
 					assert selection.getContainingTableExpression().equals( tableExpression );
 					assert ! selection.isFormula();
 					assert selection.getCustomReadExpression() == null;
 					assert selection.getCustomWriteExpression() == null;
-
-					keyColumnCollector.apply(
-							new ColumnReference(
-									targetTable,
-									selection
-							)
-					);
+					keyColumnCollector.apply( new ColumnReference( targetTable, selection ) );
 				}
 		);
 
-		final InSubQueryPredicate predicate = new InSubQueryPredicate(
+		final var predicate = new InSubQueryPredicate(
 				keyColumnCollector.buildKeyExpression(),
 				idTableSubQuery,
 				false
 		);
 
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
+		final var factory = executionContext.getSession().getFactory();
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildMutationTranslator( factory, new DeleteStatement( targetTable, predicate ) )
 				.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() );
 	}
@@ -447,13 +426,8 @@ public class TableBasedDeleteHandler
 			Predicate predicate,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
-
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
+		final var factory = executionContext.getSession().getFactory();
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildMutationTranslator( factory, new DeleteStatement( rootTableReference, predicate ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
@@ -462,20 +436,33 @@ public class TableBasedDeleteHandler
 			NamedTableReference targetTableReference,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
-			TableGroup rootTableGroup,
 			QuerySpec matchingIdSubQuerySpec,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		assert targetTableReference != null;
+		final var deleteTableReference =
+				new NamedTableReference(
+						targetTableReference.getTableExpression(),
+						DeleteStatement.DEFAULT_ALIAS,
+						true
+				);
+		final var sqlAstDelete =
+				new DeleteStatement( deleteTableReference,
+						tableDeletePredicate( tableKeyColumnVisitationSupplier, sqlExpressionResolver,
+								matchingIdSubQuerySpec, deleteTableReference ) );
+		final var factory = executionContext.getSession().getFactory();
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildMutationTranslator( factory, sqlAstDelete )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+	}
 
-		final NamedTableReference deleteTableReference = new NamedTableReference(
-				targetTableReference.getTableExpression(),
-				DeleteStatement.DEFAULT_ALIAS,
-				true
-		);
-		final Predicate tableDeletePredicate;
+	private @Nullable Predicate tableDeletePredicate(
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
+			SqlExpressionResolver sqlExpressionResolver,
+			QuerySpec matchingIdSubQuerySpec,
+			NamedTableReference deleteTableReference) {
 		if ( matchingIdSubQuerySpec == null ) {
-			tableDeletePredicate = null;
+			return null;
 		}
 		else {
 			/*
@@ -493,45 +480,25 @@ public class TableBasedDeleteHandler
 			tableKeyColumnVisitationSupplier.get().accept(
 					(columnIndex, selection) -> {
 						assert deleteTableReference.getTableReference( selection.getContainingTableExpression() ) != null;
-
-						final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-								deleteTableReference,
-								selection
-						);
-
+						final var expression =
+								sqlExpressionResolver.resolveSqlExpression( deleteTableReference, selection );
 						deletingTableColumnRefs.add( (ColumnReference) expression );
 					}
 			);
 
-			final Expression deletingTableColumnRefsExpression;
-			if ( deletingTableColumnRefs.size() == 1 ) {
-				deletingTableColumnRefsExpression = deletingTableColumnRefs.get( 0 );
-			}
-			else {
-				deletingTableColumnRefsExpression = new SqlTuple( deletingTableColumnRefs, getEntityDescriptor().getIdentifierMapping() );
-			}
-
-			tableDeletePredicate = new InSubQueryPredicate(
-					deletingTableColumnRefsExpression,
+			return new InSubQueryPredicate(
+					deletingTableColumnRefs.size() == 1
+							? deletingTableColumnRefs.get( 0 )
+							: new SqlTuple( deletingTableColumnRefs, getEntityDescriptor().getIdentifierMapping() ),
 					matchingIdSubQuerySpec,
 					false
 			);
 		}
-
-		final DeleteStatement sqlAstDelete = new DeleteStatement( deleteTableReference, tableDeletePredicate );
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, sqlAstDelete )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
 	@Override
 	public JdbcParameterBindings createJdbcParameterBindings(DomainQueryExecutionContext context) {
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		final var jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				context.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
@@ -561,12 +528,12 @@ public class TableBasedDeleteHandler
 		if ( idTableInsert != null && idTableInsert.jdbcOperation().dependsOnParameterBindings() ) {
 			return true;
 		}
-		for ( JdbcOperationQueryMutation delete : deletes ) {
+		for ( var delete : deletes ) {
 			if ( delete.dependsOnParameterBindings() ) {
 				return true;
 			}
 		}
-		for ( JdbcOperationQueryMutation delete : collectionTableDeletes ) {
+		for ( var delete : collectionTableDeletes ) {
 			if ( delete.dependsOnParameterBindings() ) {
 				return true;
 			}
@@ -580,12 +547,12 @@ public class TableBasedDeleteHandler
 			&& !idTableInsert.jdbcOperation().isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 			return false;
 		}
-		for ( JdbcOperationQueryMutation delete : deletes ) {
+		for ( var delete : deletes ) {
 			if ( !delete.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				return false;
 			}
 		}
-		for ( JdbcOperationQueryMutation delete : collectionTableDeletes ) {
+		for ( var delete : collectionTableDeletes ) {
 			if ( !delete.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				return false;
 			}
@@ -601,21 +568,21 @@ public class TableBasedDeleteHandler
 					getSqmStatement().getTarget().getModel().getName()
 			);
 		}
-		final SqmJdbcExecutionContextAdapter executionContext = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( context );
+		final var executionContext = omittingLockingAndPaging( context );
 		if ( idTableInsert != null ) {
-			ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
+			performBeforeTemporaryTableUseActions(
 					idTable,
 					temporaryTableStrategy,
 					executionContext
 			);
 
 			try {
-				final int rows = ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable(
+				final int rows = saveIntoTemporaryTable(
 						idTableInsert.jdbcOperation(),
 						jdbcParameterBindings,
 						executionContext
 				);
-				final JdbcParameterBindings sessionUidBindings = new JdbcParameterBindingsImpl( 1 );
+				final var sessionUidBindings = new JdbcParameterBindingsImpl( 1 );
 				if ( sessionUidParameter != null ) {
 					sessionUidBindings.addBinding(
 							sessionUidParameter,
@@ -625,9 +592,10 @@ public class TableBasedDeleteHandler
 							)
 					);
 				}
-				final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-				final JdbcMutationExecutor jdbcMutationExecutor = factory.getJdbcServices().getJdbcMutationExecutor();
-				for ( JdbcOperationQueryMutation delete : collectionTableDeletes ) {
+				final var jdbcMutationExecutor =
+						executionContext.getSession().getFactory()
+								.getJdbcServices().getJdbcMutationExecutor();
+				for ( var delete : collectionTableDeletes ) {
 					jdbcMutationExecutor.execute(
 							delete,
 							sessionUidBindings,
@@ -639,7 +607,7 @@ public class TableBasedDeleteHandler
 							executionContext
 					);
 				}
-				for ( JdbcOperationQueryMutation delete : deletes ) {
+				for ( var delete : deletes ) {
 					jdbcMutationExecutor.execute(
 							delete,
 							sessionUidBindings,
@@ -654,7 +622,7 @@ public class TableBasedDeleteHandler
 				return rows;
 			}
 			finally {
-				ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
+				performAfterTemporaryTableUseActions(
 						idTable,
 						sessionUidAccess,
 						getAfterUseAction(),
@@ -663,16 +631,15 @@ public class TableBasedDeleteHandler
 			}
 		}
 		else {
-			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-			final JdbcMutationExecutor jdbcMutationExecutor = factory.getJdbcServices().getJdbcMutationExecutor();
-			for ( JdbcOperationQueryMutation delete : collectionTableDeletes ) {
+			final var jdbcMutationExecutor =
+					executionContext.getSession().getFactory()
+							.getJdbcServices().getJdbcMutationExecutor();
+			for ( var delete : collectionTableDeletes ) {
 				jdbcMutationExecutor.execute(
 						delete,
 						jdbcParameterBindings,
-						sql -> executionContext.getSession()
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( sql ),
+						sql -> executionContext.getSession().getJdbcCoordinator()
+								.getStatementPreparer().prepareStatement( sql ),
 						(integer, preparedStatement) -> {},
 						executionContext
 				);
@@ -680,14 +647,12 @@ public class TableBasedDeleteHandler
 
 			if ( getEntityDescriptor() instanceof UnionSubclassEntityPersister ) {
 				int rows = 0;
-				for ( JdbcOperationQueryMutation delete : deletes ) {
+				for ( var delete : deletes ) {
 					rows += jdbcMutationExecutor.execute(
 							delete,
 							jdbcParameterBindings,
-							sql -> executionContext.getSession()
-									.getJdbcCoordinator()
-									.getStatementPreparer()
-									.prepareStatement( sql ),
+							sql -> executionContext.getSession().getJdbcCoordinator()
+									.getStatementPreparer().prepareStatement( sql ),
 							(integer, preparedStatement) -> {},
 							executionContext
 					);
@@ -696,14 +661,12 @@ public class TableBasedDeleteHandler
 			}
 			else {
 				int rows = 0;
-				for ( JdbcOperationQueryMutation delete : deletes ) {
+				for ( var delete : deletes ) {
 					rows = jdbcMutationExecutor.execute(
 							delete,
 							jdbcParameterBindings,
-							sql -> executionContext.getSession()
-									.getJdbcCoordinator()
-									.getStatementPreparer()
-									.prepareStatement( sql ),
+							sql -> executionContext.getSession().getJdbcCoordinator()
+									.getStatementPreparer().prepareStatement( sql ),
 							(integer, preparedStatement) -> {},
 							executionContext
 					);

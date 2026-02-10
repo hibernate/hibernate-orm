@@ -100,7 +100,7 @@ public class TableGroupJoin implements TableJoin, PredicateContainer, DomainResu
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return getJoinedGroup().createDomainResult( resultVariable, creationState );

@@ -15,7 +15,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -36,6 +35,7 @@ import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getSelectablePath;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 
 /**
  * Represents the "type" of an any-valued mapping
@@ -52,11 +52,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			Any bootValueMapping,
 			MappingModelCreationProcess creationProcess) {
 
-		final var dialect = creationProcess.getCreationContext().getDialect();
-		final String tableName = MappingModelCreationHelper.getTableIdentifierExpression(
-				bootValueMapping.getTable(),
-				creationProcess
-		);
+		final var creationContext = creationProcess.getCreationContext();
+		final var sessionFactory = creationContext.getSessionFactory();
+		final var dialect = creationContext.getDialect();
+		final String tableName =
+				getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
 
 		assert bootValueMapping.getColumnSpan() == 2;
 		final var columnIterator = bootValueMapping.getSelectables().iterator();
@@ -70,7 +70,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		assert !keySelectable.isFormula();
 		final var metaColumn = (Column) metaSelectable;
 		final var keyColumn = (Column) keySelectable;
-		final SelectablePath parentSelectablePath =
+		final var parentSelectablePath =
 				declaringModelPart.asAttributeMapping() != null
 						? getSelectablePath( declaringModelPart.asAttributeMapping().getDeclaringType() )
 						: null;
@@ -81,7 +81,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				declaringModelPart,
 				tableName,
 				metaColumn.getText( dialect ),
-				parentSelectablePath != null ? parentSelectablePath.append( metaColumn.getQuotedName( dialect ) )
+				parentSelectablePath != null
+						? parentSelectablePath.append( metaColumn.getQuotedName( dialect ) )
 						: new SelectablePath( metaColumn.getQuotedName( dialect ) ),
 				metaColumn.getCustomReadExpression(),
 				metaColumn.getCustomWriteExpression(),
@@ -96,7 +97,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
 				metaType.getImplicitValueStrategy(),
-				creationProcess.getCreationContext().getSessionFactory().getMappingMetamodel()
+				sessionFactory.getMappingMetamodel()
 		);
 
 
@@ -106,7 +107,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				declaringModelPart,
 				tableName,
 				keyColumn.getText( dialect ),
-				parentSelectablePath != null ? parentSelectablePath.append( keyColumn.getQuotedName( dialect ) )
+				parentSelectablePath != null
+						? parentSelectablePath.append( keyColumn.getQuotedName( dialect ) )
 						: new SelectablePath( keyColumn.getQuotedName( dialect ) ),
 				keyColumn.getCustomReadExpression(),
 				keyColumn.getCustomWriteExpression(),
@@ -130,7 +132,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isLazy()
 						? FetchTiming.DELAYED
 						: FetchTiming.IMMEDIATE,
-				creationProcess.getCreationContext().getSessionFactory()
+				sessionFactory
 		);
 	}
 
@@ -169,12 +171,10 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
-		final DiscriminatorValueDetails details =
+		final var details =
 				discriminatorPart.getValueConverter()
 						.getDetailsForEntityName( entityMappingType.getEntityName() );
-		return details != null
-				? details.getValue()
-				: null;
+		return details == null ? null : details.getValue();
 	}
 
 	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
@@ -294,7 +294,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private void ensureMapped(EntityMappingType treatTarget) {
 		assert treatTarget != null;
 
-		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForEntityName( treatTarget.getEntityName() );
+		final var details =
+				discriminatorPart.getValueConverter()
+						.getDetailsForEntityName( treatTarget.getEntityName() );
 		if ( details == null ) {
 			throw new IllegalArgumentException(
 					String.format(

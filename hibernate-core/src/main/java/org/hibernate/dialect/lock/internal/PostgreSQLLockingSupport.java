@@ -79,19 +79,31 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 		return Helper.getLockTimeout(
 				"select current_setting('lock_timeout', true)",
 				(resultSet) -> {
-					// even though lock_timeout is "in milliseconds", `current_setting`
-					// returns a String form which unfortunately varies depending on
-					// the actual value:
-					//		* for zero (no timeout), "0" is returned
-					//		* for non-zero, `{timeout-in-seconds}s` is returned (e.g. "4s")
-					// so we need to "parse" that form here
-					final String value = resultSet.getString( 1 );
+					// Although lock_timeout is stored internally in milliseconds,
+					// `current_setting` returns a String in a canonical, human-readable form
+					// that varies depending on the value:
+					//   * "0" is returned for no timeout (WAIT_FOREVER)
+					//   * Non-zero values may be returned with units such as:
+					//       - milliseconds: "500ms"
+					//       - seconds:      "3s"
+					//       - minutes:      "1min"
+					//       - hours:        "1h"
+					// Therefore, we need to parse this String carefully to reconstruct the correct Timeout.
+					String value = resultSet.getString( 1 );
 					if ( "0".equals( value ) ) {
 						return Timeouts.WAIT_FOREVER;
 					}
-					assert value.endsWith( "s" );
-					final int secondsValue = Integer.parseInt( value.substring( 0, value.length() - 1 ) );
-					return Timeout.seconds( secondsValue );
+					final var unitStartIndex = findUnitStartIndex( value );
+					final var amount = Integer.parseInt( value, 0, unitStartIndex, 10 );
+					return switch ( unitStartIndex == -1 ? "ms" : value.substring( unitStartIndex ) ) {
+						case "ms" -> Timeout.milliseconds( amount );
+						case "s" -> Timeout.seconds( amount );
+						case "min" -> Timeout.seconds( amount * 60 );
+						case "h" -> Timeout.seconds( amount * 3600 );
+						case "d" -> Timeout.seconds( amount * 3600 * 24 );
+						default -> throw new IllegalArgumentException(
+							"Unexpected PostgreSQL lock_timeout format: " + value );
+					};
 				},
 				connection,
 				factory
@@ -119,5 +131,14 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 				connection,
 				factory
 		);
+	}
+
+	private static int findUnitStartIndex(String value) {
+		for ( int i = value.length() - 1; i >= 0; i-- ) {
+			if ( Character.isDigit( value.charAt( i ) ) ) {
+				return i + 1;
+			}
+		}
+		return -1;
 	}
 }

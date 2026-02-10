@@ -54,11 +54,11 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmCteRoot<T> copy(SqmCopyContext context) {
-		final SqmCteRoot<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCteRoot<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCteRoot<>(
 						getNavigablePath(),

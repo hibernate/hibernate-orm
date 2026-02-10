@@ -268,7 +268,7 @@ public class VectorTestHelper {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcLiteralFormatter<SparseFloatVector> literalFormatter = typeConfiguration.getJdbcTypeRegistry()
 				.getDescriptor( SqlTypes.SPARSE_VECTOR_FLOAT32 )
-				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().getDescriptor( SparseFloatVector.class ) );
+				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().resolveDescriptor( SparseFloatVector.class ) );
 		final String jdbcLiteral = literalFormatter.toJdbcLiteral(
 				new SparseFloatVector( vector ),
 				sessionFactory.getJdbcServices().getDialect(),
@@ -284,7 +284,7 @@ public class VectorTestHelper {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcLiteralFormatter<SparseDoubleVector> literalFormatter = typeConfiguration.getJdbcTypeRegistry()
 				.getDescriptor( SqlTypes.SPARSE_VECTOR_FLOAT64 )
-				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().getDescriptor( SparseDoubleVector.class ) );
+				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().resolveDescriptor( SparseDoubleVector.class ) );
 		final String jdbcLiteral = literalFormatter.toJdbcLiteral(
 				new SparseDoubleVector( vector ),
 				sessionFactory.getJdbcServices().getDialect(),
@@ -300,7 +300,7 @@ public class VectorTestHelper {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcLiteralFormatter<SparseByteVector> literalFormatter = typeConfiguration.getJdbcTypeRegistry()
 				.getDescriptor( SqlTypes.SPARSE_VECTOR_INT8 )
-				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().getDescriptor( SparseByteVector.class ) );
+				.getJdbcLiteralFormatter( typeConfiguration.getJavaTypeRegistry().resolveDescriptor( SparseByteVector.class ) );
 		final String jdbcLiteral = literalFormatter.toJdbcLiteral(
 				new SparseByteVector( vector ),
 				sessionFactory.getJdbcServices().getDialect(),

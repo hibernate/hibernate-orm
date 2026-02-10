@@ -145,6 +145,10 @@ public interface SessionLogging extends BasicLogger {
 	@Message(id = 90010107, value = "Exception in interceptor afterTransactionCompletion()")
 	void exceptionInAfterTransactionCompletionInterceptor(@Cause Throwable e);
 
+	@LogMessage(level = WARN)
+	@Message(id = 90010108, value = "Closing session with unprocessed clean up bulk operations, forcing their execution")
+	void closingSessionWithUnprocessedBulkOperations();
+
 	// StatelessSession-specific
 
 	@LogMessage(level = TRACE)

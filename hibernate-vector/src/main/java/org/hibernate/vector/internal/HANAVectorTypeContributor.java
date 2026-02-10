@@ -46,7 +46,7 @@ public class HANAVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							floatBasicType,
 							genericVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR.getName()
 			);
@@ -54,7 +54,7 @@ public class HANAVectorTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							floatVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT32.getName()
 			);
@@ -77,7 +77,7 @@ public class HANAVectorTypeContributor implements TypeContributor {
 						new BasicArrayType<>(
 								basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 								float16VectorJdbcType,
-								javaTypeRegistry.getDescriptor( float[].class )
+								javaTypeRegistry.resolveDescriptor( float[].class )
 						),
 						StandardBasicTypes.VECTOR_FLOAT16.getName()
 				);

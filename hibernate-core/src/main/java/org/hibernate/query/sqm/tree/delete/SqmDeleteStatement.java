@@ -61,7 +61,7 @@ public class SqmDeleteStatement<T>
 
 	@Override
 	public SqmDeleteStatement<T> copy(SqmCopyContext context) {
-		final SqmDeleteStatement<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

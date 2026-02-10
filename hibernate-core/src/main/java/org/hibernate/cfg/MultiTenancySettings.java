@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Incubating;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 
@@ -67,5 +68,28 @@ public interface MultiTenancySettings {
 	 *
 	 * @since 7.1
 	 */
+	@Incubating
 	String MULTI_TENANT_SCHEMA_MAPPER = "hibernate.multi_tenant.schema_mapper";
+
+	/**
+	 * Specifies a {@link org.hibernate.context.spi.TenantCredentialsMapper} to use, either:
+	 * <ul>
+	 *     <li>an instance of {@code TenantCredentialsMapper},
+	 *     <li>a {@link Class} representing a class that implements {@code TenantCredentialsMapper}, or
+	 *     <li>the name of a class that implements {@code TenantCredentialsMapper}.
+	 * </ul>
+	 * When a tenant credentials mapper is set,
+	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String)}
+	 * is used to acquire JDBC connections. This typically requires that the JDBC {@code DataSource}
+	 * correctly implements the method {@link javax.sql.DataSource#getConnection(String, String)}.
+	 * <p>
+	 * By default, there is no tenant credentials mapper.
+	 *
+	 * @see org.hibernate.context.spi.TenantCredentialsMapper
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantCredentialsMapper
+	 *
+	 * @since 7.3
+	 */
+	@Incubating
+	String MULTI_TENANT_CREDENTIALS_MAPPER = "hibernate.multi_tenant.credentials_mapper";
 }

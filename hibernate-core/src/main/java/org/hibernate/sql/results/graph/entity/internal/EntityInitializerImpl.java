@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
+import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
@@ -1154,6 +1155,8 @@ public class EntityInitializerImpl
 	public void resolveInstance(EntityInitializerData data) {
 		if ( data.getState() == State.KEY_RESOLVED ) {
 			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
+			final var persistenceContext = session.getPersistenceContextInternal();
 			data.setState( State.RESOLVED );
 			if ( data.entityKey == null ) {
 				assert identifierAssembler != null;
@@ -1165,7 +1168,7 @@ public class EntityInitializerImpl
 				resolveEntityKey( data, id );
 			}
 			data.entityHolder =
-					rowProcessingState.getSession().getPersistenceContextInternal()
+					persistenceContext
 							.claimEntityHolderIfPossible(
 									data.entityKey,
 									null,
@@ -1179,7 +1182,6 @@ public class EntityInitializerImpl
 			else {
 				resolveEntityInstance1( data );
 				if ( data.uniqueKeyAttributePath != null ) {
-					final var session = rowProcessingState.getSession();
 					final var concreteDescriptor = getConcreteDescriptor( data );
 					final var entityUniqueKey = new EntityUniqueKey(
 							concreteDescriptor.getEntityName(),
@@ -1188,8 +1190,7 @@ public class EntityInitializerImpl
 							data.uniqueKeyPropertyTypes[concreteDescriptor.getSubclassId()],
 							session.getFactory()
 					);
-					session.getPersistenceContextInternal()
-							.addEntity( entityUniqueKey, data.getInstance() );
+					persistenceContext.addEntity( entityUniqueKey, data.getInstance() );
 				}
 			}
 
@@ -1346,7 +1347,10 @@ public class EntityInitializerImpl
 	protected boolean isProxyInstance(Object proxy) {
 		return proxy != null
 			&& ( proxy instanceof MapProxy
-				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
+					// do NOT use JavaType.isInstance() here; we're testing if the
+					// proxy itself is an instance of the given entity type, not if
+					// the underlying entity implementation is an instance
+					|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {
@@ -1752,6 +1756,9 @@ public class EntityInitializerImpl
 			Object version,
 			EntityDataAccess cacheAccess,
 			Object cacheKey, CacheEntry cacheEntry) {
+		final boolean minimalPutsEnabled =
+				session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
+						&& session.getCacheMode() != CacheMode.REFRESH;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean cacheContentChanged = false;
 		final var eventMonitor = session.getEventMonitor();
@@ -1763,8 +1770,7 @@ public class EntityInitializerImpl
 					cacheKey,
 					data.concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 					version,
-					//useMinimalPuts( session, entityEntry )
-					false
+					minimalPutsEnabled
 			);
 		}
 		finally {
@@ -2112,7 +2118,7 @@ public class EntityInitializerImpl
 		return assemblers;
 	}
 
-	protected @Nullable BasicResultAssembler<?> discriminatorAssembler() {
+	protected @Nullable BasicResultAssembler<?> getDiscriminatorAssembler() {
 		return discriminatorAssembler;
 	}
 

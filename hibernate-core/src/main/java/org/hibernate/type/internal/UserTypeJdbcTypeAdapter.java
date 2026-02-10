@@ -76,12 +76,11 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (JavaType<T>) javaType;
+		return javaType;
 	}
 
 	@Override

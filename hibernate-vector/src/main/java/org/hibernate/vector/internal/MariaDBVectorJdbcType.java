@@ -40,11 +40,11 @@ public class MariaDBVectorJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( float[].class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( float[].class );
 	}
 
 	@Override

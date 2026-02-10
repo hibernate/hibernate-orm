@@ -4,12 +4,6 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -26,9 +20,9 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -54,14 +48,20 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Defines how identifier values are selected from the updatable/deletable tables.
@@ -76,7 +76,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 	private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> resolvedParameterMappingModelTypes;
 
-	private final JdbcOperationQuerySelect select;
+	private final JdbcSelect select;
 
 	public AbstractCteMutationHandler(
 			CteTable cteTable,
@@ -140,7 +140,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		final List<DomainResult<?>> domainResults = new ArrayList<>( 1 );
 		final SelectStatement statement = new SelectStatement( querySpec, domainResults );
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstTranslator<JdbcOperationQuerySelect> translator = jdbcServices.getJdbcEnvironment()
+		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
 
@@ -232,7 +232,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 	}
 
 	// For Hibernate Reactive
-	protected JdbcOperationQuerySelect getSelect() {
+	protected JdbcSelect getSelect() {
 		return select;
 	}
 

@@ -4,9 +4,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -71,9 +68,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final Map<String, QueryResultsCache> namedQueryResultsCacheMap = new ConcurrentHashMap<>();
 
 
-	private final Set<String> legacySecondLevelCacheNames = new LinkedHashSet<>();
-	private final Map<String,Set<NaturalIdDataAccess>> legacyNaturalIdAccessesForRegion = new ConcurrentHashMap<>();
-
 	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 		final var options = sessionFactory.getSessionFactoryOptions();
@@ -105,7 +99,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 						DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME,
 						sessionFactory
 				);
-		legacySecondLevelCacheNames.add( timestampsRegion.getName() );
 		return sessionFactory.getSessionFactoryOptions().getTimestampsCacheFactory()
 				.buildTimestampsCache( this, timestampsRegion );
 	}
@@ -134,27 +127,16 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			for ( var entityAccessConfig : regionConfig.getEntityCaching() ) {
 				final var navigableRole = entityAccessConfig.getNavigableRole();
 				entityAccessMap.put( navigableRole, region.getEntityDataAccess( navigableRole ) );
-				legacySecondLevelCacheNames.add( qualifiedRegionName( region ) );
 			}
 
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Natural-id caching
 
-			final var naturalIdCaching = regionConfig.getNaturalIdCaching();
-			if ( naturalIdCaching.isEmpty() ) {
-				legacyNaturalIdAccessesForRegion.put( region.getName(), Collections.emptySet() );
-			}
-			else {
-				final Set<NaturalIdDataAccess> accesses = new HashSet<>();
-				for ( var naturalIdAccessConfig : naturalIdCaching ) {
-					final var navigableRole = naturalIdAccessConfig.getNavigableRole();
-					final var naturalIdDataAccess =
-							naturalIdAccessMap.put( navigableRole,
-									region.getNaturalIdDataAccess( navigableRole ) );
-					accesses.add( naturalIdDataAccess );
-				}
-				legacyNaturalIdAccessesForRegion.put( region.getName(), accesses );
+			for ( var naturalIdAccessConfig : regionConfig.getNaturalIdCaching() ) {
+				final var navigableRole = naturalIdAccessConfig.getNavigableRole();
+				naturalIdAccessMap.put( navigableRole,
+						region.getNaturalIdDataAccess( navigableRole ) );
 			}
 
 
@@ -165,7 +147,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				final var navigableRole = collectionAccessConfig.getNavigableRole();
 				collectionAccessMap.put( navigableRole,
 						region.getCollectionDataAccess( navigableRole ) );
-				legacySecondLevelCacheNames.add( qualifiedRegionName( region ) );
 			}
 		}
 
@@ -213,7 +194,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity data
 
@@ -227,11 +207,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final var persister = getEntityDescriptor( entityName );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			final Object idValue =
-					persister.getIdentifierMapping().getJavaType()
-							.coerce( identifier, sessionFactory::getTypeConfiguration );
 			final Object key = cacheAccess.generateCacheKey(
-					idValue,
+					persister.getIdentifierMapping().getJavaType()
+							.coerce( identifier ),
 					persister.getRootEntityDescriptor().getEntityPersister(),
 					sessionFactory,
 					null
@@ -311,7 +289,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Natural-id data
 
@@ -341,7 +318,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			cacheAccess.evictAll();
 		}
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -429,7 +405,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	public void evictQueryRegions() {
 		LOG.evictingAllQueryRegions();
 		evictQueryResultRegion( defaultQueryResultsCache );
-		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {
+		for ( var cache : namedQueryResultsCacheMap.values() ) {
 			evictQueryResultRegion( cache );
 		}
 	}
@@ -472,7 +448,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		}
 		else {
 			final var existing = namedQueryResultsCacheMap.get( regionName );
-			return existing != null ? existing : makeQueryResultsRegionAccess( regionName );
+			return existing != null ? existing : makeQueryResultsCache( regionName );
 		}
 	}
 
@@ -489,21 +465,20 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		}
 	}
 
-	protected QueryResultsCache makeQueryResultsRegionAccess(String regionName) {
-		final var regionAccess = new QueryResultsCacheImpl( getQueryResultsRegion( regionName ), timestampsCache );
+	protected QueryResultsCache makeQueryResultsCache(String regionName) {
+		final var regionAccess = new QueryResultsCacheImpl( queryResultsRegion( regionName ), timestampsCache );
 		namedQueryResultsCacheMap.put( regionName, regionAccess );
-		legacySecondLevelCacheNames.add( regionName );
 		return regionAccess;
 	}
 
-	private QueryResultsRegion getQueryResultsRegion(String regionName) {
-		final Region region = regionsByName.computeIfAbsent( regionName, this::makeQueryResultsRegion );
-		return region instanceof QueryResultsRegion queryResultsRegion
+	private QueryResultsRegion queryResultsRegion(String regionName) {
+		return regionsByName.computeIfAbsent( regionName, this::buildQueryResultsRegion )
+					instanceof QueryResultsRegion queryResultsRegion
 				? queryResultsRegion // There was already a different type of Region with the same name.
-				: queryResultsRegionsByDuplicateName.computeIfAbsent( regionName, this::makeQueryResultsRegion );
+				: queryResultsRegionsByDuplicateName.computeIfAbsent( regionName, this::buildQueryResultsRegion );
 	}
 
-	protected QueryResultsRegion makeQueryResultsRegion(String regionName) {
+	protected QueryResultsRegion buildQueryResultsRegion(String regionName) {
 		return regionFactory.buildQueryResultsRegion( regionName, getSessionFactory() );
 	}
 
@@ -523,13 +498,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> type) {
 		if ( type.isAssignableFrom( EnabledCaching.class ) ) {
-			return (T) this;
+			return type.cast( this );
 		}
 		else if ( type.isAssignableFrom( RegionFactory.class ) ) {
-			return (T) regionFactory;
+			return type.cast( regionFactory );
 		}
 		else {
 			throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );
@@ -545,7 +519,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			region.destroy();
 		}
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -568,8 +541,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		// JPA
 		evictEntityData( cls );
 	}
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

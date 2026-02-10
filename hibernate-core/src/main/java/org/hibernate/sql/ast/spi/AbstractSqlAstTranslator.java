@@ -14,6 +14,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -184,10 +185,12 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.internal.OptionalTableInsert;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
@@ -205,9 +208,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -962,6 +962,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void renderColumnWrite(ColumnValueBinding selectionBinding) {
+		final ColumnWriteFragment valueExpression = selectionBinding.getValueExpression();
+		if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
+			valueExpression.accept( this );
+		}
+		else {
+			renderCasted( valueExpression );
+		}
+	}
+
 	private static class OffsetJdbcParameter extends AbstractJdbcParameter {
 
 		public OffsetJdbcParameter(BasicType<Integer> type) {
@@ -1318,7 +1328,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		clauseStack.push( Clause.INSERT );
-		appendSql( "insert into " );
+		renderInsertCommand( statement );
 		renderDmlTargetTableExpression( statement.getTargetTable() );
 
 		appendSql( OPEN_PARENTHESIS );
@@ -1342,6 +1352,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitInsertSource( statement );
 		visitConflictClause( statement.getConflictClause() );
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void renderInsertCommand(InsertSelectStatement statement) {
+		appendSql( "insert into " );
 	}
 
 	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {
@@ -2232,17 +2246,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void visitCteStatement(CteStatement cte) {
 		appendSql( cte.getCteTable().getTableExpression() );
-
-		appendSql( " (" );
-
-		renderCteColumns( cte );
-
-		appendSql( ") as " );
-
+		if ( dialect.supportsCteHeaderColumnList() ) {
+			appendSql( " (" );
+			renderCteColumns( cte );
+			appendSql( ")" );
+		}
+		appendSql( " as " );
 		if ( cte.getMaterialization() != CteMaterialization.UNDEFINED ) {
 			renderMaterializationHint( cte.getMaterialization() );
 		}
-
 		final boolean needsParenthesis = !( cte.getCteDefinition() instanceof SelectStatement )
 				|| ( (SelectStatement) cte.getCteDefinition() ).getQueryPart().isRoot();
 		if ( needsParenthesis ) {
@@ -2252,7 +2264,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( needsParenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-
 		renderSearchClause( cte );
 		renderCycleClause( cte );
 	}
@@ -2275,52 +2286,51 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	protected void renderCteColumns(CteStatement cte) {
-		String separator = "";
+	private List<String> determineCteColumnNames(CteStatement cte) {
+		final List<String> columnNames = new ArrayList<>();
 		if ( cte.getCteTable().getCteColumns() == null ) {
-			final List<String> columnExpressions = new ArrayList<>();
 			cte.getCteTable().getTableGroupProducer().visitSubParts(
 					modelPart -> modelPart.forEachSelectable(
 							0,
-							(index, mapping) -> columnExpressions.add( mapping.getSelectionExpression() )
+							(index, mapping) -> columnNames.add( mapping.getSelectionExpression() )
 					),
 					null
 			);
-			for ( String columnExpression : columnExpressions ) {
-				appendSql( separator );
-				appendSql( columnExpression );
-				separator = COMMA_SEPARATOR;
-			}
 		}
 		else {
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
-				appendSql( separator );
-				appendSql( cteColumn.getColumnExpression() );
-				separator = COMMA_SEPARATOR;
+				columnNames.add( cteColumn.getColumnExpression() );
 			}
 		}
 		if ( cte.isRecursive() ) {
-			if ( !dialect.supportsRecursiveSearchClause() ) {
-				if ( cte.getSearchColumn() != null ) {
-					appendSql( COMMA_SEPARATOR );
-					if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
-						appendSql( determineDepthColumnName( cte ) );
-						appendSql( COMMA_SEPARATOR );
-					}
-					appendSql( cte.getSearchColumn().getColumnExpression() );
+			if ( !dialect.supportsRecursiveSearchClause() && cte.getSearchColumn() != null ) {
+				if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
+					columnNames.add( determineDepthColumnName( cte ) );
 				}
+				columnNames.add( cte.getSearchColumn().getColumnExpression() );
 			}
-			if ( !dialect.supportsRecursiveCycleClause() ) {
-				if ( cte.getCycleMarkColumn() != null ) {
-					appendSql( COMMA_SEPARATOR );
-					appendSql( cte.getCycleMarkColumn().getColumnExpression() );
-				}
+			if ( !dialect.supportsRecursiveCycleClause() && cte.getCycleMarkColumn() != null ) {
+				columnNames.add( cte.getCycleMarkColumn().getColumnExpression() );
 			}
-			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
-					|| cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
+			if ( (cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause())
+				|| (cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause()) ) {
+				columnNames.add( determineCyclePathColumnName( cte ) );
+			}
+		}
+		return columnNames;
+	}
+
+	protected void renderCteColumns(CteStatement cte) {
+		final List<String> columnNames = determineCteColumnNames( cte );
+		boolean first = true;
+		for ( String columnName : columnNames ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
 				appendSql( COMMA_SEPARATOR );
-				appendSql( determineCyclePathColumnName( cte ) );
 			}
+			appendSql( columnName );
 		}
 	}
 
@@ -2393,9 +2403,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		currentCteStatement = cte;
 		final Limit oldLimit = limit;
 		limit = null;
-		cte.getCteDefinition().accept( this );
-		currentCteStatement = oldCteStatement;
-		limit = oldLimit;
+		final boolean oldNeedsSelectAliases = needsSelectAliases;
+		final List<String> oldColumnAliases = columnAliases;
+		if ( !dialect.supportsCteHeaderColumnList() ) {
+			needsSelectAliases = true;
+			columnAliases = determineCteColumnNames( cte );
+		}
+		try {
+			cte.getCteDefinition().accept( this );
+		}
+		finally {
+			currentCteStatement = oldCteStatement;
+			limit = oldLimit;
+			needsSelectAliases = oldNeedsSelectAliases;
+			columnAliases = oldColumnAliases;
+		}
 	}
 
 	/**
@@ -3584,7 +3606,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void renderQueryParts(QueryGroup queryGroup) {
 		final var queryParts = queryGroup.getQueryParts();
-		final String setOperatorString = ' ' + queryGroup.getSetOperator().sqlString() + ' ';
+		final String setOperatorString = ' ' + dialect.getSetOperatorSqlString( queryGroup.getSetOperator() ) + ' ';
 		String separator = "";
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			appendSql( separator );
@@ -3987,7 +4009,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( "exists (select " );
 					renderCommaSeparatedSelectExpression( lhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
-					appendSql( " intersect select " );
+					appendSql( " " );
+					appendSql( getDialect().getSetOperatorSqlString( SetOperator.INTERSECT ) );
+					appendSql( " select " );
 					renderCommaSeparatedSelectExpression( rhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
 					appendSql( CLOSE_PARENTHESIS );
@@ -4289,7 +4313,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				clauseStack.push( Clause.SELECT );
 				visitSqlSelectExpression( lhs );
 				appendSql( getFromDualForSelectOnly() );
-				appendSql( " intersect select " );
+				appendSql( " " );
+				appendSql( dialect.getSetOperatorSqlString( SetOperator.INTERSECT ) );
+				appendSql( " select " );
 				visitSqlSelectExpression( rhs );
 				appendSql( getFromDualForSelectOnly() );
 				clauseStack.pop();
@@ -6177,6 +6203,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			&& !selectStatement.getQueryPart().isRoot();
 	}
 
+	protected boolean hasCorrelatedSubquery(Statement statement, String targetAlias) {
+		return CorrelationChecker.hasCorrelation( statement, targetAlias );
+	}
+
+	protected boolean hasNestedCorrelation(Statement statement) {
+		return NestedCorrelationChecker.hasNestedCorrelation( statement );
+	}
+
+	protected boolean hasTargetTableCorrelation(MutationStatement statement) {
+		final String targetAlias = statement.getTargetTable().getIdentificationVariable();
+		return statement instanceof AbstractUpdateOrDeleteStatement
+				&& targetAlias != null
+				&& CorrelationChecker.hasCorrelation( statement, targetAlias );
+	}
+
 	protected boolean renderNamedTableReference(
 			NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
@@ -6923,45 +6964,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
-	}
-
-	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
-		}
-		else {
-			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
-			if ( ddlType == null ) {
-				// this may happen when selecting a null value like `SELECT null from ...`
-				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
-				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
-			}
-
-			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
-		}
-	}
-
-	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
-		if ( castTarget.getColumnDefinition() != null ) {
-			return castTarget.getColumnDefinition();
-		}
-		else {
-			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
-			if ( ddlType == null ) {
-				// this may happen when selecting a null value like `SELECT null from ...`
-				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
-				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
-			}
-
-			return ddlType.getCastTypeName( castTargetSize, expressionType, ddlTypeRegistry );
-		}
+		appendSql( DdlTypeHelper.getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
 	}
 
 	@Override
@@ -7692,41 +7695,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
 				if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsValuesList() ) {
-					final int tupleSize = lhsTuple.getExpressionType().getJdbcTypeCount();
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
 					}
-					appendSql( " in (select" );
-					char separator = ' ';
-					for ( int i = 0; i < tupleSize; i++ ) {
-						appendSql( separator );
-						appendSql( "v_.c" );
-						appendSql( i );
-						separator = ',';
-					}
-					appendSql( " from (values" );
-					separator = ' ';
-					for ( Expression expression : listExpressions ) {
-						appendSql( separator );
-						appendSql( OPEN_PARENTHESIS );
-						renderCommaSeparated( getSqlTuple( expression ).getExpressions() );
-						appendSql( CLOSE_PARENTHESIS );
-						separator = ',';
-					}
-					appendSql( CLOSE_PARENTHESIS );
-					appendSql( " v_" );
-					separator = '(';
-					for ( int i = 0; i < tupleSize; i++ ) {
-						appendSql( separator );
-						appendSql( "c" );
-						appendSql( i );
-						separator = ',';
-					}
-					appendSql( CLOSE_PARENTHESIS );
+					appendSql( " in (" );
+					renderExpressionsAsValuesSubquery( lhsTuple.getExpressionType().getJdbcTypeCount(), listExpressions );
 					appendSql( CLOSE_PARENTHESIS );
 				}
-				else if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				else if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll()
+						&& preferUnionQueryForTupleInListPredicate() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
@@ -7822,6 +7800,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected boolean preferUnionQueryForTupleInListPredicate() {
+		return true;
+	}
+
+	protected void renderExpressionsAsValuesSubquery(int tupleSize, List<Expression> listExpressions) {
+		appendSql( "select" );
+		char separator = ' ';
+		for ( int i = 0; i < tupleSize; i++ ) {
+			appendSql( separator );
+			appendSql( "v_.c" );
+			appendSql( i );
+			separator = ',';
+		}
+		appendSql( " from (values" );
+		separator = ' ';
+		for ( Expression expression : listExpressions ) {
+			appendSql( separator );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
+			appendSql( CLOSE_PARENTHESIS );
+			separator = ',';
+		}
+		appendSql( CLOSE_PARENTHESIS );
+		appendSql( " v_" );
+		separator = '(';
+		for ( int i = 0; i < tupleSize; i++ ) {
+			appendSql( separator );
+			appendSql( "c" );
+			appendSql( i );
+			separator = ',';
+		}
+		appendSql( CLOSE_PARENTHESIS );
+	}
+
 	private void appendInClauseSeparator(InListPredicate inListPredicate) {
 		appendSql( CLOSE_PARENTHESIS );
 		appendSql( inListPredicate.isNegated() ? " and " : " or " );
@@ -7904,89 +7916,101 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
-		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
 				&& queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
 				appendSql( "not " );
 			}
-
-			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
-			final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
-			final boolean needsSelectAliases = this.needsSelectAliases;
-			try {
-				this.queryPartForRowNumbering = null;
-				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
-				queryPartStack.push( subQuery );
-				appendSql( "exists (" );
-				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
-						|| subQuery.getHavingClauseRestrictions() != null ) {
-					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
-					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
-					visitSelectClause( subQuery.getSelectClause() );
-					visitFromClause( subQuery.getFromClause() );
-					visitWhereClause( subQuery.getWhereClauseRestrictions() );
-					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
-
-					appendSql( " having " );
-					clauseStack.push( Clause.HAVING );
-					try {
-						renderer.renderComparison(
-								subQuery.getSelectClause().getSqlSelections(),
-								lhsTuple,
-								tupleComparisonOperator
-						);
-						final Predicate havingClauseRestrictions = subQuery.getHavingClauseRestrictions();
-						if ( havingClauseRestrictions != null ) {
-							appendSql( " and (" );
-							havingClauseRestrictions.accept( this );
-							appendSql( CLOSE_PARENTHESIS );
-						}
-					}
-					finally {
-						clauseStack.pop();
-					}
-				}
-				else {
-					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
-					appendSql( "select 1" );
-					visitFromClause( subQuery.getFromClause() );
-					appendSql( " where " );
-					clauseStack.push( Clause.WHERE );
-					try {
-						renderer.renderComparison(
-								subQuery.getSelectClause().getSqlSelections(),
-								lhsTuple,
-								tupleComparisonOperator
-						);
-						final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
-						if ( whereClauseRestrictions != null ) {
-							appendSql( " and (" );
-							whereClauseRestrictions.accept( this );
-							appendSql( CLOSE_PARENTHESIS );
-						}
-					}
-					finally {
-						clauseStack.pop();
-					}
-				}
-
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			finally {
-				queryPartStack.pop();
-				this.queryPartForRowNumbering = queryPartForRowNumbering;
-				this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
-				this.needsSelectAliases = needsSelectAliases;
-			}
+			appendSql( "exists" );
+			renderRelationalEmulationSubQuery(
+					querySpec,
+					lhsTuple,
+					renderer,
+					tupleComparisonOperator
+			);
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate IN predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate relational tuple subquery predicate with limit/offset or set operations: " + predicate );
+		}
+	}
+
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
+		final boolean needsSelectAliases = this.needsSelectAliases;
+		try {
+			this.queryPartForRowNumbering = null;
+			this.queryPartForRowNumberingClauseDepth = -1;
+			this.needsSelectAliases = false;
+			queryPartStack.push( subQuery );
+			appendSql( OPEN_PARENTHESIS );
+			if ( !subQuery.getGroupByClauseExpressions().isEmpty()
+					|| subQuery.getHavingClauseRestrictions() != null ) {
+				// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
+				// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
+				visitSelectClause( subQuery.getSelectClause() );
+				visitFromClause( subQuery.getFromClause() );
+				visitWhereClause( subQuery.getWhereClauseRestrictions() );
+				visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
+
+				appendSql( " having " );
+				clauseStack.push( Clause.HAVING );
+				try {
+					renderer.renderComparison(
+							subQuery.getSelectClause().getSqlSelections(),
+							lhsTuple,
+							tupleComparisonOperator
+					);
+					final Predicate havingClauseRestrictions = subQuery.getHavingClauseRestrictions();
+					if ( havingClauseRestrictions != null ) {
+						appendSql( " and (" );
+						havingClauseRestrictions.accept( this );
+						appendSql( CLOSE_PARENTHESIS );
+					}
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+			else {
+				// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+				appendSql( "select 1" );
+				visitFromClause( subQuery.getFromClause() );
+				appendSql( " where " );
+				clauseStack.push( Clause.WHERE );
+				try {
+					renderer.renderComparison(
+							subQuery.getSelectClause().getSqlSelections(),
+							lhsTuple,
+							tupleComparisonOperator
+					);
+					final Predicate whereClauseRestrictions = subQuery.getWhereClauseRestrictions();
+					if ( whereClauseRestrictions != null ) {
+						appendSql( " and (" );
+						whereClauseRestrictions.accept( this );
+						appendSql( CLOSE_PARENTHESIS );
+					}
+				}
+				finally {
+					clauseStack.pop();
+				}
+			}
+
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		finally {
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
+			this.needsSelectAliases = needsSelectAliases;
 		}
 	}
 
@@ -8004,66 +8028,77 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			SqlTuple lhsTuple,
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
-		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
 				&& queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate comparing against the top element when there are no limit/offsets
 			lhsTuple.accept( this );
 			appendSql( tupleComparisonOperator.sqlText() );
-
-			final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
-			final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
-			final boolean needsSelectAliases = this.needsSelectAliases;
-			try {
-				this.queryPartForRowNumbering = null;
-				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
-				queryPartStack.push( subQuery );
-				appendSql( OPEN_PARENTHESIS );
-				visitSelectClause( subQuery.getSelectClause() );
-				visitFromClause( subQuery.getFromClause() );
-				visitWhereClause( subQuery.getWhereClauseRestrictions() );
-				visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
-				visitHavingClause( subQuery );
-
-				appendSql( " order by " );
-				final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
-				final String order;
-				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
-						|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
-					// Default order is asc so we don't need to specify the order explicitly
-					order = "";
-				}
-				else {
-					order = " desc";
-				}
-				appendSql( '1' );
-				appendSql( order );
-				for ( int i = 1; i < sqlSelections.size(); i++ ) {
-					appendSql( COMMA_SEPARATOR_CHAR );
-					appendSql( i + 1 );
-					appendSql( order );
-				}
-				renderFetch(
-						new QueryLiteral<>( 1, getIntegerType() ),
-						null,
-						FetchClauseType.ROWS_ONLY
-				);
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			finally {
-				queryPartStack.pop();
-				this.queryPartForRowNumbering = queryPartForRowNumbering;
-				this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
-				this.needsSelectAliases = needsSelectAliases;
-			}
+			renderQuantifiedEmulationSubQuery(
+					querySpec,
+					tupleComparisonOperator
+			);
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate quantified tuple subquery predicate with limit/offset or set operations: " + predicate );
 		}
+	}
+
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
+		final boolean needsSelectAliases = this.needsSelectAliases;
+		try {
+			this.queryPartForRowNumbering = null;
+			this.queryPartForRowNumberingClauseDepth = -1;
+			this.needsSelectAliases = false;
+			queryPartStack.push( subQuery );
+			appendSql( OPEN_PARENTHESIS );
+			visitSelectClause( subQuery.getSelectClause() );
+			visitFromClause( subQuery.getFromClause() );
+			visitWhereClause( subQuery.getWhereClauseRestrictions() );
+			visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
+			visitHavingClause( subQuery );
+
+			appendSql( " order by " );
+			final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
+			final String order;
+			if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
+					|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+				// Default order is asc so we don't need to specify the order explicitly
+				order = "";
+			}
+			else {
+				order = " desc";
+			}
+			appendSql( '1' );
+			appendSql( order );
+			for ( int i = 1; i < sqlSelections.size(); i++ ) {
+				appendSql( COMMA_SEPARATOR_CHAR );
+				appendSql( i + 1 );
+				appendSql( order );
+			}
+			renderFetchFirstRow();
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		finally {
+			queryPartStack.pop();
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
+			this.needsSelectAliases = needsSelectAliases;
+		}
+	}
+
+	protected void renderFetchFirstRow() {
+		renderFetch(
+				new QueryLiteral<>( 1, getIntegerType() ),
+				null,
+				FetchClauseType.ROWS_ONLY
+		);
 	}
 
 	@Override
@@ -8508,6 +8543,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		if ( tableInsert instanceof OptionalTableInsert ) {
+			throw new IllegalQueryOperationException( "Optional table insert is not supported" );
+		}
 		getCurrentClauseStack().push( Clause.INSERT );
 		try {
 			renderInsertInto( tableInsert );
@@ -8521,7 +8559,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private void renderInsertInto(TableInsertStandard tableInsert) {
+	protected void renderInsertInto(TableInsertStandard tableInsert) {
 		applySqlComment( tableInsert.getMutationComment() );
 
 		if ( tableInsert.getNumberOfValueBindings() == 0 ) {

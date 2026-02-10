@@ -10,10 +10,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -58,7 +56,8 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 		}
 		else {
 			// discriminated
-			assert !entityDescriptor.hasSubclasses() || discriminatorFetchBuilder != null;
+			assert !entityDescriptor.hasSubclasses()
+				|| discriminatorFetchBuilder != null;
 		}
 	}
 
@@ -83,24 +82,23 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public EntityResult buildResult(
+	public EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final String implicitAlias = entityDescriptor.getSqlAliasStem() + resultPosition;
-		final SqlAliasBase sqlAliasBase =
-				domainResultCreationState.getSqlAliasBaseManager().createSqlAliasBase( implicitAlias );
+		final var sqlAliasBase =
+				domainResultCreationState.getSqlAliasBaseManager()
+						.createSqlAliasBase( implicitAlias );
 
-		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
+		final var impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
-
 		impl.pushExplicitFetchMementoResolver( explicitFetchBuilderMap::get );
-
 		try {
 			// we just want it added to the registry
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
-					np -> entityDescriptor.createRootTableGroup(
+					path -> entityDescriptor.createRootTableGroup(
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
@@ -111,7 +109,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 					)
 			);
 
-			return new EntityResultImpl(
+			return new EntityResultImpl<>(
 					navigablePath,
 					entityDescriptor,
 					implicitAlias,
@@ -148,19 +146,19 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof CompleteResultBuilderEntityJpa that ) ) {
 			return false;
 		}
-
-		final CompleteResultBuilderEntityJpa that = (CompleteResultBuilderEntityJpa) o;
-		return navigablePath.equals( that.navigablePath )
-			&& entityDescriptor.equals( that.entityDescriptor )
-			&& lockMode == that.lockMode
-			&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
-			&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& entityDescriptor.equals( that.entityDescriptor )
+				&& lockMode == that.lockMode
+				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+		}
 	}
 }

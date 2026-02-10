@@ -21,10 +21,8 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 /**
  * A list of columns that are mapped to a single Java property
  * or field. This is a slightly uncomfortable abstraction here,
- * because this concept is arguably missing from JPA (where
- * there's no equivalent of the Hibernate-defined
- * {@link org.hibernate.annotations.Columns} annotation) and
- * so JPA lets each {@link jakarta.persistence.Column} specify
+ * because this concept is arguably missing from JPA and so
+ * JPA lets each {@link jakarta.persistence.Column} specify
  * its own {@link jakarta.persistence.Column#table table}.
  * That leaves us having to enforce the requirement that every
  * column mapped to a given property must belong to the same

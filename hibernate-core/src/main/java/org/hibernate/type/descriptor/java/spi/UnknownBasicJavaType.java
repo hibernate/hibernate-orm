@@ -62,22 +62,9 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	}
 
 	@Override
-	public String toString(T value) {
-		return value.toString();
-	}
-
-	@Override
-	public T fromString(CharSequence string) {
-		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type: " + getTypeName()
-		);
-	}
-
-	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( type.isAssignableFrom( getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return (X) value;
+			return type.cast( value );
 		}
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type: " + getTypeName()
@@ -86,9 +73,9 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
-		if ( getJavaTypeClass().isInstance( value ) ) {
-			//noinspection unchecked
-			return (T) value;
+		final var javaTypeClass = getJavaTypeClass();
+		if ( javaTypeClass.isInstance( value ) ) {
+			return javaTypeClass.cast( value );
 		}
 		throw new UnsupportedOperationException(
 				"Wrap strategy not known for this Java type: " + getTypeName()

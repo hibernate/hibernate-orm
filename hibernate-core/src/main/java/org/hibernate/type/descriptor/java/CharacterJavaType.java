@@ -45,20 +45,24 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		return value instanceof Character;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public Character cast(Object value) {
+		return (Character) value;
+	}
+
 	@Override
 	public <X> X unwrap(Character value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Character.class.isAssignableFrom( type ) || type == Object.class ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.toString();
+			return type.cast( value.toString() );
 		}
 		if ( Number.class.isAssignableFrom( type ) ) {
-			return (X) Short.valueOf( (short) value.charValue() );
+			return type.cast( (short) value.charValue() );
 		}
 		throw unknownUnwrap( type );
 	}

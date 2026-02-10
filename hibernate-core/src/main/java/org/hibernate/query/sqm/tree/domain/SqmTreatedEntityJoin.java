@@ -60,11 +60,11 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 
 	@Override
 	public SqmTreatedEntityJoin<L,R,S> copy(SqmCopyContext context) {
-		final SqmTreatedEntityJoin<L,R,S> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedEntityJoin<L,R,S> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmTreatedEntityJoin<>(
 						getNavigablePath(),

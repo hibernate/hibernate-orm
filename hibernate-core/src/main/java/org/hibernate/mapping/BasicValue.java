@@ -4,15 +4,23 @@
  */
 package org.hibernate.mapping;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.internal.Constructors;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -63,15 +71,17 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
+import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
-import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
+import org.hibernate.usertype.UserTypeCreationContext;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.hibernate.internal.util.GenericAssignability.isAssignableFrom;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;
@@ -83,6 +93,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 public class BasicValue extends SimpleValue
 		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
@@ -145,6 +156,7 @@ public class BasicValue extends SimpleValue
 		this.isSoftDelete = original.isSoftDelete;
 		this.softDeleteStrategy = original.softDeleteStrategy;
 		this.aggregateColumn = original.aggregateColumn;
+		this.jdbcTypeCode = original.jdbcTypeCode;
 	}
 
 	@Override
@@ -215,8 +227,24 @@ public class BasicValue extends SimpleValue
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
 	}
 
+	public Function<TypeConfiguration, BasicJavaType<?>> getExplicitJavaTypeAccess() {
+		return explicitJavaTypeAccess;
+	}
+
+	public Function<TypeConfiguration, JdbcType> getExplicitJdbcTypeAccess() {
+		return explicitJdbcTypeAccess;
+	}
+
+	public Function<TypeConfiguration, MutabilityPlan<?>> getExplicitMutabilityPlanAccess() {
+		return explicitMutabilityPlanAccess;
+	}
+
+	public Function<TypeConfiguration, java.lang.reflect.Type> getImplicitJavaTypeAccess() {
+		return implicitJavaTypeAccess;
+	}
+
 	public Selectable getColumn() {
-		return getColumnSpan() == 0 ? null : getColumn( 0 );
+		return hasColumns() ? getColumn( 0 ) : null;
 	}
 
 	public java.lang.reflect.Type getResolvedJavaType() {
@@ -476,18 +504,17 @@ public class BasicValue extends SimpleValue
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
 			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
-			final var classmateContext = getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
-				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE );
 			}
 			else if ( jdbcType.isString() ) {
 				// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
-				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE );
 			}
 			else {
 				// should indicate BIT or BOOLEAN == no conversion needed
 				//		- we still create the converter to properly set up JDBC type, etc
-				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE );
 			}
 		}
 		else {
@@ -509,12 +536,12 @@ public class BasicValue extends SimpleValue
 		}
 
 		@Override
-		public ResolvedType getDomainValueResolvedType() {
+		public java.lang.reflect.Type getDomainValueResolvedType() {
 			return underlyingDescriptor.getDomainValueResolvedType();
 		}
 
 		@Override
-		public ResolvedType getRelationalValueResolvedType() {
+		public java.lang.reflect.Type getRelationalValueResolvedType() {
 			return underlyingDescriptor.getRelationalValueResolvedType();
 		}
 
@@ -612,14 +639,14 @@ public class BasicValue extends SimpleValue
 		}
 	}
 
-	private <T> Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<T> javaType) {
-		final JavaType<T> basicJavaType;
+	private Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<?> javaType) {
+		final JavaType<?> basicJavaType;
 		final JdbcType jdbcType;
 		if ( explicitJdbcTypeAccess != null ) {
 			final var typeConfiguration = getTypeConfiguration();
 			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
 			basicJavaType = javaType == null && jdbcType != null
-					? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration )
+					? jdbcType.getRecommendedJavaType( null, null, typeConfiguration )
 					: javaType;
 		}
 		else {
@@ -630,7 +657,7 @@ public class BasicValue extends SimpleValue
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		if ( basicJavaType instanceof BasicJavaType<T> castType
+		if ( basicJavaType instanceof BasicJavaType<?> castType
 				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			final var context = getBuildingContext();
 			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
@@ -673,8 +700,8 @@ public class BasicValue extends SimpleValue
 		);
 
 		if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType
-				&& !attributeConverterDescriptor.getDomainValueResolvedType().getErasedType()
-						.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+				&& !isAssignableFrom( attributeConverterDescriptor.getDomainValueResolvedType(),
+						javaType.getJavaTypeClass() ) ) {
 			// In this case, the converter applies to the element of a BasicPluralJavaType
 			final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
 			final BasicType<?> registeredType = registeredElementType == null ? null
@@ -779,7 +806,7 @@ public class BasicValue extends SimpleValue
 					return xmlJavaType;
 			}
 		}
-		return javaTypeRegistry.getDescriptor( impliedJavaType );
+		return javaTypeRegistry.resolveDescriptor( impliedJavaType );
 	}
 
 	private MutabilityPlan<?> mutabilityPlan(
@@ -1030,6 +1057,10 @@ public class BasicValue extends SimpleValue
 		this.explicitLocalTypeParams = explicitLocalTypeParams;
 	}
 
+	public Map<String, String> getExplicitTypeParams() {
+		return explicitLocalTypeParams;
+	}
+
 	public void setExplicitTypeName(String typeName) {
 		this.explicitTypeName = typeName;
 	}
@@ -1055,19 +1086,20 @@ public class BasicValue extends SimpleValue
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
 			else {
+				final var parameters = buildCustomTypeProperties();
 				resolution = new UserTypeResolution<>(
 						new CustomType<>(
-								getConfiguredUserTypeBean( explicitCustomType, getCustomTypeProperties() ),
+								getConfiguredUserTypeBean( explicitCustomType, getTypeAnnotation(), parameters ),
 								getTypeConfiguration()
 						),
 						null,
-						getCustomTypeProperties()
+						parameters
 				);
 			}
 		}
 	}
 
-	private Properties getCustomTypeProperties() {
+	private Properties buildCustomTypeProperties() {
 		final var properties = new Properties();
 		if ( isNotEmpty( getTypeParameters() ) ) {
 			properties.putAll( getTypeParameters() );
@@ -1078,29 +1110,139 @@ public class BasicValue extends SimpleValue
 		return properties;
 	}
 
-	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
+	private UserType<?> getConfiguredUserTypeBean(
+			Class<? extends UserType<?>> explicitCustomType,
+			Annotation typeAnnotation, Properties parameters) {
 		final var typeInstance =
-				getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-						? getUserTypeBean( explicitCustomType, properties ).getBeanInstance()
-						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
-
+				createUserTypeInstance( explicitCustomType, parameters, typeAnnotation );
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
 		}
+		addParameterType( parameters, typeInstance );
+		injectParameters( typeInstance, parameters );
+		// envers - grr
+		setTypeParameters( parameters );
+		return typeInstance;
+	}
 
-		if ( typeInstance instanceof DynamicParameterizedType ) {
-			if ( parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-				if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-					properties.put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
+	private UserType<?> createUserTypeInstance(
+			Class<? extends UserType<?>> customType,
+			Properties parameters,
+			Annotation typeAnnotation) {
+		final var creationContext = new TypeCreationContext( parameters );
+		final var typeInstance = instantiateUserType( customType, typeAnnotation, creationContext );
+		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
+			initializeAnnotationBasedUserType( typeAnnotation, annotationBased, creationContext );
+		}
+		return typeInstance;
+	}
+
+	private void addParameterType(Properties properties, UserType<?> typeInstance) {
+		if ( typeInstance instanceof DynamicParameterizedType
+				&& parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
+				&& properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+			properties.put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
+		}
+	}
+
+	private <A extends Annotation> void initializeAnnotationBasedUserType(
+			Annotation typeAnnotation,
+			AnnotationBasedUserType<A, ?> annotationBased,
+			UserTypeCreationContext creationContext) {
+		if ( typeAnnotation == null ) {
+			throw new AnnotationException( String.format(
+					"Custom type '%s' implements 'AnnotationBasedUserType' but no custom type annotation is present",
+					annotationBased.getClass().getName() ) );
+		}
+		annotationBased.initialize( castAnnotationType( typeAnnotation, annotationBased ), creationContext );
+	}
+
+	private class TypeCreationContext implements UserTypeCreationContext {
+		private final Properties parameters;
+
+		private TypeCreationContext(Properties parameters) {
+			this.parameters = parameters;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return BasicValue.this.getBuildingContext();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return BasicValue.this.getServiceRegistry();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return BasicValue.this.getMemberDetails();
+		}
+
+		@Override
+		public Properties getParameters() {
+			return parameters;
+		}
+	}
+
+	private <A extends Annotation> A castAnnotationType(
+			Annotation typeAnnotation, AnnotationBasedUserType<A, ?> annotationBased ) {
+		final var annotationType = annotationBased.getClass();
+		for ( var iface: annotationType.getGenericInterfaces() ) {
+			if ( iface instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() == AnnotationBasedUserType.class ) {
+				final var typeArguments = parameterizedType.getActualTypeArguments();
+				if ( typeArguments.length > 0
+					&& typeArguments[0] instanceof Class<?> annotationClass ) {
+					if ( !annotationClass.isInstance( typeAnnotation ) ) {
+						throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
+								annotationType.getName(), iface.getTypeName() ) );
+					}
+					@SuppressWarnings("unchecked") // safe, we just checked it
+					final var castAnnotation = (A) typeAnnotation;
+					return castAnnotation;
 				}
 			}
 		}
+		throw new AssertionFailure( "Could not find implementing interface" );
+	}
 
-		injectParameters( typeInstance, properties );
-		// envers - grr
-		setTypeParameters( properties );
+	private <T extends UserType<?>, A extends Annotation> T instantiateUserType(
+			Class<T> customType, A typeAnnotation,
+			UserTypeCreationContext creationContext) {
+		try {
+			T userType;
+			if ( typeAnnotation != null ) {
+				@SuppressWarnings("unchecked") // totally safe
+				final var annotationType = (Class<A>) typeAnnotation.annotationType();
+				// attempt to instantiate it with the annotation and context object as constructor arguments
+				userType =
+						Constructors.construct( customType,
+								annotationType, typeAnnotation,
+								UserTypeCreationContext.class, creationContext );
+				if ( userType != null ) {
+					return userType;
+				}
+				// attempt to instantiate it with the annotation as a constructor argument
+				userType = Constructors.construct( customType, annotationType, typeAnnotation );
+				if ( userType != null ) {
+					return userType;
+				}
+			}
 
-		return typeInstance;
+			// attempt to instantiate it with the context object as a constructor argument
+			userType = Constructors.construct( customType, UserTypeCreationContext.class, creationContext );
+			if ( userType != null ) {
+				return userType;
+			}
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+			throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
+		}
+
+		return getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+				? getUserTypeBean( customType, creationContext.getParameters() ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customType );
 	}
 
 	private <T> ManagedBean<? extends T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {

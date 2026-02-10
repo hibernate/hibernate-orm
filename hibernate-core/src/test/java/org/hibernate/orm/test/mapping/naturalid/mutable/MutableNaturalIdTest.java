@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.mapping.naturalid.mutable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,15 +21,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Gavin King
@@ -40,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 				@Setting( name = GENERATE_STATISTICS, value = "true" ),
 		}
 )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/naturalid/mutable/User.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/mutable/User.hbm.xml" )
 @SessionFactory
 public class MutableNaturalIdTest {
 
@@ -58,7 +61,7 @@ public class MutableNaturalIdTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -361,5 +364,77 @@ public class MutableNaturalIdTest {
 					assertNotSame( beforeEvict, afterEvict );
 				}
 		);
+	}
+
+	@Test
+	@JiraKey("HHH-7287")
+	public void testModificationInOtherSession(SessionFactoryScope factoryScope) {
+		var id = factoryScope.fromTransaction( (session) -> {
+			User u = new User( "gavin", "hb", "secret" );
+			session.persist( u );
+			return u.getId();
+		} );
+
+		// Use transactionless session
+		factoryScope.inSession( (session) -> {
+			// this loads the state into this `session`
+			var byNaturalId = session.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load();
+			assertNotNull( byNaturalId );
+
+			// CHANGE natural-id values in another session
+			factoryScope.inTransaction( (otherSession) -> {
+				var u = otherSession.find( User.class, id );
+				u.setOrg( "zz" );
+			} );
+			// CHANGE APPLIED
+
+			byNaturalId = session.byNaturalId( User.class )
+					.using( "name", "gavin" )
+					.using( "org", "hb" ).load();
+			assertNotNull( byNaturalId );
+
+			// the internal query will 'see' the new values, because isolation level < SERIALIZABLE
+			var byNaturalId2 = session.byNaturalId( User.class )
+					.using( "name", "gavin" )
+					.using( "org", "zz" ).load();
+			assertSame( byNaturalId, byNaturalId2 );
+
+			// this fails, that's the bug
+			assertNotNull( session.byNaturalId( User.class ).using( "name", "gavin" ).using( "org", "hb" ).load());
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-7287")
+	public void testModificationInOtherSession2(SessionFactoryScope factoryScope) {
+		var id = factoryScope.fromTransaction( (session) -> {
+			User u = new User( "gavin", "hb", "secret" );
+			session.persist( u );
+			return u.getId();
+		} );
+
+		// Use transactionless session
+		factoryScope.inSession( (session) -> {
+			// this loads the state into this `session`
+			var byNaturalId = session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL );
+			assertNotNull( byNaturalId );
+
+			// CHANGE natural-id values in another session
+			factoryScope.inTransaction( (otherSession) -> {
+				var u = otherSession.find( User.class, id );
+				u.setOrg( "zz" );
+			} );
+			// CHANGE APPLIED
+
+			byNaturalId = session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL );
+			assertNotNull( byNaturalId );
+
+			// the internal query will 'see' the new values, because isolation level < SERIALIZABLE
+			var byNaturalId2 = session.find( User.class, Map.of("name", "gavin", "org", "zz"), KeyType.NATURAL );
+			assertSame( byNaturalId, byNaturalId2 );
+
+			// this fails, that's the bug
+			assertNotNull( session.find( User.class, Map.of("name", "gavin", "org", "hb"), KeyType.NATURAL ) );
+		} );
 	}
 }

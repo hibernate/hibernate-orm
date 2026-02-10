@@ -35,7 +35,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmToDuration<T> copy(SqmCopyContext context) {
-		final SqmToDuration<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

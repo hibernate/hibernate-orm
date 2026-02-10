@@ -24,7 +24,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class EntityReadWriteAccess extends AbstractReadWriteAccess implements EntityDataAccess {
 	private final CacheKeysFactory keysFactory;
-	private final Comparator<?> versionComparator;
+	private final Comparator<Object> versionComparator;
 
 	public EntityReadWriteAccess(
 			DomainDataRegion domainDataRegion,
@@ -46,13 +46,14 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 		return AccessType.READ_WRITE;
 	}
 
+	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.ENTITY;
 	}
 
 	@Override
-	protected Comparator<?> getVersionComparator() {
+	protected Comparator<Object> getVersionComparator() {
 		return versionComparator;
 	}
 

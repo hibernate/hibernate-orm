@@ -7,23 +7,22 @@ package org.hibernate.procedure.internal;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
  */
-public class ScalarDomainResultBuilder<T> implements ResultBuilder {
+class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	private final JavaType<T> typeDescriptor;
 
-	public ScalarDomainResultBuilder(JavaType<T> typeDescriptor) {
+	ScalarDomainResultBuilder(JavaType<T> typeDescriptor) {
 		this.typeDescriptor = typeDescriptor;
 	}
 
@@ -37,17 +36,18 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver =
-				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TypeConfiguration typeConfiguration =
-				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final var sqlExpressionResolver =
+				sqlAstCreationState.getSqlExpressionResolver();
+		final var typeConfiguration =
+				sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey(
+						createColumnReferenceKey(
 								Integer.toString( resultPosition + 1 )
 						),
 						processingState -> {
-							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+							final var basicType = jdbcResultsMetadata.resolveType(
 									resultPosition + 1,
 									typeDescriptor,
 									typeConfiguration
@@ -75,17 +75,16 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ScalarDomainResultBuilder<?> that ) ) {
 			return false;
 		}
-
-		ScalarDomainResultBuilder<?> that = (ScalarDomainResultBuilder<?>) o;
-
-		return typeDescriptor.equals( that.typeDescriptor );
+		else {
+			return typeDescriptor.equals( that.typeDescriptor );
+		}
 	}
 
 	@Override

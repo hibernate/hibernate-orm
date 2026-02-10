@@ -9,14 +9,15 @@
  * The JPA specification perfectly nails many aspects of the O/R persistence problem, but
  * here we address some areas where it falls short.
  *
- * <h3 id="basic-value-mapping">Basic types in JPA</h3>
- * <p>
+ * <h2 id="basic-types">Basic types in JPA</h2>
+ *
  * A <em>basic type</em> handles the persistence of an attribute of an entity or embeddable
  * object that is stored in exactly one database column.
  * <p>
  * JPA supports a very limited set of built-in {@linkplain jakarta.persistence.Basic basic}
  * types.
  * <table style="border-spacing: 10px">
+ * <caption>Supported basic types</caption>
  * <thead style="font-weight:bold">
  * <tr>
  * <td>Category</td><td>Package</td><td>Types</td>

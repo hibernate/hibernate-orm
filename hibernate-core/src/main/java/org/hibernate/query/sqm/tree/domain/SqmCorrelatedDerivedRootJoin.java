@@ -26,11 +26,11 @@ public class SqmCorrelatedDerivedRootJoin<T> extends SqmCorrelatedRootJoin<T> {
 
 	@Override
 	public SqmCorrelatedDerivedRootJoin<T> copy(SqmCopyContext context) {
-		final SqmCorrelatedDerivedRootJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmCorrelatedDerivedRootJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmCorrelatedDerivedRootJoin<>(
 						getNavigablePath(),

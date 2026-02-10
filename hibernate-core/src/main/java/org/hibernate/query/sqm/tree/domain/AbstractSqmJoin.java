@@ -57,20 +57,18 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 			LOG.tracef(
 					"Setting join predicate [%s] (was [%s])",
 					predicate,
-					this.onClausePredicate == null ? "<null>" : this.onClausePredicate
+					onClausePredicate == null ? "<null>" : this.onClausePredicate
 			);
 		}
 
-		this.onClausePredicate = predicate;
+		onClausePredicate = predicate;
 	}
 
 	public void applyRestriction(SqmPredicate restriction) {
-		if ( this.onClausePredicate == null ) {
-			this.onClausePredicate = restriction;
-		}
-		else {
-			this.onClausePredicate = combinePredicates( onClausePredicate, restriction );
-		}
+		onClausePredicate =
+				onClausePredicate == null
+						? restriction
+						: combinePredicates( onClausePredicate, restriction );
 	}
 
 	protected void copyTo(AbstractSqmJoin<L, R> target, SqmCopyContext context) {

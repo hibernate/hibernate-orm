@@ -24,18 +24,17 @@ public class Component3 {
 	private String str1;
 
 	@AttributeOverrides({
-								@AttributeOverride(name = "key", column = @Column(name = "audComp_key")),
-								@AttributeOverride(name = "value", column = @Column(name = "audComp_value")),
-								@AttributeOverride(name = "description", column = @Column(name = "audComp_description"))
+								@AttributeOverride(name = "key", column = @Column(name = "audComp_key", length = 50)),
+								@AttributeOverride(name = "value", column = @Column(name = "audComp_value", length = 50)),
+								@AttributeOverride(name = "description", column = @Column(name = "audComp_description", length = 50))
 						})
 	private Component4 auditedComponent;
 
 	@NotAudited
 	@AttributeOverrides({
-								@AttributeOverride(name = "key", column = @Column(name = "notAudComp_key")),
-								@AttributeOverride(name = "value", column = @Column(name = "notAudComp_value")),
-								@AttributeOverride(name = "description",
-												column = @Column(name = "notAudComp_description"))
+								@AttributeOverride(name = "key", column = @Column(name = "notAudComp_key", length = 50)),
+								@AttributeOverride(name = "value", column = @Column(name = "notAudComp_value", length = 50)),
+								@AttributeOverride(name = "description", column = @Column(name = "notAudComp_description", length = 50))
 						})
 	private Component4 nonAuditedComponent;
 

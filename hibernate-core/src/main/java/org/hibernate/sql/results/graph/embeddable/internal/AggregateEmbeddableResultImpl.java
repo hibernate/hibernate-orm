@@ -4,21 +4,15 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
@@ -29,6 +23,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode.determineAggregateValuesArrayPositions;
 
 /**
@@ -63,15 +58,15 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
+		final var tableGroup = fromClauseAccess.resolveTableGroup(
 				getNavigablePath(),
 				np -> {
-					final EmbeddableValuedModelPart embeddedValueMapping =
+					final var embeddedValueMapping =
 							embeddedPartDescriptor.getEmbeddableTypeDescriptor()
 									.getEmbeddedValueMapping();
-					final TableGroup tg =
-							fromClauseAccess.findTableGroup( NullnessUtil.castNonNull( np.getParent() ).getParent() );
-					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
+					final var tg =
+							fromClauseAccess.findTableGroup( castNonNull( np.getParent() ).getParent() );
+					final var tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
 							np,
 							tg,
 							resultVariable,
@@ -89,12 +84,13 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var tableReference = tableGroup.getPrimaryTableReference();
 		final var selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
-		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
+		final var expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
+		final var aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				// Using the Object[] type here, so that a different JDBC extractor is chosen
-				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),
+				typeConfiguration.getJavaTypeRegistry()
+						.resolveDescriptor( Object[].class ),
 				null,
 				typeConfiguration
 		);
@@ -110,7 +106,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 	}
 
 	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
-		for ( Fetch fetch : fetches ) {
+		for ( var fetch : fetches ) {
 			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;
 			}

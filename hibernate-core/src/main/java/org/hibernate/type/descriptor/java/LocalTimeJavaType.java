@@ -22,11 +22,12 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.descriptor.DateTimeUtils.roundToPrecision;
 
 /**
  * Java type descriptor for the {@link LocalTime} type.
@@ -49,6 +50,11 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
+	public LocalTime cast(Object value) {
+		return (LocalTime) value;
+	}
+
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}
@@ -61,9 +67,8 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<LocalTime> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	@Override
@@ -82,48 +87,48 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(LocalTime value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
 			final var time = Time.valueOf( value );
-			if ( value.getNano() == 0 ) {
-				return (X) time;
-			}
-			// Preserve milliseconds, which java.sql.Time supports
-			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( value.getNano(), 3 ) / 1000000 );
+			final int nanos = value.getNano();
+			return nanos == 0
+					? type.cast( time )
+					// Preserve milliseconds, which java.sql.Time supports
+					: type.cast( new Time( time.getTime() + roundToPrecision( nanos, 3 ) / 1000000 ) );
 		}
 
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from
-		// a LocalTime to a Calendar.  IMO the same should hold true for converting to all
-		// the legacy Date/Time types...
+		// a LocalTime to a Calendar. IMO the same should hold true for converting to all
+		// the legacy Date/Time types.
 
-
-		final var zonedDateTime = value.atDate( LocalDate.of( 1970, 1, 1 ) ).atZone( ZoneId.systemDefault() );
+		final var zonedDateTime =
+				value.atDate( LocalDate.of( 1970, 1, 1 ) )
+						.atZone( ZoneId.systemDefault() );
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( zonedDateTime );
+			return type.cast( GregorianCalendar.from( zonedDateTime ) );
 		}
 
 		final var instant = zonedDateTime.toInstant();
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) Timestamp.from( instant );
+			return type.cast( Timestamp.from( instant ) );
 		}
 
 		if ( Date.class.equals( type ) ) {
-			return (X) Date.from( instant );
+			return type.cast( Date.from( instant ) );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return type.cast( instant.toEpochMilli() );
 		}
 
 		throw unknownUnwrap( type );
@@ -140,7 +145,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if (value instanceof Time time) {
-			final LocalTime localTime = time.toLocalTime();
+			final var localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;

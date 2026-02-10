@@ -97,12 +97,12 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Override
 	public SqmFunctionJoin<E> copy(SqmCopyContext context) {
-		final SqmFunctionJoin<E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		//noinspection unchecked
-		final SqmFunctionJoin<E> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmFunctionJoin<>(
 						getNavigablePath(),

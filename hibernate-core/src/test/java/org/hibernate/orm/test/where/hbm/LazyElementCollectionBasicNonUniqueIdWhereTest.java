@@ -10,12 +10,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialect(H2Dialect.class)
 @DomainModel(xmlMappings = "hbm/where/LazyElementCollectionBasicNonUniqueIdWhereTest.hbm.xml")
 @SessionFactory(exportSchema = false)
+@ServiceRegistry(
+	settings = {
+		@Setting(name = AvailableSettings.TRANSFORM_HBM_XML, value = "true")
+	}
+)
 public class LazyElementCollectionBasicNonUniqueIdWhereTest {
 	@BeforeAll
 	static void createSchema(SessionFactoryScope factoryScope) {

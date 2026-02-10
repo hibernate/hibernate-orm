@@ -665,7 +665,7 @@ public class SingleStoreDialect extends Dialect {
 				NullJdbcType.INSTANCE,
 				typeContributions.getTypeConfiguration()
 						.getJavaTypeRegistry()
-						.getDescriptor( Object.class )
+						.resolveDescriptor( Object.class )
 		) );
 
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );

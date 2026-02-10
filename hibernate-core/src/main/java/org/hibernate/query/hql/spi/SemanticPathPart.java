@@ -5,22 +5,17 @@
 package org.hibernate.query.hql.spi;
 
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-/**
- * @asciidoc
- *
- * Contract for things that can be part of a path structure, including:
- *
- * 		* package name
- * 		* class name
- * 		* field name
- * 		* enum name
- * 		* {@link SqmSimplePath}
- *
- * @author Steve Ebersole
- */
+/// Contract for things that can be part of a path structure, including:
+///
+/// * package name
+/// * class name
+/// * field name
+/// * enum name
+/// * [org.hibernate.query.sqm.tree.domain.SqmSimplePath]
+///
+/// @author Steve Ebersole
 public interface SemanticPathPart {
 	SemanticPathPart resolvePathPart(
 			String name,

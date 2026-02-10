@@ -65,12 +65,12 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		super( entityPersister, rootTableName, creationProcess );
 		entityDescriptor = entityPersister;
 
-		if ( bootEntityDescriptor.getIdentifierMapper() == null
-				|| bootEntityDescriptor.getIdentifierMapper() == bootEntityDescriptor.getIdentifier() ) {
+		final var identifierMapper = bootEntityDescriptor.getIdentifierMapper();
+		final var identifier = bootEntityDescriptor.getIdentifier();
+		if ( identifierMapper == null || identifierMapper == identifier ) {
 			// cid -> getIdentifier
 			// idClass -> null
-			final Component virtualIdSource = (Component) bootEntityDescriptor.getIdentifier();
-
+			final var virtualIdSource = (Component) identifier;
 			virtualIdEmbeddable = new VirtualIdEmbeddable(
 					virtualIdSource,
 					this,
@@ -85,9 +85,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		else {
 			// cid = getIdentifierMapper
 			// idClass = getIdentifier
-			final var virtualIdSource = bootEntityDescriptor.getIdentifierMapper();
-			final var idClassSource = (Component) bootEntityDescriptor.getIdentifier();
-
+			final var virtualIdSource = identifierMapper;
+			final var idClassSource = (Component) identifier;
 			virtualIdEmbeddable = new VirtualIdEmbeddable(
 					virtualIdSource,
 					this,

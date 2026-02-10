@@ -4,11 +4,10 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.DetachedObjectException;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
@@ -27,6 +26,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ProxyUtil.forceInitialize;
+import static org.hibernate.engine.internal.ProxyUtil.isUninitialized;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -51,29 +52,30 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 */
 	@Override
 	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
-		final var source = event.getSession();
-		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
-		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
-			handleUninitializedProxy( event, refreshedAlready, source, object, persistenceContext );
+		if ( object == null ) {
+			throw new NullPointerException( "Attempted to refresh null" );
 		}
 		else {
-			final Object entity = persistenceContext.unproxyAndReassociate( object );
-			if ( refreshedAlready.add( entity) ) {
-				refresh( event, refreshedAlready, entity );
+			final var source = event.getEventSource();
+			if ( isUninitialized( object, source ) ) {
+				handleUninitializedProxy( event, refreshedAlready );
 			}
 			else {
-				EVENT_LISTENER_LOGGER.alreadyRefreshed();
+				final Object entity = forceInitialize( object, source );
+				if ( refreshedAlready.add( entity ) ) {
+					refresh( event, refreshedAlready, entity );
+				}
+				else {
+					EVENT_LISTENER_LOGGER.alreadyRefreshed();
+				}
 			}
 		}
 	}
 
-	private static void handleUninitializedProxy(
-			RefreshEvent event,
-			RefreshContext refreshedAlready,
-			EventSource source,
-			Object object,
-			PersistenceContext persistenceContext) {
+	private static void handleUninitializedProxy(RefreshEvent event, RefreshContext refreshedAlready) {
+		final var source = event.getEventSource();
+		final Object object = event.getObject();
 		final boolean isTransient = !source.isManaged( object );
 		// If refreshAlready is nonempty then the refresh is the result of a cascade refresh and the
 		// refresh of the parent will take care of initializing the lazy entity and setting the
@@ -88,8 +90,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					persister,
 					lazyInitializer,
 					null,
-					persister.getIdentifier( object, event.getSession() ),
-					persistenceContext
+					persister.getIdentifier( object, source ),
+					source.getPersistenceContextInternal()
 			);
 			if ( lazyInitializer != null ) {
 				refreshedAlready.add( lazyInitializer.getImplementation() );
@@ -122,37 +124,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final var entry = persistenceContext.getEntry( object );
 
-		final EntityPersister persister;
-		final Object id;
 		if ( entry == null ) {
-			//refresh() does not pass an entityName
-			persister = source.getEntityPersister( event.getEntityName(), object );
-			id = persister.getIdentifier( object, event.getSession() );
-			if ( id == null ) {
-				throw new TransientObjectException( "Cannot refresh instance of entity '" + persister.getEntityName()
-						+ "' because it has a null identifier" );
-			}
-			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-				EVENT_LISTENER_LOGGER.refreshingTransient(
-						infoString( persister, id, event.getFactory() ) );
-			}
-			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
-				throw new NonUniqueObjectException( id, persister.getEntityName() );
-			}
+			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
-		else {
-			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
-				EVENT_LISTENER_LOGGER.refreshing(
-						infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
-			}
-			if ( !entry.isExistsInDatabase() ) {
-				throw new UnresolvableObjectException(
-						entry.getId(),
-						"this instance does not yet exist as a row in the database"
-				);
-			}
-			persister = entry.getPersister();
-			id = entry.getId();
+
+		final EntityPersister persister = entry.getPersister();
+		final Object id = entry.getId();
+		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
+			EVENT_LISTENER_LOGGER.refreshing(
+					infoString( persister, id, event.getFactory() ) );
+		}
+		if ( !entry.isExistsInDatabase() ) {
+			throw new UnresolvableObjectException( id, persister.getEntityName() );
 		}
 
 		// cascade the refresh prior to refreshing this entity
@@ -165,13 +148,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refreshedAlready
 		);
 
-		if ( entry != null ) {
-			persistenceContext.removeEntityHolder( entry.getEntityKey() );
-			if ( persister.hasCollections() ) {
-				new EvictVisitor( source, object ).process( object, persister );
-			}
-			persistenceContext.removeEntry( object );
+		persistenceContext.removeEntityHolder( entry.getEntityKey() );
+		if ( persister.hasCollections() ) {
+			new EvictVisitor( source, object ).process( object, persister );
 		}
+		persistenceContext.removeEntry( object );
 
 		evictEntity( object, persister, id, source );
 		evictCachedCollections( persister, id, source );

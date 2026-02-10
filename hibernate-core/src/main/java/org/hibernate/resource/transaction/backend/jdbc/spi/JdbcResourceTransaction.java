@@ -28,4 +28,9 @@ public interface JdbcResourceTransaction {
 	void rollback();
 
 	TransactionStatus getStatus();
+
+	/**
+	 * Mark this transaction for rollback.
+	 */
+	void markRollbackOnly();
 }

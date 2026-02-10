@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -38,10 +37,11 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath =
+		final var path = lhs.getNavigablePath();
+		final var navigablePath =
 				intermediatePathSource == null
-						? lhs.getNavigablePath()
-						: lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
+						? path
+						: path.append( intermediatePathSource.getPathName() );
 		return new AnyDiscriminatorSqmPath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 

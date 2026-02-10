@@ -260,7 +260,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			@Override
 			protected StatelessSessionImplementor createStatelessSession() {
 				return new StatelessSessionImpl( factory,
-						new SessionCreationOptionsAdaptor( factory, this, AbstractSharedSessionContract.this ) );
+						new SessionCreationOptionsAdaptor( factory, this,
+								AbstractSharedSessionContract.this ) );
 			}
 		};
 	}

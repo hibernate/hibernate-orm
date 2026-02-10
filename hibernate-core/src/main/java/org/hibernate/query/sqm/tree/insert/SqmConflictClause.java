@@ -148,7 +148,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 
 	@Override
 	public SqmConflictClause<T> copy(SqmCopyContext context) {
-		final SqmConflictClause<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

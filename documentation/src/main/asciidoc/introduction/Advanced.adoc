@@ -277,6 +277,7 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_SCHEMA_MAPPER[`hibernate.multi_tenant.schema_mapper`]  | Specifies the `TenantSchemaMapper` for schema-based multi-tenancy
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CREDENTIALS_MAPPER[`hibernate.multi_tenant.credentials_mapper`]  | Specifies the `TenantCredentialsMapper` for schema-based or discriminator-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider` for database-based multi-tenancy
 |===
 
@@ -311,7 +312,10 @@ If your source of JDBC connections is a set of JNDI-bound ``DataSource``s, you m
 
 The second option is to keep all the data for different tenants in the same database, giving each tenant a different named database schema with its own set of tables.
 
-In this case we must supply a link:{doc-javadoc-url}org/hibernate/context/spi/TenantSchemaMapper.html[`TenantSchemaMapper`] which is responsible for mapping from tenant ids to schema names.
+- If all tenants connect to the database using the same credentials, we must supply a link:{doc-javadoc-url}org/hibernate/context/spi/TenantSchemaMapper.html[`TenantSchemaMapper`] which is responsible for mapping tenant ids to schema names.
+
+- If each tenant should use distinct credentials to connect to the database, and if your JDBC `DataSource` supports this (not all do!) then we can use a link:{doc-javadoc-url}org/hibernate/context/spi/TenantCredentialsMapper.html[`TenantCredentialsMapper`] to supply the username and password of each tenant.
+If each database user has a different default schema, we might not need a `TenantSchemaMapper`.
 
 [discrete]
 ==== Discriminator-based multi-tenancy
@@ -1049,6 +1053,9 @@ Hibernate's {enhancer}[bytecode enhancer] enables the following features:
 
 - _attribute-level lazy fetching_ for basic attributes annotated `@Basic(fetch=LAZY)` and for lazy non-polymorphic associations,
 - _interception-based_—instead of the usual _snapshot-based_—detection of modifications.
+
+In addition, use of the bytecode enhancer relaxes the usual requirement that entity and embeddable classes have default constructors.
+If a class annotated `@Entity`, `@MappedSuperclass`, or `@Embeddable` has no default constructor, the bytecode enhancer will add it.
 
 To use the bytecode enhancer, we must add the Hibernate plugin to our gradle build:
 

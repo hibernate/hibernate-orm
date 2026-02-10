@@ -39,7 +39,7 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	}
 
 	protected void clearCache() {
-		L2CACHE_LOGGER.tracef( "Clearing cache data map [region='%s']", region.getName() );
+		L2CACHE_LOGGER.clearingCacheDataMap( region.getName() );
 		getStorageAccess().evictData();
 	}
 
@@ -50,7 +50,20 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public Object get(SharedSessionContractImplementor session, Object key) {
-		return getStorageAccess().getFromCache( key, session );
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		if ( traceEnabled ) {
+			L2CACHE_LOGGER.gettingCachedData( region.getName(), getAccessType(), key );
+		}
+		final Object item = getStorageAccess().getFromCache( key, session );
+		if ( traceEnabled ) {
+			if ( item == null ) {
+				L2CACHE_LOGGER.cacheMiss( region.getName(), key );
+			}
+			else {
+				L2CACHE_LOGGER.cacheHit( region.getName(), key );
+			}
+		}
+		return item;
 	}
 
 	@Override
@@ -59,6 +72,9 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object key,
 			Object value,
 			Object version) {
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.cachingDataFromLoad( region.getName(), getAccessType(), key, value );
+		}
 		getStorageAccess().putFromLoad( key, value, session );
 		return true;
 	}
@@ -70,7 +86,15 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 			Object value,
 			Object version,
 			boolean minimalPutOverride) {
-		return putFromLoad( session, key, value, version );
+		if ( minimalPutOverride && getStorageAccess().contains( key ) ) {
+			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+				L2CACHE_LOGGER.cachePutFromLoadSkippedDueToMinimalPut( region.getName(), getAccessType(), key );
+			}
+			return false;
+		}
+		else {
+			return putFromLoad( session, key, value, version );
+		}
 	}
 
 	private static final SoftLock REGION_LOCK = new SoftLock() {

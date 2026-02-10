@@ -12,18 +12,13 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -45,21 +40,15 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	@Test
 	@JiraKey(value = "HHH-8804")
 	public void testGenericTypeParameters() {
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
-		try {
-			final ConverterDescriptor<List<String>, Integer> converterDescriptor =
-					ConverterDescriptors.of( CustomAttributeConverter.class,
-							bootstrapContext.getClassmateContext() );
-			assertEquals( List.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
-		} finally {
-			bootstrapContext.close();
-		}
+		final var converterDescriptor = ConverterDescriptors.of( CustomAttributeConverter.class );
+		assertEquals( "java.util.List<java.lang.String>",
+				converterDescriptor.getDomainValueResolvedType().getTypeName() );
 	}
 
 	@Test
 	@JiraKey( value = "HHH-10050" )
 	public void testNestedTypeParameterAutoApplication(ServiceRegistryScope scope) {
-		final Metadata metadata = new MetadataSources( scope.getRegistry() )
+		final var metadata = new MetadataSources( scope.getRegistry() )
 				.addAnnotatedClass( SampleEntity.class )
 				.getMetadataBuilder()
 				.applyAttributeConverter( IntegerListConverter.class )
@@ -67,25 +56,25 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 				.build();
 
 		// lets make sure the auto-apply converters were applied properly...
-		PersistentClass pc = metadata.getEntityBinding( SampleEntity.class.getName() );
+		var pc = metadata.getEntityBinding( SampleEntity.class.getName() );
 
 		{
-			Property prop = pc.getProperty( "someStrings" );
-			ConvertedBasicTypeImpl type = assertTyping(
+			var property = pc.getProperty( "someStrings" );
+			var type = assertTyping(
 					ConvertedBasicTypeImpl.class,
-					prop.getType()
+					property.getType()
 			);
-			JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+			var converter = (JpaAttributeConverter) type.getValueConverter();
 			assertTrue( StringListConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 		}
 
 		{
-			Property prop = pc.getProperty( "someIntegers" );
-			ConvertedBasicTypeImpl type = assertTyping(
+			var property = pc.getProperty( "someIntegers" );
+			var type = assertTyping(
 					ConvertedBasicTypeImpl.class,
-					prop.getType()
+					property.getType()
 			);
-			JpaAttributeConverter converter = (JpaAttributeConverter) type.getValueConverter();
+			var converter = (JpaAttributeConverter) type.getValueConverter();
 			assertTrue( IntegerListConverter.class.isAssignableFrom( converter.getConverterJavaType().getJavaTypeClass() ) );
 		}
 	}

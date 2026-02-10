@@ -51,7 +51,7 @@ public class CustomTypeConverterTest {
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJavaTypeRegistry().getDescriptor( PayloadWrapper.class ),
+					bootTypeConfiguration.getJavaTypeRegistry().resolveDescriptor( PayloadWrapper.class ),
 					sameInstance( PayloadWrapperJavaType.INSTANCE )
 			);
 

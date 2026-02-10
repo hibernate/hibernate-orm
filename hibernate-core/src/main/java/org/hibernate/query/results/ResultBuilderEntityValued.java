@@ -17,7 +17,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 public interface ResultBuilderEntityValued extends ResultBuilder {
 	@Override
-	EntityResult buildResult(
+	EntityResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState);

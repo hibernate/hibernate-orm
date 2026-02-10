@@ -346,7 +346,7 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 			}
 
 			private void addIdColumns(PluralAttributeMapping pluralAttributeMapping, List<ColumnInfo> idColumns) {
-				final DdlTypeRegistry ddlTypeRegistry = pluralAttributeMapping.getCollectionDescriptor()
+				final var ddlTypeRegistry = pluralAttributeMapping.getCollectionDescriptor()
 						.getFactory()
 						.getTypeConfiguration()
 						.getDdlTypeRegistry();
@@ -354,7 +354,7 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 			}
 
 			private void addIdColumns(EntityMappingType entityMappingType, List<ColumnInfo> idColumns) {
-				final DdlTypeRegistry ddlTypeRegistry = entityMappingType.getEntityPersister()
+				final var ddlTypeRegistry = entityMappingType.getEntityPersister()
 						.getFactory()
 						.getTypeConfiguration()
 						.getDdlTypeRegistry();

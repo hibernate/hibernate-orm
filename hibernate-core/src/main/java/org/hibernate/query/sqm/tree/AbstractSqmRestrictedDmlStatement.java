@@ -60,7 +60,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			return null;
 		}
 		else {
-			final SqmPredicate predicate = whereClause.getPredicate();
+			final var predicate = whereClause.getPredicate();
 			return new SqmWhereClause( predicate == null ? null : predicate.copy( context ), nodeBuilder() );
 		}
 	}
@@ -70,8 +70,8 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	public SqmRoot<T> from(EntityType<T> entity) {
-		final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entity;
-		final SqmRoot<T> root = getTarget();
+		final var entityDomainType = (EntityDomainType<T>) entity;
+		final var root = getTarget();
 		if ( root.getModel() != entity ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -124,7 +124,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		// Clear the current predicate if one is present
 		whereClause.setPredicate( null );
 		if ( restrictions != null ) {
-			for ( Predicate restriction : restrictions ) {
+			for ( var restriction : restrictions ) {
 				whereClause.applyPredicate( (SqmPredicate) restriction );
 			}
 		}

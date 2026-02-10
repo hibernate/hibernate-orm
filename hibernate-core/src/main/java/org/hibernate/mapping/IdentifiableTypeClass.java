@@ -18,7 +18,12 @@ public interface IdentifiableTypeClass extends TableContainer {
 
 	List<Property> getDeclaredProperties();
 
+	Component getIdentifierMapper();
+
 	Table getImplicitTable();
+
+	boolean isVersioned();
+	Property getVersion();
 
 	/**
 	 * @deprecated No longer used

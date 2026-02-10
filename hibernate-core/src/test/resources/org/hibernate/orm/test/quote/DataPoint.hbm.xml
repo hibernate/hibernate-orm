@@ -45,11 +45,11 @@
 			<generator class="native" />
 		</id>
 		
-		<many-to-one name="manyToOne" column="o2mid" class="DataPoint"/>
+		<many-to-one name="manyToOne" column="o2mid" class="AssociatedDataPoint"/>
         
         <set name="manyToMany" table="m2mjointable" inverse="true">
             <key/>
-            <many-to-many class="DataPoint"/>
+            <many-to-many class="AssociatedDataPoint"/>
         </set>
 	</class>
 </hibernate-mapping>

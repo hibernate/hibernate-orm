@@ -272,7 +272,8 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			PersistentAttributeInterceptor interceptor,
 			SharedSessionContractImplementor session) {
 		if ( !enhancedForLazyLoading ) {
-			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
+			throw new NotInstrumentedException( "Entity class '" + entityClass.getName()
+												+ "' is not enhanced for lazy loading" );
 		}
 
 		if ( !entityClass.isInstance( entity ) ) {
@@ -291,7 +292,8 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	@Override
 	public @Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException {
 		if ( !enhancedForLazyLoading ) {
-			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
+			throw new NotInstrumentedException( "Entity class [" + entityClass.getName()
+												+ "] is not enhanced for lazy loading" );
 		}
 
 		if ( !entityClass.isInstance( entity ) ) {

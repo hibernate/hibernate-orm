@@ -54,7 +54,8 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 
 		final var compositeType = virtualIdSource.getType();
-		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
+		( (CompositeTypeImplementor) compositeType )
+				.injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(
 				"VirtualIdEmbeddable(" + navigableRole.getFullPath() + ")#finishInitialization",

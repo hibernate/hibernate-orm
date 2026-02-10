@@ -88,6 +88,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	private String typeName;
 	private Properties typeParameters;
+	private Annotation typeAnnotation;
+	private MemberDetails memberDetails;
 	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
@@ -121,12 +123,20 @@ public abstract class SimpleValue implements KeyValue {
 	protected SimpleValue(SimpleValue original) {
 		this.buildingContext = original.buildingContext;
 		this.metadata = original.metadata;
-		this.columns.addAll( original.columns );
+		for ( var selectable : original.columns ) {
+			if ( selectable instanceof Column column ) {
+				final var newColumn = column.clone();
+				newColumn.setValue( this );
+				this.columns.add( newColumn );
+			}
+		}
 		this.insertability.addAll( original.insertability );
 		this.updatability.addAll( original.updatability );
 		this.partitionKey = original.partitionKey;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
+		this.typeAnnotation = original.typeAnnotation;
+		this.memberDetails = original.memberDetails;
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
 		this.isLob = original.isLob;
@@ -227,8 +237,8 @@ public abstract class SimpleValue implements KeyValue {
 	public void sortColumns(int[] originalOrder) {
 		if ( columns.size() > 1 ) {
 			final var originalColumns = columns.toArray( new Selectable[0] );
-			final boolean[] originalInsertability = toBooleanArray( insertability );
-			final boolean[] originalUpdatability = toBooleanArray( updatability );
+			final var originalInsertability = toBooleanArray( insertability );
+			final var originalUpdatability = toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
 				final var selectable = originalColumns[i];
@@ -255,6 +265,11 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public int getColumnSpan() {
 		return columns.size();
+	}
+
+	@Override
+	public boolean hasColumns() {
+		return !columns.isEmpty();
 	}
 
 	protected Selectable getColumn(int position){
@@ -298,8 +313,7 @@ public abstract class SimpleValue implements KeyValue {
 				(Class<? extends AttributeConverter<?,?>>)
 						classForName( AttributeConverter.class, converterClassName, bootstrapContext );
 		attributeConverterDescriptor =
-				ConverterDescriptors.of( clazz, null, false,
-						bootstrapContext.getClassmateContext() );
+				ConverterDescriptors.of( clazz, null, false );
 	}
 
 	ClassLoaderService classLoaderService() {
@@ -307,7 +321,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void makeVersion() {
-		this.isVersion = true;
+		isVersion = true;
 	}
 
 	public boolean isVersion() {
@@ -589,12 +603,11 @@ public abstract class SimpleValue implements KeyValue {
 				// considered nullable
 				return true;
 			}
-			else if ( selectable instanceof Column column ) {
-				if ( !column.isNullable() ) {
-					// if there is a single non-nullable column, the Value
-					// overall is considered non-nullable.
-					return false;
-				}
+			else if ( selectable instanceof Column column
+						&& !column.isNullable() ) {
+				// if there is a single non-nullable column, the Value
+				// overall is considered non-nullable.
+				return false;
 			}
 		}
 		// nullable by default
@@ -792,11 +805,27 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	public void setTypeAnnotation(Annotation typeAnnotation) {
+		this.typeAnnotation = typeAnnotation;
+	}
+
+	public void setMemberDetails(MemberDetails memberDetails) {
+		this.memberDetails = memberDetails;
+	}
+
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
-	public void copyTypeFrom( SimpleValue sourceValue ) {
+	public Annotation getTypeAnnotation() {
+		return typeAnnotation;
+	}
+
+	public MemberDetails getMemberDetails() {
+		return memberDetails;
+	}
+
+	public void copyTypeFrom(SimpleValue sourceValue ) {
 		setTypeName( sourceValue.getTypeName() );
 		setTypeParameters( sourceValue.getTypeParameters() );
 
@@ -818,6 +847,8 @@ public abstract class SimpleValue implements KeyValue {
 		return Objects.equals( columns, other.columns )
 			&& Objects.equals( typeName, other.typeName )
 			&& Objects.equals( typeParameters, other.typeParameters )
+			&& Objects.equals( typeAnnotation, other.typeAnnotation )
+			&& Objects.equals( memberDetails, other.memberDetails )
 			&& Objects.equals( table, other.table )
 			&& Objects.equals( foreignKeyName, other.foreignKeyName )
 			&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
@@ -855,6 +886,16 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	public void setNonInsertable() {
+		insertability.replaceAll( current -> false );
+	}
+
+	@Override
+	public void setNonUpdatable() {
+		updatability.replaceAll( current -> false );
+	}
+
+	@Override
 	public boolean hasAnyUpdatableColumns() {
 		for ( int i = 0; i < updatability.size(); i++ ) {
 			if ( updatability.get( i ) ) {
@@ -883,7 +924,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {
-		final boolean[] array = new boolean[ list.size() ];
+		final var array = new boolean[ list.size() ];
 		int i = 0;
 		for ( Boolean value : list ) {
 			array[ i++ ] = value;
@@ -912,11 +953,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	protected ParameterType createParameterType() {
 		try {
-			final String[] columnNames = new String[ columns.size() ];
-			final Long[] columnLengths = new Long[ columns.size() ];
-			for ( int i = 0; i < columns.size(); i++ ) {
-				final var selectable = columns.get(i);
-				if ( selectable instanceof Column column ) {
+			final int size = columns.size();
+			final var columnNames = new String[size];
+			final var columnLengths = new Long[size];
+			for ( int i = 0; i < size; i++ ) {
+				if ( columns.get(i) instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
@@ -1094,6 +1135,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public Type getType() {
 			return SimpleValue.this.getType();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return SimpleValue.this.getMemberDetails();
 		}
 
 		// we could add this if it helps integrate old infrastructure

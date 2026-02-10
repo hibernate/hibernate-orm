@@ -7,13 +7,8 @@ package org.hibernate.dialect.unique;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
@@ -25,6 +20,8 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * <li>SQL Server <em>does</em> allow unique constraints on nullable columns, but the semantics
  *     are that two null values are non-unique. So here we need to jump through hoops with the
  *     {@code create unique nonclustered index ... where ...} command.
+ * <li>Spanner does not allow unique column definition, but it does allow the creation of unique
+ * 	   indexes instead, using {@code create unique index ...}
  * </ul>
  *
  * @author Brett Meyer
@@ -37,28 +34,29 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	@Override
 	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( uniqueKey.hasNullableColumn() ) {
-			final Dialect dialect = context.getDialect();
-			final String name = uniqueKey.getName();
-			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
-			final List<Column> columns = uniqueKey.getColumns();
-			final Map<Column, String> columnOrderMap = uniqueKey.getColumnOrderMap();
-			final StringBuilder statement =
+		final var dialect = context.getDialect();
+		if ( needsUniqueIndex( uniqueKey, dialect ) ) {
+			final String constraintName = constraintName( uniqueKey, metadata.getDatabase() );
+			final var statement =
 					new StringBuilder( dialect.getCreateIndexString( true ) )
 							.append( " " )
-							.append( dialect.qualifyIndexName() ? name : unqualify( name ) )
+							.append( dialect.qualifyIndexName()
+									? constraintName
+									: unqualify( constraintName ) )
 							.append( " on " )
-							.append( tableName )
+							.append( tableName( uniqueKey, context ) )
 							.append( " (" );
+			final var columns = uniqueKey.getColumns();
+			final var columnOrderMap = uniqueKey.getColumnOrderMap();
 			boolean first = true;
-			for ( Column column : columns ) {
+			for ( var column : columns ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					statement.append(", ");
 				}
-				statement.append( column.getQuotedName(dialect) );
+				statement.append( column.getQuotedName( dialect ) );
 				if ( columnOrderMap.containsKey( column ) ) {
 					statement.append( " " ).append( columnOrderMap.get( column ) );
 				}
@@ -75,13 +73,22 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( uniqueKey.hasNullableColumn() ) {
-			final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
-			return "drop index " + qualify( tableName, uniqueKey.getName() );
+		if ( needsUniqueIndex( uniqueKey, context.getDialect() ) ) {
+			final var statement = new StringBuilder().append( "drop index " );
+			if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+				statement.append( "if exists " );
+			}
+			statement.append( tableName( uniqueKey, context ) ).append( '.' )
+					.append( constraintName( uniqueKey, metadata.getDatabase() ) );
+			return statement.toString();
 		}
 		else {
 			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
+	}
+
+	private boolean needsUniqueIndex(UniqueKey uniqueKey, Dialect dialect) {
+		return uniqueKey.hasNullableColumn() || !dialect.supportsUniqueConstraints();
 	}
 
 }

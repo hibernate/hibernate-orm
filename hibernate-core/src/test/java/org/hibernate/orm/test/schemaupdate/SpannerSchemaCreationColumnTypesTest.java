@@ -71,7 +71,7 @@ public class SpannerSchemaCreationColumnTypesTest {
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 
-		assertThat(fileContent.toLowerCase( Locale.ROOT )).contains( "create table test_entity_table" );
+		assertThat(fileContent.toLowerCase(Locale.ROOT)).contains("create table if not exists test_entity_table");
 		assertThat(fileContent.toLowerCase( Locale.ROOT )).contains( "id int64 not null" );
 		assertThat(fileContent.toLowerCase( Locale.ROOT )).contains( "name_column string(255)" );
 	}

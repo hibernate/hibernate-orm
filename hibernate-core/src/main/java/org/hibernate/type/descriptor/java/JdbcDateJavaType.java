@@ -6,13 +6,13 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
-import java.util.Date;
+import java.sql.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
@@ -55,23 +55,26 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}
 
 	@Override
 	public Class<Date> getJavaType() {
-		// wrong, but needed for backward compatibility
-		//noinspection unchecked, rawtypes
-		return (Class) java.sql.Date.class;
+		return java.sql.Date.class;
 	}
 
 	@Override
 	public boolean isInstance(Object value) {
 		// this check holds true for java.sql.Date as well
-		return value instanceof Date
+		return value instanceof java.util.Date
 			&& !( value instanceof java.sql.Time );
+	}
+
+	@Override
+	public Date cast(Object value) {
+		return (Date) value;
 	}
 
 	@Override
@@ -110,81 +113,57 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date coerce(Object value, CoercionContext coercionContext) {
+	public Date coerce(Object value) {
 		return wrap( value, null );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public Object unwrap(Date value, Class type, WrapperOptions options) {
+	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 
 		if ( LocalDate.class.isAssignableFrom( type ) ) {
-			return unwrapLocalDate( value );
+			return type.cast( unwrapLocalDate( value ) );
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return unwrapSqlDate( value );
+			return type.cast( value );
 		}
 
 		if ( java.util.Date.class.isAssignableFrom( type ) ) {
-			return value;
+			return type.cast( value );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return unwrapDateEpoch( value );
+			return type.cast( toDateEpoch( value ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return toString( value );
+			return type.cast( toString( value ) );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final var gregorianCalendar = new GregorianCalendar();
-			gregorianCalendar.setTimeInMillis( unwrapDateEpoch( value ) );
-			return gregorianCalendar;
+			gregorianCalendar.setTimeInMillis( toDateEpoch( value ) );
+			return type.cast( gregorianCalendar );
 		}
 
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( unwrapDateEpoch( value ) );
+			return type.cast( new java.sql.Timestamp( toDateEpoch( value ) ) );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			throw new IllegalArgumentException( "Illegal attempt to treat `java.sql.Date` as `java.sql.Time`" );
+			throw new IllegalArgumentException( "Illegal attempt to treat 'java.sql.Date' as 'java.sql.Time'" );
 		}
 
 		throw unknownUnwrap( type );
 	}
 
-	private LocalDate unwrapLocalDate(Date value) {
+	private LocalDate unwrapLocalDate(java.util.Date value) {
 		return value instanceof java.sql.Date date
 				? date.toLocalDate()
-				: new java.sql.Date( unwrapDateEpoch( value ) ).toLocalDate();
-	}
-
-	private java.sql.Date unwrapSqlDate(Date value) {
-		if ( value instanceof java.sql.Date date ) {
-			final long dateEpoch = toDateEpoch( date.getTime() );
-			return dateEpoch == date.getTime() ? date : new java.sql.Date( dateEpoch );
-		}
-		return new java.sql.Date( unwrapDateEpoch( value ) );
-
-	}
-
-	private static long unwrapDateEpoch(Date value) {
-		return toDateEpoch( value.getTime() );
-	}
-
-	private static long toDateEpoch(long value) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTimeInMillis( value );
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.clear(Calendar.MINUTE);
-		calendar.clear(Calendar.SECOND);
-		calendar.clear(Calendar.MILLISECOND);
-		return calendar.getTimeInMillis();
+				: new java.sql.Date( toDateEpoch( value ) ).toLocalDate();
 	}
 
 	@Override
@@ -205,8 +184,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return new java.sql.Date( toDateEpoch( calendar.getTimeInMillis() ) );
 		}
 
-		if ( value instanceof Date date ) {
-			return unwrapSqlDate( date );
+		if ( value instanceof java.util.Date date ) {
+			return toDate( date );
 		}
 
 		if ( value instanceof LocalDate localDate ) {
@@ -216,14 +195,40 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	@Override
-	public String toString(Date value) {
-		if ( value instanceof java.sql.Date ) {
-			return LITERAL_FORMATTER.format( ( (java.sql.Date) value ).toLocalDate() );
+	static java.sql.Date toDate(java.util.Date value) {
+		if ( value instanceof java.sql.Date date ) {
+			final long millis = date.getTime();
+			final long dateEpoch = toDateEpoch( millis );
+			return dateEpoch == millis ? date : new java.sql.Date( dateEpoch );
 		}
 		else {
-			return LITERAL_FORMATTER.format( LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ) );
+			return new java.sql.Date( toDateEpoch( value ) );
 		}
+	}
+
+	static long toDateEpoch(java.util.Date value) {
+		return toDateEpoch( value.getTime() );
+	}
+
+	static long toDateEpoch(long value) {
+		final var calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( value );
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.clear(Calendar.MINUTE);
+		calendar.clear(Calendar.SECOND);
+		calendar.clear(Calendar.MILLISECOND);
+		return calendar.getTimeInMillis();
+	}
+
+	private static TemporalAccessor fromDate(java.util.Date value) {
+		return value instanceof java.sql.Date date
+				? date.toLocalDate()
+				: LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
+	}
+
+	@Override
+	public String toString(Date value) {
+		return LITERAL_FORMATTER.format( fromDate( value ) );
 	}
 
 	@Override
@@ -250,12 +255,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public void appendEncodedString(SqlAppender sb, Date value) {
-		if ( value instanceof java.sql.Date ) {
-			LITERAL_FORMATTER.formatTo( ( (java.sql.Date) value ).toLocalDate(), sb );
-		}
-		else {
-			LITERAL_FORMATTER.formatTo( LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() ), sb );
-		}
+		LITERAL_FORMATTER.formatTo( fromDate( value ), sb );
 	}
 
 	@Override
@@ -264,9 +264,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaType<X>) this;
+	protected TemporalJavaType<Date> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
@@ -274,12 +273,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 		@Override
 		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof java.sql.Date ) {
-				return value;
-			}
-			else {
-				return new java.sql.Date( value.getTime() );
-			}
+			return new java.sql.Date( value.getTime() );
 		}
 	}
 }

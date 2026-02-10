@@ -46,9 +46,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.isPartOfId;
 
 
 /**
@@ -111,7 +111,7 @@ public class TemporaryTable implements Exportable, Contributable {
 		this.temporaryTableKind = temporaryTableKind;
 		this.dialect = dialect;
 		if ( temporaryTableKind == TemporaryTableKind.PERSISTENT ) {
-			final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
+			final var typeConfiguration = creationContext.getTypeConfiguration();
 			final BasicType<UUID> uuidType = typeConfiguration.getBasicTypeRegistry().resolve(
 					StandardBasicTypes.UUID_CHAR
 			);
@@ -354,7 +354,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 					}
 					if ( isExternallyGenerated ) {
-						final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
+						final var typeConfiguration = metadata.getTypeConfiguration();
 						// We add a special row number column that we can use to identify and join rows
 						final BasicType<Integer> integerBasicType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 						final String rowNumberType;
@@ -512,10 +512,14 @@ public class TemporaryTable implements Exportable, Contributable {
 			}
 			return offset;
 		}
-		else if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
-			return offset + (basicModelPart.isInsertable() ? modelPart.getJdbcTypeCount() : 0);
+		else if ( modelPart instanceof BasicValuedModelPart basicModelPart
+				&& !basicModelPart.isInsertable()
+				&& !(modelPart instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping )) ) {
+			return offset;
 		}
-		return offset + modelPart.getJdbcTypeCount();
+		else {
+			return offset + modelPart.getJdbcTypeCount();
+		}
 	}
 
 	public boolean isRowNumberGenerated() {

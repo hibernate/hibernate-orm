@@ -61,7 +61,7 @@ public final class OneToOne extends ToOne {
 	}
 
 	public OneToOneType getType() throws MappingException {
-		if ( getColumnSpan()>0 ) {
+		if ( hasColumns() ) {
 			return new SpecialOneToOneType(
 					getTypeConfiguration(),
 					getReferencedEntityName(),
@@ -93,7 +93,7 @@ public final class OneToOne extends ToOne {
 
 	@Override
 	public void createUniqueKey(MetadataBuildingContext context) {
-		if ( !hasFormula() && getColumnSpan()>0  ) {
+		if ( !hasFormula() && hasColumns()  ) {
 			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}

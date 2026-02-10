@@ -17,7 +17,6 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.checkResults;
@@ -63,7 +62,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session,
 			Batch.StaleStateMapper staleStateMapper) {
-		final GeneratedValues generatedValues = performNonBatchedOperations(
+		final var generatedValues = performNonBatchedOperations(
 				modelReference,
 				valuesAnalysis,
 				inclusionChecker,
@@ -112,7 +111,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			return;
 		}
 
-		final TableMapping tableDetails = statementDetails.getMutatingTableDetails();
+		final var tableDetails = statementDetails.getMutatingTableDetails();
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
 			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.skippingSecondaryInsert( tableDetails.getTableName() );
@@ -140,9 +139,10 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 		try {
 			valueBindings.beforeStatement( statementDetails );
 
-			final int affectedRowCount = session.getJdbcCoordinator()
-					.getResultSetReturn()
-					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
+			final int affectedRowCount =
+					session.getJdbcCoordinator()
+							.getResultSetReturn()
+							.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
 
 			if ( affectedRowCount == 0 && tableDetails.isOptional() ) {
 				// the optional table did not have a row

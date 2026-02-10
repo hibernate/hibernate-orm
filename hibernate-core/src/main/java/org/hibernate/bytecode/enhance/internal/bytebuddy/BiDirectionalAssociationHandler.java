@@ -7,7 +7,6 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -22,9 +21,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationValue;
-import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.scaffold.FieldLocator;
@@ -49,18 +46,15 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			return implementation;
 		}
 
-		TypeDescription targetEntity = getTargetEntityClass( managedCtClass, persistentField );
+		final var targetEntity = getTargetEntityClass( managedCtClass, persistentField );
 		if ( targetEntity == null ) {
 			return implementation;
 		}
-		String mappedBy = getMappedBy( persistentField, targetEntity, enhancementContext );
-		String bidirectionalAttributeName;
-		if ( mappedBy == null ) {
-			bidirectionalAttributeName = getMappedByManyToMany( persistentField, targetEntity, enhancementContext );
-		}
-		else {
-			bidirectionalAttributeName = mappedBy;
-		}
+		final String mappedBy = getMappedBy( persistentField, targetEntity, enhancementContext );
+		final String bidirectionalAttributeName =
+				mappedBy == null
+						? getMappedByManyToMany( persistentField, targetEntity, enhancementContext )
+						: mappedBy;
 		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
 			if ( ENHANCEMENT_LOGGER.isInfoEnabled() ) {
 				ENHANCEMENT_LOGGER.bidirectionalNotManagedCouldNotFindTargetField(
@@ -72,12 +66,13 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			return implementation;
 		}
 
-		TypeDescription targetType = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
-				.locate( bidirectionalAttributeName )
-				.getField()
-				.asDefined()
-				.getType()
-				.asErasure();
+		final var targetType =
+				FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
+						.locate( bidirectionalAttributeName )
+						.getField()
+						.asDefined()
+						.getType()
+						.asErasure();
 
 		if ( persistentField.hasAnnotation( OneToOne.class ) ) {
 			implementation = Advice.withCustomMapping()
@@ -116,7 +111,8 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 		if ( persistentField.hasAnnotation( ManyToMany.class ) ) {
 
-			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
+			if ( persistentField.getType().asErasure().isAssignableTo( Map.class )
+				|| targetType.isAssignableTo( Map.class ) ) {
 				if ( ENHANCEMENT_LOGGER.isInfoEnabled() ) {
 					ENHANCEMENT_LOGGER.manyToManyInMapNotSupported(
 							managedCtClass.getName(),
@@ -139,10 +135,10 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 	public static TypeDescription getTargetEntityClass(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
 		try {
-			AnnotationDescription.Loadable<OneToOne> oto = persistentField.getAnnotation( OneToOne.class );
-			AnnotationDescription.Loadable<OneToMany> otm = persistentField.getAnnotation( OneToMany.class );
-			AnnotationDescription.Loadable<ManyToOne> mto = persistentField.getAnnotation( ManyToOne.class );
-			AnnotationDescription.Loadable<ManyToMany> mtm = persistentField.getAnnotation( ManyToMany.class );
+			final var oto = persistentField.getAnnotation( OneToOne.class );
+			final var otm = persistentField.getAnnotation( OneToMany.class );
+			final var mto = persistentField.getAnnotation( ManyToOne.class );
+			final var mtm = persistentField.getAnnotation( ManyToMany.class );
 
 			final AnnotationValue<?, ?> targetClass;
 			if ( oto != null ) {
@@ -177,22 +173,22 @@ final class BiDirectionalAssociationHandler implements Implementation {
 	}
 
 	private static TypeDescription.Generic target(AnnotatedFieldDescription persistentField) {
-		AnnotationDescription.Loadable<Access> access = persistentField.getDeclaringType().asErasure().getDeclaredAnnotations().ofType( Access.class );
+		final var access =
+				persistentField.getDeclaringType().asErasure()
+						.getDeclaredAnnotations().ofType( Access.class );
 		if ( access != null && access.load().value() == AccessType.FIELD ) {
 			return persistentField.getType();
 		}
 		else {
-			Optional<MethodDescription> getter = persistentField.getGetter();
-			if ( getter.isPresent() ) {
-				return getter.get().getReturnType();
-			}
-			else {
-				return persistentField.getType();
-			}
+			final var getter = persistentField.getGetter();
+			return getter.isPresent() ? getter.get().getReturnType() : persistentField.getType();
 		}
 	}
 
-	private static String getMappedBy(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
+	private static String getMappedBy(
+			AnnotatedFieldDescription target,
+			TypeDescription targetEntity,
+			ByteBuddyEnhancementContext context) {
 		final String mappedBy = getMappedByFromAnnotation( target );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
 			return null;
@@ -203,12 +199,19 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		}
 	}
 
-	private static boolean isValidMappedBy(AnnotatedFieldDescription persistentField, TypeDescription targetEntity, String mappedBy, ByteBuddyEnhancementContext context) {
+	private static boolean isValidMappedBy(
+			AnnotatedFieldDescription persistentField,
+			TypeDescription targetEntity,
+			String mappedBy,
+			ByteBuddyEnhancementContext context) {
 		try {
-			FieldDescription f = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity ).locate( mappedBy ).getField();
-			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( context, f );
-
-			return context.isPersistentField( annotatedF ) && persistentField.getDeclaringType().asErasure().isAssignableTo( entityType( f.getType() ) );
+			final var fieldDescription =
+					FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
+							.locate( mappedBy ).getField();
+			final var annotatedField = new AnnotatedFieldDescription( context, fieldDescription );
+			return context.isPersistentField( annotatedField )
+				&& persistentField.getDeclaringType().asErasure()
+						.isAssignableTo( entityType( fieldDescription.getType() ) );
 		}
 		catch ( IllegalStateException e ) {
 			return false;
@@ -216,59 +219,59 @@ final class BiDirectionalAssociationHandler implements Implementation {
 	}
 	private static String getMappedByFromAnnotation(AnnotatedFieldDescription target) {
 		try {
-			AnnotationDescription.Loadable<OneToOne> oto = target.getAnnotation( OneToOne.class );
+			final var oto = target.getAnnotation( OneToOne.class );
 			if ( oto != null ) {
-				return oto.getValue( new MethodDescription.ForLoadedMethod( OneToOne.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
+				return oto.getValue( new MethodDescription.ForLoadedMethod( OneToOne.class.getDeclaredMethod( "mappedBy" ) ) )
+						.resolve( String.class );
 			}
-
-			AnnotationDescription.Loadable<OneToMany> otm = target.getAnnotation( OneToMany.class );
+			final var otm = target.getAnnotation( OneToMany.class );
 			if ( otm != null ) {
-				return otm.getValue( new MethodDescription.ForLoadedMethod( OneToMany.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
+				return otm.getValue( new MethodDescription.ForLoadedMethod( OneToMany.class.getDeclaredMethod( "mappedBy" ) ) )
+						.resolve( String.class );
 			}
-
-			AnnotationDescription.Loadable<ManyToMany> mtm = target.getAnnotation( ManyToMany.class );
+			final var mtm = target.getAnnotation( ManyToMany.class );
 			if ( mtm != null ) {
-				return mtm.getValue( new MethodDescription.ForLoadedMethod( ManyToMany.class.getDeclaredMethod( "mappedBy" ) ) ).resolve( String.class );
+				return mtm.getValue( new MethodDescription.ForLoadedMethod( ManyToMany.class.getDeclaredMethod( "mappedBy" ) ) )
+						.resolve( String.class );
 			}
 		}
 		catch (NoSuchMethodException ignored) {
 		}
-
 		return null;
 	}
 
 	private static String getMappedByManyToMany(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
-		for ( FieldDescription f : targetEntity.getDeclaredFields() ) {
-			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( context, f );
-			if ( context.isPersistentField( annotatedF )
-					&& target.getName().equals( getMappedBy( annotatedF, entityType( annotatedF.getType() ), context ) )
-					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
+		for ( final var fieldDescription : targetEntity.getDeclaredFields() ) {
+			final var annotatedField = new AnnotatedFieldDescription( context, fieldDescription );
+			if ( context.isPersistentField( annotatedField )
+					&& target.getName().equals( getMappedBy( annotatedField, entityType( annotatedField.getType() ), context ) )
+					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedField.getType() ) ) ) {
 				if ( ENHANCEMENT_LOGGER.isTraceEnabled() ) {
 					ENHANCEMENT_LOGGER.tracef(
 							"mappedBy association for field [%s#%s] is [%s#%s]",
 							target.getDeclaringType().asErasure().getName(),
 							target.getName(),
 							targetEntity.getName(),
-							f.getName()
+							fieldDescription.getName()
 					);
 				}
-				return f.getName();
+				return fieldDescription.getName();
 			}
 		}
 		return null;
 	}
 
 	private static TypeDescription entityType(TypeDescription.Generic type) {
+		final var erasure = type.asErasure();
 		if ( type.getSort().isParameterized() ) {
-			if ( type.asErasure().isAssignableTo( Collection.class ) ) {
+			if ( erasure.isAssignableTo( Collection.class ) ) {
 				return type.getTypeArguments().get( 0 ).asErasure();
 			}
-			if ( type.asErasure().isAssignableTo( Map.class ) ) {
+			if ( erasure.isAssignableTo( Map.class ) ) {
 				return type.getTypeArguments().get( 1 ).asErasure();
 			}
 		}
-
-		return type.asErasure();
+		return erasure;
 	}
 
 	private final Implementation delegate;
@@ -319,56 +322,62 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		public Size apply(
 				MethodVisitor methodVisitor, Context implementationContext, MethodDescription instrumentedMethod) {
 			return delegate.apply( new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
-
 				@Override
 				public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
 					if ( owner.startsWith( Type.getInternalName( CodeTemplates.class ) ) ) {
-						if ( name.equals( "getter" ) ) {
-							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
-							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + bidirectionalAttributeName,
-									Type.getMethodDescriptor( Type.getType( targetType.getDescriptor() ) ),
-									false
-							);
-						}
-						else if ( name.equals( "getterSelf" ) ) {
-							super.visitVarInsn( Opcodes.ALOAD, 0 );
-							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									entity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + field.getName(),
-									Type.getMethodDescriptor( Type.getType( field.asDefined().getDescriptor() ) ),
-									false
-							);
-						}
-						else if ( name.equals( "setterSelf" ) ) {
-							super.visitInsn( Opcodes.POP );
-							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
-							super.visitVarInsn( Opcodes.ALOAD, 0 );
-							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + bidirectionalAttributeName,
-									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
-									false
-							);
-						}
-						else if ( name.equals( "setterNull" ) ) {
-							super.visitInsn( Opcodes.POP );
-							super.visitTypeInsn( Opcodes.CHECKCAST, targetEntity.getInternalName() );
-							super.visitInsn( Opcodes.ACONST_NULL );
-							super.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + bidirectionalAttributeName,
-									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
-									false
-							);
-						}
-						else {
-							throw new EnhancementException( "Unknown template method: " + name );
+						final String targetEntityInternalName = targetEntity.getInternalName();
+						switch ( name ) {
+							case "getter" -> {
+								super.visitTypeInsn( Opcodes.CHECKCAST, targetEntityInternalName );
+								super.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										targetEntityInternalName,
+										EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX
+												+ bidirectionalAttributeName,
+										Type.getMethodDescriptor( Type.getType( targetType.getDescriptor() ) ),
+										false
+								);
+							}
+							case "getterSelf" -> {
+								super.visitVarInsn( Opcodes.ALOAD, 0 );
+								super.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										entity.getInternalName(),
+										EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX
+												+ field.getName(),
+										Type.getMethodDescriptor( Type.getType( field.asDefined().getDescriptor() ) ),
+										false
+								);
+							}
+							case "setterSelf" -> {
+								super.visitInsn( Opcodes.POP );
+								super.visitTypeInsn( Opcodes.CHECKCAST, targetEntityInternalName );
+								super.visitVarInsn( Opcodes.ALOAD, 0 );
+								super.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										targetEntityInternalName,
+										EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX
+												+ bidirectionalAttributeName,
+										Type.getMethodDescriptor( Type.getType( void.class ),
+												Type.getType( targetType.getDescriptor() ) ),
+										false
+								);
+							}
+							case "setterNull" -> {
+								super.visitInsn( Opcodes.POP );
+								super.visitTypeInsn( Opcodes.CHECKCAST, targetEntityInternalName );
+								super.visitInsn( Opcodes.ACONST_NULL );
+								super.visitMethodInsn(
+										Opcodes.INVOKEVIRTUAL,
+										targetEntityInternalName,
+										EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX
+												+ bidirectionalAttributeName,
+										Type.getMethodDescriptor( Type.getType( void.class ),
+												Type.getType( targetType.getDescriptor() ) ),
+										false
+								);
+							}
+							default -> throw new EnhancementException( "Unknown template method: " + name );
 						}
 					}
 					else {
@@ -380,18 +389,19 @@ final class BiDirectionalAssociationHandler implements Implementation {
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if (this == o) {
+	public boolean equals(final Object object) {
+		if (this == object) {
 			return true;
 		}
-		if ( o == null || BiDirectionalAssociationHandler.class != o.getClass() ) {
+		else if ( !(object instanceof BiDirectionalAssociationHandler that ) ) {
 			return false;
 		}
-		final BiDirectionalAssociationHandler that = (BiDirectionalAssociationHandler) o;
-		return Objects.equals( delegate, that.delegate ) &&
-			Objects.equals( targetEntity, that.targetEntity ) &&
-			Objects.equals( targetType, that.targetType ) &&
-			Objects.equals( bidirectionalAttributeName, that.bidirectionalAttributeName );
+		else {
+			return Objects.equals( this.delegate, that.delegate )
+				&& Objects.equals( this.targetEntity, that.targetEntity )
+				&& Objects.equals( this.targetType, that.targetType )
+				&& Objects.equals( this.bidirectionalAttributeName, that.bidirectionalAttributeName );
+		}
 	}
 
 	@Override

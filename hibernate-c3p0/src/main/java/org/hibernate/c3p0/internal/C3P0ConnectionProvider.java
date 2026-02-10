@@ -39,6 +39,7 @@ import static org.hibernate.cfg.C3p0Settings.C3P0_MAX_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_MAX_STATEMENTS;
 import static org.hibernate.cfg.C3p0Settings.C3P0_MIN_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_TIMEOUT;
+import static org.hibernate.cfg.JdbcSettings.LOGIN_TIMEOUT;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
@@ -98,14 +99,25 @@ public class C3P0ConnectionProvider
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		final Connection connection = dataSource.getConnection();
+		final var connection = dataSource.getConnection();
+		prepareConnection( connection );
+		return connection;
+	}
+
+	@Override
+	public Connection getConnection(String user, String password) throws SQLException {
+		final var connection = dataSource.getConnection( user, password );
+		prepareConnection( connection );
+		return connection;
+	}
+
+	private void prepareConnection(Connection connection) throws SQLException {
 		if ( isolation != null && isolation != connection.getTransactionIsolation() ) {
 			connection.setTransactionIsolation( isolation );
 		}
 		if ( connection.getAutoCommit() != autocommit ) {
 			connection.setAutoCommit( autocommit );
 		}
-		return connection;
 	}
 
 	@Override
@@ -159,9 +171,19 @@ public class C3P0ConnectionProvider
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, properties ); // defaults to false
 		isolation = extractIsolation( properties );
 
-		final Properties connectionProps = getConnectionProperties( properties );
+		final var connectionProps = getConnectionProperties( properties );
 		final var poolSettings = poolSettings( properties );
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
+
+		final Integer loginTimeout = getInteger( LOGIN_TIMEOUT, properties );
+		if ( loginTimeout != null ) {
+			try {
+				dataSource.setLoginTimeout( loginTimeout );
+			}
+			catch (SQLException e) {
+				CONNECTION_INFO_LOGGER.couldNotSetLoginTimeout( e );
+			}
+		}
 
 		try ( var connection = dataSource.getConnection() ) {
 			final Integer fetchSize = getFetchSize( connection );

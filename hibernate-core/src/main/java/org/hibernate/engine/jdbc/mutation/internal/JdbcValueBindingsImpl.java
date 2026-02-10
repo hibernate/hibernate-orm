@@ -53,29 +53,32 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			String tableName,
 			String columnName,
 			ParameterUsage usage) {
-		final JdbcValueDescriptor jdbcValueDescriptor = jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
+		final var jdbcValueDescriptor =
+				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
 		if ( jdbcValueDescriptor == null ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
-
-		resolveBindingGroup( jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName ) ).bindValue( columnName, value, jdbcValueDescriptor );
+		resolveBindingGroup( jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName ) )
+				.bindValue( columnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
-		final BindingGroup existing = bindingGroupMap.get( tableName );
+		final var existing = bindingGroupMap.get( tableName );
 		if ( existing != null ) {
 			assert tableName.equals( existing.getTableName() );
 			return existing;
 		}
-
-		final BindingGroup created = new BindingGroup( tableName );
-		bindingGroupMap.put( tableName, created );
-		return created;
+		else {
+			final var created = new BindingGroup( tableName );
+			bindingGroupMap.put( tableName, created );
+			return created;
+		}
 	}
 
 	@Override
 	public void beforeStatement(PreparedStatementDetails statementDetails) {
-		final BindingGroup bindingGroup = bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
+		final var bindingGroup =
+				bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
 		if ( bindingGroup == null ) {
 			statementDetails.resolveStatement();
 		}
@@ -106,12 +109,10 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void afterStatement(TableMapping mutatingTable) {
-		final BindingGroup bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
-		if ( bindingGroup == null ) {
-			return;
+		final var bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
+		if ( bindingGroup != null ) {
+			bindingGroup.clear();
 		}
-
-		bindingGroup.clear();
 	}
 
 	/**

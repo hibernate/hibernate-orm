@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * For example, if we have a custom identifier generator:
  * <pre>
  * public class CustomSequenceGenerator implements BeforeExecutionGenerator {
- *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
+ *     public CustomSequenceGenerator(CustomSequence config,
  *                                    GeneratorCreationContext context) {
  *         ...
  *     }

@@ -14,7 +14,6 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -42,32 +41,28 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 								.getIndexPathSource()
 		);
 		this.functionName = functionName;
-		final SqmCriteriaNodeBuilder nodeBuilder = pluralDomainPath.nodeBuilder();
-		switch ( functionName ) {
-			case "sum":
-				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder.getSumReturnTypeResolver()
-						.resolveFunctionReturnType(
-								null,
-								(SqmToSqlAstConverter) null,
-								List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
-								nodeBuilder.getTypeConfiguration()
-						);
-				break;
-			case "avg":
-				//noinspection unchecked
-				this.returnableType = (ReturnableType<T>) nodeBuilder.getAvgReturnTypeResolver()
-						.resolveFunctionReturnType(
-								null,
-								(SqmToSqlAstConverter) null,
-								List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
-								nodeBuilder.getTypeConfiguration()
-						);
-				break;
-			default:
-				this.returnableType = null;
-				break;
-		}
+		final var nodeBuilder = pluralDomainPath.nodeBuilder();
+		final var type = switch ( functionName ) {
+			case "sum" ->
+					nodeBuilder.getSumReturnTypeResolver()
+							.resolveFunctionReturnType(
+									null,
+									(SqmToSqlAstConverter) null,
+									List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
+									nodeBuilder.getTypeConfiguration()
+							);
+			case "avg" ->
+					nodeBuilder.getAvgReturnTypeResolver()
+							.resolveFunctionReturnType(
+									null,
+									(SqmToSqlAstConverter) null,
+									List.of( pluralDomainPath.get( CollectionPart.Nature.INDEX.getName() ) ),
+									nodeBuilder.getTypeConfiguration()
+							);
+			default -> null;
+		};
+		//noinspection unchecked
+		returnableType = (ReturnableType<T>) type;
 	}
 
 	@Override
@@ -91,14 +86,14 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 
 	@Override
 	public SqmIndexAggregateFunction<T> copy(SqmCopyContext context) {
-		final SqmIndexAggregateFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final SqmIndexAggregateFunction<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
-				new SqmIndexAggregateFunction<>(
+				new SqmIndexAggregateFunction<T>(
 						getPluralDomainPath().copy( context ),
 						functionName
 				)
@@ -116,7 +111,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

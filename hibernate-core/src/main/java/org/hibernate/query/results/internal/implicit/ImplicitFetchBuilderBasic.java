@@ -8,11 +8,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -22,6 +20,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * @author Steve Ebersole
@@ -66,7 +65,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			);
 		}
 
-		final SqlSelection sqlSelection =
+		final var sqlSelection =
 				sqlSelection( parent, fetchPath, jdbcResultsMetadata, domainResultCreationState );
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -74,7 +73,6 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 				fetchPath,
 				fetchable,
 				FetchTiming.IMMEDIATE,
-				domainResultCreationState,
 				!sqlSelection.isVirtual()
 		);
 	}
@@ -84,12 +82,12 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
-		final TableGroup parentTableGroup =
+		final var creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final var parentTableGroup =
 				creationStateImpl.getFromClauseAccess()
 						.getTableGroup( parent.getNavigablePath() );
 		return creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						parentTableGroup.resolveTableReference( fetchPath, fetchable,
@@ -113,17 +111,17 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitFetchBuilderBasic that ) ) {
 			return false;
 		}
-
-		final ImplicitFetchBuilderBasic that = (ImplicitFetchBuilderBasic) o;
-		return fetchPath.equals( that.fetchPath )
-			&& fetchable.equals( that.fetchable );
+		else {
+			return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
+		}
 	}
 
 	@Override

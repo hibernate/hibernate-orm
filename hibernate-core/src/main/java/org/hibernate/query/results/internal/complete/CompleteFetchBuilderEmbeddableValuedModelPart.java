@@ -11,7 +11,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -20,6 +19,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
 
 /**
  * CompleteFetchBuilder for embeddable-valued ModelParts
@@ -72,11 +72,13 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+		final var creationStateImpl = impl( domainResultCreationState );
+		final var tableGroup =
+				creationStateImpl.getFromClauseAccess()
+						.getTableGroup( navigablePath.getParent() );
 		modelPart.forEachSelectable(
-				(selectionIndex, selectableMapping) ->
-						sqlSelection( jdbcResultsMetadata, selectionIndex, selectableMapping, creationStateImpl, tableGroup )
+				(index, selectableMapping) ->
+						sqlSelection( jdbcResultsMetadata, index, selectableMapping, creationStateImpl, tableGroup )
 		);
 		return parent.generateFetchableFetch(
 				modelPart,
@@ -95,7 +97,7 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 			DomainResultCreationStateImpl creationStateImpl,
 			TableGroup tableGroup) {
 		creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
+				resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
 						tableGroup.resolveTableReference( navigablePath, modelPart,
@@ -110,18 +112,18 @@ public class CompleteFetchBuilderEmbeddableValuedModelPart
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object instanceof CompleteFetchBuilderEmbeddableValuedModelPart that ) ) {
 			return false;
 		}
-
-		final CompleteFetchBuilderEmbeddableValuedModelPart that = (CompleteFetchBuilderEmbeddableValuedModelPart) o;
-		return navigablePath.equals( that.navigablePath )
-			&& modelPart.equals( that.modelPart )
-			&& columnAliases.equals( that.columnAliases );
+		else {
+			return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart )
+				&& columnAliases.equals( that.columnAliases );
+		}
 	}
 
 	@Override

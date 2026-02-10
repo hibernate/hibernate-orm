@@ -5,7 +5,6 @@
 package org.hibernate.query.results.internal.implicit;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.FetchBuilder;
@@ -42,11 +41,10 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final Function<Fetchable, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
-		final ForeignKeyDescriptor foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
+		final var creationStateImpl = impl( creationState );
+		final var fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
+		final var foreignKeyDescriptor = fetchable.getForeignKeyDescriptor();
 		final String associationKeyPropertyName;
-		final NavigablePath associationKeyFetchPath;
 		final Fetchable associationKey;
 		if ( fetchable.getReferencedPropertyName() == null ) {
 			associationKeyPropertyName = fetchable.getEntityMappingType().getIdentifierMapping().getPartName();
@@ -59,8 +57,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 			}
 			associationKey = (Fetchable) fetchable.findSubPart( keyName );
 		}
-		final FetchBuilder explicitAssociationKeyFetchBuilder =
-				fetchBuilderResolver.apply( fetchable);
+		final var explicitAssociationKeyFetchBuilder = fetchBuilderResolver.apply( fetchable);
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			if ( foreignKeyDescriptor.getPartMappingType() instanceof EmbeddableMappingType embeddableType ) {
 				fetchBuilders = fetchBuilderMap(
@@ -87,8 +84,8 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		final int size = embeddableValuedModelPart.getNumberOfFetchables();
 		final Map<Fetchable, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
-			final Fetchable subFetchable = embeddableValuedModelPart.getFetchable( i );
-			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
+			final var subFetchable = embeddableValuedModelPart.getFetchable( i );
+			final var explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
 			fetchBuilders.put( subFetchable,
 					explicitFetchBuilder == null
 							? Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
@@ -105,7 +102,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		}
 		else {
 			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
-			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
+			for ( var entry : original.fetchBuilders.entrySet() ) {
 				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
 			}
 		}
@@ -134,22 +131,22 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 
 	@Override
 	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
-		fetchBuilders.forEach( (k, v) -> consumer.accept( k, v ) );
+		fetchBuilders.forEach( consumer );
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof ImplicitFetchBuilderEntity that ) ) {
 			return false;
 		}
-
-		final ImplicitFetchBuilderEntity that = (ImplicitFetchBuilderEntity) o;
-		return fetchPath.equals( that.fetchPath )
-			&& fetchable.equals( that.fetchable )
-			&& fetchBuilders.equals( that.fetchBuilders );
+		else {
+			return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable )
+				&& fetchBuilders.equals( that.fetchBuilders );
+		}
 	}
 
 	@Override

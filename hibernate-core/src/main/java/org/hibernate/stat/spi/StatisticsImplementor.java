@@ -305,4 +305,8 @@ public interface StatisticsImplementor extends Statistics, Service {
 		//For backward compatibility
 		return emptyMap();
 	}
+
+	default void normalizeNaturalId(String entityName) {
+		//For backward compatibility
+	}
 }

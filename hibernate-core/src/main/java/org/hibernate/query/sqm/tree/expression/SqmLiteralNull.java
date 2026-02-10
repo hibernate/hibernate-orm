@@ -26,7 +26,7 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
 	@Override
 	public SqmLiteralNull<T> copy(SqmCopyContext context) {
-		final SqmLiteralNull<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

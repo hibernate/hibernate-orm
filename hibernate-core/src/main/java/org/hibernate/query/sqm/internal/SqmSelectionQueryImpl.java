@@ -41,7 +41,6 @@ import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -85,12 +84,12 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		implements SqmSelectionQueryImplementor<R>, InterpretationsKeySource {
 	private final String hql;
-	private Object queryStringCacheKey;
-	private SqmSelectStatement<R> sqm;
+	private final Object queryStringCacheKey;
+	private final SqmSelectStatement<R> sqm;
 
-	private ParameterMetadataImplementor parameterMetadata;
-	private DomainParameterXref domainParameterXref;
-	private QueryParameterBindings parameterBindings;
+	private final ParameterMetadataImplementor parameterMetadata;
+	private final DomainParameterXref domainParameterXref;
+	private final QueryParameterBindings parameterBindings;
 
 	private final Class<R> expectedResultType;
 	private final Class<?> resultType;
@@ -262,16 +261,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 		if ( explicitTemporalPrecision != null ) {
 			if ( binding.isMultiValued() ) {
-				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision,
-						getTypeConfiguration() );
+				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision );
 			}
 			else {
 				parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
 			}
 		}
 		else {
-			//noinspection unchecked
-			final var bindType = (BindableType<T>) binding.getBindType();
+			final var bindType = binding.getBindType();
 			if ( binding.isMultiValued() ) {
 				parameterBinding.setBindValues( binding.getBindValues(), bindType );
 			}
@@ -324,20 +321,20 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		return sqm;
 	}
 
-	@Override
-	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
-		this.sqm = sqm;
-		this.queryStringCacheKey = sqm;
-
-		final QueryParameterBindings oldParameterBindings = parameterBindings;
-		domainParameterXref = DomainParameterXref.from( sqm );
-		parameterMetadata =
-				domainParameterXref.hasParameters()
-						? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
-						: ParameterMetadataImpl.EMPTY;
-		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
-		copyParameterBindings( oldParameterBindings );
-	}
+//	@Override
+//	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
+//		this.sqm = sqm;
+//		this.queryStringCacheKey = sqm;
+//
+//		final QueryParameterBindings oldParameterBindings = parameterBindings;
+//		domainParameterXref = DomainParameterXref.from( sqm );
+//		parameterMetadata =
+//				domainParameterXref.hasParameters()
+//						? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
+//						: ParameterMetadataImpl.EMPTY;
+//		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
+//		copyParameterBindings( oldParameterBindings );
+//	}
 
 	@Override
 	public DomainParameterXref getDomainParameterXref() {

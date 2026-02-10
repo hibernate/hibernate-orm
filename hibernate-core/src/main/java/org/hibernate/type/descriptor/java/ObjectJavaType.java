@@ -30,9 +30,13 @@ public class ObjectJavaType extends AbstractClassJavaType<Object> {
 	}
 
 	@Override
+	public Object cast(Object value) {
+		return value;
+	}
+
+	@Override
 	public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
-		//noinspection unchecked
-		return (X) value;
+		return type.cast( value );
 	}
 
 	@Override

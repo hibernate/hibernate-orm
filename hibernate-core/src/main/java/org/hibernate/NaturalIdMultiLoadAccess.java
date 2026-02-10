@@ -6,6 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
@@ -16,13 +17,13 @@ import java.util.List;
  * Loads multiple instances of a given entity type at once, by
  * specifying a list of natural id values. This allows the entities
  * to be fetched from the database in batches.
- * <p>
- * <pre>
+ *
+ * <pre>{@code
  * List&lt;Book&gt; books =
  *         session.byMultipleNaturalId(Book.class)
  *             .withBatchSize(10)
  *             .multiLoad(isbnList);
- * </pre>
+ * }</pre>
  * <p>
  * Composite natural ids may be accommodated by passing a list of
  * maps of type {@code Map<String,Object>}  to {@link #multiLoad}.
@@ -36,7 +37,10 @@ import java.util.List;
  *
  * @see Session#byMultipleNaturalId(Class)
  * @see org.hibernate.annotations.NaturalId
+ *
+ * @deprecated (since 7.3) Use {@linkplain Session#findMultiple(Class, List, FindOption...)} with {@link KeyType#NATURAL} instead.
  */
+@Deprecated
 public interface NaturalIdMultiLoadAccess<T> {
 
 	/**

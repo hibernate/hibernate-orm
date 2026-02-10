@@ -87,7 +87,7 @@ public class EnhancementHelper {
 				return false;
 			}
 
-			if ( toOne.getColumnSpan() == 0 ) {
+			if ( !toOne.hasColumns() ) {
 				// generally this would indicate a "shared PK" one-to-one and there
 				// is no column for the association on the owner table - do not add
 				// the association to the base group (which would force an immediate

@@ -36,7 +36,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 
 	@Override
 	public SqmNamedParameter<T> copy(SqmCopyContext context) {
-		final SqmNamedParameter<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -75,7 +75,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), this.getNodeType(), nodeBuilder() );
+		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), getNodeType(), nodeBuilder() );
 	}
 
 	@Override

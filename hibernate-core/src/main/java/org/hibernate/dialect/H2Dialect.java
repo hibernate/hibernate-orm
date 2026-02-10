@@ -30,6 +30,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
 import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.H2JsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -73,9 +74,10 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -83,6 +85,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -126,6 +129,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
+ * @author Yoobin Yoon
  */
 public class H2Dialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
@@ -222,19 +226,21 @@ public class H2Dialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		final JdbcTypeRegistry jdbcTypeRegistry =
+		final var jdbcTypeRegistry =
 				typeContributions.getTypeConfiguration()
 						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
@@ -246,6 +252,7 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -342,6 +349,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.arraySlice();
 		functionFactory.arrayReplace_h2( getMaximumArraySize() );
 		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayReverse_h2( getMaximumArraySize() );
+		functionFactory.arraySort_h2( getMaximumArraySize() );
 		functionFactory.arrayFill_h2();
 		functionFactory.arrayToString_h2( getMaximumArraySize() );
 
@@ -682,11 +691,6 @@ public class H2Dialect extends Dialect {
 		return lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout );
 	}
 
-	private String withRealTimeout(String lockString, int millis) {
-		assert Timeouts.isRealTimeout( millis );
-		return lockString + " wait " + Timeouts.getTimeoutInSeconds( millis );
-	}
-
 	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
@@ -709,6 +713,11 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
 		return true;
 	}
 
@@ -1132,6 +1141,36 @@ public class H2Dialect extends Dialect {
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		// Just a guess
 		return true;
+	}
+
+	/**
+	 * Uses {@code CREATE DOMAIN} to emulate a named enum type.
+	 */
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		final int maxLength =
+				Arrays.stream(values)
+						.map( String::length )
+						.max( Integer::compareTo )
+						.orElseThrow();
+		final var domain = new StringBuilder();
+		domain.append( "create domain " )
+				.append( name )
+				.append( " as varchar(")
+				.append( maxLength )
+				.append( ") check (value in (" );
+		String separator = "";
+		for ( String value : values ) {
+			domain.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		domain.append( "))" );
+		return new String[] { domain.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop domain if exists " + name };
 	}
 
 }

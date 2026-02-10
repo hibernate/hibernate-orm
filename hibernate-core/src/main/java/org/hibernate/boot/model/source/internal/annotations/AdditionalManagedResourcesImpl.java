@@ -158,7 +158,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 
 		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
 			if ( additionalJaxbMappings != null ) {
-				for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
+				for ( var additionalJaxbMapping : additionalJaxbMappings ) {
 					addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
 				}
 			}

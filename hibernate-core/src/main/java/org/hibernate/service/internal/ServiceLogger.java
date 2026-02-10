@@ -77,4 +77,17 @@ public interface ServiceLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 10455, value = "Adding integrator: %s")
 	void addingIntegrator(String name);
+
+
+	@LogMessage(level = DEBUG)
+	@Message( id = 10456, value = "Overriding existing service binding: %s" )
+	void overridingExistingBinding(String name);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 10457, value = "Automatically destroying ServiceRegistry after deregistration of every child ServiceRegistry")
+	void destroyingServiceRegistry();
+
+	@LogMessage(level = TRACE)
+	@Message(id = 10458, value = "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry")
+	void skippingDestroyingServiceRegistry();
 }

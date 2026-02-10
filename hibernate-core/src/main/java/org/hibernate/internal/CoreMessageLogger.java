@@ -235,6 +235,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToMarkForRollbackOnTransientObjectException(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
+	@Message(value = "Unable to mark for rollback on DetachedObjectException: ", id = 339)
+	void unableToMarkForRollbackOnDetachedObjectException(@Cause Exception e);
+
+	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);
 
@@ -269,10 +273,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Warnings creating temp table: %s", id = 413)
 	void warningsCreatingTempTable(SQLWarning warning);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Write locks via update not supported for non-versioned entities [%s]", id = 416)
-	void writeLocksNotSupported(String entityName);
 
 	@LogMessage(level = WARN)
 	@Message(

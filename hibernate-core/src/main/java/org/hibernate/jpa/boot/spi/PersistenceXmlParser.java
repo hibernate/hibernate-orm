@@ -5,34 +5,24 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.transform.stream.StreamSource;
 
-import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl;
-import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl;
-import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl.JaxbPropertiesImpl.JaxbPropertyImpl;
 import org.hibernate.boot.jaxb.internal.ConfigurationBinder;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -40,8 +30,20 @@ import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 
 import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static jakarta.persistence.PersistenceUnitTransactionType.RESOURCE_LOCAL;
+import static org.hibernate.boot.archive.internal.ArchiveHelper.getJarURLFromURLEntry;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_JTA_DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_NON_JTA_DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.JPA_JTA_DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.JPA_NON_JTA_DATASOURCE;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_PERSISTENCE_PROVIDER;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_TRANSACTION_TYPE;
+import static org.hibernate.cfg.PersistenceSettings.JPA_PERSISTENCE_PROVIDER;
+import static org.hibernate.cfg.PersistenceSettings.JPA_TRANSACTION_TYPE;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.overrideProperties;
 
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.
@@ -95,17 +97,18 @@ public final class PersistenceXmlParser {
 				providedClassLoaders.add( providedClassLoader );
 			}
 
-			@SuppressWarnings("unchecked")
-			final Collection<ClassLoader> classLoaders =
-					(Collection<ClassLoader>) integration.get( AvailableSettings.CLASSLOADERS );
+			final var classLoaders =
+					(Collection<?>)
+							integration.get( AvailableSettings.CLASSLOADERS );
 			if ( classLoaders != null ) {
-				providedClassLoaders.addAll( classLoaders );
+				for ( var classLoader : classLoaders ) {
+					providedClassLoaders.add( (ClassLoader) classLoader );
+				}
 			}
 
-			classLoaderService = new ClassLoaderServiceImpl(
-					providedClassLoaders,
-					TcclLookupPrecedence.from( integration, TcclLookupPrecedence.AFTER )
-			);
+			classLoaderService =
+					new ClassLoaderServiceImpl( providedClassLoaders,
+							TcclLookupPrecedence.from( integration, TcclLookupPrecedence.AFTER ) );
 		}
 	}
 
@@ -162,28 +165,20 @@ public final class PersistenceXmlParser {
 			JPA_LOGGER.attemptingToParsePersistenceXml( xmlUrl.toExternalForm() );
 		}
 
-		final URL persistenceUnitRootUrl = ArchiveHelper.getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
-
-		final JaxbPersistenceImpl jaxbPersistence = loadUrlWithJaxb( xmlUrl );
-		final List<JaxbPersistenceUnitImpl> jaxbPersistenceUnits = jaxbPersistence.getPersistenceUnit();
-
-		for ( int i = 0; i < jaxbPersistenceUnits.size(); i++ ) {
-			final JaxbPersistenceUnitImpl jaxbPersistenceUnit = jaxbPersistenceUnits.get( i );
-
+		final URL persistenceUnitRootUrl = getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
+		for ( var jaxbPersistenceUnit : loadUrlWithJaxb( xmlUrl ).getPersistenceUnit() ) {
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
 				JPA_LOGGER.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );
-				continue;
 			}
-
-			final ParsedPersistenceXmlDescriptor persistenceUnitDescriptor =
-					new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
-			bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
-
-			// per JPA spec, any settings passed in to PersistenceProvider bootstrap methods should override
-			// values found in persistence.xml
-			applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
-
-			persistenceUnits.put( persistenceUnitDescriptor.getName(), persistenceUnitDescriptor );
+			else {
+				final var persistenceUnitDescriptor =
+						new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
+				bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
+				// per JPA spec, any settings passed in to PersistenceProvider
+				// bootstrap methods should override values found in persistence.xml
+				applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
+				persistenceUnits.put( persistenceUnitDescriptor.getName(), persistenceUnitDescriptor );
+			}
 		}
 	}
 
@@ -191,7 +186,7 @@ public final class PersistenceXmlParser {
 			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
 		final String name = jaxbPersistenceUnit.getName();
-		if ( StringHelper.isNotEmpty( name ) ) {
+		if ( isNotEmpty( name ) ) {
 			JPA_LOGGER.persistenceUnitNameFromXml( name );
 			persistenceUnitDescriptor.setName( name );
 		}
@@ -208,21 +203,19 @@ public final class PersistenceXmlParser {
 		persistenceUnitDescriptor.addMappingFiles( jaxbPersistenceUnit.getMappingFiles() );
 		persistenceUnitDescriptor.addJarFileUrls( jaxbPersistenceUnit.getJarFiles() );
 
-		final JaxbPropertiesImpl propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
+		final var propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
 		if ( propertyContainer != null ) {
-			for ( JaxbPropertyImpl property : propertyContainer.getProperties() ) {
+			for ( var property : propertyContainer.getProperties() ) {
 				persistenceUnitDescriptor.getProperties()
 						.put( property.getName(), property.getValue() );
 			}
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private static void setTransactionType(
 			JaxbPersistenceUnitImpl jaxbPersistenceUnit,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
-		final jakarta.persistence.spi.PersistenceUnitTransactionType transactionType =
-				jaxbPersistenceUnit.getTransactionType();
+		final var transactionType = jaxbPersistenceUnit.getTransactionType();
 		if ( transactionType != null ) {
 			persistenceUnitDescriptor.setTransactionType(
 					PersistenceUnitTransactionTypeHelper.toNewForm( transactionType ) );
@@ -239,80 +232,68 @@ public final class PersistenceXmlParser {
 	@SuppressWarnings("deprecation")
 	private void applyIntegrationOverrides(Map<?,?> integration, PersistenceUnitTransactionType defaultTransactionType,
 			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor) {
-		if ( integration.containsKey( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) ) {
+		if ( integration.containsKey( JAKARTA_PERSISTENCE_PROVIDER ) ) {
 			persistenceUnitDescriptor.setProviderClassName( (String)
-					integration.get( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) );
+					integration.get( JAKARTA_PERSISTENCE_PROVIDER ) );
 		}
-		else if ( integration.containsKey( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-					AvailableSettings.JPA_PERSISTENCE_PROVIDER,
-					AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER
-			);
+		else if ( integration.containsKey( JPA_PERSISTENCE_PROVIDER ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_PERSISTENCE_PROVIDER, JAKARTA_PERSISTENCE_PROVIDER );
 			persistenceUnitDescriptor.setProviderClassName( (String)
-					integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) );
+					integration.get( JPA_PERSISTENCE_PROVIDER ) );
 		}
 
-		if ( integration.containsKey( AvailableSettings.JPA_TRANSACTION_TYPE ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-					AvailableSettings.JPA_TRANSACTION_TYPE,
-					AvailableSettings.JAKARTA_TRANSACTION_TYPE
-			);
-			String transactionType = (String) integration.get( AvailableSettings.JPA_TRANSACTION_TYPE );
+		if ( integration.containsKey( JPA_TRANSACTION_TYPE ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
+			String transactionType = (String) integration.get( JPA_TRANSACTION_TYPE );
 			persistenceUnitDescriptor.setTransactionType( parseTransactionType( transactionType ) );
 		}
-		else if ( integration.containsKey( AvailableSettings.JAKARTA_TRANSACTION_TYPE ) ) {
-			String transactionType = (String) integration.get( AvailableSettings.JAKARTA_TRANSACTION_TYPE );
+		else if ( integration.containsKey( JAKARTA_TRANSACTION_TYPE ) ) {
+			String transactionType = (String) integration.get( JAKARTA_TRANSACTION_TYPE );
 			persistenceUnitDescriptor.setTransactionType( parseTransactionType( transactionType ) );
 		}
 
-		if ( integration.containsKey( AvailableSettings.JPA_JTA_DATASOURCE ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-					AvailableSettings.JPA_JTA_DATASOURCE,
-					AvailableSettings.JAKARTA_JTA_DATASOURCE
-			);
-			persistenceUnitDescriptor.setJtaDataSource( integration.get( AvailableSettings.JPA_JTA_DATASOURCE ) );
+		if ( integration.containsKey( JPA_JTA_DATASOURCE ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_JTA_DATASOURCE, JAKARTA_JTA_DATASOURCE );
+			persistenceUnitDescriptor.setJtaDataSource( integration.get( JPA_JTA_DATASOURCE ) );
 		}
-		else if ( integration.containsKey( AvailableSettings.JAKARTA_JTA_DATASOURCE ) ) {
-			persistenceUnitDescriptor.setJtaDataSource( integration.get( AvailableSettings.JAKARTA_JTA_DATASOURCE ) );
+		else if ( integration.containsKey( JAKARTA_JTA_DATASOURCE ) ) {
+			persistenceUnitDescriptor.setJtaDataSource( integration.get( JAKARTA_JTA_DATASOURCE ) );
 		}
 
-		if ( integration.containsKey( AvailableSettings.JPA_NON_JTA_DATASOURCE ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-					AvailableSettings.JPA_NON_JTA_DATASOURCE,
-					AvailableSettings.JAKARTA_NON_JTA_DATASOURCE
-			);
-			persistenceUnitDescriptor.setNonJtaDataSource( integration.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ) );
+		if ( integration.containsKey( JPA_NON_JTA_DATASOURCE ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_NON_JTA_DATASOURCE, JAKARTA_NON_JTA_DATASOURCE );
+			persistenceUnitDescriptor.setNonJtaDataSource( integration.get( JPA_NON_JTA_DATASOURCE ) );
 		}
-		else if ( integration.containsKey( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE ) ) {
-			persistenceUnitDescriptor.setNonJtaDataSource( integration.get( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE ) );
+		else if ( integration.containsKey( JAKARTA_NON_JTA_DATASOURCE ) ) {
+			persistenceUnitDescriptor.setNonJtaDataSource( integration.get( JAKARTA_NON_JTA_DATASOURCE ) );
 		}
 
 		applyTransactionTypeOverride( persistenceUnitDescriptor, defaultTransactionType );
 
-		final Properties properties = persistenceUnitDescriptor.getProperties();
-		ConfigurationHelper.overrideProperties( properties, integration );
+		overrideProperties( persistenceUnitDescriptor.getProperties(), integration );
 	}
 
-	private void applyTransactionTypeOverride(ParsedPersistenceXmlDescriptor persistenceUnitDescriptor,
+	private void applyTransactionTypeOverride(
+			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor,
 			PersistenceUnitTransactionType defaultTransactionType) {
-		// if transaction type is set already, use that value
+		// if the transaction type is set already, use that value
 		if ( persistenceUnitDescriptor.getPersistenceUnitTransactionType() == null ) {
-			// else
-			//		if JTA DS
-			//			use JTA
-			//		else if NOT JTA DS
-			//			use RESOURCE_LOCAL
-			//		else
-			//			use defaultTransactionType
-			if ( persistenceUnitDescriptor.getJtaDataSource() != null ) {
-				persistenceUnitDescriptor.setTransactionType( JTA );
-			}
-			else if ( persistenceUnitDescriptor.getNonJtaDataSource() != null ) {
-				persistenceUnitDescriptor.setTransactionType( RESOURCE_LOCAL );
-			}
-			else {
-				persistenceUnitDescriptor.setTransactionType( defaultTransactionType );
-			}
+			persistenceUnitDescriptor.setTransactionType(
+					determineTransactionType( persistenceUnitDescriptor, defaultTransactionType ) );
+		}
+	}
+
+	private static PersistenceUnitTransactionType determineTransactionType(
+			ParsedPersistenceXmlDescriptor persistenceUnitDescriptor,
+			PersistenceUnitTransactionType defaultTransactionType) {
+		if ( persistenceUnitDescriptor.getJtaDataSource() != null ) {
+			return JTA;
+		}
+		else if ( persistenceUnitDescriptor.getNonJtaDataSource() != null ) {
+			return RESOURCE_LOCAL;
+		}
+		else {
+			return defaultTransactionType;
 		}
 	}
 
@@ -320,13 +301,12 @@ public final class PersistenceXmlParser {
 		if ( isEmpty( value ) ) {
 			return null;
 		}
-		else if ( JTA.name().equalsIgnoreCase( value ) ) {
-			return JTA;
-		}
-		else if ( RESOURCE_LOCAL.name().equalsIgnoreCase( value ) ) {
-			return RESOURCE_LOCAL;
-		}
 		else {
+			for ( var transactionType : PersistenceUnitTransactionType.values() ) {
+				if ( transactionType.name().equalsIgnoreCase( value ) ) {
+					return transactionType;
+				}
+			}
 			throw new PersistenceException( "Unknown persistence unit transaction type : " + value );
 		}
 	}
@@ -334,16 +314,14 @@ public final class PersistenceXmlParser {
 	private JaxbPersistenceImpl loadUrlWithJaxb(URL xmlUrl) {
 		final String resourceName = xmlUrl.toExternalForm();
 		try {
-			URLConnection conn = xmlUrl.openConnection();
+			var connection = xmlUrl.openConnection();
 			// avoid JAR locking on Windows and Tomcat
-			conn.setUseCaches( false );
-
-			try ( InputStream inputStream = conn.getInputStream() ) {
-				final StreamSource inputSource = new StreamSource( inputStream );
-				final ConfigurationBinder configurationBinder = new ConfigurationBinder( classLoaderService );
-				final Binding<JaxbPersistenceImpl> binding =
-						configurationBinder.bind( inputSource, new Origin( SourceType.URL, resourceName ) );
-				return binding.getRoot();
+			connection.setUseCaches( false );
+			try ( var inputStream = connection.getInputStream() ) {
+				return new ConfigurationBinder( classLoaderService )
+						.bind( new StreamSource( inputStream ),
+								new Origin( SourceType.URL, resourceName ) )
+						.getRoot();
 			}
 			catch (IOException e) {
 				throw new PersistenceException( "Unable to obtain input stream from [" + resourceName + "]", e );

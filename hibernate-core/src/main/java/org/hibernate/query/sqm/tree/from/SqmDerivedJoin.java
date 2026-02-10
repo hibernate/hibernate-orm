@@ -97,12 +97,12 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 
 	@Override
 	public SqmDerivedJoin<T> copy(SqmCopyContext context) {
-		final SqmDerivedJoin<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		//noinspection unchecked
-		final SqmDerivedJoin<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmDerivedJoin<>(
 						getNavigablePath(),

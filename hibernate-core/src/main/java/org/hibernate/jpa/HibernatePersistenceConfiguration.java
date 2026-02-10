@@ -51,8 +51,7 @@ import jakarta.persistence.ValidationMode;
  * Standard JPA configuration properties are enumerated by the supertype
  * {@link PersistenceConfiguration}. All configuration properties understood
  * by Hibernate are enumerated by {@link AvailableSettings}.
- * <p>
- * <pre>
+ * <pre>{@code
  * SessionFactory factory = new HibernatePersistenceConfiguration()
  *     // scan classes for mapping annotations
  *     .managedClasses(Item.class, Bid.class, User.class)
@@ -60,7 +59,7 @@ import jakarta.persistence.ValidationMode;
  *     .setProperty(PersistenceConfiguration.JDBC_DATASOURCE,
  *                  "java:comp/env/jdbc/test")
  *     .buildSessionFactory();
- * </pre>
+ * }</pre>
  * <p>
  * When instantiated, an instance of
  * {@code HibernatePersistenceConfiguration} has its properties initially

@@ -40,11 +40,11 @@ public class RealJdbcType extends FloatJdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Float.class );
 	}
 
 	@Override

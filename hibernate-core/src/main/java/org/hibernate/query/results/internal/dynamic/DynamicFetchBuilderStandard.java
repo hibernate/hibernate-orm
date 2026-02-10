@@ -26,6 +26,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.query.results.internal.ResultsHelper.resolveSqlExpression;
+
 
 /**
  * @author Steve Ebersole
@@ -48,17 +50,8 @@ public class DynamicFetchBuilderStandard
 
 	@Override
 	public DynamicFetchBuilderStandard cacheKeyInstance() {
-		return new DynamicFetchBuilderStandard(
-				fetchable,
-				List.copyOf( columnNames )
-		);
-	}
-
-	public DynamicFetchBuilderStandard cacheKeyInstance(DynamicFetchBuilderContainer container) {
-		return new DynamicFetchBuilderStandard(
-				fetchable,
-				List.copyOf( columnNames )
-		);
+		return new DynamicFetchBuilderStandard( fetchable,
+				List.copyOf( columnNames ) );
 	}
 
 	@Override
@@ -182,7 +175,7 @@ public class DynamicFetchBuilderStandard
 			);
 			final String columnAlias = columnNames.get( selectionIndex );
 			sqlExpressionResolver.resolveSqlSelection(
-					ResultsHelper.resolveSqlExpression(
+					resolveSqlExpression(
 							creationStateImpl,
 							jdbcResultsMetadata,
 							tableReference,
@@ -191,7 +184,8 @@ public class DynamicFetchBuilderStandard
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
-					domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+					domainResultCreationState.getSqlAstCreationState()
+							.getCreationContext().getTypeConfiguration()
 			);
 		};
 	}
@@ -215,16 +209,16 @@ public class DynamicFetchBuilderStandard
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !( object instanceof DynamicFetchBuilderStandard that ) ) {
 			return false;
 		}
-
-		final var that = (DynamicFetchBuilderStandard) o;
-		return fetchable.equals( that.fetchable )
-			&& columnNames.equals( that.columnNames );
+		else {
+			return fetchable.equals( that.fetchable )
+				&& columnNames.equals( that.columnNames );
+		}
 	}
 }

@@ -45,6 +45,7 @@ include::chapters/beans/Beans.adoc[]
 include::chapters/portability/Portability.adoc[]
 include::chapters/statistics/Statistics.adoc[]
 include::chapters/tooling/Tooling.adoc[]
+include::chapters/assistant/Assistant.adoc[]
 include::appendices/BestPractices.adoc[]
 
 include::Credits.adoc[]

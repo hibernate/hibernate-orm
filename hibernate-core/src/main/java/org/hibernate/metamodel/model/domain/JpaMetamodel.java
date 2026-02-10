@@ -34,7 +34,7 @@ public interface JpaMetamodel extends Metamodel {
 	/**
 	 * Access to a managed type through its name
 	 */
-	<X> ManagedDomainType<X> managedType(String typeName);
+	ManagedDomainType<?> managedType(String typeName);
 
 	/**
 	 * Access to an entity supporting Hibernate's entity-name feature
@@ -50,13 +50,13 @@ public interface JpaMetamodel extends Metamodel {
 	 * Specialized handling for resolving entity-name references in
 	 * an HQL query
 	 */
-	<X> EntityDomainType<X> getHqlEntityReference(String entityName);
+	EntityDomainType<?> getHqlEntityReference(String entityName);
 
 	/**
 	 * Specialized handling for resolving entity-name references in
 	 * an HQL query
 	 */
-	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
+	EntityDomainType<?> resolveHqlEntityReference(String entityName);
 
 	/**
 	 * Same as {@link #managedType(Class)} except {@code null} is returned rather
@@ -80,7 +80,7 @@ public interface JpaMetamodel extends Metamodel {
 	 * Same as {@link #managedType(String)} except {@code null} is returned rather
 	 * than throwing an exception
 	 */
-	@Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName);
+	@Nullable ManagedDomainType<?> findManagedType(@Nullable String typeName);
 
 	/**
 	 * Same as {@link #entity(String)} except {@code null} is returned rather
@@ -107,7 +107,7 @@ public interface JpaMetamodel extends Metamodel {
 
 	JavaType<?> getJavaConstantType(String className, String fieldName);
 
-	<T> T getJavaConstant(String className, String fieldName);
+	<E> @Nullable E getJavaConstant(String className, String fieldName, Class<E> javaTypeClass);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

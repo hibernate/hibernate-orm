@@ -26,8 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * public class SKUGeneration
  *         implements BeforeExecutionGenerator {
- *     public SKUGeneration(SKU sku, Member annotatedMember,
- *                          GeneratorCreationContext context) {
+ *     public SKUGeneration(SKU sku, GeneratorCreationContext context) {
  *         ...
  *     }
  *     ...

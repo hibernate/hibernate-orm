@@ -6,11 +6,13 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
-import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.getDescriptorByPrimitiveType;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.cast;
+import static org.hibernate.internal.util.type.PrimitiveWrappers.isInstance;
 
 /**
  * Implementation of the JPA Tuple contract
@@ -27,7 +29,6 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X get(TupleElement<X> tupleElement) {
 		final Integer index = tupleMetadata.get( tupleElement );
 		if ( index == null ) {
@@ -36,15 +37,14 @@ public class TupleImpl implements Tuple {
 			);
 		}
 		// index should be "in range" by nature of size check in ctor
-		return (X) row[index];
+		return cast( tupleElement.getJavaType(), row[index] );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X get(String alias, Class<X> type) {
 		final Object untyped = get( alias );
 		if ( untyped != null ) {
-			if ( !elementTypeMatches( type, untyped ) ) {
+			if ( !isInstance( type, untyped ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Requested tuple value [alias=%s, value=%s] cannot be assigned to requested type [%s]",
@@ -55,12 +55,12 @@ public class TupleImpl implements Tuple {
 				);
 			}
 		}
-		return (X) untyped;
+		return cast( type, untyped );
 	}
 
 	@Override
 	public Object get(String alias) {
-		Integer index = tupleMetadata.get( alias );
+		final Integer index = tupleMetadata.get( alias );
 		if ( index == null ) {
 			throw new IllegalArgumentException(
 					"Given alias [" + alias + "] did not correspond to an element in the result tuple"
@@ -71,10 +71,9 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X get(int i, Class<X> type) {
 		final Object result = get( i );
-		if ( result != null && !elementTypeMatches( type, result ) ) {
+		if ( result != null && !isInstance( type, result ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
@@ -84,7 +83,7 @@ public class TupleImpl implements Tuple {
 					)
 			);
 		}
-		return (X) result;
+		return cast( type, result );
 	}
 
 	@Override
@@ -95,11 +94,6 @@ public class TupleImpl implements Tuple {
 			);
 		}
 		return row[i];
-	}
-
-	private <X> boolean elementTypeMatches(Class<X> type, Object untyped) {
-		return type.isInstance( untyped )
-			|| type.isPrimitive() && getDescriptorByPrimitiveType( type ).getWrapperClass().isInstance( untyped );
 	}
 
 	@Override
@@ -115,5 +109,18 @@ public class TupleImpl implements Tuple {
 	@Override
 	public String toString() {
 		return Arrays.toString( row );
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof TupleImpl that
+			&& Objects.equals( tupleMetadata.getAliases(),
+				that.tupleMetadata.getAliases() )
+			&& Arrays.equals( this.row, that.row );
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode( row );
 	}
 }

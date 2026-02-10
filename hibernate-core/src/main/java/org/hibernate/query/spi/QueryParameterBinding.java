@@ -10,21 +10,35 @@ import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.BindableType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * The value/type binding information for a particular query parameter.  Supports
- * both single-valued and multivalued binds
+ * The value and type binding information for a particular query parameter.
+ * Can represent both single-valued and multivalued bindings of arguments
+ * to a parameter.
+ * <p>
+ * The operations of this interface attempt to assign argument values to
+ * the parameter of type {@code T}. If the argument cannot be coerced to
+ * {@code T}, the operation fails and throws {@link QueryArgumentException}.
+ *
+ * @param <T> The type of the query parameter
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface QueryParameterBinding<T> {
 	/**
-	 * Is any value (including {@code null}) bound?  Asked another way,
-	 * were any of the `#set` methods called?
+	 * The query parameter associated with this binding.
+	 */
+	QueryParameter<T> getQueryParameter();
+
+	/**
+	 * Is any argument (even a {@code null} argument) currently
+	 * bound to the parameter? That is, was one of the
+	 * {@link #setBindValue} or {@link #setBindValues} methods
+	 * execute successfully?
 	 */
 	boolean isBound();
 
@@ -33,88 +47,129 @@ public interface QueryParameterBinding<T> {
 	 */
 	boolean isMultiValued();
 
-	QueryParameter<T> getQueryParameter();
-
 	/**
-	 * Get the Type currently associated with this binding.
+	 * Get the type currently associated with this binding.
+	 * By default, this is the type inferred from the parameter.
+	 * It may be modified via a call to {@link #setBindValue} or
+	 * {@link #setBindValues}.
 	 *
-	 * @return The currently associated Type
+	 * @return The currently associated {@link BindableType}
 	 */
-	@Nullable BindableType<? super T> getBindType();
+	@Nullable BindableType<T> getBindType();
 
 	/**
-	 * If the parameter represents a temporal type, return the explicitly
-	 * specified precision - if one.
+	 * If the parameter is of a temporal type, return the explicitly
+	 * specified precision, if any.
 	 */
-	@Nullable TemporalType getExplicitTemporalPrecision();
+	@Nullable @SuppressWarnings("deprecation") TemporalType getExplicitTemporalPrecision();
 
 	/**
-	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
+	 * Set argument. If the given value is a {@link Collection},
+	 * it might be interpreted as multiple arguments. Use the
+	 * inherent type of the parameter.
+	 *
+	 * @throws QueryArgumentException
+	 *        if the value cannot be bound to the parameter
 	 */
-	default void setBindValue(T value) {
+	default void setBindValue(Object value) {
 		setBindValue( value, false );
 	}
 
 	/**
-	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed.
-	 * The flag controls whether the parameter type should be resolved if necessary.
-	 */
-	void setBindValue(T value, boolean resolveJdbcTypeIfNecessary);
-
-	/**
-	 * Sets the parameter binding value using the explicit Type.
-	 * @param value The bind value
-	 * @param clarifiedType The explicit Type to use
-	 */
-	void setBindValue(T value, @Nullable BindableType<T> clarifiedType);
-
-	/**
-	 * Sets the parameter binding value using the explicit TemporalType.
-	 * @param value The bind value
-	 * @param temporalTypePrecision The temporal type to use
-	 */
-	void setBindValue(T value, TemporalType temporalTypePrecision);
-
-	/**
-	 * Get the value current bound.
+	 * Set argument. If the given value is a {@link Collection},
+	 * it might be interpreted as multiple arguments. Use the
+	 * inherent type of the parameter.
 	 *
-	 * @return The currently bound value
+	 * @param resolveJdbcTypeIfNecessary
+	 *        Controls whether the parameter type should be
+	 *        resolved if necessary.
+	 * @throws QueryArgumentException
+	 *        if the value cannot be bound to the parameter
+	 */
+	void setBindValue(Object value, boolean resolveJdbcTypeIfNecessary);
+
+	/**
+	 * Set the argument, specifying an explicit {@link BindableType}.
+	 *
+	 * @param value The argument
+	 * @param clarifiedType The explicit type
+	 */
+	<A> void setBindValue(A value, @Nullable BindableType<A> clarifiedType);
+
+	/**
+	 * Set the argument, specifying an explicit {@link TemporalType}.
+	 * If the given value is a {@link Collection}, it might be interpreted
+	 * as multiple arguments.
+	 *
+	 * @param value The argument
+	 * @param temporalTypePrecision The explicit temporal type
+	 * @throws QueryArgumentException
+	 *        if the value cannot be bound to the parameter
+	 */
+	void setBindValue(Object value, @SuppressWarnings("deprecation") TemporalType temporalTypePrecision);
+
+	/**
+	 * Get the argument currently bound to the parameter.
+	 *
+	 * @return The argument currently bound
+	 * @throws IllegalStateException
+	 *         if the parameter is multivalued
 	 */
 	T getBindValue();
 
 	/**
-	 * Sets the parameter binding values.  The inherent parameter type (if known) is assumed in regards to the
-	 * individual values.
-	 *  @param values The bind values
+	 * Attempt to set multiple arguments to the parameter. Use the
+	 * inherent type of the parameter.
 	 *
+	 * @param values The arguments
+	 * @throws IllegalArgumentException if the parameter is not multivalued
+	 * @throws QueryArgumentException
+	 *        if one of the values cannot be bound to the parameter
 	 */
-	void setBindValues(Collection<? extends T> values);
+	void setBindValues(Collection<?> values);
 
 	/**
-	 * Sets the parameter binding values using the explicit Type in regards to the individual values.
-	 * @param values The bind values
-	 * @param clarifiedType The explicit Type to use
-	 */
-	void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType);
-
-	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
+	 * Attempt to set multiple arguments to the parameter, specifying
+	 * an explicit {@link BindableType}.
 	 *
-	 *  @param values The bind values
-	 * @param temporalTypePrecision The temporal type to use
+	 * @param values The arguments
+	 * @param clarifiedType The explicit type
+	 * @throws IllegalArgumentException
+	 *         if the parameter is not multivalued
+	 * @throws QueryArgumentException
+	 *        if one of the values cannot be bound to the parameter
 	 */
-	void setBindValues(Collection<? extends T> values, TemporalType temporalTypePrecision, TypeConfiguration typeConfiguration);
+	<A> void setBindValues(Collection<? extends A> values, BindableType<A> clarifiedType);
 
 	/**
-	 * Get the values currently bound.
+	 * Attempt to set multiple arguments to the parameter, specifying
+	 * an explicit {@link TemporalType}.
 	 *
-	 * @return The currently bound values
+	 * @param values The arguments
+	 * @param temporalTypePrecision The explicit temporal type
+	 * @throws IllegalArgumentException
+	 *        if the parameter is not multivalued
+	 * @throws QueryArgumentException
+	 *        if one of the values cannot be bound to the parameter
+	 */
+	void setBindValues(
+			Collection<?> values,
+			@SuppressWarnings("deprecation")
+			TemporalType temporalTypePrecision);
+
+	/**
+	 * Get the arguments currently bound to the parameter.
+	 *
+	 * @return The arguments currently bound
+	 * @throws IllegalArgumentException if the parameter is not multivalued
 	 */
 	Collection<? extends T> getBindValues();
 
 	/**
-	 * Returns the inferred mapping model expressible i.e. the model reference against which this parameter is compared.
+	 * Returns the inferred mapping model expressible, i.e.,
+	 * the model reference against which this parameter is compared.
 	 *
-	 * @return the inferred mapping model expressible or <code>null</code>
+	 * @return the inferred mapping model expressible or {@code null}
 	 */
 	@Nullable MappingModelExpressible<T> getType();
 
@@ -122,7 +177,7 @@ public interface QueryParameterBinding<T> {
 	 * Sets the mapping model expressible for this parameter.
 	 *
 	 * @param type The mapping model expressible
-	 * @return Whether the bind type was changed
+	 * @return Whether the binding type was actually changed
 	 */
 	boolean setType(@Nullable MappingModelExpressible<T> type);
 }

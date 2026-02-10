@@ -4,11 +4,11 @@ goal=
 if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "" ]; then
   # This is the default.
   #   - special check for Jenkins CI jobs where we don't want to run preVerifyRelease
-  if [[ -n "$CI_SYSTEM" && "$CI_SYSTEM" != "jenkins" ]]; then
+  if [[ "$CI_SYSTEM" != "jenkins" ]]; then
     goal="preVerifyRelease"
     # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
-	  export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
-	fi
+    export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
+  fi
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
@@ -56,7 +56,7 @@ elif [ "$RDBMS" == "oracle_db23c" ]; then
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   goal="-Pdb=oracle_cloud_db23c -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
 # OTP
-elif [ "$RDBMS" == "autonomous-transaction-processing-serverless" ] || [ "$RDBMS" == "base-database-service-19c" ] || [ "$RDBMS" == "base-database-service-21c" ] || [ "$RDBMS" == "base-database-service-23ai" ]; then
+elif [ "$RDBMS" == "autonomous-transaction-processing-serverless-19c" ] || [ "$RDBMS" == "autonomous-transaction-processing-serverless-26ai" ] || [ "$RDBMS" == "autonomous-transaction-processing-serverless" ] || [ "$RDBMS" == "base-database-service-19c" ] || [ "$RDBMS" == "base-database-service-21c" ] || [ "$RDBMS" == "base-database-service-26ai" ]; then
   echo "Managing OTP Database..."
   goal="-Pdb=oracle_test_pilot_database -DrunID=$RUNID -DdbPassword=$TESTPILOT_PASSWORD -DdbConnectionStringSuffix=$TESTPILOT_CONNECTION_STRING_SUFFIX"
 elif [ "$RDBMS" == "db2" ]; then

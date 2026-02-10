@@ -86,7 +86,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 				attributeMetadata.getMember()
 		);
 
-		final Class<Y> javaClass = attributeJtd.getJavaTypeClass();
+		final var javaClass = attributeJtd.getJavaTypeClass();
 		if ( Map.class.equals( javaClass ) ) {
 			return new MapAttributeImpl( builder );
 		}
@@ -124,7 +124,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private static SimpleDomainType<?> determineListIndexOrMapKeyType(
 			PluralAttributeMetadata<?,?,?> attributeMetadata,
 			MetadataContext metadataContext) {
-		final Class<?> javaType = attributeMetadata.getJavaType();
+		final var javaType = attributeMetadata.getJavaType();
 		if ( Map.class.isAssignableFrom( javaType ) ) {
 			return (SimpleDomainType<?>)
 					determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );

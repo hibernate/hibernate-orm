@@ -40,7 +40,7 @@ public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainRe
 	@Override
 	public R assemble(RowProcessingState rowProcessingState) {
 		final int numberOfArgs = argumentReaders.size();
-		Object[] args = new Object[ numberOfArgs ];
+		final var args = new Object[ numberOfArgs ];
 		for ( int i = 0; i < numberOfArgs; i++ ) {
 			args[i] = argumentReaders.get( i ).assemble( rowProcessingState );
 		}
@@ -60,14 +60,14 @@ public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainRe
 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			argumentReader.resolveState( rowProcessingState );
 		}
 	}
 
 	@Override
 	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
-		for ( ArgumentReader<?> argumentReader : argumentReaders ) {
+		for ( var argumentReader : argumentReaders ) {
 			argumentReader.forEachResultAssembler( consumer, arg );
 		}
 	}

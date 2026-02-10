@@ -8,9 +8,13 @@ import org.hibernate.LockOptions;
 import org.hibernate.OrderingMode;
 import org.hibernate.RemovalsMode;
 
-/**
- * Base contract for options for multi-load operations
- */
+/// Encapsulation of the options for loading multiple entities (of a type)
+/// by [key][org.hibernate.KeyType].
+///
+/// @see MultiIdLoadOptions
+/// @see MultiNaturalIdLoadOptions
+///
+/// @author Steve Ebersole
 public interface MultiLoadOptions {
 	/**
 	 * How should entities in removed status be handled.

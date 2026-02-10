@@ -14,6 +14,7 @@ import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -55,6 +56,44 @@ public abstract class AbstractMutationCoordinator {
 		mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
+	static boolean requiresValueGeneration(
+			OnExecutionGenerator generator,
+			Dialect dialect,
+			EventType eventType,
+			boolean generatedOnExecution) {
+		if ( generatedOnExecution && generator.getEventTypes().contains( eventType ) ) {
+			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
+			if ( columnInclusions != null ) {
+				for ( boolean included : columnInclusions ) {
+					if ( !included ) {
+						return true;
+					}
+				}
+			}
+			if ( !generator.referenceColumnsInSql( dialect, eventType ) ) {
+				return false;
+			}
+			else if ( !generator.writePropertyValue( eventType ) ) {
+				return true;
+			}
+			else {
+				final String[] columnValues = generator.getReferencedColumnValues( dialect, eventType );
+				if ( columnValues != null ) {
+					for ( int i = 0; i < columnValues.length; i++ ) {
+						if ( (columnInclusions == null || columnInclusions[i])
+								&& !"?".equals( columnValues[i] ) ) {
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+
 	protected EntityPersister entityPersister() {
 		return entityPersister;
 	}
@@ -68,11 +107,11 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
-		if ( !dynamicUpdate
-				&& !entityPersister().optimisticLockStyle().isAllOrDirty()
-				&& session.getTransactionCoordinator() != null
-				&& session.getTransactionCoordinator().isTransactionActive() ) {
-			return this::getBatchKey;
+		if ( !dynamicUpdate && !entityPersister().optimisticLockStyle().isAllOrDirty() ) {
+			final var transactionCoordinator = session.getTransactionCoordinator();
+			if ( transactionCoordinator != null && transactionCoordinator.isTransactionActive() ) {
+				return this::getBatchKey;
+			}
 		}
 
 		return NoBatchKeyAccess.INSTANCE;
@@ -126,18 +165,22 @@ public abstract class AbstractMutationCoordinator {
 	protected void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
-			OnExecutionGenerator generator) {
-		final Dialect dialect = factory.getJdbcServices().getDialect();
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+			OnExecutionGenerator generator,
+			EventType eventType) {
+		final var dialect = dialect();
+		final var columnValues = generator.getReferencedColumnValues( dialect, eventType );
+		final var columnInclusions = generator.getColumnInclusions( dialect, eventType );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
-			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
-			final ColumnValuesTableMutationBuilder tableUpdateBuilder =
-					mutationGroupBuilder.findTableDetailsBuilder( tableName );
-			tableUpdateBuilder.addValueColumn(
-					writePropertyValue ? "?" : columnValues[j],
-					mapping
-			);
+			if ( columnInclusions == null || columnInclusions[j] ) {
+				final ColumnValuesTableMutationBuilder<?> tableUpdateBuilder =
+						mutationGroupBuilder.findTableDetailsBuilder(
+								entityPersister.physicalTableNameForMutation( mapping ) );
+				final String columnValue =
+						columnValues != null && columnValues[j] != null
+								? columnValues[j]
+								: "?";
+				tableUpdateBuilder.addValueColumn( columnValue, mapping );
+			}
 		} );
 	}
 

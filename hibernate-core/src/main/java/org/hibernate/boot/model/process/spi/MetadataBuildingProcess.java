@@ -13,11 +13,11 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -35,7 +35,6 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
@@ -59,13 +58,11 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
@@ -89,6 +86,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.util.Comparator.comparingInt;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
@@ -100,10 +98,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  * Represents the process of transforming a {@link MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.  Allows for 2 different process paradigms:<ul>
  *     <li>
- *         Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
+ *         Single step: as defined by the {@link #build} method; internally leverages the 2-step paradigm
  *     </li>
  *     <li>
- *         Two step : a first step coordinates resource scanning and some other preparation work; a second step
+ *         Two step: a first step coordinates resource scanning and some other preparation work; a second step
  *         builds the {@link org.hibernate.boot.Metadata}. A hugely important distinction in the need for the
  *         steps is that the first phase should strive to not load user entity/component classes so that we can still
  *         perform enhancement on them later. This approach caters to the 2-phase bootstrap we use in regard to
@@ -132,26 +130,32 @@ public class MetadataBuildingProcess {
 	}
 
 	/**
-	 * First step of two-phase for MetadataSources to Metadata process
+	 * First step of two-phase for {@link MetadataSources} to
+	 * {@link org.hibernate.boot.Metadata} process
 	 *
 	 * @param sources The MetadataSources
 	 * @param bootstrapContext The bootstrapContext
 	 *
-	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
+	 * @return Token/memento representing all known users resources
+	 *         (classes, packages, mapping files, and so on).
 	 */
 	public static ManagedResources prepare(
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final var managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		final boolean xmlMappingEnabled =
-				bootstrapContext.getConfigurationService()
-						.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
 		ScanningCoordinator.INSTANCE.coordinateScan(
 				managedResources,
 				bootstrapContext,
-				xmlMappingEnabled ? sources.getXmlMappingBinderAccess() : null
+				isXmlMappingEnabled( bootstrapContext )
+						? sources.getXmlMappingBinderAccess()
+						: null
 		);
 		return managedResources;
+	}
+
+	private static Boolean isXmlMappingEnabled(BootstrapContext bootstrapContext) {
+		return bootstrapContext.getConfigurationService()
+				.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
 	}
 
 	/**
@@ -204,8 +208,8 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
-		final var classLoaderService = bootstrapContext.getClassLoaderService();
-		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
+		processAdditionalMappingContributions( metadataCollector, options,
+				bootstrapContext.getClassLoaderService(), rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
 
@@ -220,9 +224,10 @@ public class MetadataBuildingProcess {
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
 		final var processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
-					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-					: new NoOpMetadataSourceProcessorImpl();
+			private final MetadataSourceProcessor hbmProcessor =
+					options.isXmlMappingEnabled()
+							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+							: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor =
 					new AnnotationMetadataSourceProcessorImpl(
@@ -320,16 +325,16 @@ public class MetadataBuildingProcess {
 		processor.processFilterDefinitions();
 		processor.processFetchProfiles();
 
-		final Set<String> processedEntityNames = new HashSet<>();
 		processor.prepareForEntityHierarchyProcessing();
-		processor.processEntityHierarchies( processedEntityNames );
+		processor.processEntityHierarchies( new HashSet<>() );
 		processor.postProcessEntityHierarchies();
 
 		processor.processResultSetMappings();
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
-		// Make sure collections are fully bound before processing named queries as hbm result set mappings require it
+		// Make sure collections are fully bound before processing
+		// named queries as hbm result set mappings require it
 		processor.processNamedQueries();
 
 		processor.finishUp();
@@ -359,26 +364,30 @@ public class MetadataBuildingProcess {
 
 		final var aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
 		final var modelsContext = bootstrapContext.getModelsContext();
-		final var xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
-				managedResources,
-				aggregatedPersistenceUnitMetadata
-		);
+		final var xmlPreProcessingResult =
+				XmlPreProcessor.preProcessXmlResources( managedResources,
+						aggregatedPersistenceUnitMetadata );
 
-		final List<String> allKnownClassNames = mutableJoin(
-				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
+		final var allKnownClassNames = mutableJoin(
+				managedResources.getAnnotatedClassReferences().stream()
+						.map( Class::getName ).toList(),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
 		);
-		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
-			try {
-				final var packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
-				allKnownClassNames.add( packageInfoClass.getName() );
-			}
-			catch (ClassLoadingException classLoadingException) {
-				// no package-info, so there can be no annotations... just skip it
-			}
-		} );
-		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
+		managedResources.getAnnotatedPackageNames()
+				.forEach( packageName -> {
+					try {
+						final Class<?> packageInfoClass =
+								modelsContext.getClassLoading()
+										.classForName( packageName + ".package-info" );
+						allKnownClassNames.add( packageInfoClass.getName() );
+					}
+					catch (ClassLoadingException classLoadingException) {
+						// no package-info, so there can be no annotations... just skip it
+					}
+				} );
+		managedResources.getAnnotatedClassReferences()
+				.forEach( clazz -> allKnownClassNames.add( clazz.getName() ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- process metadata-complete XML
@@ -397,15 +406,15 @@ public class MetadataBuildingProcess {
 		//  	- embeddables
 
 		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
-		final var modelCategorizationCollector = new DomainModelCategorizationCollector(
-				metadataCollector.getGlobalRegistrations(),
-				modelsContext
-		);
+		final var modelCategorizationCollector =
+				new DomainModelCategorizationCollector(
+						metadataCollector.getGlobalRegistrations(),
+						modelsContext
+				);
 
-		final var rootMappingDefaults = new RootMappingDefaults(
-				optionDefaults,
-				aggregatedPersistenceUnitMetadata
-		);
+		final var rootMappingDefaults =
+				new RootMappingDefaults( optionDefaults,
+						aggregatedPersistenceUnitMetadata );
 		final var xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				aggregatedPersistenceUnitMetadata,
@@ -417,19 +426,19 @@ public class MetadataBuildingProcess {
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
 		// apply known classes
-		allKnownClassNames.forEach( (className) -> {
+		allKnownClassNames.forEach( className -> {
 			if ( categorizedClassNames.add( className ) ) {
 				// not known yet
-				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( className ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		} );
 		// apply known "names" - generally this handles dynamic models
 		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
 			if ( categorizedClassNames.add( mappedName ) ) {
 				// not known yet
-				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( mappedName );
-				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( mappedName ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		} );
 
@@ -437,22 +446,12 @@ public class MetadataBuildingProcess {
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				CollectionHelper.mutableJoin( allKnownClassNames, xmlPreProcessingResult.getMappedNames() ),
+				mutableJoin( allKnownClassNames,
+						xmlPreProcessingResult.getMappedNames() ),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
 				aggregatedPersistenceUnitMetadata
 		);
-	}
-
-	private static void applyKnownClass(
-			String className,
-			HashSet<String> categorizedClassNames,
-			ClassDetailsRegistry classDetailsRegistry,
-			DomainModelCategorizationCollector modelCategorizationCollector) {
-		if ( categorizedClassNames.add( className ) ) {
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-			applyKnownClass( classDetails, categorizedClassNames,classDetailsRegistry, modelCategorizationCollector );
-		}
 	}
 
 	private static void applyKnownClass(
@@ -475,16 +474,19 @@ public class MetadataBuildingProcess {
 			ClassLoaderService classLoaderService,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 
-		final var contributions = new AdditionalMappingContributionsImpl(
-				metadataCollector,
-				options,
-				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
-				rootMetadataBuildingContext
-		);
+		final var contributions =
+				new AdditionalMappingContributionsImpl(
+						metadataCollector,
+						options,
+						options.isXmlMappingEnabled()
+								? new MappingBinder( classLoaderService, () -> false )
+								: null,
+						rootMetadataBuildingContext
+				);
 
 		final var additionalMappingContributors =
 				classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
-		additionalMappingContributors.forEach( (contributor) -> {
+		additionalMappingContributors.forEach( contributor -> {
 			contributions.setCurrentContributor( contributor.getContributorName() );
 			try {
 				contributor.contribute(
@@ -554,9 +556,8 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
-			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final var binding = mappingBinder.bind( xmlStream, origin );
-			final var bindingRoot = binding.getRoot();
+			final var origin = new Origin( SourceType.INPUT_STREAM, null );
+			final var bindingRoot = mappingBinder.bind( xmlStream, origin ).getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
 				contributeBinding( hibernateMapping );
 			}
@@ -593,21 +594,18 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeTable(Table table) {
-			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
-					table.getCatalogIdentifier(),
-					table.getSchemaIdentifier()
-			);
-			namespace.registerTable( table.getNameIdentifier(), table );
+			metadataCollector.getDatabase()
+					.locateNamespace( table.getCatalogIdentifier(), table.getSchemaIdentifier() )
+					.registerTable( table.getNameIdentifier(), table );
 			metadataCollector.addTableNameBinding( table.getNameIdentifier(), table );
 		}
 
 		@Override
 		public void contributeSequence(Sequence sequence) {
-			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
-					sequence.getName().getCatalogName(),
-					sequence.getName().getSchemaName()
-			);
-			namespace.registerSequence( sequence.getName().getSequenceName(), sequence );
+			final var sequenceName = sequence.getName();
+			metadataCollector.getDatabase()
+					.locateNamespace( sequenceName.getCatalogName(), sequenceName.getSchemaName() )
+					.registerSequence( sequenceName.getSequenceName(), sequence );
 		}
 
 		@Override
@@ -708,11 +706,14 @@ public class MetadataBuildingProcess {
 		}
 
 		// add Dialect contributed types
-		final var dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
+		final var dialect =
+				options.getServiceRegistry()
+						.requireService( JdbcServices.class )
+						.getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 
 		// add TypeContributor contributed types.
-		for ( var typeContributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+		for ( var typeContributor : sortedTypeContributors( classLoaderService ) ) {
 			typeContributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
@@ -762,7 +763,7 @@ public class MetadataBuildingProcess {
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
-		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
+		if ( preferredSqlTypeCodeForDuration != SqlTypes.DURATION ) {
 			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
 					jdbcTypeRegistry,
@@ -771,9 +772,6 @@ public class MetadataBuildingProcess {
 					StandardBasicTypes.DURATION.getName(),
 					"org.hibernate.type.DurationType"
 			);
-		}
-		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.DURATION );
 		}
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
@@ -827,18 +825,29 @@ public class MetadataBuildingProcess {
 		}
 	}
 
-	private static void adaptToPreferredSqlTypeCode(
-			JdbcTypeRegistry jdbcTypeRegistry,
-			JdbcType dialectUuidDescriptor,
-			int defaultSqlTypeCode,
-			int preferredSqlTypeCode) {
-		if ( jdbcTypeRegistry.findDescriptor( defaultSqlTypeCode ) == dialectUuidDescriptor ) {
-			jdbcTypeRegistry.addDescriptor(
-					defaultSqlTypeCode,
-					jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode )
-			);
-		}
-		// else warning?
+//	private static void adaptToPreferredSqlTypeCode(
+//			JdbcTypeRegistry jdbcTypeRegistry,
+//			JdbcType dialectUuidDescriptor,
+//			int defaultSqlTypeCode,
+//			int preferredSqlTypeCode) {
+//		if ( jdbcTypeRegistry.findDescriptor( defaultSqlTypeCode ) == dialectUuidDescriptor ) {
+//			jdbcTypeRegistry.addDescriptor(
+//					defaultSqlTypeCode,
+//					jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode )
+//			);
+//		}
+//		// else warning?
+//	}
+
+	private static List<TypeContributor> sortedTypeContributors(
+			ClassLoaderService classLoaderService) {
+		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort(
+				comparingInt( TypeContributor::ordinal )
+						.thenComparing( a -> a.getClass().getCanonicalName() )
+		);
+		return contributors;
 	}
 
 	private static void adaptToPreferredSqlTypeCode(
@@ -850,12 +859,12 @@ public class MetadataBuildingProcess {
 			String... additionalKeys) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
+		final var basicType = new NamedBasicTypeImpl<>(
 				javaTypeRegistry.resolveDescriptor( javaType ),
 				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
 				name
 		);
-		final String[] keys = Arrays.copyOf( additionalKeys, additionalKeys.length + 2 );
+		final var keys = Arrays.copyOf( additionalKeys, additionalKeys.length + 2 );
 		keys[additionalKeys.length] = javaType.getSimpleName();
 		keys[additionalKeys.length + 1] = javaType.getName();
 		basicTypeRegistry.register( basicType, keys );
@@ -866,13 +875,12 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<OffsetTime> offsetDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
-				timestampWithTimeZoneOverride,
-				"OffsetTime"
-		);
 		basicTypeRegistry.register(
-				offsetDateTimeType,
+				new NamedBasicTypeImpl<>(
+						javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
+						timestampWithTimeZoneOverride,
+						"OffsetTime"
+				),
 				"org.hibernate.type.OffsetTimeType",
 				OffsetTime.class.getSimpleName(),
 				OffsetTime.class.getName()
@@ -884,24 +892,22 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<OffsetDateTime> offsetDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
-				timestampWithTimeZoneOverride,
-				"OffsetDateTime"
-		);
-		final BasicType<ZonedDateTime> zonedDateTimeType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
-				timestampWithTimeZoneOverride,
-				"ZonedDateTime"
-		);
 		basicTypeRegistry.register(
-				offsetDateTimeType,
+				new NamedBasicTypeImpl<>(
+						javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
+						timestampWithTimeZoneOverride,
+						"OffsetDateTime"
+				),
 				"org.hibernate.type.OffsetDateTimeType",
 				OffsetDateTime.class.getSimpleName(),
 				OffsetDateTime.class.getName()
 		);
 		basicTypeRegistry.register(
-				zonedDateTimeType,
+				new NamedBasicTypeImpl<>(
+						javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
+						timestampWithTimeZoneOverride,
+						"ZonedDateTime"
+				),
 				"org.hibernate.type.ZonedDateTimeType",
 				ZonedDateTime.class.getSimpleName(),
 				ZonedDateTime.class.getName()
@@ -937,7 +943,8 @@ public class MetadataBuildingProcess {
 			int typeCode,
 			int fallbackTypeCode) {
 		if ( !jdbcTypeRegistry.hasRegisteredDescriptor( typeCode ) ) {
-			jdbcTypeRegistry.addDescriptor( typeCode, jdbcTypeRegistry.getDescriptor( fallbackTypeCode ) );
+			jdbcTypeRegistry.addDescriptor( typeCode,
+					jdbcTypeRegistry.getDescriptor( fallbackTypeCode ) );
 		}
 	}
 }

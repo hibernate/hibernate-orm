@@ -7,9 +7,10 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.hibernate.persister.entity.EntityPersister;
+
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 /**
  * Concurrent Map implementation of mappings entity name -> EntityPersister.
@@ -26,10 +27,7 @@ public final class EntityPersisterConcurrentMap {
 
 	public EntityPersister get(final String name) {
 		final var entityPersisterHolder = map.get( name );
-		if ( entityPersisterHolder != null ) {
-			return entityPersisterHolder.entityPersister;
-		}
-		return null;
+		return entityPersisterHolder == null ? null : entityPersisterHolder.entityPersister;
 	}
 
 	public EntityPersister[] values() {
@@ -55,10 +53,10 @@ public final class EntityPersisterConcurrentMap {
 	}
 
 	private void recomputeValues() {
-		//Assumption: the write lock is being held (synchronize on this)
+		//Assumption: the write lock is held (synchronize on this)
 		final int size = map.size();
-		final EntityPersister[] newValues = new EntityPersister[size];
-		final String[] newKeys = new String[size];
+		final var newValues = new EntityPersister[size];
+		final var newKeys = new String[size];
 		int i = 0;
 		for ( var entry : map.entrySet() ) {
 			newValues[i] = entry.getValue().entityPersister;
@@ -75,7 +73,7 @@ public final class EntityPersisterConcurrentMap {
 	 */
 	@Deprecated(forRemoval = true)
 	public Map<String, EntityPersister> convertToMap() {
-		return map.entrySet().stream().collect( Collectors.toUnmodifiableMap(
+		return map.entrySet().stream().collect( toUnmodifiableMap(
 				Map.Entry::getKey,
 				e -> e.getValue().entityPersister
 		) );

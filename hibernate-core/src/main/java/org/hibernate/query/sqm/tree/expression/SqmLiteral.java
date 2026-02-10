@@ -53,7 +53,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmLiteral<T> copy(SqmCopyContext context) {
-		final SqmLiteral<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

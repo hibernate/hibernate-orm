@@ -48,7 +48,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
- * <p>
  * <table>
  * <caption>General configuration parameters</caption>
  * 	 <tr>
@@ -368,10 +367,10 @@ public class SequenceStyleGenerator
 			IdentifierHelper identifierHelper) {
 		if ( isNotEmpty( explicitSequenceName ) ) {
 			// we have an explicit name, use it
-			return explicitSequenceName.contains(".")
+			return explicitSequenceName.contains( "." )
 					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitSequenceName ) );
+							identifierHelper.toIdentifier( explicitSequenceName, false, true ) );
 		}
 		else {
 			// otherwise, determine an implicit name to use

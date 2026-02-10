@@ -5,15 +5,14 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.internal.util.beans.BeanInfo;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.beans.PropertyDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import java.beans.BeanInfo;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.List;
 
 import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
@@ -47,7 +46,7 @@ public class InstantiationHelper {
 	}
 
 	private static boolean checkArgument(Class<?> targetJavaType, BeanInfo beanInfo, String alias, Class<?> argType) {
-		for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+		for ( var propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
 			if ( propertyMatches( alias, argType, propertyDescriptor ) ) {
 				return true;
 			}
@@ -63,7 +62,7 @@ public class InstantiationHelper {
 			Class<T> type,
 			List<Class<?>> argumentTypes,
 			TypeConfiguration typeConfiguration) {
-		for ( final Constructor<?> constructor : type.getDeclaredConstructors() ) {
+		for ( var constructor : type.getDeclaredConstructors() ) {
 			if ( isConstructorCompatible( constructor, argumentTypes, typeConfiguration ) ) {
 				//noinspection unchecked
 				return (Constructor<T>) constructor;
@@ -79,12 +78,12 @@ public class InstantiationHelper {
 		final var genericParameterTypes = constructor.getGenericParameterTypes();
 		if ( genericParameterTypes.length == argumentTypes.size() ) {
 			for (int i = 0; i < argumentTypes.size(); i++ ) {
-				final Type parameterType = genericParameterTypes[i];
+				final var parameterType = genericParameterTypes[i];
 				final var argumentType = argumentTypes.get( i );
 				final var type =
 						parameterType instanceof Class<?> classParameter
 								? classParameter
-								: typeConfiguration.getJavaTypeRegistry().getDescriptor( parameterType )
+								: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType )
 										.getJavaTypeClass();
 				if ( !areAssignmentCompatible( type, argumentType ) ) {
 					if ( LOG.isDebugEnabled() ) {
@@ -107,7 +106,7 @@ public class InstantiationHelper {
 
 	static Field findField(Class<?> declaringClass, String name, Class<?> javaType) {
 		try {
-			final Field field = declaringClass.getDeclaredField( name );
+			final var field = declaringClass.getDeclaredField( name );
 			// field should never be null
 			if ( areAssignmentCompatible( field.getType(), javaType ) ) {
 				field.setAccessible( true );

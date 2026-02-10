@@ -48,11 +48,11 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+	public JavaType<?> getRecommendedJavaType(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( OffsetDateTime.class );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( OffsetDateTime.class );
 	}
 
 	@Override

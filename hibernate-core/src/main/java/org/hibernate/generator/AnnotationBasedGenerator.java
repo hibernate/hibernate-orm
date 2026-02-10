@@ -20,16 +20,22 @@ import java.lang.reflect.Member;
  * For example, implementing {@code AnnotationBasedGenerator<AnnotationType>} is the
  * same as providing a constructor with this signature:
  * <pre>
- * public GeneratorClass(AnnotationType config, Member idMember,
+ * public GeneratorClass(AnnotationType config,
  *                      GeneratorCreationContext creationContext)
  * </pre>
  * <p>
  * where {@code GeneratorClass} is the class that implements {@code Generator}, and
  * {@code AnnotationType} is the generator annotation type used to configure the
- * generator.
+ * generator. That is, it is an annotation type annotated
+ * {@link org.hibernate.annotations.ValueGenerationType @ValueGenerationType}
+ * or {@link org.hibernate.annotations.IdGeneratorType @IdGeneratorType}.
+ * <pre>
+ * &#64;IdGeneratorType(GeneratorClass.class)
+ * public &#64;interface AnnotationType { ... }
+ * </pre>
  * <p>
- * Every instance of this class must implement either {@link BeforeExecutionGenerator} or
- * {@link OnExecutionGenerator}.
+ * Every instance of this interface must also implement either
+ * {@link BeforeExecutionGenerator} or {@link OnExecutionGenerator}.
  *
  * @param <A> The generator annotation type supported by an implementation
  *
@@ -37,6 +43,7 @@ import java.lang.reflect.Member;
  * @see org.hibernate.annotations.IdGeneratorType
  *
  * @author Gavin King
+ * @author Yanming Zhou
  *
  * @since 6.2
  */
@@ -49,8 +56,27 @@ public interface AnnotationBasedGenerator<A extends Annotation> extends Generato
 	 *                   values and store them in fields.
 	 * @param member the Java member annotated with the generator annotation.
 	 * @param context a {@link GeneratorCreationContext}
-	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
-	 *                                          an implementation can't create a value for the given property type.
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization,
+	 *         for example, if an implementation can't create a value for the given property type.
+	 * @deprecated Use {@link #initialize(Annotation, GeneratorCreationContext)} instead
 	 */
-	void initialize(A annotation, Member member, GeneratorCreationContext context);
+	@Deprecated(since = "7.3", forRemoval = true)
+	default void initialize(A annotation, Member member, GeneratorCreationContext context) {
+	}
+
+	/**
+	 * Initializes this generation strategy for the given annotation instance.
+	 *
+	 * @param annotation an instance of the strategy's annotation type. Typically,
+	 *                   implementations will retrieve the annotation's attribute
+	 *                   values and store them in fields.
+	 * @param context a {@link GeneratorCreationContext}
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization,
+	 *         for example, if an implementation can't create a value for the given property type.
+	 *
+	 * @since 7.3
+	 */
+	default void initialize(A annotation, GeneratorCreationContext context) {
+		initialize( annotation, context.getMemberDetails().toJavaMember(), context );
+	}
 }

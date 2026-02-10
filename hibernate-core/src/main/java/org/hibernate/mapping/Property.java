@@ -24,6 +24,7 @@ import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -71,6 +72,7 @@ public class Property implements Serializable, MetaAttributable {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean isGeneric;
+	private boolean isGenericSpecialization;
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
@@ -96,6 +98,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	public int getColumnSpan() {
 		return value.getColumnSpan();
+	}
+
+	boolean hasColumns() {
+		return value.hasColumns();
 	}
 
 	/**
@@ -126,12 +132,17 @@ public class Property implements Serializable, MetaAttributable {
 		return value;
 	}
 
+	public void resetInsertable(boolean insertable) {
+		setInsertable( insertable );
+		if ( !insertable ) {
+			value.setNonInsertable();
+		}
+	}
+
 	public void resetUpdateable(boolean updateable) {
 		setUpdatable( updateable );
-		final boolean[] columnUpdateability = getValue().getColumnUpdateability();
-		final int columnSpan = getColumnSpan();
-		for ( int i = 0; i < columnSpan; i++ ) {
-			columnUpdateability[i] = updateable;
+		if ( !updateable ) {
+			value.setNonUpdatable();
 		}
 	}
 
@@ -490,6 +501,14 @@ public class Property implements Serializable, MetaAttributable {
 		this.isGeneric = generic;
 	}
 
+	public boolean isGenericSpecialization() {
+		return isGenericSpecialization;
+	}
+
+	public void setGenericSpecialization(boolean genericSpecialization) {
+		isGenericSpecialization = genericSpecialization;
+	}
+
 	public boolean isLob() {
 		return lob;
 	}
@@ -554,6 +573,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setPersistentClass( getPersistentClass() );
 		property.setNaturalIdentifier( isNaturalIdentifier() );
 		property.setGeneric( isGeneric() );
+		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
 		property.addCallbackDefinitions( getCallbackDefinitions() );
 		property.setReturnedClassName( getReturnedClassName() );
@@ -605,6 +625,13 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public Value getValue() {
 			return value;
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return value instanceof SimpleValue simpleValue
+					? simpleValue.getMemberDetails()
+					: null; // TODO: Give Property a reference to the MemberDetails
 		}
 
 		@Override

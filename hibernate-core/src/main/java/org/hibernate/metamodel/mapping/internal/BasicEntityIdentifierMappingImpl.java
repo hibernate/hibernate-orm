@@ -21,14 +21,13 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -40,6 +39,8 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Mapping of a simple identifier
@@ -180,7 +181,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object getIdentifier(Object entity) {
-		final var lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		final var lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
@@ -246,7 +247,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final var sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
+		final var sqlSelection =
+				resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
@@ -283,9 +285,18 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final var expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TableReference rootTableReference;
+		final var rootTableReference = rootTableReference( navigablePath, tableGroup );
+		return expressionResolver.resolveSqlSelection(
+				expressionResolver.resolveSqlExpression( rootTableReference, this ),
+				idType.getJdbcJavaType(),
+				fetchParent,
+				sessionFactory.getTypeConfiguration()
+		);
+	}
+
+	private TableReference rootTableReference(NavigablePath navigablePath, TableGroup tableGroup) {
 		try {
-			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
+			return tableGroup.resolveTableReference( navigablePath, rootTable );
 		}
 		catch (Exception e) {
 			throw new IllegalStateException(
@@ -299,18 +310,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 					e
 			);
 		}
-
-		final Expression expression = expressionResolver.resolveSqlExpression(
-				rootTableReference,
-				this
-		);
-
-		return expressionResolver.resolveSqlSelection(
-				expression,
-				idType.getJdbcJavaType(),
-				fetchParent,
-				sessionFactory.getTypeConfiguration()
-		);
 	}
 
 	@Override
@@ -437,14 +436,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final var sqlAstCreationState = creationState.getSqlAstCreationState();
 		final var tableGroup =
-				sqlAstCreationState.getFromClauseAccess()
+				creationState.getSqlAstCreationState()
+						.getFromClauseAccess()
 						.getTableGroup( fetchParent.getNavigablePath() );
 		assert tableGroup != null;
 
-		final var sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
-		final var selectionType = sqlSelection.getExpressionType();
+		final var sqlSelection =
+				resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
@@ -453,12 +452,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				getJdbcMapping().getValueConverter(),
 				FetchTiming.IMMEDIATE,
 				true,
-				creationState,
 				// if the expression type is different that the expected type coerce the value
-				selectionType != null
-					&& selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType(),
+				mustCoerceResultType( sqlSelection.getExpressionType() ),
 				!sqlSelection.isVirtual()
 		);
+	}
+
+	private boolean mustCoerceResultType(JdbcMappingContainer selectionType) {
+		return selectionType != null
+			&& selectionType.getSingleJdbcMapping().getJdbcJavaType()
+				!= getJdbcMapping().getJdbcJavaType();
 	}
 
 	@Override

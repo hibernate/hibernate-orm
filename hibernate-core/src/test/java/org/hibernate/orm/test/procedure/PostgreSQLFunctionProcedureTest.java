@@ -35,8 +35,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -186,7 +188,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			query.execute();
 			Long phoneCount = (Long) query.getSingleResult();
-			assertThat( phoneCount ).isEqualTo( 2 );
+			assertEquals( 2, phoneCount );
 		} );
 	}
 
@@ -199,7 +201,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			query.setParameter( 1, 1L );
 
-			assertThat( query.getResultList() ).hasSize( 2 );
+			assertEquals( 2, query.getResultList().size() );
 		} );
 	}
 
@@ -213,7 +215,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			query.setParameter( 2, 1L );
 
-			assertThat( query.getResultList() ).hasSize( 2 );
+			assertEquals( 2, query.getResultList().size() );
 		} );
 	}
 
@@ -236,7 +238,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 					}
 				}
 			} );
-			assertThat( phoneCount ).isEqualTo( 2 );
+			assertEquals( 2, phoneCount );
 		} );
 	}
 
@@ -270,7 +272,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 			catch (Exception e) {
 				fail( e.getMessage() );
 			}
-			assertThat( value ).isEqualTo( 1 );
+			assertEquals( 1, value );
 
 
 			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
@@ -280,7 +282,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			value = (Integer) function.getSingleResult();
 
-			assertThat( value ).isEqualTo( 1 );
+			assertEquals( 1, value );
 		} );
 	}
 
@@ -294,7 +296,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			function.execute();
 
-			assertThat( function.hasMoreResults() ).isFalse();
+			assertFalse( function.hasMoreResults() );
 
 			Integer value = null;
 			try (ResultSet resultSet = (ResultSet) function.getOutputParameterValue( 1 )) {
@@ -306,7 +308,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 				fail( e.getMessage() );
 			}
 
-			assertThat( value ).isEqualTo( 1 );
+			assertEquals( 1, value );
 		} );
 	}
 
@@ -323,7 +325,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertThat( result ).isTrue();
+			assertTrue( result );
 		} );
 
 		inTransaction( entityManager -> {
@@ -335,7 +337,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertThat( result ).isFalse();
+			assertFalse( result );
 		} );
 	}
 
@@ -352,7 +354,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 			Boolean result = (Boolean) procedureCall.getSingleResult();
 
-			assertThat( result ).isTrue();
+			assertTrue( result );
 		} );
 	}
 
@@ -369,7 +371,6 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 					procedureCall.execute();
 				} ) );
 
-		assertThat( exception.getMessage() )
-				.isEqualTo( "The parameter named [param] was not set! You need to call the setParameter method." );
+		assertTrue( exception.getMessage().contains( "parameter named 'param'" ) );
 	}
 }

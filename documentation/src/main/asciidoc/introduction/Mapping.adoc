@@ -809,11 +809,18 @@ class Person {
 ----
 
 We also need to add Jackson or an implementation of JSONB—for example, Yasson—to our runtime classpath.
-To use Jackson we could add this line to our Gradle build:
+To use Jackson 2 we could add this line to our Gradle build:
 
 [source,groovy]
 ----
 runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
+----
+
+To use Jackson 3 we could add this line to our Gradle build:
+
+[source,groovy]
+----
+runtimeOnly 'tools.jackson.core:jackson-databind:{jackson3Version}'
 ----
 
 Now the `name` column of the `Author` table will have the type `jsonb`, and Hibernate will automatically use Jackson to serialize a `Name` to and from JSON format.

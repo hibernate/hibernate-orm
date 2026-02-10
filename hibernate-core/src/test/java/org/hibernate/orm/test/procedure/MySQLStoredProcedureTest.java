@@ -408,10 +408,7 @@ public class MySQLStoredProcedureTest {
 				fail( "Should have thrown exception" );
 			}
 			catch (IllegalArgumentException e) {
-				assertEquals(
-						"The parameter at position [1] was not set! You need to call the setParameter method.",
-						e.getMessage()
-				);
+				assertTrue( e.getMessage().contains( "parameter at position 1" ) );
 			}
 		} );
 	}

@@ -23,28 +23,13 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 	private Map<String, TableGroup> tableGroupBySqlAlias;
 	private Map<NavigablePath, TableGroup> tableGroupByPath;
 
-	public FromClauseAccessImpl() {
-	}
-
-	public TableGroup getByAlias(String alias) {
-		final TableGroup byAlias = findByAlias( alias );
-		if ( byAlias == null ) {
-			throw new IllegalArgumentException( "Could not resolve TableGroup by alias [" + alias + "]" );
-		}
-		return byAlias;
-	}
-
 	public TableGroup findByAlias(String alias) {
-		if ( tableGroupBySqlAlias != null ) {
-			return tableGroupBySqlAlias.get( alias );
-		}
-
-		return null;
+		return tableGroupBySqlAlias == null ? null : tableGroupBySqlAlias.get( alias );
 	}
 
 	@Override
 	public @Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable) {
-		for ( TableGroup tableGroup : tableGroupByPath.values() ) {
+		for ( var tableGroup : tableGroupByPath.values() ) {
 			if ( tableGroup.findTableReference( identificationVariable ) != null ) {
 				return tableGroup;
 			}
@@ -59,11 +44,8 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		if ( tableGroupByPath != null ) {
-			return tableGroupByPath.get( navigablePath );
-		}
+		return tableGroupByPath == null ? null : tableGroupByPath.get( navigablePath );
 
-		return null;
 	}
 
 	@Override
@@ -73,11 +55,12 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 		}
 		tableGroupByPath.put( navigablePath, tableGroup );
 
-		if ( tableGroup.getGroupAlias() != null ) {
+		final String groupAlias = tableGroup.getGroupAlias();
+		if ( groupAlias != null ) {
 			if ( tableGroupBySqlAlias == null ) {
 				tableGroupBySqlAlias = new HashMap<>();
 			}
-			tableGroupBySqlAlias.put( tableGroup.getGroupAlias(), tableGroup );
+			tableGroupBySqlAlias.put( groupAlias, tableGroup );
 		}
 	}
 }

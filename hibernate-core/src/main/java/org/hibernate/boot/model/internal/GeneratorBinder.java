@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -59,10 +58,13 @@ import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.Constructors.construct;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.initializeGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.isVersion;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -135,7 +137,7 @@ public class GeneratorBinder {
 	}
 
 	/**
-	 * Called if {@link @GeneratedValue} specified no name.
+	 * Called if {@link GeneratedValue @GeneratedValue} specified no name.
 	 * This is a new special case added in JPA 3.2.
 	 * We look for an appropriate matching "default generator recipe"
 	 * based on the {@link GenerationType}.
@@ -183,21 +185,20 @@ public class GeneratorBinder {
 			// NOTE: a little bit of a special rule here for the case of just one -
 			// 		 consider it a match, based on strategy, if the strategy is AUTO or matches
 			if ( strategy == AUTO
-					|| isImpliedGenerator( strategy, strategyGeneratorClassName, generatorDefinition ) ) {
+					|| isImpliedGenerator( strategyGeneratorClassName, generatorDefinition ) ) {
 				return generatorDefinition;
 			}
 		}
 
-		return matchingLocalGenerator( strategy, strategyGeneratorClassName, localGenerators );
+		return matchingLocalGenerator( strategyGeneratorClassName, localGenerators );
 	}
 
 	private static IdentifierGeneratorDefinition matchingLocalGenerator(
-			GenerationType strategy,
 			String strategyGeneratorClassName,
 			Map<String, ? extends IdentifierGeneratorDefinition> localGenerators) {
 		IdentifierGeneratorDefinition matching = null;
 		for ( var localGenerator : localGenerators.values() ) {
-			if ( isImpliedGenerator( strategy, strategyGeneratorClassName, localGenerator ) ) {
+			if ( isImpliedGenerator( strategyGeneratorClassName, localGenerator ) ) {
 				if ( matching != null ) {
 					// we found multiple matching generators
 					return null;
@@ -209,7 +210,6 @@ public class GeneratorBinder {
 	}
 
 	private static boolean isImpliedGenerator(
-			GenerationType strategy,
 			String strategyGeneratorClassName,
 			IdentifierGeneratorDefinition generatorDefinition) {
 		return generatorDefinition.getStrategy().equals( strategyGeneratorClassName );
@@ -240,7 +240,8 @@ public class GeneratorBinder {
 					+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
 		}
 		configuration.putAll( definition.getParameters() );
-		// This is quite vague in the spec, but a generator could override the generator choice
+		// This is quite vague in the spec,
+		// but a generator could override the generator choice
 		return generatorStrategy( generatorType, definition );
 	}
 
@@ -380,12 +381,13 @@ public class GeneratorBinder {
 	 * Return a {@link GeneratorCreator} for an attribute annotated
 	 * with a {@linkplain ValueGenerationType generator annotation}.
 	 */
-	private static GeneratorCreator generatorCreator(
+	private static <A extends Annotation> GeneratorCreator generatorCreator(
 			MemberDetails memberDetails,
 			Value value,
-			Annotation annotation,
+			A annotation,
 			BeanContainer beanContainer) {
-		final var annotationType = annotation.annotationType();
+		@SuppressWarnings("unchecked") // totally fine
+		final var annotationType = (Class<A>) annotation.annotationType();
 		final var generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
 		assert generatorAnnotation != null;
 		final var generatorClass = generatorAnnotation.generatedBy();
@@ -407,14 +409,14 @@ public class GeneratorBinder {
 		};
 	}
 
-	private static Generator instantiateAndInitializeGenerator(
+	private static <A extends Annotation> Generator instantiateAndInitializeGenerator(
 			Value value,
-			Annotation annotation,
+			A annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
 			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType) {
+			Class<A> annotationType) {
 		final var generator = instantiateGenerator(
 				annotation,
 				beanContainer,
@@ -423,7 +425,7 @@ public class GeneratorBinder {
 				memberDetails,
 				annotationType
 		);
-		callInitialize( annotation, memberDetails, creationContext, generator );
+		callInitialize( annotation, creationContext, generator );
 		callConfigure( creationContext, generator, emptyMap(), value );
 		return generator;
 	}
@@ -432,18 +434,19 @@ public class GeneratorBinder {
 	 * Return a {@link GeneratorCreator} for an id attribute annotated
 	 * with an {@linkplain IdGeneratorType id generator annotation}.
 	 */
-	private static GeneratorCreator identifierGeneratorCreator(
+	private static <A extends Annotation> GeneratorCreator identifierGeneratorCreator(
 			MemberDetails idAttributeMember,
-			Annotation annotation,
+			A annotation,
 			SimpleValue identifierValue,
 			BeanContainer beanContainer) {
-		final var annotationType = annotation.annotationType();
+		@SuppressWarnings("unchecked") // totally fine
+		final var annotationType = (Class<A>) annotation.annotationType();
 		final var idGeneratorAnnotation = annotationType.getAnnotation( IdGeneratorType.class );
 		assert idGeneratorAnnotation != null;
 		final var generatorClass = idGeneratorAnnotation.value();
 		checkGeneratorClass( generatorClass );
 		return creationContext -> {
-			final Generator generator =
+			final var generator =
 					instantiateAndInitializeGenerator(
 							identifierValue,
 							annotation,
@@ -466,13 +469,13 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static Generator instantiateGenerator(
-			Annotation annotation,
+	private static <A extends Annotation> Generator instantiateGenerator(
+			A annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
 			Class<? extends Generator> generatorClass,
 			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType) {
+			Class<A> annotationType) {
 		if ( beanContainer != null ) {
 			return instantiateGeneratorAsBean(
 					annotation,
@@ -502,13 +505,13 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static <T extends Generator> Generator instantiateGeneratorAsBean(
-			Annotation annotation,
+	private static <T extends Generator, A extends Annotation> Generator instantiateGeneratorAsBean(
+			A annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
 			Class<T> generatorClass,
 			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType) {
+			Class<A> annotationType) {
 		return getBean(
 			beanContainer,
 			generatorClass,
@@ -557,26 +560,38 @@ public class GeneratorBinder {
 	 * @param annotation the generator annotation
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static <G extends Generator> G instantiateGenerator(
-			Annotation annotation,
+	private static <G extends Generator, A extends Annotation> G instantiateGenerator(
+			A annotation,
 			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType,
+			Class<A> annotationType,
 			GeneratorCreationContext creationContext,
 			Class<? extends G> generatorClass) {
 		try {
-			try {
-				return generatorClass.getConstructor( annotationType, Member.class, GeneratorCreationContext.class )
-						.newInstance( annotation, memberDetails.toJavaMember(), creationContext);
+			G generator =
+					// support for deprecated signature (eventually remove)
+					construct( generatorClass,
+							annotationType, annotation,
+							Member.class, memberDetails.toJavaMember(),
+							GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
 			}
-			catch (NoSuchMethodException ignore) {
-				try {
-					return generatorClass.getConstructor( annotationType )
-							.newInstance( annotation );
-				}
-				catch (NoSuchMethodException i) {
-					return instantiateGeneratorViaDefaultConstructor( generatorClass );
-				}
+			generator =
+					construct( generatorClass,
+							annotationType, annotation,
+							GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
 			}
+			generator = construct( generatorClass, annotationType, annotation );
+			if ( generator != null ) {
+				return generator;
+			}
+			generator = construct( generatorClass, GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
+			}
+			return instantiateGeneratorViaDefaultConstructor( generatorClass );
 		}
 		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
 			throw new org.hibernate.InstantiationException( "Could not instantiate id generator", generatorClass, e );
@@ -601,7 +616,9 @@ public class GeneratorBinder {
 	 */
 	private static <G extends Generator> G instantiateGeneratorViaDefaultConstructor(Class<? extends G> generatorClass) {
 		try {
-			return generatorClass.getDeclaredConstructor().newInstance();
+			final var constructor = generatorClass.getDeclaredConstructor();
+			constructor.setAccessible( true );
+			return constructor.newInstance();
 		}
 		catch (NoSuchMethodException e) {
 			throw new org.hibernate.InstantiationException( "No appropriate constructor for id generator class", generatorClass);
@@ -611,23 +628,17 @@ public class GeneratorBinder {
 		}
 	}
 
-	public static <A extends Annotation> void callInitialize(
+	private static <A extends Annotation> void callInitialize(
 			A annotation,
-			MemberDetails memberDetails,
 			GeneratorCreationContext creationContext,
 			Generator generator) {
-		if ( generator instanceof AnnotationBasedGenerator ) {
-			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
-			// a programming error of the generation type developer and thus should show up during testing, we don't
-			// check this explicitly; If required, this could be done e.g. using ClassMate
-			@SuppressWarnings("unchecked")
-			final var generation = (AnnotationBasedGenerator<A>) generator;
-			generation.initialize( annotation, memberDetails.toJavaMember(), creationContext );
+		if ( generator instanceof AnnotationBasedGenerator<?> annotationBasedGenerator ) {
+			initializeGenerator( annotationBasedGenerator, annotation, creationContext );
 		}
 	}
 
 	private static void checkVersionGenerationAlways(MemberDetails property, Generator generator) {
-		if ( property.hasDirectAnnotationUsage( Version.class ) ) {
+		if ( isVersion( property ) ) {
 			if ( !generator.generatesOnInsert() ) {
 				throw new AnnotationException("Property '" + property.getName()
 						+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
@@ -646,7 +657,7 @@ public class GeneratorBinder {
 	 * call its {@link Configurable#configure(GeneratorCreationContext, Properties)
 	 * configure()} method.
 	 */
-	public static void callConfigure(
+	private static void callConfigure(
 			GeneratorCreationContext creationContext,
 			Generator generator,
 			Map<String, Object> configuration,
@@ -689,7 +700,7 @@ public class GeneratorBinder {
 			SimpleValue idValue,
 			PersistentClass persistentClass,
 			MetadataBuildingContext context) {
-		// NOTE: `generatedValue` is never null here
+		// NOTE: generatedValue is never null here
 		final var generatedValue = castNonNull( idMember.getDirectAnnotationUsage( GeneratedValue.class ) );
 		final var metadataCollector = context.getMetadataCollector();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {

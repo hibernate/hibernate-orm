@@ -55,7 +55,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public SqmCaseSimple<T, R> copy(SqmCopyContext context) {
-		final SqmCaseSimple<T, R> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

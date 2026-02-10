@@ -44,10 +44,8 @@ public class InputStreamAccessXmlSource {
 			InputStreamAccess inputStreamAccess,
 			Origin origin,
 			MappingBinder mappingBinder) {
-		JAXB_LOGGER.trace( "reading mappings from InputStreamAccess" );
-
-		return inputStreamAccess.fromStream( (stream) ->
-				InputStreamXmlSource.fromStream( stream, origin, false, mappingBinder )
-		);
+		JAXB_LOGGER.readingMappingsFromInputStreamAccess();
+		return inputStreamAccess.fromStream( stream ->
+				InputStreamXmlSource.fromStream( stream, origin, false, mappingBinder ) );
 	}
 }

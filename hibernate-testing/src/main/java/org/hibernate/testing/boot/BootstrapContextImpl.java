@@ -16,7 +16,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -117,11 +116,6 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	@Override
 	public ClassLoaderAccess getClassLoaderAccess() {
 		return delegate.getClassLoaderAccess();
-	}
-
-	@Override
-	public ClassmateContext getClassmateContext() {
-		return delegate.getClassmateContext();
 	}
 
 	@Override

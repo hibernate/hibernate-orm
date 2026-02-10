@@ -4,19 +4,22 @@
  */
 package org.hibernate.query.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -31,18 +34,18 @@ import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPreci
  *
  * @author Steve Ebersole
  */
-public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaType.CoercionContext {
+public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	private final QueryParameter<T> queryParameter;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private @Nullable BindableType<? super T> bindType;
+	private @Nullable BindableType<T> bindType;
 	private @Nullable MappingModelExpressible<T> type;
-	private @Nullable TemporalType explicitTemporalPrecision;
+	private @Nullable @SuppressWarnings("deprecation") TemporalType explicitTemporalPrecision;
 
-	private Object bindValue;
+	private T bindValue;
 	private Collection<? extends T> bindValues;
 
 	/**
@@ -60,7 +63,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory,
-			BindableType<? super T> bindType) {
+			@Nullable BindableType<T> bindType) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
 		this.bindType = bindType;
@@ -70,13 +73,17 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return sessionFactory.getMappingMetamodel();
 	}
 
+	public TypeConfiguration getTypeConfiguration() {
+		return sessionFactory.getTypeConfiguration();
+	}
+
 	@Override
-	public @Nullable BindableType<? super T> getBindType() {
+	public @Nullable BindableType<T> getBindType() {
 		return bindType;
 	}
 
 	@Override
-	public @Nullable TemporalType getExplicitTemporalPrecision() {
+	public @Nullable @SuppressWarnings("deprecation") TemporalType getExplicitTemporalPrecision() {
 		return explicitTemporalPrecision;
 	}
 
@@ -107,25 +114,65 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		if ( isMultiValued ) {
 			throw new IllegalStateException( "Binding is multi-valued; illegal call to #getBindValue" );
 		}
-
-		//TODO: I believe this cast is unsound due to coercion
-		return (T) bindValue;
+		return bindValue;
 	}
 
 	@Override
-	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
-		if ( !handleAsMultiValue( value, null ) ) {
-			final Object coerced = coerceIfNotJpa( value );
+	public void setBindValue(Object value, boolean resolveJdbcTypeIfNecessary) {
+		if ( handleAsMultiValue( value, bindType ) ) {
+			setBindValues( (Collection<?>) value );
+		}
+		else {
+			final Object coerced = coerce( value );
 			validate( coerced );
-
 			if ( value == null ) {
 				// needed when setting a null value to the parameter of a native SQL query
 				// TODO: this does not look like a very disciplined way to handle this
 				bindNull( resolveJdbcTypeIfNecessary );
 			}
 			else {
-				bindValue( coerced );
+				initBindType( value );
+				bindSingleValue( coerced );
 			}
+		}
+	}
+
+	@Override
+	public void setBindValue(
+			Object value,
+			@SuppressWarnings("deprecation")
+			TemporalType temporalTypePrecision) {
+		if ( handleAsMultiValue( value, bindType ) ) {
+			setBindValues( (Collection<?>) value, temporalTypePrecision );
+		}
+		else {
+			final Object coerced = coerce( value );
+			validate( coerced );
+			initBindType( value );
+			bindSingleValue( coerced );
+			setExplicitTemporalPrecision( temporalTypePrecision );
+		}
+	}
+
+	@Override
+	public <A> void setBindValue(A value, @Nullable BindableType<A> clarifiedType) {
+		// don't coerce, because value is already of the clarified type
+		validate( value );
+		clarifyType( value, clarifiedType );
+		bindSingleValue( value );
+	}
+
+	private void initBindType(Object value) {
+		if ( bindType == null ) {
+			@SuppressWarnings("unchecked")
+			// If there is no bindType set, then this is effectively a
+			// parameter of the top type. At least arguably safe cast.
+			final var self = (QueryParameterBindingImpl<Object>) this;
+			//noinspection UnnecessaryLocalVariable (needed to make javac happy)
+			final var valueType =
+					getParameterBindingTypeResolver()
+							.resolveParameterBindType( value );
+			self.bindType = valueType;
 		}
 	}
 
@@ -133,64 +180,35 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		isBound = true;
 		bindValue = null;
 		if ( resolveJdbcTypeIfNecessary && bindType == null ) {
-			bindType = (BindableType<? super T>)
+			final var nullType =
 					getTypeConfiguration().getBasicTypeRegistry()
 							.getRegisteredType( "null" );
+			//noinspection unchecked
+			bindType = (BindableType<T>) nullType;
 		}
 	}
 
-	private boolean handleAsMultiValue(T value, @Nullable BindableType<T> bindableType) {
-		if ( queryParameter.allowsMultiValuedBinding()
-				&& value instanceof Collection
-				&& !( bindableType == null
-					? isRegisteredAsBasicType( value.getClass() )
-					: bindableType.getJavaType().isInstance( value ) ) ) {
-			//noinspection unchecked
-			setBindValues( (Collection<T>) value );
-			return true;
-		}
-		else {
-			return false;
-		}
+	private boolean handleAsMultiValue(Object value, @Nullable BindableType<?> bindableType) {
+		return queryParameter.allowsMultiValuedBinding()
+			&& value instanceof Collection
+			&& !validInstance( value, bindableType );
+	}
+
+	private void bindSingleValue(Object value) {
+		bindValue = cast( value );
+		bindValues = null;
+		isMultiValued = false;
+		isBound = true;
+	}
+
+	private boolean validInstance(Object value, @Nullable BindableType<?> bindableType) {
+		return bindableType == null
+				? isRegisteredAsBasicType( value.getClass() )
+				: bindableType.getJavaType().isInstance( value );
 	}
 
 	private boolean isRegisteredAsBasicType(Class<?> valueClass) {
 		return getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
-	}
-
-	private void bindValue(Object value) {
-		isBound = true;
-		bindValue = value;
-		if ( canBindValueBeSet( value, bindType ) ) {
-			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
-		}
-	}
-
-	@Override
-	public void setBindValue(T value, @Nullable BindableType<T> clarifiedType) {
-		if ( !handleAsMultiValue( value, clarifiedType ) ) {
-			if ( clarifiedType != null ) {
-				bindType = clarifiedType;
-			}
-
-			final Object coerced = coerce( value );
-			validate( coerced, clarifiedType );
-			bindValue( coerced );
-		}
-	}
-
-	@Override
-	public void setBindValue(T value, TemporalType temporalTypePrecision) {
-		if ( !handleAsMultiValue( value, null ) ) {
-			if ( bindType == null ) {
-				bindType = queryParameter.getHibernateType();
-			}
-
-			final Object coerced = coerceIfNotJpa( value );
-			validate( coerced, temporalTypePrecision );
-			bindValue( coerced );
-			setExplicitTemporalPrecision( temporalTypePrecision );
-		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,55 +223,58 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValues(Collection<? extends T> values) {
+	public void setBindValues(Collection<?> values) {
+		assertMultivalued();
+		final var coerced = values.stream().map( this::coerce ).toList();
+		coerced.forEach( this::validate );
+		initBindType( firstNonNull( values ) );
+		bindMultipleValues( coerced );
+	}
+
+	@Override
+	public void setBindValues(
+			Collection<?> values,
+			@SuppressWarnings("deprecation") TemporalType temporalTypePrecision) {
+		setBindValues( values );
+		setExplicitTemporalPrecision( temporalTypePrecision );
+	}
+
+	@Override
+	public <V> void setBindValues(Collection<? extends V> values, BindableType<V> clarifiedType) {
+		assertMultivalued();
+		// don't coerce, because value is already of the clarified type
+		values.forEach( this::validate );
+		clarifyType( values, clarifiedType );
+		bindMultipleValues( values );
+	}
+
+	private void bindMultipleValues(Collection<?> coerced) {
+		final List<T> list = new ArrayList<>();
+		for ( var value : coerced ) {
+			list.add( cast( value ) );
+		}
+		bindValues = list;
+		bindValue = null;
+		isMultiValued = true;
+		isBound = true;
+	}
+
+	private void assertMultivalued() {
 		if ( !queryParameter.allowsMultiValuedBinding() ) {
 			throw new IllegalArgumentException(
 					"Illegal attempt to bind a collection value to a single-valued parameter"
 			);
 		}
-
-		this.isBound = true;
-		this.isMultiValued = true;
-
-		this.bindValue = null;
-		this.bindValues = values;
-
-		final var iterator = values.iterator();
-		T value = null;
-		while ( value == null && iterator.hasNext() ) {
-			value = iterator.next();
-		}
-
-		if ( canBindValueBeSet( value, bindType ) ) {
-			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
-		}
 	}
 
-	@Override
-	public void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType) {
-		if ( clarifiedType != null ) {
-			bindType = clarifiedType;
-		}
-		setBindValues( values );
-	}
-
-	@Override
-	public void setBindValues(
-			Collection<? extends T> values,
-			TemporalType temporalTypePrecision,
-			TypeConfiguration typeConfiguration) {
-		setBindValues( values );
-		setExplicitTemporalPrecision( temporalTypePrecision );
-	}
-
-	private void setExplicitTemporalPrecision(TemporalType precision) {
+	private void setExplicitTemporalPrecision(@SuppressWarnings("deprecation") TemporalType precision) {
 		explicitTemporalPrecision = precision;
 		if ( bindType == null || isTemporal( determineJavaType( bindType ) ) ) {
 			bindType = resolveTemporalPrecision( precision, bindType, getCriteriaBuilder() );
 		}
 	}
 
-	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
+	private JavaType<T> determineJavaType(BindableType<T> bindType) {
 		return getCriteriaBuilder().resolveExpressible( bindType ).getExpressibleJavaType();
 	}
 
@@ -269,14 +290,14 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
 			if ( type instanceof BindableType<?> ) {
 				final boolean changed = bindType != null && type != bindType;
-				bindType = (BindableType<? super T>) type;
+				bindType = (BindableType<T>) type;
 				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
 				final var jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					bindType = (BindableType<? super T>) jdbcMapping;
+					bindType = (BindableType<T>) jdbcMapping;
 					return changed;
 				}
 			}
@@ -284,68 +305,92 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return false;
 	}
 
+	private <V> void clarifyType(Object valueOrValues, BindableType<V> clarifiedType) {
+		if ( clarifiedType != null ) {
+			checkClarifiedType( clarifiedType, valueOrValues );
+			@SuppressWarnings("unchecked") // safe
+			final var newType = (BindableType<T>) clarifiedType;
+			bindType = newType;
+		}
+	}
+
+	private <A> void checkClarifiedType(
+			@NonNull BindableType<A> clarifiedType,
+			Object valueOrValues) {
+		final var parameterType = queryParameter.getParameterType();
+		if ( parameterType != null ) {
+			final var clarifiedJavaType = clarifiedType.getJavaType();
+			if ( !parameterType.isAssignableFrom( clarifiedJavaType ) ) {
+				throw new QueryArgumentException(
+						"Given type is incompatible with parameter type",
+						parameterType, clarifiedJavaType, valueOrValues
+				);
+			}
+		}
+		else {
+			assert queryParameter.getHibernateType() == null;
+		}
+	}
+
+	private T cast(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			final var bindableType =
+					getCriteriaBuilder()
+							.resolveExpressible( bindType );
+			if ( bindableType != null ) {
+				return QueryArguments.cast( value,
+						bindableType.getExpressibleJavaType() );
+			}
+			else if ( bindType != null ) {
+				return bindType.getJavaType().cast( value );
+			}
+			else {
+				// no typing information, but in this
+				// case we can view this as T = Object
+				// noinspection unchecked
+				return (T) value;
+			}
+		}
+	}
+
 	private void validate(Object value) {
-		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, getCriteriaBuilder() );
+		QueryParameterBindingValidator.validate( queryParameter, bindType, value, sessionFactory );
 	}
 
-	private void validate(Object value, BindableType<?> clarifiedType) {
-		QueryParameterBindingValidator.INSTANCE.validate( clarifiedType, value, getCriteriaBuilder() );
-	}
-
-	private void validate(Object value, TemporalType clarifiedTemporalType) {
-		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, clarifiedTemporalType, getCriteriaBuilder() );
-	}
-
-	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return sessionFactory.getTypeConfiguration();
-	}
-
-	private Object coerceIfNotJpa(T value) {
-		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled()
-				? value
-				: coerce( value );
-	}
-
-	private Object coerce(T value) {
+	private Object coerce(Object value) {
 		try {
-			if ( canValueBeCoerced( bindType ) ) {
+			if ( bindType != null ) {
 				return coerce( value, bindType );
 			}
-			else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
-				return coerce( value, queryParameter.getHibernateType() );
-			}
+//			else if ( queryParameter.getHibernateType() != null ) {
+//				return coerce( value, queryParameter.getHibernateType() );
+//			}
 			else {
 				return value;
 			}
 		}
 		catch (HibernateException ex) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Parameter value [%s] did not match expected type [%s]",
-							value,
-							bindType
-					),
-					ex
-			);
+			throw new QueryArgumentException( "Argument to query parameter has an incompatible type: " + ex.getMessage(),
+					queryParameter.getParameterType(), value );
 		}
 	}
 
-	private Object coerce(T value, BindableType<? super T> parameterType) {
-		if ( value == null ) {
-			return null;
-		}
-		else {
-			return getCriteriaBuilder().resolveExpressible( parameterType )
-					.getExpressibleJavaType().coerce( value, this );
-		}
+	private Object coerce(Object value, BindableType<T> parameterType) {
+		return value == null ? null
+				: getCriteriaBuilder().resolveExpressible( parameterType )
+						.getExpressibleJavaType().coerce( value );
 	}
 
-	private static boolean canValueBeCoerced(BindableType<?> bindType) {
-		return bindType != null;
+	private static <T> @Nullable T firstNonNull(Collection<? extends T> values) {
+		final var iterator = values.iterator();
+		T value = null;
+		while ( value == null && iterator.hasNext() ) {
+			value = iterator.next();
+		}
+		return value;
 	}
 
-	private static boolean canBindValueBeSet(Object value, BindableType<?> bindType) {
-		return value != null && bindType == null;
-	}
 }

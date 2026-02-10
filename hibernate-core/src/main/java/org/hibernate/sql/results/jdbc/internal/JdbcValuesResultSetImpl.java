@@ -9,11 +9,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.BitSet;
 
-import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.cache.spi.QueryResultsCache;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.LockTimeoutException;
@@ -26,6 +23,8 @@ import org.hibernate.sql.results.caching.QueryCachePutManager;
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerEnabledImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import static java.util.Arrays.copyOf;
 
 /**
  * {@link AbstractJdbcValues} implementation for a JDBC {@link ResultSet} as the source
@@ -77,7 +76,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 		final int rowSize = valuesMapping.getRowSize();
 		this.sqlSelections = new SqlSelection[rowSize];
-		for ( SqlSelection selection : valuesMapping.getSqlSelections() ) {
+		for ( var selection : valuesMapping.getSqlSelections() ) {
 			this.sqlSelections[selection.getValuesArrayPosition()] = selection;
 		}
 		this.initializedIndexes = new BitSet( rowSize );
@@ -127,11 +126,10 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			String queryIdentifier,
 			CachedJdbcValuesMetadata metadataForCache) {
 		if ( queryCacheKey != null ) {
-			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-			final QueryResultsCache queryCache = factory.getCache()
-					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
+			final var factory = executionContext.getSession().getFactory();
 			return new QueryCachePutManagerEnabledImpl(
-					queryCache,
+					factory.getCache()
+							.getQueryResultsCache( queryOptions.getResultCacheRegionName() ),
 					factory.getStatistics(),
 					queryCacheKey,
 					queryIdentifier,
@@ -300,18 +298,16 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private boolean advance(final boolean hasResult) {
-		if ( ! hasResult ) {
-			return false;
+		if ( hasResult ) {
+			readCurrentRowValues();
 		}
-
-		readCurrentRowValues();
-		return true;
+		return hasResult;
 	}
 
 	private ExecutionException makeExecutionException(String message, SQLException cause) {
-		final JDBCException jdbcException =
-				executionContext.getSession().getJdbcServices().getSqlExceptionHelper()
-						.convert( cause, message );
+		final var jdbcException =
+				executionContext.getSession().getJdbcServices()
+						.getSqlExceptionHelper().convert( cause, message );
 		if ( jdbcException instanceof QueryTimeoutException
 				|| jdbcException instanceof DataException
 				|| jdbcException instanceof LockTimeoutException ) {
@@ -352,7 +348,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			}
 			final Object objectToCache;
 			if ( valueIndexesToCacheIndexes == null ) {
-				objectToCache = Arrays.copyOf( currentRowJdbcValues, currentRowJdbcValues.length );
+				objectToCache = copyOf( currentRowJdbcValues, currentRowJdbcValues.length );
 			}
 			else if ( rowToCacheSize < 1 ) {
 				if ( !wasAdded ) {
@@ -362,7 +358,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 				objectToCache = currentRowJdbcValues[-rowToCacheSize];
 			}
 			else {
-				final Object[] rowToCache = new Object[rowToCacheSize];
+				final var rowToCache = new Object[rowToCacheSize];
 				for ( int i = 0; i < currentRowJdbcValues.length; i++ ) {
 					final int cacheIndex = valueIndexesToCacheIndexes[i];
 					if ( cacheIndex != -1 ) {
@@ -379,7 +375,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	public Object getCurrentRowValue(int valueIndex) {
 		if ( !initializedIndexes.get( valueIndex ) ) {
 			initializedIndexes.set( valueIndex );
-			final SqlSelection sqlSelection = sqlSelections[valueIndex];
+			final var sqlSelection = sqlSelections[valueIndex];
 			final int index = sqlSelection.getJdbcResultSetIndex();
 			try {
 				currentRowJdbcValues[valueIndex] = sqlSelection.getJdbcValueExtractor().extract(

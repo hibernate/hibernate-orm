@@ -170,8 +170,9 @@ class IndexBinder {
 				hasFormula = true;
 			}
 		}
-		if ( unique && !hasFormula ) {
-			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( getDialect() );
+		final var dialect = getDialect();
+		if ( unique && !hasFormula && dialect.supportsUniqueConstraints() ) {
+			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( dialect );
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
 			uniqueKey.setExplicit( true );
 			uniqueKey.setNameExplicit( nameExplicit );
@@ -186,7 +187,7 @@ class IndexBinder {
 			}
 		}
 		else {
-			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( getDialect() );
+			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( dialect );
 			final Index index = table.getOrCreateIndex( keyName );
 			index.setUnique( unique );
 			index.setOptions( options );

@@ -4,11 +4,13 @@
  */
 package org.hibernate.type.descriptor.converter.internal;
 
-import java.lang.reflect.Array;
-
 import org.hibernate.internal.build.AllowReflection;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static java.lang.reflect.Array.newInstance;
+import static org.hibernate.internal.util.ReflectHelper.arrayClass;
 
 /**
  * Given a {@link BasicValueConverter} for array elements, handles conversion
@@ -16,81 +18,73 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @param <E> the unconverted element type
  * @param <F> the converted element type
- * @param <T> the unconverted array type
- * @param <S> the converted array type
+ * @param <T> the unconverted array type (same as {@code E[]})
  */
 @AllowReflection
-public class ArrayConverter<T, S, E, F> implements BasicValueConverter<T, S> {
+public class ArrayConverter<T, E, F> implements BasicValueConverter<T, F[]> {
 
 	private final BasicValueConverter<E, F> elementConverter;
 	private final JavaType<T> domainJavaType;
-	private final JavaType<S> relationalJavaType;
+	private final JavaType<F[]> relationalJavaType;
+	private final Class<E[]> arrayClass;
 
 	public ArrayConverter(
 			BasicValueConverter<E, F> elementConverter,
 			JavaType<T> domainJavaType,
-			JavaType<S> relationalJavaType) {
+			JavaType<F[]> relationalJavaType,
+			BasicType<E> elementType) {
 		this.elementConverter = elementConverter;
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
+		this.arrayClass = arrayClass( elementType.getJavaType() );
 	}
 
 	@Override
-	public T toDomainValue(S relationalForm) {
+	public T toDomainValue(F[] relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
 		else {
-			final Class<E> elementClass = elementConverter.getDomainJavaType().getJavaTypeClass();
-			if ( relationalForm.getClass().getComponentType() == elementClass) {
-				//noinspection unchecked
-				return (T) relationalForm;
-			}
-			else {
-				//noinspection unchecked
-				return convertTo( (F[]) relationalForm, elementClass );
-			}
+			final var elementClass =
+					elementConverter.getDomainJavaType().getJavaTypeClass();
+			return relationalForm.getClass().getComponentType() == elementClass
+					? domainJavaType.cast( relationalForm )
+					: convertTo( relationalJavaType.cast( relationalForm ), elementClass );
 		}
 	}
 
 	private T convertTo(F[] relationalArray, Class<E> elementClass) {
 		//TODO: the following implementation only handles conversion between non-primitive arrays!
-		//noinspection unchecked
-		final E[] domainArray = (E[]) Array.newInstance( elementClass, relationalArray.length );
+		final var domainArray =
+				arrayClass.cast( newInstance( elementClass, relationalArray.length ) );
 		for ( int i = 0; i < relationalArray.length; i++ ) {
 			domainArray[i] = elementConverter.toDomainValue( relationalArray[i] );
 		}
-		//noinspection unchecked
-		return (T) domainArray;
+		return domainJavaType.cast( domainArray );
 	}
 
 	@Override
-	public S toRelationalValue(T domainForm) {
+	public F[] toRelationalValue(T domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
 		else {
-			final Class<F> elementClass = elementConverter.getRelationalJavaType().getJavaTypeClass();
-			if ( domainForm.getClass().getComponentType() == elementClass) {
-				//noinspection unchecked
-				return (S) domainForm;
-			}
-			else {
-				//noinspection unchecked
-				return convertFrom((E[]) domainForm, elementClass);
-			}
+			final Class<F> elementClass =
+					elementConverter.getRelationalJavaType().getJavaTypeClass();
+			return domainForm.getClass().getComponentType() == elementClass
+					? relationalJavaType.cast( domainForm )
+					: convertFrom( arrayClass.cast( domainForm ), elementClass );
 		}
 	}
 
-	private S convertFrom(E[] domainArray, Class<F> elementClass) {
+	private F[] convertFrom(E[] domainArray, Class<F> elementClass) {
 		//TODO: the following implementation only handles conversion between non-primitive arrays!
-		//noinspection unchecked
-		final F[] relationalArray = (F[]) Array.newInstance( elementClass, domainArray.length );
+		final var relationalArray =
+				relationalJavaType.cast( newInstance( elementClass, domainArray.length ) );
 		for ( int i = 0; i < domainArray.length; i++ ) {
 			relationalArray[i] = elementConverter.toRelationalValue( domainArray[i] );
 		}
-		//noinspection unchecked
-		return (S) relationalArray;
+		return relationalArray;
 	}
 
 	@Override
@@ -99,7 +93,7 @@ public class ArrayConverter<T, S, E, F> implements BasicValueConverter<T, S> {
 	}
 
 	@Override
-	public JavaType<S> getRelationalJavaType() {
+	public JavaType<F[]> getRelationalJavaType() {
 		return relationalJavaType;
 	}
 

@@ -4,9 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,11 +14,14 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -49,7 +49,7 @@ public class MultiNaturalIdLoadingBatcher {
 
 	private final KeyValueResolver keyValueResolver;
 
-	private final JdbcOperationQuerySelect jdbcSelect;
+	private final JdbcSelect jdbcSelect;
 
 	private final LockOptions lockOptions;
 

@@ -21,13 +21,10 @@ public enum SybaseDriverKind {
 		if ( driverName == null ) {
 			return OTHER;
 		}
-		switch ( driverName ) {
-			case "jConnect (TM) for JDBC (TM)":
-				return JCONNECT;
-			case "jTDS Type 4 JDBC Driver for MS SQL Server and Sybase":
-				return JTDS;
-			default:
-				return OTHER;
-		}
+		return switch ( driverName ) {
+			case "jConnect (TM) for JDBC (TM)" -> JCONNECT;
+			case "jTDS Type 4 JDBC Driver for MS SQL Server and Sybase" -> JTDS;
+			default -> OTHER;
+		};
 	}
 }

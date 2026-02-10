@@ -39,7 +39,6 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private final PropertyAccess[] propertyAccesses;
 	private final Map<String, Integer> attributeNameToPositionMap;
 
-	private final StrategySelector strategySelector;
 	private final ReflectionOptimizer reflectionOptimizer;
 	private final EmbeddableInstantiator instantiator;
 	private final Map<Object, EmbeddableInstantiator> instantiatorsByDiscriminator;
@@ -57,20 +56,23 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		propertyAccesses = new PropertyAccess[propertySpan];
 		attributeNameToPositionMap = new HashMap<>( propertySpan );
 
+		final var strategySelector =
+				creationContext.getServiceRegistry()
+						.getService( StrategySelector.class );
+
 		// We need access to the Class objects, used only during initialization
 		final var subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
 		boolean foundCustomAccessor = false;
 		for ( int i = 0; i < bootDescriptor.getProperties().size(); i++ ) {
 			final var property = bootDescriptor.getProperty( i );
-			final Class<?> embeddableClass;
-			if ( subclassesByName != null ) {
-				final var subclass = subclassesByName.get( bootDescriptor.getPropertyDeclaringClass( property ) );
-				embeddableClass = subclass != null ? subclass : getEmbeddableJavaType().getJavaTypeClass();
-			}
-			else {
-				embeddableClass = getEmbeddableJavaType().getJavaTypeClass();
-			}
-			propertyAccesses[i] = buildPropertyAccess( property, embeddableClass, customInstantiator == null );
+			final var embeddableClass = getEmbeddableClass( bootDescriptor, subclassesByName, property );
+			propertyAccesses[i] =
+					buildPropertyAccess(
+							property,
+							embeddableClass,
+							customInstantiator == null,
+							strategySelector
+					);
 			attributeNameToPositionMap.put( property.getName(), i );
 
 			if ( !property.isBasicPropertyAccessor() ) {
@@ -78,11 +80,9 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			}
 		}
 
-		boolean hasCustomAccessors = foundCustomAccessor;
-		strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 		reflectionOptimizer = buildReflectionOptimizer(
 				bootDescriptor,
-				hasCustomAccessors,
+				foundCustomAccessor,
 				propertyAccesses,
 				creationContext
 		);
@@ -120,13 +120,26 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		}
 	}
 
-	private static <T> JavaType<T> resolveEmbeddableJavaType(
+	private Class<?> getEmbeddableClass(
+			Component bootDescriptor,
+			Map<String, Class<?>> subclassesByName,
+			Property property) {
+		if ( subclassesByName != null ) {
+			final var subclass = subclassesByName.get( bootDescriptor.getPropertyDeclaringClass( property ) );
+			return subclass != null ? subclass : getEmbeddableJavaType().getJavaTypeClass();
+		}
+		else {
+			return getEmbeddableJavaType().getJavaTypeClass();
+		}
+	}
+
+	private static <T> JavaType<?> resolveEmbeddableJavaType(
 			Component bootDescriptor,
 			CompositeUserType<T> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
 		final var javaTypeRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 		return compositeUserType == null
-				? javaTypeRegistry.getDescriptor( bootDescriptor.getComponentClass() )
+				? javaTypeRegistry.resolveDescriptor( bootDescriptor.getComponentClass() )
 				: javaTypeRegistry.resolveDescriptor( compositeUserType.returnedClass(),
 						() -> new CompositeUserTypeJavaTypeWrapper<>( compositeUserType ) );
 	}
@@ -165,7 +178,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private PropertyAccess buildPropertyAccess(
 			Property property,
 			Class<?> embeddableClass,
-			boolean requireSetters) {
+			boolean requireSetters,
+			StrategySelector strategySelector) {
 		final var strategy = propertyAccessStrategy( property, embeddableClass, strategySelector );
 		if ( strategy == null ) {
 			throw new HibernateException(

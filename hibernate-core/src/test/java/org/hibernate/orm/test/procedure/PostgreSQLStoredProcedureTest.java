@@ -26,7 +26,6 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,10 +38,10 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
@@ -230,10 +229,7 @@ public class PostgreSQLStoredProcedureTest {
 				fail( "Should have thrown exception" );
 			}
 			catch (IllegalArgumentException e) {
-				assertEquals(
-						"The parameter named [param] was not set! You need to call the setParameter method.",
-						e.getMessage()
-				);
+				assertTrue( e.getMessage().contains( "parameter named 'param'" ) );
 			}
 		} );
 	}
@@ -253,7 +249,7 @@ public class PostgreSQLStoredProcedureTest {
 					query.execute();
 					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
-						Assertions.assertTrue( rs.next() );
+						assertTrue( rs.next() );
 						assertThat( rs.getString( "street" ), is( STREET ) );
 						assertThat( rs.getString( "city" ), is( CITY ) );
 						assertThat( rs.getString( "zip" ), is( ZIP ) );
@@ -280,7 +276,7 @@ public class PostgreSQLStoredProcedureTest {
 					query.execute();
 					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
-						Assertions.assertTrue( rs.next() );
+						assertTrue( rs.next() );
 						assertThat( rs.getString( "street" ), is( STREET ) );
 						assertThat( rs.getString( "city" ), is( CITY ) );
 						assertThat( rs.getString( "zip" ), is( ZIP ) );
@@ -307,7 +303,7 @@ public class PostgreSQLStoredProcedureTest {
 					query.execute();
 					ResultSet rs = (ResultSet) query.getOutputParameterValue( "rec_out" );
 					try {
-						Assertions.assertTrue( rs.next() );
+						assertTrue( rs.next() );
 						assertThat( rs.getString( "street" ), is( STREET ) );
 						assertThat( rs.getString( "city" ), is( CITY ) );
 						assertThat( rs.getString( "zip" ), is( ZIP ) );

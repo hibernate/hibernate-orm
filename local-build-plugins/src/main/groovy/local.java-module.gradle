@@ -77,6 +77,7 @@ dependencies {
     testRuntimeOnly jdbcLibs.gaussdb
     testRuntimeOnly jdbcLibs.sybase
     testRuntimeOnly jdbcLibs.teradata
+    testRuntimeOnly jdbcLibs.spanner
     testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
     // Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
@@ -146,6 +147,8 @@ tasks.withType( JavaCompile ).configureEach {
     options.forkOptions.memoryMaximumSize = '896m'
 
     options.compilerArgs += [
+            // Limit observable modules to prevent accidental dependency on java.desktop (HHH-20148) and other non essential modules
+            '--limit-modules', 'java.base,java.compiler,java.instrument,java.management,java.naming,java.rmi,java.sql,java.transaction.xa,java.xml,jdk.compiler,jdk.jfr,java.sql.rowset',
             // disable adding @Generated annotation in the logger impls to make
             // the logging annotation processor create the same sources each time.
             "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
@@ -214,7 +217,7 @@ tasks.withType( Test.class ).each { test ->
     test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
-    test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
+    test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
 
     test.enableAssertions = true
 

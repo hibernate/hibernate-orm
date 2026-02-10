@@ -6,6 +6,7 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.internal.EnumHelper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -37,7 +38,7 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 		return ENUM;
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
 		return dialect.getEnumTypeDeclaration(
 				type.getReturnedClass().getSimpleName(),
@@ -58,11 +59,20 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return "varchar";
+		return getCastTypeName( null );
+	}
+
+	@Override
+	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+		return getCastTypeName( columnSize.getLength() );
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return getTypeName( length, precision, scale );
+		return getCastTypeName( length );
+	}
+
+	public String getCastTypeName(Long length) {
+		return length == null ? "varchar" : "varchar(" + length + ")";
 	}
 }

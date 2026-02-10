@@ -92,7 +92,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 
 	@Override
 	public SharedStatelessSessionBuilder statementInspector() {
-		this.statementInspector = original.getJdbcSessionContext().getStatementInspector();
+		statementInspector = original.getJdbcSessionContext().getStatementInspector();
 		return this;
 	}
 

@@ -5,6 +5,7 @@
 package org.hibernate.graph.internal.parse;
 
 import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.SubGraphImplementor;
 
 /**
@@ -15,5 +16,5 @@ public interface SubGraphGenerator {
 	SubGraphImplementor<?> createSubGraph(
 			AttributeNodeImplementor<?,?,?> attributeNode,
 			String subTypeName,
-			EntityNameResolver entityNameResolver);
+			GraphParserEntityNameResolver entityNameResolver);
 }

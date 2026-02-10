@@ -794,7 +794,7 @@ public class BinderHelper {
 			}
 		}
 		keyValueBinder.setType( memberDetails, memberDetails.getType() );
-		final BasicValue keyDescriptor = keyValueBinder.make();
+		final var keyDescriptor = keyValueBinder.make();
 		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		keyColumns.checkPropertyConsistency();
@@ -879,9 +879,10 @@ public class BinderHelper {
 
 	public static EnumSet<CascadeType> aggregateCascadeTypes(
 			jakarta.persistence.CascadeType[] cascadeTypes,
-			Cascade cascadeAnnotation,
+			MemberDetails memberDetails,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
+		final var cascadeAnnotation = memberDetails.getDirectAnnotationUsage( Cascade.class );
 		final var cascades = convertToHibernateCascadeType( cascadeTypes );
 		final var hibernateCascades = cascadeAnnotation == null ? null : cascadeAnnotation.value();
 		if ( !isEmpty( hibernateCascades ) ) {

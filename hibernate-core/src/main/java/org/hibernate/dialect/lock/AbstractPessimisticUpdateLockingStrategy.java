@@ -10,12 +10,11 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 
 import java.sql.SQLException;
 
-import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Common implementation of {@link PessimisticReadUpdateLockingStrategy}
@@ -39,13 +38,15 @@ public abstract class AbstractPessimisticUpdateLockingStrategy implements Lockin
 	public AbstractPessimisticUpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
+		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {
+			throw new HibernateException( "Lock mode " + lockMode
+						+ " not valid for locking via 'update' statement" );
+		}
 		if ( !lockable.isVersioned() ) {
-			CORE_LOGGER.writeLocksNotSupported( lockable.getEntityName() );
-			this.sql = null;
+			throw new HibernateException( "Entity '" + lockable.getEntityName()
+						+ "' has no version and may not be locked via 'update' statement" );
 		}
-		else {
-			this.sql = generateLockString();
-		}
+		this.sql = generateLockString();
 	}
 
 	@Override
@@ -54,14 +55,11 @@ public abstract class AbstractPessimisticUpdateLockingStrategy implements Lockin
 			doLock( id, version, session );
 		}
 		catch (JDBCException e) {
-			throw new PessimisticEntityLockException( object, "could not obtain pessimistic lock", e );
+			throw new PessimisticEntityLockException( object, "Could not obtain pessimistic lock", e );
 		}
 	}
 
 	void doLock(Object id, Object version, SharedSessionContractImplementor session) {
-		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
-		}
 		try {
 			final var factory = session.getFactory();
 			final var jdbcCoordinator = session.getJdbcCoordinator();
@@ -100,7 +98,7 @@ public abstract class AbstractPessimisticUpdateLockingStrategy implements Lockin
 		catch ( SQLException e ) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
-					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
+					"could not lock: " + infoString( lockable, id, session.getFactory() ),
 					sql
 			);
 		}

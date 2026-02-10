@@ -46,13 +46,13 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	@Override
 	public SqmIndexedCollectionAccessPath<T> copy(SqmCopyContext context) {
-		final SqmIndexedCollectionAccessPath<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final SqmAttributeJoin<?, ?> lhsCopy = getLhs().copy( context );
-		final SqmIndexedCollectionAccessPath<T> path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
 				new SqmIndexedCollectionAccessPath<T>(
 						getNavigablePathCopy( lhsCopy ),
@@ -78,7 +78,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name, true );
+		final var sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

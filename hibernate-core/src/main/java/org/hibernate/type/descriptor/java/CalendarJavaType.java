@@ -39,7 +39,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		super( Calendar.class, CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}
@@ -49,19 +49,19 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) this;
+	@Override
+	protected TemporalJavaType<Calendar> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) CalendarDateJavaType.INSTANCE;
+	@Override
+	protected TemporalJavaType<Calendar> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return CalendarDateJavaType.INSTANCE;
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		return (TemporalJavaType<X>) CalendarTimeJavaType.INSTANCE;
+	@Override
+	protected TemporalJavaType<Calendar> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return CalendarTimeJavaType.INSTANCE;
 	}
 
 	public String toString(Calendar value) {
@@ -69,7 +69,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 	}
 
 	public Calendar fromString(CharSequence string) {
-		Calendar result = new GregorianCalendar();
+		final var result = new GregorianCalendar();
 		result.setTime( DateJavaType.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
@@ -105,25 +105,39 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		return hashCode;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Calendar;
+	}
+
+	@Override
+	public Calendar cast(Object value) {
+		return (Calendar) value;
+	}
+
+	@Override
+	public Calendar coerce(Object value) {
+		return wrap( value, null );
+	}
+
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Date( value.getTimeInMillis() );
+			return type.cast( new java.sql.Date( value.getTimeInMillis() ) );
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Time( value.getTimeInMillis() % 86_400_000 );
+			return type.cast( new java.sql.Time( value.getTimeInMillis() % 86_400_000 ) );
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return (X) new java.sql.Timestamp( value.getTimeInMillis() );
+			return type.cast( new java.sql.Timestamp( value.getTimeInMillis() ) );
 		}
 		if ( java.util.Date.class.isAssignableFrom( type ) ) {
-			return (X) new  java.util.Date( value.getTimeInMillis() );
+			return type.cast( new java.util.Date( value.getTimeInMillis() ) );
 		}
 		throw unknownUnwrap( type );
 	}
@@ -136,7 +150,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 			return calendar;
 		}
 		else if ( value instanceof java.util.Date date ) {
-			final Calendar cal = new GregorianCalendar();
+			final var cal = new GregorianCalendar();
 			cal.setTime( date );
 			return cal;
 		}

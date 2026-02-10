@@ -16,11 +16,10 @@ final class EnhancerCacheProvider extends TypePool.CacheProvider.Simple {
 
 	@Override
 	public TypePool.Resolution find(final String name) {
-		final EnhancementState enhancementState = getEnhancementState();
-		if ( enhancementState != null && enhancementState.getClassName().equals( name ) ) {
-			return enhancementState.getTypePoolResolution();
-		}
-		return super.find( name );
+		final var enhancementState = getEnhancementState();
+		return enhancementState != null && enhancementState.getClassName().equals( name )
+				? enhancementState.getTypePoolResolution()
+				: super.find( name );
 	}
 
 	EnhancementState getEnhancementState() {

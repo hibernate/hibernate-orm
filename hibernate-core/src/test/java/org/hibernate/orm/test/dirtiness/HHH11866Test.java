@@ -21,12 +21,11 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.internal.util.beans.BeanInfo;
+import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.beans.PropertyDescriptor;
 import org.junit.jupiter.api.Test;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -138,18 +137,13 @@ public class HHH11866Test {
 		private final Set<String> dirtyProperties = new LinkedHashSet<>();
 
 		public SelfDirtyCheckingEntity() {
-			try {
-				BeanInfo beanInfo = Introspector.getBeanInfo( getClass() );
-				PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
-				for ( PropertyDescriptor descriptor : descriptors ) {
-					Method setter = descriptor.getWriteMethod();
-					if ( setter != null ) {
-						setterToPropertyMap.put( setter.getName(), descriptor.getName() );
-					}
+			BeanInfo beanInfo = BeanInfoHelper.getBeanInfo( getClass(), null );
+			PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+			for ( PropertyDescriptor descriptor : descriptors ) {
+				Method setter = descriptor.getWriteMethod();
+				if ( setter != null ) {
+					setterToPropertyMap.put( setter.getName(), descriptor.getName() );
 				}
-			}
-			catch (IntrospectionException e) {
-				throw new IllegalStateException( e );
 			}
 		}
 

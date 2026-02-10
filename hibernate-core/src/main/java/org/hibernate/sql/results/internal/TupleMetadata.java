@@ -22,6 +22,7 @@ import static java.util.Collections.unmodifiableMap;
 public final class TupleMetadata {
 	private final TupleElement<?>[] elements;
 	private final String[] aliases;
+	private List<String> aliasList;
 	private Map<String, Integer> nameIndex;
 	private Map<TupleElement<?>, Integer> elementIndex;
 	private List<TupleElement<?>> list;
@@ -58,5 +59,12 @@ public final class TupleMetadata {
 			list = List.of( elements );
 		}
 		return list;
+	}
+
+	public List<String> getAliases() {
+		if ( aliasList != null ) {
+			aliasList = List.of( aliases );
+		}
+		return aliasList;
 	}
 }

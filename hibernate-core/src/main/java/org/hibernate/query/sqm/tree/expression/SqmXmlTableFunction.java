@@ -97,7 +97,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 
 	@Override
 	public SqmXmlTableFunction<T> copy(SqmCopyContext context) {
-		final SqmXmlTableFunction<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

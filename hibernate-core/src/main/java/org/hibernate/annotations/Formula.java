@@ -41,6 +41,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * BigDecimal totalWithTax;
  * </pre>
  * <p>
+ * The placeholder {@code {alias}} is resolved to the alias of the entity:
+ * <pre>
+ * &#64;Formula("balance/(select sum(a.balance) from customer a where a.gender={alias}.gender)")
+ * private BigDecimal percentage;
+ * </pre>
+ * <p>
  * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},
  * a formula may involve columns of the primary table, or columns of any one of the
  * secondary tables. But it may not involve columns of more than one table.

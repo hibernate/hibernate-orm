@@ -14,8 +14,7 @@
  *     which might be either a {@link org.hibernate.result.ResultSetOutput} or
  *     a {@link org.hibernate.result.UpdateCountOutput}.
  * </ul>
- * <p>
- * <pre>
+ * <pre>{@code
  *     Outputs outputs = ...;
  *     while ( outputs.goToNext() ) {
  *         final Output output = outputs.getCurrent();
@@ -26,6 +25,6 @@
  *             handleUpdateCountOutput( (UpdateCountOutput) output );
  *         }
  *     }
- * </pre>
+ * }</pre>
  */
 package org.hibernate.result;

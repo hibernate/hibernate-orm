@@ -6,11 +6,12 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 
 public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Serializable {
 	private final String[] columnNames;
@@ -28,7 +29,7 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 
 	@Override
 	public int resolveColumnPosition(String columnName) {
-		final int position = ArrayHelper.indexOf( columnNames, columnName ) + 1;
+		final int position = indexOf( columnNames, columnName ) + 1;
 		if ( position == 0 ) {
 			throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
 		}
@@ -49,7 +50,7 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 			int position,
 			JavaType<J> explicitJavaType,
 			TypeConfiguration typeConfiguration) {
-		final BasicType<?> type = types[position - 1];
+		final var type = types[position - 1];
 		if ( type == null ) {
 			throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
 		}
@@ -58,10 +59,8 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 			return (BasicType<J>) type;
 		}
 		else {
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					explicitJavaType,
-					type.getJdbcType()
-			);
+			return typeConfiguration.getBasicTypeRegistry()
+					.resolve( explicitJavaType, type.getJdbcType() );
 		}
 	}
 

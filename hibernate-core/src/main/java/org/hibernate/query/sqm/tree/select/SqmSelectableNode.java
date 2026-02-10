@@ -35,7 +35,7 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	SqmSelectableNode<T> copy(SqmCopyContext context);
 
 	default @Nullable Integer getTupleLength() {
-		final SqmBindableType<T> nodeType = getNodeType();
+		final SqmBindableType<T> nodeType = getExpressible();
 		final SqmDomainType<T> sqmType = nodeType == null ? null : nodeType.getSqmType();
 		return sqmType == null ? 1 : sqmType.getTupleLength();
 	}

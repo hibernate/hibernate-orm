@@ -41,7 +41,7 @@ public class AnnotationHelper {
 
 	public static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
 		final var bootstrapContext = context.getBootstrapContext();
-		final UserType<?> userType =
+		final var userType =
 				context.getBuildingOptions().isAllowExtensionsInCdi()
 						? bootstrapContext.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance()
 						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
@@ -74,7 +74,7 @@ public class AnnotationHelper {
 
 	public static BasicType<?> resolveBasicType(Class<?> type, MetadataBuildingContext context) {
 		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final JavaType<?> jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
+		final var jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
 		if ( jtd != null ) {
 			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
 					new JdbcTypeIndicators() {
@@ -132,7 +132,7 @@ public class AnnotationHelper {
 			Class<JavaType<?>> javaTypeClass,
 			MetadataBuildingContext context,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<?> registeredJtd =
+		final var registeredJtd =
 				typeConfiguration.getJavaTypeRegistry()
 						.findDescriptor( javaTypeClass );
 		if ( registeredJtd != null ) {
@@ -143,8 +143,7 @@ public class AnnotationHelper {
 		}
 		else {
 			return context.getBootstrapContext().getManagedBeanRegistry()
-					.getBean( javaTypeClass )
-					.getBeanInstance();
+					.getBean( javaTypeClass ).getBeanInstance();
 		}
 	}
 }

@@ -49,8 +49,8 @@ import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
@@ -62,6 +62,9 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -77,11 +80,9 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -90,13 +91,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
@@ -133,9 +134,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for CockroachDB 23.1 and above.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB 23.2 and above.
  *
  * @author Gavin King
+ * @author Yoobin Yoon
  */
 public class CockroachDialect extends Dialect {
 
@@ -145,7 +147,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 2 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -185,10 +187,10 @@ public class CockroachDialect extends Dialect {
 
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
-		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		final var databaseMetadata = info.getDatabaseMetadata();
 		if ( databaseMetadata != null ) {
-			try ( var statement = databaseMetadata.getConnection().createStatement() ) {
-				final ResultSet resultSet = statement.executeQuery( "SELECT version()" );
+			try ( var statement = databaseMetadata.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT version()" ) ) {
 				if ( resultSet.next() ) {
 					versionString = resultSet.getString( 1 );
 				}
@@ -205,21 +207,20 @@ public class CockroachDialect extends Dialect {
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {
-		DatabaseVersion databaseVersion = null;
-		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
-		final Matcher matcher = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
+		// What the DB select returns is similar to
+		// "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
+		final var matcher = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
 		if ( matcher.find() ) {
-				final String[] versionParts = StringHelper.split( ".", matcher.group().substring( 1 ) );
-				// if we got to this point, there is at least a major version, so no need to check [].length > 0
-				int majorVersion = parseInt( versionParts[0] );
-				int minorVersion = versionParts.length > 1 ? parseInt( versionParts[1] ) : 0;
-				int microVersion = versionParts.length > 2 ? parseInt( versionParts[2] ) : 0;
-				databaseVersion=  new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
+			final var versionParts = split( ".", matcher.group().substring( 1 ) );
+			// if we got to this point, there is at least a major version, so no need to check [].length > 0
+			final int majorVersion = parseInt( versionParts[0] );
+			final int minorVersion = versionParts.length > 1 ? parseInt( versionParts[1] ) : 0;
+			final int microVersion = versionParts.length > 2 ? parseInt( versionParts[2] ) : 0;
+			return new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
 		}
-		if ( databaseVersion == null ) {
-			databaseVersion = MINIMUM_VERSION;
+		else {
+			return MINIMUM_VERSION;
 		}
-		return databaseVersion;
 	}
 
 	@Override
@@ -258,7 +259,7 @@ public class CockroachDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 
@@ -354,7 +355,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
@@ -460,41 +461,9 @@ public class CockroachDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		functionFactory.array_postgresql();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_postgresql();
-		functionFactory.arrayPositions_postgresql();
-		functionFactory.arrayLength_cardinality();
-		functionFactory.arrayConcat_postgresql();
-		functionFactory.arrayPrepend_postgresql();
-		functionFactory.arrayAppend_postgresql();
-		functionFactory.arrayContains_postgresql();
-		functionFactory.arrayIntersects_postgresql();
-		functionFactory.arrayGet_bracket();
-		functionFactory.arraySet_unnest();
-		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_unnest( true );
-		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace();
-		functionFactory.arrayTrim_unnest();
-		functionFactory.arrayFill_cockroachdb();
-		functionFactory.arrayToString_postgresql();
 
-		functionFactory.jsonValue_cockroachdb();
-		functionFactory.jsonQuery_cockroachdb();
-		functionFactory.jsonExists_cockroachdb();
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
-		functionFactory.jsonArrayAgg_postgresql( false );
-		functionFactory.jsonObjectAgg_postgresql( false );
-		functionFactory.jsonSet_postgresql();
-		functionFactory.jsonRemove_cockroachdb();
-		functionFactory.jsonReplace_postgresql();
-		functionFactory.jsonInsert_postgresql();
-		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
-//		functionFactory.jsonMergepatch_postgresql();
-		functionFactory.jsonArrayAppend_postgresql( false );
-		functionFactory.jsonArrayInsert_postgresql();
+		registerArrayFunctions( functionFactory );
+		registerJsonFunctions( functionFactory );
 
 		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
@@ -516,6 +485,48 @@ public class CockroachDialect extends Dialect {
 		functionFactory.sha( "digest(?1, 'sha256')" );
 		functionFactory.md5( "digest(?1, 'md5')" );
 		functionFactory.regexpLike_postgresql( false );
+	}
+
+	protected static void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonQuery_cockroachdb();
+		functionFactory.jsonExists_cockroachdb();
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonArrayAgg_postgresql( false );
+		functionFactory.jsonObjectAgg_postgresql( false );
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_cockroachdb();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
+		functionFactory.jsonArrayInsert_postgresql();
+	}
+
+	protected static void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_unnest();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_unnest();
+		functionFactory.arrayFill_cockroachdb();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override
@@ -570,6 +581,11 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
 		return true;
 	}
 
@@ -674,6 +690,14 @@ public class CockroachDialect extends Dialect {
 				return new CockroachSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	@Override
@@ -1196,5 +1220,10 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorPostgreSQLImpl( extractionContext );
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		return true;
 	}
 }

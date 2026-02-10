@@ -93,7 +93,7 @@ public class OracleJsonTableFunction extends JsonTableFunction {
 		@Override
 		protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableQueryColumnDefinition definition, SqmToSqlAstConverter converter) {
 			//
-			final TypeConfiguration typeConfiguration = converter.getCreationContext().getTypeConfiguration();
+			final var typeConfiguration = converter.getCreationContext().getTypeConfiguration();
 			final JdbcType jsonType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.JSON );
 			if ( jsonType.getDdlTypeCode() == SqlTypes.BLOB ) {
 				// Blob is not supported on all DB versions as return type for json_table(), so we have to use clob

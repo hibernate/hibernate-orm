@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -12,10 +11,10 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
@@ -37,15 +36,18 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			prepareEnhancement( ormDsl, project );
 			prepareHbmTransformation( ormDsl, project );
 
-
-			//noinspection ConstantConditions
-			project.getDependencies().add(
-					"implementation",
-					ormDsl.getUseSameVersion().map( (use) -> use
-							? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
-							: null
-					)
-			);
+			project
+					.getExtensions()
+					.getByType( JavaPluginExtension.class )
+					.getSourceSets()
+					.configureEach( sourceSet -> project.getDependencies().add(
+							sourceSet.getImplementationConfigurationName(),
+							ormDsl.getUseSameVersion().zip(ormDsl.getSourceSet(), (use, sourceSetName) ->
+									(use && sourceSetName.equals( sourceSet.getName() ))
+											? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
+											: null
+							)
+					) );
 		} );
 	}
 
@@ -63,31 +65,30 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			for ( String language : languages ) {
 				final String languageCompileTaskName = sourceSet.getCompileTaskName( language );
-				final Task languageCompileTask = project.getTasks().findByName( languageCompileTaskName );
-				if ( languageCompileTask == null ) {
-					continue;
-				}
-
-				FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
-				Configuration compileConfig = project
-						.getConfigurations()
-						.getByName( sourceSet.getCompileClasspathConfigurationName() );
-				Set<File> dependencyFiles = compileConfig.getFiles();
-				//noinspection Convert2Lambda
-				languageCompileTask.doLast(new Action<>() {
-					@Override
-					public void execute(Task t) {
-						try {
-							final Method getDestinationDirectory = languageCompileTask.getClass().getMethod("getDestinationDirectory");
-							final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(languageCompileTask);
-							final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles);
-							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
-						}
-						catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					}
-				});
+				project.getTasks()
+						.matching( task -> task.getName().equals( languageCompileTaskName ) )
+						.configureEach( task -> {
+							FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
+							Provider<FileCollection> dependencyFiles = project
+									.getConfigurations()
+									.named( sourceSet.getCompileClasspathConfigurationName() )
+									.map(FileCollection.class::cast);
+							//noinspection Convert2Lambda
+							task.doLast(new Action<>() {
+								@Override
+								public void execute(Task t) {
+									try {
+										final Method getDestinationDirectory = task.getClass().getMethod("getDestinationDirectory");
+										final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(task);
+										final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles.get().getFiles());
+										EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
+									}
+									catch (Exception e) {
+										throw new RuntimeException(e);
+									}
+								}
+							});
+						});
 			}
 		} );
 	}

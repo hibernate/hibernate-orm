@@ -47,7 +47,7 @@ public class CockroachTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							floatBasicType,
 							genericVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR.getName()
 			);
@@ -55,7 +55,7 @@ public class CockroachTypeContributor implements TypeContributor {
 					new BasicArrayType<>(
 							basicTypeRegistry.resolve( StandardBasicTypes.FLOAT ),
 							floatVectorJdbcType,
-							javaTypeRegistry.getDescriptor( float[].class )
+							javaTypeRegistry.resolveDescriptor( float[].class )
 					),
 					StandardBasicTypes.VECTOR_FLOAT32.getName()
 			);

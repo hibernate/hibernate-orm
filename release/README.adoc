@@ -3,7 +3,7 @@
 
 == Where is the information
 
-If you're looking for information about how to release Hibernate ORM, see link:/MAINTAINERS.md[MAINTAINERS.md]
+If you're looking for information about how to release Hibernate ORM, see link:../MAINTAINERS.md[MAINTAINERS.md]
 
 If you're looking for information about how releases are implemented technically, read on.
 

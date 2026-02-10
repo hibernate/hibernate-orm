@@ -9,11 +9,12 @@ import java.util.Properties;
 
 import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 
 import com.zaxxer.hikari.HikariConfig;
 
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.consumeSetting;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationConnectionConstantName;
 
 /**
  * Utility class to map Hibernate properties to HikariCP configuration properties.
@@ -32,7 +33,7 @@ public class HikariConfigurationUtil {
 	 * @return a HikariConfig
 	 */
 	public static HikariConfig loadConfiguration(Map<String,Object> properties) {
-		final Properties hikariProps = new Properties();
+		final var hikariProps = new Properties();
 		copyProperty( JdbcSettings.AUTOCOMMIT, properties, "autoCommit", hikariProps );
 
 		copyProperty( JdbcSettings.POOL_SIZE, properties, "maximumPoolSize", hikariProps );
@@ -78,7 +79,8 @@ public class HikariConfigurationUtil {
 		for ( var entry : properties.entrySet() ) {
 			final String key = entry.getKey();
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
-				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), entry.getValue().toString() );
+				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ),
+						entry.getValue().toString() );
 			}
 		}
 
@@ -100,10 +102,10 @@ public class HikariConfigurationUtil {
 	}
 
 	private static void copyIsolationSetting(Map<String,Object> props, Properties hikariProps) {
-		final Integer isolation = ConnectionProviderInitiator.extractIsolation( props );
+		final Integer isolation = extractIsolation( props );
 		if ( isolation != null ) {
 			hikariProps.put( "transactionIsolation",
-					ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation ) );
+					toIsolationConnectionConstantName( isolation ) );
 		}
 	}
 

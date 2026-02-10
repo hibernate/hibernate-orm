@@ -19,6 +19,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -112,4 +113,16 @@ public interface JaxbLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 90005518, value = "Resolved [%s] on classpath")
 	void resolvedOnClasspath(String systemID);
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90005519, value = "Reading mappings from InputStream access")
+	void readingMappingsFromInputStreamAccess();
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90005520, value = "Reading mappings from InputStream")
+	void readingMappingsFromInputStream();
+
+	@LogMessage(level = TRACE)
+	@Message(id = 90005521, value = "Unable to close InputStream")
+	void unableToCloseInputStream(@Cause IOException ioe);
 }

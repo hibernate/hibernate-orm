@@ -29,6 +29,11 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 	}
 
 	@Override
+	public Year cast(Object value) {
+		return (Year) value;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( Types.INTEGER );
 	}
@@ -48,7 +53,6 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 		return string == null ? null : Year.parse( string, FORMATTER );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Year value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -56,19 +60,19 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 		}
 
 		if ( type.isInstance( value ) ) {
-			return (X) value;
+			return type.cast( value );
 		}
 
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			return (X) Integer.valueOf( value.getValue() );
+			return type.cast( value.getValue() );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getValue() );
+			return type.cast( (long) value.getValue() );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) toString( value );
+			return type.cast( toString( value ) );
 		}
 
 		throw unknownUnwrap( type );

@@ -108,7 +108,7 @@ public class TypeDefinition implements Serializable {
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
 		if ( isEmpty( localConfigParameters ) ) {
-			// we can use the re-usable resolution...
+			// we can use the reusable resolution...
 			if ( reusableResolution == null ) {
 				reusableResolution = createResolution( this.name, emptyMap(), indicators, context );
 			}
@@ -144,16 +144,15 @@ public class TypeDefinition implements Serializable {
 			MetadataBuildingContext context) {
 		final var bootstrapContext = context.getBootstrapContext();
 		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final var instanceProducer = bootstrapContext.getCustomTypeProducer();
+
 		final boolean isKnownType =
 				Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
-
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
 			final T typeInstance =
 					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
-							name, typeImplementorClass, instanceProducer );
+							name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );

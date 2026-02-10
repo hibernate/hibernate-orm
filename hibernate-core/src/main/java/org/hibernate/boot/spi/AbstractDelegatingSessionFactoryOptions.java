@@ -14,9 +14,11 @@ import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -240,6 +242,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return delegate.getTenantSchemaMapper();
+	}
+
+	@Override
+	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
+		return delegate.getTenantCredentialsMapper();
 	}
 
 	@Override
@@ -584,6 +591,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public Map<String, Object> getDefaultSessionProperties() {
 		return delegate.getDefaultSessionProperties();
+	}
+
+	@Override
+	public GraphParserMode getGraphParserMode() {
+		return delegate.getGraphParserMode();
 	}
 
 	@Override

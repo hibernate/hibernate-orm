@@ -91,10 +91,8 @@ import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -114,7 +112,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
@@ -197,7 +194,7 @@ public class DB2Dialect extends Dialect {
 
 	public static DatabaseVersion determinFullDatabaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
-		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		final var databaseMetadata = info.getDatabaseMetadata();
 		if ( databaseMetadata != null ) {
 			try {
 				versionString = databaseMetadata.getDatabaseProductVersion();
@@ -206,7 +203,7 @@ public class DB2Dialect extends Dialect {
 				// Ignore
 			}
 		}
-		final DatabaseVersion databaseVersion = versionString == null ? null : parseVersion( versionString );
+		final var databaseVersion = versionString == null ? null : parseVersion( versionString );
 		return databaseVersion != null ? databaseVersion : info.makeCopyOrDefault( MINIMUM_VERSION );
 	}
 
@@ -215,15 +212,18 @@ public class DB2Dialect extends Dialect {
 			// The default format
 			return null;
 		}
-		DatabaseVersion databaseVersion = null;
-		final Matcher matcher = DB2_VERSION_PATTERN.matcher( versionString );
-		if ( matcher.find() ) {
-			int majorVersion = parseInt( matcher.group( 1 ) );
-			int minorVersion = parseInt( matcher.group( 2 ) );
-			int microVersion = parseInt( matcher.group( 3 ) );
-			databaseVersion = new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion );
+		else {
+			final var matcher = DB2_VERSION_PATTERN.matcher( versionString );
+			if ( matcher.find() ) {
+				final int majorVersion = parseInt( matcher.group( 1 ) );
+				final int minorVersion = parseInt( matcher.group( 2 ) );
+				final int microVersion = parseInt( matcher.group( 3 ) );
+				return new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion );
+			}
+			else {
+				return null;
+			}
 		}
-		return databaseVersion;
 	}
 
 	protected LockingSupport buildLockingSupport() {
@@ -276,7 +276,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor(
@@ -323,7 +323,7 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final var ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
@@ -452,24 +452,8 @@ public class DB2Dialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
 
-		functionFactory.jsonValue_db2();
-		functionFactory.jsonQuery_no_passing();
-		functionFactory.jsonExists_no_passing();
-		functionFactory.jsonObject_db2();
-		functionFactory.jsonArray_db2();
-		functionFactory.jsonArrayAgg_db2();
-		functionFactory.jsonObjectAgg_db2();
-		functionFactory.jsonTable_db2( getMaximumSeriesSize() );
-
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_db2();
-		functionFactory.xmlexists();
-		functionFactory.xmlagg();
-		functionFactory.xmltable_db2();
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
 
 		functionFactory.unnest_db2( getMaximumSeriesSize() );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
@@ -479,6 +463,29 @@ public class DB2Dialect extends Dialect {
 		functionFactory.md5( "hash(?1, 0)" );
 
 		functionFactory.regexpLike();
+	}
+
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_db2();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+	}
+
+	protected void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonValue_db2();
+		functionFactory.jsonQuery_no_passing();
+		functionFactory.jsonExists_no_passing();
+		functionFactory.jsonObject_db2();
+		functionFactory.jsonArray_db2();
+		functionFactory.jsonArrayAgg_db2();
+		functionFactory.jsonObjectAgg_db2();
+		functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 	}
 
 	/**
@@ -516,7 +523,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final String fromExpression;
 		final String toExpression;
 		if ( unit.isDateUnit() ) {
@@ -589,7 +596,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		final StringBuilder pattern = new StringBuilder();
+		final var pattern = new StringBuilder();
 		final String timestampExpression;
 		if ( unit.isDateUnit() ) {
 			if ( temporalType == TemporalType.TIME ) {
@@ -881,6 +888,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return getVersion().isSameOrAfter( 11, 5 );
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
@@ -966,7 +978,7 @@ public class DB2Dialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
@@ -1211,12 +1223,9 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String castPattern(CastType from, CastType to) {
-		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
-			return "cast(?1 as ?2)";
-		}
-		else {
-			return super.castPattern( from, to );
-		}
+		return from == CastType.STRING && to == CastType.BOOLEAN
+				? "cast(?1 as ?2)"
+				: super.castPattern( from, to );
 	}
 
 	@Override

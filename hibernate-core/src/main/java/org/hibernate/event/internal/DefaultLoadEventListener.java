@@ -114,7 +114,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 							parentIdTargetIdMapping instanceof CompositeIdentifierMapping compositeMapping
 									? compositeMapping.getMappedIdEmbeddableTypeDescriptor()
 									: parentIdTargetIdMapping.getMappedType();
-					if ( parentIdType.getMappedJavaType().getJavaTypeClass().isInstance( event.getEntityId() ) ) {
+					if ( parentIdType.getMappedJavaType().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(
 								event,

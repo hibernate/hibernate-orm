@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.resulttransformer;
 
 
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.transform.ResultTransformer;
 
@@ -59,9 +59,9 @@ public class ResultTransformerTest {
 			);
 
 			try (ScrollableResults sr = q.scroll()) {
-				// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
+				// HANA and Spanner supports only ResultSet.TYPE_FORWARD_ONLY and
 				// does not support java.sql.ResultSet.first()
-				if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof HANADialect ) {
+				if ( scope.getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() == ScrollMode.FORWARD_ONLY) {
 					sr.next();
 				}
 				else {

@@ -116,7 +116,9 @@ public class EnumType<T extends Enum<T>>
 			enumClass = (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
 		}
 
-		final JavaType<T> descriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( enumClass );
+		final JavaType<T> descriptor =
+				typeConfiguration.getJavaTypeRegistry()
+						.resolveDescriptor( enumClass );
 		enumJavaType = (EnumJavaType<T>) descriptor;
 
 		if ( parameters.containsKey( TYPE ) ) {

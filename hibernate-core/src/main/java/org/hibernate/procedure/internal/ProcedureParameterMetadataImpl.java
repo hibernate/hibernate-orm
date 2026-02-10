@@ -14,13 +14,10 @@ import java.util.function.Predicate;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -36,18 +33,11 @@ import static java.util.Collections.unmodifiableList;
  *
  * @author Steve Ebersole
  */
-public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
+class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ProcedureParameterImplementor<?>> parameters;
 
-	public ProcedureParameterMetadataImpl() {
-	}
-
-	public ProcedureParameterMetadataImpl(NamedCallableQueryMemento memento, SharedSessionContractImplementor session) {
-		memento.getParameterMementos()
-				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
-	}
-
+	@Override
 	public void registerParameter(ProcedureParameterImplementor<?> parameter) {
 		if ( parameter.isNamed() ) {
 			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
@@ -99,17 +89,18 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public Set<String> getNamedParameterNames() {
-		if ( !hasNamedParameters() ) {
+		if ( hasNamedParameters() && parameters != null ) {
+			final Set<String> names = new HashSet<>();
+			for ( var parameter : parameters ) {
+				if ( parameter.getName() != null ) {
+					names.add( parameter.getName() );
+				}
+			}
+			return names;
+		}
+		else {
 			return emptySet();
 		}
-
-		final Set<String> rtn = new HashSet<>();
-		for ( ProcedureParameter<?> parameter : parameters ) {
-			if ( parameter.getName() != null ) {
-				rtn.add( parameter.getName() );
-			}
-		}
-		return rtn;
 	}
 
 	@Override
@@ -123,13 +114,14 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			&& parameters.contains( (ProcedureParameterImplementor<?>) parameter );
 	}
 
+	@Override
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}
 
 	@Override
 	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
-		if ( parameters.isEmpty() ) {
+		if ( parameters == null || parameters.isEmpty() ) {
 			return false;
 		}
 		else {
@@ -144,9 +136,11 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> findQueryParameter(String name) {
-		for ( var parameter : parameters ) {
-			if ( name.equals( parameter.getName() ) ) {
-				return parameter;
+		if ( parameters != null ) {
+			for ( var parameter : parameters ) {
+				if ( name.equals( parameter.getName() ) ) {
+					return parameter;
+				}
 			}
 		}
 		return null;
@@ -163,9 +157,12 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> findQueryParameter(int positionLabel) {
-		for ( var parameter : parameters ) {
-			if ( parameter.getName() == null && positionLabel == parameter.getPosition() ) {
-				return parameter;
+		if ( parameters != null ) {
+			for ( var parameter : parameters ) {
+				if ( parameter.getName() == null
+						&& positionLabel == parameter.getPosition() ) {
+					return parameter;
+				}
 			}
 		}
 		return null;
@@ -174,18 +171,20 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	@Override
 	public ProcedureParameterImplementor<?> getQueryParameter(int positionLabel) {
 		final var queryParameter = findQueryParameter( positionLabel );
-		if ( queryParameter != null ) {
-			return queryParameter;
+		if ( queryParameter == null ) {
+			throw new IllegalArgumentException(
+					"Positional parameter " + positionLabel + " is not registered with this procedure call" );
 		}
-		throw new IllegalArgumentException( "Positional parameter [" + positionLabel + "] is not registered with this procedure call" );
+		return queryParameter;
 	}
 
 	@Override
 	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> parameter) {
-		if ( parameter instanceof ProcedureParameterImplementor<P> parameterImplementor ) {
+		if ( parameters != null
+				&& parameter instanceof ProcedureParameterImplementor<P> procedureParam ) {
 			for ( var registered : parameters ) {
 				if ( registered == parameter ) {
-					return parameterImplementor;
+					return procedureParam;
 				}
 			}
 		}

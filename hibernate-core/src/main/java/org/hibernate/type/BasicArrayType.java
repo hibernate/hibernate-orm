@@ -6,9 +6,13 @@ package org.hibernate.type;
 
 import java.util.Objects;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.java.AbstractArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+
+import static java.lang.Character.toUpperCase;
 
 /**
  * A type that maps between {@link java.sql.Types#ARRAY ARRAY} and {@code T[]}
@@ -16,24 +20,33 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-public class BasicArrayType<T,E>
+public final class BasicArrayType<T,E>
 		extends AbstractSingleColumnStandardBasicType<T>
 		implements AdjustableBasicType<T>, BasicPluralType<T, E> {
 
 	private final BasicType<E> baseDescriptor;
 	private final String name;
+	private final AbstractArrayJavaType<T,?> arrayTypeDescriptor;
 
 	public BasicArrayType(BasicType<E> baseDescriptor, JdbcType arrayJdbcType, JavaType<T> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
 		this.name = determineArrayTypeName( baseDescriptor );
+		this.arrayTypeDescriptor =
+				arrayTypeDescriptor instanceof AbstractArrayJavaType<T, ?> arrayJavaType
+						? arrayJavaType
+						// this only happens with contributions from hibernate-vector
+						// because it passes in a PrimitiveByteArrayJavaType which is
+						// not an AbstractArrayJavaType (this might be a bug)
+						: null;
 	}
 
 	static String determineElementTypeName(BasicType<?> baseDescriptor) {
 		final String elementName = baseDescriptor.getName();
 		return switch ( elementName ) {
 			case "boolean", "byte", "char", "short", "int", "long", "float", "double" ->
-					Character.toUpperCase( elementName.charAt( 0 ) ) + elementName.substring( 1 );
+					toUpperCase( elementName.charAt( 0 ) )
+							+ elementName.substring( 1 );
 			default -> elementName;
 		};
 	}
@@ -59,20 +72,50 @@ public class BasicArrayType<T,E>
 
 	@Override
 	public <X> BasicType<X> resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<X> domainJtd) {
-		// TODO: maybe fallback to some encoding by default if the DB doesn't support arrays natively?
-		//  also, maybe move that logic into the ArrayJdbcType
+		// TODO: maybe fall back to some encoding by default if
+		//      the database doesn't support arrays natively?
+		//      also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
 	}
 
 	@Override
 	public boolean equals(Object object) {
-		return object == this || object.getClass() == BasicArrayType.class
-			&& Objects.equals( baseDescriptor, ( (BasicArrayType<?, ?>) object ).baseDescriptor );
+		return object == this
+			|| object instanceof BasicArrayType<?,?> arrayType // no subtypes
+			&& Objects.equals( baseDescriptor, arrayType.baseDescriptor );
 	}
 
 	@Override
 	public int hashCode() {
 		return baseDescriptor.hashCode();
+	}
+
+	// Methods required to support Horrible hack around the fact
+	// that java.sql.Timestamps in an array can be represented as
+	// instances of java.util.Date (Why do we even allow this?)
+
+	@Override
+	public boolean isEqual(Object one, Object another) {
+		if ( arrayTypeDescriptor == null ) {
+			// for hibernate-vector
+			return super.isEqual( one, another );
+		}
+		else if ( one == another ) {
+			return true;
+		}
+		else if ( one == null || another == null ) {
+			return false;
+		}
+		else {
+			return arrayTypeDescriptor.isEqual( one, another );
+		}
+	}
+
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return arrayTypeDescriptor == null
+				? super.deepCopy( value, factory ) // for hibernate-vector
+				: arrayTypeDescriptor.deepCopy( value );
 	}
 }

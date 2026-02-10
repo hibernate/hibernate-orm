@@ -50,12 +50,19 @@ and `org.glassfish.expressly:expressly` | Hibernate Validator
 | `org.jboss.weld:weld-core-impl` | Weld CDI
 |===
 
-You'll need to configure the annotation processor to run when your project is compiled.
-In Gradle, for example, you'll need to use `annotationProcessor`.
+You'll need to configure the annotation processor to run when your project is compiled:
 
-[source,groovy]
+* In Gradle, you'll need to use `annotationProcessor`.
++
+[source,groovy,subs="attributes+"]
 ----
-annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
+annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
+----
+* In Maven, you will need to configure the `maven-compiler-plugin`.
++
+[source,xml,subs="attributes+"]
+----
+include::../userguide/chapters/tooling/extras/maven-example-metamodel.pom[]
 ----
 
 === Excluding classes from processing

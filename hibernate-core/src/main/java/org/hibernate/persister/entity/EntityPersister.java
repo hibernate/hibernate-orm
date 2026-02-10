@@ -139,7 +139,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Prepare loaders associated with the persister.  Distinct "phase"
 	 * in building the persister after {@linkplain InFlightEntityMappingType#prepareMappingModel}
 	 * and {@linkplain #postInstantiate()} have occurred.
-	 * <p/>
+	 * <p>
 	 * The distinct phase is used to ensure that all {@linkplain org.hibernate.metamodel.mapping.TableDetails}
 	 * are available across the entire model
 	 */

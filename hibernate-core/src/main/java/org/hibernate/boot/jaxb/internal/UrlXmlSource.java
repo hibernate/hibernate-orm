@@ -13,7 +13,6 @@ import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
 
@@ -37,13 +36,11 @@ public class UrlXmlSource {
 			ClassLoaderService classLoaderService,
 			MappingBinder mappingBinder) {
 		JAXB_LOGGER.tracef( "Reading mappings from resource: %s", resourceName );
-
-		final Origin origin = new Origin( SourceType.RESOURCE, resourceName );
-		final URL url = classLoaderService.locateResource( resourceName );
+		final var origin = new Origin( SourceType.RESOURCE, resourceName );
+		final var url = classLoaderService.locateResource( resourceName );
 		if ( url == null ) {
 			throw new MappingNotFoundException( origin );
 		}
-
 		return fromUrl( url, origin, mappingBinder );
 	}
 
@@ -55,8 +52,7 @@ public class UrlXmlSource {
 	public static Binding<? extends JaxbBindableMappingDescriptor> fromUrl(
 			URL url,
 			MappingBinder mappingBinder) {
-		final Origin origin = new Origin( SourceType.URL, url.toExternalForm() );
-		return fromUrl( url, origin, mappingBinder );
+		return fromUrl( url, new Origin( SourceType.URL, url.toExternalForm() ), mappingBinder );
 	}
 
 	/**
@@ -71,10 +67,8 @@ public class UrlXmlSource {
 			Origin origin,
 			MappingBinder binder) {
 		JAXB_LOGGER.tracef( "Reading mapping document from URL: %s", origin.getName() );
-
 		try {
-			InputStream stream = url.openStream();
-			return InputStreamXmlSource.fromStream( stream, origin, true, binder );
+			return InputStreamXmlSource.fromStream( url.openStream(), origin, true, binder );
 		}
 		catch (UnknownHostException e) {
 			throw new MappingNotFoundException( "Invalid URL", e, origin );

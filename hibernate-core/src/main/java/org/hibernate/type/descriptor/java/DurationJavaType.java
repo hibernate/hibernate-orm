@@ -37,7 +37,6 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	 * Singleton access
 	 */
 	public static final DurationJavaType INSTANCE = new DurationJavaType();
-	private static final BigDecimal BILLION = BigDecimal.ONE.movePointRight(9);
 
 	public DurationJavaType() {
 		super( Duration.class, ImmutableMutabilityPlan.instance() );
@@ -46,6 +45,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	@Override
 	public boolean isInstance(Object value) {
 		return value instanceof Duration;
+	}
+
+	@Override
+	public Duration cast(Object value) {
+		return (Duration) value;
 	}
 
 	@Override
@@ -88,28 +92,27 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Duration duration, Class<X> type, WrapperOptions options) {
 		if ( duration == null ) {
 			return null;
 		}
 
 		if ( Duration.class.isAssignableFrom( type ) ) {
-			return (X) duration;
+			return type.cast( duration );
 		}
 
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) new BigDecimal( duration.getSeconds() )
+			return type.cast( new BigDecimal( duration.getSeconds() )
 					.movePointRight( 9 )
-					.add( new BigDecimal( duration.getNano() ) );
+					.add( new BigDecimal( duration.getNano() ) ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) duration.toString();
+			return type.cast( duration.toString() );
 		}
 
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( duration.toNanos() );
+			return type.cast( duration.toNanos() );
 		}
 
 		throw unknownUnwrap( type );
@@ -126,7 +129,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		}
 
 		if ( value instanceof BigDecimal decimal ) {
-			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BILLION );
+			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BigDecimalHolder.BILLION );
 			return Duration.ofSeconds(
 					secondsAndNanos[0].longValueExact(),
 					// use intValue() not intValueExact() here, because
@@ -175,5 +178,12 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 				? dialect.getDefaultIntervalSecondScale()
 				: 0; // For non-interval types, we use the type numeric(21)
 
+	}
+
+	// Avoids initializing the BigDecimal class when not strictly necessary
+	// Initializing BigDecimal generates a lot of allocations
+	private static class BigDecimalHolder {
+
+		private static final BigDecimal BILLION = BigDecimal.valueOf(1_000_000_000L);
 	}
 }

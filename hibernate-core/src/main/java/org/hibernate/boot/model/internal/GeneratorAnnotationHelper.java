@@ -7,6 +7,8 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -33,6 +35,7 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -278,29 +281,11 @@ public class GeneratorAnnotationHelper {
 			Consumer<Properties> configBaseline,
 			BiConsumer<A,Properties> configExtractor,
 			GeneratorCreationContext creationContext) {
-		if ( generator instanceof AnnotationBasedGenerator ) {
-			@SuppressWarnings("unchecked")
-			final var generation = (AnnotationBasedGenerator<A>) generator;
-			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
+		if ( generator instanceof AnnotationBasedGenerator<?> annotationBasedGenerator ) {
+			initializeGenerator( annotationBasedGenerator, annotation, creationContext );
 		}
 		if ( generator instanceof Configurable configurable ) {
-			final var properties = new Properties();
-			if ( configBaseline != null ) {
-				configBaseline.accept( properties );
-			}
-			collectBaselineProperties(
-					creationContext.getProperty() != null
-							? creationContext.getProperty().getValue()
-							: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
-					creationContext.getDatabase().getDialect(),
-					creationContext.getRootClass(),
-					properties::setProperty,
-					creationContext.getServiceRegistry().requireService( ConfigurationService.class )
-			);
-			if ( configExtractor != null ) {
-				configExtractor.accept( annotation, properties );
-			}
-			configurable.configure( creationContext, properties );
+			configureGenerator( annotation, configBaseline, configExtractor, creationContext, configurable );
 		}
 		if ( generator instanceof ExportableProducer exportableProducer ) {
 			exportableProducer.registerExportables( creationContext.getDatabase() );
@@ -308,6 +293,61 @@ public class GeneratorAnnotationHelper {
 		if ( generator instanceof Configurable configurable ) {
 			configurable.initialize( creationContext.getSqlStringGenerationContext() );
 		}
+	}
+
+	private static <A extends Annotation> void configureGenerator(
+			A annotation,
+			Consumer<Properties> configBaseline,
+			BiConsumer<A, Properties> configExtractor,
+			GeneratorCreationContext creationContext,
+			Configurable configurable) {
+		final var properties = new Properties();
+		if ( configBaseline != null ) {
+			configBaseline.accept( properties );
+		}
+		collectBaselineProperties(
+				creationContext.getProperty() != null
+						? creationContext.getProperty().getValue()
+						: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
+				creationContext.getDatabase().getDialect(),
+				creationContext.getRootClass(),
+				properties::setProperty,
+				creationContext.getServiceRegistry().requireService( ConfigurationService.class )
+		);
+		if ( configExtractor != null ) {
+			configExtractor.accept( annotation, properties );
+		}
+		configurable.configure( creationContext, properties );
+	}
+
+	public static <A extends Annotation> void initializeGenerator(
+			AnnotationBasedGenerator<A> generator,
+			Annotation annotation,
+			GeneratorCreationContext creationContext) {
+		generator.initialize( castAnnotationType( annotation, generator), creationContext );
+	}
+
+	private static <A extends Annotation> A castAnnotationType(
+			Annotation typeAnnotation,
+			AnnotationBasedGenerator<A> annotationBased) {
+		final var annotationType = annotationBased.getClass();
+		for ( var iface: annotationType.getGenericInterfaces() ) {
+			if ( iface instanceof ParameterizedType parameterizedType
+					&& parameterizedType.getRawType() == AnnotationBasedGenerator.class ) {
+				final var typeArguments = parameterizedType.getActualTypeArguments();
+				if ( typeArguments.length > 0
+						&& typeArguments[0] instanceof Class<?> annotationClass ) {
+					if ( !annotationClass.isInstance( typeAnnotation ) ) {
+						throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
+								annotationType.getName(), iface.getTypeName() ) );
+					}
+					@SuppressWarnings("unchecked") // safe, we just checked it
+					final var castAnnotation = (A) typeAnnotation;
+					return castAnnotation;
+				}
+			}
+		}
+		throw new AssertionFailure( "Could not find implementing interface" );
 	}
 
 	public static void handleUuidStrategy(

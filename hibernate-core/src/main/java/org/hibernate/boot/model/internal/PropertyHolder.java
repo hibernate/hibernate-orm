@@ -61,12 +61,14 @@ public interface PropertyHolder {
 	String getPath();
 
 	/**
-	 * return null if the column is not overridden, or an array of column if true
+	 * return null if the column is not overridden,
+	 * or an array of columns if it is
 	 */
 	Column[] getOverriddenColumn(String propertyName);
 
 	/**
-	 * return null if the column is not overridden, or an array of column if true
+	 * return null if the column is not overridden,
+	 * or an array of columns if it is
 	 */
 	JoinColumn[] getOverriddenJoinColumn(String propertyName);
 

@@ -30,7 +30,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public SqmSelfRenderingExpression<T> copy(SqmCopyContext context) {
-		final SqmSelfRenderingExpression<T> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}

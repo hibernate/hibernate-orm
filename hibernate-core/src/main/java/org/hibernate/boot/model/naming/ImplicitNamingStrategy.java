@@ -16,7 +16,7 @@ import org.hibernate.Incubating;
  * has no {@link jakarta.persistence.Table @Table} annotation, then
  * {@link #determinePrimaryTableName(ImplicitEntityNameSource) determinePrimaryTableName}
  * is called with an {@link ImplicitEntityNameSource} providing access to information
- * about the Java class and its {@link jakarta.persistence.Entity#name() entity name}.
+ * about the Java class and its {@linkplain jakarta.persistence.Entity#name entity name}.
  * <p>
  * On the other hand, when a logical name <em>is</em> explicitly specified, for example,
  * using {@link jakarta.persistence.Table#name() @Table} to specify the table name,
@@ -34,7 +34,7 @@ import org.hibernate.Incubating;
  * implementation of {@code ImplicitNamingStrategy}.
  * <p>
  * An {@code ImplicitNamingStrategy} may be selected using the configuration property
- * {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}.
+ * {@value org.hibernate.cfg.MappingSettings#IMPLICIT_NAMING_STRATEGY}.
  *
  * @apiNote The method names here mostly favor the JPA terminology,
  *          for example, "secondary table" rather than "join".
@@ -42,7 +42,7 @@ import org.hibernate.Incubating;
  * @see PhysicalNamingStrategy
  * @see org.hibernate.cfg.Configuration#setImplicitNamingStrategy(ImplicitNamingStrategy)
  * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy(ImplicitNamingStrategy)
- * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
+ * @see org.hibernate.cfg.MappingSettings#IMPLICIT_NAMING_STRATEGY
  *
  * @author Steve Ebersole
  */

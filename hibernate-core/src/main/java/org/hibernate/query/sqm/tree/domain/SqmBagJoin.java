@@ -51,12 +51,12 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public SqmBagJoin<O, E> copy(SqmCopyContext context) {
-		final SqmBagJoin<O, E> existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmBagJoin<O, E> path = context.registerCopy(
+		final var lhsCopy = getLhs().copy( context );
+		final var path = context.registerCopy(
 				this,
 				new SqmBagJoin<>(
 						lhsCopy,

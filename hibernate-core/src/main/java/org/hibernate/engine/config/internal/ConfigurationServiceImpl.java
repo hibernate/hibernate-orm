@@ -66,42 +66,49 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		return target !=null ? target : defaultValue;
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> @Nullable T cast(Class<T> expected, @Nullable Object candidate){
-		if (candidate == null) {
+		if ( candidate == null ) {
 			return null;
 		}
-
-		if ( expected.isInstance( candidate ) ) {
-			return (T) candidate;
+		else if ( expected.isInstance( candidate ) ) {
+			return expected.cast( candidate );
 		}
+		else {
+			final var target = getTargetClass( expected, candidate );
+			return target == null ? null : instantiate( expected, target );
 
-		Class<T> target;
-		if (candidate instanceof Class) {
-			target = (Class<T>) candidate;
+		}
+	}
+
+	private static <T> @Nullable T instantiate(Class<T> expected, Class<? extends T> target) {
+		try {
+			return target.getDeclaredConstructor().newInstance();
+		}
+		catch (Exception e) {
+			//TODO: should this really be a debug-level
+			//      log instead of a proper error?
+			CORE_LOGGER.debugf( "Unable to instantiate %s class %s",
+					expected.getName(), target.getName() );
+			return null;
+		}
+	}
+
+	private <T> @Nullable Class<? extends T> getTargetClass(Class<T> expected, Object candidate) {
+		if ( candidate instanceof Class<?> candidateClass ) {
+			return candidateClass.asSubclass( expected );
 		}
 		else {
 			try {
-				target = serviceRegistry.requireService( ClassLoaderService.class )
+				return serviceRegistry.requireService( ClassLoaderService.class )
 						.classForName( candidate.toString() );
 			}
-			catch ( ClassLoadingException e ) {
+			catch (ClassLoadingException e) {
+				//TODO: should this really be a debug-level
+				//      log instead of a proper error?
 				CORE_LOGGER.debugf( "Unable to locate %s implementation class %s",
 						expected.getName(), candidate.toString() );
-				target = null;
+				return null;
 			}
 		}
-		if ( target != null ) {
-			try {
-				return target.newInstance();
-			}
-			catch ( Exception e ) {
-				CORE_LOGGER.debugf( "Unable to instantiate %s class %s",
-						expected.getName(), target.getName() );
-			}
-		}
-		return null;
 	}
-
-
 }

@@ -9,8 +9,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
-import org.hibernate.type.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Page;
@@ -20,7 +20,6 @@ import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
@@ -98,65 +97,68 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();
-	protected abstract void setSqmStatement(SqmSelectStatement<R> statement);
+//	protected abstract void setSqmStatement(SqmSelectStatement<R> statement);
 	public abstract DomainParameterXref getDomainParameterXref();
 	public abstract TupleMetadata getTupleMetadata();
-
-	protected void copyParameterBindings(QueryParameterBindings oldParameterBindings) {
-		final var parameterBindings = getQueryParameterBindings();
-		oldParameterBindings.visitBindings( (queryParameter, binding) -> {
-			if ( binding.isBound() ) {
-				//noinspection unchecked
-				final var newBinding = (QueryParameterBinding<Object>) parameterBindings.getBinding( queryParameter );
-				//noinspection unchecked
-				final var bindType = (BindableType<Object>) binding.getBindType();
-				final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
-				if ( binding.isMultiValued() ) {
-					final var bindValues = binding.getBindValues();
-					if ( explicitTemporalPrecision != null ) {
-						newBinding.setBindValues( bindValues, explicitTemporalPrecision, getTypeConfiguration() );
-					}
-					else if ( bindType != null ) {
-						newBinding.setBindValues( bindValues, bindType );
-					}
-					else {
-						newBinding.setBindValues( bindValues );
-					}
-				}
-				else {
-					final var bindValue = binding.getBindValue();
-					if ( explicitTemporalPrecision != null ) {
-						newBinding.setBindValue( bindValue, explicitTemporalPrecision );
-					}
-					else if ( bindType != null ) {
-						newBinding.setBindValue( bindValue, bindType );
-					}
-					else {
-						newBinding.setBindValue( bindValue );
-					}
-				}
-			}
-		} );
-
-		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		bindValueBindCriteriaParameters( getDomainParameterXref(), parameterBindings );
-	}
+//
+//	protected void copyParameterBindings(QueryParameterBindings oldParameterBindings) {
+//		final var parameterBindings = getQueryParameterBindings();
+//		oldParameterBindings.visitBindings( (queryParameter, binding) -> {
+//			if ( binding.isBound() ) {
+//				final var newBinding = parameterBindings.getBinding( queryParameter );
+//				final var bindType = (BindableType<?>) binding.getBindType();
+//				final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
+//				if ( binding.isMultiValued() ) {
+//					final var bindValues = binding.getBindValues();
+//					if ( explicitTemporalPrecision != null ) {
+//						newBinding.setBindValues( bindValues, explicitTemporalPrecision, getTypeConfiguration() );
+//					}
+//					else if ( bindType != null ) {
+//						newBinding.setBindValues( bindValues, bindType );
+//					}
+//					else {
+//						newBinding.setBindValues( bindValues );
+//					}
+//				}
+//				else {
+//					final var bindValue = binding.getBindValue();
+//					if ( explicitTemporalPrecision != null ) {
+//						newBinding.setBindValue( bindValue, explicitTemporalPrecision );
+//					}
+//					else if ( bindType != null ) {
+//						newBinding.setBindValue( bindValue, bindType );
+//					}
+//					else {
+//						newBinding.setBindValue( bindValue );
+//					}
+//				}
+//			}
+//		} );
+//
+//		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
+//		bindValueBindCriteriaParameters( getDomainParameterXref(), parameterBindings );
+//	}
 
 	protected static void bindValueBindCriteriaParameters(
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings bindings) {
 		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
-			final var sqmParameter = entry.getValue().get( 0 );
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
-				@SuppressWarnings("unchecked")
-				final var criteriaParameter = (JpaCriteriaParameter<Object>) wrapper.getJpaCriteriaParameter();
-				if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<?> ) {
-					// Use the anticipated type for binding the value if possible
-					//noinspection unchecked
-					final var parameter = (QueryParameterImplementor<Object>) entry.getKey();
-					bindings.getBinding( parameter )
-							.setBindValue( criteriaParameter.getValue(), criteriaParameter.getAnticipatedType() );
-				}
+			bindValueToCriteriaParameter( bindings, entry.getKey(),
+					entry.getValue().get( 0 ) );
+		}
+	}
+
+	private static <T> void bindValueToCriteriaParameter(
+			QueryParameterBindings bindings,
+			QueryParameterImplementor<?> queryParameterImplementor,
+			SqmParameter<T> sqmParameter) {
+		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper ) {
+			final var criteriaParameter = wrapper.getJpaCriteriaParameter();
+			if ( criteriaParameter instanceof ValueBindJpaCriteriaParameter<T> ) {
+				// Use the anticipated type for binding the value if possible
+				bindings.getBinding( queryParameterImplementor )
+						.setBindValue( criteriaParameter.getValue(),
+								criteriaParameter.getAnticipatedType() );
 			}
 		}
 	}
@@ -164,11 +166,14 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	@Override
 	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
 		if ( parameter instanceof JpaCriteriaParameter<?> criteriaParameter ) {
-			final var parameterWrapper = getDomainParameterXref().getParameterResolutions()
-					.getJpaCriteriaParamResolutions()
-					.get( criteriaParameter );
+			final var parameterWrapper =
+					getDomainParameterXref().getParameterResolutions()
+							.getJpaCriteriaParamResolutions()
+							.get( criteriaParameter );
 			//noinspection unchecked
-			return (QueryParameterImplementor<P>) getDomainParameterXref().getQueryParameter( parameterWrapper );
+			return (QueryParameterImplementor<P>)
+					getDomainParameterXref()
+							.getQueryParameter( parameterWrapper );
 		}
 		else {
 			return parameter;
@@ -176,9 +181,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	public int @Nullable [] unnamedParameterIndices() {
-		final var domainParameterXref = getDomainParameterXref();
 		final var jpaCriteriaParamResolutions =
-				domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
+				getDomainParameterXref().getParameterResolutions()
+						.getJpaCriteriaParamResolutions();
 		if ( jpaCriteriaParamResolutions.isEmpty() ) {
 			return null;
 		}
@@ -188,7 +193,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 		final var unnamedParameterIndices = new int[maxId + 1];
 		for ( var entry : jpaCriteriaParamResolutions.entrySet() ) {
-			unnamedParameterIndices[entry.getValue().getCriteriaParameterId()] = entry.getValue().getUnnamedParameterId();
+			unnamedParameterIndices[entry.getValue().getCriteriaParameterId()] =
+					entry.getValue().getUnnamedParameterId();
 		}
 		return unnamedParameterIndices;
 	}
@@ -353,12 +359,14 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
-		if ( selections.size() == 1 ) {
+		final int selectionsSize = selections.size();
+		if ( selectionsSize == 1 ) {
 			final var selectableNode = selections.get( 0 ).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final var selectionItems = selectableNode.getSelectionItems();
-				final var elements = new TupleElement<?>[ selectionItems.size() ];
-				for ( int i = 0; i < selectionItems.size(); i++ ) {
+				final int itemsSize = selectionItems.size();
+				final var elements = new TupleElement<?>[itemsSize];
+				for ( int i = 0; i < itemsSize; i++ ) {
 					elements[i] = selectionItems.get( i );
 				}
 				return elements;
@@ -368,8 +376,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		else {
-			final var elements = new TupleElement<?>[ selections.size() ];
-			for ( int i = 0; i < selections.size(); i++ ) {
+			final var elements = new TupleElement<?>[selectionsSize];
+			for ( int i = 0; i < selectionsSize; i++ ) {
 				elements[i] = selections.get( i ).getSelectableNode();
 			}
 			return elements;
@@ -377,12 +385,14 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
-		if ( selections.size() == 1 ) {
+		final int selectionsSize = selections.size();
+		if ( selectionsSize == 1 ) {
 			final var selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final var selectionItems = selectableNode.getSelectionItems();
-				final String[] elements = new String[ selectionItems.size() ];
-				for ( int i = 0; i < selectionItems.size(); i++ ) {
+				final int itemsSize = selectionItems.size();
+				final var elements = new String[itemsSize];
+				for ( int i = 0; i < itemsSize; i++ ) {
 					elements[i] = selectionItems.get( i ).getAlias();
 				}
 				return elements;
@@ -392,8 +402,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		else {
-			final String[] elements = new String[ selections.size() ];
-			for ( int i = 0; i < selections.size(); i++ ) {
+			final String[] elements = new String[selectionsSize];
+			for ( int i = 0; i < selectionsSize; i++ ) {
 				elements[i] = selections.get( i ).getAlias();
 			}
 			return elements;

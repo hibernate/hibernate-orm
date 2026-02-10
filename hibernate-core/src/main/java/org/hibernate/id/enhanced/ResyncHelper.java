@@ -15,11 +15,10 @@ class ResyncHelper {
 
 	private static long execute(DdlTransactionIsolator isolator, String sequenceCurrentValue, String message) {
 		isolator.getJdbcContext().getSqlStatementLogger().logStatement( sequenceCurrentValue );
-		try ( var select = isolator.getIsolatedConnection().prepareStatement( sequenceCurrentValue ) ) {
-			try ( var resultSet = select.executeQuery() ) {
-				resultSet.next();
-				return resultSet.getLong( 1 );
-			}
+		try ( var select = isolator.getIsolatedConnection().prepareStatement( sequenceCurrentValue );
+				var resultSet = select.executeQuery() ) {
+			resultSet.next();
+			return resultSet.getLong( 1 );
 		}
 		catch (SQLException e) {
 			throw isolator.getJdbcContext().getSqlExceptionHelper()

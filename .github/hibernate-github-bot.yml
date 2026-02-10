@@ -81,3 +81,27 @@ branches:
   ignore:
     - user: dependabot[bot]
       titlePattern: ".*"
+pullRequestTasks:
+  # Make the bot add list of tasks to the pull requests and enable the check that makes sure all tasks are completed:
+  enabled: true
+  tasks:
+    # List of tasks for commits without a Jira ID
+    # or for those with Jira ID but that don't have a specific configuration for a corresponding issue type:
+    default:
+      - Add test **OR** check there is no need for a test
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"
+    # Tasks specific to the bug issue type:
+    bug:
+      - Add test reproducing the bug
+      - "Add entries as relevant to `migration-guide.adoc` **OR** check there are no breaking changes"
+    # Tasks specific to the improvement issue type:
+    improvement:
+      - Add tests for feature/improvement
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"
+    # Tasks specific to the "new feature" issue type (same as improvement):
+    new feature:
+      - Add tests for feature/improvement
+      - "Update documentation as relevant: javadoc for changed API, `documentation/src/main/asciidoc/userguide` for all features, `documentation/src/main/asciidoc/introduction` for main features, links from existing documentation"
+      - "Add entries as relevant to `migration-guide.adoc` (breaking changes) and `whats-new.adoc` (new features/improvements)"

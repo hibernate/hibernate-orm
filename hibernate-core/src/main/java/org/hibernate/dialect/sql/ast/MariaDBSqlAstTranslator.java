@@ -14,10 +14,12 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.NestedOrTargetTableCorrelationVisitor;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -43,6 +45,7 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
  * A SQL AST translator for MariaDB.
  *
  * @author Christian Beikov
+ * @author Yoobin Yoon
  */
 public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
@@ -113,17 +116,24 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
-		appendSql( "delete" );
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-			if ( statement.getFromClause().getRoots().isEmpty() ) {
-				appendSql( " from " );
-				renderDmlTargetTableExpression( statement.getTargetTable() );
+			if ( usesSingleTableDml( statement ) ) {
+				appendSql( "delete from " );
+				appendSql( statement.getTargetTable().getTableExpression() );
+				registerAffectedTable( statement.getTargetTable() );
 			}
 			else {
-				visitFromClause( statement.getFromClause() );
+				appendSql( "delete" );
+				renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+				if ( statement.getFromClause().getRoots().isEmpty() ) {
+					appendSql( " from " );
+					renderDmlTargetTableExpression( statement.getTargetTable() );
+				}
+				else {
+					visitFromClause( statement.getFromClause() );
+				}
 			}
 		}
 		finally {
@@ -133,7 +143,12 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected void renderUpdateClause(UpdateStatement updateStatement) {
-		if ( updateStatement.getFromClause().getRoots().isEmpty() ) {
+		if ( usesSingleTableDml( updateStatement ) ) {
+			appendSql( "update " );
+			appendSql( updateStatement.getTargetTable().getTableExpression() );
+			registerAffectedTable( updateStatement.getTargetTable() );
+		}
+		else if ( updateStatement.getFromClause().getRoots().isEmpty() ) {
 			super.renderUpdateClause( updateStatement );
 		}
 		else {
@@ -145,7 +160,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getClauseStack().getCurrent() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -178,6 +193,16 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
 				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+			final MutationStatement currentStatement = getCurrentDmlStatement();
+			if ( currentStatement != null && usesSingleTableDml( currentStatement ) && columnReference.getQualifier() != null ) {
+				final NamedTableReference targetTable = currentStatement.getTargetTable();
+				final String targetTableName = targetTable.getTableExpression();
+				final String qualifier = columnReference.getQualifier();
+				final String targetAlias = targetTable.getIdentificationVariable();
+				if ( ( targetAlias != null && qualifier.equals( targetAlias ) ) || qualifier.equals( targetTableName ) ) {
+					return !getQueryPartStack().isEmpty() ? targetTableName : null;
+				}
+			}
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
@@ -388,17 +413,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
-		if ( sqlType != null ) {
-			appendSql( sqlType );
-		}
-		else {
-			super.visitCastTarget( castTarget );
-		}
-	}
-
-	@Override
 	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
 		// MariaDB can't cope with NUL characters in the position function, so we use a like predicate instead
 		haystack.accept( this );
@@ -430,4 +444,72 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 						? determineColumnReferenceQualifier( column )
 						: null );
 	}
+
+	private boolean usesSingleTableDml(MutationStatement statement) {
+		// As of MariaDB 11.1, the self-join rewrite optimization can handle this, so no need force single table DML
+		return getDialect().getVersion().isBefore( 11, 1 ) && hasTargetTableCorrelation( statement );
+	}
+
+	private boolean needsDmlSubqueryWrapper() {
+		final Statement statement = getStatement();
+		// As of MariaDB 11.1, the self-join rewrite optimization can handle this, so no need for the wrapper
+		return getDialect().getVersion().isBefore( 11, 1 )
+				&& statement instanceof AbstractUpdateOrDeleteStatement updateOrDeleteStatement
+				&& !NestedOrTargetTableCorrelationVisitor.hasCorrelation( updateOrDeleteStatement );
+	}
+
+	@Override
+	public void visitSelectStatement(SelectStatement statement) {
+		final boolean needsParenthesis = !statement.getQueryPart().isRoot();
+		if ( needsParenthesis && needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.visitSelectStatement( statement );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitSelectStatement( statement );
+		}
+	}
+
+	@Override
+	protected <X extends Expression> void renderRelationalEmulationSubQuery(
+			QuerySpec subQuery,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderRelationalEmulationSubQuery( subQuery, lhsTuple, renderer, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderQuantifiedEmulationSubQuery(
+			QuerySpec subQuery,
+			ComparisonOperator tupleComparisonOperator) {
+		if ( needsDmlSubqueryWrapper() ) {
+			appendSql( OPEN_PARENTHESIS );
+			appendSql( "select * from " );
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+			appendSql( " _sub_" );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.renderQuantifiedEmulationSubQuery( subQuery, tupleComparisonOperator );
+		}
+	}
+
+	@Override
+	protected void renderFetchFirstRow() {
+		appendSql( " limit 1" );
+	}
+
 }

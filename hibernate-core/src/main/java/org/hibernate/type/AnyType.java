@@ -208,41 +208,25 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return null;
 	}
 
+	private Object getIdentifierEvenIfTransient(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		try {
+			return getEntityIdentifierIfNotUnsaved(
+					session.bestGuessEntityName( value ),
+					value,
+					session
+			);
+		}
+		catch (TransientObjectException e) {
+			return null;
+		}
+	}
+
 	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
-		if ( x == y ) {
-			return true;
-		}
-
-		if ( x == null || y == null ) {
-			return false;
-		}
-
-		final var xLazy = extractLazyInitializer( x );
-		final var yLazy = extractLazyInitializer( y );
-
-		final Object xImpl = xLazy != null ? xLazy.getImplementation() : x;
-		final Object yImpl = yLazy != null ? yLazy.getImplementation() : y;
-
-		if ( xImpl == yImpl ) {
-			return true;
-		}
-
-		final var xPersister = guessEntityPersister( xImpl, typeConfiguration.getSessionFactory() );
-		final var yPersister = guessEntityPersister( yImpl, typeConfiguration.getSessionFactory() );
-
-		if ( xPersister == null || yPersister == null ) {
-			return false;
-		}
-
-		if ( !Objects.equals( xPersister.getEntityName(), yPersister.getEntityName() ) ) {
-			return false;
-		}
-
-		final Object xId = xPersister.getIdentifier( xImpl );
-		final Object yId = yPersister.getIdentifier( yImpl );
-
-		return Objects.equals( xId, yId );
+		return x == y;
 	}
 
 	@Override
@@ -275,7 +259,22 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return isDirty( old, current, session );
+		if ( isSame( old, current ) ) {
+			return false;
+		}
+		final String oldDiscriminator =
+				old == null ? null : session.bestGuessEntityName( old );
+		final String newDiscriminator =
+				current == null ? null : session.bestGuessEntityName( current );
+
+		if ( discriminatorType.isDirty( oldDiscriminator, newDiscriminator, session ) ) {
+			return true;
+		}
+
+		final Object oldId = getIdentifierEvenIfTransient( old, session );
+		final Object newId = getIdentifierEvenIfTransient( current, session );
+
+		return identifierType.isDirty( oldId, newId, session );
 	}
 
 	@Override

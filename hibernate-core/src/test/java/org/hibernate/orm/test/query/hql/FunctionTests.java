@@ -1844,14 +1844,17 @@ public class FunctionTests {
 							session.createQuery( "select 1 + :i" )
 									.setParameter( "i", 2)
 									.getSingleResult() );
-					assertEquals( "hello world",
-							session.createQuery( "select :greet || ' world'" )
-									.setParameter( "greet", "hello")
-									.getSingleResult() );
-					assertEquals( "hello world",
-							session.createQuery( "select 'hello ' || :name" )
-									.setParameter( "name", "world")
-									.getSingleResult() );
+					// informix pads with a lot of spaces
+					if ( !(scope.getSessionFactory().getJdbcServices().getDialect() instanceof InformixDialect)) {
+						assertEquals( "hello world",
+								session.createQuery( "select :greet || ' world'" )
+										.setParameter( "greet", "hello")
+										.getSingleResult() );
+						assertEquals( "hello world",
+								session.createQuery( "select 'hello ' || :name" )
+										.setParameter( "name", "world" )
+										.getSingleResult() );
+					}
 				}
 		);
 	}

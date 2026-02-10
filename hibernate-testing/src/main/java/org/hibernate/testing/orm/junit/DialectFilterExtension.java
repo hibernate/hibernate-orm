@@ -10,8 +10,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -158,27 +160,78 @@ public class DialectFilterExtension implements ExecutionCondition {
 		}
 	}
 
+	static class DialectVersionKey {
+		private final Class<? extends Dialect> dialect;
+		private final DatabaseVersion version;
+
+		public DialectVersionKey(Class<? extends Dialect> dialect, DatabaseVersion version) {
+			this.dialect = dialect;
+			this.version = version;
+		}
+
+		public static DialectVersionKey of(SkipForDialect annotation) {
+			final Class<? extends Dialect> dialectClass = annotation.dialectClass();
+			int majorVersion = DatabaseVersion.NO_VERSION;
+			int minorVersion = DatabaseVersion.NO_VERSION;
+			int microVersion = DatabaseVersion.NO_VERSION;
+			if ( annotation.majorVersion() != -1 ) {
+				majorVersion = annotation.majorVersion();
+				if ( annotation.minorVersion() != -1 ) {
+					minorVersion += annotation.minorVersion();
+					if ( annotation.microVersion() != -1 ) {
+						microVersion += annotation.microVersion();
+					}
+				}
+			}
+			return new DialectVersionKey( dialectClass, new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion ) );
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+			DialectVersionKey that = (DialectVersionKey) o;
+			return dialect.equals( that.dialect )
+					&& version.getDatabaseMajorVersion() == that.version.getDatabaseMajorVersion()
+					&& version.getDatabaseMinorVersion() == that.version.getDatabaseMinorVersion()
+					&& version.getDatabaseMicroVersion() == that.version.getDatabaseMicroVersion();
+		}
+
+		@Override
+		public int hashCode() {
+			int result = dialect.hashCode();
+			result = 31 * result + version.getDatabaseMajorVersion();
+			result = 31 * result + version.getDatabaseMinorVersion();
+			result = 31 * result + version.getDatabaseMicroVersion();
+			return result;
+		}
+	}
+
 	private ConditionEvaluationResult evaluateSkipConditions(ExtensionContext context, Dialect dialect, String enabledResult) {
 		final Collection<SkipForDialect> effectiveSkips = TestingUtil.collectAnnotations(
 				context,
 				SkipForDialect.class,
 				SkipForDialectGroup.class,
 				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
-					final LinkedHashMap<Class<?>, SkipForDialect> map = new LinkedHashMap<>();
+					final LinkedHashMap<DialectVersionKey, SkipForDialect> map = new LinkedHashMap<>();
 					if ( classAnnotation != null ) {
-						map.put( classAnnotation.dialectClass(), classAnnotation );
+						map.put( DialectVersionKey.of( classAnnotation ), classAnnotation );
 					}
 					if ( classAnnotations != null ) {
 						for ( SkipForDialect annotation : classAnnotations ) {
-							map.put( annotation.dialectClass(), annotation );
+							map.put( DialectVersionKey.of( annotation ), annotation );
 						}
 					}
 					if ( methodAnnotation != null ) {
-						map.put( methodAnnotation.dialectClass(), methodAnnotation );
+						map.put( DialectVersionKey.of( methodAnnotation ), methodAnnotation );
 					}
 					if ( methodAnnotations != null ) {
 						for ( SkipForDialect annotation : methodAnnotations ) {
-							map.put( annotation.dialectClass(), annotation );
+							map.put( DialectVersionKey.of( annotation ), annotation );
 						}
 					}
 					return map.values();

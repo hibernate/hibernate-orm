@@ -1563,6 +1563,19 @@ informix_12_10() {
 
 spanner() {
   spanner_emulator
+  spanner_setup
+}
+
+spanner_setup() {
+  echo "Creating Spanner instance and database..."
+  curl -s -X POST http://localhost:9020/v1/projects/orm-test-project/instances \
+    -H 'Content-Type: application/json' \
+    -d '{"instanceId": "orm-test-instance", "instance": {"config": "emulator-config", "displayName": "Test Instance", "nodeCount": 1}}' > /dev/null
+
+  curl -s -X POST http://localhost:9020/v1/projects/orm-test-project/instances/orm-test-instance/databases \
+    -H 'Content-Type: application/json' \
+    -d '{"createStatement": "CREATE DATABASE `orm-test-db`", "extraStatements": ["ALTER DATABASE `orm-test-db` SET OPTIONS ( default_time_zone = '"'UTC'"' )"]}' > /dev/null
+  echo "Spanner instance and database created."
 }
 
 spanner_emulator() {

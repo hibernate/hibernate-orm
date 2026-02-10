@@ -589,11 +589,22 @@ public abstract sealed class Collection
 
 	private void adjustTemporalPrimaryKey() {
 		if ( isAuxiliaryColumnInPrimaryKey() ) {
-			final var primaryKey = collectionTable.getPrimaryKey();
-			if ( primaryKey != null ) {
-				final var startingColumn = getAuxiliaryColumn( auxiliaryColumnInPrimaryKey );
-				if ( startingColumn != null && !primaryKey.containsColumn( startingColumn ) ) {
-					primaryKey.addColumn( startingColumn );
+			final var startingColumn = getAuxiliaryColumn( auxiliaryColumnInPrimaryKey );
+			if ( startingColumn != null ) {
+				final var primaryKey = collectionTable.getPrimaryKey();
+				if ( primaryKey != null ) {
+					if ( !primaryKey.containsColumn( startingColumn ) ) {
+						primaryKey.addColumn( startingColumn );
+					}
+				}
+				// TODO: we should probably only do this for the UK created in
+				//       Set.createPrimaryKey() and not one the user defined
+				else if ( !collectionTable.getUniqueKeys().isEmpty() ) {
+					for ( var uniqueKey : collectionTable.getUniqueKeys().values() ) {
+						if ( !uniqueKey.containsColumn( startingColumn ) ) {
+							uniqueKey.addColumn( startingColumn );
+						}
+					}
 				}
 			}
 		}

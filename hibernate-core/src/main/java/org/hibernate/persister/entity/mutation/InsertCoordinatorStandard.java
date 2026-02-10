@@ -365,23 +365,25 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Generator generator,
 			Object entity) {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
-			final boolean generatedOnExecution =
-					isGeneratedOnExecution( generator, entity, session );
-			final var onExecutionGenerator =
-					generator instanceof OnExecutionGenerator executionGenerator && generatedOnExecution
-							&& generator.getEventTypes().contains( EventType.INSERT )
-									? executionGenerator
-									: null;
-			final String[] columnValues =
-					onExecutionGenerator == null ? null
-							: onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.INSERT );
-			final boolean[] columnInclusions =
-					onExecutionGenerator == null ? null
-							: onExecutionGenerator.getColumnInclusions( dialect(), EventType.INSERT );
-			final boolean bindAllValues =
-					onExecutionGenerator != null
-							&& onExecutionGenerator.writePropertyValue( EventType.INSERT )
-							&& columnValues == null;
+			final OnExecutionGenerator onExecutionGenerator;
+			final String[] columnValues;
+			final boolean[] columnInclusions;
+			final boolean bindAllValues;
+			if ( generator instanceof OnExecutionGenerator executionGenerator
+					&& generator.generatedOnExecution( entity, session )
+					&& generator.generatesOnInsert() ) {
+				onExecutionGenerator = executionGenerator;
+				columnValues = onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.INSERT );
+				columnInclusions = onExecutionGenerator.getColumnInclusions( dialect(), EventType.INSERT );
+				bindAllValues = onExecutionGenerator.writePropertyValue( EventType.INSERT ) && columnValues == null;
+			}
+			else {
+				onExecutionGenerator = null;
+				columnValues = null;
+				columnInclusions = null;
+				bindAllValues = false;
+			}
+
 			mapping.decompose(
 					value,
 					0,
@@ -418,21 +420,6 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			return bindAllValues
 				|| columnValues != null && "?".equals( columnValues[valueIndex] );
-		}
-	}
-
-	private static boolean isGeneratedOnExecution(
-			Generator generator,
-			Object entity,
-			SharedSessionContractImplementor session) {
-		if ( generator instanceof OnExecutionGenerator
-				&& generator.getEventTypes().contains( EventType.INSERT ) ) {
-			return session != null && entity != null
-					? generator.generatedOnExecution( entity, session )
-					: generator.generatedOnExecution();
-		}
-		else {
-			return false;
 		}
 	}
 
@@ -550,11 +537,9 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				final int attributeIndex = attributeIndexes[ i ];
 				final var attributeMapping = attributeMappings.get( attributeIndex );
 				final var generator = attributeMapping.getGenerator();
-				final boolean generatedOnExecution =
-						isGeneratedOnExecution( generator, object, session );
-				if ( generatedOnExecution && generator instanceof OnExecutionGenerator onExecutionGenerator
-						&& requiresValueGeneration( onExecutionGenerator, dialect(), EventType.INSERT, generatedOnExecution ) ) {
-					if ( needsValueBinding( onExecutionGenerator, dialect(), generatedOnExecution ) ) {
+				if ( generator instanceof OnExecutionGenerator onExecutionGenerator
+						&& hasValueGenerationOnExecution( object, session, onExecutionGenerator, EventType.INSERT ) ) {
+					if ( needsValueBinding( onExecutionGenerator, dialect() ) ) {
 						attributeInclusions[attributeIndex] = true;
 					}
 					handleValueGeneration( attributeMapping, insertGroupBuilder, onExecutionGenerator, EventType.INSERT );
@@ -591,13 +576,16 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( columnInclusions != null ) {
 					if ( columnValues != null && columnValues.length != keyColumnCount ) {
 						throw new IllegalStateException(
-								"Mismatch between generated column values and identifier columns for " + entityPersister().getEntityName()
+								"Mismatch between generated column values and identifier columns for "
+										+ entityPersister().getEntityName()
 						);
 					}
 					for ( int i = 0; i < keyColumnCount; i++ ) {
 						if ( columnInclusions[i] ) {
 							final String valueExpression =
-									columnValues == null ? keyMapping.getKeyColumn( i ).getWriteExpression() : columnValues[i];
+									columnValues == null
+											? keyMapping.getKeyColumn( i ).getWriteExpression()
+											: columnValues[i];
 							tableInsertBuilder.addKeyColumn( valueExpression, keyMapping.getKeyColumn( i ) );
 						}
 					}
@@ -616,11 +604,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private static boolean needsValueBinding(
-			OnExecutionGenerator generator,
-			Dialect dialect,
-			boolean generatedOnExecution) {
-		if ( generatedOnExecution && generator.getEventTypes().contains( EventType.INSERT ) ) {
+	private static boolean needsValueBinding(OnExecutionGenerator generator, Dialect dialect) {
+		if ( generator.generatesOnInsert() ) {
 			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, EventType.INSERT );
 			final String[] columnValues = generator.getReferencedColumnValues( dialect, EventType.INSERT );
 			if ( columnValues != null ) {

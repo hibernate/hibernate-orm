@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -26,13 +27,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
-import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -700,148 +698,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
 		return getCustomIdGeneratorCreator().isAssigned()
-				? buildIdentifierGenerator( dialect, rootClass, defaults )
+				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
 				: super.createGenerator( dialect, rootClass, property, defaults );
-	}
-
-	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
-		final var properties = getProperties();
-		final List<Generator> generators = new ArrayList<>( properties.size() );
-		final int columnSpan = getColumnSpan();
-		String[] columnValues = null;
-		boolean[] columnInclusions = null;
-		boolean[] generatedOnExecutionColumns = null;
-		int columnIndex = 0;
-		final List<GenerationPlan> generationPlans = new ArrayList<>();
-		for ( int i = 0; i < properties.size(); i++ ) {
-			final var property = properties.get( i );
-			final int span = property.getColumnSpan();
-			Generator propertyGenerator = null;
-			if ( property.getValue().isSimpleValue() ) {
-				final var value = (SimpleValue) property.getValue();
-				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
-					// skip any 'assigned' generators, they would have been
-					// handled by the StandardGenerationContextLocator
-					propertyGenerator = value.createGenerator( dialect, rootClass, property, defaults );
-					if ( propertyGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
-						generationPlans.add( new ValueGenerationPlan(
-								beforeExecutionGenerator,
-								getType().isMutable()
-										? injector( property, getAttributeDeclarer( rootClass ) )
-										: null,
-								i
-						) );
-					}
-					else if ( !( propertyGenerator instanceof OnExecutionGenerator ) ) {
-						throw new IdentifierGenerationException(
-								"Unsupported identifier generator for composite id: " + propertyGenerator.getClass().getName()
-						);
-					}
-				}
-			}
-			generators.add( propertyGenerator );
-
-			if ( propertyGenerator instanceof OnExecutionGenerator onExecutionGenerator
-					&& propertyGenerator.generatedOnExecution() ) {
-				if ( columnValues == null ) {
-					columnValues = new String[columnSpan];
-					columnInclusions = new boolean[columnSpan];
-					generatedOnExecutionColumns = new boolean[columnSpan];
-					for ( int j = 0; j < columnSpan; j++ ) {
-						columnValues[j] = "?";
-						columnInclusions[j] = true;
-					}
-				}
-				for ( int j = 0; j < span; j++ ) {
-					generatedOnExecutionColumns[columnIndex + j] = true;
-				}
-				if ( onExecutionGenerator.getEventTypes().contains( EventType.INSERT ) ) {
-					if ( !onExecutionGenerator.referenceColumnsInSql( dialect, EventType.INSERT ) ) {
-						for ( int j = 0; j < span; j++ ) {
-							columnInclusions[columnIndex + j] = false;
-						}
-					}
-					else if ( onExecutionGenerator.writePropertyValue( EventType.INSERT ) ) {
-						// leave default parameter markers in place
-					}
-					else {
-						final String[] referencedColumnValues =
-								onExecutionGenerator.getReferencedColumnValues( dialect, EventType.INSERT );
-						if ( referencedColumnValues == null ) {
-							throw new IdentifierGenerationException(
-									"Generated column values were not provided for composite id property: "
-											+ property.getName()
-							);
-						}
-						if ( referencedColumnValues.length != span ) {
-							throw new IdentifierGenerationException(
-									"Mismatch between generated column values and column count for composite id property: "
-											+ property.getName()
-							);
-						}
-						System.arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
-					}
-				}
-				else if ( !onExecutionGenerator.allowMutation() ) {
-					for ( int j = 0; j < span; j++ ) {
-						columnInclusions[columnIndex + j] = false;
-					}
-				}
-			}
-			columnIndex += span;
-		}
-
-		final var generator =
-				new CompositeNestedGeneratedValueGenerator(
-						new StandardGenerationContextLocator( rootClass.getEntityName() ),
-						(ComponentType) getType(),
-						generators,
-						columnValues,
-						columnInclusions,
-						generatedOnExecutionColumns
-				);
-		for ( var plan : generationPlans ) {
-			generator.addGeneratedValuePlan( plan );
-		}
-		return generator;
-	}
-
-	/**
-	 * Return the class that declares the composite pk attributes,
-	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
-	 * of the entity class itself.
-	 */
-	private Class<?> getAttributeDeclarer(RootClass rootClass) {
-		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
-		// for the various scenarios we need to account for here
-		if ( rootClass.getIdentifierMapper() != null ) {
-			// we have the @IdClass / <composite-id mapped="true"/> case
-			return resolveComponentClass();
-		}
-		else if ( rootClass.getIdentifierProperty() != null ) {
-			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
-			return resolveComponentClass();
-		}
-		else {
-			// we have the "straight up" embedded (again the Hibernate term)
-			// component identifier: the entity class itself is the id class
-			return rootClass.getMappedClass();
-		}
-	}
-
-	private Setter injector(Property property, Class<?> attributeDeclarer) {
-		return property.getPropertyAccessStrategy( attributeDeclarer )
-				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
-				.getSetter();
-	}
-
-	private Class<?> resolveComponentClass() {
-		try {
-			return getComponentClass();
-		}
-		catch ( Exception e ) {
-			return null;
-		}
 	}
 
 	@Internal
@@ -1046,6 +904,15 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			simple = simpleRecord = true;
 		}
 		return simple;
+	}
+
+	private Class<?> resolveComponentClass() {
+		try {
+			return getComponentClass();
+		}
+		catch ( Exception e ) {
+			return null;
+		}
 	}
 
 	public Class<? extends EmbeddableInstantiator> getCustomInstantiator() {

@@ -246,14 +246,12 @@ public class GeneratedValuesHelper {
 		if ( timing == EventType.INSERT ) {
 			if ( !supportsArbitraryValues ) {
 				final var identifierMapping = persister.getIdentifierMapping();
-				if ( identifierMapping instanceof CompositeIdentifierMapping compositeIdentifier ) {
-					final var generator = persister.getGenerator();
-					if ( generator instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
-						final boolean[] generatedColumns =
-								compositeGenerator.getGeneratedOnExecutionColumnInclusions();
-						if ( generatedColumns != null ) {
-							return generatedIdentifierModelParts( compositeIdentifier, generatedColumns );
-						}
+				if ( identifierMapping instanceof CompositeIdentifierMapping compositeIdentifier
+						&& persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator compositeGenerator ) {
+					final boolean[] generatedColumns =
+							compositeGenerator.getGeneratedOnExecutionColumnInclusions();
+					if ( generatedColumns != null ) {
+						return generatedIdentifierModelParts( compositeIdentifier, generatedColumns );
 					}
 				}
 				return List.of( identifierMapping );

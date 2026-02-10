@@ -56,12 +56,11 @@ public abstract class AbstractMutationCoordinator {
 		mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
-	static boolean requiresValueGeneration(
+	static boolean hasValueGenerationOnExecution(
 			OnExecutionGenerator generator,
 			Dialect dialect,
-			EventType eventType,
-			boolean generatedOnExecution) {
-		if ( generatedOnExecution && generator.getEventTypes().contains( eventType ) ) {
+			EventType eventType) {
+		if ( generator.getEventTypes().contains( eventType ) ) {
 			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
 			if ( columnInclusions != null ) {
 				for ( boolean included : columnInclusions ) {
@@ -160,6 +159,19 @@ public abstract class AbstractMutationCoordinator {
 	 */
 	protected MutationOperation createOperation(ValuesAnalysis valuesAnalysis, TableMutation<?> singleTableMutation) {
 		return singleTableMutation.createMutationOperation( valuesAnalysis, factory() );
+	}
+
+	boolean hasValueGenerationOnExecution(
+			Object entity,
+			SharedSessionContractImplementor session,
+			OnExecutionGenerator generator,
+			EventType eventType) {
+		final boolean generatedOnExecution =
+				session == null
+						? generator.generatedOnExecution()
+						: generator.generatedOnExecution( entity, session );
+		return generatedOnExecution
+			&& hasValueGenerationOnExecution( generator, dialect(), eventType );
 	}
 
 	protected void handleValueGeneration(

@@ -444,23 +444,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private static boolean isValueGenerationOnUpdateInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.generatedOnExecution()
-			&& generator.getEventTypes().contains( EventType.UPDATE )
+			&& generator.generatesOnUpdate()
 			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect, EventType.UPDATE );
-	}
-
-	private static boolean isGeneratedOnExecution(
-			Generator generator,
-			Object entity,
-			SharedSessionContractImplementor session) {
-		if ( generator instanceof OnExecutionGenerator
-				&& generator.getEventTypes().contains( EventType.UPDATE ) ) {
-			return session != null && entity != null
-					? generator.generatedOnExecution( entity, session )
-					: generator.generatedOnExecution();
-		}
-		else {
-			return false;
-		}
 	}
 
 	/**
@@ -695,7 +680,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final var generator = attributeMapping.getGenerator();
 		final boolean generatesOnUpdate =
-				generator != null && generator.getEventTypes().contains( EventType.UPDATE );
+				generator != null
+						&& generator.generatesOnUpdate();
 		final boolean needsDynamicUpdate =
 				generatesOnUpdate
 						&& session != null
@@ -704,11 +690,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						&& generator.generatedOnExecution();
 		final boolean generatedOnExecution =
 				generatesOnUpdate
-						&& isGeneratedOnExecution( generator, entity, session );
+						&& ( session == null
+							? generator.generatedOnExecution()
+							: generator.generatedOnExecution( entity, session )
+						);
 		final boolean generatedInSql =
 				generatedOnExecution
-						&& generator instanceof OnExecutionGenerator
-						&& requiresValueGeneration( (OnExecutionGenerator) generator, dialect, EventType.UPDATE, generatedOnExecution );
+						&& generator instanceof OnExecutionGenerator onExecutionGenerator
+						&& hasValueGenerationOnExecution( onExecutionGenerator, dialect, EventType.UPDATE );
 		if ( generatedInSql
 				&& !needsDynamicUpdate
 				&& !( (OnExecutionGenerator) generator ).writePropertyValue( EventType.UPDATE ) ) {
@@ -930,23 +919,25 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object values,
 			Object entity) {
 		final var generator = attributeMapping.getGenerator();
-		final boolean generatedOnExecution =
-				isGeneratedOnExecution( generator, entity, session );
-		final var onExecutionGenerator =
-				generator instanceof OnExecutionGenerator executionGenerator && generatedOnExecution
-						&& generator.getEventTypes().contains( EventType.UPDATE )
-								? executionGenerator
-								: null;
-		final String[] columnValues =
-				onExecutionGenerator == null ? null
-						: onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.UPDATE );
-		final boolean[] columnInclusions =
-				onExecutionGenerator == null ? null
-						: onExecutionGenerator.getColumnInclusions( dialect(), EventType.UPDATE );
-		final boolean bindAllValues =
-				onExecutionGenerator != null
-						&& onExecutionGenerator.writePropertyValue( EventType.UPDATE )
-						&& columnValues == null;
+		final OnExecutionGenerator onExecutionGenerator;
+		final String[] columnValues;
+		final boolean[] columnInclusions;
+		final boolean bindAllValues;
+		if ( generator instanceof OnExecutionGenerator executionGenerator
+				&& generator.generatedOnExecution( entity, session )
+				&& generator.generatesOnUpdate() ) {
+			onExecutionGenerator = executionGenerator;
+			columnValues = onExecutionGenerator.getReferencedColumnValues( dialect(), EventType.UPDATE );
+			columnInclusions = onExecutionGenerator.getColumnInclusions( dialect(), EventType.UPDATE );
+			bindAllValues = onExecutionGenerator.writePropertyValue( EventType.UPDATE ) && columnValues == null;
+		}
+		else {
+			onExecutionGenerator = null;
+			columnValues = null;
+			columnInclusions = null;
+			bindAllValues = false;
+		}
+
 		attributeMapping.decompose(
 				values,
 				0,
@@ -1330,8 +1321,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
 		final var generator = attributeMapping.getGenerator();
-		if ( needsValueGeneration( entity, session, generator ) ) {
-			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator, EventType.UPDATE );
+		if ( generator instanceof OnExecutionGenerator onExecutionGenerator
+				&& hasValueGenerationOnExecution( entity, session, onExecutionGenerator, EventType.UPDATE ) ) {
+			handleValueGeneration( attributeMapping, updateGroupBuilder, onExecutionGenerator, EventType.UPDATE );
 		}
 		else if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attributeMapping) {
@@ -1349,20 +1341,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	protected void forEachUpdatable(AttributeMapping attributeMapping, TableUpdateBuilder<?> tableUpdateBuilder) {
 		attributeMapping.forEachUpdatable( tableUpdateBuilder );
-	}
-
-	private boolean needsValueGeneration(Object entity, SharedSessionContractImplementor session, Generator generator) {
-		if ( generator instanceof OnExecutionGenerator onExecutionGenerator ) {
-			final boolean generatedOnExecution =
-					session == null || entity == null
-							? generator.generatedOnExecution()
-							: generator.generatedOnExecution( entity, session );
-			return generatedOnExecution
-				&& requiresValueGeneration( onExecutionGenerator, dialect, EventType.UPDATE, true );
-		}
-		else {
-			return false;
-		}
 	}
 
 	/**

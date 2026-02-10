@@ -171,23 +171,19 @@ public class CompositeNestedGeneratedValueGenerator
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object object) {
-		final Object context = resolveGenerationContext( session, object );
-		final var generatedValues = generatedValues( session, object, context );
+		final Object context = generationContextLocator.locateGenerationContext( session, object );
+		final Object result = context != null ? context : instantiateEmptyComposite();
+		final var generatedValues = generatedValues( session, object, result );
 		if ( generatedValues != null) {
-			final var values = componentType.getPropertyValues( context );
+			final var values = componentType.getPropertyValues( result );
 			for ( int i = 0; i < generatedValues.size(); i++ ) {
 				values[generationPlans.get( i ).getPropertyIndex()] = generatedValues.get( i );
 			}
-			return componentType.replacePropertyValues( context, values, session );
+			return componentType.replacePropertyValues( result, values, session );
 		}
 		else {
-			return context;
+			return result;
 		}
-	}
-
-	private Object resolveGenerationContext(SharedSessionContractImplementor session, Object object) {
-		final Object context = generationContextLocator.locateGenerationContext( session, object );
-		return context != null ? context : instantiateEmptyComposite();
 	}
 
 	private Object instantiateEmptyComposite() {
@@ -298,8 +294,7 @@ public class CompositeNestedGeneratedValueGenerator
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		for ( var generator : generators ) {
 			if ( generator instanceof PostInsertIdentifierGenerator postInsertIdentifierGenerator ) {
-				final InsertGeneratedIdentifierDelegate delegate =
-						postInsertIdentifierGenerator.getGeneratedIdentifierDelegate( persister );
+				final var delegate = postInsertIdentifierGenerator.getGeneratedIdentifierDelegate( persister );
 				if ( delegate != null ) {
 					return delegate;
 				}

@@ -973,11 +973,17 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String currentTime() {
+		// means 'current hour to fraction(3)'
+		// but note that subsecond precision
+		// requires USEOSTIME config parameter
 		return "current hour to fraction";
 	}
 
 	@Override
 	public String currentTimestamp() {
+		// means 'current year to fraction(3)'
+		// but note that subsecond precision
+		// requires USEOSTIME config parameter
 		return "current";
 	}
 

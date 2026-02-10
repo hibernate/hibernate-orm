@@ -16,7 +16,10 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.FormatFunction;
+import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.SpannerFormatFunction;
+import org.hibernate.dialect.function.SpannerExtractFunction;
+import org.hibernate.dialect.function.SpannerTruncFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.internal.NoLockingSupport;
@@ -41,9 +44,11 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
@@ -174,6 +179,17 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.TIME && from == CastType.STRING ) {
+			return "cast('1970-01-01 ' || ?1 as timestamp)";
+		}
+		if ( to == CastType.STRING && from == CastType.TIME ) {
+			return "format_timestamp('%H:%M:%E*S', ?1)";
+		}
+		return super.castPattern( from, to );
+	}
+
+	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case CHAR:
@@ -189,6 +205,11 @@ public class SpannerDialect extends Dialect {
 				return "bytes";
 		}
 		return super.castType( sqlTypeCode );
+	}
+
+	@Override
+	public boolean supportsTruncateWithCast() {
+		return false;
 	}
 
 	@Override
@@ -216,14 +237,17 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
-
 		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final var byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
+		final var intType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 		final var longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+		final var doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 		final var booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
+		final var charType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
 		final var stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final var dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
 		final var timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		// Aggregate Functions
@@ -262,6 +286,13 @@ public class SpannerDialect extends Dialect {
 		functionFactory.tanh();
 		functionFactory.moreHyperbolic();
 
+		functionRegistry.registerPattern(
+				"var_pop",
+				"(avg(?1 * ?1)-power(avg(?1),2))" );
+		functionRegistry.registerPattern(
+				"stddev_pop",
+				"sqrt(avg(?1 * ?1)-power(avg(?1),2))" );
+
 		functionFactory.bitandorxornot_bitAndOrXorNot();
 
 		functionRegistry.namedDescriptorBuilder( "is_inf" )
@@ -280,6 +311,18 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
 				.register();
+		functionRegistry.registerPattern(
+				"degrees",
+				"(?1 * 180 / acos(-1))",
+				doubleType );
+		functionRegistry.registerPattern(
+				"radians",
+				"(?1 * acos(-1) / 180)",
+				doubleType );
+		functionRegistry.registerPattern(
+				"log",
+				"log(?2, ?1)",
+				doubleType );
 
 		functionFactory.sha1();
 
@@ -370,6 +413,38 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
+		functionRegistry.registerPattern(
+				"hex",
+				"to_hex(cast(?1 as bytes))",
+				stringType );
+		functionRegistry.registerPattern(
+				"ascii",
+				"to_code_points(?1)[offset(0)]",
+				intType );
+		functionRegistry.registerPattern(
+				"chr",
+				"code_points_to_string([?1])",
+				charType );
+		functionRegistry.registerPattern(
+				"left",
+				"substr(?1, 1, ?2)",
+				stringType );
+		functionRegistry.registerPattern(
+				"right",
+				"substr(?1, -?2)",
+				stringType );
+		functionRegistry.register(
+				"overlay",
+				new InsertSubstringOverlayEmulation( functionContributions.getTypeConfiguration(), false ) );
+		functionRegistry.registerBinaryTernaryPattern(
+						"locate",
+						intType,
+						"strpos(?2,?1)",
+						"(strpos(substr(?2,?3),?1)+case when strpos(substr(?2,?3),?1)>0 then ?3-1 else 0 end)",
+						FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
+						functionContributions.getTypeConfiguration()
+				)
+				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
 
 		// JSON Functions
 		functionRegistry.namedDescriptorBuilder( "json_query" )
@@ -494,15 +569,23 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
-
-		functionRegistry.register(
-				"format",
-				new FormatFunction( "format_timestamp", true, true, functionContributions.getTypeConfiguration() )
-		);
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.array_spanner();
+
+		functionRegistry.register(
+				"extract",
+				new SpannerExtractFunction( this, functionContributions.getTypeConfiguration() )
+		);
+
+		functionRegistry.register(
+				"format",
+				new SpannerFormatFunction( functionContributions.getTypeConfiguration() )
+		);
+
+		functionRegistry.register( "trunc", new SpannerTruncFunction() );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -743,52 +826,64 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( temporalType == TemporalType.TIMESTAMP ) {
-			switch (unit) {
+		if ( temporalType == TemporalType.TIMESTAMP || temporalType == TemporalType.TIME ) {
+			switch ( unit ) {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException("Illegal unit for timestamp_add(): " + unit);
+					throw new SemanticException( "Illegal unit for timestamp_add(): " + unit );
+				case WEEK:
+					return "timestamp_add(?3, interval cast(?2 * 7 as int64) day)";
+				case SECOND:
+					return "timestamp_add(?3, interval cast(?2 * 1000000000 as int64) nanosecond)";
 				default:
-					return "timestamp_add(?3,interval ?2 ?1)";
+					return "timestamp_add(?3, interval cast(?2 as int64) ?1)";
 			}
 		}
 		else {
-			switch (unit) {
+			switch ( unit ) {
 				case NANOSECOND:
 				case SECOND:
 				case MINUTE:
 				case HOUR:
 				case NATIVE:
-					throw new SemanticException("Illegal unit for date_add(): " + unit);
+					throw new SemanticException( "Illegal unit for date_add(): " + unit );
 				default:
-					return "date_add(?3,interval ?2 ?1)";
+					return "date_add(?3, interval cast(?2 as int64) ?1)";
 			}
 		}
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP ) {
-			switch (unit) {
+		if ( toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP
+			|| toTemporalType == TemporalType.TIME || fromTemporalType == TemporalType.TIME ) {
+			switch ( unit ) {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException("Illegal unit for timestamp_diff(): " + unit);
+					throw new SemanticException( "Illegal unit for timestamp_diff(): " + unit );
+				case WEEK:
+					return "div(timestamp_diff(?3, ?2, day), 7)";
+				case NATIVE:
+					return "timestamp_diff(?3, ?2, nanosecond)";
 				default:
-					return "timestamp_diff(?3,?2,?1)";
+					return "timestamp_diff(?3, ?2, ?1)";
 			}
 		}
 		else {
-			switch (unit) {
+			switch ( unit ) {
 				case NANOSECOND:
-				case SECOND:
-				case MINUTE:
-				case HOUR:
 				case NATIVE:
-					throw new SemanticException("Illegal unit for date_diff(): " + unit);
+					return "(date_diff(?3, ?2, day) * 86400000000000)";
+				case SECOND:
+					return "(date_diff(?3, ?2, day) * 86400)";
+				case MINUTE:
+					return "(date_diff(?3, ?2, day) * 1440)";
+				case HOUR:
+					return "(date_diff(?3, ?2, day) * 24)";
 				default:
-					return "date_diff(?3,?2,?1)";
+					return "date_diff(?3, ?2, ?1)";
 			}
 		}
 	}
@@ -1188,8 +1283,6 @@ public class SpannerDialect extends Dialect {
 	public boolean supportsCteHeaderColumnList() {
 		return false;
 	}
-
-	/* Type conversion and casting */
 
 	/**
 	 * A no-op {@link Exporter} which is responsible for returning empty Create and Drop SQL strings.

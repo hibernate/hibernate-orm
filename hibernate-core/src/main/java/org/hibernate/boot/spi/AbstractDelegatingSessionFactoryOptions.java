@@ -18,7 +18,7 @@ import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;

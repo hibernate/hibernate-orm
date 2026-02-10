@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.state.internal;
 
-import org.hibernate.Internal;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -33,7 +32,7 @@ import org.hibernate.persister.entity.mutation.InsertCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.MergeCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isInsertAllowed;
@@ -46,8 +45,9 @@ import static org.hibernate.persister.state.internal.AbstractStateManagement.res
  * history tables}.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
-@Internal
 public final class HistoryStateManagement implements StateManagement {
 	public static final HistoryStateManagement INSTANCE = new HistoryStateManagement();
 

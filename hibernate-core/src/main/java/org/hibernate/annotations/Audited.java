@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies that the annotated entity class is an audited entity
  * or audited collection. An audited entity or collection keeps
- * a historical record of changes over time, but unlike a
+ * a historical record of changes over time. Unlike a
  * {@linkplain Temporal temporal} entity, it explicitly records
  * the nature of each change, such as creation, modification, or
  * deletion. An audited entity or collection maps to two tables,
@@ -44,12 +44,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * transaction identifiers is available to Hibernate. A supplier
  * may be specified via the configuration property
  * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
- * If no supplier is provided, Hibernate defaults to using the
- * {@linkplain java.time.Instant#now() current JVM instant} as
- * the transaction identifier, but this default behavior is not
- * recommended.
+ * Transactions ids must be unique and comparable and must
+ * increase monotonically. Typically, such an id is obtained by
+ * persisting an instance of an application-defined entity class
+ * with a generated id which represents the current unit of work.
+ * This entity associates the transaction id with other information
+ * about the work being performed, such as the current timestamp,
+ * current application user, and so on. If no supplier is provided,
+ * the {@linkplain java.time.Instant#now() current JVM instant} is
+ * used as the transaction identifier, but relying on this default
+ * behavior is not recommended.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 @Documented
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})

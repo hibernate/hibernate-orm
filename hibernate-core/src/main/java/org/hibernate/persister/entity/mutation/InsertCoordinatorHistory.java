@@ -31,7 +31,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 
 /**
  * Insert coordinator for
- * {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE}
+ * {@link org.hibernate.temporal.TemporalTableStrategy#HISTORY_TABLE}
  * temporal strategy.
  *
  * @author Gavin King

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -24,7 +25,10 @@ import java.util.function.Supplier;
  * Unified mapping contract for state management strategies (soft-delete, temporal, audit).
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
+@Incubating
 public interface AuxiliaryMapping {
 	/**
 	 * The name of the table to which this auxiliary mapping applies.

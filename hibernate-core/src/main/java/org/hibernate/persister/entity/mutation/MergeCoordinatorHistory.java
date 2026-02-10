@@ -10,7 +10,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Merge coordinator for
- * {@link org.hibernate.cfg.TemporalTableStrategy#HISTORY_TABLE}
+ * {@link org.hibernate.temporal.TemporalTableStrategy#HISTORY_TABLE}
  * temporal strategy.
  *
  * @author Gavin King

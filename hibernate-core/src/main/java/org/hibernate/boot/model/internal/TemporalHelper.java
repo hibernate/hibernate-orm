@@ -14,7 +14,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
@@ -27,12 +27,12 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
-import org.hibernate.service.TransactionIdentifierService;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
-import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
-import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
-import static org.hibernate.cfg.TemporalTableStrategy.SINGLE_TABLE;
+import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
+import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
+import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**

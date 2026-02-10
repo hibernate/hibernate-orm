@@ -11,7 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SelectItemReferenceStrategy;

@@ -6,7 +6,7 @@ package org.hibernate.dialect.temporal;
 
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.mapping.Table;
 

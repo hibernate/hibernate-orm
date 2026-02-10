@@ -15,7 +15,7 @@ import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;

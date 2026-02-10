@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 /**
- *
  * Metadata about the indicator column for entities and collections enabled
  * for soft delete
  *

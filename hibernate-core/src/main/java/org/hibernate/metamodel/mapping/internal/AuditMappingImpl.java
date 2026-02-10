@@ -56,6 +56,8 @@ import static org.hibernate.query.sqm.ComparisonOperator.NOT_EQUAL;
  * Audit mapping implementation.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 public class AuditMappingImpl implements AuditMapping {
 	private static final String SUBQUERY_ALIAS_STEM = "audit";

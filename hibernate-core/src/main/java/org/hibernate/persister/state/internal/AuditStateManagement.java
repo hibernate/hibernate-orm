@@ -31,7 +31,7 @@ import org.hibernate.persister.entity.mutation.InsertCoordinatorAudit;
 import org.hibernate.persister.entity.mutation.MergeCoordinatorAudit;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorAudit;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
@@ -41,6 +41,8 @@ import static org.hibernate.persister.state.internal.AbstractStateManagement.res
  * entities and collections.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 public class AuditStateManagement implements StateManagement {
 	public static final AuditStateManagement INSTANCE = new AuditStateManagement();

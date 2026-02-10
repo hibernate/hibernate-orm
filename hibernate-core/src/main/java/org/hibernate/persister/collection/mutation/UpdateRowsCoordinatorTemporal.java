@@ -19,8 +19,8 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 
 /**
  * {@link UpdateRowsCoordinator} implementation for temporal collection tables
- * in the {@link org.hibernate.cfg.TemporalTableStrategy#SINGLE_TABLE} temporal
- * table mapping strategy.
+ * in the {@link org.hibernate.temporal.TemporalTableStrategy#SINGLE_TABLE}
+ * temporal table mapping strategy.
  *
  * @author Gavin King
  */

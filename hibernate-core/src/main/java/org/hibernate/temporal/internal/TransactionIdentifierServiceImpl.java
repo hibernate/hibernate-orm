@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.service.internal;
+package org.hibernate.temporal.internal;
 
 import java.time.Instant;
 import java.util.Map;
@@ -14,7 +14,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.TransactionIdentifierService;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 
 import static org.hibernate.cfg.StateManagementSettings.TRANSACTION_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
@@ -24,11 +24,15 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Default implementation of {@link TransactionIdentifierService}.
+ * <p>
+ * Produces current timestamps by calling {@link Instant#now()}.
  *
  * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
  * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 public class TransactionIdentifierServiceImpl implements TransactionIdentifierService, Supplier<Instant> {
 
@@ -101,7 +105,7 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 	public Supplier<?> transactionIdSupplier(
 			Map<String,Object> settings,
 			StrategySelector strategySelector) {
-		Object setting = settings.get( TRANSACTION_ID_SUPPLIER );
+		final Object setting = settings.get( TRANSACTION_ID_SUPPLIER );
 		if ( setting == null ) {
 			return this;
 		}

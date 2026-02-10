@@ -138,7 +138,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
+import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * Base implementation of the {@code QueryableCollection} interface.

@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.temporal;
 
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.type.SqlTypes;
 

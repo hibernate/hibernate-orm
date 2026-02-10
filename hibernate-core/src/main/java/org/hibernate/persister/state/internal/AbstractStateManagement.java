@@ -40,12 +40,14 @@ import org.hibernate.persister.entity.mutation.MergeCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 
 /**
  * @author Gavin King
+ *
+ * @since 7.4
  */
 abstract class AbstractStateManagement implements StateManagement {
 	@Override

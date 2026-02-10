@@ -8,7 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
-import static org.hibernate.cfg.TemporalTableStrategy.AUTO;
+import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**

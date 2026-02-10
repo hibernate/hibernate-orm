@@ -157,7 +157,7 @@ import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;

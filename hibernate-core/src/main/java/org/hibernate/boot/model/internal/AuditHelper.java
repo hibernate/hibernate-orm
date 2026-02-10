@@ -20,7 +20,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
 import org.hibernate.persister.state.internal.AuditStateManagement;
-import org.hibernate.service.TransactionIdentifierService;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 
 import static org.hibernate.internal.util.StringHelper.isBlank;
 

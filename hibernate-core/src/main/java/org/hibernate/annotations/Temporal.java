@@ -6,7 +6,7 @@ package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -24,8 +24,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specifies that the annotated entity class is a temporal entity
  * or temporal collection. A temporal entity or collection keeps a
  * historical record of changes over time. Each row of the mapped
- * table represents a single revision of a single instance of the
- * entity, or an element of the collection whose existence is
+ * table or tables represents a single revision of a single instance
+ * of the entity, or an element of the collection whose existence is
  * bounded in time, with:
  * <ul>
  * <li>a {@link #rowStart} timestamp representing the instant at
@@ -37,7 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * its {@linkplain #rowEnd} timestamp.
  * <p>
  * Given the identifier of an instance of a temporal entity, along
- * with an instant, which may be represented by an instance if
+ * with an instant, which may be represented by an instance of
  * {@link java.time.Instant}, the <em>effective</em> revision of the
  * temporal entity with the given identifier at the given instant is
  * the revision with:

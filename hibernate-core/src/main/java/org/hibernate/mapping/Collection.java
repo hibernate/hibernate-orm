@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;

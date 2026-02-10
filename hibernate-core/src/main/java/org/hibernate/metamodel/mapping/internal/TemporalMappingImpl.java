@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Stateful;
@@ -52,6 +52,8 @@ import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
  * Temporal mapping implementation.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 public class TemporalMappingImpl implements TemporalMapping {
 	private final String tableName;

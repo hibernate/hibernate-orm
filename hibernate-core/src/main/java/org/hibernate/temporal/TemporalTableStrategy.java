@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.cfg;
+package org.hibernate.temporal;
 
 import org.hibernate.Incubating;
 
@@ -15,6 +15,8 @@ import org.hibernate.Incubating;
  * @see org.hibernate.annotations.Temporal
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 @Incubating
 public enum TemporalTableStrategy {

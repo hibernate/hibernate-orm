@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.state.internal;
 
-import org.hibernate.Internal;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -24,17 +23,19 @@ import org.hibernate.persister.entity.mutation.InsertCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.MergeCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
+import org.hibernate.temporal.TemporalTableStrategy;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 
 /**
  * State management for temporal entities and collections in the
- * {@linkplain org.hibernate.cfg.TemporalTableStrategy#SINGLE_TABLE
+ * {@linkplain TemporalTableStrategy#SINGLE_TABLE
  * single table strategy}.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
-@Internal
 public final class TemporalStateManagement extends AbstractStateManagement {
 	public static final TemporalStateManagement INSTANCE = new TemporalStateManagement();
 

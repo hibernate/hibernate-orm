@@ -31,7 +31,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.internal.TemporalHelper;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.context.spi.TenantCredentialsMapper;

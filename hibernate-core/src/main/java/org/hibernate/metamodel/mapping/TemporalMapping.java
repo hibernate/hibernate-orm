@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.mapping;
 
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 
@@ -14,7 +15,10 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
  * @see org.hibernate.annotations.Temporal
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
+@Incubating
 public interface TemporalMapping extends AuxiliaryMapping {
 
 	SelectableMapping getStartingColumnMapping();

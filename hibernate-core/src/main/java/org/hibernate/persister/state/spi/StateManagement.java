@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.persister.state;
+package org.hibernate.persister.state.spi;
 
-import org.hibernate.Internal;
+import org.hibernate.Incubating;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -38,8 +38,10 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
  * @see TemporalStateManagement
  * @see HistoryStateManagement
  * @see AuditStateManagement
+ *
+ * @since 7.4
  */
-@Internal
+@Incubating
 public interface StateManagement {
 
 	InsertCoordinator createInsertCoordinator(EntityPersister persister);

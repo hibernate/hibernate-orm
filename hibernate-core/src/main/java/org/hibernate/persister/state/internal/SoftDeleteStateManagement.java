@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.state.internal;
 
-import org.hibernate.Internal;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -18,8 +17,9 @@ import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDele
 
 /**
  * @author Gavin King
+ *
+ * @since 7.4
  */
-@Internal
 public final class SoftDeleteStateManagement extends AbstractStateManagement {
 	public static final SoftDeleteStateManagement INSTANCE = new SoftDeleteStateManagement();
 

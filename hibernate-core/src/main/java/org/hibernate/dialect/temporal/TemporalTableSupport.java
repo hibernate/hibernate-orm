@@ -6,7 +6,7 @@ package org.hibernate.dialect.temporal;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
@@ -18,6 +18,8 @@ import java.time.Instant;
  * Abstracts the support for temporal tables.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
 @Incubating
 public interface TemporalTableSupport {

@@ -21,7 +21,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;

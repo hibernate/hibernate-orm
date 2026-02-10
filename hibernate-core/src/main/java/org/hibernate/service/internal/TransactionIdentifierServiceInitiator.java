@@ -6,7 +6,8 @@ package org.hibernate.service.internal;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.TransactionIdentifierService;
+import org.hibernate.temporal.internal.TransactionIdentifierServiceImpl;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 
 import java.util.Map;
 

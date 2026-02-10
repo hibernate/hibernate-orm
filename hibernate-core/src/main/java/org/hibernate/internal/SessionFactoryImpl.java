@@ -91,7 +91,7 @@ import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.TransactionIdentifierService;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;

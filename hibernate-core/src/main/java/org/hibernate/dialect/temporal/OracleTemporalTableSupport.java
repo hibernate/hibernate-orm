@@ -7,7 +7,7 @@ package org.hibernate.dialect.temporal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.cfg.TemporalTableStrategy;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
@@ -15,7 +15,7 @@ import org.hibernate.mapping.Table;
 import java.time.Instant;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.cfg.TemporalTableStrategy.HISTORY_TABLE;
+import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * @author Gavin King

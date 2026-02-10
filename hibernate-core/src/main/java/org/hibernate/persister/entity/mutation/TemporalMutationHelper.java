@@ -6,7 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import static org.hibernate.cfg.TemporalTableStrategy.NATIVE;
+import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 
 public class TemporalMutationHelper {
 	public static boolean isUsingParameters(SharedSessionContractImplementor session) {

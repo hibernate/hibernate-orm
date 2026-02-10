@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.service;
+package org.hibernate.temporal.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.service.Service;
 
 import java.util.function.Supplier;
 
@@ -34,7 +36,10 @@ import java.util.function.Supplier;
  * no more than once in a transaction.
  *
  * @author Gavin King
+ *
+ * @since 7.4
  */
+@Incubating
 public interface TransactionIdentifierService extends Service {
 	/**
 	 * The Java type of the transaction identifiers or timestamps.

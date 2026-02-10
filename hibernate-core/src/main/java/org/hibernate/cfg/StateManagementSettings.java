@@ -6,9 +6,10 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.temporal.TemporalTableStrategy;
 
 /**
- * Settings related to {@linkplain org.hibernate.persister.state.StateManagement
+ * Settings related to {@linkplain org.hibernate.persister.state.spi.StateManagement
  * customized state management}, {@linkplain org.hibernate.annotations.Temporal
  * temporal entities}, and {@linkplain org.hibernate.annotations.Audited audited
  * entities}.
@@ -23,13 +24,17 @@ public interface StateManagementSettings {
 	 * <p>
 	 * Accepts any of:
 	 * <ul>
-	 *     <li>an instance of {@link TemporalTableStrategy}
-	 *     <li>the (case-insensitive) name of a {@code TemporalTableStrategy} (e.g. {@code native})
+	 *     <li>an instance of {@link TemporalTableStrategy}, or
+	 *     <li>the (case-insensitive) name of a {@code TemporalTableStrategy},
+	 *     for example, {@code native}, {@code single_time}, or
+	 *     {@code history_table}.
 	 * </ul>
 	 *
 	 * @settingDefault {@link TemporalTableStrategy#SINGLE_TABLE}
 	 * @see org.hibernate.annotations.Temporal
 	 * @see TemporalTableStrategy
+	 *
+	 * @since 7.4
 	 */
 	String TEMPORAL_TABLE_STRATEGY = "hibernate.temporal.table_strategy";
 
@@ -53,6 +58,8 @@ public interface StateManagementSettings {
 	 *
 	 * @settingDefault {@code false}
 	 * @see org.hibernate.annotations.Temporal
+	 *
+	 * @since 7.4
 	 */
 	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
 
@@ -78,7 +85,9 @@ public interface StateManagementSettings {
 	 *
 	 * @see org.hibernate.annotations.Temporal
 	 * @see org.hibernate.annotations.Audited
-	 * @see org.hibernate.service.TransactionIdentifierService
+	 * @see org.hibernate.temporal.spi.TransactionIdentifierService
+	 *
+	 * @since 7.4
 	 */
 	String TRANSACTION_ID_SUPPLIER = "hibernate.temporal.transaction_id_supplier";
 }

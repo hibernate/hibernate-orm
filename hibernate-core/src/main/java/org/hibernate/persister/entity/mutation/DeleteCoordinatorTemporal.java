@@ -18,7 +18,7 @@ import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoor
 
 /**
  * Delete coordinator for
- * {@link org.hibernate.cfg.TemporalTableStrategy#SINGLE_TABLE}
+ * {@link org.hibernate.temporal.TemporalTableStrategy#SINGLE_TABLE}
  * temporal strategy.
  *
  * @author Gavin King

@@ -5,7 +5,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.persister.state.StateManagement;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.persister.state.internal.StandardStateManagement;
 
 /**
@@ -18,6 +18,8 @@ import org.hibernate.persister.state.internal.StandardStateManagement;
  * @see org.hibernate.annotations.Temporal
  * @see org.hibernate.annotations.Audited
  * @see org.hibernate.annotations.SoftDelete
+ *
+ * @since 7.4
  */
 public interface Stateful {
 

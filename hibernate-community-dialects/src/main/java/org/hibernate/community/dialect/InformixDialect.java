@@ -30,6 +30,7 @@ import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -341,7 +342,6 @@ public class InformixDialect extends Dialect {
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substringFromFor();
-		functionFactory.trunc();
 		functionFactory.trim2();
 		functionFactory.space();
 		functionFactory.reverse();
@@ -415,6 +415,18 @@ public class InformixDialect extends Dialect {
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
 
 		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
+
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1*pow(10,?2))/pow(10,?2)",
+						null,
+						null,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override

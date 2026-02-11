@@ -123,12 +123,15 @@ public class FilterDefBinder {
 	}
 
 	public static FilterJoinConfiguration joinConfiguration(Filter filter, Supplier<String> message) {
-		final var join = filter.join();
-		if ( join == null || join.tableName().isBlank() ) {
+		if ( filter.tableName().isBlank() ) {
+			if ( filter.joinColumns().length > 0 ) {
+				throw new AnnotationException( message.get()
+						+ " has '@Filter' join columns without a join table name for filter '" + filter.name() + "'" );
+			}
 			return null;
 		}
 
-		final var joinColumns = join.joinColumns();
+		final var joinColumns = filter.joinColumns();
 		if ( joinColumns.length == 0 ) {
 			throw new AnnotationException( message.get()
 				+ " has a '@Filter' join with no joinColumns for filter '" + filter.name() + "'" );
@@ -148,6 +151,6 @@ public class FilterDefBinder {
 			joinColumnNames[i] = joinColumn.name();
 			referencedColumnNames[i] = joinColumn.referencedColumnName();
 		}
-		return new FilterJoinConfiguration( join.tableName(), joinColumnNames, referencedColumnNames );
+		return new FilterJoinConfiguration( filter.tableName(), joinColumnNames, referencedColumnNames );
 	}
 }

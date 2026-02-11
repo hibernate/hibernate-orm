@@ -16,6 +16,7 @@ import org.hibernate.boot.models.xml.internal.FilterProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
+import jakarta.persistence.JoinColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -26,7 +27,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	private String condition;
 	private boolean deduceAliasInjectionPoints;
 	private SqlFragmentAlias[] aliases;
-	private Join join;
+	private String tableName;
+	private JoinColumn[] joinColumns;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -35,6 +37,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = "";
 		this.deduceAliasInjectionPoints = true;
 		this.aliases = new SqlFragmentAlias[0];
+		this.tableName = "";
+		this.joinColumns = new JoinColumn[0];
 	}
 
 	/**
@@ -45,7 +49,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = annotation.condition();
 		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
 		this.aliases = extractJdkValue( annotation, HibernateAnnotations.FILTER, "aliases", modelContext );
-		this.join = annotation.join();
+		this.tableName = annotation.tableName();
+		this.joinColumns = extractJdkValue( annotation, HibernateAnnotations.FILTER, "joinColumns", modelContext );
 	}
 
 	/**
@@ -56,7 +61,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = (String) attributeValues.get( "condition" );
 		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );
 		this.aliases = (SqlFragmentAlias[]) attributeValues.get( "aliases" );
-		this.join = (Join) attributeValues.get( "join" );
+		this.tableName = (String) attributeValues.get( "tableName" );
+		this.joinColumns = (JoinColumn[]) attributeValues.get( "joinColumns" );
 	}
 
 
@@ -85,12 +91,21 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	}
 
 	@Override
-	public Join join() {
-		return join;
+	public String tableName() {
+		return tableName;
 	}
 
-	public void join(Join join) {
-		this.join = join;
+	public void tableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	@Override
+	public JoinColumn[] joinColumns() {
+		return joinColumns;
+	}
+
+	public void joinColumns(JoinColumn[] joinColumns) {
+		this.joinColumns = joinColumns;
 	}
 
 	@Override

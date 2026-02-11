@@ -74,6 +74,7 @@ public class ArrayToStringWithArrayAggregateTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19, reason = "Oracle bug in version 19")
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, reason = "Oracle bug in version 21")
 	public void testWithCte(SessionFactoryScope scope) {
 		scope.inSession( em -> {

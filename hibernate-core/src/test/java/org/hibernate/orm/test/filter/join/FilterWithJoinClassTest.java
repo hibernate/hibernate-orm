@@ -77,9 +77,9 @@ class FilterWithJoinClassTest {
 
 	@Filter(name = "regionFilter",
 			condition = "region = :region",
-			join = @Filter.Join(tableName = "parent",
-					joinColumns = @JoinColumn(name = "parentId",
-							referencedColumnName = "id")))
+			tableName = "parent",
+			joinColumns = @JoinColumn(name = "parentId",
+					referencedColumnName = "id"))
 	@Entity(name = "Child")
 	@Table(name = "child")
 	static class Child {

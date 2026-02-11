@@ -120,28 +120,14 @@ public @interface Filter {
 	 * @since 7.4
 	 */
 	@Incubating
-	Join join() default @Join;
+	String tableName() default "";
 
 	/**
-	 * A join to the table with the specified
-	 * {@linkplain #tableName table}, on the specified
-	 * {@linkplain #joinColumns join columns}.
+	 * The columns to use in the join condition when
+	 * {@linkplain #tableName} is specified.
 	 *
 	 * @since 7.4
 	 */
-	@Target({})
-	@Retention(RUNTIME)
 	@Incubating
-	@interface Join {
-		/**
-		 * The name of the table with the columns involved
-		 * in the {@linkplain #condition filter condition}.
-		 */
-		String tableName() default "";
-
-		/**
-		 * The columns to use in the join condition.
-		 */
-		JoinColumn[] joinColumns() default {};
-	}
+	JoinColumn[] joinColumns() default {};
 }

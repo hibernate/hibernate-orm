@@ -5597,6 +5597,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support some sort of generated "virtual" column
+	 * declaration in DDL statements?
+	 *
+	 * @see #generatedAs
+	 */
+	public boolean supportsGeneratedColumns() {
+		return true;
+	}
+
+	/**
 	 * The {@code generated as} clause, or similar, for generated column
 	 * declarations in DDL statements.
 	 *

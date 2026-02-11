@@ -921,8 +921,15 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String generatedAs(String generatedAs) {
 		return getVersion().isSameOrAfter( 18 )
-				? " generated always as (" + generatedAs + ")"
-				: super.generatedAs( generatedAs );
+				? super.generatedAs( generatedAs, false, false )
+				: super.generatedAs( generatedAs, true, false );
+	}
+
+	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return getVersion().isSameOrAfter( 18 )
+				? super.generatedAs( generatedAs, stored, hidden )
+				: super.generatedAs( generatedAs, true, false );
 	}
 
 	@Override

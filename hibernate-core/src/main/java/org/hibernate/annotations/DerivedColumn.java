@@ -5,7 +5,9 @@
 package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
+import org.hibernate.binder.internal.DerivedColumnBinder;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -15,10 +17,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Adds a derived column to the generated DDL for the
- * primary table of the annotated entity, or to the
- * join or collection table of the annotated association
- * or collection.
+ * Adds a derived column to the generated DDL for a
+ * primary or secondary table of the annotated entity,
+ * or to the join or collection table of the annotated
+ * association or collection.
  * <p>
  * Unlike {@link GeneratedColumn}, this annotation only
  * affects DDL generation, and does not imply a mapping
@@ -36,6 +38,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
+@TypeBinderType(binder = DerivedColumnBinder.class)
+@AttributeBinderType(binder = DerivedColumnBinder.class)
+@Repeatable(DerivedColumns.class)
 @Incubating
 public @interface DerivedColumn {
 	/**
@@ -44,7 +49,15 @@ public @interface DerivedColumn {
 	String name();
 
 	/**
-	 * The {@linkplain org.hibernate.type.SqlTypes SQL
+	 * The name of the table that contains the derived
+	 * column. Defaults to the primary table of the
+	 * annotated entity, or the join or collection table
+	 * of the annotated association or collection.
+	 */
+	String table() default "";
+
+	/**
+	 * The {@linkplain org.hibernate.type.SqlTypes JDBC
 	 * type code} of the type of the derived column.
 	 */
 	int sqlType();
@@ -72,4 +85,9 @@ public @interface DerivedColumn {
 	 * database supports hidden columns.
 	 */
 	boolean hidden() default false;
+
+	/**
+	 * A DDL comment to be added to the derived column.
+	 */
+	String comment() default "";
 }

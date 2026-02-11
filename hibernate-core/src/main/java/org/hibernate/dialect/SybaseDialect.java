@@ -219,6 +219,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsGeneratedColumns() {
+		return false;
+	}
+
+	@Override
 	public int getInExpressionCountLimit() {
 		return IN_LIST_SIZE_LIMIT;
 	}

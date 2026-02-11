@@ -72,6 +72,8 @@ public sealed class Column
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
+	private boolean stored = true;
+	private boolean hidden;
 	private String assignmentExpression;
 	private String customWrite;
 	private String customRead;
@@ -575,17 +577,17 @@ public sealed class Column
 	}
 
 	public boolean isSqlTypeLob(Metadata mapping) {
-		final var database = mapping.getDatabase();
-		final var ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
-		final var dialect = database.getDialect();
 		if ( sqlTypeLob == null ) {
 			try {
+				final var database = mapping.getDatabase();
 				final int typeCode = getSqlTypeCode( mapping );
-				final var ddlType = ddlTypeRegistry.getDescriptor( typeCode );
+				final var ddlType =
+						database.getTypeConfiguration().getDdlTypeRegistry()
+								.getDescriptor( typeCode );
 				sqlTypeLob =
 						ddlType == null
 								? JdbcType.isLob( typeCode )
-								: ddlType.isLob( getColumnSize( dialect, mapping ) );
+								: ddlType.isLob( getColumnSize( database.getDialect(), mapping ) );
 			}
 			catch ( MappingException cause ) {
 				throw cause;
@@ -742,6 +744,24 @@ public sealed class Column
 
 	public void setGeneratedAs(String generatedAs) {
 		this.generatedAs = generatedAs;
+		this.stored = true;
+		this.hidden = false;
+	}
+
+	public boolean isStored() {
+		return stored;
+	}
+
+	public void setStored(boolean stored) {
+		this.stored = stored;
+	}
+
+	public boolean isHidden() {
+		return hidden;
+	}
+
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
 	}
 
 	public String getAssignmentExpression() {
@@ -809,6 +829,8 @@ public sealed class Column
 		copy.comment = comment;
 		copy.defaultValue = defaultValue;
 		copy.generatedAs = generatedAs;
+		copy.stored = stored;
+		copy.hidden = hidden;
 		copy.assignmentExpression = assignmentExpression;
 		copy.customRead = customRead;
 		copy.customWrite = customWrite;

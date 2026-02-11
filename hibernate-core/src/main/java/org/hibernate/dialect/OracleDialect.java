@@ -1719,6 +1719,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return ( hidden ? " invisible" : "" )
+			+ generatedAs( generatedAs )
+			+ ( stored ? "" : " virtual" );
+	}
+
+	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );

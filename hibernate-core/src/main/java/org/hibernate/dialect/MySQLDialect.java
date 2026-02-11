@@ -1640,6 +1640,13 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return " generated always as (" + generatedAs + ")"
+				+ ( stored ? " stored" : " virtual" )
+				+ ( hidden ? " invisible" : "" );
+	}
+
+	@Override
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
 		return isNotEmpty( checkConstraint.getOptions() )
 				? sqlCheckConstraint + " " + checkConstraint.getOptions()

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.locking.options;
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -94,7 +95,19 @@ public class ConnectionLockTimeoutTests {
 			assertThat( initialLockTimeout.milliseconds() ).isEqualTo( expectedInitialValue );
 
 			List<Duration> durs;
-			if ( session.getDialect() instanceof MySQLDialect ) {
+			if ( session.getDialect() instanceof TiDBDialect ) {
+				// The supported values are between 1 and 3600 seconds
+				// 3600 means infinite, so it is special
+				durs = List.of(
+					Duration.ofSeconds(1),
+					Duration.ofSeconds(2),
+					Duration.ofSeconds(59),
+					Duration.ofMinutes(1),
+					Duration.ofMinutes(2),
+					Duration.ofMinutes(59)
+				);
+			}
+			else if ( session.getDialect() instanceof MySQLDialect ) {
 				// The minimum value of innodb_lock_wait_timeout in MySQL is 1 second.
 				durs = List.of(
 					Duration.ofSeconds(1),

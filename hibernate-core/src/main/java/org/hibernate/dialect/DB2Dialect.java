@@ -1246,6 +1246,12 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return generatedAs( generatedAs )
+				+ ( hidden ? " implicitly hidden" : "" );
+	}
+
+	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );

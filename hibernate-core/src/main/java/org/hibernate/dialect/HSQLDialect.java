@@ -471,6 +471,16 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
+	}
+
+	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return generatedAs( generatedAs );
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR_20;
 	}

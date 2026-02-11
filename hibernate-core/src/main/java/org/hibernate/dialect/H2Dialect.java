@@ -996,6 +996,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return generatedAs( generatedAs );
+	}
+
+	@Override
 	public boolean canDisableConstraints() {
 		return true;
 	}

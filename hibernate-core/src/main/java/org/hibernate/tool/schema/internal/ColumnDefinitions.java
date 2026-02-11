@@ -228,6 +228,16 @@ class ColumnDefinitions {
 				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
 					return;
 				}
+				if ( column.isStored() && !column.isHidden() ) {
+					definition.append( dialect.generatedAs( generatedAs ) );
+				}
+				else {
+					definition.append( dialect.generatedAs(
+							generatedAs,
+							column.isStored(),
+							column.isHidden()
+					) );
+				}
 			}
 
 			if ( column.isNullable() ) {

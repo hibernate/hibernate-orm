@@ -69,7 +69,7 @@ public class FilterConfiguration {
 			return mergedAliasTableMap;
 		}
 		else if ( joinConfiguration != null ) {
-			return singletonMap( null, joinConfiguration.getTableName() );
+			return singletonMap( null, joinConfiguration.tableName() );
 		}
 		else if ( persistentClass != null ) {
 			final String tableName =

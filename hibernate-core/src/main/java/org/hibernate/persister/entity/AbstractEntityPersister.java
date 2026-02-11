@@ -881,11 +881,13 @@ public abstract class AbstractEntityPersister
 			if ( joinConfigurations == null ) {
 				joinConfigurations = new HashMap<>();
 			}
-			final var existing = joinConfigurations.putIfAbsent( joinConfiguration.getTableName(), joinConfiguration );
+			final var existing =
+					joinConfigurations.putIfAbsent( joinConfiguration.tableName(), joinConfiguration );
+			// TODO: remove this limitation!
 			if ( existing != null && !existing.equals( joinConfiguration ) ) {
 				throw new MappingException(
 						"Entity '" + entityName + "' has multiple @Filter joins with conflicting definitions for table '"
-								+ joinConfiguration.getTableName() + "'"
+								+ joinConfiguration.tableName() + "'"
 				);
 			}
 		}
@@ -1434,7 +1436,7 @@ public abstract class AbstractEntityPersister
 			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
 		final var joinedTableReference = new NamedTableReference(
-				joinConfiguration.getTableName(),
+				joinConfiguration.tableName(),
 				sqlAliasBase.generateNewAlias()
 		);
 		return new TableReferenceJoin(
@@ -1449,11 +1451,11 @@ public abstract class AbstractEntityPersister
 			TableReference joinedTableReference,
 			FilterJoinConfiguration joinConfiguration,
 			SqlAstCreationState creationState) {
-		final String[] joinColumnNames = joinConfiguration.getJoinColumnNames();
-		final String[] referencedColumnNames = joinConfiguration.getReferencedColumnNames();
+		final String[] joinColumnNames = joinConfiguration.joinColumnNames();
+		final String[] referencedColumnNames = joinConfiguration.referencedColumnNames();
 		if ( joinColumnNames.length != referencedColumnNames.length ) {
 			throw new MappingException(
-					"Filter join table '" + joinConfiguration.getTableName()
+					"Filter join table '" + joinConfiguration.tableName()
 							+ "' has a mismatched number of join columns and referenced columns"
 			);
 		}

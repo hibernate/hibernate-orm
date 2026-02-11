@@ -11,9 +11,11 @@ import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.mapping.FilterJoinConfiguration;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -118,5 +120,34 @@ public class FilterDefBinder {
 		else {
 			return resolveBasicType( type, context );
 		}
+	}
+
+	public static FilterJoinConfiguration joinConfiguration(Filter filter, Supplier<String> message) {
+		final var join = filter.join();
+		if ( join == null || join.tableName().isBlank() ) {
+			return null;
+		}
+
+		final var joinColumns = join.joinColumns();
+		if ( joinColumns.length == 0 ) {
+			throw new AnnotationException( message.get()
+				+ " has a '@Filter' join with no joinColumns for filter '" + filter.name() + "'" );
+		}
+		final String[] joinColumnNames = new String[joinColumns.length];
+		final String[] referencedColumnNames = new String[joinColumns.length];
+		for ( int i = 0; i < joinColumns.length; i++ ) {
+			final var joinColumn = joinColumns[i];
+			if ( joinColumn.name().isBlank() ) {
+				throw new AnnotationException( message.get()
+					+ "' has a '@Filter' join with a blank join column name for filter '" + filter.name() + "'" );
+			}
+			if ( joinColumn.referencedColumnName().isBlank() ) {
+				throw new AnnotationException( message.get()
+					+ "' has a '@Filter' join with a blank referenced column name for filter '" + filter.name() + "'" );
+			}
+			joinColumnNames[i] = joinColumn.name();
+			referencedColumnNames[i] = joinColumn.referencedColumnName();
+		}
+		return new FilterJoinConfiguration( join.tableName(), joinColumnNames, referencedColumnNames );
 	}
 }

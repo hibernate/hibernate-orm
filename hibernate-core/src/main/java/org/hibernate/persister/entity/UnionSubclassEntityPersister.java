@@ -203,6 +203,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
+		if ( isFilterJoinTable( tableExpression ) ) {
+			return true;
+		}
 		for ( String subclassTableExpression : subclassTableExpressions ) {
 			if ( subclassTableExpression.equals( tableExpression ) ) {
 				return true;

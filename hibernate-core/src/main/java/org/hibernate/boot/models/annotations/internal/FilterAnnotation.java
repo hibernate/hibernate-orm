@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.FilterDetails;
@@ -24,7 +25,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	private String name;
 	private String condition;
 	private boolean deduceAliasInjectionPoints;
-	private org.hibernate.annotations.SqlFragmentAlias[] aliases;
+	private SqlFragmentAlias[] aliases;
+	private Join join;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -32,7 +34,7 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	public FilterAnnotation(ModelsContext modelContext) {
 		this.condition = "";
 		this.deduceAliasInjectionPoints = true;
-		this.aliases = new org.hibernate.annotations.SqlFragmentAlias[0];
+		this.aliases = new SqlFragmentAlias[0];
 	}
 
 	/**
@@ -43,6 +45,7 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = annotation.condition();
 		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
 		this.aliases = extractJdkValue( annotation, HibernateAnnotations.FILTER, "aliases", modelContext );
+		this.join = annotation.join();
 	}
 
 	/**
@@ -52,7 +55,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.name = (String) attributeValues.get( "name" );
 		this.condition = (String) attributeValues.get( "condition" );
 		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );
-		this.aliases = (org.hibernate.annotations.SqlFragmentAlias[]) attributeValues.get( "aliases" );
+		this.aliases = (SqlFragmentAlias[]) attributeValues.get( "aliases" );
+		this.join = (Join) attributeValues.get( "join" );
 	}
 
 
@@ -80,6 +84,14 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = value;
 	}
 
+	@Override
+	public Join join() {
+		return join;
+	}
+
+	public void join(Join join) {
+		this.join = join;
+	}
 
 	@Override
 	public boolean deduceAliasInjectionPoints() {
@@ -92,11 +104,11 @@ public class FilterAnnotation implements Filter, FilterDetails {
 
 
 	@Override
-	public org.hibernate.annotations.SqlFragmentAlias[] aliases() {
+	public SqlFragmentAlias[] aliases() {
 		return aliases;
 	}
 
-	public void aliases(org.hibernate.annotations.SqlFragmentAlias[] value) {
+	public void aliases(SqlFragmentAlias[] value) {
 		this.aliases = value;
 	}
 

@@ -97,6 +97,8 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.FilterConfiguration;
+import org.hibernate.mapping.FilterJoinConfiguration;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -199,6 +201,7 @@ import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.type.NullType;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -399,6 +402,7 @@ public abstract class AbstractEntityPersister
 
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
+	private final Map<String, FilterJoinConfiguration> filterJoinConfigurationsByTable;
 	private volatile Set<String> affectingFetchProfileNames;
 
 	protected List<? extends ModelPart> insertGeneratedProperties;
@@ -494,16 +498,20 @@ public abstract class AbstractEntityPersister
 						: ImmutableEntityEntryFactory.INSTANCE;
 
 		// Handle any filters applied to the class level
-		if ( isNotEmpty( persistentClass.getFilters() ) ) {
+		final var filters = persistentClass.getFilters();
+		if ( isNotEmpty( filters ) ) {
 			filterHelper = new FilterHelper(
-					persistentClass.getFilters(),
+					filters,
 					getEntityNameByTableNameMap( persistentClass,
 							factory.getSqlStringGenerationContext() ),
 					factory
 			);
+			filterJoinConfigurationsByTable =
+					extractFilterJoinConfigurations( persistentClass.getEntityName(), filters );
 		}
 		else {
 			filterHelper = null;
+			filterJoinConfigurationsByTable = emptyMap();
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -859,6 +867,29 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		return entityNameByTableNameMap;
+	}
+
+	private static Map<String, FilterJoinConfiguration> extractFilterJoinConfigurations(
+			String entityName,
+			List<FilterConfiguration> filters) {
+		Map<String, FilterJoinConfiguration> joinConfigurations = null;
+		for ( var filter : filters ) {
+			final var joinConfiguration = filter.getJoinConfiguration();
+			if ( joinConfiguration == null ) {
+				continue;
+			}
+			if ( joinConfigurations == null ) {
+				joinConfigurations = new HashMap<>();
+			}
+			final var existing = joinConfigurations.putIfAbsent( joinConfiguration.getTableName(), joinConfiguration );
+			if ( existing != null && !existing.equals( joinConfiguration ) ) {
+				throw new MappingException(
+						"Entity '" + entityName + "' has multiple @Filter joins with conflicting definitions for table '"
+								+ joinConfiguration.getTableName() + "'"
+				);
+			}
+		}
+		return joinConfigurations == null ? emptyMap() : joinConfigurations;
 	}
 
 	/**
@@ -1274,7 +1305,16 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		return contains( getSubclassTableNames(), tableExpression );
+		return isFilterJoinTable( tableExpression )
+			|| contains( getSubclassTableNames(), tableExpression );
+	}
+
+	protected boolean isFilterJoinTable(String tableExpression) {
+		return filterJoinConfigurationsByTable.containsKey( tableExpression );
+	}
+
+	protected FilterJoinConfiguration findFilterJoinConfiguration(String tableExpression) {
+		return filterJoinConfigurationsByTable.get( tableExpression );
 	}
 
 	@Override
@@ -1342,6 +1382,11 @@ public abstract class AbstractEntityPersister
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
 			SqlAstCreationState creationState) {
+		final var joinConfiguration = findFilterJoinConfiguration( joinTableExpression );
+		if ( joinConfiguration != null ) {
+			return createFilterJoinTableReferenceJoin( lhs, joinConfiguration, sqlAliasBase, creationState );
+		}
+
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			if ( getSubclassTableName( i ).equals( joinTableExpression ) ) {
 				return generateTableReferenceJoin(
@@ -1381,6 +1426,71 @@ public abstract class AbstractEntityPersister
 						creationState
 				)
 		);
+	}
+
+	protected TableReferenceJoin createFilterJoinTableReferenceJoin(
+			TableReference rootTableReference,
+			FilterJoinConfiguration joinConfiguration,
+			SqlAliasBase sqlAliasBase,
+			SqlAstCreationState creationState) {
+		final var joinedTableReference = new NamedTableReference(
+				joinConfiguration.getTableName(),
+				sqlAliasBase.generateNewAlias()
+		);
+		return new TableReferenceJoin(
+				true,
+				joinedTableReference,
+				generateFilterJoinPredicate( rootTableReference, joinedTableReference, joinConfiguration, creationState )
+		);
+	}
+
+	private Predicate generateFilterJoinPredicate(
+			TableReference rootTableReference,
+			TableReference joinedTableReference,
+			FilterJoinConfiguration joinConfiguration,
+			SqlAstCreationState creationState) {
+		final String[] joinColumnNames = joinConfiguration.getJoinColumnNames();
+		final String[] referencedColumnNames = joinConfiguration.getReferencedColumnNames();
+		if ( joinColumnNames.length != referencedColumnNames.length ) {
+			throw new MappingException(
+					"Filter join table '" + joinConfiguration.getTableName()
+							+ "' has a mismatched number of join columns and referenced columns"
+			);
+		}
+
+		final var conjunction = new Junction( Junction.Nature.CONJUNCTION );
+		final var sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		for ( int i = 0; i < joinColumnNames.length; i++ ) {
+			final String joinColumnName = joinColumnNames[i];
+			final var joinColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					createColumnReferenceKey( rootTableReference, joinColumnName, NullType.INSTANCE ),
+					sqlAstProcessingState -> new ColumnReference(
+							rootTableReference.getIdentificationVariable(),
+							joinColumnName,
+							false,
+							null,
+							NullType.INSTANCE
+					)
+			);
+
+			final String referencedColumnName = referencedColumnNames[i];
+			final var referencedColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					createColumnReferenceKey( joinedTableReference, referencedColumnName, NullType.INSTANCE ),
+					sqlAstProcessingState -> new ColumnReference(
+							joinedTableReference.getIdentificationVariable(),
+							referencedColumnName,
+							false,
+							null,
+							NullType.INSTANCE
+					)
+			);
+
+			conjunction.add(
+					new ComparisonPredicate( joinColumnExpression, ComparisonOperator.EQUAL, referencedColumnExpression )
+			);
+		}
+
+		return conjunction;
 	}
 
 	protected Predicate generateJoinPredicate(
@@ -2838,8 +2948,18 @@ public abstract class AbstractEntityPersister
 				rootTableReference,
 				true,
 				sqlAliasBase,
-				getRootEntityDescriptor()::containsTableReference,
+				tableExpression -> getRootEntityDescriptor().containsTableReference( tableExpression )
+						|| isFilterJoinTable( tableExpression ),
 				(tableExpression, group) -> {
+					final var joinConfiguration = findFilterJoinConfiguration( tableExpression );
+					if ( joinConfiguration != null ) {
+						return createFilterJoinTableReferenceJoin(
+								rootTableReference,
+								joinConfiguration,
+								sqlAliasBase,
+								creationState
+						);
+					}
 					final var subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
 						if ( tableExpression.equals( subclassTableNames[ i ] ) ) {

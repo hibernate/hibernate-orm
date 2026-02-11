@@ -22,6 +22,7 @@ public class FilterConfiguration {
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
 	private final PersistentClass persistentClass;
+	private final FilterJoinConfiguration joinConfiguration;
 
 	public FilterConfiguration(
 			String name,
@@ -30,11 +31,23 @@ public class FilterConfiguration {
 			Map<String, String> aliasTableMap,
 			Map<String, String> aliasEntityMap,
 			PersistentClass persistentClass) {
+		this( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null, persistentClass );
+	}
+
+	public FilterConfiguration(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap,
+			FilterJoinConfiguration joinConfiguration,
+			PersistentClass persistentClass) {
 		this.name = name;
 		this.condition = condition;
 		this.autoAliasInjection = autoAliasInjection;
 		this.aliasTableMap = aliasTableMap;
 		this.aliasEntityMap = aliasEntityMap;
+		this.joinConfiguration = joinConfiguration;
 		this.persistentClass = persistentClass;
 	}
 
@@ -55,6 +68,9 @@ public class FilterConfiguration {
 		if ( !mergedAliasTableMap.isEmpty() ) {
 			return mergedAliasTableMap;
 		}
+		else if ( joinConfiguration != null ) {
+			return singletonMap( null, joinConfiguration.getTableName() );
+		}
 		else if ( persistentClass != null ) {
 			final String tableName =
 					persistentClass.getTable()
@@ -64,6 +80,10 @@ public class FilterConfiguration {
 		else {
 			return emptyMap();
 		}
+	}
+
+	public FilterJoinConfiguration getJoinConfiguration() {
+		return joinConfiguration;
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {

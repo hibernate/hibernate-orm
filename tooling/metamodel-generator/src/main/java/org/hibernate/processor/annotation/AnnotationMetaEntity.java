@@ -18,6 +18,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
+import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
@@ -538,9 +539,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		Element statelessBlockingRepository = null;
 		Element managedReactiveRepository = null;
 		Element statelessReactiveRepository = null;
+		// At this point we did not yet collect nested repositories as type members, so I have to collect them here
+		// to make sure we don't clash with their names
+		List<String> nestedRepositories = new ArrayList<>();
 		for ( Element enclosedElement : element.getEnclosedElements() ) {
 			if ( enclosedElement.getKind() == ElementKind.INTERFACE ) {
-				members.put( enclosedElement.getSimpleName().toString(), new CDIAccessorMetaAttribute( this, enclosedElement ) );
+				if ( !addRepositoryAccessor( element, enclosedElement, nestedRepositories ) ) {
+					continue;
+				}
 				if ( implementsInterface( (TypeElement) enclosedElement, Constants.PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE ) ) {
 					managedBlockingRepository = enclosedElement;
 				}
@@ -558,14 +564,38 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( quarkusInjection ) {
 			// FIXME: perhaps import id type?
 			TypeMirror idType = findIdType();
-			addAccessors(managedBlockingRepository, idType, "managedBlocking", PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE);
-			addAccessors(statelessBlockingRepository, idType, "statelessBlocking", PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE);
+			addAccessors( managedBlockingRepository, idType, "managedBlocking",
+					PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE, nestedRepositories );
+			addAccessors( statelessBlockingRepository, idType, "statelessBlocking",
+					PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE, nestedRepositories );
 			// Only add those if HR is in the classpath, otherwise it causes a compilation issue
-			if( context.usesQuarkusReactiveCommon() ) {
-				addAccessors(managedReactiveRepository, idType, "managedReactive", PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE);
-				addAccessors(statelessReactiveRepository, idType, "statelessReactive", PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE);
+			if ( context.usesQuarkusReactiveCommon() ) {
+				addAccessors( managedReactiveRepository, idType, "managedReactive",
+						PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE, nestedRepositories );
+				addAccessors( statelessReactiveRepository, idType, "statelessReactive",
+						PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE, nestedRepositories );
 			}
 		}
+	}
+
+	private boolean addRepositoryAccessor(TypeElement element, Element enclosedElement, List<String> nestedRepositories) {
+		String name = enclosedElement.getSimpleName().toString();
+		if ( name.endsWith( "_" ) ) {
+			message( element,
+					"Nested repositories may not have names that end with '_': "
+					+ element.getQualifiedName() + "." + enclosedElement.getSimpleName(),
+					Diagnostic.Kind.ERROR );
+			// skip it
+			return false;
+		}
+		// All nested repositories have _ suffix
+		nestedRepositories.add( name + "_");
+		// turn the name into lowercase
+		// FIXME: this is wrong for types like STEFQueries
+		String propertyName = StringUtil.decapitalize( name );
+		members.put( propertyName, new CDIAccessorMetaAttribute( this, propertyName, name ) );
+		// keep it
+		return true;
 	}
 
 	private List<MetaAttribute> getIdMemberNames(List<VariableElement> fields, List<ExecutableElement> methods) {
@@ -696,15 +726,36 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addAccessors(@Nullable Element repositoryType, @Nullable TypeMirror idType,
-							String repositoryAccessor, String repositorySuperType) {
+							String repositoryAccessor, String repositorySuperType, List<String> nestedRepositories) {
 		TypeElement finalPrimaryEntity = primaryEntity;
 		if ( repositoryType != null ) {
-			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,  repositoryType.getSimpleName().toString() ) );
+			addRepositoryAccessor( repositoryAccessor, repositoryType.getSimpleName().toString() );
 		}
 		else if ( idType != null && finalPrimaryEntity != null ) {
-			String repositoryTypeName = "Panache"+repositoryAccessor.substring(0,1).toUpperCase()+repositoryAccessor.substring(1)+"Repository";
-			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,  repositoryTypeName ) );
-			members.put( repositoryAccessor + "Repository", new CDITypeMetaAttribute( this, repositoryTypeName, repositorySuperType +"<"+ finalPrimaryEntity.getSimpleName()+", "+ idType.toString()+">" ) );
+			String repositoryTypeName = "Panache" + repositoryAccessor.substring( 0, 1 )
+						.toUpperCase() + repositoryAccessor.substring( 1 ) + "Repository_";
+			// There may be a user-defined repository under our generated name, if the user names it with the same name
+			// in which case we add an underscore suffix
+			if ( members.containsKey( repositoryTypeName ) || nestedRepositories.contains( repositoryTypeName ) ) {
+				repositoryTypeName += "_";
+			}
+			members.put( repositoryTypeName, new CDITypeMetaAttribute( this, repositoryTypeName,
+					repositorySuperType +"<"+ finalPrimaryEntity.getSimpleName()+", "+ idType.toString()+">" ) );
+			addRepositoryAccessor( repositoryAccessor, repositoryTypeName );
+		}
+	}
+
+	private void addRepositoryAccessor(String repositoryAccessor, String repositoryType) {
+		// Do not add an accessor if a user already has their own repository with the same accessor name
+		if ( !members.containsKey( repositoryAccessor ) ) {
+			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,
+					repositoryType ) );
+		}
+		else {
+			message( element,
+					"Failed to generate accessor in " + primaryEntity
+					+ " for the generated repository under name " + repositoryAccessor + " since it is already defined by the user",
+					Diagnostic.Kind.WARNING );
 		}
 	}
 

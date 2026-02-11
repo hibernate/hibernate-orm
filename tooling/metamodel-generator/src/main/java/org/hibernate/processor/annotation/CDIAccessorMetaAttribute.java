@@ -4,26 +4,15 @@
  */
 package org.hibernate.processor.annotation;
 
-import javax.lang.model.element.Element;
 
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.util.StringUtil;
 
 public class CDIAccessorMetaAttribute implements MetaAttribute {
 
 	private AnnotationMetaEntity annotationMetaEntity;
 	private String propertyName;
 	private String typeName;
-
-	public CDIAccessorMetaAttribute(AnnotationMetaEntity annotationMetaEntity, Element repositoryElement) {
-		this.annotationMetaEntity = annotationMetaEntity;
-		// turn the name into lowercase
-		String name = repositoryElement.getSimpleName().toString();
-		// FIXME: this is wrong for types like STEFQueries
-		this.propertyName = StringUtil.decapitalize( name );
-		this.typeName = name;
-	}
 
 	public CDIAccessorMetaAttribute(AnnotationMetaEntity annotationMetaEntity, String propertyName, String className) {
 		this.annotationMetaEntity = annotationMetaEntity;

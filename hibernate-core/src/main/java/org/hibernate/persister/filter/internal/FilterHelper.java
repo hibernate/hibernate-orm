@@ -283,8 +283,10 @@ public class FilterHelper {
 	}
 
 	private void registerEntityNameUsage(TableGroup tableGroup, SqlAstCreationState creationState, String tableName) {
-		creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
-				tableToEntityName.get( tableName ) );
+		final String entityName = tableToEntityName.get( tableName );
+		if ( entityName != null ) {
+			creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, entityName );
+		}
 	}
 
 	private static String tableName(TableGroup tableGroup, String tableName) {

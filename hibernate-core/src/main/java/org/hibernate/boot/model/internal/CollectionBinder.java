@@ -106,6 +106,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.FilterDefBinder.joinConfiguration;
 import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
@@ -1664,13 +1665,17 @@ public abstract class CollectionBinder {
 		final Map<String,String> aliasEntityMap = new HashMap<>();
 		fillAliasMaps( filter.aliases(), aliasTableMap, aliasEntityMap );
 		final String filterCondition = getFilterCondition( filter );
+		final var joinConfiguration =
+				joinConfiguration( filter,
+						() -> "Collection '" + qualify( propertyHolder.getPath(), propertyName ) + "'" );
 		if ( hasAssociationTable ) {
 			collection.addManyToManyFilter(
 					filter.name(),
 					filterCondition,
 					filter.deduceAliasInjectionPoints(),
 					aliasTableMap,
-					aliasEntityMap
+					aliasEntityMap,
+					joinConfiguration
 			);
 		}
 		else {
@@ -1679,7 +1684,8 @@ public abstract class CollectionBinder {
 					filterCondition,
 					filter.deduceAliasInjectionPoints(),
 					aliasTableMap,
-					aliasEntityMap
+					aliasEntityMap,
+					joinConfiguration
 			);
 		}
 	}

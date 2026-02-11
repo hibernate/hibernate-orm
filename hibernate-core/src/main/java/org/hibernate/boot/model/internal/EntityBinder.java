@@ -137,6 +137,7 @@ import static org.hibernate.boot.model.internal.ClassPropertyHolder.setType;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.FilterDefBinder.joinConfiguration;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
@@ -1573,12 +1574,16 @@ public class EntityBinder {
 			if ( condition.isBlank() ) {
 				condition = getDefaultFilterCondition( filterName );
 			}
+			final var joinConfiguration =
+					joinConfiguration( filter,
+							() -> "Entity '" + name + "'" );
 			persistentClass.addFilter(
 					filterName,
 					condition,
 					filter.deduceAliasInjectionPoints(),
 					toAliasTableMap( filter.aliases() ),
-					toAliasEntityMap( filter.aliases() )
+					toAliasEntityMap( filter.aliases() ),
+					joinConfiguration
 			);
 		}
 	}

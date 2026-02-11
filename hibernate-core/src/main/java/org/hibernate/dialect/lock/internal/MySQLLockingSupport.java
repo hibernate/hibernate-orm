@@ -101,11 +101,11 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 					"SELECT @@SESSION.innodb_lock_wait_timeout",
 					(resultSet) -> {
 						// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
-						final int millis = resultSet.getInt( 1 );
-						return switch ( millis ) {
-							case 0 -> Timeouts.NO_WAIT;
-							case 100000000 -> Timeouts.WAIT_FOREVER;
-							default -> Timeout.milliseconds( millis );
+						// unit: seconds, allowed values: [1, 1073741824]
+						final int seconds = resultSet.getInt( 1 );
+						return switch ( seconds ) {
+							case 100_000_000 -> Timeouts.WAIT_FOREVER;
+							default -> Timeout.seconds( seconds );
 						};
 					},
 					connection,
@@ -119,14 +119,15 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 					timeout,
 					(t) -> {
 						// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
+						// unit: seconds, allowed values: [1, 1073741824]
 						final int milliseconds = timeout.milliseconds();
 						if ( milliseconds == SKIP_LOCKED_MILLI ) {
 							throw new HibernateException( "Connection lock-timeout does not accept skip-locked" );
 						}
 						if ( milliseconds == WAIT_FOREVER_MILLI ) {
-							return 100000000;
+							return 100_000_000;
 						}
-						return milliseconds;
+						return milliseconds / 1000;
 					},
 					"SET @@SESSION.innodb_lock_wait_timeout = %s",
 					connection,

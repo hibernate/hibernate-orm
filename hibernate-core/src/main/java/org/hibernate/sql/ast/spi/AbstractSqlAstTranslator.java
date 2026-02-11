@@ -1178,6 +1178,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			querySpec.applyPredicate(
 					createRowMatchingPredicate(
+							statement.getMutationTarget(),
 							dmlTargetTableGroup,
 							dmlTargetAlias,
 							dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
@@ -1298,6 +1299,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( valueExpression ) );
 		querySpec.applyPredicate(
 				createRowMatchingPredicate(
+						statement.getMutationTarget(),
 						dmlTargetTableGroup,
 						"dml_target_",
 						dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
@@ -1482,7 +1484,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( inlineView.getColumnNames().size() - 1 );
 		}
 		else if ( rowIdExpression == null ) {
-			createRowMatchingPredicate( dmlTargetTableGroup, "t", "s" ).accept( this );
+			createRowMatchingPredicate( statement.getMutationTarget(), dmlTargetTableGroup, "t", "s" ).accept( this );
 		}
 		else {
 			appendSql( "t." );
@@ -5809,6 +5811,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			addAdditionalWherePredicate(
 					// Render the match predicate like `table.ctid=alias.ctid`
 					createRowMatchingPredicate(
+							statement.getMutationTarget(),
 							dmlTargetTableGroup,
 							statement.getTargetTable().getTableExpression(),
 							statement.getTargetTable().getIdentificationVariable()
@@ -5820,7 +5823,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * @deprecated Use {@link #createRowMatchingPredicate(MutationTarget, TableGroup, String, String)} instead
 	 */
-	@Deprecated(forRemoval = true, since = "7.3")
+	@Deprecated(forRemoval = true, since = "7.4")
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
 		return createRowMatchingPredicate(
 				(MutationTarget<?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
@@ -5857,7 +5860,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					)
 			);
 		}
-		else if ( rowIdExpression == null && entityMappingType != null ) {
+		else if ( rowIdExpression == null ) {
 			final var identifierTableMapping = mutationTarget.getIdentifierTableMapping();
 			final int jdbcTypeCount = identifierTableMapping.getKeyDetails().getJdbcTypeCount();
 			final List<ColumnReference> targetExpressions = new ArrayList<>( jdbcTypeCount );
@@ -5883,11 +5886,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return new ComparisonPredicate(
 					targetExpressions.size() == 1
 							? targetExpressions.get( 0 )
-							: new SqlTuple( targetExpressions, entityMappingType.getIdentifierMapping() ),
+							: new SqlTuple( targetExpressions, null ),
 					ComparisonOperator.EQUAL,
 					sourceExpressions.size() == 1
 							? sourceExpressions.get( 0 )
-							: new SqlTuple( sourceExpressions, entityMappingType.getIdentifierMapping() )
+							: new SqlTuple( sourceExpressions, null )
 			);
 		}
 		else {

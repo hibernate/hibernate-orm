@@ -37,7 +37,7 @@ public class ConnectionLockTimeoutTests {
 		factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
 			final int expectedInitialValue;
 			if ( session.getDialect() instanceof MySQLDialect ) {
-				expectedInitialValue = 50;
+				expectedInitialValue = 50_000;
 			}
 			else if ( session.getDialect() instanceof GaussDBDialect ) {
 				expectedInitialValue = 20 * 60 * 1000;
@@ -78,7 +78,7 @@ public class ConnectionLockTimeoutTests {
 		factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
 			final int expectedInitialValue;
 			if ( session.getDialect() instanceof MySQLDialect ) {
-				expectedInitialValue = 50;
+				expectedInitialValue = 50_000;
 			}
 			else if ( session.getDialect() instanceof GaussDBDialect ) {
 				expectedInitialValue = 20 * 60 * 1000;
@@ -92,7 +92,23 @@ public class ConnectionLockTimeoutTests {
 			final Timeout initialLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
 			assertThat( initialLockTimeout.milliseconds() ).isEqualTo( expectedInitialValue );
 
-			List<Duration> durs = List.of(
+			List<Duration> durs;
+			if ( session.getDialect() instanceof MySQLDialect ) {
+				// The minimum value of innodb_lock_wait_timeout in MySQL is 1 second.
+				durs = List.of(
+					Duration.ofSeconds(1),
+					Duration.ofSeconds(2),
+					Duration.ofSeconds(59),
+					Duration.ofMinutes(1),
+					Duration.ofMinutes(2),
+					Duration.ofMinutes(59),
+					Duration.ofHours(1),
+					Duration.ofHours(2),
+					Duration.ofHours(23),
+					Duration.ofDays(1)
+				);
+			} else {
+				durs = List.of(
 					Duration.ofMillis(1),
 					Duration.ofMillis(2),
 					Duration.ofMillis(999),
@@ -106,7 +122,8 @@ public class ConnectionLockTimeoutTests {
 					Duration.ofHours(2),
 					Duration.ofHours(23),
 					Duration.ofDays(1)
-			);
+				);
+			}
 
 			try {
 				for ( Duration dur : durs ) {
@@ -143,7 +160,8 @@ public class ConnectionLockTimeoutTests {
 	@Test
 	@SkipForDialect(
 			dialectClass = MySQLDialect.class,
-			reason = "The docs claim 0 is a valid value as 'no wait'; but in my testing, after setting to 0 we get back 1"
+			matchSubTypes = true,
+			reason = "The innodb_lock_wait_timeout variable can't be set to zero."
 	)
 	void testNoWait(SessionFactoryScope factoryScope) {
 		// this is dependent on the Dialect's ConnectionLockTimeoutType
@@ -153,12 +171,7 @@ public class ConnectionLockTimeoutTests {
 			final ConnectionLockTimeoutStrategy connectionStrategy = lockingSupport.getConnectionLockTimeoutStrategy();
 			final ConnectionLockTimeoutStrategy.Level lockTimeoutType = connectionStrategy.getSupportedLevel();
 			final int initialValue;
-			if ( session.getDialect() instanceof MySQLDialect ) {
-				initialValue = 50;
-			}
-			else {
-				initialValue = Timeouts.WAIT_FOREVER_MILLI;
-			}
+			initialValue = Timeouts.WAIT_FOREVER_MILLI;
 
 			try {
 				connectionStrategy.setLockTimeout( Timeouts.NO_WAIT, conn, session.getFactory() );

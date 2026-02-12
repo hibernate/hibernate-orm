@@ -6,11 +6,14 @@ package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
+import org.hibernate.JDBCException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -19,10 +22,19 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
+import java.sql.SQLException;
 import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -197,6 +209,89 @@ public class ConnectionLockTimeoutTests {
 			finally {
 				connectionStrategy.setLockTimeout( Timeout.milliseconds( initialValue ), conn, session.getFactory() );
 			}
+		} ) );
+	}
+
+	@Test
+	@SkipForDialect(
+			dialectClass = SybaseDialect.class,
+			matchSubTypes = true,
+			reason = "Sybase does not support IF EXISTS, multi value insert and has per statement SET LOCK WAIT"
+	)
+	void testLockWaitTimeout(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
+			conn.prepareStatement("DROP TABLE IF EXISTS t_testLockWaitTimeout").executeUpdate();
+			conn.prepareStatement("CREATE TABLE t_testLockWaitTimeout (id int PRIMARY KEY)").executeUpdate();
+			conn.prepareStatement("INSERT INTO t_testLockWaitTimeout VALUES (1),(2),(3)").executeUpdate();
+		} ));
+
+		final CountDownLatch updateLatch = new CountDownLatch( 1 );
+		final CountDownLatch blockLatch = new CountDownLatch( 1 );
+
+		Runnable c1 = () -> {
+			factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
+				try {
+					assertFalse( conn.getAutoCommit() );
+					conn.prepareStatement("UPDATE t_testLockWaitTimeout SET id=20 WHERE id=2").executeUpdate();
+					updateLatch.countDown();
+
+					boolean latchSet = blockLatch.await( 7, TimeUnit.SECONDS );
+					assertTrue( latchSet, "background test thread finished (lock timeout is broken)" );
+
+					conn.rollback();
+				}
+				catch (InterruptedException|SQLException e) {
+					throw new RuntimeException( e );
+				}
+			} ) );
+		};
+
+		Runnable c2 = () -> {
+			factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
+				final ConnectionLockTimeoutStrategy connectionStrategy = session.getDialect().getLockingSupport().getConnectionLockTimeoutStrategy();
+				final Timeout previousTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
+				connectionStrategy.setLockTimeout( Timeout.seconds( 1 ), conn, session.getFactory() );
+				try {
+					boolean latchSet = updateLatch.await( 10, TimeUnit.SECONDS );
+					assertTrue( latchSet, "Update didn't occur within 10 seconds. System overload?" );
+
+					conn.prepareStatement("UPDATE t_testLockWaitTimeout SET id=id+100").executeUpdate();
+					fail( "Concurrent update didn't fail with a lock timeout" );
+				}
+				catch (SQLException e) {
+					final JDBCException jdbcException = session.getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert( e, "" );
+					if ( !(jdbcException instanceof LockTimeoutException) && !(jdbcException instanceof QueryTimeoutException) ) {
+						throw new AssertionError( "Expected timeout exception", jdbcException );
+					}
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException( e );
+				}
+				finally {
+					// Postgres doesn't allow setting a lock timeout on an aborted transaction.
+					try {
+						connectionStrategy.setLockTimeout( previousTimeout, conn, session.getFactory() );
+					}
+					catch (JDBCException ignore) {}
+					blockLatch.countDown();
+				}
+			} ) );
+		};
+
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		try {
+			Future<?> f1 = executor.submit(c1);
+			Future<?> f2 = executor.submit(c2);
+
+			f1.get();
+			f2.get();
+		} catch (ExecutionException|InterruptedException e) {
+			throw new RuntimeException( e );
+		} finally {
+			executor.shutdown();
+		}
+		factoryScope.inTransaction( (session) -> session.doWork( (conn) -> {
+			conn.prepareStatement("DROP TABLE IF EXISTS t_testLockWaitTimeout").executeUpdate();
 		} ) );
 	}
 }

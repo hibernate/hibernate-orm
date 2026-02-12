@@ -38,7 +38,7 @@ a static metamodel class based on the following rules:
 * For each managed class `X` in package `p`, a metamodel class `X_` is created in package `p`.
 * The name of the metamodel class is derived from the name of the managed class by appending "_" to the managed class name.
 * The metamodel class `X_` must be annotated with the `jakarta.persistence.StaticMetamodel` annotation.  The generation
-can also be configured to add the `javax.annotation.processing.Generated` annotation.
+also adds the `jakarta.annotation.Generated` annotation (this can be disabled with a <<tooling-modelgen-options,configuration option>>).
 * If class `X` extends another class `S`, where `S` is the most derived managed class extended by `X`, then
 class `X_` must extend class `S_`, where `S_` is the metamodel class created for `S`.
 * For every persistent singular attribute `y` declared by class `X`, where the type of `y` is `Y`,
@@ -112,12 +112,15 @@ include::{toolingTestsDir}/modelgen/ModelGenTests.java[tags=tooling-modelgen-usa
 The Hibernate Static Metamodel Generator accepts a number of configuration options, which are specified as
 part of the `javac` execution using standard link:{ann-proc-options}[-A] options -
 
-`-Adebug=[true|false]`:: Enables debug logging from the generator.
-`-AfullyAnnotationConfigured=[true|false]`:: Controls whether `orm.xml` mapping should be considered.
+`-Adebug=[true|false]`:: Enables debug logging from the generator. (Default: `false`)
+`-AfullyAnnotationConfigured=[true|false]`:: Controls whether `orm.xml` mapping should be considered. (Default: `false`)
 `-ApersistenceXml=[path]`:: Specifies the path to the `persistence.xml` file.
 `-AormXml=[path]`:: Specifies the path to an `orm.xml` file.
-`-AlazyXmlParsing=[true|false]`:: Controls whether the processor should attempt to determine whether any `orm.xml` files have changed.
-`-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes.
-`-addGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`.
-`-addSuppressWarningsAnnotation=[warning[,warning]*|true]`:: A comma-separated list of warnings to suppress, or simply `true` if `@SuppressWarnings({"deprecation","rawtypes"})` should be added to the generated classes.
-
+`-AlazyXmlParsing=[true|false]`:: Controls whether the processor should attempt to determine whether any `orm.xml` files have changed. (Default: `false`)
+`-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes. (Default: `true`)
+`-AaddGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`. (Default: `false`)
+`-AaddSuppressWarningsAnnotation=[warning[,warning]*|true]`:: A comma-separated list of warnings to suppress, or simply `true` if `@SuppressWarnings({"deprecation","rawtypes"})` should be added to the generated classes. (Default: No suppression)
+`-AsuppressJakartaDataMetamodel=[true|false]`:: Controls whether the processor should suppress Jakarta Data Metamodel even if Jakarta Data is available on the build path. (Default: `false`)
+`-Ainclude=[pattern[,pattern]*]`:: A comma-separated list of type patterns that should be included with `*` as wildcard. (Default: `*`)
+`-Aexclude=[pattern[,pattern]*]`:: A comma-separated list of type patterns that should be excluded with `*` as wildcard. (Default: empty)
+`-Aindex=[true|false]`:: Controls whether the processor should use a filesystem-based index of entity types and enums for use by the query validator to speed up query validation and thus compilation. (Default: `true`)

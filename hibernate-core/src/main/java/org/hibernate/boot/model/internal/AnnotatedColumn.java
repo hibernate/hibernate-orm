@@ -957,7 +957,7 @@ public class AnnotatedColumn {
 					throw new AnnotationException( "'@GeneratedColumn' may only be applied to single-column mappings but '"
 							+ memberDetails.getName() + "' maps to " + length + " columns" );
 				}
-				setGeneratedAs( generatedColumn.value() );
+				setGeneratedAs( generatedColumn.value(), generatedColumn.stored(), generatedColumn.hidden() );
 			}
 		}
 		else {

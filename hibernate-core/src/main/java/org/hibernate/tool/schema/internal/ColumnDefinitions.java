@@ -224,16 +224,11 @@ class ColumnDefinitions {
 
 			final String generatedAs = column.getGeneratedAs();
 			if ( generatedAs != null ) {
-				if ( column.isStored() && !column.isHidden() ) {
-					definition.append( dialect.generatedAs( generatedAs ) );
-				}
-				else {
-					definition.append( dialect.generatedAs(
-							generatedAs,
-							column.isStored(),
-							column.isHidden()
-					) );
-				}
+				definition.append( dialect.generatedAs(
+						generatedAs,
+						column.isStored(),
+						column.isHidden()
+				) );
 			}
 
 			if ( column.isNullable() ) {

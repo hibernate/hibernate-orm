@@ -296,7 +296,7 @@ the Jakarta Persistence specification proper.
 
 ===== Graph parser mode configuration
 
-Since Hibernate 7.3, a new configuration setting controls which syntax the `LegacyGraphParser` uses:
+Since Hibernate 7.3, a new configuration setting controls which syntax the `GraphParser` uses:
 
 `hibernate.graph_parser_mode`::
 Determines which parsing syntax is active.
@@ -451,6 +451,7 @@ to explicitly indicate the entity type that is the root of the graph.
 
 When `@NamedEntityGraph` is placed on a package, the `root` attribute **must** be specified.
 If the annotation is placed on a package and the `root` is omitted:
+
 * In `legacy` parser mode a deprecation warning will be emitted.
 * In `modern` parser mode the omission is **not allowed** and results in an error.
 
@@ -467,7 +468,7 @@ package com.example.model;
 ----
 ====
 
-This annotation works in conjunction with the `LegacyGraphParser` and respects the syntax
+This annotation works in conjunction with the `GraphParser` and respects the syntax
 defined by `hibernate.graph_parser_mode`.
 
 [[fetching-strategies-dynamic-fetching-profile]]

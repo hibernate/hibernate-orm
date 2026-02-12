@@ -223,21 +223,15 @@ class ColumnDefinitions {
 			}
 
 			final String generatedAs = column.getGeneratedAs();
-			if ( generatedAs != null) {
-				definition.append( dialect.generatedAs( generatedAs ) );
+			if ( generatedAs != null ) {
 				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
 					return;
 				}
-				if ( column.isStored() && !column.isHidden() ) {
-					definition.append( dialect.generatedAs( generatedAs ) );
-				}
-				else {
-					definition.append( dialect.generatedAs(
-							generatedAs,
-							column.isStored(),
-							column.isHidden()
-					) );
-				}
+				definition.append( dialect.generatedAs(
+						generatedAs,
+						column.isStored(),
+						column.isHidden()
+				) );
 			}
 
 			if ( column.isNullable() ) {

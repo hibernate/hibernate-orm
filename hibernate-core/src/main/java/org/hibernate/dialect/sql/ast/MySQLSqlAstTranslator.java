@@ -32,10 +32,14 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
+
 
 /**
  * A SQL AST translator for MySQL.
@@ -46,10 +50,32 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MySQLDialect dialect;
+	private final FullJoinEmulationHelper fullJoinEmulationHelper;
 
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
+		this.fullJoinEmulationHelper = new FullJoinEmulationHelper( this );
+	}
+
+	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		if ( !fullJoinEmulationHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+				&& !fullJoinEmulationHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+			if ( shouldEmulateFetchClause( querySpec ) ) {
+				emulateFetchOffsetWithWindowFunctions( querySpec, true );
+			}
+			else {
+				super.visitQuerySpec( querySpec );
+			}
+		}
+	}
+
+	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		if ( !fullJoinEmulationHelper.renderSelectClauseIfNeeded( selectClause ) ) {
+			super.visitSelectClause( selectClause );
+		}
 	}
 
 	@Override
@@ -222,8 +248,10 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+		return useOffsetFetchClause( queryPart )
+			&& getQueryPartForRowNumbering() != queryPart
+			&& getDialect().supportsWindowFunctions()
+			&& !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -233,16 +261,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		}
 		else {
 			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
 		}
 	}
 
@@ -263,8 +281,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	}
 
 	@Override
+	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		fullJoinEmulationHelper.renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
+		if ( !fullJoinEmulationHelper.isFullJoinEmulationQueryPart( queryPart )
+				&& !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
 		}
 	}

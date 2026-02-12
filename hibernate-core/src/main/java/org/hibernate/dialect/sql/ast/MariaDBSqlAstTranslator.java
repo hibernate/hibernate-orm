@@ -34,12 +34,15 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
 
 /**
  * A SQL AST translator for MariaDB.
@@ -50,10 +53,12 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MariaDBDialect dialect;
+	private final FullJoinEmulationHelper fullJoinEmulationHelper;
 
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MariaDBDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
+		this.fullJoinEmulationHelper = new FullJoinEmulationHelper( this );
 	}
 
 	@Override
@@ -272,11 +277,22 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
+		if ( !fullJoinEmulationHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec ) ) {
+			if ( !fullJoinEmulationHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+				if ( shouldEmulateFetchClause( querySpec ) ) {
+					emulateFetchOffsetWithWindowFunctions( querySpec, true );
+				}
+				else {
+					super.visitQuerySpec( querySpec );
+				}
+			}
 		}
-		else {
-			super.visitQuerySpec( querySpec );
+	}
+
+	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		if ( !fullJoinEmulationHelper.renderSelectClauseIfNeeded( selectClause ) ) {
+			super.visitSelectClause( selectClause );
 		}
 	}
 
@@ -292,9 +308,15 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
+		if ( !fullJoinEmulationHelper.isFullJoinEmulationQueryPart( queryPart )
+				&& !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
 		}
+	}
+
+	@Override
+	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		fullJoinEmulationHelper.renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override

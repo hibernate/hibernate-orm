@@ -23,6 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -266,7 +267,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
-				resultSet = wrapResultSet( preparedStatement.executeQuery() );
+				resultSet = wrapResultSet( executeStatement( preparedStatement ) );
 			}
 			catch (SQLException exception) {
 				session.getJdbcCoordinator().afterFailedStatementExecution( exception );
@@ -290,6 +291,19 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			throw session.getJdbcServices().getSqlExceptionHelper()
 					.convert( exception, "JDBC exception executing SQL", finalSql );
+		}
+	}
+
+	private static ResultSet executeStatement(PreparedStatement statement)
+			throws SQLException {
+		if ( statement instanceof CallableStatement callableStatement ) {
+			if ( !callableStatement.execute() ) {
+				callableStatement.getMoreResults();
+			}
+			return callableStatement.getResultSet();
+		}
+		else {
+			return statement.executeQuery();
 		}
 	}
 

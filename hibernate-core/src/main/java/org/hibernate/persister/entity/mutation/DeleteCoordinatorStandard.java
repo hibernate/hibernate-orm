@@ -45,7 +45,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 
 		applyTableDeleteDetails( deleteGroupBuilder, rowId, loadedState, applyVersion, session );
 
-		return createOperationGroup( null, deleteGroupBuilder.buildMutationGroup() );
+		return createOperationGroup( null, deleteGroupBuilder.buildMutationGroup(), loadedState == null );
 	}
 
 	private void applyTableDeleteDetails(

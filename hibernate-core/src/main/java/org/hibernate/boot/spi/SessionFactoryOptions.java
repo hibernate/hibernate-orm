@@ -745,6 +745,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isPassProcedureParameterNames();
 
 	/**
+	 * Should stored procedures be used to execute named queries
+	 * and mutations?
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#USE_STORED_PROCEDURES
+	 */
+	@Incubating
+	boolean isUseStoredProceduresEnabled();
+
+	/**
 	 * Should native queries return JDBC datetime types
 	 * instead of using {@code java.time} types.
 	 *

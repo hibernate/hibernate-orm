@@ -705,6 +705,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void postInstantiate() throws MappingException {
+		initializeStoredProcedureMutationOperations();
+
 		collectionLoader =
 				hasNamedQueryLoader()
 						// We pass null as metamodel because we did the initialization during construction already
@@ -717,6 +719,24 @@ public abstract class AbstractCollectionPersister
 		}
 
 		logStaticSQL();
+	}
+
+	private void initializeStoredProcedureMutationOperations() {
+		// TODO: this is inelegant
+		if ( factory.getStoredProcedureHelper().isEnabled() ) {
+			// eagerly initialize the mutation operations to
+			// force registration of the stored procedures
+			final var rowMutationOperations = getRowMutationOperations();
+			if ( rowMutationOperations != null ) {
+				rowMutationOperations.getInsertRowOperation();
+				rowMutationOperations.getUpdateRowOperation();
+				rowMutationOperations.getDeleteRowOperation();
+			}
+			final var removeCoordinator = getRemoveCoordinator();
+			if ( removeCoordinator != null ) {
+				removeCoordinator.getSqlString();
+			}
+		}
 	}
 
 	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {

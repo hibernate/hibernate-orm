@@ -121,6 +121,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		final var tableMapping = mutationTarget.getCollectionTableMapping();
 		final var tableReference = new MutatingTableReference( tableMapping );
 		return singleOperation( MutationType.DELETE, mutationTarget,
-				operationProducer.createOperation( tableReference ) );
+				mutationTarget.getTargetPart().getCollectionDescriptor().getFactory().getStoredProcedureHelper()
+						.maybeWrapOperation( operationProducer.createOperation( tableReference ) ) );
 	}
 }

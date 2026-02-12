@@ -82,6 +82,15 @@ public interface ImplicitNamingStrategy {
 	 */
 	Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source);
 
+	/**
+	 * Determine the stored procedure name when one is not explicitly specified.
+	 *
+	 * @param source The source information
+	 *
+	 * @return The implicit stored procedure name.
+	 */
+	Identifier determineStoredProcedureName(ImplicitStoredProcedureNameSource source);
+
 
 	/**
 	 * Determine the {@linkplain jakarta.persistence.DiscriminatorValue discriminator}

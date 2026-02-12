@@ -98,7 +98,8 @@ public class RowMutationOperations {
 			JdbcMutationOperation local = insertRowOperation;
 			if ( local == null ) {
 				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-				insertRowOperation = local = insertRowOperationProducer.createOperation( tableReference );
+				insertRowOperation = local =
+						maybeWrapOperation( insertRowOperationProducer.createOperation( tableReference ) );
 			}
 			return local;
 		}
@@ -110,7 +111,7 @@ public class RowMutationOperations {
 		}
 		else {
 			final var tableReference = new MutatingTableReference( tableMapping );
-			return insertRowOperationProducer.createOperation( tableReference );
+			return maybeWrapOperation( insertRowOperationProducer.createOperation( tableReference ) );
 		}
 	}
 
@@ -130,7 +131,8 @@ public class RowMutationOperations {
 			JdbcMutationOperation local = updateRowOperation;
 			if ( local == null ) {
 				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-				updateRowOperation = local = updateRowOperationProducer.createOperation( tableReference );
+				updateRowOperation = local =
+						maybeWrapOperation( updateRowOperationProducer.createOperation( tableReference ) );
 			}
 			return local;
 		}
@@ -164,7 +166,8 @@ public class RowMutationOperations {
 			JdbcMutationOperation local = deleteRowOperation;
 			if ( local == null ) {
 				final var tableReference = new MutatingTableReference( target.getCollectionTableMapping() );
-				deleteRowOperation = local = deleteRowOperationProducer.createOperation( tableReference );
+				deleteRowOperation = local =
+						maybeWrapOperation( deleteRowOperationProducer.createOperation( tableReference ) );
 			}
 			return local;
 		}
@@ -176,8 +179,14 @@ public class RowMutationOperations {
 		}
 		else {
 			final var tableReference = new MutatingTableReference( tableMapping );
-			return deleteRowOperationProducer.createOperation( tableReference );
+			return maybeWrapOperation( deleteRowOperationProducer.createOperation( tableReference ) );
 		}
+	}
+
+	private JdbcMutationOperation maybeWrapOperation(JdbcMutationOperation operation) {
+		return (JdbcMutationOperation)
+				target.getTargetPart().getCollectionDescriptor().getFactory()
+						.getStoredProcedureHelper().maybeWrapOperation( operation );
 	}
 
 

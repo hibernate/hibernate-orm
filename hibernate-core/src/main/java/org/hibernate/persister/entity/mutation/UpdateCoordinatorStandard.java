@@ -1150,7 +1150,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				session
 		);
 
-		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
+		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup(), false );
 	}
 
 	private TableMutationBuilder<?> createTableUpdateBuilder(EntityTableMapping tableMapping) {
@@ -1745,7 +1745,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		// build the mutation-group (SQL AST) and convert it into a jdbc-operations (SQL String, etc) group
-		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
+		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup(), true );
 	}
 
 	protected boolean includeInStaticUpdate(
@@ -1783,7 +1783,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.buildModelMutationTranslator( updateBuilder.buildMutation(), factory() )
 					.translate( null, MutationQueryOptions.INSTANCE );
 
-			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
+			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(),
+					factory().getStoredProcedureHelper().maybeWrapOperation( jdbcMutation ) );
 		}
 	}
 

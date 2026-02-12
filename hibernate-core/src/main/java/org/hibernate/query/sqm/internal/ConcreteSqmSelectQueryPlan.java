@@ -45,6 +45,7 @@ import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,6 +92,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
 			final var session = executionContext.getSession();
 			final var jdbcSelect = sqmInterpretation.jdbcOperation();
+			final var wrappedJdbcSelect = maybeWrapNamedSelect( executionContext, sqmInterpretation );
 			try {
 				final var subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
@@ -98,11 +100,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
-				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), skipPreFlush );
+				session.autoFlushIfRequired( wrappedJdbcSelect.getAffectedTableNames(), skipPreFlush );
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
-						jdbcSelect,
+						wrappedJdbcSelect,
 						jdbcParameterBindings,
-						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
+						listInterpreterExecutionContext(
+								hql,
+								executionContext,
+								wrappedJdbcSelect,
+								subSelectFetchKeyHandler
+						),
 						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						null,
 						resultCountEstimate( sqmInterpretation, jdbcParameterBindings ),
@@ -113,9 +120,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				domainParameterXref.clearExpansions();
 			}
 		};
-		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
+		listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
 			final var session = executionContext.getSession();
-			final var jdbcSelect = sqmInterpretation.jdbcOperation();
+			final var jdbcSelect = maybeWrapNamedSelect( executionContext, sqmInterpretation );
 			try {
 				final var subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
@@ -128,7 +135,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
-						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
+						listInterpreterExecutionContext(
+								hql,
+								executionContext,
+								jdbcSelect,
+								subSelectFetchKeyHandler
+						),
 						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
@@ -140,24 +152,54 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		};
 
-		this.scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
+		scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
 			final var session = executionContext.getSession();
 			final var jdbcSelect = sqmInterpretation.jdbcOperation();
+			final var wrappedJdbcSelect = maybeWrapNamedSelect( executionContext, sqmInterpretation );
 			try {
-				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), skipPreFlush );
-				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().scroll(
-						jdbcSelect,
-						scrollMode,
-						jdbcParameterBindings,
-						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
-				);
+				session.autoFlushIfRequired( wrappedJdbcSelect.getAffectedTableNames(), skipPreFlush );
+				final var jdbcSelectExecutor = session.getFactory().getJdbcServices().getJdbcSelectExecutor();
+				if ( wrappedJdbcSelect == jdbcSelect ) {
+					return jdbcSelectExecutor.scroll(
+							jdbcSelect,
+							scrollMode,
+							jdbcParameterBindings,
+							new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
+							determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+							resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
+					);
+				}
+				else {
+					return jdbcSelectExecutor.executeQuery(
+							wrappedJdbcSelect,
+							jdbcParameterBindings,
+							new SqmJdbcExecutionContextAdapter( executionContext, wrappedJdbcSelect ),
+							determineRowTransformer( sqm, resultType, tupleMetadata,
+									executionContext.getQueryOptions() ),
+							null,
+							resultCountEstimate( sqmInterpretation, jdbcParameterBindings ),
+							ScrollableResultsConsumer.instance()
+					);
+				}
 			}
 			finally {
 				domainParameterXref.clearExpansions();
 			}
 		};
+	}
+
+	private static JdbcSelect maybeWrapNamedSelect(
+			DomainQueryExecutionContext executionContext,
+			CacheableSqmInterpretation<SelectStatement, JdbcSelect> sqmInterpretation) {
+		final String namedQueryMementoName = executionContext.getQueryOptions().getNamedQueryMementoName();
+		return namedQueryMementoName == null
+				? sqmInterpretation.jdbcOperation()
+				: executionContext.getSession().getFactory().getStoredProcedureHelper()
+						.maybeWrapNamedQuerySelect(
+								sqmInterpretation.jdbcOperation(),
+								sqmInterpretation.statement(),
+								namedQueryMementoName
+						);
 	}
 
 	private static int resultCountEstimate(

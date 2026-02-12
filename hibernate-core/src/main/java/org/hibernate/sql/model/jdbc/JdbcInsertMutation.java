@@ -37,4 +37,9 @@ public class JdbcInsertMutation extends AbstractJdbcMutation {
 	public String toString() {
 		return "JdbcInsertMutation(" + getTableDetails().getTableName() + ")";
 	}
+
+	@Override
+	public String kind() {
+		return "insert";
+	}
 }

@@ -37,6 +37,7 @@ public class JdbcOperationQuerySelect
 	private final JdbcParameter offsetParameter;
 	private final JdbcParameter limitParameter;
 	private final JdbcLockStrategy jdbcLockStrategy;
+	private final boolean callable;
 
 	public JdbcOperationQuerySelect(
 			String sql,
@@ -53,7 +54,8 @@ public class JdbcOperationQuerySelect
 				Collections.emptyMap(),
 				JdbcLockStrategy.AUTO,
 				null,
-				null
+				null,
+				false
 		);
 	}
 
@@ -68,6 +70,33 @@ public class JdbcOperationQuerySelect
 			JdbcLockStrategy jdbcLockStrategy,
 			JdbcParameter offsetParameter,
 			JdbcParameter limitParameter) {
+		this(
+				sql,
+				parameterBinders,
+				jdbcValuesMappingProducer,
+				affectedTableNames,
+				rowsToSkip,
+				maxRows,
+				appliedParameters,
+				jdbcLockStrategy,
+				offsetParameter,
+				limitParameter,
+				false
+		);
+	}
+
+	public JdbcOperationQuerySelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames,
+			int rowsToSkip,
+			int maxRows,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			JdbcLockStrategy jdbcLockStrategy,
+			JdbcParameter offsetParameter,
+			JdbcParameter limitParameter,
+			boolean callable) {
 		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.rowsToSkip = rowsToSkip;
@@ -75,6 +104,7 @@ public class JdbcOperationQuerySelect
 		this.jdbcLockStrategy = jdbcLockStrategy;
 		this.offsetParameter = offsetParameter;
 		this.limitParameter = limitParameter;
+		this.callable = callable;
 	}
 
 	@Override
@@ -122,6 +152,11 @@ public class JdbcOperationQuerySelect
 	@Override
 	public JdbcLockStrategy getLockStrategy() {
 		return jdbcLockStrategy;
+	}
+
+	@Override
+	public boolean isCallable() {
+		return callable;
 	}
 
 	@Override

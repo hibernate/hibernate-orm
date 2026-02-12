@@ -21,6 +21,8 @@ import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
+import org.hibernate.dialect.procedure.MySQLStoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
@@ -1253,6 +1255,11 @@ public class MySQLDialect extends Dialect {
 			isResultSet = ps.getMoreResults();
 		}
 		return ps.getResultSet();
+	}
+
+	@Override
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return MySQLStoredProcedureSupport.INSTANCE;
 	}
 
 	@Override

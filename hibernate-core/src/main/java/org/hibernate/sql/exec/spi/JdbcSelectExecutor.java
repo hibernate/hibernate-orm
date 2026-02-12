@@ -29,6 +29,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.sql.exec.spi.JdbcSelectExecution.defaultStatementCreator;
+
 /**
  * An executor for JdbcSelect operations.
  *
@@ -67,7 +69,7 @@ public interface JdbcSelectExecutor {
 				rowTransformer,
 				domainResultType,
 				resultCountEstimate,
-				StandardStatementCreator.getStatementCreator( null ),
+				defaultStatementCreator( jdbcSelect ),
 				resultsConsumer
 		);
 	}
@@ -93,6 +95,16 @@ public interface JdbcSelectExecutor {
 				statementCreator,
 				resultsConsumer
 		);
+	}
+
+	default <R> List<R> list(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			ListResultsConsumer.UniqueSemantic uniqueSemantic,
+			int resultCountEstimate) {
+		return list( jdbcSelect, jdbcParameterBindings, executionContext, rowTransformer, null, uniqueSemantic, resultCountEstimate );
 	}
 
 	default <R> List<R> list(
@@ -181,7 +193,8 @@ public interface JdbcSelectExecutor {
 	 */
 	@FunctionalInterface
 	interface StatementCreator {
-		PreparedStatement createStatement(ExecutionContext executionContext, String sql) throws SQLException;
+		PreparedStatement createStatement(ExecutionContext executionContext, String sql)
+				throws SQLException;
 	}
 
 	/*

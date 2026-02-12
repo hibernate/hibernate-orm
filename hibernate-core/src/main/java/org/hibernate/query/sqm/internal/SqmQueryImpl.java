@@ -68,6 +68,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
+import org.hibernate.internal.util.MutableObject;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -93,6 +94,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptionsWithUniqueSemanticFilter;
 import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
+import static org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.buildInterpretation;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
@@ -135,6 +137,7 @@ public class SqmQueryImpl<R>
 				interpretation( memento, expectedResultType, session ),
 				expectedResultType, session );
 		applySqmOptions( memento );
+		getQueryOptions().setNamedQueryMementoName( memento.getRegistrationName() );
 	}
 
 	/**
@@ -149,6 +152,7 @@ public class SqmQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		this( statement, resultType, session );
 		applySqmOptions( memento );
+		getQueryOptions().setNamedQueryMementoName( memento.getRegistrationName() );
 	}
 
 	/**
@@ -334,6 +338,26 @@ public class SqmQueryImpl<R>
 	protected void prepareForExecution() {
 		// Reset the callback before every execution
 		resetCallback();
+	}
+
+	public void preRegisterStoredProcedureSelectDefinition() {
+		if ( sqm instanceof SqmSelectStatement<?> sqmSelectStatement ) {
+			final String namedQueryMementoName = getQueryOptions().getNamedQueryMementoName();
+			if ( namedQueryMementoName != null ) {
+				final var sqmInterpretation = buildInterpretation(
+						sqmSelectStatement,
+						domainParameterXref,
+						this,
+						new MutableObject<>()
+				);
+				getSessionFactory().getStoredProcedureHelper()
+						.maybeWrapNamedQuerySelect(
+								sqmInterpretation.jdbcOperation(),
+								sqmInterpretation.statement(),
+								namedQueryMementoName
+						);
+			}
+		}
 	}
 
 	protected void verifySelect() {

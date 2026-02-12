@@ -240,6 +240,7 @@ public class JsonWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 19, reason = "Oracle bug: ORA-03113 database connection closed by peer")
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

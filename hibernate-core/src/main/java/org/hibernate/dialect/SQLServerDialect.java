@@ -1272,21 +1272,4 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
-
-	@Override
-	public boolean equivalentTypes(int typeCode1, int typeCode2) {
-		if ( (typeCode1 == NCLOB || typeCode2 == NCLOB) ||
-			 (typeCode1 == LONG32NVARCHAR || typeCode2 == LONG32NVARCHAR) ) {
-			return typeCode1 == NVARCHAR ||
-				   typeCode2 == NVARCHAR ||
-				   super.equivalentTypes( typeCode1, typeCode2 );
-		}
-		if ( (typeCode1 == CLOB || typeCode2 == CLOB) ||
-			 (typeCode1 == LONG32VARCHAR || typeCode2 == LONG32VARCHAR) ) {
-			return typeCode1 == VARCHAR ||
-				   typeCode2 == VARCHAR ||
-				   super.equivalentTypes( typeCode1, typeCode2 );
-		}
-		return super.equivalentTypes( typeCode1, typeCode2 );
-	}
 }

@@ -35,7 +35,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
-import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -135,16 +134,7 @@ public class InferredBasicValueResolver {
 			}
 			else if ( explicitJdbcType != null ) {
 				// we also have an explicit JdbcType
-				if ( explicitJdbcType instanceof AdjustableJdbcType ) {
-					jdbcMapping = resolveSqlTypeIndicators(
-							stdIndicators,
-							basicTypeRegistry.resolve( reflectedJtd, explicitJdbcType ),
-							reflectedJtd
-					);
-				}
-				else {
-					jdbcMapping = basicTypeRegistry.resolve( reflectedJtd, explicitJdbcType );
-				}
+				jdbcMapping = basicTypeRegistry.resolve( reflectedJtd, explicitJdbcType );
 			}
 			else {
 				// see if there is a registered BasicType for this JavaType and,

@@ -865,15 +865,24 @@ public class EnhancerImpl implements Enhancer {
 			AnnotationDescription.Loadable<Access> access = fieldDescription.getDeclaringType().asErasure()
 					.getDeclaredAnnotations().ofType( Access.class );
 			if ( access != null && access.load().value() == AccessType.PROPERTY ) {
-				Optional<MethodDescription> getter = getGetter();
-				if ( getter.isPresent() ) {
-					return getter.get().getDeclaredAnnotations();
-				}
-				else {
+				final var fieldAccess = fieldDescription.getDeclaredAnnotations()
+						.ofType( Access.class );
+
+				if ( fieldAccess != null && fieldAccess.load().value() == AccessType.FIELD ) {
 					return fieldDescription.getDeclaredAnnotations();
 				}
+				return getGetter()
+						.map( MethodDescription::getDeclaredAnnotations )
+						.orElseGet( fieldDescription::getDeclaredAnnotations );
 			}
 			else if ( access != null && access.load().value() == AccessType.FIELD ) {
+				var getter = getGetter();
+				if ( getter.isPresent() ) {
+					var getterAccess = getter.get().getDeclaredAnnotations().ofType( Access.class );
+					if ( getterAccess != null && getterAccess.load().value() == AccessType.PROPERTY ) {
+						return getter.get().getDeclaredAnnotations();
+					}
+				}
 				return fieldDescription.getDeclaredAnnotations();
 			}
 			else {

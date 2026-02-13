@@ -1598,7 +1598,7 @@ spanner_emulator() {
   $CONTAINER_CLI run --name spanner -d \
     -p 9010:9010 \
     -p 9020:9020 \
-    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.45}
+    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.48}
 
   # Wait for emulator to be ready (check logs for known messages)
   n=0

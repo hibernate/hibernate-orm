@@ -15,6 +15,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.Index;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -97,6 +98,13 @@ public class ConstraintTest {
 					if ( column.getName().equals( "explicit" ) ) {
 						foundCount++;
 						assertThat( uk.getName() ).isEqualTo( EXPLICIT_UK_NAME );
+					}
+				}
+
+				for ( Index index: table.getIndexes().values() ) {
+					if (index.isUnique()) {
+						assertThat( index.getName().length() ).isLessThanOrEqualTo( MAX_NAME_LENGTH );
+						foundCount++;
 					}
 				}
 			}

@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
+import org.hibernate.JDBCException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.TypeContributions;
@@ -36,6 +37,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
@@ -52,6 +55,9 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+
+import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -95,6 +101,10 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 					ConnectionLockTimeoutStrategy.NONE );
 
 	protected final static DatabaseVersion MINIMUM_POSTGRES_VERSION = DatabaseVersion.make( 15 );
+
+	private static final Pattern NOT_NULL_CONSTRAINT_PATTERN = Pattern.compile( ".*(must not be NULL in table|does not specify a non-null value for NOT NULL column|Cannot specify a null value for column).*" );
+	private static final Pattern FOREIGN_KEY_CONSTRAINT_PATTERN = Pattern.compile( ".*Foreign key.*(constraint violation on table|constraint violation when deleting or updating referenced key|violated on table).*" );
+	private static final Pattern CHECK_CONSTRAINT_PATTERN = Pattern.compile( ".*Check constraint.*" );
 
 	public SpannerPostgreSQLDialect() {
 		super();
@@ -501,6 +511,33 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public TemporaryTableStrategy getPersistentTemporaryTableStrategy() {
 		return new PersistentTemporaryTableStrategy( this );
+	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return this::handleConstraintViolatedException;
+	}
+
+	private @Nullable JDBCException handleConstraintViolatedException(SQLException sqlException, String message, String sql) {
+		if (sqlException.getErrorCode() == 6) {
+			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.UNIQUE, null );
+		}
+		else if (matches( NOT_NULL_CONSTRAINT_PATTERN, message )) {
+			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+		}
+		else if (matches( CHECK_CONSTRAINT_PATTERN, message )) {
+			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.CHECK, null );
+		}
+		else if(matches( FOREIGN_KEY_CONSTRAINT_PATTERN, message )) {
+			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.FOREIGN_KEY, null );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private boolean matches(Pattern pattern, String message) {
+		return pattern.matcher( message ).matches();
 	}
 
 	@Override

@@ -1668,9 +1668,9 @@ if [ -z ${1} ]; then
     echo -e "\ttidb"
     echo -e "\ttidb_8_5"
     echo -e "\ttidb_5_4"
-    echo -e "\informix"
-    echo -e "\informix_14_10"
-    echo -e "\informix_12_10"
+    echo -e "\tinformix"
+    echo -e "\tinformix_14_10"
+    echo -e "\tinformix_12_10"
     echo -e "\tspanner"
     echo -e "\tspanner_emulator"
 else

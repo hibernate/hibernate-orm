@@ -66,7 +66,7 @@ public final class FullJoinEmulationHelper {
 		final var branch = findFullJoinEmulationBranch( querySpec );
 		final boolean hasBranch = branch != null;
 		if ( hasBranch ) {
-			renderFullJoinEmulationBranch( querySpec, branch.joinSides, renderQuerySpec );
+			renderFullJoinEmulationBranch( querySpec, branch.joinSides(), renderQuerySpec );
 		}
 		return hasBranch;
 	}
@@ -133,14 +133,11 @@ public final class FullJoinEmulationHelper {
 	}
 
 	private boolean isFullJoinEmulationOrderBy(QueryPart queryPart, List<SortSpecification> sortSpecifications) {
-		final boolean hasEmulation = fullJoinEmulationBranches != null;
-		if ( hasEmulation
+		return fullJoinEmulationBranches != null
+			&& ( queryPart == fullJoinEmulationQueryGroup
 				// Some dialects (e.g. Sybase ASE) render ORDER BY outside the query group scope.
-				&& queryPart != fullJoinEmulationQueryGroup ) {
-			return fullJoinEmulationQueryGroup != null
-				&& sortSpecifications == fullJoinEmulationQueryGroup.getSortSpecifications();
-		}
-		return hasEmulation;
+				|| fullJoinEmulationQueryGroup != null
+					&& sortSpecifications == fullJoinEmulationQueryGroup.getSortSpecifications() );
 	}
 
 	private void emulateFullJoinWithUnion(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
@@ -158,7 +155,6 @@ public final class FullJoinEmulationHelper {
 			if ( querySpec.getSelectClause().isDistinct()
 					|| !querySpec.getGroupByClauseExpressions().isEmpty()
 					|| querySpec.getHavingClauseRestrictions() != null ) {
-				fullJoinEmulationNullPrecedenceSelectionIndexes = null;
 				throw new UnsupportedOperationException(
 						"Full join emulation requires order by expressions to be in the select list for grouped or distinct queries"
 				);
@@ -173,7 +169,7 @@ public final class FullJoinEmulationHelper {
 						: querySpec.asRootQuery(),
 				fullJoins,
 				0,
-				new JoinSide[fullJoinCount],
+				new SqlAstJoinType[fullJoinCount],
 				null,
 				queryParts,
 				branches
@@ -198,7 +194,7 @@ public final class FullJoinEmulationHelper {
 			QuerySpec branchBase,
 			List<FullJoinEmulationInfo> fullJoins,
 			int index,
-			JoinSide[] joinSides,
+			SqlAstJoinType[] joinSides,
 			Predicate predicate,
 			List<QueryPart> queryParts,
 			List<FullJoinEmulationBranch> branches) {
@@ -212,7 +208,7 @@ public final class FullJoinEmulationHelper {
 			queryParts.add( branchQuery );
 		}
 		else {
-			joinSides[index] = JoinSide.LEFT;
+			joinSides[index] = SqlAstJoinType.LEFT;
 			collectFullJoinEmulationBranches(
 					branchBase,
 					fullJoins,
@@ -223,14 +219,14 @@ public final class FullJoinEmulationHelper {
 					branches
 			);
 
-			joinSides[index] = JoinSide.RIGHT;
+			joinSides[index] = SqlAstJoinType.RIGHT;
 			collectFullJoinEmulationBranches(
 					branchBase,
 					fullJoins,
 					index + 1,
 					joinSides,
 					combinePredicates( predicate,
-							createTableGroupNullnessPredicate( fullJoins.get( index ).leftTableGroup ) ),
+							createTableGroupNullnessPredicate( fullJoins.get( index ).leftTableGroup() ) ),
 					queryParts,
 					branches
 			);
@@ -263,7 +259,7 @@ public final class FullJoinEmulationHelper {
 		}
 	}
 
-	private void renderFullJoinEmulationBranch(QuerySpec querySpec, JoinSide[] joinSides, Consumer<QuerySpec> renderQuerySpec) {
+	private void renderFullJoinEmulationBranch(QuerySpec querySpec, SqlAstJoinType[] joinSides, Consumer<QuerySpec> renderQuerySpec) {
 		applyFullJoinJoinType( joinSides );
 		final boolean previousRenderingBranch = renderingFullJoinEmulationBranch;
 		renderingFullJoinEmulationBranch = true;
@@ -276,16 +272,15 @@ public final class FullJoinEmulationHelper {
 		}
 	}
 
-	private void applyFullJoinJoinType(JoinSide[] joinSides) {
+	private void applyFullJoinJoinType(SqlAstJoinType[] joinTypes) {
 		for ( int i = 0; i < fullJoinEmulationInfos.size(); i++ ) {
-			fullJoinEmulationInfos.get( i ).join
-					.setJoinType( joinSides[i] == JoinSide.RIGHT ? SqlAstJoinType.RIGHT : SqlAstJoinType.LEFT );
+			fullJoinEmulationInfos.get( i ).join().setJoinType( joinTypes[i] );
 		}
 	}
 
 	private void restoreFullJoinJoinType() {
 		for ( var info : fullJoinEmulationInfos ) {
-			info.join.setJoinType( info.originalJoinType );
+			info.join().setJoinType( info.originalJoinType() );
 		}
 	}
 
@@ -368,7 +363,7 @@ public final class FullJoinEmulationHelper {
 	private FullJoinEmulationBranch findFullJoinEmulationBranch(QuerySpec querySpec) {
 		if ( fullJoinEmulationBranches != null ) {
 			for ( var branch : fullJoinEmulationBranches ) {
-				if ( branch.querySpec == querySpec ) {
+				if ( branch.querySpec() == querySpec ) {
 					return branch;
 				}
 			}
@@ -562,30 +557,11 @@ public final class FullJoinEmulationHelper {
 		);
 	}
 
-	private static final class FullJoinEmulationInfo {
-		private final TableGroup leftTableGroup;
-		private final TableGroupJoin join;
-		private final SqlAstJoinType originalJoinType;
-
-		private FullJoinEmulationInfo(TableGroup leftTableGroup, TableGroupJoin join) {
-			this.leftTableGroup = leftTableGroup;
-			this.join = join;
-			this.originalJoinType = join.getJoinType();
+	private record FullJoinEmulationInfo(TableGroup leftTableGroup, TableGroupJoin join, SqlAstJoinType originalJoinType) {
+		FullJoinEmulationInfo(TableGroup leftTableGroup, TableGroupJoin join) {
+			this( leftTableGroup, join, join.getJoinType() );
 		}
 	}
 
-	private static final class FullJoinEmulationBranch {
-		private final QuerySpec querySpec;
-		private final JoinSide[] joinSides;
-
-		private FullJoinEmulationBranch(QuerySpec querySpec, JoinSide[] joinSides) {
-			this.querySpec = querySpec;
-			this.joinSides = joinSides;
-		}
-	}
-
-	private enum JoinSide {
-		LEFT,
-		RIGHT
-	}
+	private record FullJoinEmulationBranch(QuerySpec querySpec, SqlAstJoinType[] joinSides) {}
 }

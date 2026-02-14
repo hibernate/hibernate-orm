@@ -282,7 +282,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			renderQueryGroup( queryGroup, false );
 			appendSql( ") grp_(c0" );
 			// Sybase doesn't have implicit names for non-column select expressions, so we need to assign names
-			int itemCount = assignNamesToSelectItems( queryGroup );
+			final int itemCount = assignNamesToSelectItems( queryGroup );
 			for (int i = 1; i < itemCount; i++) {
 				appendSql( ",c" );
 				appendSql( i );

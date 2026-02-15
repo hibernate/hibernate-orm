@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.util.ArrayDeque;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -54,24 +55,43 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	private boolean renderAsArray;
-	private final FullJoinEmulationHelper fullJoinEmulationHelper;
+	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulationHelper = new FullJoinEmulationHelper( this );
+		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+	}
+
+	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
+		return fullJoinEmulationHelpers.getFirst();
 	}
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( !fullJoinEmulationHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
-				&& !fullJoinEmulationHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-			super.visitQuerySpec( querySpec );
+		final var helper = currentFullJoinEmulationHelper();
+		final boolean needsNestedHelper =
+				helper.hasActiveFullJoinEmulation()
+						&& !helper.isFullJoinEmulationQueryPart( querySpec );
+		if ( needsNestedHelper ) {
+			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		}
+		try {
+			final var currentHelper = currentFullJoinEmulationHelper();
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+				super.visitQuerySpec( querySpec );
+			}
+		}
+		finally {
+			if ( needsNestedHelper ) {
+				fullJoinEmulationHelpers.pop();
+			}
 		}
 	}
 
 	@Override
 	public void visitSelectClause(SelectClause selectClause) {
-		if ( !fullJoinEmulationHelper.renderSelectClauseIfNeeded( selectClause ) ) {
+		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
 			super.visitSelectClause( selectClause );
 		}
 	}
@@ -243,12 +263,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	@Override
 	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		fullJoinEmulationHelper.renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !fullJoinEmulationHelper.isFullJoinEmulationQueryPart( queryPart ) ) {
+		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
 			if ( isRowsOnlyFetchClauseType( queryPart ) ) {
 				if ( supportsOffsetFetchClause() ) {
 					renderOffsetFetchClause( queryPart, true );

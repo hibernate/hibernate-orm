@@ -9,8 +9,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -57,6 +59,43 @@ class FullJoinTest {
 			);
 			assertNull( result.get( 2 )[0] );
 			assertNotNull( result.get( 2 )[1] );
+			} );
+		}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Sybase does not allow union within subquery")
+	void testNestedFullJoinInSubquery(EntityManagerFactoryScope scope) {
+		prepareData( scope );
+		scope.inTransaction( session -> {
+			final var result =
+					session.createQuery(
+							"""
+									select t.id from Thing t
+										full join t.otherThing o
+										where exists (select 1 from Thing t2 full join t2.otherThing o2 where o2.id is null)
+									""",
+							Long.class
+					).getResultList();
+			assertEquals( 3, result.size() );
+		} );
+	}
+
+	@Test
+	void testNestedScalarSubqueryWithOuterFullJoinOrderBy(EntityManagerFactoryScope scope) {
+		prepareData( scope );
+		scope.inTransaction( session -> {
+			final var result =
+					session.createQuery(
+							"""
+									select t.id from Thing t full join t.otherThing o
+										where t.id = (select max(t2.id) from Thing t2)
+										order by o.id
+									""",
+							Long.class
+					).getResultList();
+			assertEquals( 1, result.size() );
+			assertNotNull( result.get( 0 ) );
 		} );
 	}
 

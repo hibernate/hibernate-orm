@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,12 +54,16 @@ import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
 public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MariaDBDialect dialect;
-	private final FullJoinEmulationHelper fullJoinEmulationHelper;
+	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
 
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MariaDBDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
-		this.fullJoinEmulationHelper = new FullJoinEmulationHelper( this );
+		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+	}
+
+	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
+		return fullJoinEmulationHelpers.getFirst();
 	}
 
 	@Override
@@ -277,21 +282,36 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( !fullJoinEmulationHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec ) ) {
-			if ( !fullJoinEmulationHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				if ( shouldEmulateFetchClause( querySpec ) ) {
-					emulateFetchOffsetWithWindowFunctions( querySpec, true );
+		final var helper = currentFullJoinEmulationHelper();
+		final boolean needsNestedHelper =
+				helper.hasActiveFullJoinEmulation()
+						&& !helper.isFullJoinEmulationQueryPart( querySpec );
+		if ( needsNestedHelper ) {
+			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		}
+		try {
+			final var currentHelper = currentFullJoinEmulationHelper();
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec ) ) {
+				if ( !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+					if ( shouldEmulateFetchClause( querySpec ) ) {
+						emulateFetchOffsetWithWindowFunctions( querySpec, true );
+					}
+					else {
+						super.visitQuerySpec( querySpec );
+					}
 				}
-				else {
-					super.visitQuerySpec( querySpec );
-				}
+			}
+		}
+		finally {
+			if ( needsNestedHelper ) {
+				fullJoinEmulationHelpers.pop();
 			}
 		}
 	}
 
 	@Override
 	public void visitSelectClause(SelectClause selectClause) {
-		if ( !fullJoinEmulationHelper.renderSelectClauseIfNeeded( selectClause ) ) {
+		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
 			super.visitSelectClause( selectClause );
 		}
 	}
@@ -308,7 +328,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !fullJoinEmulationHelper.isFullJoinEmulationQueryPart( queryPart )
+		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart )
 				&& !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
 		}
@@ -316,7 +336,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		fullJoinEmulationHelper.renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override

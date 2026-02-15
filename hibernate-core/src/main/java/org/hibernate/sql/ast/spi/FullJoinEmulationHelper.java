@@ -118,6 +118,10 @@ public final class FullJoinEmulationHelper {
 			&& findFullJoinEmulationBranch( querySpec ) != null;
 	}
 
+	public boolean hasActiveFullJoinEmulation() {
+		return fullJoinEmulationInfos != null;
+	}
+
 	public void renderOrderByIfNeeded(
 			QueryPart queryPart,
 			List<SortSpecification> sortSpecifications,

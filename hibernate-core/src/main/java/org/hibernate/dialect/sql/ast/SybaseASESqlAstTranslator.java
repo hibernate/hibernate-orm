@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.function.Consumer;
+
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -46,9 +50,6 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.sql.ast.spi.FullJoinEmulationHelper.countRenderedSelectItems;
 
@@ -60,11 +61,15 @@ import static org.hibernate.sql.ast.spi.FullJoinEmulationHelper.countRenderedSel
 public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private static final String UNION_ALL = " union all ";
-	private final FullJoinEmulationHelper fullJoinEmulationHelper;
+	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
 
 	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulationHelper = new FullJoinEmulationHelper( this );
+		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+	}
+
+	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
+		return fullJoinEmulationHelpers.getFirst();
 	}
 
 	@Override
@@ -254,15 +259,30 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( !fullJoinEmulationHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
-				&& !fullJoinEmulationHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-			super.visitQuerySpec( querySpec );
+		final var helper = currentFullJoinEmulationHelper();
+		final boolean needsNestedHelper =
+				helper.hasActiveFullJoinEmulation()
+						&& !helper.isFullJoinEmulationQueryPart( querySpec );
+		if ( needsNestedHelper ) {
+			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		}
+		try {
+			final var currentHelper = currentFullJoinEmulationHelper();
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+				super.visitQuerySpec( querySpec );
+			}
+		}
+		finally {
+			if ( needsNestedHelper ) {
+				fullJoinEmulationHelpers.pop();
+			}
 		}
 	}
 
 	@Override
 	public void visitSelectClause(SelectClause selectClause) {
-		if ( !fullJoinEmulationHelper.renderSelectClauseIfNeeded( selectClause ) ) {
+		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
 			super.visitSelectClause( selectClause );
 		}
 	}
@@ -328,7 +348,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !fullJoinEmulationHelper.isFullJoinEmulationQueryPart( queryPart ) ) {
+		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
 			assertRowsOnlyFetchClauseType( queryPart );
 			if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
 				if ( queryPart.getFetchClauseExpression() != null && queryPart.getOffsetClauseExpression() != null ) {
@@ -340,7 +360,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		fullJoinEmulationHelper.renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override

@@ -51,7 +51,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
-import static org.hibernate.sql.ast.spi.FullJoinEmulationHelper.countRenderedSelectItems;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -303,7 +302,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			appendSql( ") grp_(c0" );
 			// Sybase doesn't have implicit names for non-column select expressions, so we need to assign names
 			final int itemCount = assignNamesToSelectItems( queryGroup );
-			for (int i = 1; i < itemCount; i++) {
+			for ( int i = 1; i < itemCount; i++ ) {
 				appendSql( ",c" );
 				appendSql( i );
 			}
@@ -315,8 +314,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 	}
 
-	private static int assignNamesToSelectItems(QueryGroup queryGroup) {
-		int itemCount = countRenderedSelectItems( queryGroup.getFirstQuerySpec().getSelectClause() );
+	private int assignNamesToSelectItems(QueryGroup queryGroup) {
+		int itemCount =
+				currentFullJoinEmulationHelper()
+						.countRenderedSelectItemsIncludingEmulationSelections(
+								queryGroup.getFirstQuerySpec() );
 		final var sortSpecifications = queryGroup.getSortSpecifications();
 		if ( sortSpecifications != null ) {
 			for ( var sortSpecification : sortSpecifications ) {

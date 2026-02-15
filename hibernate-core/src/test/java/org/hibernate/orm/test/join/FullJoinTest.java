@@ -59,8 +59,22 @@ class FullJoinTest {
 			);
 			assertNull( result.get( 2 )[0] );
 			assertNotNull( result.get( 2 )[1] );
-			} );
-		}
+		} );
+	}
+
+	@Test
+	void testSybaseNullPrecedenceAliasCounting(EntityManagerFactoryScope scope) {
+		prepareData( scope );
+		scope.inTransaction( session -> {
+			final var result =
+					session.createQuery(
+							"select t.id from Thing t full join t.otherThing o order by t.id nulls last",
+							Long.class
+					).getResultList();
+			assertEquals( 3, result.size() );
+			assertNull( result.get( 2 ) );
+		} );
+	}
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,

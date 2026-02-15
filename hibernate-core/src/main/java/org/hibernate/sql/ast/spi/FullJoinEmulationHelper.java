@@ -122,6 +122,15 @@ public final class FullJoinEmulationHelper {
 		return fullJoinEmulationInfos != null;
 	}
 
+	public int countRenderedSelectItemsIncludingEmulationSelections(QuerySpec querySpec) {
+		int count = countRenderedSelectItems( querySpec.getSelectClause() );
+		if ( fullJoinEmulationExtraSelections != null
+				&& isFullJoinEmulationQueryPart( querySpec ) ) {
+			count += fullJoinEmulationExtraSelections.size();
+		}
+		return count;
+	}
+
 	public void renderOrderByIfNeeded(
 			QueryPart queryPart,
 			List<SortSpecification> sortSpecifications,

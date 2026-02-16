@@ -33,6 +33,8 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -52,6 +54,9 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -502,6 +507,64 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	public TemporaryTableStrategy getPersistentTemporaryTableStrategy() {
 		return new PersistentTemporaryTableStrategy( this );
 	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(
+			IdentifierHelperBuilder builder,
+			DatabaseMetaData metadata) throws SQLException {
+		final IdentifierHelper delegate = super.buildIdentifierHelper( builder, metadata );
+		return new IdentifierHelper() {
+			@Override
+			public org.hibernate.boot.model.naming.Identifier normalizeQuoting(org.hibernate.boot.model.naming.Identifier identifier) {
+				return delegate.normalizeQuoting( identifier );
+			}
+
+			@Override
+			public org.hibernate.boot.model.naming.Identifier toIdentifier(String text) {
+				return delegate.toIdentifier( replaceDollarWithUnderscore(text) );
+			}
+
+			@Override
+			public org.hibernate.boot.model.naming.Identifier toIdentifier(String text, boolean quoted) {
+				return delegate.toIdentifier( replaceDollarWithUnderscore(text), quoted );
+			}
+
+			@Override
+			public org.hibernate.boot.model.naming.Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+				return delegate.toIdentifier( replaceDollarWithUnderscore(text), quoted, isExplicit );
+			}
+
+			@Override
+			public org.hibernate.boot.model.naming.Identifier applyGlobalQuoting(String text) {
+				return delegate.applyGlobalQuoting( replaceDollarWithUnderscore(text) );
+			}
+
+			@Override
+			public boolean isReservedWord(String word) {
+				return delegate.isReservedWord( word );
+			}
+
+			@Override
+			public String toMetaDataCatalogName(org.hibernate.boot.model.naming.Identifier catalogIdentifier) {
+				return delegate.toMetaDataCatalogName( catalogIdentifier );
+			}
+
+			@Override
+			public String toMetaDataSchemaName(org.hibernate.boot.model.naming.Identifier schemaIdentifier) {
+				return delegate.toMetaDataSchemaName( schemaIdentifier );
+			}
+
+			@Override
+			public String toMetaDataObjectName(org.hibernate.boot.model.naming.Identifier identifier) {
+				return delegate.toMetaDataObjectName( identifier );
+			}
+
+			private String replaceDollarWithUnderscore(String text) {
+				return text != null ? text.replace( '$', '_' ) : null;
+			}
+		};
+	}
+
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {

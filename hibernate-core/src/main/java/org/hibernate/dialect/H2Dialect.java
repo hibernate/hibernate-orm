@@ -918,6 +918,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsExceptAll() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return true;
 	}

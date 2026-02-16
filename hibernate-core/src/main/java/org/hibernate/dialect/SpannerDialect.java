@@ -62,7 +62,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Map;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
@@ -611,10 +611,10 @@ public class SpannerDialect extends Dialect {
 			case TIME:
 				appender.appendSql( "TIMESTAMP '" );
 				if ( temporalAccessor instanceof java.time.LocalTime localTime ) {
-					Instant instant = localTime
+					final OffsetDateTime offsetDateTime = localTime
 							.atDate( LocalDate.of( 1970, 1, 1 ) )
-							.toInstant( ZoneOffset.UTC );
-					appendAsTimestampWithNanos( appender, instant, true, jdbcTimeZone );
+							.atOffset( ZoneOffset.UTC );
+					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
 				}
 				else if ( temporalAccessor instanceof java.time.OffsetTime offsetTime ) {
 					OffsetDateTime offsetDateTime =
@@ -628,7 +628,7 @@ public class SpannerDialect extends Dialect {
 				if ( temporalAccessor instanceof java.time.LocalDateTime ldt ) {
 					appendAsTimestampWithNanos(
 							appender,
-							ldt.toInstant( ZoneOffset.UTC ),
+							ldt.atOffset( ZoneOffset.UTC ),
 							supportsTemporalLiteralOffset(),
 							jdbcTimeZone
 					);
@@ -663,10 +663,10 @@ public class SpannerDialect extends Dialect {
 			case TIME:
 				appender.appendSql( "TIMESTAMP '" );
 				if ( date instanceof java.sql.Time time ) {
-					Instant instant = time.toLocalTime()
+					final OffsetDateTime offsetDateTime = time.toLocalTime()
 							.atDate( LocalDate.of( 1970, 1, 1 ) )
-							.toInstant( ZoneOffset.UTC );
-					appendAsTimestampWithNanos( appender, instant, true, jdbcTimeZone );
+							.atOffset( ZoneOffset.UTC );
+					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
 				}
 				appender.appendSql( "'" );
 				break;
@@ -699,26 +699,22 @@ public class SpannerDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "TIMESTAMP '" );
-				ZonedDateTime zdt = ZonedDateTime.ofInstant(
-						calendar.toInstant(),
-						calendar.getTimeZone().toZoneId()
-				);
-				zdt = zdt.withYear( 1970 )
-						.withMonth( 1 )
-						.withDayOfMonth( 1 );
-				appendAsTimestampWithMillis(
-						appender,
-						zdt.toInstant(),
-						supportsTemporalLiteralOffset(),
-						jdbcTimeZone
-				);
+				final OffsetDateTime offsetDateTime = Instant.EPOCH.atOffset( ZoneOffset.UTC )
+						.withHour( calendar.get( Calendar.HOUR_OF_DAY ) )
+						.withMinute( calendar.get( Calendar.MINUTE ) )
+						.withSecond( calendar.get( Calendar.SECOND ) )
+						.withNano( calendar.get( Calendar.MILLISECOND ) * 1_000_000 );
+				appendAsTimestampWithMillis( appender, offsetDateTime, true, jdbcTimeZone );
 				appender.appendSql( "'" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "TIMESTAMP '" );
+				final OffsetDateTime odt = OffsetDateTime.ofInstant(
+						calendar.toInstant(),
+						calendar.getTimeZone().toZoneId() );
 				appendAsTimestampWithMillis(
 						appender,
-						calendar.toInstant(),
+						odt,
 						supportsTemporalLiteralOffset(),
 						jdbcTimeZone
 				);

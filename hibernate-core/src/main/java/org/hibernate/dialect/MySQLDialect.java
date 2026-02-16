@@ -1656,11 +1656,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsJoinsInDelete() {
 		return true;
 	}

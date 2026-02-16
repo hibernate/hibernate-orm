@@ -675,6 +675,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsExceptAll implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsExceptAll();
+		}
+	}
+
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof MySQLDialect && !(dialect instanceof MariaDBDialect)

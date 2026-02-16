@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.query.SortDirection;
-import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -36,14 +35,20 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.query.internal.NullPrecedenceHelper.isDefaultOrdering;
+import static org.hibernate.query.sqm.SetOperator.EXCEPT_ALL;
+import static org.hibernate.query.sqm.SetOperator.UNION_ALL;
+import static org.hibernate.sql.ast.SqlAstJoinType.INNER;
+import static org.hibernate.sql.ast.SqlAstJoinType.LEFT;
+import static org.hibernate.sql.ast.SqlAstJoinType.RIGHT;
 import static org.hibernate.sql.ast.spi.SqlAppender.COMMA_SEPARATOR;
 import static org.hibernate.sql.ast.spi.SqlAppender.NO_SEPARATOR;
 import static org.hibernate.sql.ast.tree.expression.SqlTupleContainer.getSqlTuple;
 import static org.hibernate.sql.ast.tree.predicate.Predicate.combinePredicates;
 
 /**
- * Emulates ANSI {@code FULL JOIN} using {@code UNION}.
+ * Emulates ANSI {@code FULL JOIN} using set operators.
  *
  * @author Gavin King
  */
@@ -154,18 +159,14 @@ public final class FullJoinEmulationHelper {
 	}
 
 	private void emulateFullJoinWithUnion(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
-		final int fullJoinCount = fullJoins.size();
-		final int branchCount = 1 << fullJoinCount;
-		final List<QueryPart> queryParts = new ArrayList<>( branchCount );
-		final List<FullJoinEmulationBranch> branches = new ArrayList<>( branchCount );
-		final var queryGroup =
-				new QueryGroup( querySpec.isRoot(),
-						SetOperator.UNION, queryParts );
+		final var sortSpecifications = querySpec.getSortSpecifications();
+		final List<SortSpecification> preservedSortSpecifications =
+				sortSpecifications == null ? null : new ArrayList<>( sortSpecifications );
 		final var extraSelections =
 				collectFullJoinEmulationExtraSelections( querySpec,
 						countRenderedSelectItems( querySpec.getSelectClause() ) );
 		if ( !extraSelections.isEmpty() ) {
-			if ( querySpec.getSelectClause().isDistinct()
+			if ( querySpec.getSelectClause().isDistinct() // TODO: we could easily remove this limitation
 					|| !querySpec.getGroupByClauseExpressions().isEmpty()
 					|| querySpec.getHavingClauseRestrictions() != null ) {
 				throw new UnsupportedOperationException(
@@ -174,19 +175,12 @@ public final class FullJoinEmulationHelper {
 			}
 			fullJoinEmulationExtraSelections = extraSelections;
 		}
-		copyOrderAndOffsetFetch( querySpec, queryGroup );
 
-		collectFullJoinEmulationBranches(
-				querySpec.isRoot()
-						? querySpec
-						: querySpec.asRootQuery(),
-				fullJoins,
-				0,
-				new SqlAstJoinType[fullJoinCount],
-				null,
-				queryParts,
-				branches
-		);
+		final var emulationPlan = createFullJoinEmulationPlan( querySpec, fullJoins );
+		final var queryGroup = emulationPlan.queryGroup();
+		final var branches = emulationPlan.branches();
+
+		copyOrderAndOffsetFetch( querySpec, preservedSortSpecifications, queryGroup );
 
 		fullJoinEmulationInfos = fullJoins;
 		fullJoinEmulationBranches = branches;
@@ -203,47 +197,117 @@ public final class FullJoinEmulationHelper {
 		}
 	}
 
-	private void collectFullJoinEmulationBranches(
+	private FullJoinEmulationPlan createFullJoinEmulationPlan(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
+		return fullJoins.size() == 1 && translator.getDialect().supportsExceptAll()
+				? createSingleFullJoinExceptAllEmulationPlan( querySpec )
+				: createMultiFullJoinEmulationPlan( querySpec, fullJoins );
+	}
+
+	private FullJoinEmulationPlan createSingleFullJoinExceptAllEmulationPlan(QuerySpec querySpec) {
+		final var branchBase = querySpec.isRoot() ? querySpec : querySpec.asRootQuery();
+		final var left = createFullJoinEmulationBranch( branchBase, LEFT );
+		final var right = createFullJoinEmulationBranch( branchBase, RIGHT );
+		final var except = createFullJoinEmulationBranch( branchBase, INNER );
+		final var unionQuery =
+				new QueryGroup( false, UNION_ALL,
+						List.of( left.querySpec(), right.querySpec() ) );
+		return new FullJoinEmulationPlan(
+				new QueryGroup( querySpec.isRoot(), EXCEPT_ALL,
+						List.of( unionQuery, except.querySpec() ) ),
+				List.of( left, right, except )
+		);
+	}
+
+	private FullJoinEmulationPlan createMultiFullJoinEmulationPlan(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
+		final var branches = createFullJoinEmulationBranches(
+				querySpec.isRoot()
+						? querySpec
+						: querySpec.asRootQuery(),
+				fullJoins,
+				0,
+				new SqlAstJoinType[fullJoins.size()],
+				null,
+				emptyList(),
+				false
+		);
+		return new FullJoinEmulationPlan(
+				new QueryGroup( querySpec.isRoot(), UNION_ALL,
+						branches.stream().map( FullJoinEmulationBranch::querySpec ).toList() ),
+				branches
+		);
+	}
+
+	private FullJoinEmulationBranch createFullJoinEmulationBranch(
+			QuerySpec branchBase,
+			SqlAstJoinType joinType) {
+		final var branchQuery = branchBase.asSubQuery();
+		clearSortAndOffsetFetch( branchQuery );
+		return new FullJoinEmulationBranch( branchQuery, new SqlAstJoinType[] { joinType } );
+	}
+
+	private List<FullJoinEmulationBranch> createFullJoinEmulationBranches(
 			QuerySpec branchBase,
 			List<FullJoinEmulationInfo> fullJoins,
 			int index,
 			SqlAstJoinType[] joinSides,
 			Predicate predicate,
-			List<QueryPart> queryParts,
-			List<FullJoinEmulationBranch> branches) {
+			List<Predicate> pendingLeftJoinNotNullPredicates,
+			boolean rightJoinSeen) {
 		if ( index == fullJoins.size() ) {
 			final var branchQuery = branchBase.asSubQuery();
 			clearSortAndOffsetFetch( branchQuery );
 			if ( predicate != null ) {
 				branchQuery.applyPredicate( predicate );
 			}
-			branches.add( new FullJoinEmulationBranch( branchQuery, joinSides.clone() ) );
-			queryParts.add( branchQuery );
+			return List.of( new FullJoinEmulationBranch( branchQuery, joinSides.clone() ) );
 		}
 		else {
-			joinSides[index] = SqlAstJoinType.LEFT;
-			collectFullJoinEmulationBranches(
+			final var leftTableGroup = fullJoins.get( index ).leftTableGroup();
+			final var leftTableGroupNullnessPredicate = createTableGroupNullnessPredicate( leftTableGroup );
+			final var leftTableGroupNotNullnessPredicate = createTableGroupNotNullnessPredicate( leftTableGroup );
+
+			joinSides[index] = LEFT;
+			final var left = createFullJoinEmulationBranches(
 					branchBase,
 					fullJoins,
 					index + 1,
 					joinSides,
-					predicate,
-					queryParts,
-					branches
+					rightJoinSeen
+							? combinePredicates( predicate,
+									leftTableGroupNotNullnessPredicate )
+							: predicate,
+					rightJoinSeen
+							? emptyList()
+							: appendPredicate( pendingLeftJoinNotNullPredicates,
+									leftTableGroupNotNullnessPredicate ),
+					rightJoinSeen
 			);
 
-			joinSides[index] = SqlAstJoinType.RIGHT;
-			collectFullJoinEmulationBranches(
+			joinSides[index] = RIGHT;
+			final var right = createFullJoinEmulationBranches(
 					branchBase,
 					fullJoins,
 					index + 1,
 					joinSides,
-					combinePredicates( predicate,
-							createTableGroupNullnessPredicate( fullJoins.get( index ).leftTableGroup() ) ),
-					queryParts,
-					branches
+					combinedRightPredicate( predicate,
+							pendingLeftJoinNotNullPredicates,
+							leftTableGroupNullnessPredicate ),
+					emptyList(),
+					true
 			);
+			return combine( left, right );
 		}
+	}
+
+	private static Predicate combinedRightPredicate(
+			Predicate predicate,
+			List<Predicate> pendingLeftJoinNotNullPredicates,
+			Predicate leftTableGroupNullnessPredicate) {
+		Predicate rightPredicate = combinePredicates( predicate, leftTableGroupNullnessPredicate );
+		for ( var pendingLeftJoinNotNullPredicate : pendingLeftJoinNotNullPredicates ) {
+			rightPredicate = combinePredicates( rightPredicate, pendingLeftJoinNotNullPredicate );
+		}
+		return rightPredicate;
 	}
 
 	private static void clearSortAndOffsetFetch(QuerySpec querySpec) {
@@ -255,8 +319,17 @@ public final class FullJoinEmulationHelper {
 		querySpec.setFetchClauseExpression( null, null );
 	}
 
-	private void copyOrderAndOffsetFetch(QuerySpec source, QueryGroup target) {
-		final var sortSpecifications = source.getSortSpecifications();
+	private List<Predicate> appendPredicate(List<Predicate> predicates, Predicate predicate) {
+		final List<Predicate> combined = new ArrayList<>( predicates.size() + 1 );
+		combined.addAll( predicates );
+		combined.add( predicate );
+		return combined;
+	}
+
+	private void copyOrderAndOffsetFetch(
+			QuerySpec source,
+			List<SortSpecification> sortSpecifications,
+			QueryGroup target) {
 		if ( sortSpecifications != null ) {
 			for ( var sortSpecification : sortSpecifications ) {
 				target.addSortSpecification( sortSpecification );
@@ -333,7 +406,14 @@ public final class FullJoinEmulationHelper {
 
 	private Predicate createTableGroupNullnessPredicate(TableGroup tableGroup) {
 		return createValuedModelPartNullnessPredicate( tableGroup,
-				getValuedModelPart( tableGroup.getModelPart() ) );
+				getValuedModelPart( tableGroup.getModelPart() ),
+				false );
+	}
+
+	private Predicate createTableGroupNotNullnessPredicate(TableGroup tableGroup) {
+		return createValuedModelPartNullnessPredicate( tableGroup,
+				getValuedModelPart( tableGroup.getModelPart() ),
+				true );
 	}
 
 	private static ValuedModelPart getValuedModelPart(ModelPartContainer modelPart) {
@@ -357,7 +437,10 @@ public final class FullJoinEmulationHelper {
 		}
 	}
 
-	private Predicate createValuedModelPartNullnessPredicate(TableGroup tableGroup, ValuedModelPart valuedModelPart) {
+	private Predicate createValuedModelPartNullnessPredicate(
+			TableGroup tableGroup,
+			ValuedModelPart valuedModelPart,
+			boolean negated) {
 		final List<ColumnReference> columnReferences = new ArrayList<>( valuedModelPart.getJdbcTypeCount() );
 		valuedModelPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
 			final var tableReference = tableGroup.resolveTableReference(
@@ -370,7 +453,8 @@ public final class FullJoinEmulationHelper {
 
 		return new NullnessPredicate( columnReferences.size() == 1
 				? columnReferences.get( 0 )
-				: new SqlTuple( columnReferences, valuedModelPart ) );
+				: new SqlTuple( columnReferences, valuedModelPart ),
+				negated );
 	}
 
 	private FullJoinEmulationBranch findFullJoinEmulationBranch(QuerySpec querySpec) {
@@ -575,6 +659,8 @@ public final class FullJoinEmulationHelper {
 			this( leftTableGroup, join, join.getJoinType() );
 		}
 	}
+
+	private record FullJoinEmulationPlan(QueryGroup queryGroup, List<FullJoinEmulationBranch> branches) {}
 
 	private record FullJoinEmulationBranch(QuerySpec querySpec, SqlAstJoinType[] joinSides) {}
 }

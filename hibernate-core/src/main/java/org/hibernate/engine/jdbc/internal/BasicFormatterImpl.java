@@ -162,6 +162,7 @@ public class BasicFormatterImpl implements Formatter {
 					case "into":
 					case "union":
 					case "intersect":
+					case "except":
 					case "offset":
 					case "limit":
 					case "fetch":

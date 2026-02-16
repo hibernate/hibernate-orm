@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
+import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -50,15 +50,15 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private static final String UNION_ALL = " union all ";
-	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
+	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public SybaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
 	}
 
-	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
-		return fullJoinEmulationHelpers.getFirst();
+	private FullJoinEmulation currentFullJoinEmulationHelper() {
+		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -233,7 +233,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 				helper.hasActiveFullJoinEmulation()
 						&& !helper.isFullJoinEmulationQueryPart( querySpec );
 		if ( needsNestedHelper ) {
-			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+			fullJoinEmulations.push( new FullJoinEmulation( this ) );
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
@@ -244,7 +244,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 		finally {
 			if ( needsNestedHelper ) {
-				fullJoinEmulationHelpers.pop();
+				fullJoinEmulations.pop();
 			}
 		}
 	}

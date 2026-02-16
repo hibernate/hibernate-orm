@@ -53,7 +53,7 @@ import static org.hibernate.sql.ast.tree.predicate.Predicate.combinePredicates;
  * @author Gavin King
  */
 @Internal
-public final class FullJoinEmulationHelper {
+public final class FullJoinEmulation {
 
 	private final AbstractSqlAstTranslator<?> translator;
 	private List<FullJoinEmulationInfo> fullJoinEmulationInfos;
@@ -63,7 +63,7 @@ public final class FullJoinEmulationHelper {
 	private IdentityHashMap<SortSpecification, int[]> fullJoinEmulationNullPrecedenceSelectionIndexes;
 	private boolean renderingFullJoinEmulationBranch;
 
-	public FullJoinEmulationHelper(AbstractSqlAstTranslator<?> translator) {
+	public FullJoinEmulation(AbstractSqlAstTranslator<?> translator) {
 		this.translator = translator;
 	}
 
@@ -384,7 +384,13 @@ public final class FullJoinEmulationHelper {
 		final boolean previousRenderingBranch = renderingFullJoinEmulationBranch;
 		renderingFullJoinEmulationBranch = true;
 		try {
-			renderQuerySpec.accept( querySpec );
+			if ( translator.getDialect().supportsDuplicateSelectItemsInQueryGroup() ) {
+				renderQuerySpec.accept( querySpec );
+			}
+			else {
+				translator.withRowNumbering( null, true,
+						() -> renderQuerySpec.accept( querySpec ) );
+			}
 		}
 		finally {
 			renderingFullJoinEmulationBranch = previousRenderingBranch;
@@ -561,13 +567,24 @@ public final class FullJoinEmulationHelper {
 	}
 
 	private void renderFullJoinEmulationAdditionalSelectItems(SelectClause selectClause) {
+		final boolean forceSelectAliases =
+				!translator.getDialect()
+						.supportsDuplicateSelectItemsInQueryGroup();
 		String separator =
 				countRenderedSelectItems( selectClause ) > 0
 						? COMMA_SEPARATOR
 						: NO_SEPARATOR;
+		final int aliasOffset = countRenderedSelectItems( selectClause );
+		int aliasIndex = 0;
 		for ( var extraExpression : fullJoinEmulationExtraSelections ) {
 			translator.appendSql( separator );
 			translator.renderSelectExpression( extraExpression );
+			if ( forceSelectAliases ) {
+				translator.appendSql( ' ' );
+				translator.appendSql( 'c' );
+				translator.appendSql( aliasOffset + aliasIndex );
+			}
+			aliasIndex++;
 			separator = COMMA_SEPARATOR;
 		}
 	}

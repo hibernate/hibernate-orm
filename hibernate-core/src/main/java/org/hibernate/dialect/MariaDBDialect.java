@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.Incubating;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -411,6 +412,12 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsIntersect() {
 		return true;
+	}
+
+	@Override
+	@Incubating
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
 	}
 
 	@Override

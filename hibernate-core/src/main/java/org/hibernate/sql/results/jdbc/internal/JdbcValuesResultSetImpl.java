@@ -359,7 +359,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			}
 			else {
 				final var rowToCache = new Object[rowToCacheSize];
-				for ( int i = 0; i < currentRowJdbcValues.length; i++ ) {
+				for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
 					final int cacheIndex = valueIndexesToCacheIndexes[i];
 					if ( cacheIndex != -1 ) {
 						rowToCache[cacheIndex] = initializedIndexes.get( i ) ? currentRowJdbcValues[i] : null;

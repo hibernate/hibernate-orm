@@ -4,18 +4,14 @@
  */
 package org.hibernate.testing.logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.jboss.logging.Logger;
+
 import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.jboss.logging.Logger;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.LoggingException;
-import org.apache.logging.log4j.message.MessageFormatMessageFactory;
-import org.apache.logging.log4j.message.StringFormattedMessage;
-import org.apache.logging.log4j.spi.AbstractLogger;
 
 /**
  * A {@code Logger} implementation which delegates to Log4J2 but makes it possible
@@ -23,25 +19,17 @@ import org.apache.logging.log4j.spi.AbstractLogger;
  *
  * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
-public final class Log4J2DelegatingLogger extends Logger {
+public final class DelegatingLogger extends Logger {
 
-	private final AbstractLogger logger;
-	private final MessageFormatMessageFactory messageFactory;
+	private final Logger delegate;
 
 	// Synchronize access on the field
 	private final List<LogListener> enabledListeners = new LinkedList<>();
 	private final AtomicBoolean interceptEnabled = new AtomicBoolean( false );
 
-	Log4J2DelegatingLogger(final String name) {
-		super( name );
-		org.apache.logging.log4j.Logger logger = LogManager.getLogger( name );
-		if ( !( logger instanceof AbstractLogger ) ) {
-			throw new LoggingException( "The logger for [" + name + "] does not extend AbstractLogger. Actual logger: " + logger
-					.getClass()
-					.getName() );
-		}
-		this.logger = (AbstractLogger) logger;
-		this.messageFactory = new MessageFormatMessageFactory();
+	DelegatingLogger(final Logger logger) {
+		super( logger.getName() );
+		this.delegate = logger;
 	}
 
 	void registerListener(LogListener newListener) {
@@ -62,7 +50,7 @@ public final class Log4J2DelegatingLogger extends Logger {
 
 	@Override
 	public boolean isEnabled(final Level level) {
-		return this.logger.isEnabled( translate( level ) );
+		return this.delegate.isEnabled( level );
 	}
 
 	@Override
@@ -72,29 +60,21 @@ public final class Log4J2DelegatingLogger extends Logger {
 			final Object message,
 			final Object[] parameters,
 			final Throwable thrown) {
-		final org.apache.logging.log4j.Level translatedLevel = translate( level );
 		if ( interceptEnabled.get() ) {
 			intercept(
 					level,
-					parameters == null || parameters.length == 0 ?
+					(parameters == null || parameters.length == 0) ?
 							String.valueOf( message ) :
 							MessageFormat.format( String.valueOf( message ), parameters ),
 					thrown
 			);
 		}
-		if ( !this.logger.isEnabled( translatedLevel ) ) {
+
+		if ( !this.delegate.isEnabled( level ) ) {
 			return;
 		}
-		try {
-			this.logger.logMessage( loggerClassName, translatedLevel, null,
-					( parameters == null || parameters.length == 0 ) ?
-							this.messageFactory.newMessage( message ) :
-							this.messageFactory.newMessage( String.valueOf( message ), parameters ),
-					thrown
-			);
-		}
-		catch (Throwable ignored) {
-		}
+
+		this.delegate.log( loggerClassName, level, message, parameters, thrown );
 	}
 
 	private void intercept(Level level, String renderedMessage, Throwable thrown) {
@@ -112,24 +92,16 @@ public final class Log4J2DelegatingLogger extends Logger {
 			final String format,
 			final Object[] parameters,
 			final Throwable thrown) {
-		final org.apache.logging.log4j.Level translatedLevel = translate( level );
+
 		if ( interceptEnabled.get() ) {
 			intercept( level, parameters == null ? format : String.format( format, parameters ), thrown );
 		}
-		if ( !logger.isEnabled( translatedLevel ) ) {
+
+		if ( !delegate.isEnabled( level ) ) {
 			return;
 		}
-		try {
-			this.logger.logMessage(
-					loggerClassName,
-					translatedLevel,
-					null,
-					new StringFormattedMessage( format, parameters ),
-					thrown
-			);
-		}
-		catch (Throwable ignored) {
-		}
+
+		this.delegate.logf( loggerClassName, level, thrown, format, parameters );
 	}
 
 	private static org.apache.logging.log4j.Level translate(final Level level) {
@@ -150,9 +122,23 @@ public final class Log4J2DelegatingLogger extends Logger {
 				return org.apache.logging.log4j.Level.DEBUG;
 			case TRACE:
 				return org.apache.logging.log4j.Level.TRACE;
+			default:
+				return org.apache.logging.log4j.Level.INFO;
 		}
-
-		return org.apache.logging.log4j.Level.ALL;
 	}
 
+	org.apache.logging.log4j.Level getLevel() {
+		return LogManager.getLogger( getName() ).getLevel();
+	}
+
+	void setLevel(org.apache.logging.log4j.Level level) {
+		((LoggerContext) LogManager.getContext( false ))
+				.getConfiguration()
+				.getLoggerConfig( getName() )
+				.setLevel( level );
+	}
+
+	void setLevel(Level level) {
+		setLevel( translate( level ) );
+	}
 }

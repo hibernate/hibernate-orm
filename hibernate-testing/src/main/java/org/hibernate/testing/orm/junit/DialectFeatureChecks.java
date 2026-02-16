@@ -670,8 +670,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof SybaseDialect
-					|| dialect instanceof DerbyDialect );
+			return !( dialect instanceof DerbyDialect );
 		}
 	}
 

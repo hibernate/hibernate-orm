@@ -39,7 +39,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
+import org.hibernate.sql.ast.spi.FullJoinEmulation;
 
 
 /**
@@ -51,16 +51,16 @@ import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MySQLDialect dialect;
-	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
+	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
-		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
 	}
 
-	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
-		return fullJoinEmulationHelpers.getFirst();
+	private FullJoinEmulation currentFullJoinEmulationHelper() {
+		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 				helper.hasActiveFullJoinEmulation()
 						&& !helper.isFullJoinEmulationQueryPart( querySpec );
 		if ( needsNestedHelper ) {
-			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+			fullJoinEmulations.push( new FullJoinEmulation( this ) );
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
@@ -86,7 +86,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		}
 		finally {
 			if ( needsNestedHelper ) {
-				fullJoinEmulationHelpers.pop();
+				fullJoinEmulations.pop();
 			}
 		}
 	}

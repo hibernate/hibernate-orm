@@ -15,7 +15,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.FullJoinEmulationHelper;
+import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -55,15 +55,15 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	private boolean renderAsArray;
-	private final ArrayDeque<FullJoinEmulationHelper> fullJoinEmulationHelpers = new ArrayDeque<>();
+	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
 	}
 
-	private FullJoinEmulationHelper currentFullJoinEmulationHelper() {
-		return fullJoinEmulationHelpers.getFirst();
+	private FullJoinEmulation currentFullJoinEmulationHelper() {
+		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 				helper.hasActiveFullJoinEmulation()
 						&& !helper.isFullJoinEmulationQueryPart( querySpec );
 		if ( needsNestedHelper ) {
-			fullJoinEmulationHelpers.push( new FullJoinEmulationHelper( this ) );
+			fullJoinEmulations.push( new FullJoinEmulation( this ) );
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
@@ -84,7 +84,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		}
 		finally {
 			if ( needsNestedHelper ) {
-				fullJoinEmulationHelpers.pop();
+				fullJoinEmulations.pop();
 			}
 		}
 	}

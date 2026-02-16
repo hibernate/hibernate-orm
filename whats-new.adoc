@@ -1,8 +1,8 @@
-= What's New in 7.3
+= What's New in {version}
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 7.3
+:version: 7.4
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -11,94 +11,3 @@
 Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
-
-[[key-type]]
-== KeyType
-
-The new `KeyType` enum is a `FindOption` that allows `find()` and `findMultiple()` to perform a load based on natural id in addition to identifier.
-
-[source,java]
-----
-@Entity
-class Person {
-	@Id
-	Integer id;
-	@NaturalId
-	String name;
-	...
-}
-
-// loads by id, implicitly
-session.find( Person.class, 1 );
-
-// loads by id, explicitly
-session.find( Person.class, 1, KeyType.IDENTIFIER );
-
-// loads by natural-id
-session.find( Person.class, "Bilbo Baggins", KeyType.NATURAL );
-
-// load by multiple natural-ids
-session.findMultiple( Person.class,
-        List.of( "Bilbo Baggins", "Gandolph the Grey" ),
-        KeyType.NATURAL );
-----
-
-
-[[natural-id-class]]
-== @NaturalIdClass
-
-The new `@NaturalIdClass` annotation models a non-aggregated composite natural id for the purpose of loading.
-It acts very much like `@IdClass` does for identifier loading.
-
-[source,java]
-----
-@Entity
-@NaturalIdClass(PersonNameKey.class)
-class Person {
-	@Id
-	Integer id;
-	@NaturalId
-	String firstName;
-	@NaturalId
-	String lastName;
-    ...
-}
-
-class PersonNameKey {
-	String firstName;
-	String lastName;
-	...
-}
-----
-
-Given this model, we can load Person by natural id via:
-
-[source,java]
-----
-session.find( Order.class,
-        new PersonNameKey( "Bilbo", "Baggins" ),
-        KeyType.NATURAL );
-----
-
-[[credentials-multitenancy]]
-== Tenant-specific credentials
-
-The new interface `TenantCredentialsMapper` allows an application to supply tenant-specific credentials to use for connecting to the database.
-This feature may be used on its own or in conjunction with schema-based or discriminator-based multitenancy.
-It requires a JDBC `DataSource` which correctly implements the method `getConnection(String,String)`.
-
-[[no-default-constructor]]
-== Entities and embeddables with no default constructor
-
-JPA requires that entity and embeddable classes have a default constructor (a constructor with no parameters).
-The bytecode enhancer now automatically adds a default constructor to any `@Entity`, `@MappedSuperclass`, or `@Embeddable` class which does not come equipped with one.
-
-[[annotation-based-user-type]]
-== AnnotationBasedUserType and UserTypeCreationContext
-
-As an alternative to and eventual replacement for `ParameterizedType`, the new interface `AnnotationBasedUserType` offers a programming model for configurable custom types inspired by the success of `AnnotationBasedGenerator`.
-
-[[order-column-check]]
-== Check constraints on List order columns
-
-The schema export tooling now automatically generates check constraints on ``@OrderColumn``s.

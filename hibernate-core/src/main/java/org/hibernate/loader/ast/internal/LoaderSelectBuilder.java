@@ -744,7 +744,7 @@ public class LoaderSelectBuilder {
 		List<Fetchable> bagFetchables = null;
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
-			if ( isBag( fetchable ) ) {
+			if ( fetchable.isBag() ) {
 				if ( bagFetchables == null ) {
 					bagFetchables = new ArrayList<>();
 				}
@@ -761,17 +761,6 @@ public class LoaderSelectBuilder {
 			}
 		}
 		return fetches.build();
-	}
-
-	private boolean isBag(Fetchable fetchable) {
-		return isPluralAttributeMapping( fetchable )
-			&& ( (PluralAttributeMapping) fetchable ).getMappedType().getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG;
-	}
-
-	private boolean isPluralAttributeMapping(Fetchable fetchable) {
-		final var attributeMapping = fetchable.asAttributeMapping();
-		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 
 	@FunctionalInterface
@@ -796,7 +785,7 @@ public class LoaderSelectBuilder {
 			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
-			final boolean isFetchablePluralAttributeMapping = isABag || isPluralAttributeMapping( fetchable );
+			final boolean isFetchablePluralAttributeMapping = isABag || fetchable.isPluralAttributeMapping();
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 
 			if ( !( fetchable instanceof CollectionPart ) ) {

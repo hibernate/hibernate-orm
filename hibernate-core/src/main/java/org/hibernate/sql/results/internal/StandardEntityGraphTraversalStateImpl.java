@@ -30,6 +30,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	private final GraphSemantic graphSemantic;
 	private final JpaMetamodel metamodel;
 	private GraphImplementor<?> currentGraphContext;
+	private boolean traversedAtLeastOneBag = false;
 
 	public StandardEntityGraphTraversalStateImpl(
 			GraphSemantic graphSemantic,
@@ -62,7 +63,11 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		currentGraphContext = null;
 		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
-			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
+			final boolean isBag = fetchable.isBag();
+			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, !(traversedAtLeastOneBag && isBag) );
+			if ( isBag ) {
+				traversedAtLeastOneBag = true;
+			}
 			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 			final Class<?> subgraphMapKey;
 			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {

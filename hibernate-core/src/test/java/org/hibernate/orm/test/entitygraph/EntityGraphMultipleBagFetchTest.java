@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.entitygraph;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -18,10 +20,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.Hibernate;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -64,18 +66,24 @@ public class EntityGraphMultipleBagFetchTest {
 				session -> {
 					EntityManager entityManager = session.unwrap( EntityManager.class );
 
-					entityManager
+					List<Order> orders = entityManager
 						.createQuery( criteriaQuery(entityManager) )
 						.getResultList();
 
-					assertNoJoinFetch(statementInspector);
+					// Expect three SELECT statements
+					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertAllSelect();
+					// First one fetches parent entity, subsequent selects for bags
+					for (int i = 0; i < 3; i++) {
+						statementInspector.assertNumberOfJoins( i, 0 );
+					}
+
+					assertInitialized(orders.get(0));
 				}
 		);
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-20152",
-		reason = "throws MultipleBagFetchException instead of using subsequent selects")
 	void testWithEntityGraph(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -88,12 +96,20 @@ public class EntityGraphMultipleBagFetchTest {
 					entityGraph.addAttributeNodes( "products" );
 					entityGraph.addAttributeNodes( "tags" );
 
-					entityManager
+					List<Order> orders = entityManager
 						.createQuery( criteriaQuery(entityManager) )
 						.setHint( AvailableHints.HINT_SPEC_FETCH_GRAPH, entityGraph )
 						.getResultList();
 
-					assertNoJoinFetch(statementInspector);
+					// Expect two SELECT statements
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertAllSelect();
+					// First one join fetches first bag
+					statementInspector.assertNumberOfJoins( 0, 1 );
+					// Subsequent select for second bag
+					statementInspector.assertNumberOfJoins( 1, 0 );
+
+					assertInitialized(orders.get(0));
 				}
 		);
 	}
@@ -105,10 +121,10 @@ public class EntityGraphMultipleBagFetchTest {
 		return criteriaQuery;
 	}
 
-	private void assertNoJoinFetch(SQLStatementInspector statementInspector) {
-		statementInspector.assertNumberOfJoins( 0, 0 );
-		statementInspector.assertExecutedCount( 3 );
-		statementInspector.assertAllSelect();
+	private void assertInitialized(Order order) {
+		assertTrue( Hibernate.isInitialized(order) );
+		assertTrue( Hibernate.isInitialized(order.products) );
+		assertTrue( Hibernate.isInitialized(order.tags) );
 	}
 
 	@Entity

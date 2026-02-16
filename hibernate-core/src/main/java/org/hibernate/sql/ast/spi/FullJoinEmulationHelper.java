@@ -198,28 +198,62 @@ public final class FullJoinEmulationHelper {
 	}
 
 	private FullJoinEmulationPlan createFullJoinEmulationPlan(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
-		return fullJoins.size() == 1 && translator.getDialect().supportsExceptAll()
-				? createSingleFullJoinExceptAllEmulationPlan( querySpec )
-				: createMultiFullJoinEmulationPlan( querySpec, fullJoins );
+		return translator.getDialect().supportsExceptAll()
+				? createExceptAllEmulationPlan( querySpec, fullJoins.size() )
+				: createNullnessPredicateEmulationPlan( querySpec, fullJoins );
 	}
 
-	private FullJoinEmulationPlan createSingleFullJoinExceptAllEmulationPlan(QuerySpec querySpec) {
-		final var branchBase = querySpec.isRoot() ? querySpec : querySpec.asRootQuery();
-		final var left = createFullJoinEmulationBranch( branchBase, LEFT );
-		final var right = createFullJoinEmulationBranch( branchBase, RIGHT );
-		final var except = createFullJoinEmulationBranch( branchBase, INNER );
-		final var unionQuery =
-				new QueryGroup( false, UNION_ALL,
-						List.of( left.querySpec(), right.querySpec() ) );
-		return new FullJoinEmulationPlan(
-				new QueryGroup( querySpec.isRoot(), EXCEPT_ALL,
-						List.of( unionQuery, except.querySpec() ) ),
-				List.of( left, right, except )
+	private FullJoinEmulationPlan createExceptAllEmulationPlan(QuerySpec querySpec, int fullJoinCount) {
+		return createExceptAllEmulationPlan(
+				querySpec.isRoot() ? querySpec : querySpec.asRootQuery(),
+				fullJoinCount,
+				0,
+				new SqlAstJoinType[fullJoinCount],
+				querySpec.isRoot()
 		);
 	}
 
-	private FullJoinEmulationPlan createMultiFullJoinEmulationPlan(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
-		final var branches = createFullJoinEmulationBranches(
+	private FullJoinEmulationPlan createExceptAllEmulationPlan(
+			QuerySpec branchBase,
+			int fullJoinCount,
+			int index,
+			SqlAstJoinType[] joinSides,
+			boolean root) {
+		final List<? extends QueryPart> queryParts;
+		final QueryPart innerQueryPart;
+		final List<FullJoinEmulationBranch> branches;
+		if ( index + 1 == fullJoinCount ) {
+			joinSides[index] = LEFT;
+			final var left = createFullJoinEmulationBranch( branchBase, joinSides );
+			joinSides[index] = RIGHT;
+			final var right = createFullJoinEmulationBranch( branchBase, joinSides );
+			joinSides[index] = INNER;
+			final var inner = createFullJoinEmulationBranch( branchBase, joinSides );
+			branches = List.of( left, right, inner );
+			queryParts = List.of( left.querySpec(), right.querySpec() );
+			innerQueryPart = inner.querySpec();
+		}
+		else {
+			joinSides[index] = LEFT;
+			final var left = createExceptAllEmulationPlan( branchBase, fullJoinCount, index + 1, joinSides, false );
+			joinSides[index] = RIGHT;
+			final var right = createExceptAllEmulationPlan( branchBase, fullJoinCount, index + 1, joinSides, false );
+			joinSides[index] = INNER;
+			final var inner = createExceptAllEmulationPlan( branchBase, fullJoinCount, index + 1, joinSides, false );
+			queryParts = List.of( left.queryGroup(), right.queryGroup() );
+			innerQueryPart = inner.queryGroup();
+			branches = new ArrayList<>();
+			branches.addAll( left.branches() );
+			branches.addAll( right.branches() );
+			branches.addAll( inner.branches() );
+		}
+		final var unionAll = new QueryGroup( false, UNION_ALL, queryParts );
+		final var exceptAll = new QueryGroup( root, EXCEPT_ALL, List.of( unionAll, innerQueryPart ) );
+		return new FullJoinEmulationPlan( exceptAll, branches );
+	}
+
+	private FullJoinEmulationPlan createNullnessPredicateEmulationPlan(QuerySpec querySpec, List<FullJoinEmulationInfo> fullJoins) {
+		final var branches = createNullnessPredicateEmulationPlanBranches(
 				querySpec.isRoot()
 						? querySpec
 						: querySpec.asRootQuery(),
@@ -239,13 +273,13 @@ public final class FullJoinEmulationHelper {
 
 	private FullJoinEmulationBranch createFullJoinEmulationBranch(
 			QuerySpec branchBase,
-			SqlAstJoinType joinType) {
+			SqlAstJoinType[] joinSides) {
 		final var branchQuery = branchBase.asSubQuery();
 		clearSortAndOffsetFetch( branchQuery );
-		return new FullJoinEmulationBranch( branchQuery, new SqlAstJoinType[] { joinType } );
+		return new FullJoinEmulationBranch( branchQuery, joinSides.clone() );
 	}
 
-	private List<FullJoinEmulationBranch> createFullJoinEmulationBranches(
+	private List<FullJoinEmulationBranch> createNullnessPredicateEmulationPlanBranches(
 			QuerySpec branchBase,
 			List<FullJoinEmulationInfo> fullJoins,
 			int index,
@@ -267,7 +301,7 @@ public final class FullJoinEmulationHelper {
 			final var leftTableGroupNotNullnessPredicate = createTableGroupNotNullnessPredicate( leftTableGroup );
 
 			joinSides[index] = LEFT;
-			final var left = createFullJoinEmulationBranches(
+			final var left = createNullnessPredicateEmulationPlanBranches(
 					branchBase,
 					fullJoins,
 					index + 1,
@@ -284,7 +318,7 @@ public final class FullJoinEmulationHelper {
 			);
 
 			joinSides[index] = RIGHT;
-			final var right = createFullJoinEmulationBranches(
+			final var right = createNullnessPredicateEmulationPlanBranches(
 					branchBase,
 					fullJoins,
 					index + 1,

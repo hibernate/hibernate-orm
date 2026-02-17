@@ -4,16 +4,13 @@
  */
 package org.hibernate.orm.test.mapping.onetoone.primarykey;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -34,25 +31,22 @@ public class NullablePrimaryKeyTest {
 	@Test
 	public void testGeneratedSql() {
 
-		Map settings = new HashMap();
+		var settings = new Properties();
 		settings.putAll( Environment.getProperties() );
 		settings.put( AvailableSettings.DIALECT, SQLServerDialect.class.getName() );
 
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
+		var serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
 
 		try {
-			MetadataSources ms = new MetadataSources( serviceRegistry );
+			var ms = new MetadataSources( serviceRegistry );
 			ms.addAnnotatedClass( Address.class );
 			ms.addAnnotatedClass( Person.class );
+			final List<String> commands =
+					new SchemaCreatorImpl( serviceRegistry )
+							.generateCreationCommands( ms.buildMetadata(), false );
 
-			final Metadata metadata = ms.buildMetadata();
-			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands(
-					metadata,
-					false
-			);
-			String expectedMappingTableSql = "create table personAddress (address_id bigint, " +
-					"person_id bigint not null, primary key (person_id))";
-
+			String expectedMappingTableSql =
+					"create table personAddress (address_id bigint not null, person_id bigint not null, primary key (person_id))";
 			assertEquals( expectedMappingTableSql, commands.get( 2 ), "Wrong SQL" );
 		}
 		catch (Exception e) {

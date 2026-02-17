@@ -811,7 +811,7 @@ public class OracleLegacyDialect extends Dialect {
 			case DATE:
 				return "date";
 			case TIME:
-				return getVersion().isBefore( 9 ) ? "date" : super.columnType( sqlTypeCode );
+				return getVersion().isBefore( 9 ) ? "date" : "timestamp($p)";
 			case TIMESTAMP:
 				// the only difference between date and timestamp
 				// on Oracle is that date has no fractional seconds

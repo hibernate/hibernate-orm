@@ -68,7 +68,7 @@ public class ManyToOneJoinTableForeignKeyNullabilityTest {
 		}
 		assertNotNull( found );
 
-		assertTrue( found.matches( ".*\"?publisher_id\"?\\s+[^,]*\\bnot\\s+null\\b.*" ) );
+		assertTrue( found.matches( ".*\"?publisher_id\"?\\s+[^,]*(\\(\\d+,\\d+\\)\\s+)?\\bnot\\s+null\\b.*" ) );
 	}
 
 	@Entity(name = "Author")

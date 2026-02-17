@@ -125,9 +125,9 @@ public class ImportContextImpl implements ImportContext {
 	private String unqualifyName(String qualifiedName) {
 		final String sourceQualifiedName = qualifiedName.replace( '$', '.' );
 		final String simpleName = unqualify( qualifiedName );
-		boolean canBeSimple;
+		final boolean canBeSimple;
 		if ( simpleNames.containsKey( simpleName ) ) {
-			String existing = simpleNames.get( simpleName );
+			final String existing = simpleNames.get( simpleName );
 			canBeSimple = existing.equals( sourceQualifiedName );
 		}
 		else {
@@ -136,8 +136,10 @@ public class ImportContextImpl implements ImportContext {
 			imports.add( sourceQualifiedName );
 		}
 
-		if ( inSamePackage( qualifiedName ) || inJavaLang( qualifiedName )
-				|| canBeSimple && imports.contains( sourceQualifiedName ) ) {
+		if ( canBeSimple && (
+				inSamePackage( qualifiedName )
+				|| inJavaLang( qualifiedName )
+				|| imports.contains( sourceQualifiedName ) ) ) {
 			return unqualify( qualifiedName );
 		}
 		else {
@@ -223,12 +225,12 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public static String unqualify(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( '.' );
-		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf( '.' ) + 1 );
+		final int loc = qualifiedName.lastIndexOf( '.' );
+		return loc < 0 ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( '.' );
-		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
+		final int loc = qualifiedName.lastIndexOf( '.' );
+		return loc < 0 ? "" : qualifiedName.substring( 0, loc );
 	}
 }

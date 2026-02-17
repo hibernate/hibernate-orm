@@ -158,7 +158,7 @@ mysql_setup() {
 }
 
 mariadb() {
-  mariadb_12_0
+  mariadb_12_2
 }
 
 mariadb_wait_until_start()
@@ -210,6 +210,18 @@ mariadb_12_0() {
     mariadb_setup
 }
 
+mariadb_12_1() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_1:-docker.io/mariadb:12.1.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
+}
+
+mariadb_12_2() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_2:-docker.io/mariadb:12.2.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_setup
+}
+
 mariadb_verylatest() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
@@ -229,7 +241,7 @@ mariadb_setup() {
       create_cmd+="create database ${databases[i]}; grant all privileges on ${databases[i]}.* to 'hibernate_orm_test'@'%';"
     done
     $CONTAINER_CLI exec mariadb bash -c "mariadb -u root -phibernate_orm_test -e \"${create_cmd}\"" 2>/dev/null
-    echo "MySQL databases were successfully setup"
+    echo "MariaDB databases were successfully setup"
 }
 
 POSTGRESQL_PLATFORM_OPTION=""
@@ -1224,44 +1236,6 @@ EOF
   echo "Cockroachdb successfully started"
 }
 
-cockroachdb_24_1() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_3:-cockroachdb/cockroach:v24.3.3} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
-  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
-SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
-SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
-SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
-SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '5s';
-SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-
-quit
-EOF
-"
-  cockroachdb_setup
-  echo "Cockroachdb successfully started"
-}
-
 cockroachdb_24_3() {
   $CONTAINER_CLI rm -f cockroach || true
   LOG_CONFIG="
@@ -1405,7 +1379,7 @@ tidb() {
 
 tidb_8_5() {
     $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.4}
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.5}
 
     # Wait for TiDB to start
     OUTPUT=
@@ -1628,6 +1602,7 @@ if [ -z ${1} ]; then
     echo -e "\tcockroachdb_24_1"
     echo -e "\tcockroachdb_23_2"
     echo -e "\tdb2"
+    echo -e "\tdb2_12_1"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
@@ -1639,11 +1614,15 @@ if [ -z ${1} ]; then
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"
+    echo -e "\tmariadb_12_2"
+    echo -e "\tmariadb_12_1"
+    echo -e "\tmariadb_12_0"
     echo -e "\tmariadb_11_8"
     echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_10_11"
     echo -e "\tmariadb_10_6"
     echo -e "\tmssql"
+    echo -e "\tmssql_2025"
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
@@ -1657,8 +1636,15 @@ if [ -z ${1} ]; then
     echo -e "\toracle"
     echo -e "\toracle_23"
     echo -e "\toracle_21"
+    echo -e "\toracle_18"
+    echo -e "\toracle_atps"
+    echo -e "\toracle_atps_tls"
+    echo -e "\toracle_db19c"
+    echo -e "\toracle_db21c"
+    echo -e "\toracle_db23c"
     echo -e "\tgaussdb"
     echo -e "\tpostgresql"
+    echo -e "\tpostgresql_18"
     echo -e "\tpostgresql_17"
     echo -e "\tpostgresql_16"
     echo -e "\tpostgresql_15"
@@ -1669,6 +1655,7 @@ if [ -z ${1} ]; then
     echo -e "\ttidb_8_5"
     echo -e "\ttidb_5_4"
     echo -e "\tinformix"
+    echo -e "\tinformix_15"
     echo -e "\tinformix_14_10"
     echo -e "\tinformix_12_10"
     echo -e "\tspanner"

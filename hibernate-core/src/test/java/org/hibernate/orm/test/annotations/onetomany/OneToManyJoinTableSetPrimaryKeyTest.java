@@ -67,7 +67,7 @@ public class OneToManyJoinTableSetPrimaryKeyTest {
 		assertNotNull( found );
 
 		assertThat( found )
-				.containsPattern( "\"?publisher_id\"?\\s+[^,]*\\bnot\\s+null\\b" )
+				.containsPattern( "\"?publisher_id\"?\\s+[^,]*(\\(\\d+,\\d+\\)\\s+)?\\bnot\\s+null\\b" )
 				.containsPattern( "\"?authors_ssn\"?\\s+[^,]*\\bnot\\s+null\\b" )
 				.containsPattern( "\\bprimary\\s+key\\s*\\(\\s*\"?authors_ssn\"?\\s*\\)" )
 				.doesNotContainPattern( "\"?authors_ssn\"?\\s+[^,]*\\bunique\\b" )

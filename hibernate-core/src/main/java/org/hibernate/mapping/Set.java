@@ -43,7 +43,7 @@ public non-sealed class Set extends Collection {
 		super( customTypeBeanResolver, persistentClass, buildingContext );
 	}
 
-	private Set(Collection original) {
+	private Set(Set original) {
 		super( original );
 	}
 

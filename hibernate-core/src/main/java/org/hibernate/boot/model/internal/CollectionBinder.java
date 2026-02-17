@@ -39,6 +39,7 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
@@ -2058,7 +2059,7 @@ public abstract class CollectionBinder {
 		bindCollectionSecondPass( targetEntity, joinColumns );
 
 		if ( isCollectionOfEntities ) {
-			final ManyToOne element = handleCollectionOfEntities( elementTypeDetails, targetEntity, hqlOrderBy );
+			final var element = handleCollectionOfEntities( elementTypeDetails, targetEntity, hqlOrderBy );
 			bindManyToManyInverseForeignKey( targetEntity, inverseJoinColumns, element, oneToMany );
 		}
 		else if ( isManyToAny ) {
@@ -2666,14 +2667,21 @@ public abstract class CollectionBinder {
 		if ( notFoundAction == NotFoundAction.IGNORE ) {
 			value.disableForeignKey();
 		}
+		final boolean createPrimaryKey = unique && oneToMany && collection.isSet();
 		TableBinder.bindForeignKey(
 				targetEntity,
 				collection.getOwner(),
 				joinColumns,
 				value,
-				unique,
+				unique && !createPrimaryKey,
 				buildingContext
 		);
+		if ( createPrimaryKey ) {
+			final var table = value.getTable();
+			final var primaryKey = new PrimaryKey( table );
+			primaryKey.addColumns( value );
+			table.setPrimaryKey( primaryKey );
+		}
 	}
 
 	private void bindUnownedManyToManyInverseForeignKey(

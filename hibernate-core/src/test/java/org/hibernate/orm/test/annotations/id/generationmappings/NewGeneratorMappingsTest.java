@@ -4,6 +4,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.NoopOptimizer;
+import org.hibernate.id.enhanced.PooledLoOptimizer;
+import org.hibernate.id.enhanced.PooledLoThreadLocalOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
@@ -35,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = {
 				MinimalSequenceEntity.class,
 				CompleteSequenceEntity.class,
+				OptimizerSequenceEntity.class,
+				OptimizerSequenceEntity2.class,
 				AutoEntity.class,
 				MinimalTableEntity.class,
 				DedicatedSequenceEntity1.class,
@@ -81,6 +85,34 @@ public class NewGeneratorMappingsTest  {
 		assertEquals( 1000, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( 52, seqGenerator.getDatabaseStructure().getIncrementSize() );
 		assertFalse( NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
+	}
+
+	@Test
+	public void testOptimizerAnnotation(SessionFactoryScope scope) {
+		final EntityPersister persister = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( OptimizerSequenceEntity.class.getName() );
+		Generator generator = persister.getGenerator();
+		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
+		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		assertEquals( 20, seqGenerator.getDatabaseStructure().getIncrementSize() );
+		assertTrue( PooledLoOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
+		assertEquals( 20, seqGenerator.getOptimizer().getIncrementSize() );
+	}
+
+	@Test
+	public void testOptimizerAnnotation2(SessionFactoryScope scope) {
+		final EntityPersister persister = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( OptimizerSequenceEntity2.class.getName() );
+		Generator generator = persister.getGenerator();
+		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
+		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		assertEquals( 30, seqGenerator.getDatabaseStructure().getIncrementSize() );
+		assertTrue( PooledLoThreadLocalOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
+		assertEquals( 30, seqGenerator.getOptimizer().getIncrementSize() );
 	}
 
 	@Test

@@ -657,12 +657,16 @@ For example, with no optimizer applied to a sequence-generator, every time the a
 But if we can minimize the number of times we need to communicate with the database here, the application will be able to perform better,
 which is, in fact, the role of these optimizers.
 
+The generator's increment size, configured using `allocationSize` on `@SequenceGenerator` or `@TableGenerator`,
+determines the size of the identifier pool. The optimizer determines how values obtained from the database
+are interpreted and how identifiers are allocated from that pool.
+
 none:: No optimization is performed. We communicate with the database each and every time an identifier value is needed from the generator.
 
 pooled-lo:: The pooled-lo optimizer works on the principle that the increment-value is encoded into the database table/sequence structure.
 In sequence-terms, this means that the sequence is defined with a greater-than-1 increment size.
 +
-For example, consider a brand new sequence defined as `create sequence m_sequence start with 1 increment by 20`.
+For example, consider a brand-new sequence defined as `create sequence m_sequence start with 1 increment by 20`.
 This sequence essentially defines a "pool" of 20 usable id values each and every time we ask it for its next-value.
 The pooled-lo optimizer interprets the next-value as the low end of that pool.
 +
@@ -674,6 +678,8 @@ The "lo" part of the name indicates that the value from the database table/seque
 
 pooled:: Just like pooled-lo, except that here the value from the table/sequence is interpreted as the high end of the value pool.
 
+pooled-lotl:: A variant of pooled-lo that maintains a separate pool of identifiers for each thread.
+
 hilo; legacy-hilo:: Define a custom algorithm for generating pools of values based on a single value from a table or sequence.
 +
 These optimizers are not recommended for use. They are maintained (and mentioned) here simply for use by legacy applications that used these strategies previously.
@@ -682,6 +688,59 @@ These optimizers are not recommended for use. They are maintained (and mentioned
 ====
 Applications can also implement and use their own optimizer strategies, as defined by the `org.hibernate.id.enhanced.Optimizer` contract.
 ====
+
+[[identifiers-generators-optimizer-annotation]]
+===== Selecting an optimizer with `@GeneratorOptimizer`
+
+The `@GeneratorOptimizer` annotation selects a standard optimizer for sequence or table identifier generation.
+Place it on the identifier field or getter alongside `@GeneratedValue`, and select a value from
+`org.hibernate.id.enhanced.StandardOptimizerDescriptor`.
+
+[[identifiers-generator-optimizer-sequence-example]]
+.Selecting `pooled-lo` for a sequence generator
+====
+[source,java]
+----
+include::{example-dir-identifier}/GeneratorOptimizerTest.java[tag=identifiers-generator-optimizer-sequence, indent=0]
+----
+====
+
+The database sequence must have an increment of 20, matching `allocationSize`.
+Hibernate uses this increment when creating the sequence during schema generation.
+
+[[identifiers-generator-optimizer-table-example]]
+.Selecting `pooled-lo` for a table generator
+====
+[source,java]
+----
+include::{example-dir-identifier}/GeneratorOptimizerTest.java[tag=identifiers-generator-optimizer-table, indent=0]
+----
+====
+
+This mapping uses the `local_table_entity` segment of the `identifier_pools` table to allocate pools of 20 identifiers.
+
+To reference a generator declared on another entity class, enable global generator scope using
+`hibernate.jpa.compliance.global_id_generators=true`.
+The following example declares a generator on `GeneratorDefinitions` and references it from two other entities.
+
+[[identifiers-generator-optimizer-global-example]]
+.Selecting optimizers when referencing a global generator definition
+====
+[source,java]
+----
+include::{example-dir-identifier}/GeneratorOptimizerTest.java[tag=identifiers-generator-optimizer-global, indent=0]
+----
+====
+
+Both consuming entities reference the same globally named sequence generator definition.
+Hibernate creates a separate generator instance for each entity hierarchy, so each consuming identifier may select its own optimizer.
+`FirstConsumer` selects `POOLED_LO`, while `SecondConsumer` selects `POOLED_LOTL`.
+When sharing a database sequence, consumers must use compatible optimizer strategies and allocation sizes.
+
+The optimizer selection belongs to the consuming identifier mapping.
+`@GeneratorOptimizer` cannot be placed on the class or package declaring a global generator definition.
+It applies to the sequence and table generation paths; it does not override the configuration of a
+`@GenericGenerator` or a custom generator selected using `@IdGeneratorType`.
 
 [[identifiers-generators-IdGeneratorType]]
 ==== Using `@IdGeneratorType`

@@ -99,6 +99,29 @@ link:{migrationGuide}#default-list-semantics[Migration Guide] for replacing the 
 `hibernate.mapping.default_list_semantics` setting.
 
 
+[[generator-optimizer]]
+== Generator optimizer annotation
+
+The new `@GeneratorOptimizer` annotation allows specifying a standard optimizer for sequence or table identifier generation.
+Place it on the identifier field or getter alongside `@GeneratedValue`, choosing a strategy from `org.hibernate.id.enhanced.StandardOptimizerDescriptor`.
+
+[source,java]
+.@GeneratorOptimizer example
+----
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE)
+@SequenceGenerator(sequenceName = "book_sequence", allocationSize = 20)
+@GeneratorOptimizer(StandardOptimizerDescriptor.POOLED_LO)
+private Long id;
+----
+
+Here, `POOLED_LO` allocates identifiers in pools of 20, interpreting each database sequence value as the low end of a pool.
+The database sequence increment must match `allocationSize`; Hibernate uses this increment when creating the sequence during schema generation.
+
+Optimizer selection applies to the consuming identifier mapping, including when it references a globally named generator definition.
+See the link:{userGuideBase}#identifiers-generators-optimizer-annotation[User Guide] for examples and details.
+
+
 [[graph-flushing]]
 == Graph-based Flushing
 

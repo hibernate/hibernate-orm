@@ -680,6 +680,12 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
+	OrmAnnotationDescriptor<GeneratorOptimizer, GeneratorOptimizerAnnotation> OPTIMIZER = new OrmAnnotationDescriptor<>(
+			GeneratorOptimizer.class,
+			GeneratorOptimizerAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false
+	);
 	OrmAnnotationDescriptor<OptimisticLock, OptimisticLockAnnotation> OPTIMISTIC_LOCK = new OrmAnnotationDescriptor<>(
 			OptimisticLock.class,
 			OptimisticLockAnnotation.class,

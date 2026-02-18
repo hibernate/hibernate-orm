@@ -93,11 +93,11 @@ public class CompositeInheritanceWorkingTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "DummyEntity")
 	public static class DummyEntity extends TupAbstractEntity {
 	}
 
-	@Entity
+	@Entity(name = "FooEntity")
 	@IdClass(CompositeIdClass.class)
 	public static class FooEntity extends TupAbstractEntity {
 
@@ -123,7 +123,7 @@ public class CompositeInheritanceWorkingTest {
 
 	}
 
-	@Entity
+	@Entity(name = "Test2Entity")
 	@IdClass(CompositeId2Class.class)
 	public static class Test2Entity extends TupAbstractEntity {
 

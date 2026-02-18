@@ -34,7 +34,7 @@ class MapsEmbeddedIdToIdClassTest {
 		long id2;
 	}
 
-	@Entity
+	@Entity(name = "Employee")
 	@IdClass(EmployeeId.class)
 	static class Employee {
 		@Id
@@ -51,7 +51,7 @@ class MapsEmbeddedIdToIdClassTest {
 		EmployeeId empId;
 	}
 
-	@Entity
+	@Entity(name = "Dependent")
 	@IdClass(DependentId.class)
 	static class Dependent {
 		@Id

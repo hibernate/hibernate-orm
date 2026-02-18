@@ -50,6 +50,7 @@ public class NamedEnumEnumerateValueTests {
 	@Test
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 	void testBasicUsage(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.persist( new Person( 1, "John", Gender.MALE ) );
@@ -73,6 +74,7 @@ public class NamedEnumEnumerateValueTests {
 
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 	@Test
 	void testNulls(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

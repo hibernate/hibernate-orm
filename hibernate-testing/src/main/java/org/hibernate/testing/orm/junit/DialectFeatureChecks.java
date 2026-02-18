@@ -54,6 +54,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -162,6 +163,49 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsNamedEnum implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return definesDdlType( dialect, SqlTypes.ENUM );
+		}
+	}
+
+	public static class SupportPooledSequences implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getSequenceSupport().supportsPooledSequences();
+		}
+	}
+
+	public static class SupportsNumericPrimaryKey implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsFunctionalDependencyAnalysis implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getFunctionalDependencyAnalysisSupport() != FunctionalDependencyAnalysisSupportImpl.NONE;
+		}
+	}
+
+	public static class SupportsAllQuantifiedSubqueriesWithComparison implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsUpdateWithJoin implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			// Spanner doesn't support UPDATE...FROM
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
 	public static class UsesInputStreamToInsertBlob implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.useInputStreamToInsertBlob();
@@ -170,6 +214,9 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsIdentityColumns implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if ( dialect instanceof SpannerPostgreSQLDialect ) {
+				return false;
+			}
 			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
 		}
 	}
@@ -498,7 +545,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsCteInsertStrategy implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect instanceof PostgreSQLDialect
+			return (dialect instanceof PostgreSQLDialect && !(dialect instanceof SpannerPostgreSQLDialect))
 				|| dialect instanceof DB2Dialect
 				|| dialect instanceof GaussDBDialect;
 		}
@@ -560,6 +607,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			if (dialect instanceof DerbyDialect
 				|| dialect instanceof FirebirdDialect
+				|| dialect instanceof SpannerPostgreSQLDialect
 				|| dialect instanceof InformixDialect) {
 				return false;
 			}
@@ -623,27 +671,13 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect instanceof H2Dialect
-				|| dialect instanceof PostgreSQLDialect
-				|| dialect instanceof HANADialect
-				|| dialect instanceof CockroachDialect
-				|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isSameOrAfter( 11 )
-				|| dialect instanceof OracleDialect
-				|| dialect instanceof SpannerDialect
-				|| dialect instanceof SQLServerDialect;
+			return definesFunction( dialect, "percentile_disc" );
 		}
 	}
 
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect instanceof H2Dialect
-				|| dialect instanceof PostgreSQLDialect
-				|| dialect instanceof HANADialect
-				|| dialect instanceof CockroachDialect
-				|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isSameOrAfter( 11 )
-				|| dialect instanceof OracleDialect
-				|| dialect instanceof SpannerDialect
-				|| dialect instanceof SQLServerDialect;
+			return definesFunction( dialect, "percent_rank" );
 		}
 	}
 
@@ -991,6 +1025,9 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsGenerateSeries implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if (dialect instanceof SpannerPostgreSQLDialect) {
+				return false;
+			}
 			return definesSetReturningFunction( dialect, "generate_series" );
 		}
 	}
@@ -1004,6 +1041,24 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsXmlTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesSetReturningFunction( dialect, "xmltable" );
+		}
+	}
+
+	public static class SupportsArrayComparison implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsPrimaryKeyUpdate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsUserDefinedTypes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsUserDefinedTypes();
 		}
 	}
 
@@ -1346,6 +1401,20 @@ abstract public class DialectFeatureChecks {
 			return !(dialect instanceof SybaseASEDialect aseDialect)
 					// The jconn driver apparently doesn't support unicode characters
 					|| aseDialect.getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
+	public static class SupportsTimestampComparison implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsArbitraryEscapeCharInLike implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
 		}
 	}
 

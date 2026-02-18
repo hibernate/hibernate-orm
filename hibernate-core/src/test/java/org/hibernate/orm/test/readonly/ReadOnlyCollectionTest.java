@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.readonly;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -63,11 +64,13 @@ class ReadOnlyCollectionTest {
 			assertEquals( List.of( "foo" ), entity.strings );
 		} );
 	}
-	@Entity static class ModifiableEntity {
+	@Entity(name = "ModifiableEntity")
+	static class ModifiableEntity {
 		@GeneratedValue
 		@Id UUID uuid;
 		double numericValue;
 		@ElementCollection
+		@CollectionTable(name = "STRINGS")
 		List<String> strings = new ArrayList<>();
 	}
 }

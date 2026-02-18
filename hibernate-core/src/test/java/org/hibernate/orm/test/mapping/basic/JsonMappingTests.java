@@ -17,6 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -290,6 +291,7 @@ public abstract class JsonMappingTests {
 			reason = "Altibase doesn't support comparing CLOBs with the = operator")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support comparing JSONB type")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -451,7 +453,7 @@ public abstract class JsonMappingTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "EntityWithObjectJson")
 	public static class EntityWithObjectJson {
 		@Id
 		long id;

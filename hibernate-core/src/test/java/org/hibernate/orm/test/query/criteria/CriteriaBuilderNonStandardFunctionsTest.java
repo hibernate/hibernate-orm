@@ -135,6 +135,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support inet type")
 	public void testSqlCustomType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -227,6 +228,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support overlay")
 	public void testOverlay(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -320,6 +322,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support collation")
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -343,6 +346,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach has unreliable support for numeric types in log function")
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support 2-parameter log function with numeric type")
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -451,6 +455,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	@JiraKey("HHH-16185")
 	@JiraKey("HHH-20113")
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support numeric truncation")
 	public void testNumericTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();

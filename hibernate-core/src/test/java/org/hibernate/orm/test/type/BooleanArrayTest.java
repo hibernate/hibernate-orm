@@ -120,6 +120,7 @@ public class BooleanArrayTest {
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testQuery(SessionFactoryScope scope) {
 	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
@@ -149,6 +150,7 @@ public class BooleanArrayTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
@@ -180,6 +182,7 @@ public class BooleanArrayTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsArrayComparison.class )
 	public void testLiteral(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final HibernateCriteriaBuilder cb = em.getCriteriaBuilder();

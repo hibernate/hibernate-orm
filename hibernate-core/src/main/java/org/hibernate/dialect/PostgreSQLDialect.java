@@ -272,6 +272,10 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
+		registerPostgreSQLColumnTypes( typeContributions, serviceRegistry );
+	}
+
+	protected void registerPostgreSQLColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
@@ -605,6 +609,12 @@ public class PostgreSQLDialect extends Dialect {
 		registerArrayFunctions( functionFactory );
 		registerJsonFunction( functionFactory );
 		registerXmlFunctions( functionFactory );
+		registerUtilityFunctions( functionContributions );
+	}
+
+	protected void registerUtilityFunctions( FunctionContributions functionContributions ) {
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry =  functionContributions.getFunctionRegistry();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

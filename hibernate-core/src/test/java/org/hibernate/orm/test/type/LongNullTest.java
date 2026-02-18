@@ -57,7 +57,7 @@ public class LongNullTest {
 		assertArrayEquals( expected.bfield, actual.bfield );
 	}
 
-	@Entity
+	@Entity(name = "Foo")
 	public static final class Foo {
 		@Id
 		@GeneratedValue

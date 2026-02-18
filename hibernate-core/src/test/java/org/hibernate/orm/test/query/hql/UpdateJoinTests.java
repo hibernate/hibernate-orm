@@ -16,8 +16,10 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.Contact.Name;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -54,6 +56,7 @@ public class UpdateJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUpdateWithJoin.class )
 	public void testUpdateWithJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -72,6 +75,7 @@ public class UpdateJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUpdateWithJoin.class )
 	public void testUpdateWithJoinCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

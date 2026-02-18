@@ -40,7 +40,7 @@ import static org.hamcrest.Matchers.is;
 		reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
 @SkipForDialect( dialectClass = InformixDialect.class,
 		reason = "Blobs are not allowed in this expression (with a column of type BYTE)")
-public class InetAddressMappingTests {
+	public class InetAddressMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) throws Exception {

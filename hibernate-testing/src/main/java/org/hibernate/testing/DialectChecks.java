@@ -43,6 +43,9 @@ abstract public class DialectChecks {
 
 	public static class SupportsIdentityColumns implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
+			if ( dialect instanceof org.hibernate.community.dialect.SpannerPostgreSQLDialect ) {
+				return false;
+			}
 			return dialect.getIdentityColumnSupport().supportsIdentityColumns();
 		}
 	}

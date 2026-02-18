@@ -123,11 +123,11 @@ class ManyToAnySubClassAccessPropertyTest {
 		private Integer id;
 	}
 
-	@Entity
+	@Entity(name = "DogHandler")
 	public static class DogHandler extends Person {
 	}
 
-	@Entity
+	@Entity(name = "Military")
 	public static class Military extends Person {
 	}
 }

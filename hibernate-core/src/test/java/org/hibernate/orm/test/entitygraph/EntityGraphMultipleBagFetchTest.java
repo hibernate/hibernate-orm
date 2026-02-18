@@ -37,12 +37,12 @@ import org.junit.jupiter.api.Test;
 				EntityGraphMultipleBagFetchTest.Tag.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
-@JiraKey(value = "HHH-20152")
+@SessionFactory( useCollectingStatementInspector = true )
+@JiraKey( value = "HHH-20152" )
 public class EntityGraphMultipleBagFetchTest {
 
 	@BeforeAll
-	public void setUp(SessionFactoryScope scope) {
+	public void setUp( SessionFactoryScope scope ) {
 		scope.inTransaction(
 				session -> {
 					Product product = new Product();
@@ -50,15 +50,15 @@ public class EntityGraphMultipleBagFetchTest {
 					Tag tag = new Tag();
 					tag.setName( "test" );
 					Order order = new Order();
-					order.setProducts(List.of(product));
-					order.setTags(List.of(tag));
-					session.persist(order);
+					order.setProducts( List.of( product ));
+					order.setTags( List.of( tag ));
+					session.persist( order );
 				}
 		);
 	}
 
 	@Test
-	void testWithoutEntityGraph(SessionFactoryScope scope) {
+	void testWithoutEntityGraph( SessionFactoryScope scope ) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
@@ -67,24 +67,24 @@ public class EntityGraphMultipleBagFetchTest {
 					EntityManager entityManager = session.unwrap( EntityManager.class );
 
 					List<Order> orders = entityManager
-						.createQuery( criteriaQuery(entityManager) )
+						.createQuery( criteriaQuery( entityManager ) )
 						.getResultList();
 
 					// Expect three SELECT statements
 					statementInspector.assertExecutedCount( 3 );
 					statementInspector.assertAllSelect();
 					// First one fetches parent entity, subsequent selects for bags
-					for (int i = 0; i < 3; i++) {
+					for ( int i = 0; i < 3; i++ ) {
 						statementInspector.assertNumberOfJoins( i, 0 );
 					}
 
-					assertInitialized(orders.get(0));
+					assertInitialized( orders.get( 0 ));
 				}
 		);
 	}
 
 	@Test
-	void testWithEntityGraph(SessionFactoryScope scope) {
+	void testWithEntityGraph( SessionFactoryScope scope ) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
@@ -97,7 +97,7 @@ public class EntityGraphMultipleBagFetchTest {
 					entityGraph.addAttributeNodes( "tags" );
 
 					List<Order> orders = entityManager
-						.createQuery( criteriaQuery(entityManager) )
+						.createQuery( criteriaQuery( entityManager ) )
 						.setHint( AvailableHints.HINT_SPEC_FETCH_GRAPH, entityGraph )
 						.getResultList();
 
@@ -109,22 +109,22 @@ public class EntityGraphMultipleBagFetchTest {
 					// Subsequent select for second bag
 					statementInspector.assertNumberOfJoins( 1, 0 );
 
-					assertInitialized(orders.get(0));
+					assertInitialized( orders.get( 0 ));
 				}
 		);
 	}
 
-	private CriteriaQuery<Order> criteriaQuery(EntityManager entityManager) {
+	private CriteriaQuery<Order> criteriaQuery( EntityManager entityManager ) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Order> criteriaQuery = criteriaBuilder.createQuery( Order.class );
 		criteriaQuery.from( Order.class );
 		return criteriaQuery;
 	}
 
-	private void assertInitialized(Order order) {
-		assertTrue( Hibernate.isInitialized(order) );
-		assertTrue( Hibernate.isInitialized(order.products) );
-		assertTrue( Hibernate.isInitialized(order.tags) );
+	private void assertInitialized( Order order ) {
+		assertTrue( Hibernate.isInitialized( order ) );
+		assertTrue( Hibernate.isInitialized( order.products ) );
+		assertTrue( Hibernate.isInitialized( order.tags ) );
 	}
 
 	@Entity
@@ -146,7 +146,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.id;
 		}
 
-		public void setId(long id) {
+		public void setId( long id ) {
 			this.id = id;
 		}
 
@@ -154,7 +154,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.products;
 		}
 
-		public void setProducts(List<Product> products) {
+		public void setProducts( List<Product> products ) {
 			this.products = products;
 		}
 
@@ -162,7 +162,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.tags;
 		}
 
-		public void setTags(List<Tag> tags) {
+		public void setTags( List<Tag> tags ) {
 			this.tags = tags;
 		}
 	}
@@ -180,7 +180,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.id;
 		}
 
-		public void setId(long id) {
+		public void setId( long id ) {
 			this.id = id;
 		}
 
@@ -188,7 +188,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.name;
 		}
 
-		public void setName(String name) {
+		public void setName( String name ) {
 			this.name = name;
 		}
 	}
@@ -206,7 +206,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.id;
 		}
 
-		public void setId(long id) {
+		public void setId( long id ) {
 			this.id = id;
 		}
 
@@ -214,7 +214,7 @@ public class EntityGraphMultipleBagFetchTest {
 			return this.name;
 		}
 
-		public void setName(String name) {
+		public void setName( String name ) {
 			this.name = name;
 		}
 	}

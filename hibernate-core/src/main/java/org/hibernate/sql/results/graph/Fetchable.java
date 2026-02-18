@@ -7,11 +7,9 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 
@@ -98,16 +96,5 @@ public interface Fetchable extends ModelPart {
 		else {
 			return true;
 		}
-	}
-
-	default boolean isBag() {
-		return this.isPluralAttributeMapping()
-			&& ( (PluralAttributeMapping) this ).getMappedType().getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG;
-	}
-
-	default boolean isPluralAttributeMapping() {
-		final var attributeMapping = this.asAttributeMapping();
-		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 }

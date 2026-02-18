@@ -63,7 +63,6 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -75,11 +74,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -91,35 +86,15 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.LONGNVARCHAR;
-import static org.hibernate.type.SqlTypes.LONGVARBINARY;
-import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
@@ -160,12 +135,7 @@ public class InterSystemsIRISDialect extends Dialect {
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final var dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-		final var stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
-		final var timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 		final var doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
-		final var integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
-		final var timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
 
 		functionFactory.ascii();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
@@ -173,299 +143,31 @@ public class InterSystemsIRISDialect extends Dialect {
 		functionFactory.chr_char();
 		functionFactory.cot();
 		functionFactory.concat_pipeOperator();
-		functionFactory.nowCurdateCurtime();
-
-		functionRegistry.namedDescriptorBuilder( "convert" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(ANY, ANY)
-				.register();
-
-		functionRegistry.noArgsBuilder( "database" )
-				.setInvariantType( stringType )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "dateadd" )
-				.setReturnTypeResolver( useArgType( 3 ) )
-				.setExactArgumentCount( 3 )
-				.setParameterTypes(ANY, NUMERIC, ANY)
-				.setArgumentListSignature( "(STRING string, NUMERIC unit, ANY datetime)" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "datediff" )
-				.setInvariantType( stringType )
-				.setExactArgumentCount( 3 )
-				.setParameterTypes(ANY, ANY, ANY)
-				.setArgumentListSignature( "(ANY value, ANY date, ANY date)" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "datename" )
-				.setInvariantType( stringType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.setArgumentListSignature( "(ANY value)" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "datepart" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(ANY, ANY)
-				.setArgumentListSignature( "(ANY value, ANY value)" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "day" )
-				.setInvariantType( integerType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "dayname" )
-				.setInvariantType( stringType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "dayofmonth" )
-				.setInvariantType( integerType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "dayofweek" )
-				.setInvariantType( integerType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "dayofyear" )
-				.setInvariantType( integerType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%exact" )
-				.setInvariantType( integerType )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%external" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$extract" )
-				.setInvariantType( stringType )
-				.setArgumentCountBetween( 1, 3 )
-				.setParameterTypes(STRING, INTEGER)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$find" )
-				.setArgumentCountBetween( 2, 3 )
-				.setInvariantType( integerType )
-				.setParameterTypes(STRING, STRING, INTEGER)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "getdate" )
-				.setArgumentCountBetween( 0, 1 )
-				.setInvariantType( timestampType )
-				.setParameterTypes(INTEGER)
-				.setUseParenthesesWhenNoArgs( true )
-				.setArgumentListSignature( "([INTEGER precision])" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "ifnull" )
-				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(ANY, ANY, ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%internal" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%isnull" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(ANY, ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%isnumeric" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.setInvariantType( integerType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "lcase" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setInvariantType( stringType )
-				.register();
+		functionFactory.datepartDatename();
+		functionFactory.dayofweekmonthyear();
 
 		functionRegistry.patternDescriptorBuilder( "log10", "log10(?1)" )
 				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		functionRegistry.namedDescriptorBuilder( "lower" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "upper" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "nullif" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(ANY, ANY)
-				.setReturnTypeResolver( useArgType( 1 ) )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "nvl" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(ANY, ANY)
-				.setReturnTypeResolver( useArgType( 1 ) )
-				.register();
-
+		functionFactory.lowerUpper();
+		functionFactory.nullif();
 		functionFactory.round_round();
-
-		functionRegistry.namedDescriptorBuilder( "to_number" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setArgumentListSignature( "STRING string" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "to_char" )
-				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(ANY, STRING)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "to_date" )
-				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(STRING, STRING)
-				.setInvariantType( dateType )
-				.register();
 
 		functionRegistry.register(
 				"trunc",
 				new TruncFunction( "truncate(?1,0)", "truncate(?1,?2)",
 						TruncFunction.DatetimeTrunc.FORMAT, "to_timestamp", typeConfiguration )
 		);
+
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
-
-		functionRegistry.namedDescriptorBuilder( "%sqlstring" )
-				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%sqlupper" )
-				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(STRING, INTEGER)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$piece" )
-				.setArgumentCountBetween( 1, 3 )
-				.setParameterTypes(STRING, STRING, INTEGER, INTEGER)
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%ODBCIN" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "%odbcout" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "ucase" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setInvariantType( stringType )
-				.setArgumentListSignature( "STRING string" )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "user" )
-				.setInvariantType( timestampType )
-				.setParameterTypes(INTEGER)
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
-		functionFactory.xmlelement();
-		functionFactory.xmlconcat();
-
-		functionRegistry.namedDescriptorBuilder( "$list" )
-				.setArgumentCountBetween( 1, 3 )
-				.setInvariantType( stringType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$listdata" )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$listfind" )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$listget" )
-				.setArgumentCountBetween( 1, 3 )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "$listlength" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "current_timestamp" )
-				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( timestampType )
-				.register();
-
 		functionContributions.getFunctionRegistry().register(
 				"extract",
 				new ExtractFunction( this, typeConfiguration )
 		);
 
-		functionRegistry.namedDescriptorBuilder( "current_time" )
-				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( timeType )
-				.register();
-
-		functionRegistry.namedDescriptorBuilder( "current_date" )
-				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType( dateType )
-				.register();
-
-
-		functionRegistry.namedDescriptorBuilder( "char_length" )
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(ANY)
-				.setInvariantType( integerType )
-				.setArgumentListSignature( "ANY any" )
-				.register();
-
-		functionRegistry.registerBinaryTernaryPattern(
-				"locate",
-				integerType,
-				"position(?1 in ?2)",
-				"position(?1 in substring(?2 from ?3))",
-				FunctionParameterType.STRING,
-				FunctionParameterType.STRING,
-				FunctionParameterType.INTEGER,
-				typeConfiguration
-		);
-
-		functionRegistry.registerPattern(
-				"Extract",
-				"?1(?2)",
-				integerType
-		);
-
+		functionFactory.locate_positionSubstring();
 		functionContributions.getFunctionRegistry()
 				.register( "log", new InterSystemsIRISLogFunction( typeConfiguration ) );
 		functionRegistry.registerAlternateKey( "ln", "log" );
@@ -476,10 +178,8 @@ public class InterSystemsIRISDialect extends Dialect {
 		functionFactory.nowCurdateCurtime();
 		functionFactory.substr();
 		functionFactory.sysdate();
-		functionFactory.yearMonthDay();
 		functionFactory.weekQuarter();
 		functionFactory.position();
-		functionFactory.weekQuarter();
 		functionFactory.repeat_replicate();
 		functionFactory.trim1();
 		functionFactory.pi();
@@ -491,25 +191,9 @@ public class InterSystemsIRISDialect extends Dialect {
 				"bit_length",
 				new LengthFunction( "bit_length", "LENGTH(?1)*8", "(CHARACTER_LENGTH(?1) * 8)", typeConfiguration )
 		);
+		functionFactory.characterLength_length( "character_length(?1)" );
+		functionFactory.octetLength_pattern( "length(?1)", "character_length(?1)" );
 
-		functionRegistry.register(
-				"LENGTH",
-				new LengthFunction(
-						"LENGTH",
-						"LENGTH(?1)",
-						"CHARACTER_LENGTH(?1)",
-						typeConfiguration
-				)
-		);
-		functionRegistry.register(
-				"octet_length",
-				new LengthFunction(
-						"octet_length",
-						"LENGTH(?1)",
-						"CHARACTER_LENGTH(?1)",
-						typeConfiguration
-				)
-		);
 	}
 
 
@@ -519,73 +203,10 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 	@Override
-	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-
-		ddlTypeRegistry.addDescriptor( simpleSqlType( BIT ) );
-		ddlTypeRegistry.addDescriptor( simpleSqlType( LONGVARBINARY ) );
-		ddlTypeRegistry.addDescriptor( simpleSqlType( LONGVARCHAR ) );
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARBINARY, LONGVARBINARY, VARBINARY )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( VARCHAR, LONGVARCHAR, VARCHAR )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				sqlTypeBuilder( NVARCHAR, LONGVARCHAR, NVARCHAR )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
-						.build()
-		);
-
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "CHAR(36)", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( CHAR, "CHAR($l)", this ) );
-	}
-
-	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor( org.hibernate.type.descriptor.jdbc.TimestampJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( UUID, VarcharJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP, org.hibernate.type.descriptor.jdbc.TimestampJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( BLOB, BlobJdbcType.MATERIALIZED );
-	}
-
-	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
-		return new DdlTypeImpl(
-				sqlTypeCode,
-				isLob( sqlTypeCode ),
-				columnType( sqlTypeCode ),
-				castType( sqlTypeCode ),
-				this
-		);
-	}
-
-	private CapacityDependentDdlType.Builder sqlTypeBuilder(int sqlTypeCode, int biggestSqlTypeCode, int castTypeCode) {
-		return CapacityDependentDdlType.builder(
-				sqlTypeCode,
-				isLob( sqlTypeCode )
-						? CapacityDependentDdlType.LobKind.ALL_LOB
-						: isLob( biggestSqlTypeCode )
-								? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-								: CapacityDependentDdlType.LobKind.NONE,
-				columnType( biggestSqlTypeCode ),
-				castType( castTypeCode ),
-				this
-		);
-	}
-
-	@Override
-	protected boolean isLob(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
-			case LONG32VARBINARY, LONG32VARCHAR, LONG32NVARCHAR, BLOB, CLOB, NCLOB, LONGNVARCHAR, LONGVARCHAR, LONGVARBINARY -> true;
-			default -> false;
-		};
 	}
 
 	//sql type to column type mapping
@@ -595,23 +216,8 @@ public class InterSystemsIRISDialect extends Dialect {
 			case BOOLEAN:
 			case BIT:
 				return "bit";
-			case CHAR:
-				return "char(1)";
-			case BIGINT:
-				return "BigInt";
-			case DOUBLE:
-				return "double";
-			case FLOAT:
-				return "float";
-			case TIME:
-				return "time";
-			case BINARY:
-			case VARBINARY:
-				return "varbinary($l)";
-			case LONGVARBINARY:
 			case LONG32VARBINARY:
 				return "longvarbinary";
-			case LONGVARCHAR:
 			case LONG32VARCHAR:
 				return "longvarchar";
 			case NCLOB:
@@ -670,7 +276,6 @@ public class InterSystemsIRISDialect extends Dialect {
 			registerKeyword( kw.toLowerCase( Locale.ROOT ) );
 		}
 	}
-
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1165,7 +770,7 @@ public class InterSystemsIRISDialect extends Dialect {
 				appender.appendSql( "'" );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( "'");
+				appender.appendSql( "'" );
 				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "'" );
 				break;
@@ -1199,7 +804,7 @@ public class InterSystemsIRISDialect extends Dialect {
 
 				//week of year
 				.replace("ww", "IW")
-				.replace("w", "IW" )
+				.replace("w", "IW")
 				//year for week
 				.replace("YYYY", "IYYY")
 				.replace("YYY", "IYYY")

@@ -36,7 +36,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
@@ -116,9 +115,9 @@ public class BeanValidationEventListener
 
 	@Override
 	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
-		final Object entity = castNonNull( event.getCollection().getOwner() );
+		final Object entity = event.getAffectedOwnerOrNull();
 		validate(
-				entity,
+				event.getAffectedOwnerOrNull(),
 				getEntityPersister( event.getSession(), event.getAffectedOwnerEntityName(), entity ),
 				GroupsPerOperation.Operation.UPDATE
 		);

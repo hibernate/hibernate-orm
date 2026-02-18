@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.entitygraph;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -22,6 +24,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.AvailableHints;
+import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -110,6 +113,21 @@ public class EntityGraphMultipleBagFetchTest {
 					statementInspector.assertNumberOfJoins( 1, 0 );
 
 					assertInitialized( orders.get( 0 ));
+				}
+		);
+	}
+
+	@Test
+	void testWithJoinFetch( SessionFactoryScope scope ) {
+		scope.inTransaction(
+				session -> {
+					EntityManager entityManager = session.unwrap( EntityManager.class );
+
+					// Cannot explicitly join fetch multiple bags
+					Throwable e = assertThrows( IllegalArgumentException.class, () -> entityManager
+						.createQuery( "from EntityGraphMultipleBagFetchTest$Order o join fetch o.products join fetch o.tags" )
+						.getResultList() );
+					assertEquals( MultipleBagFetchException.class, e.getCause().getClass() );
 				}
 		);
 	}

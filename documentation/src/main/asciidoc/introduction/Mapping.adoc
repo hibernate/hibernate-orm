@@ -289,6 +289,17 @@ class Book {
 }
 ----
 
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table BooksAuthors (
+    Book_isbn varchar(255) not null,
+    authors_ssn varchar(255) not null,
+    primary key (Book_isbn, authors_ssn)
+)
+====
+
 But it's even possible to use it to map a `@ManyToOne` or `@OneToOne` association to an association table.
 
 [source,java]
@@ -305,7 +316,18 @@ class Book {
 }
 ----
 
-Here, there should be a `UNIQUE` constraint on one of the columns of the association table.
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table BookPublisher (
+    publisher_id bigint not null,
+    isbn varchar(255) not null,
+    primary key (isbn)
+)
+====
+
+Here, there should be a `UNIQUE` constraint or `PRIMARY KEY` on one of the columns of the association table.
 
 [source,java]
 ----
@@ -321,7 +343,41 @@ class Author {
 }
 ----
 
-Here, there should be a `UNIQUE` constraint on _both_ columns of the association table.
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table AuthorPerson (
+    author_ssn varchar(255) not null unique,
+    ssn varchar(255) not null,
+    primary key (ssn)
+)
+====
+
+Here, there should be a `UNIQUE` constraint or `PRIMARY KEY` on _both_ columns of the association table.
+
+We already mentioned that <<unidirectional-one-to-many,unidirectional `@OneToMany` associations should be avoided>>.
+For completeness, we note that `@JoinTable` may also be used with this sort of mapping.
+
+[source,java]
+----
+@OneToMany // no matching @ManyToOne
+@JoinTable(name="PublishedBooks")
+Set<Book> books;
+----
+
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table PublishedBooks (
+    Publisher_id bigint not null,
+    books_isbn varchar(255) not null,
+    primary key (books_isbn)
+)
+====
+
+Here there is a `UNIQUE` or `PRIMARY KEY` constraint on the foreign key of the `Book` table in the join table `PublishedBooks`.
 
 .`@JoinTable` annotation members
 [%breakable,cols="20,~"]
@@ -402,7 +458,8 @@ Here we see four different ways to use the `@Column` annotation:
 ----
 @Entity
 @Table(name="Books")
-@SecondaryTable(name="Editions")
+@SecondaryTable(name="Editions",
+        foreignKey = @ForeignKey(name="BooksToEditionsById"))
 class Book {
     @Id @GeneratedValue
     @Column(name="bookId") // customize column name
@@ -418,6 +475,29 @@ class Book {
     int edition;
 }
 ----
+
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table Books (
+    bookId bigint not null,
+    isbn varchar(17) not null unique,
+    title varchar(100) not null,
+    primary key (bookId)
+)
+create table Editions (
+    edition integer,
+    bookId bigint not null,
+    primary key (bookId)
+)
+alter table if exists Editions
+   add constraint BooksToEditionsById
+   foreign key (bookId)
+   references Books
+====
+
+Note that we have used the `@ForeignKey` annotation to assign a name to the foreign key constraint.
 
 We don't use `@Column` to map associations.
 
@@ -464,6 +544,21 @@ class Item {
     ...
 }
 ----
+
+.Show DDL
+[%collapsible%closed]
+====
+[source,sql]
+create table Items (
+    id bigint not null,
+    bookIsbn varchar(17) not null,
+    primary key (id)
+)
+alter table if exists Items
+   add constraint ItemsToBooksBySsn
+   foreign key (bookIsbn)
+   references Books (isbn)
+====
 
 In case this is confusing:
 
@@ -749,8 +844,7 @@ There's a couple of alternative ways to represent an embeddable type on the data
 ==== Embeddables as UDTs
 
 First, a really nice option, at least in the case of Java record types, and for databases which support _user-defined types_ (UDTs), is to define a UDT which represents the record type.
-Hibernate 6 makes this really easy.
-Just annotate the record type, or the attribute which holds a reference to it, with the new `@Struct` annotation:
+This is easy: just annotate the record type, or the attribute which holds a reference to it, with the new `@Struct` annotation:
 
 [source,java]
 ----

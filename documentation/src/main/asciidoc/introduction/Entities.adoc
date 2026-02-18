@@ -1256,12 +1256,20 @@ For example, if the collection `Publisher.books` was stored in the second-level 
 
 That said, it's _not_ a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 
+[[unidirectional-one-to-many]]
 [TIP]
 // .Unidirectional `@OneToMany`?
 ====
-In principle Hibernate _does_ allow you to have a unidirectional one-to-many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
-In practice, this mapping is unnatural, and just doesn't work very well.
-Avoid it.
+Hibernate _does_ allow a unidirectional one-to-many association, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
+
+[source,java]
+----
+@OneToMany // no matching @ManyToOne
+Set<Book> books;
+----
+
+By default, this association maps to a separate <<join-table-mappings,association join table>>.
+In practice, this mapping is quite unnatural and should be avoided almost all of the time.
 ====
 
 Here we've used `Set` as the type of the collection, but Hibernate also allows the use of `List` or `Collection` here, with almost no difference in semantics.

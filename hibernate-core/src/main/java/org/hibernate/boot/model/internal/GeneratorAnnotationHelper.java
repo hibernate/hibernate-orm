@@ -11,6 +11,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
+import org.hibernate.annotations.Optimizer;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -49,6 +50,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.collectBasel
 import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.id.OptimizableGenerator.OPT_PARAM;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.config.ConfigurationHelper.setIfNotEmpty;
 
@@ -192,6 +194,7 @@ public class GeneratorAnnotationHelper {
 						}
 						// we need to better handle the default allocation size here
 						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+						applyOptimizer( idMember, properties );
 					},
 					generatorAnnotation == null
 							? null
@@ -229,6 +232,7 @@ public class GeneratorAnnotationHelper {
 								INCREMENT_PARAM,
 								fallbackAllocationSize( generatorAnnotation, buildingContext )
 						);
+						applyOptimizer( idMember, properties );
 					},
 					generatorAnnotation == null
 							? null
@@ -240,6 +244,13 @@ public class GeneratorAnnotationHelper {
 			);
 			return tableGenerator;
 		} );
+	}
+
+	private static void applyOptimizer(MemberDetails idMember, Properties properties) {
+		final var optimizer = idMember.getDirectAnnotationUsage( Optimizer.class );
+		if ( optimizer != null ) {
+			properties.setProperty( OPT_PARAM, optimizer.value().getExternalName() );
+		}
 	}
 
 	public static void handleIdGeneratorType(

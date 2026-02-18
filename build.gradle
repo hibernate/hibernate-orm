@@ -19,7 +19,7 @@ buildscript {
 plugins {
 	id "local.module"
 
-	id "org.hibernate.build.version-injection" version "2.2.0" apply false
+	id "org.hibernate.build.version-injection" version "2.3.0" apply false
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '7.2.0' apply false
 

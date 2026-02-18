@@ -15,8 +15,10 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -47,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		CriteriaMultiselectGroupByAndOrderByTest.Secondary.class,
 } )
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFunctionalDependencyAnalysis.class )
 public class CriteriaMultiselectGroupByAndOrderByTest {
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {

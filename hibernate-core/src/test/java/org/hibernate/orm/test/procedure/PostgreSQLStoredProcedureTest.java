@@ -16,8 +16,10 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -55,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
 @RequiresDialect(value = PostgreSQLDialect.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support stored procedures")
 public class PostgreSQLStoredProcedureTest {
 
 	private static final String CITY = "London";

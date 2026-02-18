@@ -6,8 +6,10 @@ package org.hibernate.orm.test.foreignkeys.sorting;
 
 import java.math.BigDecimal;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel(annotatedClasses = { A.class, B.class })
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class ForeignKeyColumnSortingTests {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16514" )

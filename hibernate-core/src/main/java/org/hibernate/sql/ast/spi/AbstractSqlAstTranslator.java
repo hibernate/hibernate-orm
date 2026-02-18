@@ -1103,16 +1103,82 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		final boolean supportsFromClause = dialect.supportsFromClauseInUpdate() || !hasNonTrivialFromClause( statement.getFromClause() );
 		renderUpdateClause( statement );
-		renderSetClause( statement.getAssignments() );
-		renderFromClauseAfterUpdateSet( statement );
-		if ( dialect.supportsFromClauseInUpdate() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+		if ( supportsFromClause ) {
+			renderSetClause( statement.getAssignments() );
+			renderFromClauseAfterUpdateSet( statement );
+		}
+		else {
+			renderSetClauseEmulateScalarSubqueries( statement );
+		}
+		if ( supportsFromClause ) {
 			visitWhereClause( statement.getRestriction() );
 		}
 		else {
 			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
 		}
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void renderSetClauseEmulateScalarSubqueries(UpdateStatement statement) {
+		appendSql(" set");
+
+		boolean first = true;
+		for (Assignment assignment : statement.getAssignments()) {
+			if (!first) {
+				appendSql(',');
+			}
+			first = false;
+			appendSql(' ');
+
+			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+			for (int i = 0; i < columnReferences.size(); i++) {
+				if (i > 0) {
+					appendSql(',');
+				}
+				columnReferences.get(i).appendColumnForWrite(this, null);
+			}
+
+			appendSql("=(");
+			createScalarSubquery(statement, assignment).accept(this);
+			appendSql(")");
+		}
+	}
+
+	private QuerySpec createScalarSubquery(UpdateStatement statement, Assignment assignment) {
+		final QuerySpec inlineView = new QuerySpec(false);
+		final SelectClause selectClause = inlineView.getSelectClause();
+
+		final Expression assignedValue = assignment.getAssignedValue();
+		selectClause.addSqlSelection(new SqlSelectionImpl(assignedValue));
+
+		for (TableGroup root : statement.getFromClause().getRoots()) {
+			if (statement.getTargetTable() == root.getPrimaryTableReference()) {
+				final TableGroup dmlTargetTableGroup = new StandardTableGroup(
+						true,
+						new NavigablePath("dual"),
+						null,
+						null,
+						new NamedTableReference(
+								getSessionFactory().getJdbcServices().getDialect().getDual(), "d_"),
+						null,
+						getSessionFactory());
+				inlineView.getFromClause().addRoot(dmlTargetTableGroup);
+				dmlTargetTableGroup.getTableReferenceJoins().addAll(root.getTableReferenceJoins());
+				for (TableGroupJoin tableGroupJoin : root.getTableGroupJoins()) {
+					dmlTargetTableGroup.addTableGroupJoin(tableGroupJoin);
+				}
+				for (TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins()) {
+					dmlTargetTableGroup.addNestedTableGroupJoin(tableGroupJoin);
+				}
+			}
+			else {
+				inlineView.getFromClause().addRoot(root);
+			}
+		}
+		inlineView.applyPredicate(statement.getRestriction());
+		return inlineView;
 	}
 
 	protected void renderUpdateClause(UpdateStatement updateStatement) {
@@ -8173,9 +8239,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderLikePredicate(LikePredicate likePredicate) {
 		likePredicate.getPattern().accept( this );
-		if ( likePredicate.getEscapeCharacter() != null ) {
+		renderEscapeCharacter( likePredicate.getEscapeCharacter() );
+	}
+
+	protected void renderEscapeCharacter(Expression escapeCharacter) {
+		if ( escapeCharacter != null ) {
 			appendSql( " escape " );
-			likePredicate.getEscapeCharacter().accept( this );
+			escapeCharacter.accept( this );
 		}
 	}
 
@@ -8191,12 +8261,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( " like " );
 		appendSql( dialect.getLowercaseFunction() );
 		appendSql( OPEN_PARENTHESIS );
-		rhs.accept( this );
+		renderLikePattern(rhs, escapeCharacter);
 		appendSql( CLOSE_PARENTHESIS );
-		if ( escapeCharacter != null ) {
-			appendSql( " escape " );
-			escapeCharacter.accept( this );
-		}
+		renderEscapeCharacter(  escapeCharacter );
+	}
+
+	protected void renderLikePattern(Expression pattern, Expression escapeCharacter) {
+		pattern.accept( this );
 	}
 
 	protected void renderBackslashEscapedLikePattern(

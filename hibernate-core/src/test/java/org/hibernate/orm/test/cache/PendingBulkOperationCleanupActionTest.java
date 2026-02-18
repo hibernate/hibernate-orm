@@ -25,8 +25,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.cache.MapStorageAccessImpl;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -92,6 +94,7 @@ public class PendingBulkOperationCleanupActionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testUpdateCachedEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
@@ -107,6 +110,7 @@ public class PendingBulkOperationCleanupActionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testPendingBulkOperationActionsAreExecutedWhenSessionIsClosed(SessionFactoryScope scope) {
 		scope.inSession(
 				session ->

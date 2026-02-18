@@ -15,6 +15,8 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +46,7 @@ public class ParameterTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
@@ -62,6 +65,7 @@ public class ParameterTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNonPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
@@ -144,6 +148,7 @@ public class ParameterTest {
 	@JiraKey("HHH-17912")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testAttributeEqualListParameter(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();

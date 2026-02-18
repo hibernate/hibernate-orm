@@ -7,9 +7,12 @@ package org.hibernate.orm.test.type;
 import java.util.Locale;
 
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 @RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNamedEnum.class )
 public class PostgresNamedEnumTest extends AbstractNamedEnumTest {
 
 	@Override

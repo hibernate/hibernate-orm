@@ -1791,6 +1791,19 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Spanner substring() function
+	 */
+	public void substring_spanner() {
+		functionRegistry.namedDescriptorBuilder( "strpos" )
+				.setInvariantType(stringType)
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes(STRING, INTEGER, INTEGER)
+				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
+				.register();
+		functionRegistry.registerAlternateKey( "substring", "strpos" );
+	}
+
+	/**
 	 * Transact SQL-style (3 required args)
 	 */
 	public void substring_substringLen() {

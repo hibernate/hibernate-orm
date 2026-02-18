@@ -9,11 +9,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Date;
 import java.util.Locale;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -110,7 +112,12 @@ public class BasicOperationsTest {
 			validateColumn( connection, "ID", java.sql.Types.DATE );
 
 			// timeData -> java.sql.Time (TIME)
-			validateColumn( connection, "TIMEDATA", java.sql.Types.TIME );
+			if (s.getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+				validateColumn( connection, "TIMEDATA", Types.TIMESTAMP );
+			}
+			else {
+				validateColumn( connection, "TIMEDATA", java.sql.Types.TIME );
+			}
 
 			// tsData -> java.sql.Timestamp (TIMESTAMP)
 			validateColumn( connection, "TSDATA", java.sql.Types.TIMESTAMP );

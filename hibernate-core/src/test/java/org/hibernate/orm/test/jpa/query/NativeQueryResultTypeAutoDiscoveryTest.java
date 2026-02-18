@@ -18,6 +18,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -115,14 +116,20 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps integer types to number")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
 	public void smallintType(EntityManagerFactoryScope scope) {
 		doTest( scope, SmallintEntity.class, (short)32767 );
 	}
 
 	@Test
-	public void integerTypes(EntityManagerFactoryScope scope) {
-		doTest( scope, BigintEntity.class, 9223372036854775807L );
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
+	public void integerType(EntityManagerFactoryScope scope) {
 		doTest( scope, IntegerEntity.class, 2147483647 );
+	}
+
+	@Test
+	public void bigIntegerType(EntityManagerFactoryScope scope) {
+		doTest( scope, BigintEntity.class, 9223372036854775807L );
 	}
 
 	@Test
@@ -161,6 +168,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "informix maps tinyint to smallint")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
 	public void tinyintType(EntityManagerFactoryScope scope) {
 		doTest( scope, TinyintEntity.class, (byte)127 );
 	}
@@ -225,6 +233,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps char types to varchar" )
 	public void charType(EntityManagerFactoryScope scope) {
 		doTest( scope, CharEntity.class, 'c' );
 	}
@@ -284,7 +293,9 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		);
 
 		doTest( scope, DateEntity.class, new java.sql.Date( zonedDateTime.toInstant().toEpochMilli() ) );
-		doTest( scope, TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
+		if (!(scope.getDialect() instanceof SpannerPostgreSQLDialect)) {
+			doTest( scope, TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
+		}
 	}
 
 	@Test

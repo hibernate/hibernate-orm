@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcType;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -42,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey("HHH-17964")
 @RequiresDialect( H2Dialect.class )
 @RequiresDialect( PostgreSQLDialect.class )
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support creating tables without primary key" )
 public class ElementCollectionAndCompositeKeyTest {
 
 	@BeforeEach

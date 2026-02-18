@@ -8,6 +8,8 @@ import java.time.Duration;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,6 +28,7 @@ import jakarta.persistence.Id;
 @SessionFactory
 @DomainModel(annotatedClasses = { PostgresIntervalSecondNoScaleTest.TestEntity.class })
 @RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIntervalSecondType.class )
 @JiraKey("HHH-17520")
 public class PostgresIntervalSecondNoScaleTest {
 	@AfterEach

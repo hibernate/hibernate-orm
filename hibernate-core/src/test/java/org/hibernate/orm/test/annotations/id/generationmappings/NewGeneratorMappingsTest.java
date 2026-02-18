@@ -13,8 +13,10 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity1;
 import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity2;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -51,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		exportSchema = false
 )
 @ServiceRegistry(settings = @Setting(name =Environment.HBM2DDL_AUTO, value = ""))
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class)
 public class NewGeneratorMappingsTest  {
 
 

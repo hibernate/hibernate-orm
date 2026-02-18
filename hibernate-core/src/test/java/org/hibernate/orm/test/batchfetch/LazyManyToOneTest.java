@@ -68,7 +68,7 @@ public class LazyManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					Query<Child> query = session
-							.createQuery( "select c from Child as c ", Child.class );
+							.createQuery("select c from Child as c order by c.id", Child.class);
 					List<Child> resultList = query.getResultList();
 					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
 

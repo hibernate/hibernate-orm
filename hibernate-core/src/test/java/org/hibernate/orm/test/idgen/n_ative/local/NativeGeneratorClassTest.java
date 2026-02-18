@@ -51,7 +51,7 @@ public class NativeGeneratorClassTest {
 		assertThat( generator ).isInstanceOf( NativeGenerator.class );
 	}
 
-	@Entity
+	@Entity(name = "NativeEntity")
 	@org.hibernate.annotations.NativeGenerator
 	public static class NativeEntity {
 		@Id @GeneratedValue

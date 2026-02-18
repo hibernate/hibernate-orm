@@ -62,8 +62,14 @@ public class UniqueConstraintUnitTests {
 			assertThat( tableA != null && tableB != null )
 					.describedAs( "Could not find the expected tables." )
 					.isTrue();
-			assertThat( tableA.getUniqueKeys().values().iterator().next().getName() )
-					.isNotEqualTo( tableB.getUniqueKeys().values().iterator().next().getName() );
+			if ( !tableA.getUniqueKeys().isEmpty() ) {
+				assertThat( tableA.getUniqueKeys().values().iterator().next().getName() )
+						.isNotEqualTo( tableB.getUniqueKeys().values().iterator().next().getName() );
+			}
+			else {
+				assertThat( tableA.getIndexes().values().iterator().next().getName() )
+						.isNotEqualTo( tableB.getIndexes().values().iterator().next().getName() );
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

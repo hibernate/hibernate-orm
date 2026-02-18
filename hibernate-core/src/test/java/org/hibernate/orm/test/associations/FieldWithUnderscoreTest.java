@@ -4,9 +4,11 @@
  */
 package org.hibernate.orm.test.associations;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,12 +26,17 @@ public class FieldWithUnderscoreTest {
 
 	@Entity(name = "A")
 	static class A {
-		@Id Long _id;
+		@Id
+		@Column(name = "id")
+		Long _id;
 
 	}
 	@Entity(name = "B")
 	static class B {
-		@Id Long _id;
+		@Id
+		@Column(name = "id")
+		Long _id;
+		@JoinColumn(name = "relation_a")
 		@ManyToOne(fetch = FetchType.LAZY) A _a;
 	}
 }

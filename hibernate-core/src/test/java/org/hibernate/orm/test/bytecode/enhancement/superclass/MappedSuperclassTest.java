@@ -68,7 +68,7 @@ public class MappedSuperclassTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "MyEntity")
 	public static class MyEntity extends MappedBase {
 		@Id
 		Long id;

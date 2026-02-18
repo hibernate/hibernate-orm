@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
+import jakarta.persistence.CollectionTable;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -109,6 +110,7 @@ public class UnexpectedDeleteTest3 {
 			this.id = id;
 		}
 
+		@CollectionTable(name = "NAMES")
 		@ElementCollection
 		Set<String> getNames() {
 			return Collections.unmodifiableSet( names );

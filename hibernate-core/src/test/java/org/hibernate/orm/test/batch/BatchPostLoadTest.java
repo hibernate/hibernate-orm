@@ -66,7 +66,7 @@ public class BatchPostLoadTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "MyEntity1")
 	public static class MyEntity1 {
 		@Id
 		private Long id;
@@ -103,7 +103,7 @@ public class BatchPostLoadTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "MyEntity2")
 	@BatchSize(size = 100)
 	public static class MyEntity2 {
 		@Id

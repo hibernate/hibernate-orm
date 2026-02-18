@@ -165,7 +165,7 @@ public class BatchSubselectCollection2Test {
 		scope.inTransaction(
 				session -> {
 					List<EntityD> entityDs = session.createQuery(
-							"from EntityD d  left join fetch d.openingB left join fetch d.closingB" ).list();
+							"from EntityD d  left join fetch d.openingB left join fetch d.closingB order by d.id" ).list();
 					assertThat( entityDs.size() ).isEqualTo( 2 );
 					EntityD entityD = entityDs.get( 0 );
 					assertThat( entityD ).isNotNull();
@@ -180,7 +180,7 @@ public class BatchSubselectCollection2Test {
 	public void testSelectEntityD(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<EntityD> entitiesD = session.createQuery( "select d from EntityD d", EntityD.class )
+					List<EntityD> entitiesD = session.createQuery( "select d from EntityD d order by d.id", EntityD.class )
 							.getResultList();
 					assertThat( entitiesD ).hasSize( 2 );
 					EntityB entityB = entitiesD.get( 0 ).getOpeningB();

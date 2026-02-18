@@ -308,7 +308,7 @@ public class NaturalIdTest {
 	/**
 	 * @author Emmanuel Bernard
 	 */
-	@Entity
+	@Entity(name = "State")
 	public static class State {
 		@Id
 		private Integer id;
@@ -342,7 +342,7 @@ public class NaturalIdTest {
 	/**
 	 * @author Emmanuel Bernard
 	 */
-	@Entity
+	@Entity(name = "Citizen")
 	@NaturalIdCache
 	public static class Citizen {
 		@Id
@@ -413,7 +413,7 @@ public class NaturalIdTest {
 	 * @author Emmanuel Bernard
 	 * @author Hardy Ferentschik
 	 */
-	@Entity
+	@Entity(name = "NaturalIdOnManyToOne")
 	@NaturalIdCache
 	static
 	class NaturalIdOnManyToOne {

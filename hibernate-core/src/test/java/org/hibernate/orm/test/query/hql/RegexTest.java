@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;

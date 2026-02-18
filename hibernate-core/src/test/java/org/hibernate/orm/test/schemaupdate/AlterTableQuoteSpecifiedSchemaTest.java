@@ -19,9 +19,11 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
@@ -47,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect(value = PostgreSQLDialect.class)
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support - in schema name" )
 public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@BeforeEach

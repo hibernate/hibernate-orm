@@ -48,7 +48,7 @@ public class CascadePersistJpaTest {
 		});
 	}
 
-	@Entity
+	@Entity(name = "Parent")
 	static class Parent {
 		@Id
 		@GeneratedValue
@@ -58,7 +58,7 @@ public class CascadePersistJpaTest {
 				mappedBy = "parent")
 		Set<Child> children = new HashSet<>();
 	}
-	@Entity
+	@Entity(name = "Child")
 	static class Child {
 		@Id @GeneratedValue
 		private Long id;

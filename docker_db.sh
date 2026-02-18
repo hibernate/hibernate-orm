@@ -1568,7 +1568,11 @@ informix_12_10() {
 }
 
 spanner() {
-  spanner_emulator
+  spanner_emulator GOOGLE_STANDARD_SQL
+}
+
+spanner_pg() {
+  spanner_emulator POSTGRESQL
 }
 
 spanner_emulator() {
@@ -1578,7 +1582,7 @@ spanner_emulator() {
   $CONTAINER_CLI run --name spanner -d \
     -p 9010:9010 \
     -p 9020:9020 \
-    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.48}
+    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.50}
 
   # Wait for emulator to be ready (check logs for known messages)
   n=0
@@ -1597,6 +1601,31 @@ spanner_emulator() {
     echo "Cloud Spanner emulator failed to start after 1 minute"
     exit 1
   fi
+
+  if ! command -v gcloud >/dev/null; then
+    echo "gcloud not found. Installing gcloud..."
+    curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/tmp >/dev/null 2>&1
+    export PATH="/tmp/google-cloud-sdk/bin:$PATH"
+  fi
+
+  echo "Configuring Spanner emulator instance and database timezone..."
+  # Execute in a subshell so we don't pollute the host environment variables indefinitely
+  (
+    export SPANNER_EMULATOR_HOST=localhost:9010
+    gcloud spanner instances create orm-test-instance \
+      --config=emulator-config --description="Test Instance" --nodes=1 \
+      --project=orm-test-project >/dev/null 2>&1 || true
+      
+    local dialect=${1:-GOOGLE_STANDARD_SQL}
+    gcloud spanner databases create orm-test-db \
+      --instance=orm-test-instance --database-dialect=${dialect} \
+      --project=orm-test-project >/dev/null 2>&1 || true
+      
+    gcloud spanner databases ddl update orm-test-db \
+      --instance=orm-test-instance \
+      --ddl="ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = 'UTC';" \
+      --project=orm-test-project >/dev/null 2>&1 || true
+  )
 }
 
 if [ -z ${1} ]; then
@@ -1665,6 +1694,7 @@ if [ -z ${1} ]; then
     echo -e "\tinformix_14_10"
     echo -e "\tinformix_12_10"
     echo -e "\tspanner"
+    echo -e "\tspanner_pg"
     echo -e "\tspanner_emulator"
 else
     ${1}

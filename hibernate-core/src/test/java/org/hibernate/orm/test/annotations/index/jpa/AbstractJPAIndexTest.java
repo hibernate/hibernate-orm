@@ -59,26 +59,53 @@ public abstract class AbstractJPAIndexTest {
 	@Test
 	public void testTableIndex(SessionFactoryScope scope) {
 		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
-		Iterator<UniqueKey> itr = entity.getTable().getUniqueKeys().values().iterator();
-		assertThat( itr.hasNext() ).isTrue();
-		UniqueKey uk = itr.next();
-		assertThat( itr.hasNext() ).isFalse();
-		assertThat( StringHelper.isNotEmpty( uk.getName() ) ).isTrue();
-		assertThat( uk.getColumnSpan() ).isEqualTo( 2 );
-		Column column = uk.getColumns().get( 0 );
-		assertThat( column.getName() ).isEqualTo( "brand" );
-		column = uk.getColumns().get( 1 );
-		assertThat( column.getName() ).isEqualTo( "producer" );
-		assertThat( uk.getTable() ).isSameAs( entity.getTable() );
-
+		var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect.supportsUniqueConstraints() ) {
+			// if dialect supports unique constraints then validate unique key
+			Iterator<UniqueKey> itr = entity.getTable().getUniqueKeys().values().iterator();
+			assertThat( itr.hasNext() ).isTrue();
+			UniqueKey uk = itr.next();
+			assertThat( itr.hasNext() ).isFalse();
+			assertThat( StringHelper.isNotEmpty( uk.getName() ) ).isTrue();
+			assertThat( uk.getColumnSpan() ).isEqualTo( 2 );
+			Column column = uk.getColumns().get( 0 );
+			assertThat( column.getName() ).isEqualTo( "brand" );
+			column = uk.getColumns().get( 1 );
+			assertThat( column.getName() ).isEqualTo( "producer" );
+			assertThat( uk.getTable() ).isSameAs( entity.getTable() );
+		}
 
 		Iterator<Index> indexItr = entity.getTable().getIndexes().values().iterator();
-		assertThat( indexItr.hasNext() ).isTrue();
-		Index index = indexItr.next();
-		assertThat( indexItr.hasNext() ).isFalse();
+		Index index;
+		if ( dialect.supportsUniqueConstraints() ) {
+			// if dialect supports unique constraints, we don't have to check unique index
+			index  = indexItr.next();
+			assertThat( indexItr.hasNext() ).isFalse();
+		}
+		else {
+			// we need to check unique index along with Car_Idx
+			Index uniqueIndex;
+			var tmpIndex = indexItr.next();
+			assertThat( indexItr.hasNext() ).isTrue();
+			if ( tmpIndex.isUnique() ) {
+				uniqueIndex = tmpIndex;
+				index  = indexItr.next();
+			}
+			else {
+				index = tmpIndex;
+				uniqueIndex  = indexItr.next();
+			}
+			assertThat( StringHelper.isNotEmpty( uniqueIndex.getName() ) ).isTrue();
+			assertThat( uniqueIndex.getColumnSpan() ).isEqualTo( 2 );
+			var column = uniqueIndex.getColumns().get( 0 );
+			assertThat( column.getName() ).isEqualTo( "brand" );
+			column = uniqueIndex.getColumns().get( 1 );
+			assertThat( column.getName() ).isEqualTo( "producer" );
+			assertThat( uniqueIndex.getTable() ).isSameAs( entity.getTable() );
+		}
 		assertThat( index.getName() ).isEqualTo( "Car_idx" );
 		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
-		column = index.getColumns().iterator().next();
+		var column = index.getColumns().iterator().next();
 		assertThat( column.getName() ).isEqualTo( "since" );
 		assertThat( index.getTable() ).isSameAs( entity.getTable() );
 	}

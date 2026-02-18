@@ -36,7 +36,7 @@ class MergeNullCollectionTest {
 			assertEquals(0, em.find( Thing.class, thing.id ).strings.size());
 		});
 	}
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		@Id
 		long id;

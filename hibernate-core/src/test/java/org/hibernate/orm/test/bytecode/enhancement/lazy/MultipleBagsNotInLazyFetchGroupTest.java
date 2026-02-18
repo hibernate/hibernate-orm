@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.persistence.CollectionTable;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -70,9 +71,11 @@ public class MultipleBagsNotInLazyFetchGroupTest {
 
 		String text;
 
+		@CollectionTable(name = "SOME_STRINGS")
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings;
 
+		@CollectionTable(name = "SOME_STRINGS_TWO")
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings2;
 	}

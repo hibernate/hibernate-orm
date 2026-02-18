@@ -43,7 +43,7 @@ public class MergeExplicitInitialVersionTest {
 		assertEquals(g2.version, 1);
 	}
 
-	@Entity
+	@Entity(name = "E")
 	static class E {
 		@Id
 		@GeneratedValue
@@ -53,7 +53,7 @@ public class MergeExplicitInitialVersionTest {
 		String text;
 	}
 
-	@Entity
+	@Entity(name = "F")
 	static class F {
 		@Id
 		long id = 5;
@@ -62,7 +62,7 @@ public class MergeExplicitInitialVersionTest {
 		String text;
 	}
 
-	@Entity
+	@Entity(name = "G")
 	static class G {
 		@Id
 		@GeneratedValue

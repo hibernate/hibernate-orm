@@ -299,7 +299,7 @@ public class ImmutableNaturalKeyLookupTest {
 		return a;
 	}
 
-	@Entity
+	@Entity(name = "A")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	@NaturalIdCache
 	public static class A {
@@ -349,7 +349,7 @@ public class ImmutableNaturalKeyLookupTest {
 
 	}
 
-	@Entity
+	@Entity(name = "D")
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	public static class D {
 		@Id

@@ -299,7 +299,7 @@ public class EntityJoinTest {
 	}
 
 	@Entity(name = "Customer")
-	@Table(name = "`a:customer`")
+	@Table(name = "`a_customer`")
 	public static class Customer {
 		private Integer id;
 		private String name;
@@ -331,7 +331,7 @@ public class EntityJoinTest {
 	}
 
 	@Entity(name = "FinancialRecord")
-	@Table(name = "`a:financial_record`")
+	@Table(name = "`a_financial_record`")
 	public static class FinancialRecord {
 		private Integer id;
 		private Customer customer;
@@ -375,7 +375,7 @@ public class EntityJoinTest {
 	}
 
 	@Entity(name = "User")
-	@Table(name = "`a:user`")
+	@Table(name = "`a_user`")
 	public static class User {
 		private Integer id;
 		private String username;

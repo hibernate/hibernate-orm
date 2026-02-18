@@ -61,12 +61,31 @@ public class LongKeyNamingStrategyTest {
 				.iterator().next();
 		assertThat( foreignKey.getName() ).isEqualTo( "FK_way_longer_than_the_30_char" );
 
-		var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
-				.iterator().next();
-		assertThat( uniqueKey.getName() ).isEqualTo( "UK_way_longer_than_the_30_char" );
+		var uniqueKeys = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values();
+		org.hibernate.mapping.Index index = null;
+		if ( !uniqueKeys.isEmpty() ) {
+			var uniqueKey = uniqueKeys.iterator().next();
+			assertThat( uniqueKey.getName() ).isEqualTo( "UK_way_longer_than_the_30_char" );
+			index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+					.next();
+		}
+		else {
+			var indexes = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values();
+			assertThat( indexes.size() ).isEqualTo( 2 );
 
-		var index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
-				.next();
+			org.hibernate.mapping.Index uniqueIndex = null;
+			for ( var idx: indexes ) {
+				if ( idx.isUnique() ) {
+					uniqueIndex = idx;
+				}
+				else {
+					index = idx;
+				}
+			}
+			assertThat( uniqueIndex ).isNotNull();
+			assertThat( uniqueIndex.getName() ).isEqualTo( "UK_way_longer_than_the_30_char" );
+		}
+		assertThat( index ).isNotNull();
 		assertThat( index.getName() ).isEqualTo( "IDX_way_longer_than_the_30_cha" );
 	}
 

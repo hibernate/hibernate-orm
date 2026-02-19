@@ -74,8 +74,7 @@ public class WrapVisitor extends ProxyVisitor {
 			final var persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder() ) {
-				if ( collection != CollectionType.UNFETCHED_COLLECTION
-						&& persistenceContext.getCollectionHolder( collection ) == null ) {
+				if ( persistenceContext.getCollectionHolder( collection ) == null ) {
 					final var collectionHolder = collectionType.wrap( session, collection );
 					persistenceContext.addNewCollection( persister, collectionHolder );
 					persistenceContext.addCollectionHolder( collectionHolder );

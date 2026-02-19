@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +52,6 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.exec.spi.Callback;
@@ -71,6 +71,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.PersistenceContextLogging.PERSISTENCE_CONTEXT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
+import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -85,6 +86,21 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Sanne Grinovero
  */
 class StatefulPersistenceContext implements PersistenceContext {
+
+	/**
+	 * Marker object used to indicate (via reference checking) that no row was returned.
+	 */
+	private static final Serializable NO_ROW = new Serializable() {
+		@Override
+		public String toString() {
+			return "NO_ROW";
+		}
+
+		@Serial
+		public Object readResolve() {
+			return NO_ROW;
+		}
+	};
 
 	private static final int INIT_COLL_SIZE = 8;
 
@@ -362,7 +378,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( snapshot == NO_ROW ) {
 			throw new IllegalStateException(
 					"persistence context reported no row snapshot for "
-							+ MessageHelper.infoString( key.getEntityName(), key.getIdentifier() )
+							+ infoString( key.getEntityName(), key.getIdentifier() )
 			);
 		}
 		return (Object[]) snapshot;

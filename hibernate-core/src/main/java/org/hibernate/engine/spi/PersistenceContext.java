@@ -17,7 +17,6 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ProxyUtil;
-import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -42,10 +41,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface PersistenceContext {
-	/**
-	 * Marker object used to indicate (via reference checking) that no row was returned.
-	 */
-	Object NO_ROW = new MarkerObject( "NO_ROW" );
 
 	boolean isStateless();
 
@@ -126,12 +121,12 @@ public interface PersistenceContext {
 	 * <ol>
 	 * <li>no snapshot is obtained from the database if not already cached,
 	 *     and
-	 * <li>an entry of {@link #NO_ROW} here results in an exception.
+	 * <li>an entry of {@code NO_ROW} here results in an exception.
 	 * </ol>
 	 *
 	 * @param key The entity key for which to retrieve the cached snapshot
 	 * @return The cached snapshot
-	 * @throws IllegalStateException if the cached snapshot was {@link #NO_ROW}.
+	 * @throws IllegalStateException if the cached snapshot was {@code NO_ROW}.
 	 */
 	Object[] getCachedDatabaseSnapshot(EntityKey key);
 

@@ -53,7 +53,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -3871,7 +3870,7 @@ public abstract class AbstractEntityPersister
 				// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 				// database, because we have no other way to know if the state changed while detached.
 				final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-				final Object naturalIdSnapshot = naturalIdFromSnapshot( entitySnapshot );
+				final Object naturalIdSnapshot = naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 
 				naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
 				final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
@@ -3880,11 +3879,6 @@ public abstract class AbstractEntityPersister
 			// otherwise we assume there were no changes to natural id during detachment for now,
 			// that is validated later during flush.
 		}
-	}
-
-	private Object naturalIdFromSnapshot(Object[] entitySnapshot) {
-		return entitySnapshot == PersistenceContext.NO_ROW ? null
-				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 	}
 
 	@Override

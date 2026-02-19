@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.Optional;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.BasicType;
@@ -383,9 +383,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 	}
 
-	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
-
-	protected Object readElementByIndex(final Object index) {
+	protected Optional<E> readElementByIndex(final Object index) {
 		if ( !initialized ) {
 			return withTemporarySessionIfNeeded( () -> {
 				final var entry = getCollectionEntry();
@@ -395,15 +393,16 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					if ( hasQueuedOperations() ) {
 						session.flush();
 					}
-					return persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+					final Object element = persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+					return Optional.of( (E) element );
 				}
 				else {
 					read();
-					return UNKNOWN;
+					return Optional.undefined();
 				}
 			} );
 		}
-		return UNKNOWN;
+		return Optional.undefined();
 	}
 
 	@Override

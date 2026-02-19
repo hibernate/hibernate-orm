@@ -1,0 +1,90 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.java-module"
+    id "local.publishing"
+    id "local.code-quality"
+}
+
+description = 'Hibernate ORM\'s Jakarta Persistence TCK runner'
+
+repositories {
+    mavenLocal() {
+        content {
+            includeGroup "jakarta.persistence"
+        }
+    }
+    maven {
+        name = "Central Portal Snapshots"
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        content {
+            includeGroup "jakarta.persistence"
+        }
+    }
+    mavenCentral()
+}
+
+configurations {
+    tckTests
+}
+
+dependencies {
+    testImplementation testLibs.junitJupiterApi
+    testImplementation testLibs.junitJupiterSuiteEngine
+    testImplementation testLibs.jakartaPersistenceTckTests
+    tckTests testLibs.jakartaPersistenceTckTests
+
+    testRuntimeOnly project(':hibernate-core')
+    testRuntimeOnly project(':hibernate-testing')
+}
+
+test {
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching "*Client*"
+        includeTestsMatching "JakartaPersistenceTckTestRunner"
+    }
+
+    // System Properties
+
+    def userdir = mkdir(project.layout.buildDirectory.dir("userdir"))
+    def tckLogs = mkdir(project.layout.buildDirectory.dir("tcklogs"))
+    systemProperties = [
+            "platform.mode"                                  : "standalone",
+            "persistence.unit.name"                          : "JPATCK",
+            "persistence.unit.name.2"                        : "JPATCK2",
+            "jakarta.persistence.provider"                   : "org.hibernate.jpa.HibernatePersistenceProvider",
+            "jakarta.persistence.jdbc.driver"                : "org.postgresql.Driver",
+            "jakarta.persistence.jdbc.url"                   : "jdbc:postgresql://localhost:5432/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn",
+            "jakarta.persistence.jdbc.user"                  : "hibernate_orm_test",
+            "jakarta.persistence.jdbc.password"              : "hibernate_orm_test",
+            "jpa.provider.implementation.specific.properties": "hibernate.query.jpaql_strict_compliance=true:hibernate.id.new_generator_mappings=true:hibernate.cache.region.factory_class=org.hibernate.testing.cache.CachingRegionFactory:hibernate.model.generator_name_as_sequence_name=true:hibernate.jpa.compliance.transaction=true:hibernate.jpa.compliance.closed=true:hibernate.jpa.compliance.query=true:hibernate.jpa.compliance.list=true:hibernate.jpa.compliance.caching=true:hibernate.jpa.compliance.global_id_generators=true:hibernate.jpa.compliance=true:hibernate.type.wrapper_array_handling=legacy:hibernate.type.preferred_uuid_jdbc_type=char",
+            "persistence.second.level.caching.supported"     : "true",
+            "vehicle"                                        : "standalone",
+            "user.dir"                                       : userdir,
+            "db.supports.sequence"                           : "true",
+            "Insert_Jpa_Purchase_Order"                      : "INSERT INTO PURCHASE_ORDER(ID, TOTAL, DESCRIPTION) VALUES(?, ?, null)",
+            "Select_Jpa_Purchase_Order"                      : "SELECT ID, TOTAL FROM PURCHASE_ORDER WHERE ID=?",
+            "log.file.location"                              : tckLogs,
+            "jdbc.db"                                        : "postgresql",
+            "hibernate.show_sql"                             : "true"
+    ]
+
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+        events "passed", "skipped", "failed"
+    }
+
+    // IDE cannot deal with the onlyIf ...
+    // TCK is expected to be executed with a PostgreSQL DB.
+    // hence running without it is "pointless":
+    onlyIf {
+        def dbType = project.hasProperty('db') ? project.property('db') : ''
+        return "pgsql_ci" == dbType || "" == dbType
+    }
+}

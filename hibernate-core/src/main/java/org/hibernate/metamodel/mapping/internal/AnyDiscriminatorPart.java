@@ -13,6 +13,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -86,7 +87,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean updateable,
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
-			Map<Object, String> valueToEntityNameMap,
+			Map<DiscriminatorValue, String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this(
@@ -129,7 +130,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean updateable,
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
-			Map<Object,String> valueToEntityNameMap,
+			Map<DiscriminatorValue,String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
@@ -161,7 +162,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	public static DiscriminatorConverter<?, ?> determineDiscriminatorConverter(
 			NavigableRole partRole,
 			BasicType<?> underlyingJdbcMapping,
-			Map<Object, String> valueToEntityNameMap,
+			Map<DiscriminatorValue, String> valueToEntityNameMap,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		return new UnifiedAnyDiscriminatorConverter<>(

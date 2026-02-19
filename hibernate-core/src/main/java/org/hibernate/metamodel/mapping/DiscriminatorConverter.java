@@ -72,7 +72,8 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		else {
 			final var discriminatorValueDetails = getDetailsForEntityName( entityName );
 			//noinspection unchecked
-			return (R) discriminatorValueDetails.getValue();
+			Object value = discriminatorValueDetails.getValue();
+			return (R) value;
 		}
 	}
 

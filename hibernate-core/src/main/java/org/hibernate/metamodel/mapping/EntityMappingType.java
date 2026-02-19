@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping;
 import jakarta.persistence.Entity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -252,10 +253,22 @@ public interface EntityMappingType
 	/**
 	 * The discriminator value which indicates this entity mapping
 	 */
-	Object getDiscriminatorValue();
+	DiscriminatorValue getDiscriminatorValue();
 
 	default String getDiscriminatorSQLValue() {
-		return getDiscriminatorValue().toString();
+		final DiscriminatorValue discriminatorValue = getDiscriminatorValue();
+		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
+			return String.valueOf( literal.value() );
+		}
+		else if ( discriminatorValue instanceof DiscriminatorValue.Special special ) {
+			return switch ( special ) {
+				case NULL -> "null";
+				case NOT_NULL -> throw new IllegalStateException( "Illegal call for NOT_NULL discriminator" );
+			};
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized DiscriminatorValue" );
+		}
 	}
 
 	default EntityMappingType getRootEntityDescriptor() {

@@ -26,6 +26,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -62,8 +63,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
 /**
  * An {@link EntityPersister} implementing the normalized
@@ -119,7 +118,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of not-null primary key
 	// values in the outer join using an SQL CASE
-	private final Map<Object,String> subclassesByDiscriminatorValue = new HashMap<>();
+	private final Map<DiscriminatorValue, String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
 	private final boolean[] discriminatorAbstract;
 	private final String[] notNullColumnNames;
@@ -128,7 +127,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
-	private final Object discriminatorValue;
+	private final DiscriminatorValue discriminatorValue;
 	private final String discriminatorSQLString;
 	private final BasicType<?> discriminatorType;
 	private final String explicitDiscriminatorColumnName;
@@ -142,7 +141,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
-	private final Map<String, Object> discriminatorValuesByTableName;
+	private final Map<String, DiscriminatorValue> discriminatorValuesByTableName;
 	private final Map<String, String> discriminatorColumnNameByTableName;
 
 	public JoinedSubclassEntityPersister(
@@ -181,8 +180,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				discriminatorAlias = IMPLICIT_DISCRIMINATOR_ALIAS;
 				discriminatorType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 				try {
-					discriminatorValue = persistentClass.getSubclassId();
-					discriminatorSQLString = discriminatorValue.toString();
+					discriminatorValue = new DiscriminatorValue.Literal( persistentClass.getSubclassId() );
+					discriminatorSQLString = Integer.toString( persistentClass.getSubclassId() );
 				}
 				catch ( Exception e ) {
 					throw new MappingException( "Could not format discriminator value to SQL string", e );
@@ -480,12 +479,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final var subclass = subclasses.get(k);
 				final var subclassTable = subclass.getTable();
 				if ( persistentClass.isPolymorphic() ) {
-					final Object discriminatorValue = explicitDiscriminatorColumnName != null
+					final DiscriminatorValue discriminatorValue = explicitDiscriminatorColumnName != null
 							? DiscriminatorHelper.getDiscriminatorValue( subclass )
 							// we now use subclass ids that are consistent across all
 							// persisters for a class hierarchy, so that the use of
 							// "foo.class = Bar" works in HQL
-							: subclass.getSubclassId();
+							: new DiscriminatorValue.Literal( subclass.getSubclassId() );
 					initDiscriminatorProperties( dialect, k, subclassTable, discriminatorValue, isAbstract( subclass ) );
 					subclassesByDiscriminatorValue.put( discriminatorValue, subclass.getEntityName() );
 					final int tableId = getTableId(
@@ -509,17 +508,30 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private void initDiscriminatorProperties(Dialect dialect, int k, Table table, Object discriminatorValue, boolean isAbstract) {
+	private void initDiscriminatorProperties(
+			Dialect dialect,
+			int k,
+			Table table,
+			DiscriminatorValue discriminatorValue,
+			boolean isAbstract) {
 		final String tableName = determineTableName( table );
 		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( dialect );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
-		discriminatorValues[k] = discriminatorValue.toString();
+		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
+			discriminatorValues[k] = String.valueOf( literal.value() );
+		}
+		else if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+			discriminatorValues[k] = "null";
+		}
+		else {
+			discriminatorValues[k] = "not null";
+		}
 		discriminatorAbstract[k] = isAbstract;
 	}
 
 	@Override
-	public Map<Object, String> getSubclassByDiscriminatorValue() {
+	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
 		return subclassesByDiscriminatorValue;
 	}
 
@@ -704,7 +716,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Object getDiscriminatorValue() {
+	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
@@ -748,10 +760,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private String getDiscriminatorValueString() {
-		if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+		if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 			return "null";
 		}
-		else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+		else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
 			return "not null";
 		}
 		else {

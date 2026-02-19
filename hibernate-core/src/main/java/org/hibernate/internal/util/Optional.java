@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -13,7 +14,7 @@ import java.util.function.Supplier;
  *
  * @author Gavin King
  */
-sealed public interface Optional<T> {
+sealed public interface Optional<T> extends Serializable {
 	record Defined<T>(T result) implements Optional<T> {}
 	record Undefined<T>() implements Optional<T> {}
 

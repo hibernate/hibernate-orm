@@ -106,6 +106,7 @@ dependencyResolutionManagement {
                 overrideableVersion("gradle.libs.versions.derby", "derby")
                 overrideableVersion("gradle.libs.versions.h2gis", "h2gis")
                 overrideableVersion("gradle.libs.versions.hsqldb", "hsqldb")
+                overrideableVersion("gradle.libs.versions.persistenceTck", "persistenceTck")
             }
         }
     }
@@ -185,6 +186,8 @@ project(':hibernate-assistant').projectDir = new File(rootProject.projectDir, "t
 include 'hibernate-reveng'
 project(':hibernate-reveng').projectDir = new File(rootProject.projectDir, "tooling/hibernate-reveng")
 
+include 'hibernate-tck-runner'
+
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()
@@ -192,5 +195,3 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
-
-

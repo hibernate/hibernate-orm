@@ -88,6 +88,7 @@ import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
@@ -1433,7 +1434,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			targetColumnReferenceConsumer.accept( discriminatorPath, discriminatorPath.getColumnReferences() );
 			discriminatorExpression = new QueryLiteral<>(
-					entityDescriptor.getDiscriminatorValue(),
+					DiscriminatorHelper.toRelationalValue( entityDescriptor.getDiscriminatorValue() ),
 					discriminatorMapping
 			);
 

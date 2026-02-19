@@ -14,6 +14,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.metamodel.mapping.DiscriminatorValue.Literal;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
@@ -51,14 +52,14 @@ public class JoinedSubclassWithExplicitDiscriminatorTest {
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", dogPersister.getDiscriminatorType().getName() );
 		assertEquals( "type", dogPersister.getDiscriminatorColumnName() );
-		assertEquals( "dog", dogPersister.getDiscriminatorValue() );
+		assertEquals( new Literal("dog"), dogPersister.getDiscriminatorValue() );
 
 		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", catPersister.getDiscriminatorType().getName() );
 		assertEquals( "type", catPersister.getDiscriminatorColumnName() );
-		assertEquals( "cat", catPersister.getDiscriminatorValue() );
+		assertEquals( new Literal("cat"), catPersister.getDiscriminatorValue() );
 	}
 
 	@Test

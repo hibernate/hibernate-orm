@@ -9,6 +9,7 @@ import java.time.Instant;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -89,9 +90,9 @@ public class MappingModelAccessTests {
 		assertThat( discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Class.class );
 		assertThat( discriminatorMapping.getJdbcMapping().getJdbcJavaType().getJavaTypeClass() ).isEqualTo( Integer.class );
 
-		assertThat( paymentMapping.getDiscriminatorValue() ).isEqualTo( 0 );
-		assertThat( cashPaymentMapping.getDiscriminatorValue() ).isEqualTo( 1 );
-		assertThat( cardPaymentMapping.getDiscriminatorValue() ).isEqualTo( 2 );
+		assertThat( paymentMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal(0) );
+		assertThat( cashPaymentMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal(1) );
+		assertThat( cardPaymentMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal(2) );
 
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( 0 ).getIndicatedEntity() ).isEqualTo( paymentMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( 1 ).getIndicatedEntity() ).isEqualTo( cashPaymentMapping );
@@ -119,9 +120,9 @@ public class MappingModelAccessTests {
 		assertThat( discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Class.class );
 		assertThat( discriminatorMapping.getJdbcMapping().getJdbcJavaType().getJavaTypeClass() ).isEqualTo( String.class );
 
-		assertThat( vendorMapping.getDiscriminatorValue() ).isEqualTo( "Vendor" );
-		assertThat( domesticVendorMapping.getDiscriminatorValue() ).isEqualTo( "domestic" );
-		assertThat( foreignVendorMapping.getDiscriminatorValue() ).isEqualTo( "foreign" );
+		assertThat( vendorMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal("Vendor") );
+		assertThat( domesticVendorMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal("domestic") );
+		assertThat( foreignVendorMapping.getDiscriminatorValue() ).isEqualTo( new DiscriminatorValue.Literal("foreign") );
 
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( "Vendor" ).getIndicatedEntity() ).isEqualTo( vendorMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( "domestic" ).getIndicatedEntity() ).isEqualTo( domesticVendorMapping );

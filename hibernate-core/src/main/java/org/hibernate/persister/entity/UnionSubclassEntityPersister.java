@@ -31,6 +31,7 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -77,10 +78,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] spaces;
 	private final String[] subclassSpaces;
 	private final String[] subclassTableExpressions;
-	private final Object discriminatorValue;
+	private final DiscriminatorValue discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final BasicType<?> discriminatorType;
-	private final Map<Object,String> subclassByDiscriminatorValue = new HashMap<>();
+	private final Map<DiscriminatorValue, String> subclassByDiscriminatorValue = new HashMap<>();
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
@@ -118,17 +119,17 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		deleteExpectations = new Expectation[] { createExpectation( persistentClass.getDeleteExpectation(),
 				persistentClass.isCustomDeleteCallable() ) };
 
-		discriminatorValue = persistentClass.getSubclassId();
+		discriminatorValue = new DiscriminatorValue.Literal( persistentClass.getSubclassId() );
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
 		discriminatorType = creationContext.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
 
 		// PROPERTIES
 
 		// SUBCLASSES
-		subclassByDiscriminatorValue.put( persistentClass.getSubclassId(), persistentClass.getEntityName() );
+		subclassByDiscriminatorValue.put( new DiscriminatorValue.Literal( persistentClass.getSubclassId() ), persistentClass.getEntityName() );
 		if ( persistentClass.isPolymorphic() ) {
 			for ( var subclass : persistentClass.getSubclasses() ) {
-				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
+				subclassByDiscriminatorValue.put( new DiscriminatorValue.Literal( subclass.getSubclassId() ), subclass.getEntityName() );
 			}
 		}
 
@@ -271,7 +272,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Map<Object, String> getSubclassByDiscriminatorValue() {
+	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
 		return subclassByDiscriminatorValue;
 	}
 
@@ -286,7 +287,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Object getDiscriminatorValue() {
+	public DiscriminatorValue getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 

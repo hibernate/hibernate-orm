@@ -7,9 +7,9 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
@@ -41,9 +41,9 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 		if ( discriminatorMapping != null
 				&& discriminatorMapping.hasPhysicalColumn()
 				&& tableMapping.getTableName().equals( discriminatorMapping.getContainingTableExpression() ) ) {
-			final Object discriminatorValue = entityPersister().getDiscriminatorValue();
-			if ( discriminatorValue != DiscriminatorHelper.NULL_DISCRIMINATOR
-				&& discriminatorValue != DiscriminatorHelper.NOT_NULL_DISCRIMINATOR ) {
+			final DiscriminatorValue discriminatorValue = entityPersister().getDiscriminatorValue();
+			if ( discriminatorValue != DiscriminatorValue.Special.NULL
+				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
 				tableUpdateBuilder.addValueColumn(
 						entityPersister().getDiscriminatorSQLValue(),
 						discriminatorMapping

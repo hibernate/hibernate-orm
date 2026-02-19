@@ -85,6 +85,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
@@ -1977,9 +1978,7 @@ public class ModelBinder {
 				discriminatorSource.getRelationalValueSource(),
 				anyBinding.getMetaMapping(),
 				true,
-				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName(
-						discriminatorSource
-				)
+				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName( discriminatorSource )
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -2014,19 +2013,19 @@ public class ModelBinder {
 		}
 	}
 
-	private static HashMap<Object, String> discriminatorValueToEntityNameMap(
+	private static Map<DiscriminatorValue, String> discriminatorValueToEntityNameMap(
 			MappingDocument sourceDocument,
 			AnyMappingSource anyMapping,
 			AttributeRole attributeRole,
 			BasicType<?> discriminatorType) {
-		final HashMap<Object, String> discriminatorValueToEntityNameMap = new HashMap<>();
+		final Map<DiscriminatorValue, String> discriminatorValueToEntityNameMap = new HashMap<>();
 		anyMapping.getDiscriminatorSource().getValueMappings().forEach(
 				(discriminatorValueString, entityName) -> {
 					try {
 						final Object discriminatorValue =
 								discriminatorType.getJavaTypeDescriptor()
 										.fromString( discriminatorValueString );
-						discriminatorValueToEntityNameMap.put( discriminatorValue, entityName );
+						discriminatorValueToEntityNameMap.put( new DiscriminatorValue.Literal( discriminatorValue ), entityName );
 					}
 					catch (Exception exception) {
 						throw new MappingException(

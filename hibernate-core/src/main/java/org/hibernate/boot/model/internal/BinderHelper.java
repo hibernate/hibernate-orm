@@ -39,6 +39,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -764,11 +765,11 @@ public class BinderHelper {
 
 		final var discriminatorJavaType = discriminator.resolve().getRelationalJavaType();
 
-		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
+		final Map<DiscriminatorValue,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
 				inferredData.getAttributeMember(),
 				valueMapping -> discriminatorValueMappings.put(
-						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
+						new DiscriminatorValue.Literal( discriminatorJavaType.wrap( valueMapping.discriminator(), null ) ),
 						valueMapping.entity()
 				),
 				context.getBootstrapContext().getModelsContext()

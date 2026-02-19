@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.MappingContext;
@@ -35,7 +36,7 @@ public class Any extends SimpleValue {
 	private BasicValue keyDescriptor;
 
 	// common
-	private Map<Object,String> metaValueToEntityNameMap;
+	private Map<DiscriminatorValue,String> metaValueToEntityNameMap;
 	private ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
 
@@ -183,11 +184,11 @@ public class Any extends SimpleValue {
 		metaMapping.setTypeName( type );
 	}
 
-	public Map<Object,String> getMetaValues() {
+	public Map<DiscriminatorValue,String> getMetaValues() {
 		return metaValueToEntityNameMap;
 	}
 
-	public void setMetaValues(Map<Object,String> metaValueToEntityNameMap) {
+	public void setMetaValues(Map<DiscriminatorValue,String> metaValueToEntityNameMap) {
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
 	}
 
@@ -267,7 +268,7 @@ public class Any extends SimpleValue {
 		}
 	}
 
-	public void setDiscriminatorValueMappings(Map<Object, Class<?>> discriminatorValueMappings) {
+	public void setDiscriminatorValueMappings(Map<DiscriminatorValue, Class<?>> discriminatorValueMappings) {
 		metaValueToEntityNameMap = new HashMap<>();
 		discriminatorValueMappings.forEach( (value, entity) -> metaValueToEntityNameMap.put( value, entity.getName() ) );
 	}

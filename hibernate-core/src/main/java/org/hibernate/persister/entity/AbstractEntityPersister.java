@@ -73,7 +73,6 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
@@ -106,6 +105,7 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -273,7 +273,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
-import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
@@ -289,8 +288,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.resolveAggregateColumnBasicType;
 import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -440,7 +437,7 @@ public abstract class AbstractEntityPersister
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
 	protected final String[] fullDiscriminatorSQLValues;
-	private final Object[] fullDiscriminatorValues;
+	private final DiscriminatorValue[] fullDiscriminatorValues;
 
 	/**
 	 * Warning:
@@ -741,7 +738,7 @@ public abstract class AbstractEntityPersister
 						&& canWriteToCache
 						&& shouldInvalidateCache( persistentClass, creationContext );
 
-		final List<Object> values = new ArrayList<>();
+		final List<DiscriminatorValue> values = new ArrayList<>();
 		final List<String> sqlValues = new ArrayList<>();
 
 		if ( persistentClass.isPolymorphic() && persistentClass.getDiscriminator() != null ) {
@@ -762,7 +759,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		fullDiscriminatorSQLValues = toStringArray( sqlValues );
-		fullDiscriminatorValues = toObjectArray( values );
+		fullDiscriminatorValues = values.toArray( DiscriminatorValue[]::new );
 
 		if ( hasNamedQueryLoader() ) {
 			getNamedQueryMemento( creationContext.getBootModel() );
@@ -2801,7 +2798,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	public abstract Map<Object, String> getSubclassByDiscriminatorValue();
+	public abstract Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue();
 
 	public abstract String[] getConstraintOrderedTableNameClosure();
 
@@ -2964,27 +2961,33 @@ public abstract class AbstractEntityPersister
 			return createInListPredicate( discriminatorType, sqlExpression );
 		}
 		else {
-			final Object value = getDiscriminatorValue();
-			if ( value == NULL_DISCRIMINATOR ) {
+			final DiscriminatorValue value = getDiscriminatorValue();
+			if ( value == DiscriminatorValue.Special.NULL ) {
 				return new NullnessPredicate( sqlExpression );
 			}
-			else if ( value == NOT_NULL_DISCRIMINATOR ) {
+			else if ( value == DiscriminatorValue.Special.NOT_NULL ) {
 				return new NullnessPredicate( sqlExpression, true );
 			}
+			else if ( value instanceof DiscriminatorValue.Literal literal ) {
+				return new ComparisonPredicate(
+						sqlExpression,
+						ComparisonOperator.EQUAL,
+						new QueryLiteral<>( literal.value(), discriminatorType )
+				);
+			}
 			else {
-				return new ComparisonPredicate( sqlExpression, ComparisonOperator.EQUAL,
-						new QueryLiteral<>( value, discriminatorType ) );
+				throw new IllegalStateException( "Unexpected discriminator value: " + value );
 			}
 		}
 	}
 
 	private Predicate createInListPredicate(BasicType<?> discriminatorType, Expression sqlExpression) {
 		boolean hasNull = false, hasNonNull = false;
-		for ( Object discriminatorValue : fullDiscriminatorValues ) {
-			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+		for ( DiscriminatorValue discriminatorValue : fullDiscriminatorValues ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				hasNull = true;
 			}
-			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+			else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
 				hasNonNull = true;
 			}
 		}
@@ -3011,12 +3014,12 @@ public abstract class AbstractEntityPersister
 
 	private InListPredicate discriminatorValuesPredicate(BasicType<?> discriminatorType, Expression sqlExpression) {
 		final List<Expression> values = new ArrayList<>( fullDiscriminatorValues.length );
-		for ( Object discriminatorValue : fullDiscriminatorValues ) {
-			if ( !(discriminatorValue instanceof MarkerObject) ) {
-				values.add( new QueryLiteral<>( discriminatorValue, discriminatorType) );
+		for ( DiscriminatorValue discriminatorValue : fullDiscriminatorValues ) {
+			if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
+				values.add( new QueryLiteral<>( literal.value(), discriminatorType ) );
 			}
 		}
-		return new InListPredicate( sqlExpression, values);
+		return new InListPredicate( sqlExpression, values );
 	}
 
 	protected String getPrunedDiscriminatorPredicate(

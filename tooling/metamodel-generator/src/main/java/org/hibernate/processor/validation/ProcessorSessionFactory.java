@@ -43,6 +43,8 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.StandardLocation;
+
+import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -55,9 +57,7 @@ import java.util.Set;
 
 import static java.util.Arrays.stream;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
-import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -115,8 +115,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	MockCollectionPersister createMockCollectionPersister(String role) {
-		final String entityName = root(role); //only works because entity names don't contain dots
-		final String propertyPath = unroot(role);
+		final String entityName = extractEntityNameFromRole( role );
+		final String propertyPath = role.substring( entityName.length() + 1 );
 		final TypeElement entityClass = findEntityClass(entityName);
 		final AccessType defaultAccessType = getDefaultAccessType(entityClass);
 		final Element property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
@@ -133,6 +133,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		else {
 			return null;
 		}
+	}
+
+	private String extractEntityNameFromRole(String role) {
+		for ( String entityName : entityNameMappings.values() ) {
+			if ( role.startsWith( entityName ) ) {
+				return entityName;
+			}
+		}
+		// fragile fallback
+		return qualifier( role );
 	}
 
 	@Override

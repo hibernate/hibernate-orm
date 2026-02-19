@@ -335,13 +335,13 @@ public abstract class MockSessionFactory
 		return result;
 	}
 
-	private CollectionPersister createCollectionPersister(String entityName) {
-		MockCollectionPersister result = collectionPersistersByName.get(entityName);
+	private CollectionPersister createCollectionPersister(String role) {
+		MockCollectionPersister result = collectionPersistersByName.get(role);
 		if (result!=null) {
 			return result;
 		}
-		result = createMockCollectionPersister(entityName);
-		collectionPersistersByName.put(entityName, result);
+		result = createMockCollectionPersister(role);
+		collectionPersistersByName.put(role, result);
 		return result;
 	}
 

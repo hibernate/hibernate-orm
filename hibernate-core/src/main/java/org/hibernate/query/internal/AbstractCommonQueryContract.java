@@ -416,7 +416,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
 			}
 		}
-		catch (IllegalArgumentException jpaExpected) {
+		catch (IllegalArgumentException|IllegalStateException jpaExpected) {
 			throw jpaExpected;
 		}
 		catch (Exception e) {

@@ -1256,22 +1256,6 @@ For example, if the collection `Publisher.books` was stored in the second-level 
 
 That said, it's _not_ a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 
-[[unidirectional-one-to-many]]
-[TIP]
-// .Unidirectional `@OneToMany`?
-====
-Hibernate _does_ allow a unidirectional one-to-many association, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
-
-[source,java]
-----
-@OneToMany // no matching @ManyToOne
-Set<Book> books;
-----
-
-By default, this association maps to a separate <<join-table-mappings,association join table>>.
-In practice, this mapping is quite unnatural and should be avoided almost all of the time.
-====
-
 Here we've used `Set` as the type of the collection, but Hibernate also allows the use of `List` or `Collection` here, with almost no difference in semantics.
 In particular, the `List` may not contain duplicate elements, and its order will not be persistent.
 
@@ -1414,7 +1398,7 @@ If the association is bidirectional, we annotate the unowned side `@OneToOne(map
 === Many-to-many
 
 A unidirectional many-to-many association is represented as a collection-valued attribute.
-It always maps to a separate _association table_ in the database.
+It always maps to a separate <<join-table-mappings,_association join table_>> in the database.
 
 It tends to happen that a many-to-many association eventually turns out to be an entity in disguise.
 
@@ -1487,6 +1471,34 @@ But this is especially clear in the case of many-to-many associations.
 We don't much employ the word "never" when it comes to object/relational mappings, but here we will:
 **never** write `@ManyToMany(fetch=EAGER)` unless you're deliberately looking for trouble.
 ====
+
+[[unidirectional-one-to-many]]
+=== Unidirectional one-to-many
+
+Finally, Hibernate allows a unidirectional one-to-many association, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
+
+[source,java]
+----
+@OneToMany // no matching @ManyToOne
+Set<Book> books;
+----
+
+By default, a unidirectional one-to-many association maps to a separate <<join-table-mappings,association join table>>.
+It therefore more closely resembles a many-to-many association than a many-to-one association.
+
+[CAUTION]
+====
+If you're new to Hibernate, this is not the association mapping strategy you're looking for.
+Use a <<many-to-one,bidirectional many-to-one>> instead.
+Previous versions of this Guide advised against the use of these mappings completely.
+====
+
+Unidirectional one-to-many association mappings are only useful in one very specific circumstance.
+Suppose we have a `Comment` entity, which has many different "parents" -- there can be comments on ``Document``s, comments on ``Issue``s, comments on ``Request``s, and so on.
+These aren't many-to-many associations; each given `Comment` belongs to exactly one parent.
+But on the other hand, it doesn't make sense to add a field for each kind of parent entity to the `Comment` class.
+Nor does it make sense to add a foreign key column for each parent entity to the `COMMENTS` table.
+This is the only scenario in which we can imagine ourselves using a unidirectional one-to-many.
 
 [[collections]]
 === Collections of basic values and embeddable objects

@@ -310,12 +310,12 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new UnsupportedOperationException( "Locking not supported for ProcedureCall" );
+		throw new IllegalStateException( "Locking not supported for ProcedureCall" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setLockScope(PessimisticLockScope lockScope) {
-		throw new UnsupportedOperationException( "Locking not supported for ProcedureCall" );
+		throw new IllegalStateException( "Locking not supported for ProcedureCall" );
 	}
 
 	@Override

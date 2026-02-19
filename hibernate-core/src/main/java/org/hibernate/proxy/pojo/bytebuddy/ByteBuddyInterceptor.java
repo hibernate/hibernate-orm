@@ -37,43 +37,42 @@ public class ByteBuddyInterceptor
 
 	@Override
 	public Object intercept(Object proxy, Method method, Object[] args) throws Throwable {
-		final Object result = this.invoke( method, args, proxy );
-		if ( result == INVOKE_IMPLEMENTATION ) {
-			final Object target = getImplementation();
-			final Object returnValue;
-			try {
-				if ( isPublic( persistentClass, method ) ) {
-					if ( !method.getDeclaringClass().isInstance( target ) ) {
-						throw new ClassCastException(
-								target.getClass().getName()
-										+ " incompatible with "
-										+ method.getDeclaringClass().getName()
-						);
-					}
-					returnValue = method.invoke( target, args );
+		return invoke( method, args, proxy );
+	}
+
+	@Override
+	protected Object call(Object proxy, Method method, Object[] args) throws Throwable {
+		final Object target = getImplementation();
+		final Object returnValue;
+		try {
+			if ( isPublic( persistentClass, method ) ) {
+				if ( !method.getDeclaringClass().isInstance( target ) ) {
+					throw new ClassCastException(
+							target.getClass().getName()
+							+ " incompatible with "
+							+ method.getDeclaringClass().getName()
+					);
+				}
+				returnValue = method.invoke( target, args );
+			}
+			else {
+				method.setAccessible( true );
+				returnValue = method.invoke( target, args );
+			}
+
+			if ( returnValue == target ) {
+				final var returnValueClass = returnValue.getClass();
+				if ( returnValueClass.isInstance( proxy ) ) {
+					return proxy;
 				}
 				else {
-					method.setAccessible( true );
-					returnValue = method.invoke( target, args );
+					CORE_LOGGER.narrowingProxy( returnValueClass );
 				}
-
-				if ( returnValue == target ) {
-					final var returnValueClass = returnValue.getClass();
-					if ( returnValueClass.isInstance( proxy ) ) {
-						return proxy;
-					}
-					else {
-						CORE_LOGGER.narrowingProxy( returnValueClass );
-					}
-				}
-				return returnValue;
 			}
-			catch (InvocationTargetException ite) {
-				throw ite.getTargetException();
-			}
+			return returnValue;
 		}
-		else {
-			return result;
+		catch (InvocationTargetException ite) {
+			throw ite.getTargetException();
 		}
 	}
 

@@ -68,6 +68,7 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.AccessType;
 
+import static java.lang.Character.toUpperCase;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -732,36 +733,54 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
 	}
 
-	private void addAccessors(@Nullable Element repositoryType, @Nullable TypeMirror idType,
-							String repositoryAccessor, String repositorySuperType, List<String> nestedRepositories) {
-		TypeElement finalPrimaryEntity = primaryEntity;
+	private void addAccessors(
+			@Nullable Element repositoryType, @Nullable TypeMirror idType,
+			String repositoryAccessor, String repositorySuperType, List<String> nestedRepositories) {
+		final TypeElement finalPrimaryEntity = primaryEntity;
 		if ( repositoryType != null ) {
-			addRepositoryAccessor( repositoryAccessor, repositoryType.getSimpleName().toString() );
+			addRepositoryAccessor( repositoryAccessor,
+					repositoryType.getSimpleName().toString() );
 		}
 		else if ( idType != null && finalPrimaryEntity != null ) {
-			String repositoryTypeName = "Panache" + repositoryAccessor.substring( 0, 1 )
-						.toUpperCase() + repositoryAccessor.substring( 1 ) + "Repository_";
-			// There may be a user-defined repository under our generated name, if the user names it with the same name
-			// in which case we add an underscore suffix
-			if ( members.containsKey( repositoryTypeName ) || nestedRepositories.contains( repositoryTypeName ) ) {
-				repositoryTypeName += "_";
-			}
-			members.put( repositoryTypeName, new CDITypeMetaAttribute( this, repositoryTypeName,
-					repositorySuperType +"<"+ finalPrimaryEntity.getSimpleName()+", "+ idType.toString()+">" ) );
+			final String repositoryTypeName =
+					panacheRepositoryTypeName( repositoryAccessor, nestedRepositories );
+			members.put( repositoryTypeName,
+					new CDITypeMetaAttribute( this, repositoryTypeName,
+							panacheRepositorySuperType( idType, repositorySuperType, finalPrimaryEntity ) ) );
 			addRepositoryAccessor( repositoryAccessor, repositoryTypeName );
 		}
+	}
+
+	private static @NonNull String panacheRepositorySuperType(
+			@NonNull TypeMirror idType, String repositorySuperType, TypeElement finalPrimaryEntity) {
+		return repositorySuperType + "<" + finalPrimaryEntity.getSimpleName() + ", " + idType + ">";
+	}
+
+	private @NonNull String panacheRepositoryTypeName(String repositoryAccessor, List<String> nestedRepositories) {
+		final String repositoryTypeName =
+				"Panache"
+						+ toUpperCase( repositoryAccessor.charAt( 0 ) )
+						+ repositoryAccessor.substring( 1 )
+						+ "Repository_";
+		// There may be a user-defined repository under our generated name if the
+		// user gives it the same name, in which case we add an underscore suffix
+		return members.containsKey( repositoryTypeName )
+			|| nestedRepositories.contains( repositoryTypeName )
+				? repositoryTypeName + "_"
+				: repositoryTypeName;
 	}
 
 	private void addRepositoryAccessor(String repositoryAccessor, String repositoryType) {
 		// Do not add an accessor if a user already has their own repository with the same accessor name
 		if ( !members.containsKey( repositoryAccessor ) ) {
-			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,
-					repositoryType ) );
+			members.put( repositoryAccessor,
+					new CDIAccessorMetaAttribute( this,
+							repositoryAccessor, repositoryType ) );
 		}
 		else {
 			message( element,
-					"Failed to generate accessor in " + primaryEntity
-					+ " for the generated repository under name " + repositoryAccessor + " since it is already defined by the user",
+					"Failed to generate accessor in '" + primaryEntity
+					+ "' for the generated repository under name '" + repositoryAccessor + "' since it is already defined by the user",
 					Diagnostic.Kind.WARNING );
 		}
 	}
@@ -771,25 +790,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( primaryEntityForTest == null ) {
 			return null;
 		}
-		AnnotationMirror idClass = getInheritedAnnotationMirror( this.context.getElementUtils(), primaryEntityForTest,
-				ID_CLASS );
+		final AnnotationMirror idClass =
+				getInheritedAnnotationMirror( context.getElementUtils(),
+						primaryEntityForTest, ID_CLASS );
 		if ( idClass != null ) {
-			AnnotationValue value = getAnnotationValue( idClass, "value" );
+			final AnnotationValue value = getAnnotationValue( idClass, "value" );
 			// I don't think this can have a null value
 			if ( value != null ) {
 				return (TypeMirror) value.getValue();
 			}
 		}
-		Element idMember = findIdMember();
+		final Element idMember = findIdMember();
 		if ( idMember != null ) {
-			TypeMirror typedIdMember = this.context.getTypeUtils()
+			final TypeMirror typedIdMember = context.getTypeUtils()
 					.asMemberOf( (DeclaredType) primaryEntityForTest.asType(), idMember );
 			return switch ( typedIdMember.getKind() ) {
 				case ARRAY, DECLARED, BOOLEAN, BYTE, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE -> typedIdMember;
 				case EXECUTABLE -> ((ExecutableType) typedIdMember).getReturnType();
 				default -> {
 					message( element,
-							"Unhandled id member kind: " + typedIdMember + " for id " + idMember,
+							"Unhandled id member kind '" + typedIdMember + "' for id '" + idMember + "'",
 							Diagnostic.Kind.ERROR );
 					yield null;
 				}

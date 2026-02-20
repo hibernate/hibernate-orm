@@ -261,7 +261,7 @@ TODO:
     public ${pojo.importType("java.util.List")} ${methname}(${argList}) {
 </#if>
         ${pojo.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
-                .getNamedQuery("${queryName}");
+                .createNamedQuery("${queryName}");
 <#if jdk5 && methname.startsWith("find")>
         return (List<${declarationName}>) query.list();
 <#elseif methname.startsWith("count")>

@@ -10,6 +10,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -17,7 +18,10 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.Test;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.EnumSet;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -109,6 +113,7 @@ public class MigrationTest {
 		);
 
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
+		assertColumnLength( registryScope, "Version", "description", 500 );
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
@@ -177,5 +182,43 @@ public class MigrationTest {
 		private Integer id;
 	}
 
+	private void assertColumnLength(ServiceRegistryScope registryScope, String tableName, String columnName, int expectedLength) {
+		final var connectionProvider = registryScope.getRegistry().requireService( ConnectionProvider.class );
+		try {
+			final var connection = connectionProvider.getConnection();
+			try {
+				final var metaData = connection.getMetaData();
+				final String tablePattern = toMetadataIdentifier( metaData, tableName );
+				final String columnPattern = toMetadataIdentifier( metaData, columnName );
 
+				int actualLength = -1;
+				try ( var resultSet = metaData.getColumns( null, null, tablePattern, columnPattern ) ) {
+					while ( resultSet.next() ) {
+						actualLength = Math.max( actualLength, resultSet.getInt( "COLUMN_SIZE" ) );
+					}
+				}
+				assertEquals(
+						expectedLength,
+						actualLength,
+						"Unexpected column length for " + tableName + "." + columnName
+				);
+			}
+			finally {
+				connectionProvider.closeConnection( connection );
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+	}
+
+	private String toMetadataIdentifier(DatabaseMetaData metaData, String identifier) throws SQLException {
+		if ( metaData.storesUpperCaseIdentifiers() ) {
+			return identifier.toUpperCase( Locale.ROOT );
+		}
+		if ( metaData.storesLowerCaseIdentifiers() ) {
+			return identifier.toLowerCase( Locale.ROOT );
+		}
+		return identifier;
+	}
 }

@@ -27,7 +27,7 @@ public abstract class RelationalModelDetector extends Detector {
 	}
 
 	/**
-	 * @return true if visit should continue down through the columns
+	 * Visit the given table and collect issues.
 	 */
 	protected void visit(Table table, IssueCollector collector) {
 		visitColumns(table, collector);

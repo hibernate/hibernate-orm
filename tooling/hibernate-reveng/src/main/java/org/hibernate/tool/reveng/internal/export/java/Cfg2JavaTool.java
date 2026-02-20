@@ -35,8 +35,6 @@ import java.util.Properties;
 
 /**
  * Helper methods for javacode generation.
- * <p/>
- *
  *
  * @author max
  */
@@ -270,8 +268,6 @@ public class Cfg2JavaTool {
 	/**
 	 * @param fields iterator on Property elements.
 	 * @return "name, number, ..." for a property list, usable for method calls.
-	 *         <p/>
-	 *         TODO: handle this in a template ?
 	 */
 	public String asArgumentList(Iterator<?> fields) {
 		StringBuilder buf = new StringBuilder();
@@ -288,8 +284,6 @@ public class Cfg2JavaTool {
 	/**
 	 * @param clazz persistent class.
 	 * @return "String name, int number, ..." for a property list, usable for method declarations.
-	 *         <p/>
-	 *         TODO: handle this in a template ?
 	 */
 	public String asNaturalIdParameterList(PersistentClass clazz) {
 		StringBuilder buf = new StringBuilder();

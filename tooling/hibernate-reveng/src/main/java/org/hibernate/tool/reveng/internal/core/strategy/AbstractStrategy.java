@@ -19,7 +19,6 @@ import org.hibernate.tool.reveng.internal.util.NameConverter;
 import org.hibernate.tool.reveng.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
-import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,7 +49,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public String columnToPropertyName(TableIdentifier table, String columnName) {
-		String decapitalize = Introspector.decapitalize( toUpperCamelCase(columnName) );
+		String decapitalize = StringHelper.decapitalize( toUpperCamelCase(columnName) );
 
 		return keywordCheck( decapitalize );
 	}
@@ -71,7 +70,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	 * TODO: are the from/to names correct ?
 	 */
 	public String foreignKeyToCollectionName(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns, boolean uniqueReference) {
-		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(fromTable) ) );
+		String propertyName = StringHelper.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(fromTable) ) );
 		propertyName = pluralize( propertyName );
 
 		if(!uniqueReference) {
@@ -99,7 +98,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 
 
 	public String foreignKeyToEntityName(String keyname, TableIdentifier fromTable, List<?> fromColumnNames, TableIdentifier referencedTable, List<?> referencedColumnNames, boolean uniqueReference) {
-		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(referencedTable) ) );
+		String propertyName = StringHelper.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(referencedTable) ) );
 
 		if(!uniqueReference) {
 			if(fromColumnNames!=null && fromColumnNames.size()==1) {
@@ -309,7 +308,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference) {
-		String propertyName = Introspector.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(TableIdentifier.create( toKey.getReferencedTable()) )) );
+		String propertyName = StringHelper.decapitalize( StringHelper.unqualify( getRoot().tableToClassName(TableIdentifier.create( toKey.getReferencedTable()) )) );
 		propertyName = pluralize( propertyName );
 
 		if(!uniqueReference) {

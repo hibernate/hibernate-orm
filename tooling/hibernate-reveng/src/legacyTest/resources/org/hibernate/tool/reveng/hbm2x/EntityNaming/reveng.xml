@@ -14,8 +14,6 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
-
 <hibernate-reverse-engineering>
    <table-filter match-catalog="test1" match-schema="PUBLIC" match-name=".*" package="com.entity"/>
    <table name="orderItems" class="OrderItem"/>

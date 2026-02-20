@@ -10,9 +10,9 @@ import org.hibernate.processor.model.Metamodel;
 
 public class CDITypeMetaAttribute implements MetaAttribute {
 
-	private AnnotationMetaEntity annotationMetaEntity;
-	private String typeName;
-	private Object superTypeName;
+	private final AnnotationMetaEntity annotationMetaEntity;
+	private final String typeName;
+	private final Object superTypeName;
 
 	public CDITypeMetaAttribute(AnnotationMetaEntity annotationMetaEntity, String className, String superTypeName) {
 		this.annotationMetaEntity = annotationMetaEntity;
@@ -45,11 +45,10 @@ public class CDITypeMetaAttribute implements MetaAttribute {
 
 	void preamble(StringBuilder declaration) {
 		declaration
-		.append("class ")
-		.append(typeName)
+				.append("class ")
+				.append(typeName)
 				.append(" implements ")
-				.append( superTypeName );
-		declaration
+				.append( superTypeName )
 				.append(" {\n");
 	}
 
@@ -77,9 +76,10 @@ public class CDITypeMetaAttribute implements MetaAttribute {
 		annotationMetaEntity.importType("jakarta.annotation.Generated");
 		annotationMetaEntity.importType("jakarta.enterprise.context.Dependent");
 		declaration
-		.append("\n@Dependent\n")
-		.append("@Generated(\""+HibernateProcessor.class.getName()+"\")\n");
-		declaration
+				.append( "\n@Dependent\n" )
+				.append( "@Generated(\"" )
+				.append( HibernateProcessor.class.getName() )
+				.append( "\")\n" )
 				.append("public static ");
 	}
 

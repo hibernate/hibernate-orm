@@ -15,13 +15,14 @@ public class ResourceUtil {
 	public static void createResources(Object test, String[] resources, File resourcesDir) {
 		try {
 			for (String resource : resources) {
-				InputStream inputStream = resolveResourceLocation(test.getClass(), resource);
-				File resourceFile = new File(resourcesDir, resource);
-				File parent = resourceFile.getParentFile();
-				if (!parent.exists()) {
-					if (!parent.mkdirs()) throw new AssertionError();
+				try (InputStream inputStream = resolveResourceLocation(test.getClass(), resource)) {
+					File resourceFile = new File(resourcesDir, resource);
+					File parent = resourceFile.getParentFile();
+					if (!parent.exists()) {
+						if (!parent.mkdirs()) throw new AssertionError();
+					}
+					Files.copy(inputStream, resourceFile.toPath());
 				}
-				Files.copy(inputStream, resourceFile.toPath());
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -39,8 +40,8 @@ public class ResourceUtil {
 	}
 
 	public static File resolveResourceFile(Class<?> testClass, String resourceName) {
-		String path = testClass.getPackage().getName().replace('.', File.separatorChar);
-		URL resourceUrl = testClass.getClassLoader().getResource(path + File.separatorChar
+		String path = testClass.getPackage().getName().replace('.', '/');
+		URL resourceUrl = testClass.getClassLoader().getResource(path + "/"
 																+ resourceName);
 		assert resourceUrl != null;
 		return new File(resourceUrl.getFile());

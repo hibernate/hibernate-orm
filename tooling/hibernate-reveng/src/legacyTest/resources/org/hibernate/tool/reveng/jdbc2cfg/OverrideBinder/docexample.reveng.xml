@@ -14,8 +14,6 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
-
 <hibernate-reverse-engineering>
 <type-mapping>
  <sql-type jdbc-type="NUMERIC" precision="15" hibernate-type="big_decimal"/>

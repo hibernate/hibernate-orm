@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * Helper for loading, merging  and accessing <meta> tags.
+ * Helper for loading, merging  and accessing {@code <meta>} tags.
  *
  * @author max
  *

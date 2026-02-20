@@ -117,7 +117,7 @@ public class DelegatingStrategy implements RevengStrategy {
 	 *
 	 * If subclasses need to use the Settings then it should keep its own reference, but still remember to initialize the delegates settings by calling super.setSettings(settings).
 	 *
-	 * @see RevengStrategy.setSettings
+	 * @see RevengStrategy#setSettings
 	 */
 	public void setSettings(RevengSettings settings) {
 		if(delegate!=null) delegate.setSettings(settings);

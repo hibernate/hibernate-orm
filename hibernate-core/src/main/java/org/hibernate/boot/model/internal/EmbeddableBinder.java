@@ -261,14 +261,6 @@ public class EmbeddableBinder {
 			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			AnnotatedJoinColumns annotatedJoinColumns) {
-		checkMappedIdType(
-				inferredData,
-				propertyHolder,
-				context,
-				referencedEntityName,
-				propertyName
-		);
-
 		final var embeddable = createEmbeddable(
 				propertyHolder,
 				inferredData,
@@ -292,47 +284,6 @@ public class EmbeddableBinder {
 		}
 		callTypeBinders( embeddable, context, inferredData.getPropertyType() );
 		return embeddable;
-	}
-
-	private static void checkMappedIdType(
-			PropertyData inferredData,
-			PropertyHolder propertyHolder,
-			MetadataBuildingContext context,
-			String referencedEntityName,
-			String associationPropertyName) {
-		final String propertyName = inferredData.getPropertyName();
-		if ( !associationPropertyName.equals( propertyName ) ) { // indicates presence of @MapsId
-			final var referencedEntityBinding = context.getMetadataCollector().getEntityBinding( referencedEntityName );
-			if ( referencedEntityBinding != null
-					&& referencedEntityBinding.getIdentifier() instanceof Component identifierComponent ) {
-				if ( !propertyHolder.isOrWithinEmbeddedId() // not a field of an @EmbeddedId class
-						&& !isEmbeddedId( inferredData.getAttributeMember() ) ) {
-					throw new AnnotationException(
-							"Attribute '%s' of entity '%s' is mapped by association '%s' but is not annotated '@EmbeddedId'"
-									.formatted(
-											propertyName,
-											propertyHolder.getPersistentClass().getEntityName(),
-											associationPropertyName
-									)
-					);
-				}
-				final String expectedTypeName = identifierComponent.getComponentClassName();
-				final String actualTypeName = inferredData.getClassOrElementName();
-				if ( !hasCompatibleType( actualTypeName, expectedTypeName ) ) {
-					throw new AnnotationException(
-							"Identifier attribute '%s' of entity '%s' has type '%s' but is mapped by association '%s' to entity '%s' with composite identifier type '%s'"
-									.formatted(
-											propertyName,
-											propertyHolder.getPersistentClass().getEntityName(),
-											actualTypeName,
-											associationPropertyName,
-											referencedEntityName,
-											expectedTypeName
-									)
-					);
-				}
-			}
-		}
 	}
 
 	static Component bindEmbeddable(
@@ -1014,7 +965,7 @@ public class EmbeddableBinder {
 			&& !entityPropertyData.getClassOrElementType().equals( idClassPropertyData.getClassOrElementType() );
 	}
 
-	private static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
+	static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
 		return typeNameInIdClass.equals( typeNameInEntityClass )
 			|| canonicalize( typeNameInIdClass ).equals( typeNameInEntityClass )
 			|| typeNameInIdClass.equals( canonicalize( typeNameInEntityClass ) );

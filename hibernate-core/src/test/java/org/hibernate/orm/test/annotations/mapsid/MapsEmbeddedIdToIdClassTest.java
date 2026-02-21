@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.mapsid;
 
 import jakarta.persistence.*;
+import org.hibernate.orm.test.annotations.mapsid.MapsEmbeddedIdToIdClassTest_.Dependent_;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -59,7 +60,7 @@ class MapsEmbeddedIdToIdClassTest {
 		@EmbeddedId
 		EmployeeId empId;
 
-		@MapsId("empId")
+		@MapsId(Dependent_.EMP_ID)
 		@ManyToOne
 		Employee employee;
 	}

@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
+import org.hibernate.orm.test.annotations.mapsid.MapsSimpleIdToIdClassTest_.Dependent_;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ class MapsSimpleIdToIdClassTest {
 		@Id
 		long empId;
 
-		@MapsId("empId")
+		@MapsId(Dependent_.EMP_ID)
 		@ManyToOne
 		Employee employee;
 	}

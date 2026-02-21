@@ -20,7 +20,6 @@ public interface GraphParserSettings {
 	 *     <li>{@code "modern"} - Uses the new syntax: attribute:SubType(attributes)
 	 *         This is the preferred syntax going forward.
 	 * </ul>
-	 * <p>
 	 * @settingDefault {@code "legacy"} for backward compatibility
 	 * @since 7.0
 	 */

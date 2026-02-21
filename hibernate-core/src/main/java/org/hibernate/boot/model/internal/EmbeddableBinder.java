@@ -80,6 +80,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -995,7 +996,7 @@ public class EmbeddableBinder {
 		embeddable.setEmbedded( isNonAggregated );
 		applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
 
-		if ( isIdentifierMapper
+		if ( isIdentifierMapper( inferredData, isIdentifierMapper )
 				|| isNonAggregated && inferredData.getPropertyName() == null ) {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
@@ -1015,6 +1016,10 @@ public class EmbeddableBinder {
 		}
 		applyColumnNamingPattern( embeddable, inferredData );
 		return embeddable;
+	}
+
+	private static boolean isIdentifierMapper(PropertyData inferredData, boolean isIdentifierMapper) {
+		return isIdentifierMapper && IDENTIFIER_MAPPER_PROPERTY.equals( inferredData.getPropertyName() );
 	}
 
 	private static void checkEmbeddableRecursiveHierarchy(

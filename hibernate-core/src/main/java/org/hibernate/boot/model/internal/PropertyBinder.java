@@ -929,11 +929,11 @@ public class PropertyBinder {
 		return property.hasDirectAnnotationUsage( Version.class );
 	}
 
-	private static boolean isOneToOne(MemberDetails property) {
+	static boolean isOneToOne(MemberDetails property) {
 		return property.hasDirectAnnotationUsage( OneToOne.class );
 	}
 
-	private static boolean isManyToOne(MemberDetails property) {
+	static boolean isManyToOne(MemberDetails property) {
 		return property.hasDirectAnnotationUsage( ManyToOne.class );
 	}
 

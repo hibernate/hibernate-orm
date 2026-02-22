@@ -1,6 +1,21 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.5.Final (February 22, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37807
+
+
+** Bug
+    * HHH-20187 NPE in BeanValidationEventListener with StatelessSession
+    * HHH-20165 Hibernate processor: Panache Next generated repository name conflicts
+    * HHH-20164 Hibernate processor: @Delete methods not working outside of Jakarta Data repository
+    * HHH-20163 Hibernate processor: nested types are visited twice
+    * HHH-20162 MySQL timeout based on innodb_lock_timeout has incorrect units
+    * HHH-20151 Metamodel geneartor: allow implicit repositories for Panache Next
+    * HHH-20143 Attempting to lock an entity not associated with the persistence context should rollback the active transaction
+
 Changes in 7.2.4.Final (February 08, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

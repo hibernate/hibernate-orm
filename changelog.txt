@@ -1,6 +1,16 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.43.Final (February 22, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37572
+
+
+** Bug
+    * HHH-20168 Hibernate JsonWithArrayEmbeddableTest.testUpdateMultipleAggregateMembers test fail with Oracle 19c
+    * HHH-20161 Hibernate ArrayToStringWithArrayAggregateTest test fail with Oracle 19c
+
 Changes in 6.6.42.Final (February 01, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

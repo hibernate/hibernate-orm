@@ -436,43 +436,67 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object id) {
-		checkOpen();
+		try {
+			checkOpen();
 
-		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
-		//noinspection unchecked
-		return (T) byKey( persister ).performFind( id );
+			final var persister = requireEntityPersisterForLoad( entityClass.getName() );
+			//noinspection unchecked
+			return (T) byKey( persister ).performFind( id );
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object key, FindOption... findOptions) {
-		checkOpen();
+		try {
+			checkOpen();
 
-		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
-		//noinspection unchecked
-		return (T) byKey( persister, findOptions ).performFind( key );
+			final var persister = requireEntityPersisterForLoad( entityClass.getName() );
+			//noinspection unchecked
+			return (T) byKey( persister, findOptions ).performFind( key );
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
-		checkOpen();
+		try {
+			checkOpen();
 
-		final var graph = (RootGraphImplementor<T>) entityGraph;
-		final var type = graph.getGraphedType();
+			final var graph = (RootGraphImplementor<T>) entityGraph;
+			final var type = graph.getGraphedType();
 
-		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
-			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
-			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
-		};
+			final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+				case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
+				case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
+			};
 
-		//noinspection unchecked
-		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, findOptions ).performFind( key );
+			//noinspection unchecked
+			return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, findOptions ).performFind( key );
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	@Override
 	public Object find(String entityName, Object key, FindOption... findOptions) {
-		checkOpen();
-		var entityDescriptor = requireEntityPersisterForLoad( entityName );
-		return byKey( entityDescriptor, findOptions ).performFind( key );
+		try {
+			checkOpen();
+			var entityDescriptor = requireEntityPersisterForLoad( entityName );
+			return byKey( entityDescriptor, findOptions ).performFind( key );
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	@Override
@@ -1337,6 +1361,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return createSelectionQuery( queryString, expectedResultType );
 		}
 		catch (RuntimeException e) {
+			markForRollbackOnly();
 			throw getExceptionConverter().convert( e );
 		}
 	}
@@ -1493,19 +1518,25 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public MutationQuery createStatement(StatementReference statementReference) {
-		checksBeforeQueryCreation();
-		if ( statementReference instanceof MutationSpecification<?> specification ) {
-			final var criteria = specification.buildCriteria( getCriteriaBuilder() );
-			return new MutationQueryImpl<>( (SqmDmlStatement<?>) criteria, this );
+		try {
+			checksBeforeQueryCreation();
+			if ( statementReference instanceof MutationSpecification<?> specification ) {
+				final var criteria = specification.buildCriteria( getCriteriaBuilder() );
+				return new MutationQueryImpl<>( (SqmDmlStatement<?>) criteria, this );
+			}
+			else {
+				// this cast is fine because of all our impls of TypedQueryReference return Class<R>
+				final MutationQuery query =
+						buildNamedQuery( statementReference.getName(),
+								memento -> memento.toMutationQuery( this ),
+								memento -> memento.toMutationQuery( this ) );
+				statementReference.getHints().forEach( query::setHint );
+				return query;
+			}
 		}
-		else {
-			// this cast is fine because of all our impls of TypedQueryReference return Class<R>
-			final MutationQuery query =
-					buildNamedQuery( statementReference.getName(),
-							memento -> memento.toMutationQuery( this ),
-							memento -> memento.toMutationQuery( this ) );
-			statementReference.getHints().forEach( query::setHint );
-			return query;
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
 		}
 	}
 
@@ -1560,6 +1591,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return query;
 		}
 		catch ( RuntimeException he ) {
+			markForRollbackOnly();
 			throw getExceptionConverter().convert( he );
 		}
 	}

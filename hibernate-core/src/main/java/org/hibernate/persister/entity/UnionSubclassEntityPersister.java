@@ -237,13 +237,25 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			SqlAliasBase sqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState) {
-		return new UnionTableGroup(
+		final var tableGroup = new UnionTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				createPrimaryTableReference( sqlAliasBase, creationState ),
 				this,
 				explicitSourceAlias
 		);
+		final var softDeleteMapping = getSoftDeleteMapping();
+		if ( additionalPredicateCollectorAccess != null && softDeleteMapping != null ) {
+			final var tableReference =
+					tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+			additionalPredicateCollectorAccess.get().accept(
+					softDeleteMapping.createNonDeletedRestriction(
+							tableReference,
+							creationState.getSqlExpressionResolver()
+					)
+			);
+		}
+		return tableGroup;
 	}
 
 	@Override

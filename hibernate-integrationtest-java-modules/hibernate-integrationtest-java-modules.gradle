@@ -36,3 +36,13 @@ test {
 	useJUnitPlatform()
 }
 
+tasks.withType(JavaCompile).configureEach {
+    // NOTE: we override the compiler args here since we don't want to include
+    //  the `--limit-modules` defined in the `local.java-module`.
+    //  This module is specific to module path testing and we require much much more than what's
+    //  defined in the `local.java-module` (e.g. we need JPA or ORM modules as well as things like logging etc.)
+    //
+    //  We also are dropping the JBoss logging arg from the list since the tests do not have loggers that require
+    //  impl generation.
+    options.compilerArgs = [ ]
+}

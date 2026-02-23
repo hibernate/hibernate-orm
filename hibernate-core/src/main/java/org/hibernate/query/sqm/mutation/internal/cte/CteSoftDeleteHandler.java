@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -26,6 +27,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.softDeleteTargets;
 
 /**
  * Specialized CteDeleteHandler for soft-delete handling
@@ -50,8 +53,19 @@ public class CteSoftDeleteHandler extends CteDeleteHandler {
 			CteStatement idSelectCte,
 			SessionFactoryImplementor factory,
 			TableGroup updatingTableGroup) {
-		final SoftDeleteMapping softDeleteMapping = getEntityDescriptor().getSoftDeleteMapping();
-		final TableDetails softDeleteTable = getEntityDescriptor().getSoftDeleteTableDetails();
+		for ( var target : softDeleteTargets( getEntityDescriptor() ) ) {
+			addSoftDeleteCte( statement, idSelectCte, factory, updatingTableGroup, target );
+		}
+	}
+
+	private void addSoftDeleteCte(
+			CteContainer statement,
+			CteStatement idSelectCte,
+			SessionFactoryImplementor factory,
+			TableGroup updatingTableGroup,
+			EntityMappingType entityDescriptor) {
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
 		final CteTable dmlResultCte = new CteTable(
 				getCteTableName( softDeleteTable.getTableName() ),
 				idSelectCte.getCteTable().getCteColumns()

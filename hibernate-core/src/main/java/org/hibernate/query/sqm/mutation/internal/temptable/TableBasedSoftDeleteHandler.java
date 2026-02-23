@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -62,6 +62,8 @@ import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
+import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.softDeleteTargets;
+import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec;
 
 /**
 * @author Steve Ebersole
@@ -81,7 +83,7 @@ public class TableBasedSoftDeleteHandler
 	private final @Nullable JdbcParameter sessionUidParameter;
 
 	private final @Nullable CacheableSqmInterpretation<InsertSelectStatement, JdbcOperationQueryMutation> idTableInsert;
-	private final JdbcOperationQueryMutation softDelete;
+	private final List<JdbcOperationQueryMutation> softDeletes;
 
 	public TableBasedSoftDeleteHandler(
 			SqmDeleteStatement<?> sqmDelete,
@@ -133,12 +135,14 @@ public class TableBasedSoftDeleteHandler
 		//			other than the identifier table we will
 		final SqmJdbcExecutionContextAdapter executionContext = omittingLockingAndPaging( context );
 
-		final TableGroup deletingTableGroup = converter.getMutatingTableGroup();
-		final TableDetails softDeleteTable = rootEntityDescriptor.getSoftDeleteTableDetails();
-		final NamedTableReference rootTableReference = (NamedTableReference) deletingTableGroup.resolveTableReference(
-				deletingTableGroup.getNavigablePath(),
-				softDeleteTable.getTableName()
-		);
+		final var deletingTableGroup = converter.getMutatingTableGroup();
+		final var softDeleteTable = targetEntityDescriptor.getSoftDeleteTableDetails();
+		final var rootTableReference =
+				(NamedTableReference)
+						deletingTableGroup.resolveTableReference(
+								deletingTableGroup.getNavigablePath(),
+								softDeleteTable.getTableName()
+						);
 		assert rootTableReference != null;
 
 		// NOTE : `converter.visitWhereClause` already applies the soft-delete restriction
@@ -190,13 +194,15 @@ public class TableBasedSoftDeleteHandler
 			);
 		}
 
-		final boolean needsSubQuery = !walker.isAllColumnReferencesFromIdentificationVariable()
-									|| targetEntityDescriptor != rootEntityDescriptor;
+		final boolean needsSubQuery =
+				!walker.isAllColumnReferencesFromIdentificationVariable()
+						|| targetEntityDescriptor != rootEntityDescriptor
+						|| targetEntityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister;
 		if ( needsSubQuery ) {
 			if ( getSessionFactory().getJdbcServices().getDialect().supportsSubqueryOnMutatingTable() ) {
 				this.idTableInsert = null;
-				this.softDelete = createDeleteWithSubQuery(
-						rootEntityDescriptor,
+				this.softDeletes = createDeletesWithSubQuery(
+						targetEntityDescriptor,
 						deletingTableGroup,
 						rootTableReference,
 						predicateCollector,
@@ -214,128 +220,125 @@ public class TableBasedSoftDeleteHandler
 						jdbcParameterBindings,
 						executionContext
 				);
-				this.softDelete = createDeleteUsingIdTable(
-						rootEntityDescriptor,
-						rootTableReference,
-						predicateCollector,
+				this.softDeletes = createDeletesUsingIdTable(
+						targetEntityDescriptor,
 						executionContext
 				);
 			}
 		}
 		else {
 			this.idTableInsert = null;
-			this.softDelete = createDirectDelete(
-					rootEntityDescriptor,
+			this.softDeletes = singletonList( createDirectDelete(
+					targetEntityDescriptor,
 					rootTableReference,
 					predicateCollector,
 					jdbcParameterBindings,
 					executionContext
-			);
+			) );
 		}
 
 		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
 	}
 
-	private JdbcOperationQueryMutation createDeleteUsingIdTable(
-			EntityMappingType rootEntityDescriptor,
-			NamedTableReference targetTableReference,
-			PredicateCollector predicateCollector,
+	private List<JdbcOperationQueryMutation> createDeletesUsingIdTable(
+			EntityMappingType targetEntityDescriptor,
 			SqmJdbcExecutionContextAdapter executionContext) {
-		final QuerySpec idTableIdentifierSubQuery = ExecuteWithTemporaryTableHelper.createIdTableSelectQuerySpec(
-				getIdTable(),
-				sessionUidParameter,
-				getEntityDescriptor(),
-				executionContext
-		);
-
-		final Assignment softDeleteAssignment = rootEntityDescriptor
-				.getSoftDeleteMapping()
-				.createSoftDeleteAssignment( targetTableReference );
-		final Expression idExpression = createIdExpression( rootEntityDescriptor, targetTableReference );
-		final UpdateStatement updateStatement = new UpdateStatement(
-				targetTableReference,
-				singletonList( softDeleteAssignment ),
-				new InSubQueryPredicate( idExpression, idTableIdentifierSubQuery, false )
-		);
-
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, updateStatement )
-				.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() );
+		final var factory = executionContext.getSession().getFactory();
+		final var softDeleteMutations = new ArrayList<JdbcOperationQueryMutation>();
+		for ( var entityDescriptor : softDeleteTargets( targetEntityDescriptor ) ) {
+			final var tableDetails = entityDescriptor.getSoftDeleteTableDetails();
+			final var targetTableReference = new NamedTableReference(
+					tableDetails.getTableName(),
+					DeleteStatement.DEFAULT_ALIAS,
+					false
+			);
+			final var idTableIdentifierSubQuery = createIdTableSelectQuerySpec(
+					getIdTable(),
+					sessionUidParameter,
+					getEntityDescriptor(),
+					executionContext
+			);
+			final var softDeleteAssignment =
+					entityDescriptor.getSoftDeleteMapping()
+							.createSoftDeleteAssignment( targetTableReference );
+			final var idExpression = createIdExpression( entityDescriptor, targetTableReference );
+			final var updateStatement =
+					new UpdateStatement( targetTableReference, singletonList( softDeleteAssignment ),
+							new InSubQueryPredicate( idExpression, idTableIdentifierSubQuery, false ) );
+			softDeleteMutations.add( factory.getJdbcServices().getJdbcEnvironment()
+					.getSqlAstTranslatorFactory()
+					.buildMutationTranslator( factory, updateStatement )
+					.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() ) );
+		}
+		return softDeleteMutations;
 	}
 
-	private static Expression createIdExpression(EntityMappingType rootEntityDescriptor, NamedTableReference targetTableReference) {
-		final TableDetails softDeleteTable = rootEntityDescriptor.getSoftDeleteTableDetails();
-		final TableDetails.KeyDetails keyDetails = softDeleteTable.getKeyDetails();
+	private static Expression createIdExpression(EntityMappingType entityDescriptor, NamedTableReference targetTableReference) {
+		final var keyDetails = entityDescriptor.getSoftDeleteTableDetails().getKeyDetails();
 		final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
 		keyDetails.forEachKeyColumn( (position, column) -> idExpressions.add(
 				new ColumnReference( targetTableReference, column )
 		) );
-		final Expression idExpression = idExpressions.size() == 1
+		return idExpressions.size() == 1
 				? idExpressions.get( 0 )
-				: new SqlTuple( idExpressions, rootEntityDescriptor.getIdentifierMapping() );
-		return idExpression;
+				: new SqlTuple( idExpressions,
+						entityDescriptor.getIdentifierMapping() );
 	}
 
-	private JdbcOperationQueryMutation createDeleteWithSubQuery(
-			EntityMappingType rootEntityDescriptor,
+	private List<JdbcOperationQueryMutation> createDeletesWithSubQuery(
+			EntityMappingType targetEntityDescriptor,
 			TableGroup deletingTableGroup,
 			NamedTableReference rootTableReference,
 			PredicateCollector predicateCollector,
 			JdbcParameterBindings jdbcParameterBindings,
 			MultiTableSqmMutationConverter converter,
 			SqmJdbcExecutionContextAdapter executionContext) {
-		final QuerySpec matchingIdSubQuery = new QuerySpec( false, 1 );
+		// Build the matching-ids subquery (shared across all UPDATE statements)
+		final var matchingIdSubQuery = new QuerySpec( false, 1 );
 		matchingIdSubQuery.getFromClause().addRoot( deletingTableGroup );
 
-		final TableDetails identifierTableDetails = rootEntityDescriptor.getIdentifierTableDetails();
-		final TableDetails.KeyDetails keyDetails = identifierTableDetails.getKeyDetails();
-
-		final NamedTableReference targetTable = new NamedTableReference(
-				identifierTableDetails.getTableName(),
-				DeleteStatement.DEFAULT_ALIAS,
-				false
-		);
-
-		final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
+		final var keyDetails = targetEntityDescriptor.getIdentifierTableDetails().getKeyDetails();
 		keyDetails.forEachKeyColumn( (position, column) -> {
-			final Expression columnReference = converter.getSqlExpressionResolver().resolveSqlExpression(
-					rootTableReference,
-					column
-			);
-			matchingIdSubQuery.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( position, columnReference )
-			);
-			idExpressions.add( new ColumnReference( targetTable, column ) );
+			final var columnReference =
+					converter.getSqlExpressionResolver()
+							.resolveSqlExpression( rootTableReference, column );
+			matchingIdSubQuery.getSelectClause()
+					.addSqlSelection( new SqlSelectionImpl( position, columnReference ) );
 		} );
-
 		matchingIdSubQuery.applyPredicate( predicateCollector.getPredicate() );
-		final Expression idExpression = idExpressions.size() == 1
-				? idExpressions.get( 0 )
-				: new SqlTuple( idExpressions, rootEntityDescriptor.getIdentifierMapping() );
 
-		final Assignment softDeleteAssignment = rootEntityDescriptor
-				.getSoftDeleteMapping()
-				.createSoftDeleteAssignment( targetTable );
+		// Create one UPDATE per concrete soft-delete table
+		final var factory = executionContext.getSession().getFactory();
+		final var softDeleteMutations = new ArrayList<JdbcOperationQueryMutation>();
+		for ( var entityDescriptor : softDeleteTargets( targetEntityDescriptor ) ) {
+			final var tableDetails = entityDescriptor.getSoftDeleteTableDetails();
+			final var targetTable = new NamedTableReference(
+					tableDetails.getTableName(),
+					DeleteStatement.DEFAULT_ALIAS,
+					false
+			);
 
-		final UpdateStatement updateStatement = new UpdateStatement(
-				targetTable,
-				singletonList( softDeleteAssignment ),
-				new InSubQueryPredicate( idExpression, matchingIdSubQuery, false )
-		);
+			final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
+			keyDetails.forEachKeyColumn( (position, column) ->
+					idExpressions.add( new ColumnReference( targetTable, column ) ) );
+			final var idExpression =
+					idExpressions.size() == 1
+							? idExpressions.get( 0 )
+							: new SqlTuple( idExpressions, entityDescriptor.getIdentifierMapping() );
 
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+			final var softDeleteAssignment =
+					entityDescriptor.getSoftDeleteMapping()
+							.createSoftDeleteAssignment( targetTable );
 
-		final JdbcServices jdbcServices = factory.getJdbcServices();
+			final var updateStatement =
+					new UpdateStatement( targetTable, singletonList( softDeleteAssignment ),
+							new InSubQueryPredicate( idExpression, matchingIdSubQuery, false ) );
 
-		return jdbcServices.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, updateStatement )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+			softDeleteMutations.add( factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+					.buildMutationTranslator( factory, updateStatement )
+					.translate( jdbcParameterBindings, executionContext.getQueryOptions() ) );
+		}
+		return softDeleteMutations;
 	}
 
 	private JdbcOperationQueryMutation createDirectDelete(
@@ -396,8 +399,10 @@ public class TableBasedSoftDeleteHandler
 		if ( idTableInsert != null && idTableInsert.jdbcOperation().dependsOnParameterBindings() ) {
 			return true;
 		}
-		if ( softDelete.dependsOnParameterBindings() ) {
-			return true;
+		for ( var softDelete : softDeletes ) {
+			if ( softDelete.dependsOnParameterBindings() ) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -408,8 +413,10 @@ public class TableBasedSoftDeleteHandler
 			&& !idTableInsert.jdbcOperation().isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 			return false;
 		}
-		if ( !softDelete.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
-			return false;
+		for ( var softDelete : softDeletes ) {
+			if ( !softDelete.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -448,16 +455,16 @@ public class TableBasedSoftDeleteHandler
 							)
 					);
 				}
-				jdbcMutationExecutor.execute(
-						softDelete,
-						sessionUidBindings,
-						sql -> executionContext.getSession()
-								.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( sql ),
-						(integer, preparedStatement) -> {},
-						executionContext
-				);
+				for ( var softDelete : softDeletes ) {
+					jdbcMutationExecutor.execute(
+							softDelete,
+							sessionUidBindings,
+							sql -> executionContext.getSession().getJdbcCoordinator()
+									.getStatementPreparer().prepareStatement( sql ),
+							(integer, preparedStatement) -> {},
+							executionContext
+					);
+				}
 				return rows;
 			}
 			finally {
@@ -470,16 +477,18 @@ public class TableBasedSoftDeleteHandler
 			}
 		}
 		else {
-			return jdbcMutationExecutor.execute(
-					softDelete,
-					jdbcParameterBindings,
-					sql -> executionContext.getSession()
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql ),
-					(integer, preparedStatement) -> {},
-					executionContext
-			);
+			int rows = 0;
+			for ( var softDelete : softDeletes ) {
+				rows += jdbcMutationExecutor.execute(
+						softDelete,
+						jdbcParameterBindings,
+						sql -> executionContext.getSession().getJdbcCoordinator()
+								.getStatementPreparer().prepareStatement( sql ),
+						(integer, preparedStatement) -> {},
+						executionContext
+				);
+			}
+			return rows;
 		}
 	}
 
@@ -489,8 +498,8 @@ public class TableBasedSoftDeleteHandler
 	}
 
 	// For Hibernate Reactive
-	protected JdbcOperationQueryMutation getSoftDelete() {
-		return softDelete;
+	protected List<JdbcOperationQueryMutation> getSoftDeletes() {
+		return softDeletes;
 	}
 
 	// For Hibernate Reactive

@@ -2,16 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.result.internal;
+package org.hibernate.procedure.internal;
 
-import org.hibernate.result.UpdateCountOutput;
+import org.hibernate.procedure.UpdateCountOutput;
 
 /**
  * Implementation of UpdateCountOutput
  *
  * @author Steve Ebersole
  */
-class UpdateCountOutputImpl implements UpdateCountOutput {
+public class UpdateCountOutputImpl implements UpdateCountOutput {
 	private final int updateCount;
 
 	public UpdateCountOutputImpl(int updateCount) {

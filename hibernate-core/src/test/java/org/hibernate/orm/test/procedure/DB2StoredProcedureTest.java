@@ -13,8 +13,8 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.result.Output;
-import org.hibernate.result.ResultSetOutput;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.procedure.Output;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
@@ -118,7 +118,7 @@ public class DB2StoredProcedureTest {
 	@Test
 	public void testHibernateProcedureCallRefCursor(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			final var session = entityManager.unwrap( Session.class );
+			final var session = entityManager.unwrap( SessionImplementor.class );
 
 			final var call = session.createStoredProcedureCall( "sp_person_phones" );
 			final var inParam = call.registerParameter( 1, Long.class, ParameterMode.IN );
@@ -126,7 +126,7 @@ public class DB2StoredProcedureTest {
 			call.registerParameter( 2, Class.class, ParameterMode.REF_CURSOR );
 
 			final Output output = call.getOutputs().getCurrent();
-			final List<Object[]> postComments = ( (ResultSetOutput) output ).getResultList();
+			final List<Phone> postComments = output.asResultSetOutput(Phone.class).getResultList();
 			assertEquals( 2, postComments.size() );
 		} );
 	}

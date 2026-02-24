@@ -24,10 +24,12 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.Output;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.ProcedureParameter;
+import org.hibernate.procedure.NoMoreOutputsException;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
@@ -46,10 +48,8 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.SqmBindableType;
-import org.hibernate.result.ResultSetOutput;
-import org.hibernate.result.UpdateCountOutput;
-import org.hibernate.result.internal.OutputsExecutionContext;
-import org.hibernate.result.spi.ResultContext;
+import org.hibernate.procedure.ResultSetOutput;
+import org.hibernate.procedure.UpdateCountOutput;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -57,7 +57,6 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.OutputableType;
 
@@ -71,6 +70,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.parseBoolean;
@@ -83,9 +83,6 @@ import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
-import static org.hibernate.procedure.internal.Util.resolveResultSetMappingClasses;
-import static org.hibernate.procedure.internal.Util.resolveResultSetMappingNames;
-import static org.hibernate.procedure.internal.Util.resolveResultSetMappings;
 import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
 
 /**
@@ -95,7 +92,7 @@ import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetM
  */
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
-		implements ProcedureCallImplementor<R>, ResultContext {
+		implements ProcedureCallImplementor<R> {
 
 	private final String procedureName;
 
@@ -104,28 +101,13 @@ public class ProcedureCallImpl<R>
 	private final ProcedureParameterMetadataImplementor parameterMetadata;
 	private final ProcedureParamBindings parameterBindings;
 
-	private final ResultSetMapping resultSetMapping;
+	private final List<ResultSetMapping> resultSetMappings;
 
 	private Set<String> synchronizedQuerySpaces;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private ProcedureOutputsImpl outputs;
-
-	private ProcedureCallImpl(
-			SharedSessionContractImplementor session,
-			String procedureName,
-			String resultSetMappingName,
-			boolean resultSetMappingDynamic,
-			Set<String> synchronizedQuerySpaces) {
-		super( session );
-		this.procedureName = procedureName;
-		this.synchronizedQuerySpaces = synchronizedQuerySpaces;
-		final var factory = session.getSessionFactory();
-		resultSetMapping = resolveResultSetMapping( resultSetMappingName, resultSetMappingDynamic, factory );
-		parameterMetadata = new ProcedureParameterMetadataImpl();
-		parameterBindings = new ProcedureParamBindings( parameterMetadata, factory );
-	}
+	private OutputsImpl outputs;
 
 	/**
 	 * The no-returns form.
@@ -136,7 +118,12 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImpl(
 			SharedSessionContractImplementor session,
 			String procedureName) {
-		this( session, procedureName, procedureName, true, null );
+		super( session );
+		this.procedureName = procedureName;
+		this.synchronizedQuerySpaces = null;
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
+		this.resultSetMappings = List.of( resolveResultSetMapping( procedureName, true, session.getFactory() ) );
 	}
 
 	/**
@@ -150,13 +137,14 @@ public class ProcedureCallImpl<R>
 			SharedSessionContractImplementor session,
 			String procedureName,
 			Class<?>... resultClasses) {
-		this( session, procedureName,
-				mappingId( procedureName, resultClasses ),
-				false,
-				new HashSet<>() );
-		resolveResultSetMappingClasses(
+		super( session );
+		this.procedureName = procedureName;
+		this.synchronizedQuerySpaces = new HashSet<>();
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
+		resultSetMappings = Util.resolveResultSetMappings(
+				procedureName,
 				resultClasses,
-				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
@@ -173,13 +161,14 @@ public class ProcedureCallImpl<R>
 			final SharedSessionContractImplementor session,
 			String procedureName,
 			String... resultSetMappingNames) {
-		this( session, procedureName,
-				mappingId( procedureName, resultSetMappingNames ),
-				false,
-				new HashSet<>() );
-		resolveResultSetMappingNames(
+		super( session );
+		this.procedureName = procedureName;
+		this.synchronizedQuerySpaces = new HashSet<>();
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
+		resultSetMappings = Util.resolveResultSetMappings(
+				procedureName,
 				resultSetMappingNames,
-				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
@@ -194,39 +183,15 @@ public class ProcedureCallImpl<R>
 	ProcedureCallImpl(
 			SharedSessionContractImplementor session,
 			NamedCallableQueryMemento memento) {
-		this( session, memento.getCallableName(),
-				memento.getRegistrationName(),
-				false,
-				makeCopy( memento.getQuerySpaces() ) );
-		resolveResultSetMappings(
+		super(session);
+		this.procedureName = memento.getCallableName();
+		this.synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
+		resultSetMappings = Util.resolveResultSetMappings(
+				procedureName,
 				memento.getResultSetMappingNames(),
 				memento.getResultSetMappingClasses(),
-				resultSetMapping,
-				synchronizedQuerySpaces::add,
-				this::getSessionFactory
-		);
-		registerParameters( session, memento );
-		applyMementoOptions( memento );
-	}
-
-	/**
-	 * The named/stored copy constructor
-	 *
-	 * @param session The session
-	 * @param memento The named/stored memento
-	 */
-	ProcedureCallImpl(
-			SharedSessionContractImplementor session,
-			NamedCallableQueryMemento memento,
-			Class<?>... resultTypes) {
-		this( session, memento.getCallableName(),
-				mappingId( memento.getCallableName(), resultTypes ),
-				false,
-				makeCopy( memento.getQuerySpaces() ) );
-		resolveResultSetMappings(
-				null,
-				resultTypes,
-				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
@@ -238,14 +203,14 @@ public class ProcedureCallImpl<R>
 			SharedSessionContractImplementor session,
 			NamedCallableQueryMementoImpl memento,
 			String... resultSetMappingNames) {
-		this( session, memento.getCallableName(),
-				mappingId( memento.getCallableName(), resultSetMappingNames ),
-				false,
-				makeCopy( memento.getQuerySpaces() ) );
-		resolveResultSetMappings(
+		super( session );
+		this.procedureName = memento.getCallableName();
+		this.synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
+		parameterMetadata = new ProcedureParameterMetadataImpl();
+		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
+		resultSetMappings = Util.resolveResultSetMappings(
+				procedureName,
 				resultSetMappingNames,
-				null,
-				resultSetMapping,
 				synchronizedQuerySpaces::add,
 				this::getSessionFactory
 		);
@@ -395,8 +360,8 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	public ResultSetMapping getResultSetMapping() {
-		return resultSetMapping;
+	public List<ResultSetMapping> getResultSetMappings() {
+		return resultSetMappings;
 	}
 
 	@Override
@@ -564,23 +529,28 @@ public class ProcedureCallImpl<R>
 	}
 
 	private void applyCallableFunctionHint() {
-		final List<Class<?>> resultTypes = new ArrayList<>();
-		resultSetMapping.visitResultBuilders(
-				(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
-		);
-		if ( resultTypes.size() == 1 ) {
-			final var basicType =
-					getTypeConfiguration()
-							.getBasicTypeForJavaType( resultTypes.get(0) );
-			if ( basicType != null ) {
-				markAsFunctionCall( basicType );
+		assert !resultSetMappings.isEmpty();
+		if ( resultSetMappings.size() > 1 ) {
+			markAsFunctionCallRefRefCursor();
+		}
+		else {
+			final List<Class<?>> resultTypes = new ArrayList<>();
+			resultSetMappings.get( 0 ).visitResultBuilders(
+					(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
+			);
+			if ( resultTypes.size() == 1 ) {
+				final var basicType = getTypeConfiguration()
+						.getBasicTypeForJavaType( resultTypes.get( 0 ) );
+				if ( basicType != null ) {
+					markAsFunctionCall( basicType );
+				}
+				else {
+					markAsFunctionCallRefRefCursor();
+				}
 			}
 			else {
 				markAsFunctionCallRefRefCursor();
 			}
-		}
-		else {
-			markAsFunctionCallRefRefCursor();
 		}
 	}
 
@@ -622,21 +592,24 @@ public class ProcedureCallImpl<R>
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
-		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+
+		assert !resultSetMappings.isEmpty();
+		if ( resultSetMappings.get(0).getNumberOfResultBuilders() == 0 ) {
 			final var expressible = resolveExpressible( typeReference );
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			resultSetMappings.get(0).addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) outputableType );
 		return this;
 	}
 
 	private void markAsFunctionCall(BasicType<?> basicType) {
-		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+		assert !resultSetMappings.isEmpty();
+		if ( resultSetMappings.get(0).getNumberOfResultBuilders() == 0 ) {
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
+			resultSetMappings.get(0).addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) basicType );
 	}
@@ -934,7 +907,7 @@ public class ProcedureCallImpl<R>
 		return outputs;
 	}
 
-	private ProcedureOutputsImpl buildOutputs() {
+	private OutputsImpl buildOutputs() {
 		// todo : going to need a very specialized Loader for this.
 		// or, might be a good time to look at splitting Loader up into:
 		//		1) building statement objects
@@ -1001,7 +974,7 @@ public class ProcedureCallImpl<R>
 			);
 		}
 
-		return new ProcedureOutputsImpl(
+		return new OutputsImpl(
 				this,
 				parameterRegistrations,
 				refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] ),
@@ -1170,48 +1143,44 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	@Override
-	protected List<R> doList() {
+	protected <X> List<X> reallyDoList(Function<Output,List<X>> supplier) {
 		if ( getMaxResults() == 0 ) {
+			// EARLY EXIT!!!
 			return emptyList();
 		}
-		else {
-			try {
-				if ( getOutputs().getCurrent() instanceof ResultSetOutput<?> resultSetOutput ) {
-					//noinspection unchecked
-					return ((ResultSetOutput<R>) resultSetOutput).getResultList();
-				}
-				else {
-					throw new IllegalStateException(
-							"Current CallableStatement was not a ResultSet, but getResultList was called" );
-				}
-			}
-			catch (NoMoreOutputsException e) {
-				// TODO: the spec is completely silent on these type of edge-case scenarios.
-				// Essentially here we'd have a case where there are no more results
-				// (ResultSets nor updateCount) but getResultList() was called.
-				return null;
-			}
-			catch (HibernateException he) {
-				throw getExceptionConverter().convert( he );
-			}
-			catch (RuntimeException e) {
-				getSession().markForRollbackOnly();
-				throw e;
-			}
+
+		try {
+			return supplier.apply( getOutputs().getCurrent() );
 		}
+		catch (NoMoreOutputsException e) {
+			// TODO: the spec is completely silent on these type of edge-case scenarios.
+			// Essentially here we'd have a case where there are no more results
+			// (ResultSets nor updateCount) but getResultList() was called.
+			return null;
+		}
+		catch (HibernateException he) {
+			throw getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected List<R> doList() {
+		return (List<R>) reallyDoList( (output) -> output.asResultSetOutput().getResultList() );
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(Class<R1> type) {
-		//noinspection unchecked
-		return (List<R1>) doList();
+		return reallyDoList( (output) -> output.asResultSetOutput( type ).getResultList() );
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
-		//noinspection unchecked
-		return (List<R1>) doList();
+		return reallyDoList( (output) -> output.asResultSetOutput( resultSetMapping ).getResultList() );
 	}
 
 	@Override

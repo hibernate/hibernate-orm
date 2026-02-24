@@ -111,6 +111,16 @@ Hibernate has therefore needed to do the same in its `org.hibernate.graph.Attrib
 
 Jakarta Persistence has changed/fixed the type signature of methods in the Criteria API which return Join and Fetch based on the String name of attributes.  This can lead to compilation issues if an application uses these methods in certain ways.
 
+[[procedure-api]]
+=== ProcedureCall and ProcedureOutputs
+
+The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a number of reasons, mostly -
+
+* Fix a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] where multiple result mappings were not handled properly.
+* Better handling of `ProcedureOutputs` to avoid casts and, even worse, often untyped casts.  This is achieved by the new methods added to `Output`.  See link:{whatsNewBase}#procedure-outputs-casting.
+* Clean up leakage of various SPI contracts into these API contracts.
+* Align with changes in Jakarta Persistence 4.0.
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,6 +167,30 @@ address this conflict, we've renamed the `NamedSqmQueryMemento` method to
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+[[procedure-results]]
+
+The behavior of Hibernate's handling for creating a `ProcedureCall` / `StoredProcedureQuery` with multiple result set mappings has been changed to fix a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] and comply with the Jakarta Persistence specification.
+Hibernate now interprets the multiple mappings as one per result available from the procedure.  E.g.
+
+[source,java]
+----
+var call = session.createProcedureCall("the_proc",
+        Region.class, Initiative.class);
+var outputs = call.getOutputs();
+
+// old approach with casts still works -
+List<Region> regions = ( (ResultSetOutput<Region>) outputs.getCurrent() ).getResultList();
+
+outputs.gotToNext();
+
+// but consider this instead -
+List<Initiative> initiatives =  outputs.getCurrent()
+        .asResultSetOutput(Initiative.class)
+        .getResultList();
+----
+
+
 
 === Collections belonging to read-only entities
 

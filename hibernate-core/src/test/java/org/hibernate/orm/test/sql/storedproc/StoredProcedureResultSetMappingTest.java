@@ -21,7 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.result.ResultSetOutput;
+import org.hibernate.procedure.ResultSetOutput;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -137,7 +137,7 @@ public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunct
 				session -> {
 					ProcedureCall call = session.createStoredProcedureCall( "allEmployeeNames", "id-fname-lname" );
 					ProcedureOutputs outputs = call.getOutputs();
-					ResultSetOutput output = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
+					ResultSetOutput<?> output = outputs.getCurrent().asResultSetOutput();
 					assertEquals( 3, output.getResultList().size() );
 					assertTyping( Employee.class, output.getResultList().get( 0 ) );
 				}

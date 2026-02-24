@@ -774,12 +774,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 	}
 
-	private JavaType<Object> javaType(TypeConfiguration typeConfiguration, java.lang.reflect.Type impliedJavaType) {
-		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( impliedJavaType );
+	private JavaType<?> javaType(TypeConfiguration typeConfiguration, java.lang.reflect.Type impliedJavaType) {
+		final JavaType<?> javaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( impliedJavaType );
 		return javaType == null ? specialJavaType( typeConfiguration, impliedJavaType ) : javaType;
 	}
 
-	private JavaType<Object> specialJavaType(
+	private JavaType<?> specialJavaType(
 			TypeConfiguration typeConfiguration,
 			java.lang.reflect.Type impliedJavaType) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
@@ -788,19 +788,25 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			// and implement toString/fromString as well as copying based on FormatMapper operations
 			switch ( jdbcTypeCode ) {
 				case SqlTypes.JSON:
-					final JavaType<Object> jsonJavaType =
-							new JsonJavaType<>( impliedJavaType,
+					return javaTypeRegistry.resolveDescriptor(
+							SqlTypes.JSON,
+							impliedJavaType,
+							() -> new JsonJavaType<>(
+									impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
-									typeConfiguration );
-					javaTypeRegistry.addDescriptor( jsonJavaType );
-					return jsonJavaType;
+									typeConfiguration
+							)
+					);
 				case SqlTypes.SQLXML:
-					final JavaType<Object> xmlJavaType =
-							new XmlJavaType<>( impliedJavaType,
+					return javaTypeRegistry.resolveDescriptor(
+							SqlTypes.SQLXML,
+							impliedJavaType,
+							() -> new XmlJavaType<>(
+									impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
-									typeConfiguration );
-					javaTypeRegistry.addDescriptor( xmlJavaType );
-					return xmlJavaType;
+									typeConfiguration
+							)
+					);
 			}
 		}
 		return javaTypeRegistry.resolveDescriptor( impliedJavaType );

@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -37,6 +38,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, ConcurrentHashMap<Type, JavaType<?>>> typeCodeSpecificDescriptorsByType = new ConcurrentHashMap<>();
 
 	public JavaTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -74,6 +76,9 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	public void forEachDescriptor(Consumer<JavaType<?>> consumer) {
 		descriptorsByType.values().forEach( consumer );
+		typeCodeSpecificDescriptorsByType.values().forEach( descriptorsByTypeName -> {
+			descriptorsByTypeName.values().forEach( consumer );
+		} );
 	}
 
 	public <T> JavaType<T> getDescriptor(Type javaType) {
@@ -81,6 +86,16 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
+		addDescriptor( descriptorsByType, descriptor );
+	}
+
+	public void addDescriptor(int sqlTypeCode, JavaType<?> descriptor) {
+		final ConcurrentHashMap<Type, JavaType<?>> descriptorsByTypeName =
+				typeCodeSpecificDescriptorsByType.computeIfAbsent( sqlTypeCode, k -> new ConcurrentHashMap<>() );
+		addDescriptor( descriptorsByTypeName, descriptor );
+	}
+
+	private void addDescriptor(ConcurrentHashMap<Type, JavaType<?>> descriptorsByType, JavaType<?> descriptor) {
 		JavaType<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
 		if ( old != null ) {
 			log.debugf(
@@ -93,19 +108,35 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		performInjections( descriptor );
 	}
 
-	public <J> JavaType<J> findDescriptor(Type javaType) {
+	public <J> @Nullable JavaType<J> findDescriptor(Type javaType) {
 		//noinspection unchecked
 		return (JavaType<J>) descriptorsByType.get( javaType );
 	}
 
+	public @Nullable JavaType<?> findDescriptor(int sqlTypeCode, Type javaType) {
+		final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType =
+				typeCodeSpecificDescriptorsByType.get( sqlTypeCode );
+		return descriptorsByType.get( javaType );
+	}
+
 	public <J> JavaType<J> resolveDescriptor(Type javaType, Supplier<JavaType<J>> creator) {
+		//noinspection unchecked
+		return (JavaType<J>) resolveDescriptor( descriptorsByType, javaType, creator );
+	}
+
+	public JavaType<?> resolveDescriptor(int sqlTypeCode, Type javaType, Supplier<JavaType<?>> creator) {
+		final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType =
+				typeCodeSpecificDescriptorsByType.computeIfAbsent( sqlTypeCode, k -> new ConcurrentHashMap<>() );
+		return resolveDescriptor( descriptorsByType, javaType, creator );
+	}
+
+	private JavaType<?> resolveDescriptor(ConcurrentHashMap<Type, JavaType<?>> descriptorsByType, Type javaType, Supplier<? extends JavaType<?>> creator) {
 		final JavaType<?> cached = descriptorsByType.get( javaType );
 		if ( cached != null ) {
-			//noinspection unchecked
-			return (JavaType<J>) cached;
+			return cached;
 		}
 
-		final JavaType<J> created = creator.get();
+		final JavaType<?> created = creator.get();
 		descriptorsByType.put( javaType, created );
 		return created;
 	}

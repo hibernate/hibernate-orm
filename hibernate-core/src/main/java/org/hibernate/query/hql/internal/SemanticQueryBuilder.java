@@ -5987,7 +5987,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( hasContinuation ) {
 				throw new TerminalPathException("List index has no attributes");
 			}
-			result = listJoin.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
+			if ( consumer instanceof QualifiedJoinPathConsumer pathConsumer ) {
+				if ( madeNested ) {
+					pathConsumer.setNested( false );
+				}
+				consumer.consumeIdentifier( CollectionPart.Nature.INDEX.getName(), false, true );
+				result = (SqmPath<?>) consumer.getConsumedPart();
+			}
+			else {
+				result = listJoin.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
+			}
 		}
 		else if ( sqmPath instanceof SqmFunctionRoot<?> functionRoot ) {
 			if ( hasContinuation ) {

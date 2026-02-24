@@ -572,6 +572,34 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
+	 * Locates the jar file in which the given class is located and adds its URL
+	 * as a {@linkplain #jarFileUrls() JAR file}.
+	 *
+	 * @see #jarFileUrls()
+	 *
+	 * @since 8.0
+	 */
+	public HibernatePersistenceConfiguration jarFileUrl(Class<?> classFromJarFile) {
+		jarFileUrls.add( classFromJarFile.getProtectionDomain().getCodeSource().getLocation() );
+		return this;
+	}
+
+	/**
+	 * Locates the jar file in which the given class is located and adds its URL
+	 * as a {@linkplain #jarFileUrls() JAR file}.
+	 *
+	 * @see #jarFileUrls()
+	 *
+	 * @since 8.0
+	 */
+	public HibernatePersistenceConfiguration jarFileUrls(Class<?>... classesFromJarFiles) {
+		for ( int i = 0; i < classesFromJarFiles.length; i++ ) {
+			jarFileUrls.add( classesFromJarFiles[i].getProtectionDomain().getCodeSource().getLocation() );
+		}
+		return this;
+	}
+
+	/**
 	 * Specify the {@linkplain Action action} to take in terms of automatic
 	 * database schema tooling.
 	 *

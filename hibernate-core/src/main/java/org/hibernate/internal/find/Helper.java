@@ -31,7 +31,7 @@ public class Helper {
 	public static Object coerceId(EntityPersister entityPersister, Object id, SessionFactoryImplementor factory) {
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			final var identifierMapping = entityPersister.getIdentifierMapping();
-			if ( !identifierMapping.getJavaType().isInstance( id ) ) {
+			if ( !identifierMapping.isVirtual() && !identifierMapping.getJavaType().isInstance( id ) ) {
 				// per expectation of EntityHandler#find / EntityHandler#get
 				throw new IllegalArgumentException( String.format( Locale.ROOT,
 						"Given value (%s) did not match expected identifier type for entity (%s) : %s",

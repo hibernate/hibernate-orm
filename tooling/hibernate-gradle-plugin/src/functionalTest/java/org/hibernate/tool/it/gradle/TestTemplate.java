@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.io.TempDir;
 
 import org.gradle.testkit.runner.BuildResult;
@@ -48,7 +50,16 @@ public class TestTemplate {
 
     protected void executeGradleCommand(String ... gradleCommandLine) {
         GradleRunner runner = GradleRunner.create();
-        runner.withArguments(gradleCommandLine);
+        String gradleVersion = System.getProperty("gradle.test.version");
+        if (gradleVersion != null) {
+            runner.withGradleVersion(gradleVersion);
+        }
+        List<String> args = new ArrayList<>(Arrays.asList(gradleCommandLine));
+        String javaHome = System.getProperty("gradle.test.java.home");
+        if (javaHome != null) {
+            args.add("-Dorg.gradle.java.home=" + javaHome);
+        }
+        runner.withArguments(args);
         runner.forwardOutput();
         runner.withPluginClasspath();
         runner.withProjectDir(getProjectDir());

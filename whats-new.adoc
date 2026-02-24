@@ -17,3 +17,59 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 
 Support for Jakarta Persistence has been moved to version 4.0.
 See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.
+
+[[procedure-outputs]]
+== Improvements to ProcedureCall
+
+A number of improvements and additions have been made to
+`ProcedureCall`, `ProcedureOutputs` and `Output`.
+
+
+[[procedure-outputs-casting]]
+=== Output Casting
+
+Previous versions of Hibernate required explicit casting of the `Output` references.  E.g.
+
+[source,java]
+----
+ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives", Region.class);
+ProcedureOutputs outputs = call.getOutputs();
+
+List<Region> regions = ( (ResultSetOutput<Region>) outputs.getCurrent() )
+        .getResultList();
+----
+
+8.0 offers method-driven casting -
+
+[source,java]
+----
+ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives");
+ProcedureOutputs outputs = call.getOutputs();
+
+List<Region> regions = outputs.getCurrent()
+        .asResultSetOutput( Region.class )
+        .getResultList();
+----
+
+
+
+[[procedure-outputs-mapping]]
+=== ResultSet Mapping
+
+Building on top of fixing a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] and the improvements to <<procedure-outputs-casting,output casting>>, 8.0 adds the ability to lazily declare ResultSet mapping rather than up front during `ProcedureCall` creation.
+
+[source,java]
+----
+var call = session.createProcedureCall( "getRegionsAndInitiatives");
+var outputs = call.getOutputs();
+
+List<Region> regions =  outputs.getCurrent()
+        .asResultSetOutput(Region.class)
+        .getResultList();
+
+outputs.goToNext();
+
+List<Initiative> initiatives =  outputs.getCurrent()
+        .asResultSetOutput(Initiative.class)
+        .getResultList();
+----

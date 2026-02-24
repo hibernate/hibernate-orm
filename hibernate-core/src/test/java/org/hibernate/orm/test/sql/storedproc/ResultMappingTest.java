@@ -8,8 +8,8 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.result.Output;
-import org.hibernate.result.ResultSetOutput;
+import org.hibernate.procedure.Output;
+import org.hibernate.procedure.ResultSetOutput;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;

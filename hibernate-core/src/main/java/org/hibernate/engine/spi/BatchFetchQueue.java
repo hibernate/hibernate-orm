@@ -18,7 +18,6 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.result.internal.OutputsImpl;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
@@ -38,7 +37,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class BatchFetchQueue {
 
-	private static final Logger LOG = Logger.getLogger( OutputsImpl.class );
+	private static final Logger LOG = Logger.getLogger( BatchFetchQueue.class );
 
 	private final PersistenceContext context;
 

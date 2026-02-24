@@ -5,11 +5,11 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.generator.Generator;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  * @author Steve Ebersole
  */
 public interface SingleAttributeIdentifierMapping extends EntityIdentifierMapping, PropertyBasedMapping,
-		AttributeMapping, AttributeMetadata {
+		SingularAttributeMapping, AttributeMetadata {
 	/**
 	 * Access to the identifier attribute's PropertyAccess
 	 */

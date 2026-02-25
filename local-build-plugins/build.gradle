@@ -5,7 +5,7 @@
 plugins {
 	id "java-gradle-plugin"
 	id 'groovy-gradle-plugin'
-	id "com.diffplug.spotless" version "8.1.0"
+	id "com.diffplug.spotless" version "8.2.1"
 }
 
 repositories {
@@ -36,8 +36,8 @@ dependencies {
 
 	implementation "org.apache.maven:maven-embedder:3.9.12"
 	implementation "org.apache.maven:maven-compat:3.9.12"
-	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.25"
-	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.25"
+	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.27"
+	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.27"
 	implementation "org.slf4j:slf4j-simple:1.7.36"
 }
 

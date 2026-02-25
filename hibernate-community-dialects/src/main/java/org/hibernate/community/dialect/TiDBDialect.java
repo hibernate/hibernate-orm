@@ -244,4 +244,10 @@ public class TiDBDialect extends MySQLDialect {
 		}
 		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
+
+	// https://github.com/pingcap/tidb/issues/66392
+	@Override
+	public boolean supportsExceptAll() {
+		return false;
+	}
 }

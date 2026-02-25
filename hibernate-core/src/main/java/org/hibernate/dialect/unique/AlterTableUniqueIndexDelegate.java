@@ -75,7 +75,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 			SqlStringGenerationContext context) {
 		if ( needsUniqueIndex( uniqueKey, context.getDialect() ) ) {
 			final var statement = new StringBuilder().append( "drop index " );
-			if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			if ( dialect.supportsIfExistsBeforeIndexName() ) {
 				statement.append( "if exists " );
 			}
 			statement.append( tableName( uniqueKey, context ) ).append( '.' )

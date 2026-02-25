@@ -714,7 +714,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean mustUnwrap) {
 		if ( containerType == null ) {
 			if ( nullable ) {
-				unwrapQuery(declaration, unwrapped);
 				declaration
 						.append("\t\t\t.getSingleResultOrNull()");
 			}

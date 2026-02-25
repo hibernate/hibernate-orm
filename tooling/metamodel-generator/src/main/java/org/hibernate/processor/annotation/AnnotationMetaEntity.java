@@ -3225,57 +3225,61 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationMirror mirror,
 			AnnotationValue value,
 			SqmSelectStatement<?> statement) {
-		if ( returnType != null ) {
-			// HQL based queries are ensured to have a select clause by SemanticQueryBuilder
-			final JpaSelection<?> selection = castNonNull( statement.getSelection() );
-			boolean returnTypeCorrect;
-			if ( selection.isCompoundSelection() ) {
-				switch ( returnType.getKind() ) {
-					case ARRAY:
-						returnTypeCorrect = checkReturnedArrayType( (ArrayType) returnType );
-						break;
-					case DECLARED:
-						if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
-							message( method, mirror, value,
-									"return type '" + returnType
-									+ "' of method has no constructor matching query selection list",
-									Diagnostic.Kind.ERROR );
-						}
-						returnTypeCorrect = true;
-						break;
-					default:
-						returnTypeCorrect = false;
-				}
-			}
-			else if ( selection instanceof JpaEntityJoin<?, ?> from ) {
-				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
-			}
-			else if ( selection instanceof JpaRoot<?> from ) {
-				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
-			}
-			else {
-				// TODO: anything more we can do here? e.g. check constructor
-				try {
-					final Class<?> javaResultType = selection.getJavaType();
-					if ( javaResultType == null ) {
-						returnTypeCorrect = true;
+		if ( returnType != null
+				&& !isReturnTypeCorrect( method, returnType, mirror, value,
+						// HQL queries are guaranteed to have a select
+						// clause by SemanticQueryBuilder
+						castNonNull( statement.getSelection() ) ) ) {
+			message( method, mirror, value,
+					"return type of query did not match return type '" + returnType + "' of method",
+					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private boolean isReturnTypeCorrect(
+			ExecutableElement method,
+			@NonNull TypeMirror returnType,
+			AnnotationMirror mirror,
+			AnnotationValue value,
+			JpaSelection<?> selection) {
+		if ( selection.isCompoundSelection() ) {
+			return switch ( returnType.getKind() ) {
+				case ARRAY -> checkReturnedArrayType( (ArrayType) returnType );
+				case DECLARED -> {
+					if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
+						message( method, mirror, value,
+								"return type '" + returnType
+								+ "' of method has no constructor matching query selection list",
+								Diagnostic.Kind.ERROR );
 					}
-					else {
-						final TypeElement typeElement = context.getTypeElementForFullyQualifiedName(
-								javaResultType.getName() );
-						final Types types = context.getTypeUtils();
-						returnTypeCorrect = types.isAssignable( returnType, types.erasure( typeElement.asType() ) );
-					}
+					yield true;
 				}
-				catch (Exception e) {
-					//ignore
-					returnTypeCorrect = true;
+				default -> false;
+			};
+		}
+		else if ( selection instanceof JpaEntityJoin<?, ?> from ) {
+			return checkReturnedEntity( from.getModel(), returnType );
+		}
+		else if ( selection instanceof JpaRoot<?> from ) {
+			return checkReturnedEntity( from.getModel(), returnType );
+		}
+		else {
+			// TODO: anything more we can do here? e.g. check constructor
+			try {
+				final Class<?> javaResultType = selection.getJavaType();
+				if ( javaResultType == null ) {
+					return true;
+				}
+				else {
+					final TypeElement typeElement =
+							context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+					final Types types = context.getTypeUtils();
+					return types.isAssignable( returnType, types.erasure( typeElement.asType() ) );
 				}
 			}
-			if ( !returnTypeCorrect ) {
-				message( method, mirror, value,
-						"return type of query did not match return type '" + returnType + "' of method",
-						Diagnostic.Kind.ERROR );
+			catch (Exception e) {
+				//ignore
+				return true;
 			}
 		}
 	}
@@ -3424,7 +3428,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //			}
 			return typeElement.getQualifiedName().contentEquals( model.getHibernateEntityName() );
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	private void checkParameter(

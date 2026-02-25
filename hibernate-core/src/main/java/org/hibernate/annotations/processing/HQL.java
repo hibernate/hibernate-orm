@@ -76,14 +76,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * This is reminiscent of traditional DAO-style repositories.
  * <p>
- * For a {@code select} query, the return type of an annotated method
- * must be:
+ * For a {@code select} query, the return type of the annotated method
+ * must be the query result type {@code R} or one of the following
+ * types:
  * <ul>
- * <li>an entity type, or {@link java.util.Optional Optional&lt;E&gt;}
- *     where {@code E} is an entity type,
- * <li>{@link java.util.List List&lt;E&gt;} or
- *     {@link java.util.stream.Stream Stream&lt;E&gt;}
- *     where {@code E} is an entity type,
+ * <li>{@link java.util.List List&lt;R&gt;} or
+ *     {@link java.util.stream.Stream Stream&lt;R&gt;},
+ * <li>{@link java.util.Optional Optional&lt;R&gt;},
  * <li>{@link java.util.List List&lt;Object[]&gt;} or
  *     {@link java.util.stream.Stream Stream&lt;Object[]&gt;}
  * <li>a record type or JavaBean class with a constructor signature

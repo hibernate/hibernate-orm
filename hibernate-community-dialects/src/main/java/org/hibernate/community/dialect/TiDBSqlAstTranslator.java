@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -36,6 +37,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,10 +50,16 @@ import java.util.List;
 public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final TiDBDialect dialect;
+	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, TiDBDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
+		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
+	}
+
+	private FullJoinEmulation currentFullJoinEmulationHelper() {
+		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -227,11 +235,29 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
+		final var helper = currentFullJoinEmulationHelper();
+		final boolean needsNestedHelper =
+				helper.hasActiveFullJoinEmulation()
+						&& !helper.isFullJoinEmulationQueryPart( querySpec );
+		if ( needsNestedHelper ) {
+			fullJoinEmulations.push( new FullJoinEmulation( this ) );
 		}
-		else {
-			super.visitQuerySpec( querySpec );
+		try {
+			final var currentHelper = currentFullJoinEmulationHelper();
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+				if ( shouldEmulateFetchClause( querySpec ) ) {
+					emulateFetchOffsetWithWindowFunctions( querySpec, true );
+				}
+				else {
+					super.visitQuerySpec( querySpec );
+				}
+			}
+		}
+		finally {
+			if ( needsNestedHelper ) {
+				fullJoinEmulations.pop();
+			}
 		}
 	}
 

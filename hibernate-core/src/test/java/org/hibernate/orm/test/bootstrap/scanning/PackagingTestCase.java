@@ -176,9 +176,6 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "defaultpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar/Mouse.hbm.xml" );
-		archive.addAsResource( "defaultpar/org/hibernate/orm/test/jpa/pack/defaultpar/Mouse.hbm.xml", path );
-
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar/package-info.class" );
 		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/defaultpar/package-info.class", path );
 
@@ -295,9 +292,6 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 
 		path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addAsResource( "explodedpar/META-INF/orm.xml", path );
-
-		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml" );
-		archive.addAsResource( "explodedpar/org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml", path );
 
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class" );
 		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class", path );

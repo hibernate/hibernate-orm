@@ -1,0 +1,185 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.tool.it.gradle;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.jupiter.api.io.TempDir;
+
+import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.GradleRunner;
+
+public class TestTemplate {
+
+	protected static final String[] GRADLE_INIT_PROJECT_ARGUMENTS = new String[] {
+			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17"};
+
+	@TempDir
+	private File projectDir;
+
+	private File gradlePropertiesFile;
+	private File gradleBuildFile;
+	private File databaseFile;
+
+	private String[] databaseCreationScript;
+	private String hibernateToolsExtensionSection;
+	private String gradleTaskToPerform;
+	private BuildResult buildResult;
+
+	protected File getProjectDir() { return projectDir; }
+	protected File getGradlePropertiesFile() { return gradlePropertiesFile; }
+	protected void setGradlePropertiesFile(File f) { this.gradlePropertiesFile = f; }
+	protected File getGradleBuildFile() { return gradleBuildFile; }
+	protected void setGradleBuildFile(File f) { gradleBuildFile = f; }
+	protected File getDatabaseFile() { return databaseFile; }
+	protected void setDatabaseFile(File f) { databaseFile = f; }
+	protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
+	protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
+	protected String getHibernateToolsExtensionSection() { return hibernateToolsExtensionSection; }
+	protected void setHibernateToolsExtensionSection(String s) { hibernateToolsExtensionSection = s; }
+	protected String getGradleTaskToPerform() { return gradleTaskToPerform; }
+	protected void setGradleTaskToPerform(String command) { gradleTaskToPerform = command; }
+	protected BuildResult getBuildResult() { return buildResult; }
+
+	protected void executeGradleCommand(String ... gradleCommandLine) {
+		GradleRunner runner = GradleRunner.create();
+		String gradleVersion = System.getProperty("gradle.test.version");
+		if (gradleVersion != null) {
+			runner.withGradleVersion(gradleVersion);
+		}
+		List<String> args = new ArrayList<>(Arrays.asList(gradleCommandLine));
+		String javaHome = System.getProperty("gradle.test.java.home");
+		if (javaHome != null) {
+			args.add("-Dorg.gradle.java.home=" + javaHome);
+		}
+		runner.withArguments(args);
+		runner.forwardOutput();
+		runner.withPluginClasspath();
+		runner.withProjectDir(getProjectDir());
+		buildResult = runner.build();
+		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
+	}
+
+	protected void createProject() throws Exception {
+		initGradleProject();
+		editGradleBuildFile();
+		editGradlePropertiesFile();
+		createDatabase();
+		createHibernatePropertiesFile();
+	}
+
+	protected void createProjectAndExecuteGradleCommand() throws Exception {
+		createProject();
+		executeGradleCommand(getGradleTaskToPerform());
+	}
+
+	protected void initGradleProject() throws Exception {
+		executeGradleCommand(GRADLE_INIT_PROJECT_ARGUMENTS);
+		setGradlePropertiesFile(new File(getProjectDir(), "gradle.properties"));
+		assertTrue(getGradlePropertiesFile().exists());
+		assertTrue(getGradlePropertiesFile().isFile());
+		File appDir = new File(getProjectDir(), "app");
+		assertTrue(appDir.exists());
+		assertTrue(appDir.isDirectory());
+		setGradleBuildFile(new File(appDir, "build.gradle"));
+		assertTrue(getGradleBuildFile().exists());
+		assertTrue(getGradleBuildFile().isFile());
+		setDatabaseFile(new File(getProjectDir(), "database/test.mv.db"));
+		assertFalse(getDatabaseFile().exists());
+	}
+
+	protected void editGradleBuildFile() throws Exception {
+		StringBuffer gradleBuildFileContents = new StringBuffer(
+				new String(Files.readAllBytes(getGradleBuildFile().toPath())));
+		addHibernateToolsPluginLine(gradleBuildFileContents);
+		addH2DatabaseDependencyLine(gradleBuildFileContents);
+		addHibernateToolsExtension(gradleBuildFileContents);
+		Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
+	}
+
+	protected void editGradlePropertiesFile() throws Exception {
+		// The Hibernate Tools Gradle plugin does not support the configuration cache.
+		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
+		// in the gradle.properties file.
+		StringBuffer gradlePropertiesFileContents = new StringBuffer(
+				new String(Files.readAllBytes(getGradlePropertiesFile().toPath())));
+		int pos = gradlePropertiesFileContents.indexOf("org.gradle.configuration-cache=true");
+		gradlePropertiesFileContents.insert(pos, "#");
+		Files.writeString(getGradlePropertiesFile().toPath(), gradlePropertiesFileContents.toString());
+	}
+
+	protected void createHibernatePropertiesFile() throws Exception {
+		File hibernatePropertiesFile = new File(getProjectDir(), "app/src/main/resources/hibernate.properties");
+		StringBuffer hibernatePropertiesFileContents = new StringBuffer();
+		hibernatePropertiesFileContents
+				.append("hibernate.connection.driver_class=org.h2.Driver").append(System.lineSeparator())
+				.append("hibernate.connection.url=").append(constructJdbcConnectionString()).append(System.lineSeparator())
+				.append("hibernate.connection.username=").append(System.lineSeparator())
+				.append("hibernate.connection.password=").append(System.lineSeparator())
+				.append("hibernate.default_catalog=TEST").append(System.lineSeparator())
+				.append("hibernate.default_schema=PUBLIC").append(System.lineSeparator());
+		Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents.toString());
+		assertTrue(hibernatePropertiesFile.exists());
+	}
+
+	protected void createDatabase() throws Exception {
+		String[] sqls = getDatabaseCreationScript();
+		if ((sqls != null) && (sqls.length > 0)) {
+			Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
+			Statement statement = connection.createStatement();
+			for (String sql : sqls) {
+				statement.execute(sql);
+			}
+			statement.close();
+			connection.close();
+			assertTrue(getDatabaseFile().exists());
+			assertTrue(getDatabaseFile().isFile());
+		}
+	}
+
+	protected String constructH2DatabaseDependencyLine() {
+		return "    implementation 'com.h2database:h2:" + System.getProperty("h2.version") + "'";
+	}
+
+	protected String constructHibernateToolsPluginLine() {
+		return "    id 'org.hibernate.tool.hibernate-tools-gradle'";
+	}
+
+	protected String constructJdbcConnectionString() {
+		String testFolderPath = getProjectDir().getAbsolutePath().replace('\\', '/') + "/database/test";
+		return "jdbc:h2:" + testFolderPath + ";AUTO_SERVER=TRUE";
+	}
+
+	protected void addH2DatabaseDependencyLine(StringBuffer gradleBuildFileContents) {
+		int pos = gradleBuildFileContents.indexOf("dependencies {");
+		pos = gradleBuildFileContents.indexOf("}", pos);
+		gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + System.lineSeparator());
+	}
+
+	protected void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
+		int pos = gradleBuildFileContents.indexOf("plugins {");
+		pos = gradleBuildFileContents.indexOf("}", pos);
+		gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + System.lineSeparator());
+	}
+
+	protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
+		String extension = getHibernateToolsExtensionSection();
+		if (extension != null) {
+			int pos = gradleBuildFileContents.indexOf("dependencies {");
+			pos = gradleBuildFileContents.indexOf("}", pos);
+			gradleBuildFileContents.insert(pos + 1, System.lineSeparator() + System.lineSeparator() + extension);
+		}
+	}
+
+}

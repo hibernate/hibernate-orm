@@ -134,12 +134,23 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
-		if ( this.classTransformer != null || !TransformerTracker.canSupplyTransformer( TransformerKey.from( persistenceUnitInfo ) ) ) {
+		if ( this.classTransformer != null ) {
 			throw new PersistenceException(
 					"Persistence unit ["
 					+ persistenceUnitInfo.getPersistenceUnitName()
 					+ "] can only have a single class transformer."
 			);
+		}
+
+		final TransformerKey transformerKey = TransformerKey.from( persistenceUnitInfo );
+		if ( !TransformerTracker.canSupplyTransformer( transformerKey ) ) {
+			// transformer was already registered from `jakarta.persistence.spi.PersistenceProvider#getClassTransformer`
+			// just skip
+			if ( JPA_LOGGER.isTraceEnabled() ) {
+				JPA_LOGGER.duplicatedRequestForClassTransformer( transformerKey.puName(), transformerKey.loaderName() );
+			}
+			// EARLY EXIT!!!
+			return null;
 		}
 
 		// During testing, we will return a null temp class loader

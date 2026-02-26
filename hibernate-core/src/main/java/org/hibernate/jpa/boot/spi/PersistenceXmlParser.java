@@ -201,7 +201,7 @@ public final class PersistenceXmlParser {
 		persistenceUnitDescriptor.setExcludeUnlistedClasses( handleBoolean( jaxbPersistenceUnit.isExcludeUnlistedClasses() ) );
 		persistenceUnitDescriptor.addClasses( jaxbPersistenceUnit.getClasses() );
 		persistenceUnitDescriptor.addMappingFiles( jaxbPersistenceUnit.getMappingFiles() );
-		persistenceUnitDescriptor.addJarFileUrls( jaxbPersistenceUnit.getJarFiles() );
+		persistenceUnitDescriptor.addJarFileRefs( jaxbPersistenceUnit.getJarFiles() );
 
 		final var propertyContainer = jaxbPersistenceUnit.getPropertyContainer();
 		if ( propertyContainer != null ) {

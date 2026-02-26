@@ -24,4 +24,5 @@ module org.hibernate.orm.integrationtest.java.module.test {
 
 	opens org.hibernate.orm.integrationtest.java.module.test to org.junit.platform.commons;
 	requires org.junit.jupiter.api;
+	requires org.hibernate.orm.scan.jandex;
 }

@@ -4,12 +4,13 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
-import org.hibernate.archive.scan.internal.StandardScanner;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.scan.spi.ScanParameters;
-import org.hibernate.boot.archive.scan.spi.ScanResult;
-import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
+import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
+import org.hibernate.boot.scan.internal.StandardScanner;
+import org.hibernate.boot.scan.spi.Scanner;
+import org.hibernate.boot.scan.spi.ScanningResult;
+
+import java.net.URL;
 
 /**
  * @author Emmanuel Bernard
@@ -27,11 +28,14 @@ public class CustomScanner implements Scanner {
 	}
 
 	@Override
-	public ScanResult scan(
-			ScanEnvironment environment,
-			ScanOptions options,
-			ScanParameters parameters) {
+	public ScanningResult scan(URL... boundaries) {
 		isUsed = true;
-		return delegate.scan( environment, options, parameters );
+		return delegate.scan( boundaries );
+	}
+
+	@Override
+	public ScanningResult jpaScan(ArchiveDescriptor archiveDescriptor, JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbUnit) {
+		isUsed = true;
+		return delegate.jpaScan(  archiveDescriptor, jaxbUnit );
 	}
 }

@@ -24,17 +24,17 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
+import org.hibernate.jpa.internal.TransformerTracker;
+import org.hibernate.jpa.internal.TransformerTracker.TransformerKey;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper.MetadataCache;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
@@ -54,8 +54,6 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private final Set<TransformerKey> unitsWithTransformer = new HashSet<>();
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -265,23 +263,18 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return ProviderUtilImpl.INSTANCE;
 	}
 
-	private record TransformerKey(String puName, String loaderName) {}
-
 	@Override
 	public ClassTransformer getClassTransformer(PersistenceUnitInfo persistenceUnit, Map<?, ?> integrationSettings) {
-		// todo (jpa4) : If this method is called, be sure to not push the transform via `PersistentUnitInfo#addTransformer`.
-		//		See usage of `PersistenceUnitDescriptor#pushClassTransformer` in `EntityManagerFactoryBuilderImpl`.
-		// 		Leverage `unitsWithTransformer` in `#createContainerEntityManagerFactory`
-		var transformerKey = new TransformerKey( persistenceUnit.getPersistenceUnitName(), persistenceUnit.getClassLoader().getName() );
-		if ( !unitsWithTransformer.add( transformerKey ) ) {
+		var transformerKey = TransformerKey.from( persistenceUnit );
+		if ( !TransformerTracker.canSupplyTransformer( transformerKey ) ) {
 			if ( JPA_LOGGER.isTraceEnabled() ) {
-				JPA_LOGGER.duplicatedRequestForClassTransformer( transformerKey.puName, transformerKey.loaderName );
+				JPA_LOGGER.duplicatedRequestForClassTransformer( transformerKey.puName(), transformerKey.loaderName() );
 			}
 			return null;
 		}
 
 		if ( JPA_LOGGER.isTraceEnabled() ) {
-			JPA_LOGGER.requestForClassTransformer( transformerKey.puName, transformerKey.loaderName );
+			JPA_LOGGER.requestForClassTransformer( transformerKey.puName(), transformerKey.loaderName() );
 		}
 
 		//noinspection removal

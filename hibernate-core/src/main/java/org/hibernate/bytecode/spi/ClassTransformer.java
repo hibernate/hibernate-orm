@@ -5,16 +5,21 @@
 package org.hibernate.bytecode.spi;
 
 import java.security.ProtectionDomain;
+import java.util.Map;
 
+import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.TransformerException;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 
 /**
- * A persistence provider provides an instance of this interface to the
- * {@link jakarta.persistence.spi.PersistenceUnitInfo#addTransformer} method.
+ * A persistence provider provides an instance of this interface to the container.
  * The supplied transformer instance will get called to transform entity class
  * files when they are loaded and redefined. The transformation occurs before
  * the class is defined by the JVM.
+ *
+ * @see HibernatePersistenceProvider#getClassTransformer(PersistenceUnitInfo, Map)
+ * @see jakarta.persistence.spi.PersistenceUnitInfo#addTransformer
  *
  * @author Bill Burke
  * @author Emmanuel Bernard

@@ -417,9 +417,6 @@ public class ToOneBinder {
 
 	private static FetchType handlingDefault(FetchType specifiedType, MetadataBuildingContext context) {
 		return specifiedType == DEFAULT
-				// todo (jpa4) : Account for the JPA 4.0 notion of default-to-one-fetch-type
-				//		ideally, somehow account for it as part of MappingDefaults.
-				//		easiest would be to consider that when calculating effective defaults
 				? context.getEffectiveDefaults().isDefaultEntityLaziness() ? LAZY : EAGER
 				: specifiedType;
 	}

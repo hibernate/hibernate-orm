@@ -12,6 +12,8 @@ import jakarta.persistence.FetchType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.TransformerTracker;
+import org.hibernate.jpa.internal.TransformerTracker.TransformerKey;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
 import jakarta.persistence.PersistenceException;
@@ -132,11 +134,14 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public ClassTransformer pushClassTransformer(EnhancementContext enhancementContext) {
-		if ( this.classTransformer != null ) {
-			throw new PersistenceException( "Persistence unit ["
+		if ( this.classTransformer != null || !TransformerTracker.canSupplyTransformer( TransformerKey.from( persistenceUnitInfo ) ) ) {
+			throw new PersistenceException(
+					"Persistence unit ["
 					+ persistenceUnitInfo.getPersistenceUnitName()
-					+ "] can only have a single class transformer." );
+					+ "] can only have a single class transformer."
+			);
 		}
+
 		// During testing, we will return a null temp class loader
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {

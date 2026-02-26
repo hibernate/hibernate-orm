@@ -2104,13 +2104,19 @@ public class SessionImpl
 	}
 
 	private <T> T doFind(Class<T> entityClass, Object primaryKey, LockMode lockMode, Map<String, Object> properties) {
-		checkOpen();
+		try {
+			checkOpen();
 
-		final FindOption[] options = determineFindOptions( lockMode, properties );
+			final FindOption[] options = determineFindOptions( lockMode, properties );
 
-		final EntityPersister entityDescriptor = requireEntityPersisterForLoad( entityClass );
-		//noinspection unchecked
-		return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
+			final EntityPersister entityDescriptor = requireEntityPersisterForLoad( entityClass );
+			//noinspection unchecked
+			return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	private <T> FindByKeyOperation<T> byKeyWithGraph(EntityPersister entityDescriptor, Map<String, Object> properties, FindOption[] options) {

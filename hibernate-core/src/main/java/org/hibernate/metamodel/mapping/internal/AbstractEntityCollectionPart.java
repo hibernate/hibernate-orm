@@ -315,7 +315,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
+				tableExpression ->
+						getEntityMappingType().getRootEntityDescriptor().containsTableReference( tableExpression )
+								|| getEntityMappingType().containsTableReference( tableExpression ),
 				(tableExpression, group) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

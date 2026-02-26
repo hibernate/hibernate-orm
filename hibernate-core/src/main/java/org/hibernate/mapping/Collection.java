@@ -661,12 +661,23 @@ public abstract sealed class Collection
 			boolean autoAliasInjection,
 			java.util.Map<String, String> aliasTableMap,
 			java.util.Map<String, String> aliasEntityMap) {
+		addFilter( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null );
+	}
+
+	public void addFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap,
+			FilterJoinConfiguration joinConfiguration) {
 		filters.add( new FilterConfiguration(
 				name,
 				condition,
 				autoAliasInjection,
 				aliasTableMap,
 				aliasEntityMap,
+				joinConfiguration,
 				null
 		) );
 	}
@@ -682,12 +693,23 @@ public abstract sealed class Collection
 			boolean autoAliasInjection,
 			java.util.Map<String, String> aliasTableMap,
 			java.util.Map<String, String> aliasEntityMap) {
+		addManyToManyFilter( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null );
+	}
+
+	public void addManyToManyFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap,
+			FilterJoinConfiguration joinConfiguration) {
 		manyToManyFilters.add( new FilterConfiguration(
 				name,
 				condition,
 				autoAliasInjection,
 				aliasTableMap,
 				aliasEntityMap,
+				joinConfiguration,
 				null
 		) );
 	}

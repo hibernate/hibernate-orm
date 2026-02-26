@@ -1677,4 +1677,9 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean causesRollback(SQLException sqlException) {
 		return true;
 	}
+
+	@Override
+	public boolean requiresAliasForFromClauseSubquery() {
+		return getVersion().isBefore( 16 );
+	}
 }

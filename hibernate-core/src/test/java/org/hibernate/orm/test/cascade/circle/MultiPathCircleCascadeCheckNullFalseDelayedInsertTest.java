@@ -16,7 +16,7 @@ import org.hibernate.testing.orm.junit.Setting;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml"
+				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.orm.xml"
 		}
 )
 @SessionFactory

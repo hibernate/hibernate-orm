@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                 https://www.hibernate.org/xsd/orm/mapping/mapping-7.0.xsd"
+                 version="7.0">
+
+    <package>org.hibernate.orm.test.where.xml</package>
+
+    <entity class="EagerManyToOneFetchModeJoinWhereTest$Product" access="PROPERTY">
+        <table name="PRODUCT"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <many-to-one name="category" fetch="EAGER" fetch-mode="JOIN" not-found="IGNORE">
+                <join-column name="categoryId"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+
+            <element-collection name="containedCategories" fetch="EAGER">
+                <target>EagerManyToOneFetchModeJoinWhereTest$ContainedCategory</target>
+                <collection-table name="PRODUCT_CATEGORY">
+                    <join-column name="PRODUCT_ID"/>
+                </collection-table>
+            </element-collection>
+
+            <embedded name="containedCategory">
+                <target>EagerManyToOneFetchModeJoinWhereTest$ContainedCategory</target>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <entity class="EagerManyToOneFetchModeJoinWhereTest$Category" access="PROPERTY">
+        <table name="CATEGORY"/>
+        <sql-restriction>inactive = 0</sql-restriction>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="name"/>
+
+            <basic name="inactive"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="EagerManyToOneFetchModeJoinWhereTest$ContainedCategory">
+        <attributes>
+            <many-to-one name="category" fetch="EAGER" fetch-mode="JOIN" not-found="IGNORE">
+                <join-column name="containedCategoryId"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

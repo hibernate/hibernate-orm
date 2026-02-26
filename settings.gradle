@@ -78,7 +78,7 @@ dependencyResolutionManagement {
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.17.8"
             def checkerFrameworkVersion = version "checkerFramework", "3.53.1"
-            def geolatteVersion = version "geolatte", "1.10"
+            def geolatteVersion = version "geolatte", "1.11"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
             def jandexVersion = version "jandex", "3.3.2"
             def jacksonVersion = version "jackson", "2.19.4"

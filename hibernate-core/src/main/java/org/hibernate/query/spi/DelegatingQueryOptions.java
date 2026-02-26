@@ -148,4 +148,9 @@ public class DelegatingQueryOptions implements QueryOptions {
 	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return queryOptions.getUniqueSemantic();
 	}
+
+	@Override
+	public String getNamedQueryMementoName() {
+		return queryOptions.getNamedQueryMementoName();
+	}
 }

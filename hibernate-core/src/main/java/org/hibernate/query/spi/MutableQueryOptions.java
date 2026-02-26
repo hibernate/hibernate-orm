@@ -97,4 +97,6 @@ public interface MutableQueryOptions extends QueryOptions {
 	void enableFetchProfile(String profileName);
 
 	void disableFetchProfile(String profileName);
+
+	void setNamedQueryMementoName(String namedQueryMementoName);
 }

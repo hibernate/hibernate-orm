@@ -13,6 +13,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -54,7 +55,9 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 	@Override
 	public String getSqlString() {
-		throw new UnsupportedOperationException();
+		final var operationGroups = getMutationOperationGroups();
+		final var operation = (JdbcMutationOperation) operationGroups[0].getSingleOperation();
+		return operation.getSqlString();
 	}
 
 	@Override
@@ -63,15 +66,9 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 			MODEL_MUTATION_LOGGER.removingCollection( mutationTarget.getRolePath(), key );
 		}
 
-		var operationGroups = this.operationGroups;
-		if ( operationGroups == null ) {
-			// delayed creation of the operation-group
-			operationGroups = this.operationGroups = buildOperationGroups();
-		}
-
 		final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 
-		for ( var operationGroup : operationGroups ) {
+		for ( var operationGroup : getMutationOperationGroups() ) {
 			final var mutationExecutor = mutationExecutorService.createExecutor(
 					() -> null,
 					operationGroup,
@@ -100,6 +97,14 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 				mutationExecutor.release();
 			}
 		}
+	}
+
+	private MutationOperationGroup[] getMutationOperationGroups() {
+		final var operationGroups = this.operationGroups;
+		// delayed creation of the operation-group
+		return operationGroups == null
+				? (this.operationGroups = buildOperationGroups())
+				: operationGroups;
 	}
 
 	private MutationOperationGroup[] buildOperationGroups() {
@@ -140,6 +145,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		);
 
 		return singleOperation( MutationType.DELETE, mutationTarget,
-				operationProducer.createOperation( tableReference ) );
+				mutationTarget.getFactory().getStoredProcedureHelper()
+						.maybeWrapOperation( operationProducer.createOperation( tableReference ) ) );
 	}
 }

@@ -71,4 +71,11 @@ public interface PhysicalNamingStrategy {
 	default Identifier toPhysicalTypeName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
 		return toPhysicalTableName( logicalName, jdbcEnvironment );
 	}
+
+	/**
+	 * Determine the physical stored procedure name from the given logical name
+	 */
+	default Identifier toPhysicalStoredProcedureName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return toPhysicalTableName( logicalName, jdbcEnvironment );
+	}
 }

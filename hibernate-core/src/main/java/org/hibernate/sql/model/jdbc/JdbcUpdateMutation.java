@@ -37,4 +37,9 @@ public class JdbcUpdateMutation extends AbstractJdbcMutation {
 	public String toString() {
 		return "JdbcUpdateMutation(" + getTableDetails().getTableName() + ")";
 	}
+
+	@Override
+	public String kind() {
+		return "update";
+	}
 }

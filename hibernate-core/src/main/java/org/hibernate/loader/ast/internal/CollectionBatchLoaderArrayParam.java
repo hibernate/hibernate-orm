@@ -47,6 +47,7 @@ public class CollectionBatchLoaderArrayParam
 
 	private final SqlTypedMapping arraySqlTypedMapping;
 	private final JdbcParameter jdbcParameter;
+	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlSelect;
 	private final JdbcSelect jdbcSelectOperation;
 
@@ -83,6 +84,7 @@ public class CollectionBatchLoaderArrayParam
 		);
 
 		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+		jdbcParameters = JdbcParametersList.singleton( jdbcParameter );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				keyDescriptor.getKeyPart(),
@@ -96,11 +98,17 @@ public class CollectionBatchLoaderArrayParam
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
-		jdbcSelectOperation = getSessionFactory().getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( getSessionFactory(), sqlSelect )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcSelectOperation =
+				sessionFactory.getStoredProcedureHelper().maybeWrapBatchIdSelect(
+						getSessionFactory().getJdbcServices()
+								.getJdbcEnvironment()
+								.getSqlAstTranslatorFactory()
+								.buildSelectTranslator( getSessionFactory(), sqlSelect )
+								.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE ),
+						sqlSelect,
+						arraySqlTypedMapping.getJdbcMapping(),
+						getLoadable().getCollectionDescriptor().getRole()
+				);
 	}
 
 	@Override
@@ -182,7 +190,6 @@ public class CollectionBatchLoaderArrayParam
 				jdbcParameter,
 				new JdbcParameterBindingImpl( arraySqlTypedMapping.getJdbcMapping(), keysToInitialize )
 		);
-
 		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
 				jdbcParameterBindings,
@@ -191,7 +198,7 @@ public class CollectionBatchLoaderArrayParam
 						SubselectFetch.createRegistrationHandler(
 								session.getPersistenceContext().getBatchFetchQueue(),
 								sqlSelect,
-								JdbcParametersList.singleton( jdbcParameter ),
+								jdbcParameters,
 								jdbcParameterBindings
 						)
 				),

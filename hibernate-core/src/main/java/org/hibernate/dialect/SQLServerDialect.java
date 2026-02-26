@@ -28,6 +28,8 @@ import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.dialect.procedure.SQLServerStoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -1218,6 +1220,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return SQLServerCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return getVersion().isSameOrAfter( 13 )
+				? SQLServerStoredProcedureSupport.IF_EXISTS_INSTANCE
+				: SQLServerStoredProcedureSupport.INSTANCE;
 	}
 
 	@Override

@@ -79,6 +79,11 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	}
 
 	@Override
+	public boolean isCallable() {
+		return primaryOperation.isCallable();
+	}
+
+	@Override
 	public boolean usesLimitParameters() {
 		return primaryOperation.usesLimitParameters();
 	}

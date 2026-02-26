@@ -40,4 +40,8 @@ public class MergeOperation extends AbstractJdbcMutation {
 		return MutationType.UPDATE;
 	}
 
+	@Override
+	public String kind() {
+		return "upsert";
+	}
 }

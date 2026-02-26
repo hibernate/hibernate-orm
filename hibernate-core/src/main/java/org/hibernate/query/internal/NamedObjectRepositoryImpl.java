@@ -33,6 +33,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.UnknownPathException;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.jboss.logging.Logger;
@@ -281,8 +282,21 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 								namedProcedureCallDefinition.resolve( sessionFactory ) )
 		);
 
+		registerStoredProceduresForNamedQueries( sessionFactory );
 	}
 
+	private void registerStoredProceduresForNamedQueries(SessionFactoryImplementor sessionFactory) {
+		final var storedProcedureHelper = sessionFactory.getStoredProcedureHelper();
+		if ( storedProcedureHelper.isEnabled() ) {
+			try ( var session = sessionFactory.openSession() ) {
+				for ( var memento : sqmMementoMap.values() ) {
+					if ( memento.toQuery( session ) instanceof SqmQueryImpl<?> sqmQuery ) {
+						sqmQuery.preRegisterStoredProcedureSelectDefinition();
+					}
+				}
+			}
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query checking

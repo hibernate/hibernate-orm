@@ -47,6 +47,7 @@ import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.procedure.StoredProcedureHelper;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -205,6 +206,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient EntityCopyObserverFactory entityCopyObserverFactory;
 	final transient ParameterMarkerStrategy parameterMarkerStrategy;
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+	private final transient StoredProcedureHelper storedProcedureHelper;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -251,6 +253,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
+
+		storedProcedureHelper = new StoredProcedureHelper( this, bootMetamodel.getDatabase() );
 
 		// used for initializing the MappingMetamodelImpl
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
@@ -391,6 +395,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
 		return jdbcValuesMappingProducerProvider;
+	}
+
+	@Override
+	public StoredProcedureHelper getStoredProcedureHelper() {
+		return storedProcedureHelper;
 	}
 
 	@Override

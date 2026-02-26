@@ -49,4 +49,9 @@ public class JdbcDeleteMutation extends AbstractJdbcMutation {
 	public String toString() {
 		return "JdbcDeleteMutation(" + getTableDetails().getTableName() + ")";
 	}
+
+	@Override
+	public String kind() {
+		return "delete";
+	}
 }

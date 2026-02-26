@@ -14,7 +14,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToMany;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -58,7 +57,6 @@ class JoinInheritanceSelectJoinTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-19607")
 	void testSelect(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List<Child> children = session
@@ -73,7 +71,6 @@ class JoinInheritanceSelectJoinTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-19607")
 	void testSelectWithParameters(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List<Child> children = session
@@ -82,6 +79,106 @@ class JoinInheritanceSelectJoinTest {
 							Child.class
 					)
 					.setParameter( "address", new Address( "Via Milano", "Roma" )  )
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectEmbeddedPropertyDirectly(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN c.parents p WHERE p.address.street = 'Via Milano'",
+							Child.class
+					)
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectInheritedSimpleProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN c.parents p WHERE p.name = 'Luigi'",
+							Child.class
+					)
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectEmbeddedAsResult(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Address> addresses = session
+					.createSelectionQuery(
+							"SELECT p.address FROM Child c LEFT JOIN c.parents p WHERE p.address IS NOT NULL",
+							Address.class
+					)
+					.getResultList();
+
+			assertThat( addresses.size() ).isEqualTo( 1 );
+			assertThat( addresses.get( 0 ).getStreet() ).isEqualTo( "Via Milano" );
+		} );
+	}
+
+	@Test
+	void testSelectWithOrderByInheritedProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN c.parents p ORDER BY p.name",
+							Child.class
+					)
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectWithOrderByEmbeddedProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN c.parents p ORDER BY p.address.city",
+							Child.class
+					)
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectWithJoinFetch(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN FETCH c.parents p WHERE p.address IS NOT NULL",
+							Child.class
+					)
+					.getResultList();
+
+			assertThat( children.size() ).isEqualTo( 1 );
+			assertThat( children.get( 0 ).getParents() ).hasSize( 1 );
+		} );
+	}
+
+	@Test
+	void testSelectMultipleConditionsOnInheritedProperties(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Child> children = session
+					.createSelectionQuery(
+							"SELECT c FROM Child c LEFT JOIN c.parents p WHERE p.name = 'Luigi' AND p.address.city = 'Roma'",
+							Child.class
+					)
 					.getResultList();
 
 			assertThat( children.size() ).isEqualTo( 1 );

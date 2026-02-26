@@ -25,6 +25,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
@@ -960,6 +961,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "casts with time are not supported")
 	public void testCastFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1202,6 +1204,7 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting varchar to binary")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support casting with length")
 	public void testCastBinaryWithLengthForOracle(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1217,6 +1220,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support casting with length")
 	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1230,6 +1234,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "str for time produces timestamp string")
 	public void testStrFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1328,6 +1333,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = org.hibernate.dialect.SpannerDialect.class, reason = "VAR_POP, STDDEV_POP are unsupported in Spanner")
 	public void testStatisticalFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "select var_samp(e.theDouble), var_pop(abs(e.theDouble)), stddev_samp(e.theDouble), stddev_pop(e.theDouble) from EntityOfBasics e", Object[].class)
@@ -1454,6 +1460,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	@SkipForDialect(dialectClass = TiDBDialect.class)
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	public void testDateAddDiffFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1484,6 +1491,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "spanner timestamp_add/timestamp_diff doesn't support year/month")
 	public void testIntervalAddExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1532,6 +1541,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "spanner timestamp_add/timestamp_diff doesn't support year/month")
 	public void testIntervalSubExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2136,6 +2147,8 @@ public class FunctionTests {
 			reason = "unsupported binary operator: <date> - <timestamp(6)>")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Intervals or datetimes are incompatible for the operation")
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "Spanner date - timestamp not compatible")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

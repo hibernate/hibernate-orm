@@ -39,9 +39,29 @@ dependencies {
 	testRuntimeOnly testLibs.junitJupiterLauncher
 }
 
+sourceSets {
+	functionalTest {
+	}
+}
+
+configurations {
+	functionalTestImplementation.extendsFrom testImplementation
+	functionalTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+	functionalTestRuntimeOnly jdbcLibs.h2
+}
+
+tasks.named( "forbiddenApisFunctionalTest" ) {
+	enabled = false
+}
+
 gradlePlugin {
 	website = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
 	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
+
+	testSourceSets sourceSets.test, sourceSets.functionalTest
 
 	plugins {
 		ormPlugin {
@@ -77,9 +97,27 @@ test {
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
 }
 
+def functionalTestTask = tasks.register("functionalTest", Test) {
+	description = "Runs the functional tests."
+	group = "verification"
+	testClassesDirs = sourceSets.functionalTest.output.classesDirs
+	classpath = sourceSets.functionalTest.runtimeClasspath
+	useJUnitPlatform()
+	systemProperty("gradle.test.version", project.property("orm.gradle.min"))
+	systemProperty("h2.version", jdbcLibs.versions.h2.get())
+	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
+}
+
+tasks.named("check") {
+	dependsOn functionalTestTask
+}
+
 if ( jdkVersions.test.launcher.asInt() > 21 ) {
     project.logger.lifecycle( "Skipping {} tests for JDK version {}", project.name, jdkVersions.test.launcher.asInt() )
     tasks.getByName( "test" ).enabled = false
+    tasks.getByName( "functionalTest" ).enabled = false
 }
 
 def releasePrepareTask = tasks.register("releasePrepare") {
@@ -140,29 +178,35 @@ else {
 		tasks.named( "compileTestJava", JavaCompile ).configure {
 			options.release = Math.min( jdkVersions.test.compiler.asInt(), jdkVersions.min.asInt() )
 		}
+		tasks.named( "compileFunctionalTestJava", JavaCompile ).configure {
+			options.release = Math.min( jdkVersions.test.compiler.asInt(), jdkVersions.min.asInt() )
+		}
 		// Must configure the test launcher to a version <= orm.jdk.max, because the tests invoke gradle,
 		// which inherently can only run with a JDK up to orm.jdk.max.
 		// Since we only support running Gradle with JDKs in the range of orm.jdk.min up to orm.jdk.max,
 		// we use a test java launcher for the latest available/configured JDK version
+		def testLauncher = javaToolchains.launcherFor {
+			languageVersion = jdkVersions.min
+		}
+		for ( int version = jdkVersions.min.asInt() + 1; version <= jdkVersions.max.asInt(); version++ ) {
+			testLauncher = new DefaultProvider(() -> {
+				try {
+					return javaToolchains.launcherFor {
+						languageVersion = JavaLanguageVersion.of( version )
+					}.get()
+				}
+				catch (GradleException ex) {
+					// JavaToolchainQueryService unfortunately throws an exception if a version is not found,
+					// so we have to catch the exception and return null here to allow a fallback
+					return null
+				}
+			}).orElse( testLauncher )
+		}
 		tasks.named( "test", Test ).configure {
-			def launcher = javaToolchains.launcherFor {
-				languageVersion = jdkVersions.min
-			}
-			for ( int version = jdkVersions.min.asInt() + 1; version <= jdkVersions.max.asInt(); version++ ) {
-				launcher = new DefaultProvider(() -> {
-					try {
-						return javaToolchains.launcherFor {
-							languageVersion = JavaLanguageVersion.of( version )
-						}.get()
-					}
-					catch (GradleException ex) {
-						// JavaToolchainQueryService unfortunately throws an exception if a version is not found,
-						// so we have to catch the exception and return null here to allow a fallback
-						return null
-					}
-				}).orElse( launcher )
-			}
-			javaLauncher = launcher
+			javaLauncher = testLauncher
+		}
+		tasks.named( "functionalTest", Test ).configure {
+			javaLauncher = testLauncher
 		}
 	}
 }

@@ -4,19 +4,23 @@
  */
 package org.hibernate.processor.test.data.hhh20212;
 
+import org.hibernate.StatelessSession;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.hibernate.processor.test.util.TestUtil.getMetamodelClassFor;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @CompilationTest
 class HHH20212Test {
 	@Test
 	@WithClasses({ HHH20212Entity.class, HHH20212Repository.class })
-	void test() {
+	void test() throws Exception {
 		System.out.println( getMetaModelSourceAsString( HHH20212Repository.class ) );
 		assertMetamodelClassGeneratedFor( HHH20212Repository.class );
+		assertNotNull( getMetamodelClassFor( HHH20212Repository.class ).getDeclaredConstructor( StatelessSession.class ) );
 	}
 }

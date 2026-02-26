@@ -12,7 +12,7 @@ import org.hibernate.StatelessSession;
 @Repository
 public interface HHH20212Repository extends CrudRepository<HHH20212Entity, Long> {
 	default StatelessSession getStatelessSession() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Find

@@ -10,6 +10,7 @@ import jakarta.persistence.FindOption;
 ///
 /// @see jakarta.persistence.EntityManager#find
 /// @see Session#findMultiple
+/// @see Session#getReference(Class, Object, KeyType)
 ///
 /// @since 7.3
 ///

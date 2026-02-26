@@ -8,6 +8,7 @@ import java.util.List;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
@@ -32,8 +33,12 @@ import org.hibernate.graph.GraphSemantic;
  *
  * @author Steve Ebersole
 
- * @deprecated Use forms of {@linkplain Session#findMultiple} accepting
- * {@linkplain jakarta.persistence.FindOption} instead of {@linkplain Session#byMultipleIds}.
+ * @deprecated Use {@linkplain Session#findMultiple} accepting
+ * {@linkplain jakarta.persistence.FindOption options} instead.
+ *
+ * @see FindMultipleOption
+ * @see Session#findMultiple(Class, List, FindOption...)
+ * @see Session#findMultiple(EntityGraph, List, FindOption...)
  */
 @Deprecated(since = "7.2", forRemoval = true)
 public interface MultiIdentifierLoadAccess<T> {

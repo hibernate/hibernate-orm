@@ -73,3 +73,15 @@ List<Initiative> initiatives =  outputs.getCurrent()
         .asResultSetOutput(Initiative.class)
         .getResultList();
 ----
+
+[[get-ref-option]]
+== getReference() by Natural Id
+
+8.0 adds the ability to get a reference (`Session#getReference`) based on an entity's natural-id via
+a new overload -
+
+[source,java]
+----
+var isbn = ...;
+var book = session.getReference(Book.class, isbn, NATURAL);
+----

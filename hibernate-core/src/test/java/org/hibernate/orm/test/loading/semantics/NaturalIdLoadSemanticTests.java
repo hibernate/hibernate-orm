@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.loading.semantics;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.Hibernate;
 import org.hibernate.KeyType;
 import org.hibernate.testing.orm.domain.library.Book;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -179,6 +180,17 @@ public class NaturalIdLoadSemanticTests extends Base {
 				fail( "Expecting failure" );
 			}
 			catch (IllegalArgumentException expected) {}
+		} );
+	}
+
+	@Test
+	void testGetReferenceByNaturalId(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var ref = session.getReference( Book.class, "123", KeyType.NATURAL );
+			assertThat( ref ).isNotNull();
+			assertThat( Hibernate.isInitialized( ref ) ).isFalse();
+			assertThat( ref.getName() ).isEqualTo( "Mistborn" );
+			assertThat( Hibernate.isInitialized( ref ) ).isTrue();
 		} );
 	}
 }

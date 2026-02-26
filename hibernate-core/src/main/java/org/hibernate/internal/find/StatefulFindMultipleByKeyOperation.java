@@ -20,7 +20,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -37,11 +36,11 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 ///
 /// @author Steve Ebersole
 public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation {
-	private final LoadAccessContext loadAccessContext;
+	private final StatefulLoadAccessContext loadAccessContext;
 
 	public StatefulFindMultipleByKeyOperation(
 			@NonNull EntityPersister entityDescriptor,
-			@NonNull LoadAccessContext loadAccessContext,
+			@NonNull StatefulLoadAccessContext loadAccessContext,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
@@ -67,7 +66,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 		}
 	}
 
-	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, StatefulLoadAccessContext loadAccessContext) {
 		final NaturalIdMapping naturalIdMapping = getEntityDescriptor().requireNaturalIdMapping();
 		final SessionImplementor session = loadAccessContext.getSession();
 
@@ -93,7 +92,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	}
 
 	private List<T> withOptions(
-			LoadAccessContext loadAccessContext,
+			StatefulLoadAccessContext loadAccessContext,
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			Supplier<List<T>> action) {
@@ -126,7 +125,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 
 	private Object getCachedNaturalIdResolution(
 			Object normalizedNaturalIdValue,
-			LoadAccessContext loadAccessContext) {
+			StatefulLoadAccessContext loadAccessContext) {
 		loadAccessContext.checkOpenOrWaitingForAutoClose();
 		loadAccessContext.pulseTransactionCoordinator();
 
@@ -137,7 +136,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
 	}
 
-	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, LoadAccessContext loadAccessContext) {
+	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, StatefulLoadAccessContext loadAccessContext) {
 		final Object[] ids = keys.toArray( new Object[0] );
 		//noinspection unchecked
 		return withOptions( loadAccessContext, graphSemantic, rootGraph,
@@ -154,7 +153,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	@Deprecated
 	public StatefulFindMultipleByKeyOperation(
 			@NonNull EntityPersister entityDescriptor,
-			@NonNull LoadAccessContext loadAccessContext,
+			@NonNull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType,
 			BatchSize batchSize,
 			SessionCheckMode sessionCheckMode,

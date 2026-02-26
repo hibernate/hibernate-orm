@@ -20,10 +20,10 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
  *
  * @author Gavin King
  */
-public class MergeCoordinator extends UpdateCoordinatorStandard {
+public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
-	public MergeCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
-		super(entityPersister, factory);
+	public MergeCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
+		super( entityPersister, factory );
 	}
 
 	@Override
@@ -118,10 +118,11 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
 			InclusionChecker dirtinessChecker,
+			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
-		final UpdateValuesAnalysisImpl updateValuesAnalysis = super.analyzeUpdateValues(
+		final var updateValuesAnalysis = super.analyzeUpdateValues(
 				entity,
 				values,
 				oldVersion,
@@ -130,6 +131,7 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 				inclusionChecker,
 				lockingChecker,
 				dirtinessChecker,
+				restrictToTemporalExcluded,
 				rowId,
 				forceDynamicUpdate,
 				session
@@ -138,7 +140,7 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 			final TableSet tablesNeedingUpdate = updateValuesAnalysis.getTablesNeedingUpdate();
 			final TableSet tablesWithNonNullValues = updateValuesAnalysis.getTablesWithNonNullValues();
 			final TableSet tablesWithPreviousNonNullValues = updateValuesAnalysis.getTablesWithPreviousNonNullValues();
-			for ( EntityTableMapping tableMapping : entityPersister().getTableMappings() ) {
+			for ( var tableMapping : entityPersister().getTableMappings() ) {
 				// Need to upsert into all non-optional table mappings
 				if ( !tableMapping.isOptional() ) {
 					// If the table was previously not needing an update, remove it from tablesWithPreviousNonNullValues

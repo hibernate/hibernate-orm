@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.BasicValue;
@@ -14,16 +15,25 @@ import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityNameUse;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -31,6 +41,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -40,6 +52,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import java.time.Instant;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
@@ -349,6 +363,90 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return softDeletable.findContainingEntityMapping();
+	}
+
+	@Override
+	public void addToInsertGroup(MutationGroupBuilder insertGroupBuilder, EntityPersister persister) {
+		final TableInsertBuilder insertBuilder =
+				insertGroupBuilder.getTableDetailsBuilder( persister.getIdentifierTableName() );
+		insertBuilder.addValueColumn( createNonDeletedValueBinding(
+				new ColumnReference( insertBuilder.getMutatingTable(), this ) ) );
+	}
+
+	@Override
+	public void applyPredicate(
+			EntityMappingType associatedEntityMappingType,
+			Consumer<Predicate> predicateConsumer,
+			LazyTableGroup lazyTableGroup,
+			NavigablePath navigablePath,
+			SqlAstCreationState creationState) {
+		// add the restriction
+		final var tableReference =
+				lazyTableGroup.resolveTableReference( navigablePath,
+						associatedEntityMappingType.getSoftDeleteTableDetails().getTableName() );
+		predicateConsumer.accept( createNonDeletedRestriction( tableReference,
+				creationState.getSqlExpressionResolver() ) );
+	}
+
+	@Override
+	public void applyPredicate(
+			EntityMappingType associatedEntityDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		final String primaryTableName =
+				associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
+		predicateConsumer.accept( createNonDeletedRestriction(
+				tableGroup.resolveTableReference( primaryTableName ) ) );
+	}
+
+	@Override
+	public void applyPredicate(
+			PluralAttributeMapping associatedEntityDescriptor,
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers influencers) {
+		predicateConsumer.accept( createNonDeletedRestriction(
+				tableGroup.resolveTableReference( getTableName() ) ) );
+	}
+
+	@Override
+	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+		tableGroupJoin.applyPredicate( createNonDeletedRestriction(
+				tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() )
+		) );
+	}
+
+	@Override
+	public void applyPredicate(
+			Supplier<Consumer<Predicate>> predicateCollector,
+			SqlAstCreationState creationState,
+			StandardTableGroup tableGroup,
+			NamedTableReference rootTableReference,
+			EntityMappingType entityMappingType) {
+		final var tableReference =
+				tableGroup.resolveTableReference( getTableName() );
+		final var softDeletePredicate =
+				createNonDeletedRestriction( tableReference,
+						creationState.getSqlExpressionResolver() );
+		predicateCollector.get().accept( softDeletePredicate );
+		if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+			// Register entity name usage for the hierarchy root table to avoid pruning
+			creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION,
+					entityMappingType.getRootEntityDescriptor().getEntityName() );
+		}
+	}
+
+	@Override
+	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
 	}
 
 	@Override

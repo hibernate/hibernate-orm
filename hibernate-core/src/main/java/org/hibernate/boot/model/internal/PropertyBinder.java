@@ -30,6 +30,7 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CascadeType;
@@ -41,15 +42,18 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
+import org.hibernate.annotations.Temporal.Excluded;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -97,6 +101,7 @@ import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -447,6 +452,8 @@ public class PropertyBinder {
 		handleMutability( property );
 		handleOptional( property );
 		inferOptimisticLocking( property );
+		handleTemporalExcluded( property );
+		handleAuditedExcluded( property );
 		return property;
 	}
 
@@ -532,6 +539,40 @@ public class PropertyBinder {
 		}
 		else {
 			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
+		}
+	}
+
+	private void handleTemporalExcluded(Property property) {
+		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Excluded.class ) ) {
+			property.setTemporalExcluded( true );
+			property.setOptimisticLocked( false );
+			addTemporalExcludedColumnOptions( property );
+		}
+	}
+
+	private void handleAuditedExcluded(Property property) {
+		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			property.setAuditedExcluded( true );
+			property.setOptimisticLocked( false );
+		}
+	}
+
+	private void addTemporalExcludedColumnOptions(Property property) {
+		if ( buildingContext.getTemporalTableStrategy() == TemporalTableStrategy.NATIVE ) {
+			for ( var selectable : property.getSelectables() ) {
+				if ( selectable instanceof Column column ) {
+					final String existing = column.getOptions();
+					final String exclusion =
+							buildingContext.getMetadataCollector()
+									.getDatabase().getDialect().getTemporalTableSupport()
+									.getTemporalExclusionColumnOption();
+					final String options =
+							isBlank( existing )
+									? exclusion
+									: existing + " " + exclusion;
+					column.setOptions( options );
+				}
+			}
 		}
 	}
 

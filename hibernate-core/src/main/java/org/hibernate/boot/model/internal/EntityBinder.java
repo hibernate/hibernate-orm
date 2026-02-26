@@ -58,7 +58,9 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
+import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
@@ -258,6 +260,8 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
+			bindTemporal( clazzToProcess, rootClass, context );
+			bindAudited( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -322,7 +326,7 @@ public class EntityBinder {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final var softDelete = extractSoftDelete( classDetails, context );
+		final var softDelete = extract( SoftDelete.class, classDetails, context );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -333,16 +337,44 @@ public class EntityBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
+	private static void bindTemporal(
+			ClassDetails classDetails,
+			RootClass rootClass,
+			MetadataBuildingContext context) {
+		final var temporal = extract( Temporal.class, classDetails, context );
+		if ( temporal != null ) {
+			TemporalHelper.bindTemporalColumns(
+					temporal,
+					rootClass,
+					rootClass.getRootTable(),
+					classDetails.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
+					context
+			);
+		}
+	}
+
+	private static void bindAudited(
+			ClassDetails classDetails,
+			RootClass rootClass,
+			MetadataBuildingContext context) {
+		final var audited = extract( Audited.class, classDetails, context );
+		if ( audited != null ) {
+			AuditHelper.bindAuditTable( audited, rootClass, context );
+		}
+	}
+
+	private static <T extends Annotation> T extract(
+			Class<T> annotationClass, ClassDetails classDetails, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
+		final var fromClass = classDetails.getAnnotationUsage( annotationClass, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
 		}
 
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null ) {
-			final var fromSuper = classToCheck.getAnnotationUsage( SoftDelete.class, modelsContext );
+			final var fromSuper = classToCheck.getAnnotationUsage( annotationClass, modelsContext );
 			if ( fromSuper != null
 					&& classToCheck.hasAnnotationUsage( MappedSuperclass.class, modelsContext ) ) {
 				return fromSuper;
@@ -350,7 +382,7 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 
-		return extractFromPackage( SoftDelete.class, classDetails, context );
+		return extractFromPackage( annotationClass, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {

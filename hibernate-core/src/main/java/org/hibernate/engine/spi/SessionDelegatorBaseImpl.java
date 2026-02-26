@@ -464,6 +464,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object getCurrentTransactionIdentifier() {
+		return delegate.getCurrentTransactionIdentifier();
+	}
+
+	@Override
 	public void afterTransactionBegin() {
 		delegate.afterTransactionBegin();
 	}

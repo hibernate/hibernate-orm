@@ -409,6 +409,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public Object getCurrentTransactionIdentifier() {
+		return delegate.getCurrentTransactionIdentifier();
+	}
+
+	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
 	}

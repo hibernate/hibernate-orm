@@ -18,6 +18,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
+import org.hibernate.dialect.temporal.MariaDBTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MariaDBCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -426,12 +428,30 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
-		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final MariaDBSqlAstTranslator<?> translator = new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, MariaDBDialect.this );
-			return translator.createMergeOperation( optionalTableUpdate );
-		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return false;
 	}
 
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
+			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )
+					.createMergeOperation( optionalTableUpdate );
+		}
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " generated always as " + generatedAs
+				: super.generatedAs( generatedAs );
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new MariaDBTemporalTableSupport( this );
+	}
 }

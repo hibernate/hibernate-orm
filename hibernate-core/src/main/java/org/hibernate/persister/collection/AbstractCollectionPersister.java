@@ -124,6 +124,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -137,6 +138,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * Base implementation of the {@code QueryableCollection} interface.
@@ -518,23 +520,23 @@ public abstract class AbstractCollectionPersister
 	private FilterHelper filterHelper(
 			Collection collection, EntityPersister elementPersister, RuntimeModelCreationContext context) {
 		final var filters = collection.getFilters();
-		if ( filters.isEmpty() ) {
-			return null;
-		}
-		else {
-			final var entityNameByTableNameMap =
-					elementPersister == null
-							? null
-							: AbstractEntityPersister.getEntityNameByTableNameMap(
-									context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
-									context.getSessionFactory().getSqlStringGenerationContext()
-							);
-			return new FilterHelper( filters, entityNameByTableNameMap, factory );
-		}
+		return filters.isEmpty()
+				? null
+				: new FilterHelper( filters, entityNameByTableNameMap( elementPersister, context ), factory );
+	}
+
+	private static Map<String, String> entityNameByTableNameMap(
+			EntityPersister elementPersister, RuntimeModelCreationContext context) {
+		return elementPersister == null
+				? null
+				: AbstractEntityPersister.getEntityNameByTableNameMap(
+						context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
+						context.getSessionFactory().getSqlStringGenerationContext()
+				);
 	}
 
 	private static int batchSize(Collection collection, SessionFactoryOptions options) {
-		int batchSize = collection.getBatchSize();
+		final int batchSize = collection.getBatchSize();
 		return batchSize >= 0
 				? batchSize
 				: options.getDefaultBatchFetchSize();
@@ -543,8 +545,8 @@ public abstract class AbstractCollectionPersister
 	private static CacheEntryStructure cacheEntryStructure(Collection collection, SessionFactoryOptions options) {
 		if ( options.isStructuredCacheEntriesEnabled() ) {
 			return collection.isMap()
-							? StructuredMapCacheEntry.INSTANCE
-							: StructuredCollectionCacheEntry.INSTANCE;
+					? StructuredMapCacheEntry.INSTANCE
+					: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
 			return UnstructuredCacheEntry.INSTANCE;
@@ -892,7 +894,8 @@ public abstract class AbstractCollectionPersister
 		return useShallowQueryCacheLayout;
 	}
 
-	protected abstract RowMutationOperations getRowMutationOperations();
+	@Override
+	public abstract RowMutationOperations getRowMutationOperations();
 	protected abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
@@ -1110,7 +1113,12 @@ public abstract class AbstractCollectionPersister
 		getRemoveCoordinator().deleteAllRows( id, session );
 	}
 
-	protected boolean isRowDeleteEnabled() {
+	boolean isHistoryStrategy() {
+		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
+	}
+
+	@Override
+	public boolean isRowDeleteEnabled() {
 		return keyIsUpdateable;
 	}
 
@@ -1119,8 +1127,24 @@ public abstract class AbstractCollectionPersister
 		return !isInverse() && isRowDeleteEnabled();
 	}
 
-	protected boolean isRowInsertEnabled() {
+	@Override
+	public boolean isRowInsertEnabled() {
 		return keyIsUpdateable;
+	}
+
+	@Override
+	public boolean[] getIndexColumnIsSettable() {
+		return indexColumnIsSettable;
+	}
+
+	@Override
+	public boolean[] getElementColumnIsSettable() {
+		return elementColumnIsSettable;
+	}
+
+	@Override
+	public UnaryOperator<Object> getIndexIncrementer() {
+		return this::incrementIndexByBase;
 	}
 
 	public String getOwnerEntityName() {

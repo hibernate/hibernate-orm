@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -21,7 +20,9 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -36,6 +37,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
@@ -51,11 +53,13 @@ import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.from.AuxiliaryTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -80,7 +84,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Locale.ROOT;
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
@@ -114,8 +117,7 @@ public class PluralAttributeMappingImpl
 	private final CollectionIdentifierDescriptor identifierDescriptor;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
-	private final SoftDeleteMapping softDeleteMapping;
-	private Boolean hasSoftDelete;
+	private final AuxiliaryMapping auxiliaryMapping;
 
 	private final String bidirectionalAttributeName;
 
@@ -158,16 +160,15 @@ public class PluralAttributeMappingImpl
 		this.collectionDescriptor = collectionDescriptor;
 		this.referencedPropertyName = bootDescriptor.getReferencedPropertyName();
 
-		this.mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
+		mapKeyPropertyName = bootDescriptor instanceof Map map ? map.getMapKeyPropertyName() : null;
 
-		this.bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+		bidirectionalAttributeName = subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
+		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
 		separateCollectionTable = bootDescriptor.isOneToMany() ? null : collectionDescriptor.getTableName();
 
 		final int baseIndex = bootDescriptor instanceof List list ? list.getBaseIndex() : -1;
-
 		indexMetadata = new IndexMetadata() {
 			@Override
 			public CollectionPart getIndexDescriptor() {
@@ -185,9 +186,9 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
-		softDeleteMapping =
-				resolveSoftDeleteMapping( this, bootDescriptor,
-						getSeparateCollectionTable(), creationProcess );
+		auxiliaryMapping =
+				bootDescriptor.getStateManagement()
+						.createAuxiliaryMapping( this, bootDescriptor, creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 
@@ -343,8 +344,6 @@ public class PluralAttributeMappingImpl
 		this.identifierDescriptor = original.identifierDescriptor;
 		this.fetchTiming = original.fetchTiming;
 		this.fetchStyle = original.fetchStyle;
-		this.softDeleteMapping = original.softDeleteMapping;
-		this.hasSoftDelete = original.hasSoftDelete;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
@@ -355,6 +354,7 @@ public class PluralAttributeMappingImpl
 		this.fkDescriptor = original.fkDescriptor;
 		this.orderByFragment = original.orderByFragment;
 		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
+		this.auxiliaryMapping = original.auxiliaryMapping;
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
@@ -478,13 +478,31 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public SoftDeleteMapping getSoftDeleteMapping() {
-		return softDeleteMapping;
+		return auxiliaryMapping instanceof SoftDeleteMapping softDeleteMapping
+				? softDeleteMapping : null;
 	}
 
 	@Override
 	public TableDetails getSoftDeleteTableDetails() {
 		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
 	}
+
+	@Override
+	public TemporalMapping getTemporalMapping() {
+		return auxiliaryMapping instanceof TemporalMapping temporalMapping
+				? temporalMapping : null;
+	}
+
+	@Override
+	public AuditMapping getAuditMapping() {
+		return auxiliaryMapping instanceof AuditMapping auditMapping
+				? auditMapping : null;
+	}
+
+	private AuxiliaryMapping getAuxiliaryMapping() {
+		return auxiliaryMapping;
+	}
+
 
 	@Override
 	public OrderByFragment getOrderByFragment() {
@@ -538,34 +556,36 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
-		if ( hasSoftDelete() ) {
-			final var descriptor = getCollectionDescriptor();
-			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-				// see if the associated entity has soft-delete defined
-				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-				final var softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
-				if ( softDeleteMapping != null ) {
-					final String primaryTableName =
-							associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
-					final var primaryTableReference =
-							tableGroup.resolveTableReference( primaryTableName );
-					final var softDeleteRestriction =
-							softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
-					predicateConsumer.applyPredicate( softDeleteRestriction );
-				}
+	public void applyAuxiliaryRestrictions(
+			TableGroup tableGroup,
+			PredicateConsumer predicateConsumer,
+			LoadQueryInfluencers influencers,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
+		final var descriptor = getCollectionDescriptor();
+		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+			final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+			final var associatedAuxiliaryMapping = associatedEntityDescriptor.getAuxiliaryMapping();
+			if ( associatedAuxiliaryMapping != null ) {
+				associatedAuxiliaryMapping.applyPredicate(
+						associatedEntityDescriptor,
+						predicateConsumer::applyPredicate,
+						tableGroup,
+						sqlAliasBaseGenerator,
+						influencers
+				);
 			}
+		}
 
-			// apply the collection's soft-delete mapping, if one
-			final var softDeleteMapping = getSoftDeleteMapping();
-			if ( softDeleteMapping != null ) {
-				final var primaryTableReference =
-						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final var softDeleteRestriction =
-						softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
-				predicateConsumer.applyPredicate( softDeleteRestriction );
-			}
+		final var auxiliaryMapping = getAuxiliaryMapping();
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyPredicate(
+					this,
+					predicateConsumer::applyPredicate,
+					tableGroup,
+					sqlAliasBaseGenerator,
+					influencers
+			);
 		}
 	}
 
@@ -869,10 +889,11 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
-		applySoftDeleteRestriction(
-				predicateCollector::applyPredicate,
+		applyAuxiliaryRestrictions(
 				tableGroup,
-				creationState
+				predicateCollector::applyPredicate,
+				creationState.getLoadQueryInfluencers(),
+				creationState.getSqlAliasBaseGenerator()
 		);
 
 		if ( fetched ) {
@@ -899,43 +920,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean hasSoftDelete() {
-		// NOTE : this needs to be done lazily because the associated entity mapping (if one)
+		// NOTE: this needs to be done lazily because the associated entity mapping (if one)
 		// does not know its SoftDeleteMapping yet when this is created
-		if ( hasSoftDelete == null ) {
-			hasSoftDelete =
-					softDeleteMapping != null
-						|| getElementDescriptor() instanceof EntityCollectionPart collectionPart
-								&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
-		}
-		return hasSoftDelete;
-	}
-
-	private void applySoftDeleteRestriction(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			SqlAstCreationState creationState) {
-		if ( hasSoftDelete() ) {
-			if ( getElementDescriptor() instanceof EntityCollectionPart entityCollectionPart ) {
-				final var entityMappingType = entityCollectionPart.getAssociatedEntityMappingType();
-				final var softDeleteMapping = entityMappingType.getSoftDeleteMapping();
-				if ( softDeleteMapping != null ) {
-					final var softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
-					predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
-							tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-							creationState.getSqlExpressionResolver()
-					) );
-				}
-			}
-
-			final var softDeleteMapping = getSoftDeleteMapping();
-			if ( softDeleteMapping != null ) {
-				final var softDeleteTable = getSoftDeleteTableDetails();
-				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
-						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-						creationState.getSqlExpressionResolver()
-				) );
-			}
-		}
+		return auxiliaryMapping instanceof SoftDeleteMapping
+			|| getElementDescriptor() instanceof EntityCollectionPart collectionPart
+					&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
@@ -1007,7 +996,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
-	private @NonNull TableGroup rootTableGroup(
+	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
@@ -1121,12 +1110,12 @@ public class PluralAttributeMappingImpl
 				this,
 				creationState.getSqlAliasBaseGenerator()
 		);
-		final String collectionTableName = collectionDescriptor.getTableName();
-		final var collectionTableReference = new NamedTableReference(
-				collectionTableName,
-				sqlAliasBase.generateNewAlias(),
-				true
-		);
+		final String tableName = collectionDescriptor.getTableName();
+		final String alias = sqlAliasBase.generateNewAlias();
+		final var collectionTableReference =
+				collectionTableReference( creationState, tableName, alias );
+		collectionTableReference.applyAuxiliaryTable( auxiliaryMapping,
+				creationState.getLoadQueryInfluencers() );
 
 		final var tableGroup = new CollectionTableGroup(
 				canUseInnerJoins,
@@ -1177,6 +1166,12 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	private NamedTableReference collectionTableReference(SqlAstCreationState creationState, String tableName, String alias) {
+		return auxiliaryMapping != null && auxiliaryMapping.useAuxiliaryTable( creationState.getLoadQueryInfluencers() )
+				? new AuxiliaryTableReference( auxiliaryMapping.getTableName(), tableName, alias, true )
+				: new NamedTableReference( tableName, alias, true );
+	}
+
 	@Override
 	public TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
@@ -1219,6 +1214,23 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		if ( PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
+				|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )) {
+			return true;
+		}
+		else {
+			final var descriptor = getCollectionDescriptor();
+			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
+				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+				return elementDescriptor.getAssociatedEntityMappingType()
+						.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters );
+			}
+			return false;
+		}
 	}
 
 	@Override

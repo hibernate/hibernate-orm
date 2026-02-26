@@ -4,11 +4,15 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -23,6 +27,8 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
+	private Object temporalIdentifier;
+	private JdbcMapping temporalJdbcMapping;
 
 	public NamedTableReference(
 			String tableExpression,
@@ -41,6 +47,35 @@ public class NamedTableReference extends AbstractTableReference {
 
 	public String getTableExpression() {
 		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
+	}
+
+	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
+		if ( useAsOfOperator( influencers, mapping )
+				&& mapping.getTableName().equals( getTableExpression() ) ) {
+			this.temporalIdentifier = influencers.getTemporalIdentifier();
+			this.temporalJdbcMapping = mapping.getJdbcMapping();
+		}
+	}
+
+	private boolean useAsOfOperator(LoadQueryInfluencers influencers, AuxiliaryMapping mapping) {
+		if ( mapping == null ) {
+			return false;
+		}
+		else {
+			final var sessionFactory = influencers.getSessionFactory();
+			return sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
+				&& sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
+						.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
+								(Instant) influencers.getTemporalIdentifier() );
+		}
+	}
+
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
+	}
+
+	public JdbcMapping getTemporalJdbcMapping() {
+		return temporalJdbcMapping;
 	}
 
 	@Override

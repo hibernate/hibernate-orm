@@ -32,6 +32,8 @@ import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
+import org.hibernate.dialect.temporal.SQLServerTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.SQLServerLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
@@ -1085,6 +1087,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " datetime2 generated always as " + generatedAs
+				: " as (" + generatedAs + ") persisted";
+	}
+
+	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
 		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
 	}
@@ -1170,11 +1179,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
 			return context.formatWithoutCatalog( name );
 		}
-	}
-
-	@Override
-	public String generatedAs(String generatedAs) {
-		return " as (" + generatedAs + ") persisted";
 	}
 
 	@Override
@@ -1278,4 +1282,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new SQLServerTemporalTableSupport( this );
+	}
 }

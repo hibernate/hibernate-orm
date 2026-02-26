@@ -23,6 +23,8 @@ import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.MySQLTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -1682,5 +1684,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorMySQLImpl( extractionContext );
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new MySQLTemporalTableSupport( this );
 	}
 }

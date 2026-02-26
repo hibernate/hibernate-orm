@@ -27,24 +27,11 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorStandard;
-import org.hibernate.persister.collection.mutation.RemoveCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -107,16 +94,16 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& !getElementPersisterInternal().managesColumns( indexColumnNames );
 
 		rowMutationOperations = buildRowMutationOperations();
-
-		insertRowsCoordinator = buildInsertCoordinator();
-		updateRowsCoordinator = buildUpdateCoordinator();
-		deleteRowsCoordinator = buildDeleteCoordinator();
-		removeCoordinator = buildDeleteAllCoordinator();
+		final var stateManagement = collectionBinding.getStateManagement();
+		insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
+		updateRowsCoordinator = stateManagement.createUpdateRowsCoordinator( this );
+		deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );
+		removeCoordinator = stateManagement.createRemoveCoordinator( this );
 		mutationExecutorService = creationContext.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	@Override
-	protected RowMutationOperations getRowMutationOperations() {
+	public RowMutationOperations getRowMutationOperations() {
 		return rowMutationOperations;
 	}
 
@@ -138,7 +125,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected boolean isRowDeleteEnabled() {
+	public boolean isRowDeleteEnabled() {
 		return super.isRowDeleteEnabled() && keyIsNullable;
 	}
 
@@ -368,6 +355,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			deleteEntryRestrictions = null;
 		}
 
+		final OperationProducer deleteAllEntriesOperationProducer;
+		if ( !isInverse() && isRowDeleteEnabled() ) {
+			deleteAllEntriesOperationProducer = this::buildDeleteAllOperation;
+		}
+		else {
+			deleteAllEntriesOperationProducer = null;
+		}
+
 		return new RowMutationOperations(
 				this,
 				insertRowOperationProducer,
@@ -376,77 +371,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				writeIndexValues,
 				writeIndexRestrictions,
 				deleteEntryOperationProducer,
-				deleteEntryRestrictions
+				deleteEntryRestrictions,
+				deleteAllEntriesOperationProducer
 		);
-	}
-
-	private InsertRowsCoordinator buildInsertCoordinator() {
-		if ( isInverse() || !isRowInsertEnabled() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection (re)creation - %s", getRolePath() );
-//			}
-			return new InsertRowsCoordinatorNoOp( this );
-		}
-		else {
-			final var registry = getFactory().getServiceRegistry();
-			final var elementPersister = getElementPersisterInternal();
-			return elementPersister != null && elementPersister.hasSubclasses()
-						&& elementPersister instanceof UnionSubclassEntityPersister
-					? new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations, registry )
-					: new InsertRowsCoordinatorStandard( this, rowMutationOperations, registry );
-		}
-	}
-
-	private UpdateRowsCoordinator buildUpdateCoordinator() {
-		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row updates - %s", getRolePath() );
-//			}
-			return new UpdateRowsCoordinatorNoOp( this );
-		}
-		else {
-			final var elementPersister = getElementPersisterInternal();
-			final var factory = getFactory();
-			return elementPersister != null && elementPersister.hasSubclasses()
-				&& elementPersister instanceof UnionSubclassEntityPersister
-					? new UpdateRowsCoordinatorTablePerSubclass( this, rowMutationOperations, factory )
-					: new UpdateRowsCoordinatorOneToMany( this, rowMutationOperations, factory );
-		}
-	}
-
-	private DeleteRowsCoordinator buildDeleteCoordinator() {
-		if ( !needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row deletions - %s", getRolePath() );
-//			}
-			return new DeleteRowsCoordinatorNoOp( this );
-		}
-		else {
-			final var elementPersister = getElementPersisterInternal();
-			final var registry = getFactory().getServiceRegistry();
-			return elementPersister != null && elementPersister.hasSubclasses()
-				&& elementPersister instanceof UnionSubclassEntityPersister
-					// never delete by index for one-to-many
-					? new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false, registry )
-					: new DeleteRowsCoordinatorStandard( this, rowMutationOperations, false, registry );
-		}
-	}
-
-	private RemoveCoordinator buildDeleteAllCoordinator() {
-		if ( ! needsRemove() ) {
-//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection removals - %s", getRolePath() );
-//			}
-			return new RemoveCoordinatorNoOp( this );
-		}
-		else {
-			final var registry = getFactory().getServiceRegistry();
-			final var elementPersister = getElementPersisterInternal();
-			return elementPersister != null && elementPersister.hasSubclasses()
-				&& elementPersister instanceof UnionSubclassEntityPersister
-					? new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation, registry )
-					: new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, registry );
-		}
 	}
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {

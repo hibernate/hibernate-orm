@@ -203,7 +203,6 @@ public sealed class Column
 
 	private @NonNull String aliasRoot() {
 		final int lastLetter = lastIndexOfLetter( name );
-		final String alias;
 		if ( lastLetter == -1 ) {
 			return "column";
 		}

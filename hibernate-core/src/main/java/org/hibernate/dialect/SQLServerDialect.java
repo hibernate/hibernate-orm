@@ -1178,6 +1178,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return " as (" + generatedAs + ")" + ( stored ? " persisted" : "" );
+	}
+
+	@Override
 	public boolean hasDataTypeBeforeGeneratedAs() {
 		return false;
 	}

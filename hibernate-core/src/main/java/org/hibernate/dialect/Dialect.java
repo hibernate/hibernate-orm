@@ -5597,6 +5597,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support some sort of generated "virtual" column
+	 * declaration in DDL statements?
+	 *
+	 * @see #generatedAs
+	 */
+	public boolean supportsGeneratedColumns() {
+		return true;
+	}
+
+	/**
 	 * The {@code generated as} clause, or similar, for generated column
 	 * declarations in DDL statements.
 	 *
@@ -5604,7 +5614,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The {@code generated as} clause containing the given expression
 	 */
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ") stored";
+		return generatedAs( generatedAs, true, false );
+	}
+
+	/**
+	 * The {@code generated as} clause, or similar, for generated column
+	 * declarations in DDL statements.
+	 *
+	 * @param generatedAs a SQL expression used to generate the column value
+	 * @param stored whether the column is stored or virtual
+	 * @param hidden whether the column is a hidden column (if supported)
+	 * @return The {@code generated as} clause containing the given expression
+	 * @since 7.4
+	 */
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return " generated always as (" + generatedAs + ") "
+				+ (stored ? "stored" : "virtual");
 	}
 
 	/**

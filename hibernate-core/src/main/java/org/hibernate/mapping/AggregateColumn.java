@@ -43,6 +43,8 @@ public final class AggregateColumn extends Column {
 		setCollation( column.getCollation() );
 		setDefaultValue( column.getDefaultValue() );
 		setGeneratedAs( column.getGeneratedAs() );
+		setStored( column.isStored() );
+		setHidden( column.isHidden() );
 		setAssignmentExpression( column.getAssignmentExpression() );
 		setCustomRead( column.getCustomRead() );
 		setCustomWrite( column.getCustomWrite() );
@@ -58,9 +60,8 @@ public final class AggregateColumn extends Column {
 	}
 
 	private static SelectablePath getSelectablePath(Component component) {
-		final var aggregateColumn = component.getAggregateColumn();
 		final var parent = component.getParentAggregateColumn();
-		final String simpleAggregateName = aggregateColumn.getQuotedName();
+		final String simpleAggregateName = component.getAggregateColumn().getQuotedName();
 		return parent == null
 				? new SelectablePath( simpleAggregateName )
 				: getSelectablePath( parent.getComponent() ).append( simpleAggregateName );

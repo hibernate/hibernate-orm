@@ -1333,6 +1333,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsGeneratedColumns implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsGeneratedColumns();
+		}
+	}
+
 	public static class SupportsNClob implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {

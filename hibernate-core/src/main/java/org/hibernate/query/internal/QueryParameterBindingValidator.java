@@ -39,13 +39,17 @@ class QueryParameterBindingValidator {
 					// NOTE2: The case of a collection value and an expected collection
 					// 	      (if that can even happen) will fall through to the main check.
 					if ( !areInstances( parameterType, collection, criteriaBuilder ) ) {
-						throw queryArgumentException( parameterJavaType, collection, parameter );
+						throw queryArgumentException(
+								"Collection-valued argument to parameter %s has an incompatible type",
+								parameterJavaType, collection, parameter );
 					}
 				}
 				else if ( !argument.getClass().isArray() ) {
 					// assume single-valued argument
 					if ( !isInstance( parameterType, argument, criteriaBuilder ) ) {
-						throw queryArgumentException( parameterJavaType, argument, parameter );
+						throw queryArgumentException(
+								"Argument to parameter %s has an incompatible type",
+								parameterJavaType, argument, parameter );
 					}
 				}
 				else {
@@ -67,39 +71,18 @@ class QueryParameterBindingValidator {
 	}
 
 	private static @NonNull QueryArgumentException queryArgumentException(
-			Class<?> parameterJavaType, Object value, QueryParameter<?> parameter) {
-		if ( parameter.isNamed() ) {
-			return new QueryArgumentException( "Argument to parameter named '"
-						+ parameter.getName() + "' has an element with an incompatible type",
-					parameterJavaType, value );
-		}
-		else {
-			return new QueryArgumentException( "Argument to parameter at position "
-						+ parameter.isOrdinal() + " has an element with an incompatible type",
-					parameterJavaType, value );
-		}
-	}
-
-	private static @NonNull QueryArgumentException queryArgumentException(
-			Class<?> parameterJavaType, Collection<?> values, QueryParameter<?> parameter) {
-		if ( parameter.isNamed() ) {
-			return new QueryArgumentException( "Collection-values argument to parameter named '"
-						+ parameter.getName() + "' has an incompatible type",
-					parameterJavaType, values );
-		}
-		else {
-			return new QueryArgumentException( "Collection-values argument to parameter at position "
-						+ parameter.isOrdinal() + " has has an incompatible type",
-					parameterJavaType, values );
-		}
+			String messagePattern, Class<?> parameterJavaType, Object value, QueryParameter<?> parameter) {
+		final String message = String.format( messagePattern,
+				parameter.isNamed() ? "named '" + parameter.getName() + "'"
+						: "at position " + parameter.getPosition() );
+		return new QueryArgumentException( message, parameterJavaType, value );
 	}
 
 	private static void validateArrayValuedParameterBinding(
 			Class<?> parameterType, Object value, QueryParameter<?> parameter) {
-		// TODO: improve the error messages using the given parameter info
 		if ( !parameterType.isArray() ) {
-			throw new QueryArgumentException( "Unexpected array-valued parameter binding",
-					parameterType, value );
+			throw queryArgumentException( "Unexpected array-valued argument to parameter %s",
+					parameterType, value, parameter );
 		}
 
 		final var componentType = value.getClass().getComponentType();
@@ -109,8 +92,9 @@ class QueryParameterBindingValidator {
 			// We validate that the actual array has the component type (type of elements)
 			// that we expect based on the component type of the parameter specification.
 			if ( !parameterComponentType.isAssignableFrom( componentType ) ) {
-				throw new QueryArgumentException( "Primitive array-valued argument type did not match parameter type",
-						parameterType, value );
+				throw queryArgumentException(
+						"Primitive array-valued argument to parameter %s has an incompatible component type",
+						parameterType, value, parameter );
 			}
 		}
 		else {
@@ -119,8 +103,9 @@ class QueryParameterBindingValidator {
 			// type we expect based on the component type of the parameter specification.
 			for ( Object element : (Object[]) value ) {
 				if ( element != null && !parameterComponentType.isInstance( element ) ) {
-					throw new QueryArgumentException( "Array element did not match parameter element type",
-							parameterComponentType, element );
+					throw queryArgumentException(
+							"Array-valued argument to parameter %s has an element with an incompatible type",
+							parameterComponentType, element, parameter );
 				}
 			}
 		}

@@ -52,8 +52,6 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		// todo (jpa4) : allow for loading from cache
-
 		for ( Object key : keys ) {
 			if ( key == null ) {
 				throw new IllegalArgumentException( "Null key" );
@@ -81,6 +79,7 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			RootGraphImplementor<T> rootGraph) {
 		var session = loadAccessContext.getStatelessSession();
 		return withOptions( session, graphSemantic, rootGraph, () -> {
+			// todo (jpa4) : make sure loading from cache happens inside here
 			final var results = getEntityDescriptor().multiLoad( keys.toArray(), session, multiLoadOptions( getLockMode() ) );
 			//noinspection unchecked
 			return (List<T>) results;

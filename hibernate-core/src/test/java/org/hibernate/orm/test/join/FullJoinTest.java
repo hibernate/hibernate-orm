@@ -10,8 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		FullJoinTest.OtherThing.class})
 class FullJoinTest {
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	void test(EntityManagerFactoryScope scope) {
 		prepareData( scope );
 		scope.inTransaction( session -> {
@@ -43,6 +46,7 @@ class FullJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	void testNullsLastOrderBy(EntityManagerFactoryScope scope) {
 		prepareData( scope );
 		scope.inTransaction( session -> {
@@ -63,6 +67,7 @@ class FullJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	void testSybaseNullPrecedenceAliasCounting(EntityManagerFactoryScope scope) {
 		prepareData( scope );
 		scope.inTransaction( session -> {
@@ -77,6 +82,7 @@ class FullJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class,
 			reason = "Sybase does not allow union within subquery")
 	void testNestedFullJoinInSubquery(EntityManagerFactoryScope scope) {
@@ -96,6 +102,7 @@ class FullJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	void testNestedScalarSubqueryWithOuterFullJoinOrderBy(EntityManagerFactoryScope scope) {
 		prepareData( scope );
 		scope.inTransaction( session -> {

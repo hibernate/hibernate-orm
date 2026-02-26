@@ -1250,8 +1250,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * getter. It can be any method with no parameters and one of the
 	 * needed return types.
 	 */
-	private static boolean isSessionGetter(ExecutableElement method) {
+	private boolean isSessionGetter(ExecutableElement method) {
 		return method.getParameters().isEmpty()
+			&& !(jakartaDataRepository && method.isDefault()) // resource accessor methods must be abstract
 			&& isSessionGetterType( method.getReturnType() );
 	}
 

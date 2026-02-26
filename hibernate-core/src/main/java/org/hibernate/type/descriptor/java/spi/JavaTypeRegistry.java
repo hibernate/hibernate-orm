@@ -116,8 +116,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		}
 		else {
 			final var created = creator.get();
-			descriptorsByTypeName.put( javaTypeName, created );
-			return created;
+			final var existing = descriptorsByTypeName.putIfAbsent( javaTypeName, created );
+			return ( existing != null ? checkCached( javaType, existing ) : created );
 		}
 	}
 
@@ -138,8 +138,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		}
 		else {
 			final var created = creator.get();
-			descriptorsByTypeName.put( javaTypeName, created );
-			return created;
+			final var existing = descriptorsByTypeName.putIfAbsent( javaTypeName, created );
+			return ( existing != null ? existing : created );
 		}
 	}
 

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test">
+
+    <class name="Train">
+        <composite-id name="transportationId" class="TransportationPk">
+            <key-property name="city" type="string"/>
+            <key-property name="line" type="string"/>
+        </composite-id>
+
+        <property name="name" unique="true" type="string" not-null="true"/>
+
+		<set name="currentPassengers"
+    		inverse="true" cascade="persist,save-update">
+    		<key>
+                <column name="currentTrainCity"/>
+                <column name="currentTrainLine"/>
+            </key>
+            <one-to-many class="Passenger"/>
+    	</set>
+
+        <set name="usualPassengers" table="USUAL_TRAIN" inverse="true">
+    		<key>
+                <column name="trainCity"/>
+                <column name="trainLine"/>
+            </key>
+            <many-to-many class="Passenger">
+                <column name="passengerId"/>
+            </many-to-many>
+        </set>
+    </class>
+
+</hibernate-mapping>

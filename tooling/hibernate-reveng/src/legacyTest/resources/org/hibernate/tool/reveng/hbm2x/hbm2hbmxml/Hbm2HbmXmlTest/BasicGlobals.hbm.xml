@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping 
+	package="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest"
+>
+	<import class="testImport" rename="org.import.test.testImport" />
+<!-- 
+  This mapping demonstrates basic attributes of the mapping document
+
+     (1) Global settings [Note: They do not come from this document]
+     (2) Simple id and properties
+     (3) Id generation with no arguments.
+-->
+    <class name="BasicGlobals">
+    
+    	<id name="basicId"
+    		length="10"
+    		type="string"
+			unsaved-value="null"
+    	>
+    		<generator class="assigned"/>
+    	</id>
+    	
+    	<property name="description" 
+    		not-null="true" 
+    		length="200"
+    		type="string" />
+    		
+    	<property name="price" length="3" type="big_decimal" />
+    	
+    	<property name="numberAvailable" type="int" />
+    	
+	</class>
+
+<!--  TODO: HBX-2042 - Uncomment -->
+<!--  	<query name="test_query_1"><![CDATA[from cat as c where c.age > 1]]></query> 
+	<query name="test_query_2"
+		flush-mode="auto"
+	    cacheable="true"
+	    cache-region="myregion"
+        fetch-size="10"
+        timeout="1000"	   
+	><![CDATA[from dog as d where d.age > 2]]></query> -->
+
+	<sql-query name="test_sqlquery_1"><![CDATA[from bird as {b} where {b.age} > 3]]></sql-query>
+	
+	<sql-query 
+        name="test_sqlquery_2"
+        flush-mode="auto"
+	    cacheable="true"
+	    cache-region="myregion"
+        fetch-size="10"
+        timeout="1000"
+    ><![CDATA[from snake as {s} where {s.age} > 4]]></sql-query>
+
+	<sql-query name="test_sqlquery_3">
+		<synchronize table="mytable" />
+		<![CDATA[from fish as {f} where {f.age} > 5]]>
+	</sql-query> 
+
+<!--  TODO: HBX-2042 - Uncomment -->
+<!--	<sql-query name="test_sqlquery_4">
+		<synchronize table="mytable" />
+		<return 
+             alias="e"
+             class="org.hibernate.tool.hbm2x.hbm2hbmxml.BasicGlobals"
+		/>
+		<![CDATA[from elephant as {e} where {e.age} > 50]]>
+	</sql-query> -->
+
+	<sql-query name="test_sqlquery_5">
+		<synchronize table="mytable" />
+        <return-join 
+        	alias="e"
+        	property="e.age"
+       	/>
+		<![CDATA[from elephant as {e} where {e.age} > 35]]>
+	</sql-query> 
+
+	<sql-query name="test_sqlquery_6">
+		<synchronize table="mytable" />
+        <load-collection alias="e" role="BasicGlobals.price" lock-mode="none"/>
+		<![CDATA[from elephant as {e} where {e.age} > 25]]>
+	</sql-query> 
+	
+	<filter-def name="filterit">
+	    <filter-param
+             name="idname"
+             type="string"
+	    />
+	</filter-def> 
+	
+</hibernate-mapping>

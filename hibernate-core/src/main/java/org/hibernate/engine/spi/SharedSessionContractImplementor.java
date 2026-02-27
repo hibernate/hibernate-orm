@@ -6,6 +6,7 @@ package org.hibernate.engine.spi;
 
 import java.util.Set;
 import java.util.UUID;
+
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -18,6 +19,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
@@ -631,4 +633,17 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+	/**
+	 * Allows accessing session scoped extension storages of the particular session instance.
+	 * <p>
+	 * Extensions first had to be registered with the {@link org.hibernate.SessionFactory}
+	 *
+	 * @param extension The extension storage attached to the current session.
+	 * if the current session does not yet have the particular storage type attached to this session.
+	 * @param <E> The type of the extension storage.
+	 */
+	@Incubating
+	<E extends Extension> E getExtension(Class<E> extension);
+
 }

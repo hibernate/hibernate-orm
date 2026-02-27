@@ -33,6 +33,10 @@ import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
+import org.hibernate.engine.extension.spi.Extension;
+import org.hibernate.engine.extension.spi.ExtensionIntegration;
+import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
+import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -111,8 +115,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -139,7 +145,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  *
  * @author Steve Ebersole
  */
-abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
+abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor, ExtensionIntegrationContext {
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -185,6 +191,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	//Lazily initialized
 	private transient ExceptionConverter exceptionConverter;
 	private transient SessionAssociationMarkers sessionAssociationMarkers;
+
+	private transient final Map<Class<?>, Object> extensions;
 
 	AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -247,6 +255,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			jdbcCoordinator = createJdbcCoordinator( options );
 			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
+		}
+
+		extensions = new HashMap<>();
+		for ( ExtensionIntegration<?> integration : factory.getServiceRegistry()
+				.requireService( ExtensionIntegrationService.class )
+				.extensionIntegrations() ) {
+			extensions.put( integration.getExtensionType(), integration.createExtension( this ) );
 		}
 	}
 
@@ -471,6 +486,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		}
 		return sessionIdentifier;
+	}
+
+	@Override
+	public SharedSessionContractImplementor getSession() {
+		return this;
 	}
 
 	@Override
@@ -1708,6 +1728,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			sessionAssociationMarkers = new SessionAssociationMarkers( this );
 		}
 		return sessionAssociationMarkers;
+	}
+
+	@Override
+	public <E extends Extension> E getExtension(Class<E> extension) {
+		return extension.cast( extensions.get( extension ) );
 	}
 
 	@Serial

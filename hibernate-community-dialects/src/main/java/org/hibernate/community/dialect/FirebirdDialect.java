@@ -41,7 +41,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -94,6 +93,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -937,12 +937,9 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			final String sqlExceptionMessage = sqlException.getMessage();
-			//final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-
 			// Some of the error codes will only surface in Jaybird 3 or higher, as older versions return less specific error codes first
-			switch ( errorCode ) {
+			switch ( extractErrorCode( sqlException ) ) {
 				case 335544336:
 					// isc_deadlock (deadlock, note: not necessarily a deadlock, can also be an update conflict)
 					if ( sqlExceptionMessage != null

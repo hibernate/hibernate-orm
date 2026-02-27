@@ -47,7 +47,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
@@ -88,6 +87,7 @@ import java.sql.Types;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -699,14 +699,13 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor( sqle -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+			final String sqlState = extractSqlState( sqle );
 			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "23505":
-						return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
-								"'", "'",
-								sqle.getMessage()
-						);
+				if ( sqlState.equals( "23505" ) ) {
+					return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
+							"'", "'",
+							sqle.getMessage()
+					);
 				}
 			}
 			return null;
@@ -716,7 +715,7 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 //				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			final String constraintName;
 

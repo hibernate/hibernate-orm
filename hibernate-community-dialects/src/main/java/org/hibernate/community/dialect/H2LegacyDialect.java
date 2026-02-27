@@ -49,7 +49,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -93,6 +92,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -843,37 +843,32 @@ public class H2LegacyDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			final String constraintName;
-
-			switch (errorCode) {
-				case 23505:
-					// Unique constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-				case 40001:
-					// DEADLOCK DETECTED
-					return new LockAcquisitionException(message, sqlException, sql);
-				case 50200:
-					// LOCK NOT AVAILABLE
-					return new PessimisticLockException(message, sqlException, sql);
-				case 90006:
-					// NULL not allowed for column [90006-145]
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException(message, sqlException, sql, constraintName);
-				case 57014:
-					return new QueryTimeoutException( message, sqlException, sql );
-			}
-
-			return null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 23505 ->
+						// Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor()
+											.extractConstraintName( sqlException )
+							);
+					case 40001 ->
+						// DEADLOCK DETECTED
+							new LockAcquisitionException( message, sqlException, sql );
+					case 50200 ->
+						// LOCK NOT AVAILABLE
+							new PessimisticLockException( message, sqlException, sql );
+					case 90006 ->
+						// NULL not allowed for column [90006-145]
+							new ConstraintViolationException( message, sqlException, sql,
+									getViolatedConstraintNameExtractor()
+											.extractConstraintName( sqlException ) );
+					case 57014 -> new QueryTimeoutException( message, sqlException, sql );
+					default -> null;
+				};
 	}
 
 	@Override

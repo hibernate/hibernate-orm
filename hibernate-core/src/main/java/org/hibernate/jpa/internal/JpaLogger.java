@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -36,7 +37,7 @@ public interface JpaLogger extends BasicLogger {
 
 	String NAME = SubSystemLogging.BASE + ".jpa";
 
-	JpaLogger JPA_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JpaLogger.class, NAME );
+	JpaLogger JPA_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JpaLogger.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(value = "Defining %s=true ignored in HEM", id = 8059)

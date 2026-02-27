@@ -124,6 +124,14 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		if ( !visitedTypes.add( this ) ) {
 			return false;
 		}
+
+		return areAttributesAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
+	}
+
+	default boolean areAttributesAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
 		// we still need to verify collection fields to be eagerly loaded by join
 		final AttributeMappingsList attributeMappings = getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {

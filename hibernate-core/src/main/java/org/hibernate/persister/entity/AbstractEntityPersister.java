@@ -3673,14 +3673,22 @@ public abstract class AbstractEntityPersister
 	public boolean isAffectedByEnabledFilters(
 			LoadQueryInfluencers loadQueryInfluencers,
 			boolean onlyApplyForLoadByKeyFilters) {
-		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
-			return filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters(), onlyApplyForLoadByKeyFilters )
-				|| isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
+		return loadQueryInfluencers.hasEnabledFilters()
+			&& isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
+	}
 
-		}
-		else {
+	@Override
+	public boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
+		assert influencers.hasEnabledFilters();
+		if ( !visitedTypes.add( this ) ) {
 			return false;
 		}
+		return filterHelper != null
+			&& filterHelper.isAffectedBy( influencers.getEnabledFilters(), onlyApplyForLoadByKey )
+			|| areAttributesAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey );
 	}
 
 	/**

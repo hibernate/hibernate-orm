@@ -51,3 +51,6 @@ ObjectStore
 
 # SDKman, used by some module maintainers
 .sdkmanrc
+
+# Sonar CLI local scan files:
+.scannerwork

@@ -9,16 +9,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.MutableObject;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.softDeleteTargets;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -62,7 +63,9 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 
 		final SoftDeleteMapping softDeleteMapping = getEntityDescriptor().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			tableDeleters.add( createSoftDeleter() );
+			for ( var target : softDeleteTargets( getEntityDescriptor() ) ) {
+				tableDeleters.add( createSoftDeleter( target ) );
+			}
 		}
 		else {
 			// delete from the tables
@@ -124,8 +127,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 		this.tableDeleters = tableDeleters;
 	}
 
-	private TableDeleter createSoftDeleter() {
-		final EntityPersister entityDescriptor = getEntityDescriptor();
+	private TableDeleter createSoftDeleter(EntityMappingType entityDescriptor) {
 		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
 		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		assert softDeleteMapping != null;

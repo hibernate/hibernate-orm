@@ -177,7 +177,7 @@ dependencyResolutionManagement {
             def bytemanVersion = version "byteman", "4.0.24"
             def jbossJtaVersion = version "jbossJta", "7.3.3.Final"
             def jbossTxSpiVersion = version "jbossTxSpi", "8.0.0.Final"
-            def log4jVersion = version "log4j", "2.24.3"
+            def log4jVersion = version "log4j", "2.25.3"
             def mockitoVersion = version "mockito", "5.20.0"
             def shrinkwrapVersion = version "shrinkwrap", "1.2.6"
             def shrinkwrapDescriptorsVersion = version "shrinkwrapDescriptors", "2.0.0"

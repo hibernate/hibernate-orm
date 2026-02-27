@@ -11,3 +11,14 @@
 :core-project-dir: {root-project-dir}/hibernate-core
 :documentation-project-dir: {root-project-dir}/documentation
 :testing-project-dir: {root-project-dir}/hibernate-testing
+:envers-project-dir: {root-project-dir}/hibernate-envers
+:spatial-project-dir: {root-project-dir}/hibernate-spatial
+:vector-project-dir: {root-project-dir}/hibernate-vector
+:example-dir-criteria: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+:doc-emeddable-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+:example-dir-envers: {envers-project-dir}/src/test/java/org/hibernate/orm/test/envers
+:example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
+:example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
+:example-dir-spatial: {spatial-project-dir}/src/test/java/org/hibernate/spatial/testing
+:example-dir-vector: {vector-project-dir}/src/test/java/org/hibernate/vector
+:toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling

@@ -13,6 +13,7 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -30,6 +31,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	private final GraphSemantic graphSemantic;
 	private final JpaMetamodel metamodel;
 	private GraphImplementor<?> currentGraphContext;
+	private boolean traversedAtLeastOneBag = false;
 
 	public StandardEntityGraphTraversalStateImpl(
 			GraphSemantic graphSemantic,
@@ -62,7 +64,13 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		currentGraphContext = null;
 		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
-			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
+			final boolean isBag = fetchable instanceof PluralAttributeMapping m
+				&& m.getMappedType().getCollectionSemantics().getCollectionClassification()
+				== CollectionClassification.BAG;
+			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, !(traversedAtLeastOneBag && isBag) );
+			if ( isBag ) {
+				traversedAtLeastOneBag = true;
+			}
 			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 			final Class<?> subgraphMapKey;
 			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {

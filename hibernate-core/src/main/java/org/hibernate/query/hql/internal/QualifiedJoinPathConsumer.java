@@ -14,7 +14,9 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import jakarta.persistence.criteria.PluralJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -221,6 +223,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			}
 		}
 		if ( !(subPathSource instanceof SqmJoinable) ) {
+			// For plural joins with basic-typed keys/values/indices, the path source
+			// is not joinable, so we create a SqmPluralPartJoin directly
+			if ( lhs instanceof PluralJoin ) {
+				return createSqmPluralPartJoin( lhs, subPathSource, joinType, alias, isTerminal, allowReuse, creationState );
+			}
 			throw new SemanticException( "Joining on basic value elements is not supported",
 					((SemanticQueryBuilder<?>) creationState).getQuery() );
 		}
@@ -244,6 +251,27 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
 				isTerminal && fetch,
 				creationState
+		);
+		lhs.addSqmJoin( join );
+		creationState.getCurrentProcessingState().getPathRegistry().register( join );
+		return join;
+	}
+
+	private static <U> SqmFrom<?, ?> createSqmPluralPartJoin(
+			SqmFrom<?, U> lhs,
+			SqmPathSource<?> subPathSource,
+			SqmJoinType joinType,
+			String alias,
+			boolean isTerminal,
+			boolean allowReuse,
+			SqmCreationState creationState) {
+		@SuppressWarnings("unchecked")
+		final SqmPluralPartJoin<U, ?> join = new SqmPluralPartJoin<>(
+				lhs,
+				(SqmPathSource<?>) subPathSource,
+				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
+				joinType,
+				lhs.nodeBuilder()
 		);
 		lhs.addSqmJoin( join );
 		creationState.getCurrentProcessingState().getPathRegistry().register( join );

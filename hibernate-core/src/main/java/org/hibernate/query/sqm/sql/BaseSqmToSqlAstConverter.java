@@ -3779,14 +3779,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private TableGroup getPluralPartTableGroup(PluralTableGroup pluralTableGroup, SqmPathSource<?> pathSource) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( pathSource.getPathName() );
 		if ( nature != null ) {
-			switch ( nature ) {
-				case INDEX:
-					return pluralTableGroup.getIndexTableGroup();
-				case ELEMENT:
-					return pluralTableGroup.getElementTableGroup();
-			}
+			var tableGroup = switch ( nature ) {
+				case INDEX -> pluralTableGroup.getIndexTableGroup();
+				case ELEMENT -> pluralTableGroup.getElementTableGroup();
+				case ID -> throw new UnsupportedOperationException( "Unsupported plural part join nature: " + nature );
+			};
+			// fall back to the plural table group itself, e.g. for basic valued collection parts
+			return tableGroup != null ? tableGroup : pluralTableGroup;
 		}
-		throw new UnsupportedOperationException( "Unsupported plural part join nature: " + nature );
+		throw new UnsupportedOperationException( "Unsupported plural path name: " + pathSource.getPathName() );
 	}
 
 	private <X> X prepareReusablePath(SqmPath<?> sqmPath, Supplier<X> supplier) {
@@ -4208,7 +4209,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 //			LOG.tracef( "SqmPluralPartJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
-			return visitTableGroup( existing, sqmJoin );
+			final ModelPartContainer tableGroupModelPart = existing.getModelPart();
+			final ModelPart actualModelPart;
+			if ( tableGroupModelPart instanceof PluralAttributeMapping pam ) {
+				final var nature = CollectionPart.Nature.fromNameExact(
+						sqmJoin.getReferencedPathSource().getPathName() );
+				actualModelPart = nature == CollectionPart.Nature.INDEX ?
+						pam.getIndexDescriptor() :
+						pam.getElementDescriptor();
+			}
+			else {
+				actualModelPart = tableGroupModelPart;
+			}
+			return createExpression( existing, sqmJoin.getNavigablePath(), actualModelPart, sqmJoin );
 		}
 
 		throw new InterpretationException( "SqmPluralPartJoin not yet resolved to TableGroup" );

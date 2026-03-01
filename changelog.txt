@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.44.Final (March 01, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37977
+
+
+** Bug
+    * HHH-20176 Native Query cache causing ArrayIndexOutOfBoundsException with extra columns
+
 Changes in 6.6.43.Final (February 22, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

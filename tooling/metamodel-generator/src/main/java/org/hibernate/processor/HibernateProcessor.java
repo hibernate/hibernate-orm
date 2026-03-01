@@ -55,6 +55,7 @@ import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
 import static org.hibernate.processor.HibernateProcessor.INDEX;
+import static org.hibernate.processor.HibernateProcessor.JAKARTA_DATA_SORT_COMPLIANCE;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
@@ -128,7 +129,8 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
 		INCLUDE, EXCLUDE,
-		INDEX
+		INDEX,
+		JAKARTA_DATA_SORT_COMPLIANCE
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -181,6 +183,14 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * even when Jakarta Data is available on the build path.
 	 */
 	public static final String SUPPRESS_JAKARTA_DATA_METAMODEL = "suppressJakartaDataMetamodel";
+
+	/**
+	 * Option to suppress rejection of Jakarta Data repository interfaces that use
+	 * {@code jakarta.data.Sort} types with a null type argument, which
+	 * the Jakarta Data specification allows.
+	 */
+	public static final String JAKARTA_DATA_SORT_COMPLIANCE = "jakartaDataSortCompliance";
+
 
 	/**
 	 * Option to include only certain types, according to a list of patterns.
@@ -305,6 +315,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		final boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
 
 		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && packagePresent(jakartaDataPackage) );
+
+		context.setJakartaDataSortCompliance( parseBoolean( options.get( JAKARTA_DATA_SORT_COMPLIANCE ) ) );
 
 		final String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {

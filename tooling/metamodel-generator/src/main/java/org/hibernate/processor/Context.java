@@ -92,6 +92,7 @@ public final class Context {
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
+	private boolean jakartaDataSortCompliance;
 	private boolean quarkusInjection;
 	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
@@ -159,6 +160,14 @@ public final class Context {
 
 	public void setGenerateJakartaDataStaticMetamodel(boolean generateJakartaDataStaticMetamodel) {
 		this.generateJakartaDataStaticMetamodel = generateJakartaDataStaticMetamodel;
+	}
+
+	public boolean getJakartaDataSortCompliance() {
+		return jakartaDataSortCompliance;
+	}
+
+	public void setJakartaDataSortCompliance(boolean jakartaDataSortCompliance) {
+		this.jakartaDataSortCompliance = jakartaDataSortCompliance;
 	}
 
 	public boolean addInjectAnnotation() {

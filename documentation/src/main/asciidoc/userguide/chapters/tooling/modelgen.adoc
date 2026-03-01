@@ -120,4 +120,5 @@ part of the `javac` execution using standard link:{ann-proc-options}[-A] options
 `-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes.
 `-addGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`.
 `-addSuppressWarningsAnnotation=[warning[,warning]*|true]`:: A comma-separated list of warnings to suppress, or simply `true` if `@SuppressWarnings({"deprecation","rawtypes"})` should be added to the generated classes.
+`-AjakartaDataSortCompliance=[true|false]`:: Controls whether the processor should allow Jakarta Data repository interfaces that use `jakarta.data.Sort` types with a null type argument, which the Jakarta Data specification allows. (Default: `false`)
 

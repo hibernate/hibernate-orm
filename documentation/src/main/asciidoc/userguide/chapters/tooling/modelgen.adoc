@@ -124,3 +124,4 @@ part of the `javac` execution using standard link:{ann-proc-options}[-A] options
 `-Ainclude=[pattern[,pattern]*]`:: A comma-separated list of type patterns that should be included with `*` as wildcard. (Default: `*`)
 `-Aexclude=[pattern[,pattern]*]`:: A comma-separated list of type patterns that should be excluded with `*` as wildcard. (Default: empty)
 `-Aindex=[true|false]`:: Controls whether the processor should use a filesystem-based index of entity types and enums for use by the query validator to speed up query validation and thus compilation. (Default: `true`)
+`-AjakartaDataSortCompliance=[true|false]`:: Controls whether the processor should allow Jakarta Data repository interfaces that use `jakarta.data.Sort` types with a null type argument, which the Jakarta Data specification allows. (Default: `false`)

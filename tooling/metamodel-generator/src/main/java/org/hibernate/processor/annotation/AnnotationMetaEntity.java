@@ -2213,7 +2213,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final TypeMirror typeArgument = getTypeArgument( parameterType );
 			if ( entityType != null ) {
 				if ( typeArgument == null ) {
-					missingTypeArgError( entityType, parameter, typeName );
+					if ( requireTypeArgument( typeName )) {
+						missingTypeArgError( entityType, parameter, typeName );
+					}
 				}
 				else if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
 					wrongTypeArgError( entityType, parameter, typeName );
@@ -2271,6 +2273,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void wrongTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {
 		message( parameter, "mismatched type of " + message( parameterType, entityType ),
 				Diagnostic.Kind.ERROR );
+	}
+
+	private boolean requireTypeArgument(String typeName) {
+		return !context.getJakartaDataSortCompliance() || !typeName.startsWith( JD_SORT );
 	}
 
 	private void missingTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {

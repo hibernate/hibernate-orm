@@ -18,6 +18,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
+import org.hibernate.engine.jdbc.procedure.StoredProcedureHelper;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -252,6 +253,12 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 */
 	@Incubating
 	ManagedBeanRegistry getManagedBeanRegistry();
+
+	/**
+	 * Access the stored-procedure helper scoped to this session factory.
+	 */
+	@Incubating
+	StoredProcedureHelper getStoredProcedureHelper();
 
 	/**
 	 * Obtain the {@link EventListenerRegistry} service.

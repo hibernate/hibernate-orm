@@ -45,6 +45,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.procedure.StoredProcedureHelper;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -162,6 +163,7 @@ public abstract class MockSessionFactory
 
 	private final NodeBuilder nodeBuilder;
 	private final SqlTranslationEngine sqlTranslationEngine;
+	private final StoredProcedureHelper storedProcedureHelper;
 
 	private final ClassLoaderServiceImpl classLoaderService;
 
@@ -242,10 +244,16 @@ public abstract class MockSessionFactory
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
+		storedProcedureHelper = new StoredProcedureHelper( this, bootModel.getDatabase() );
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
 
 		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration, emptyMap() );
+	}
+
+	@Override
+	public Map<String, Object> getProperties() {
+		return Map.of();
 	}
 
 	@Override
@@ -256,6 +264,11 @@ public abstract class MockSessionFactory
 	@Override
 	public ClassLoaderService getClassLoaderService() {
 		return classLoaderService;
+	}
+
+	@Override
+	public StoredProcedureHelper getStoredProcedureHelper() {
+		return storedProcedureHelper;
 	}
 
 	@Override

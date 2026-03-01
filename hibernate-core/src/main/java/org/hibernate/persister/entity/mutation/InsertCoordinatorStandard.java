@@ -495,7 +495,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) )
 		);
 		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceIdentifierBinding );
-		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
+		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup(), false );
 	}
 
 	public MutationOperationGroup generateStaticOperationGroup() {
@@ -505,7 +505,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, false ) )
 		);
 		applyTableInsertDetails( insertGroupBuilder, persister.getPropertyInsertability(), null, null, false );
-		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
+		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup(), true );
 	}
 
 	private TableMutationBuilder<?> createTableInsertBuilder(EntityTableMapping tableMapping, boolean forceIdentifierBinding) {

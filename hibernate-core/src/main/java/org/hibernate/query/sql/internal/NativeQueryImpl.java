@@ -276,6 +276,7 @@ public class NativeQueryImpl<R>
 		handleExplicitResultSetMapping();
 
 		applyOptions( memento );
+		queryOptions.setNamedQueryMementoName( memento.getRegistrationName() );
 	}
 
 	public NativeQueryImpl(

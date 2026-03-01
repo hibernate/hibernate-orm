@@ -25,6 +25,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
+import org.hibernate.engine.jdbc.procedure.StoredProcedureHelper;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -411,6 +412,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public ManagedBeanRegistry getManagedBeanRegistry() {
 		return delegate.getManagedBeanRegistry();
+	}
+
+	@Override
+	public StoredProcedureHelper getStoredProcedureHelper() {
+		return delegate.getStoredProcedureHelper();
 	}
 
 	@Override

@@ -574,6 +574,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isUseStoredProceduresEnabled() {
+		return delegate.isUseStoredProceduresEnabled();
+	}
+
+	@Override
 	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
 		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 	}

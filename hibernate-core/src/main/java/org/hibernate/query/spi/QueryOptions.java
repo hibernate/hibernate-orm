@@ -194,6 +194,14 @@ public interface QueryOptions {
 	}
 
 	/**
+	 * The registration name of the named query that produced these options,
+	 * or {@code null} for dynamic queries.
+	 */
+	default String getNamedQueryMementoName() {
+		return null;
+	}
+
+	/**
 	 * Provide singleton access for frequently needed options:
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {

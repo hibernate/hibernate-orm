@@ -118,13 +118,19 @@ public abstract class AbstractMutationCoordinator {
 
 	protected abstract BatchKey getBatchKey();
 
-	protected MutationOperationGroup createOperationGroup(ValuesAnalysis valuesAnalysis, MutationGroup mutationGroup) {
+	protected MutationOperationGroup createOperationGroup(
+			ValuesAnalysis valuesAnalysis,
+			MutationGroup mutationGroup,
+			boolean wrapWithStoredProcedure) {
 		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();
 		switch ( numberOfTableMutations ) {
 			case 0:
 				return noOperations( mutationGroup );
 			case 1: {
-				final var operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
+				var operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
+				if ( wrapWithStoredProcedure ) {
+					operation = factory.getStoredProcedureHelper().maybeWrapOperation( operation );
+				}
 				return operation == null
 						? noOperations( mutationGroup )
 						: singleOperation( mutationGroup, operation );
@@ -135,7 +141,10 @@ public abstract class AbstractMutationCoordinator {
 				int skipped = 0;
 				for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
 					final var tableMutation = mutationGroup.getTableMutation( i );
-					final var operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
+					var operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
+					if ( wrapWithStoredProcedure ) {
+						operation = factory.getStoredProcedureHelper().maybeWrapOperation( operation );
+					}
 					if ( operation != null ) {
 						operations[outputIndex++] = operation;
 					}

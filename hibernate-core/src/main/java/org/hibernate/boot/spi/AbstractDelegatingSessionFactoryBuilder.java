@@ -199,6 +199,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder enableStoredProcedureUpdates(boolean enabled) {
+		delegate.enableStoredProcedureUpdates( enabled );
+		return getThis();
+	}
+
+	@Override
 	public T applyMultiTenancy(boolean enabled) {
 		delegate.applyMultiTenancy(enabled);
 		return getThis();

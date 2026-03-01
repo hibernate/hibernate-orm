@@ -83,6 +83,11 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	}
 
 	@Override
+	public Identifier determineStoredProcedureName(ImplicitStoredProcedureNameSource source) {
+		return Identifier.toIdentifier( source.getOperation() + unqualify( source.getRolePath() ) );
+	}
+
+	@Override
 	public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source) {
 		// JPA states the implicit column name should be the attribute name
 		return toIdentifier(

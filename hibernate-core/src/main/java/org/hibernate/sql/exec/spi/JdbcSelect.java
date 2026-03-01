@@ -18,12 +18,16 @@ import java.sql.Connection;
  */
 @Incubating
 public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
+
 	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
 	JdbcLockStrategy getLockStrategy();
 	boolean usesLimitParameters();
 	JdbcParameter getLimitParameter();
 	int getRowsToSkip();
 	int getMaxRows();
+	default boolean isCallable() {
+		return false;
+	}
 
 	/**
 	 * Access to a collector of values loaded to be applied during the

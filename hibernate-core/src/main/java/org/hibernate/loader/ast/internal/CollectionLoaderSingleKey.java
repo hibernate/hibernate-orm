@@ -22,8 +22,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-
-import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * Main implementation of CollectionLoader for handling a load of a single collection-key
@@ -66,9 +65,15 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 
 		jdbcParameters = jdbcParametersBuilder.build();
 		jdbcSelect =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqlAst )
-						.translate( NO_BINDINGS, QueryOptions.NONE );
+				sessionFactory.getStoredProcedureHelper().maybeWrapSingleIdSelect(
+						sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+								.buildSelectTranslator( sessionFactory, sqlAst )
+								.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE ),
+						sqlAst,
+						jdbcParameters,
+						attributeMapping.getKeyDescriptor(),
+						attributeMapping.getCollectionDescriptor().getRole()
+				);
 	}
 
 	@Override
@@ -107,7 +112,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				jdbcParameters,
 				jdbcParameterBindings
 		);
-
 		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,

@@ -243,6 +243,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder enableStoredProcedureUpdates(boolean enabled) {
+		optionsBuilder.enableStoredProcedureUpdates( enabled );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyMultiTenancy(boolean enabled) {
 		optionsBuilder.applyMultiTenancy(enabled);
 		return this;

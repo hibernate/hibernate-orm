@@ -24,6 +24,8 @@ import org.hibernate.dialect.lock.internal.DB2LockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.procedure.DB2StoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
@@ -1048,6 +1050,11 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return DB2CallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return DB2StoredProcedureSupport.INSTANCE;
 	}
 
 	@Override

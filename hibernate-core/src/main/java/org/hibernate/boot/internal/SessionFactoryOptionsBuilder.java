@@ -32,6 +32,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -170,6 +171,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
+	private boolean storedProcedureMutationsEnabled;
 	private final boolean unownedAssociationTransientCheck;
 	private final boolean passProcedureParameterNames;
 	private final boolean preferJdbcDatetimeTypes;
@@ -545,6 +547,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				getBoolean( UNOWNED_ASSOCIATION_TRANSIENT_CHECK, settings, isJpaBootstrap() );
 
 		passProcedureParameterNames = getBoolean( QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings );
+
+		storedProcedureMutationsEnabled = getBoolean( MappingSettings.USE_STORED_PROCEDURES, settings );
 
 		preferJdbcDatetimeTypes = getBoolean( NATIVE_PREFER_JDBC_DATETIME_TYPES, settings );
 
@@ -1509,6 +1513,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isUseStoredProceduresEnabled() {
+		return storedProcedureMutationsEnabled;
+	}
+
+	@Override
 	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
 		return preferJdbcDatetimeTypes;
 	}
@@ -1651,6 +1660,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableOrderingOfUpdates(boolean enabled) {
 		this.orderUpdatesEnabled = enabled;
+	}
+
+	public void enableStoredProcedureUpdates(boolean enabled) {
+		this.storedProcedureMutationsEnabled = enabled;
 	}
 
 	public void applyMultiTenancy(boolean enabled) {

@@ -90,6 +90,9 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 		return null;
 	}
 
+	public List<JdbcValueDescriptor> getJdbcValueDescriptors() {
+		return jdbcValueDescriptors;
+	}
 
 
 	@Override
@@ -101,4 +104,6 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	public Expectation getExpectation() {
 		return expectation;
 	}
+
+	public abstract String kind();
 }

@@ -52,6 +52,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private GraphSemantic graphSemantic;
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
+	private String namedQueryMementoName;
 
 	@Override
 	public Integer getTimeout() {
@@ -255,5 +256,15 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public @Nullable GraphSemantic getSemantic() {
 		return graphSemantic;
+	}
+
+	@Override
+	public void setNamedQueryMementoName(String namedQueryMementoName) {
+		this.namedQueryMementoName = namedQueryMementoName;
+	}
+
+	@Override
+	public String getNamedQueryMementoName() {
+		return namedQueryMementoName;
 	}
 }

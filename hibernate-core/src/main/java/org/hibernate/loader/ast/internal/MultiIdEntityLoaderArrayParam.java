@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -74,6 +75,26 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				)
 		);
 		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
+
+		if ( sessionFactory.getStoredProcedureHelper().isEnabled() ) {
+			// register a stored procedure for the no-influencers variant
+			final var sqlAst = createSelectBySingleArrayParameter(
+					getLoadable(),
+					getIdentifierMapping(),
+					new LoadQueryInfluencers( sessionFactory ),
+					LockOptions.NONE,
+					jdbcParameter,
+					sessionFactory
+			);
+			sessionFactory.getStoredProcedureHelper().maybeWrapBatchIdSelect(
+					getSqlAstTranslatorFactory()
+							.buildSelectTranslator( sessionFactory, sqlAst )
+							.translate( NO_BINDINGS, QueryOptions.NONE ),
+					sqlAst,
+					arraySqlTypedMapping.getJdbcMapping(),
+					getLoadable().getEntityName()
+			);
+		}
 	}
 
 	@Override
@@ -96,6 +117,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
+		final var sessionFactory = getSessionFactory();
 		final var sqlAst =
 				createSelectBySingleArrayParameter(
 						getLoadable(),
@@ -103,7 +125,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						session.getLoadQueryInfluencers(),
 						lockOptions,
 						jdbcParameter,
-						getSessionFactory()
+						sessionFactory
 				);
 
 		final var bindings = new JdbcParameterBindingsImpl(1);
@@ -114,7 +136,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		final var sqlAstTranslator =
 				getSqlAstTranslatorFactory()
-						.buildSelectTranslator( getSessionFactory(), sqlAst );
+						.buildSelectTranslator( sessionFactory, sqlAst );
 		final var jdbcOperation =
 				sqlAstTranslator.translate(
 						NO_BINDINGS,
@@ -125,9 +147,13 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 							}
 						}
 				);
-
 		getJdbcSelectExecutor().executeQuery(
-				jdbcOperation,
+				sessionFactory.getStoredProcedureHelper().maybeWrapBatchIdSelect(
+						jdbcOperation,
+						sqlAst,
+						arraySqlTypedMapping.getJdbcMapping(),
+						getLoadable().getEntityName()
+				),
 				bindings,
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
@@ -156,6 +182,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			LockOptions lockOptions,
 			List<E> results,
 			SharedSessionContractImplementor session) {
+		final var sessionFactory = getSessionFactory();
 		final var sqlAst =
 				createSelectBySingleArrayParameter(
 						getLoadable(),
@@ -163,17 +190,27 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						session.getLoadQueryInfluencers(),
 						lockOptions,
 						jdbcParameter,
-						getSessionFactory()
+						sessionFactory
 				);
 
 		final var jdbcSelectOperation =
-				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
-						.translate( NO_BINDINGS, QueryOptions.NONE );
-
+				getSqlAstTranslatorFactory().buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( NO_BINDINGS,
+								new QueryOptionsAdapter() {
+									@Override
+									public LockOptions getLockOptions() {
+										return lockOptions;
+									}
+								} );
 		final List<E> databaseResults = loadByArrayParameter(
 				toIdArray( unresolvableIds ),
 				sqlAst,
-				jdbcSelectOperation,
+				sessionFactory.getStoredProcedureHelper().maybeWrapBatchIdSelect(
+						jdbcSelectOperation,
+						sqlAst,
+						arraySqlTypedMapping.getJdbcMapping(),
+						getLoadable().getEntityName()
+				),
 				jdbcParameter,
 				arraySqlTypedMapping.getJdbcMapping(),
 				null,

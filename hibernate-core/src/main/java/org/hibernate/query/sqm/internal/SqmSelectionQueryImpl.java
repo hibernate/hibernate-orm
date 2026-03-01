@@ -135,6 +135,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				interpretation( memento, resultType, session ),
 				resultType, session );
 		applySqmOptions( memento );
+		getQueryOptions().setNamedQueryMementoName( memento.getRegistrationName() );
 	}
 
 	/**
@@ -149,6 +150,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			SharedSessionContractImplementor session) {
 		this( selectStatement, expectedResultType, session );
 		applySqmOptions( memento );
+		getQueryOptions().setNamedQueryMementoName( memento.getRegistrationName() );
 	}
 
 	/**

@@ -25,6 +25,8 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.dialect.procedure.NoStoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -3384,6 +3386,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		throw new UnsupportedOperationException(
 				getClass().getName() + " does not support resultsets via stored procedures"
 		);
+	}
+
+	/**
+	 * The strategy for dialect-specific stored-procedure SQL rendering.
+	 */
+	@Incubating
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return NoStoredProcedureSupport.INSTANCE;
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

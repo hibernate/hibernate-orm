@@ -24,6 +24,8 @@ import org.hibernate.dialect.lock.internal.OracleLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
+import org.hibernate.dialect.procedure.OracleStoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
@@ -1425,6 +1427,11 @@ public class OracleDialect extends Dialect {
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
 		return OracleCallableStatementSupport.REF_CURSOR_INSTANCE;
+	}
+
+	@Override
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return OracleStoredProcedureSupport.INSTANCE;
 	}
 
 	@Override

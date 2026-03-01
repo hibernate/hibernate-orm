@@ -53,7 +53,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		this.restrictivePart = restrictivePart;
 		this.lockOptions = lockOptions.makeDefensiveCopy();
 		this.jdbcParameters = jdbcParameters;
-		this.jdbcSelect =
+		final var translatedSelect =
 				sessionFactory.getJdbcServices().getJdbcEnvironment()
 						.getSqlAstTranslatorFactory()
 						.buildSelectTranslator( sessionFactory, sqlAst )
@@ -65,6 +65,15 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 										return lockOptions;
 									}
 								}
+						);
+		this.jdbcSelect =
+				sessionFactory.getStoredProcedureHelper()
+						.maybeWrapSingleIdSelect(
+								translatedSelect,
+								sqlAst,
+								jdbcParameters,
+								restrictivePart,
+								entityMappingType.getEntityName()
 						);
 	}
 
@@ -148,7 +157,6 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 						callback
 				),
 				getRowTransformer(),
-				null,
 				singleResultExpected
 						? ListResultsConsumer.UniqueSemantic.ASSERT
 						: ListResultsConsumer.UniqueSemantic.FILTER,

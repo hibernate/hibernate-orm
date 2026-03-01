@@ -699,6 +699,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#USE_STORED_PROCEDURES
+	 */
+	SessionFactoryBuilder enableStoredProcedureUpdates(boolean enabled);
+
+	/**
 	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
 	 * released immediately on close?
 	 * <p>

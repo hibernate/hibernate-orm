@@ -27,6 +27,8 @@ import org.hibernate.dialect.lock.internal.PostgreSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.procedure.PostgreSQLStoredProcedureSupport;
+import org.hibernate.dialect.procedure.StoredProcedureSupport;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
@@ -1123,6 +1125,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return PostgreSQLCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public StoredProcedureSupport getStoredProcedureSupport() {
+		return PostgreSQLStoredProcedureSupport.INSTANCE;
 	}
 
 	@Override

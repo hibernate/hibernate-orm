@@ -278,6 +278,23 @@ public interface MappingSettings {
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
 
 	/**
+	 * Enables routing of HQL named queries and entity mutation operations through
+	 * generated stored procedures when supported by the dialect.
+	 * <p>
+	 * When enabled, stored procedures are inferred from mapping metadata and
+	 * named query definitions when the {@link SessionFactory} is instantiated,
+	 * and then automatically exported to the database if
+	 * {@linkplain SchemaToolingSettings#JAKARTA_HBM2DDL_DATABASE_ACTION schema
+	 * export is enabled}.
+	 *
+	 * @settingDefault {@code false}
+	 *
+	 * @see org.hibernate.dialect.procedure.StoredProcedureSupport
+	 */
+	@Incubating
+	String USE_STORED_PROCEDURES = "hibernate.use_stored_procedures";
+
+	/**
 	 * Indicates whether {@link Locale#toLanguageTag()} should be preferred over
 	 * {@link Locale#toString()} when converting a {@code Locale} to a {@code String}.
 	 * <p>

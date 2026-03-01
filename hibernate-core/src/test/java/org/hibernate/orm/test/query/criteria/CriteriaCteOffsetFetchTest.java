@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -65,6 +66,7 @@ public class CriteriaCteOffsetFetchTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support OFFSET without LIMIT clause")
 	public void testSetFirstResult(SessionFactoryScope scope) {
 		executeQuery( scope, 1, null, true );
 	}

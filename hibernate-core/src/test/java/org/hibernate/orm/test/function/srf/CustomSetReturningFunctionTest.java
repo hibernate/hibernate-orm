@@ -15,6 +15,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
@@ -63,6 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseASEDialect.class)
 @RequiresDialect(HANADialect.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support custom set returning function")
 public class CustomSetReturningFunctionTest implements AdditionalMappingContributor, FunctionContributor {
 
 	@Override

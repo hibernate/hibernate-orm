@@ -9,9 +9,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +68,7 @@ public class IdClassAndAssociationsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testIt(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

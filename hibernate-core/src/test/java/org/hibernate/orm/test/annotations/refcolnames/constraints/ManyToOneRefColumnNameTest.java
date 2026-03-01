@@ -100,7 +100,7 @@ class ManyToOneRefColumnNameTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "That")
 	static class That {
 		@Id @GeneratedValue
 		long id;
@@ -112,7 +112,7 @@ class ManyToOneRefColumnNameTest {
 		int compositeKeyTwo;
 	}
 
-	@Entity
+	@Entity(name = "This")
 	static class This {
 		@Id @GeneratedValue
 		long id;

@@ -4,22 +4,28 @@
  */
 package org.hibernate.community.dialect;
 
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.JDBCException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
 import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
 import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.SpannerConcatFunction;
+import org.hibernate.dialect.function.SpannerPostgreSQLRegexpLikeFunction;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -29,6 +35,10 @@ import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -41,6 +51,9 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -49,14 +62,31 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.type.descriptor.jdbc.SpannerTimeJdbcType;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
@@ -67,6 +97,7 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -74,7 +105,9 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
@@ -94,7 +127,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	private final LockingSupport SPANNER_LOCKING_SUPPORT =
 			new LockingSupportSimple(
-					PessimisticLockStyle.CLAUSE,
+					PessimisticLockStyle.NONE,
 					RowLockStrategy.NONE,
 					LockTimeoutType.NONE,
 					OuterJoinLockingType.FULL,
@@ -119,11 +152,34 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry( functionContributions );
+
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions );
+		functionFactory.substring_spanner();
+		functionFactory.leftRight_substr();
+
+		var functionRegistry = functionContributions.getFunctionRegistry();
+		functionRegistry.register( "concat",
+				new SpannerConcatFunction( functionContributions.getTypeConfiguration()) );
+		functionRegistry.register( "regexp_like",
+				new SpannerPostgreSQLRegexpLikeFunction(functionContributions.getTypeConfiguration()));
+	}
+
+	@Override
+	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
+	}
+
+	@Override
 	protected void registerArrayFunctions(CommonFunctionFactory functionFactory) {
 	}
 
 	@Override
 	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+	}
+
+	@Override
+	protected void registerUtilityFunctions(FunctionContributions functionContributions) {
 	}
 
 	@Override
@@ -148,6 +204,87 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public String getCheckCondition(String columnName, String[] values) {
+		final StringBuilder check = new StringBuilder();
+		check.append("(");
+		String separator = "";
+		boolean nullIsValid = false;
+		for (String value : values) {
+			if (value == null) {
+				nullIsValid = true;
+				continue;
+			}
+			check.append(separator).append(columnName).append("='").append(value).append("'");
+			separator = " or ";
+		}
+		check.append(")");
+		if (nullIsValid) {
+			check.append(" or ").append(columnName).append(" is null");
+		}
+		return check.toString();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, Long[] values) {
+		final StringBuilder check = new StringBuilder();
+		check.append("(");
+		String separator = "";
+		boolean nullIsValid = false;
+		for (Long value : values) {
+			if (value == null) {
+				nullIsValid = true;
+				continue;
+			}
+			check.append(separator).append(columnName).append("=").append(value);
+			separator = " or ";
+		}
+		check.append(")");
+		if (nullIsValid) {
+			check.append(" or ").append(columnName).append(" is null");
+		}
+		return check.toString();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, java.util.Collection<?> valueSet,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		final boolean isCharacterJdbcType = org.hibernate.type.SqlTypes.isCharacterType(jdbcType.getJdbcTypeCode());
+
+		final StringBuilder check = new StringBuilder();
+		check.append("(");
+		String separator = "";
+		boolean nullIsValid = false;
+		for (Object value : valueSet) {
+			if (value == null) {
+				nullIsValid = true;
+				continue;
+			}
+			check.append(separator).append(columnName).append("=");
+			if (isCharacterJdbcType) {
+				check.append("'").append(String.valueOf(value).replace("'", "''")).append("'");
+			}
+			else {
+				check.append(value);
+			}
+			separator = " or ";
+		}
+		check.append(")");
+		if (nullIsValid) {
+			check.append(" or ").append(columnName).append(" is null");
+		}
+		return check.toString();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, long[] values) {
+		final Long[] boxedValues = new Long[values.length];
+		for (int i = 0; i < values.length; i++) {
+			boxedValues[i] = values[i];
+		}
+		return getCheckCondition(columnName, boxedValues);
+	}
+
+	@Override
 	public AggregateSupport getAggregateSupport() {
 		return SpannerPostgreSQLAggregateSupport.INSTANCE;
 	}
@@ -155,6 +292,21 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public LockingSupport getLockingSupport() {
 		return SPANNER_LOCKING_SUPPORT;
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		return switch (columnTypeName) {
+			case "character varying" -> Types.VARCHAR;
+			case "timestamp with time zone" -> Types.TIMESTAMP_WITH_TIMEZONE;
+			case "bigint" -> Types.BIGINT;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return false;
 	}
 
 	@Override
@@ -267,6 +419,27 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.NONE;
+	}
+
+	@Override
+	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeRegistry();
+
+		jdbcTypeRegistry.addDescriptor(SpannerTimeJdbcType.INSTANCE);
+
+		jdbcTypeRegistry.addDescriptor(PostgreSQLUUIDJdbcType.INSTANCE);
+
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor(PostgreSQLArrayJdbcTypeConstructor.INSTANCE);
+
+		jdbcTypeRegistry.addDescriptorIfAbsent(PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE);
+		jdbcTypeRegistry.addTypeConstructorIfAbsent(PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE);
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
@@ -277,10 +450,13 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.registerColumnTypes( typeContributions, serviceRegistry );
-
+	protected void registerPostgreSQLColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		// We need to configure that the array type uses the raw element type for casts
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( FLOAT, columnType( FLOAT ), castType( FLOAT ), this )
@@ -291,10 +467,98 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		if ( precision == TemporalType.TIME || (precision == TemporalType.TIMESTAMP && !temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ))) {
+			precision = TemporalType.TIMESTAMP;
+			if ( temporalAccessor instanceof LocalTime localTime) {
+				temporalAccessor = localTime.atDate( LocalDate.of( 1970, 1, 1 ) )
+						.atOffset( ZoneOffset.UTC );
+			}
+			else if ( temporalAccessor instanceof OffsetTime offsetTime ) {
+				temporalAccessor = offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) );
+			}
+			else if ( temporalAccessor instanceof LocalDateTime localDateTime) {
+				temporalAccessor = localDateTime.atOffset( ZoneOffset.UTC );
+			}
+			else if ( temporalAccessor instanceof Instant instant) {
+				temporalAccessor = instant.atOffset(  ZoneOffset.UTC );
+			}
+			else {
+				throw new UnsupportedOperationException( "Unsupported temporal type: " + temporalAccessor.getClass().getName() );
+			}
+		}
+
+		super.appendDateTimeLiteral(  appender, temporalAccessor, precision, jdbcTimeZone );
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		if ( precision == TemporalType.TIME ) {
+			precision = TemporalType.TIMESTAMP;
+		}
+		super.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
+	}
+
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		if ( precision == TemporalType.TIME ) {
+			precision = TemporalType.TIMESTAMP;
+		}
+
+		super.appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
+	}
+
+	@Override
+	protected String castType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			case TIME, TIME_UTC, TIMESTAMP, TIMESTAMP_UTC -> columnType(TIMESTAMP_WITH_TIMEZONE);
+			default -> super.castType(sqlTypeCode);
+		};
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + castTemporalType( temporalType ) + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		return switch (unit) {
+			case NANOSECOND -> "cast(concat(cast((?2)/1e3 as text), ' microsecond') as interval)";
+			case NATIVE -> "cast(concat(cast((?2) as text), ' second') as interval)";
+			case QUARTER -> "cast(concat(cast((?2) as text), ' quarter') as interval)";
+			case WEEK -> "cast(concat(cast((?2) as text), ' week') as interval)";
+			default -> "cast(concat(cast((?2) as text), ' " + unit + "') as interval)";
+		};
+	}
+
+	private String castTemporalType(TemporalType temporalType) {
+		return switch (temporalType) {
+			case TIME, TIMESTAMP -> castType( TIMESTAMP );
+			default -> temporalType.name().toLowerCase();
+		};
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// Spanner doesn't support precision with the timestamp
-			case TIME, TIMESTAMP, TIMESTAMP_UTC, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
+			case TIME, TIME_UTC, TIMESTAMP, TIMESTAMP_UTC, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
 			case BLOB -> "bytea";
 			case CLOB, NCLOB -> "character varying";
 			// Spanner doesn't support NUMERIC with precision and scale
@@ -465,6 +729,16 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return false;
+	}
+
+	@Override
+	public String getDual() {
+		return "unnest(ARRAY[1])";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual() + " dual";
 	}
 
 	@Override

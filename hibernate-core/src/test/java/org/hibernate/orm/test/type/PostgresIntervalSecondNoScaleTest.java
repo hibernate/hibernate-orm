@@ -7,7 +7,9 @@ package org.hibernate.orm.test.type;
 import java.time.Duration;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,6 +28,7 @@ import jakarta.persistence.Id;
 @SessionFactory
 @DomainModel(annotatedClasses = { PostgresIntervalSecondNoScaleTest.TestEntity.class })
 @RequiresDialect(PostgreSQLDialect.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support interval column type")
 @JiraKey("HHH-17520")
 public class PostgresIntervalSecondNoScaleTest {
 	@AfterEach

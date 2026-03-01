@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.basic.bitset;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -105,7 +106,8 @@ public class MetaUserTypeTest {
 		} );
 	}
 
-	@Entity static class Thing {
+	@Entity(name = "Thing")
+	static class Thing {
 		@Id @GeneratedValue
 		long id;
 		@TimePeriod
@@ -114,7 +116,8 @@ public class MetaUserTypeTest {
 		Period days;
 	}
 
-	@Entity static class SecondThing {
+	@Entity(name = "SecondThing")
+	static class SecondThing {
 		@Id @GeneratedValue
 		long id;
 		@SecondTimePeriod
@@ -123,7 +126,8 @@ public class MetaUserTypeTest {
 		Period days;
 	}
 
-	@Entity static class ThirdThing {
+	@Entity(name = "ThirdThing")
+	static class ThirdThing {
 		@Id @GeneratedValue
 		long id;
 		@ThirdTimePeriod
@@ -132,7 +136,8 @@ public class MetaUserTypeTest {
 		Period days;
 	}
 
-	@Entity static class FourthThing {
+	@Entity(name = "FourthThing")
+	static class FourthThing {
 		@Id @GeneratedValue
 		long id;
 		@FourthTimePeriod
@@ -141,12 +146,17 @@ public class MetaUserTypeTest {
 		Period days;
 	}
 
-	@Entity static class Things {
+	@Entity(name = "Things")
+	static class Things {
 		@Id @GeneratedValue
 		long id;
-		@TimePeriod @ElementCollection
+		@TimePeriod
+		@ElementCollection
+		@CollectionTable(name = "Periods")
 		List<Period> periods = new ArrayList<>();
-		@TimePeriod(days = true) @ElementCollection
+		@TimePeriod(days = true)
+		@ElementCollection
+		@CollectionTable(name = "Days")
 		List<Period> days = new ArrayList<>();
 	}
 

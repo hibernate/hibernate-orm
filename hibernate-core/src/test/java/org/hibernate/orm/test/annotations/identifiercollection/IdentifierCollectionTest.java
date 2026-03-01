@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.test.annotations.identifiercollection;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 public class IdentifierCollectionTest {
 
 	@Test

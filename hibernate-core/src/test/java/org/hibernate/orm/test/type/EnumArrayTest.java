@@ -22,6 +22,8 @@ import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.AfterEach;
@@ -116,6 +118,7 @@ public class EnumArrayTest {
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getByData", TableWithEnumArrays.class );
@@ -146,6 +149,7 @@ public class EnumArrayTest {
 	@SkipForDialect(dialectClass = DerbyDialect.class )
 	@SkipForDialect(dialectClass = DB2Dialect.class )
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

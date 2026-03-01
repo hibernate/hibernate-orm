@@ -208,6 +208,22 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return null;
 	}
 
+	private Object getIdentifierEvenIfTransient(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		try {
+			return getEntityIdentifierIfNotUnsaved(
+					session.bestGuessEntityName( value ),
+					value,
+					session
+			);
+		}
+		catch (TransientObjectException e) {
+			return null;
+		}
+	}
+
 	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
 		return x == y;
@@ -243,7 +259,22 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return isDirty( old, current, session );
+		if ( isSame( old, current ) ) {
+			return false;
+		}
+		final String oldDiscriminator =
+				old == null ? null : session.bestGuessEntityName( old );
+		final String newDiscriminator =
+				current == null ? null : session.bestGuessEntityName( current );
+
+		if ( discriminatorType.isDirty( oldDiscriminator, newDiscriminator, session ) ) {
+			return true;
+		}
+
+		final Object oldId = getIdentifierEvenIfTransient( old, session );
+		final Object newId = getIdentifierEvenIfTransient( current, session );
+
+		return identifierType.isDirty( oldId, newId, session );
 	}
 
 	@Override

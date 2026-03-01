@@ -562,7 +562,7 @@ The `@By` annotation lets us work around this problem:
 [source,java]
 ----
 @Find
-List<Book> books(@By("isbn") String[] ibsns);
+List<Book> books(@By(_Book.ISBN) String[] ibsns);
 ----
 
 Naturally, the name and type of the parameter are still checked at compile time; there's no loss of typesafety here, despite the string.

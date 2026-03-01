@@ -48,7 +48,7 @@ interface Library {
     Uni<Void> add(Book book);
 
     @Find
-    Uni<List<Book>> books(@By("isbn") String[] ibsns);
+    Uni<List<Book>> books(@By(_Book.ISBN) String[] ibsns);
 }
 ----
 

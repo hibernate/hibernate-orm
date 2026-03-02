@@ -74,11 +74,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	private static String getAttributePath(AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();
-		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+		if ( declaringType instanceof EmbeddableMappingType ) {
 			final var path = new StringBuilder();
 			path.append( attribute.getAttributeName() );
 			do {
-				final var valueMapping = embeddableMappingType.getEmbeddedValueMapping();
+				// declaringType must be cast each time (not a pattern variable) as it's updated each iteration
+				final var valueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
 				attribute = valueMapping.asAttributeMapping();
 				if ( attribute == null ) {
 					break;
